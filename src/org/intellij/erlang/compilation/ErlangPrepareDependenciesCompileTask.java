@@ -19,6 +19,7 @@ package org.intellij.erlang.compilation;
 import com.intellij.compiler.server.BuildManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.diagnostic.Logger;
@@ -39,7 +40,6 @@ import com.intellij.util.graph.InboundSemiGraph;
 import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializationException;
 import com.intellij.util.xmlb.XmlSerializer;
-import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.jps.builder.ErlangBuilderUtil;
@@ -65,7 +65,20 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   @Override
   public boolean execute(final CompileContext context) {
     Project project = context.getProject();
-    if (ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled()) {
+    CompileScope scope = context.getCompileScope();
+    if (!ErlangCompilationUtil.hasErlangModules(scope)) {
+      return true;
+    }
+    String compileServerPluginProblem = ErlangCompilationUtil.findCompileServerPluginProblem();
+    if (compileServerPluginProblem != null) {
+      // Without the JPS plugin the build process copies .erl files to the output and reports success (#1077).
+      LOG.warn(compileServerPluginProblem);
+      context.addMessage(CompilerMessageCategory.ERROR,
+                         compileServerPluginProblem + ", so Erlang modules can't be compiled. Reinstall the Erlang plugin.",
+                         null, -1, -1);
+      return false;
+    }
+    if (!ErlangCompilationUtil.hasModulesCompiledWithErlc(project, scope)) {
       // delegate dependencies resolution to rebar
       return true;
     }

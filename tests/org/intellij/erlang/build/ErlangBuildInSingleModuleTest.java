@@ -17,10 +17,15 @@
 package org.intellij.erlang.build;
 
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.compiler.CompilerMessage;
+import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertNotEquals;
 
@@ -41,6 +46,17 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     addSourceFile(myModule, "parse_transform1.erl", ErlangModuleTextGenerator.pt("parse_transform1").build());
     addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").pt("parse_transform1").build());
     compileAndAssertOutput(false);
+  }
+
+  // #1028: with "Compile project with rebar" on, a module without rebar.config used to be skipped silently.
+  public void testModuleWithoutRebarConfigIsCompiledWithErlcWhenRebarIsEnabled() throws Exception {
+    ErlangCompilerSettings.getInstance(myProject).setUseRebarCompilerEnabled(true);
+    addSourceFile(myModule, "parse_transform1.erl", ErlangModuleTextGenerator.pt("parse_transform1").build());
+    addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").pt("parse_transform1").build());
+    List<CompilerMessage> messages = myCompilationRunner.compile();
+    assertSourcesCompiled(myModule, false);
+    assertTrue(ContainerUtil.exists(messages, m -> m.getCategory() == CompilerMessageCategory.WARNING &&
+                                                   m.getMessage().contains("rebar.config is not found")));
   }
 
   public void testBuildWithBehaviour() throws Exception {

@@ -18,6 +18,9 @@ package org.intellij.erlang.jps;
 
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.ErlangCompilerOptions;
+import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +33,7 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
+import java.util.List;
 
 public class ErlangBuilderTest extends JpsBuildTestCase {
   public void testSimple() {
@@ -42,6 +46,40 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
 
   public void testAppSrcFilesAreCopiedToOutputDirectory() {
     doSingleFileTest("src/simple.app.src", "", "simple.app");
+  }
+
+  public void testWarningsDoNotFailBuild() {
+    String file = createFile("src/simple.erl", "-module(simple). foo() -> ok.");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    result.assertSuccessful();
+    assertTrue(ContainerUtil.exists(result.getWarnMessages(), m -> m.getMessageText().contains("function foo/0 is unused")));
+    assertCompiled("m", "simple.beam");
+  }
+
+  public void testErlcFailureWithoutRecognizedErrorFailsBuild() {
+    ErlangCompilerOptions options = setCompilerOptions();
+    options.myAdditionalErlcArguments = List.of("+{bad");
+    String file = createFile("src/simple.erl", "-module(simple).");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    assertTrue(ContainerUtil.exists(result.getErrorMessages(), m -> m.getMessageText().contains("erlc finished with exit code")));
+  }
+
+  public void testModuleWithoutRebarConfigIsCompiledWithErlcWhenRebarIsEnabled() {
+    setCompilerOptions().myUseRebarCompiler = true;
+    String file = createFile("src/simple.erl", "-module(simple).");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    result.assertSuccessful();
+    assertTrue(ContainerUtil.exists(result.getWarnMessages(), m -> m.getMessageText().contains("rebar.config is not found in module 'm'")));
+    assertCompiled("m", "simple.beam");
+  }
+
+  private ErlangCompilerOptions setCompilerOptions() {
+    ErlangCompilerOptions options = new ErlangCompilerOptions();
+    myModel.getProject().getContainer().setChild(JpsErlangCompilerOptionsExtension.ROLE, new JpsErlangCompilerOptionsExtension(options));
+    return options;
   }
 
   private void doSingleFileTest(String relativePath, String text, String expectedOutputFileName) {

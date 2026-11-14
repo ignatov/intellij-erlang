@@ -53,6 +53,14 @@ public class BuildResult implements MessageHandler {
     return myErrorMessages.isEmpty();
   }
 
+  public List<BuildMessage> getErrorMessages() {
+    return myErrorMessages;
+  }
+
+  public List<BuildMessage> getWarnMessages() {
+    return myWarnMessages;
+  }
+
   public void assertSuccessful() {
     Function<BuildMessage, String> toStringFunction = message -> message.toString();
     assertTrue("Build failed. \nErrors:\n" + StringUtil.join(myErrorMessages, toStringFunction, "\n") +

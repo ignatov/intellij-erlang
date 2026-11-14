@@ -24,6 +24,7 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.projectRoots.impl.SdkConfigurationUtil;
@@ -36,6 +37,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.CompilerTester;
 import com.intellij.testFramework.HeavyPlatformTestCase;
@@ -64,6 +66,7 @@ import java.util.List;
 @Ignore
 public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   protected CompilationRunner myCompilationRunner;
+  private Sdk myErlangSdk;
 
   @Override
   protected void setUp() throws Exception {
@@ -81,6 +84,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     if (sdk == null) {
       fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
     }
+    myErlangSdk = sdk;
 
     // Erlang SDK can contain symlinks to files outside the allowed root set.
     // So we remove all roots from the sdk as we don't need SDK contents anyway.
@@ -99,7 +103,12 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   @Override
   protected void tearDown() throws Exception {
     try {
-      myCompilationRunner.tearDown();
+      // CompilerTester disposes itself together with the test root disposable.
+      if (myErlangSdk != null) {
+        Sdk sdk = myErlangSdk;
+        myErlangSdk = null;
+        ApplicationManager.getApplication().runWriteAction(() -> ProjectJdkTable.getInstance().removeJdk(sdk));
+      }
     }
     finally {
       super.tearDown();
@@ -190,9 +199,9 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     assertContains(getOutputDirectory(module, tests), ContainerUtil.mapNotNull(sources, ErlangCompilationTestBase::getExpectedOutputFileName));
   }
 
-  private static void assertContains(@Nullable VirtualFile parentPath, List<String> fileNames) {
-    assertNotNull(parentPath);
-    List<String> actual = getChildrenNames(parentPath);
+  private static void assertContains(@NotNull File outputDirectory, List<String> fileNames) {
+    String[] children = outputDirectory.list();
+    List<String> actual = children != null ? Arrays.asList(children) : List.of();
     assertUnorderedElementsAreEqual(actual, fileNames);
   }
 
@@ -202,10 +211,9 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
 
   @Nullable
   protected static File getOutputFile(Module module, VirtualFile sourceFile, boolean isTest) {
-    VirtualFile outputDirectory = getOutputDirectory(module, isTest);
-    assertNotNull(outputDirectory);
+    File outputDirectory = getOutputDirectory(module, isTest);
     String expectedOutputFileName = getExpectedOutputFileName(sourceFile.getName());
-    return expectedOutputFileName == null ? null : new File(outputDirectory.getCanonicalPath(), expectedOutputFileName);
+    return expectedOutputFileName == null ? null : new File(outputDirectory, expectedOutputFileName);
   }
 
   protected static long lastOutputModificationTime(@NotNull Module module, @NotNull VirtualFile sourceFile) {
@@ -225,9 +233,10 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   private static VirtualFile addSourceRoot(@NotNull Module module,
                                            @NotNull String sourceRootName,
                                            @NotNull JpsModuleSourceRootType<?> rootType) throws IOException {
-    VirtualFile moduleFile = module.getModuleFile();
-    assertNotNull(moduleFile);
-    PsiTestUtil.addContentRoot(module, moduleFile.getParent());
+    // The .iml file is not written to disk until the project is saved, so use its directory instead.
+    VirtualFile moduleDir = VfsUtil.createDirectoryIfMissing(module.getModuleNioFile().getParent().toString());
+    assertNotNull(moduleDir);
+    PsiTestUtil.addContentRoot(module, moduleDir);
     VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
     assertSize(1, contentRoots);
 
@@ -254,11 +263,14 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     return ArrayUtil.toStringArray(result);
   }
 
-  @Nullable
-  private static VirtualFile getOutputDirectory(@NotNull Module module, boolean isTest) {
+  // Use java.io.File rather than VirtualFile: CompilerTester fails if the output directories get loaded into the VFS.
+  @NotNull
+  private static File getOutputDirectory(@NotNull Module module, boolean isTest) {
     CompilerModuleExtension instance = CompilerModuleExtension.getInstance(module);
     assertNotNull(instance);
-    return isTest ? instance.getCompilerOutputPathForTests() : instance.getCompilerOutputPath();
+    String outputUrl = isTest ? instance.getCompilerOutputUrlForTests() : instance.getCompilerOutputUrl();
+    assertNotNull(outputUrl);
+    return new File(VfsUtilCore.urlToPath(outputUrl));
   }
 
   @Nullable
@@ -293,7 +305,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
       myTester = new CompilerTester(myProject, Arrays.asList(scope.getAffectedModules()), getTestRootDisposable());
     }
 
-    public void compile() {
+    public List<CompilerMessage> compile() {
       List<CompilerMessage> messages = myTester.make(myScope);
       for (CompilerMessage message : messages) {
         switch (message.getCategory()) {
@@ -313,14 +325,11 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
             throw new AssertionError();
         }
       }
+      return messages;
     }
 
     public void touch(@NotNull VirtualFile file) throws IOException {
       myTester.touch(file);
-    }
-
-    public void tearDown() {
-      myTester.tearDown();
     }
   }
 }
