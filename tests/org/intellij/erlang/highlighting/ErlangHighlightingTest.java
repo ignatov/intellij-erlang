@@ -85,6 +85,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test605()               { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
+  public void testBasedIntegers()         { doTest(); }
+  public void testBasedIntegersErrors()   { doTest(); }
+  public void testHexEscapeCodePoints()   { doTest(); }
+  public void testHexEscapeCodePointsErrors() { doTest(); }
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
