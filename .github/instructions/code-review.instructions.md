@@ -31,6 +31,12 @@ The project rules are in `AGENTS.md` at the repository root. Review against them
    - tests deleted or disabled (`@Ignore`, a `_test` rename, a new `Assume`), or assertions weakened.
 9. **Scope.** Flag changes unrelated to the stated purpose: refactors, reformatting, renames, dependency bumps or documentation churn.
 10. **Stop-and-ask areas** (listed in `AGENTS.md`): `.github/`, versioning and change notes, build files, `grammars/` and `gen/`, stub and index versions, the plugin descriptors and `jps-plugin/`. If the PR touches one and its description does not call it out, say so. A parser or lexer fix may change `grammars/erlang.bnf`, `Erlang.flex` and `gen/`: check it against "Parser and lexer fixes" in `AGENTS.md` instead. It needs a parser test that fails without the change, an `erlc` result for the snippet, and a reason for every changed `testData/parser/*.txt` dump.
+11. **Specs** ("Specs" in `AGENTS.md`).
+    - A bug fix must add a scenario for the corrected behaviour to `openspec/specs/<capability>/spec.md`, through a change `fix-<issue>-<what>` that the same PR archives under `openspec/changes/archive/`. Flag a fix without one, a fix change left open, and a change in `openspec/specs/` that no archived delta of the PR explains.
+    - The scenario must match the test: the test it names exists in the PR, and its `testData` shows the behaviour that the scenario states.
+    - The scenario must match erlc: run erlc on the snippet when Erlang is available and compare the result with what the scenario says; otherwise report that it is not checked.
+    - Flag spec text for behaviour that the PR does not change, and scenarios of the requirement that disappeared or occur twice.
+    - A baseline PR (`baseline-<capability>-<slice>`) changes nothing outside `openspec/`. Every requirement names an existing test; flag a requirement that no test proves, and a missing "Not covered by tests" list in its `design.md`.
 
 ## How to report
 - Report only concrete defects. For each one give the file and line, what goes wrong, and a scenario that triggers it: the input, the thread, or the IDE state.

@@ -11,17 +11,25 @@ context: |
   rules, the definition of done and the areas that need the maintainer's consent. It applies to every change.
   The Erlang compiler is the reference for behaviour: when it is unclear what the plugin should do, it does what
   erlc does.
-  A proposal and its implementation are separate pull requests. The maintainer approves proposal.md by merging
-  the proposal; nothing is implemented before that.
+  Specs grow from the work that is done. There are three kinds of change:
+  - A feature or a change of user-visible behaviour: a proposal with all four artifacts. The proposal and its
+    implementation are separate pull requests. The maintainer approves proposal.md by merging the proposal;
+    nothing is implemented before that.
+  - A bug fix: a change `fix-<issue>-<what>` that has only `.openspec.yaml` and a delta spec. It is created and
+    archived inside the pull request of the fix, after the test and the fix. No proposal.md, design.md or tasks.md,
+    no "Open decisions", no approval before the fix.
+  - A baseline of existing behaviour: a change `baseline-<capability>-<slice>` that has a delta spec and a
+    design.md. It is created and archived in a pull request of its own that changes nothing outside `openspec/`.
 
 # Rules per artifact. OpenSpec accepts only the artifact ids of the schema as keys (proposal, specs, design,
 # tasks); a plain list under `rules` is ignored with a warning.
 rules:
   proposal:
     - >-
-      A change needs specs when it adds a feature or changes behaviour that a user can see. A bug fix needs no
-      OpenSpec change at all: its failing test is the spec. Refactoring, tooling and documentation changes that
-      someone still wants to plan set `skip_specs: true` in `.openspec.yaml` and have no delta specs.
+      Write proposal.md only for a feature or a change of behaviour that a user can see. A bug fix and a
+      baseline of existing behaviour have no proposal.md: the pull request description says why. Refactoring,
+      tooling and documentation changes that someone still wants to plan set `skip_specs: true` in
+      `.openspec.yaml` and have no delta specs.
     - >-
       Name capabilities after lasting feature areas, never after the work item. Take the name from the areas the
       project already has: the `feat:*` issue labels (navigation, completion, inspections, formatter, syntax,
@@ -38,7 +46,7 @@ rules:
       The maintainer's direction is a lexer that substitutes macros; such a change waits for that design. Say so
       in the proposal and stop.
     - >-
-      End with a section "Open decisions" that lists every decision the maintainer has to take, each with the
+      End a proposal with a section "Open decisions" that lists every decision the maintainer has to take, each with the
       options and the proposed one. The maintainer approves proposal.md before the implementation starts.
     - >-
       Say what the change does to find usages, rename, completion, the stub and file-based indices and the
@@ -53,21 +61,44 @@ rules:
       One mismatch with erlc is accepted and is not a defect: the IDE treats a `.ERL` file as an Erlang file,
       erlc refuses it ("Unknown extension").
     - >-
-      Write specs only for the behaviour that this change adds or changes. Do not add requirements for existing
-      behaviour that stays as it is.
+      A bug fix and a baseline have no tasks.md, so every scenario names the test that proves it, as
+      `Class.testMethod`, in its last step: in a bug fix the test that the fix adds, in a baseline a test that
+      exists and passes. A proposal names the tests in tasks.md.
+    - >-
+      Check what erlc does by running it on the snippet of the scenario; do not write it from memory. Where
+      erlc rejects the snippet for a reason that the requirement is not about, say so in the scenario.
+    - >-
+      A proposal and a bug fix specify only the behaviour that the pull request adds or changes: no
+      requirements for existing behaviour that stays as it is. A bug fix states the corrected behaviour and
+      nothing else.
+    - >-
+      A baseline specifies only existing behaviour that an existing test proves, one area or one slice of an
+      area per change. Keep the slice small enough to be read in one sitting: what one test class proves, or a
+      part of it, and at most about five requirements. Behaviour that the code has but no test proves is not
+      specified; it goes into design.md.
+    - >-
+      The first change that touches a capability creates it: `## Purpose` and `## ADDED Requirements`. A later
+      one has no `## Purpose`. To add a scenario to an existing requirement, copy the whole requirement block
+      from `openspec/specs/<capability>/spec.md` under `## MODIFIED Requirements` and add the scenario at its
+      end; a block that leaves out an existing scenario is refused. A new requirement goes under
+      `## ADDED Requirements`.
     - >-
       Use the capability paths of the proposal. Do not specify parser behaviour that depends on macros or on the
       preprocessor one special case at a time.
   design:
     - >-
       Write design.md only as far as the requirements need it. Where the IDE cannot do what erlc does, say what
-      it does instead and why.
+      it does instead and why. A bug fix has no design.md.
+    - >-
+      The design.md of a baseline has a section "Not covered by tests": every behaviour of the slice that the
+      code has and no test proves, one line each with the class that has it. It is the input for later test
+      work. Leave the other sections of the template out unless they are needed.
     - >-
       Name every area of the "Stop and ask the maintainer" list of AGENTS.md that the implementation will touch.
   tasks:
     - >-
-      Every scenario of the delta specs names the test that will prove it, as `Class.testMethod` with its
-      `testData` files. A scenario without a test is not done.
+      Only a proposal has tasks.md. Every scenario of the delta specs names the test that will prove it, as
+      `Class.testMethod` with its `testData` files. A scenario without a test is not done.
     - >-
       Follow the definition of done of AGENTS.md: a test fails before the change and passes after it, and
       `./gradlew test` passes. Include the version bumps that AGENTS.md asks for (stub version, index versions).
@@ -82,5 +113,8 @@ operations:
   archive:
     guidance:
       - >-
-        Archive only after the implementation is merged into master, in a pull request of its own that contains
-        nothing else. `openspec/specs/` changes only through archiving.
+        A proposal is archived only after its implementation is merged into master, in a pull request of its
+        own that contains nothing else. A bug fix and a baseline are archived in the pull request that creates
+        them: `openspec archive <name> --yes`, then `openspec validate --all --strict --no-interactive`.
+        `openspec/specs/` changes only through archiving; the one edit by hand is to keep both sides when two
+        pull requests conflict in the same spec.
