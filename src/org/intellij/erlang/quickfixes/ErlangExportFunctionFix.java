@@ -42,7 +42,6 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -85,6 +84,16 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   @Override
+  public boolean isAvailable(@NotNull Project project,
+                             @NotNull PsiFile file,
+                             @NotNull PsiElement startElement,
+                             @NotNull PsiElement endElement) {
+    return !(startElement instanceof ErlangFunction function) ||
+           !(file instanceof ErlangFile erlangFile) ||
+           canBeExported(erlangFile, function);
+  }
+
+  @Override
   public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project,
                                                        @NotNull Editor editor,
                                                        @NotNull PsiFile file) {
@@ -96,11 +105,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @Nullable Editor editor) {
     if (!(function.getContainingFile() instanceof ErlangFile file)) return;
 
-    var macroDefinition = getLastMacroDefinition(file, function);
-    var exports = getExportsBelow(getExportPsiElements(file), macroDefinition);
+    if (!canBeExported(file, function)) return;
+
+    var macroAnchor = getMacroExportAnchor(file, function);
+    var exports = getExportsBelow(file, getExportPsiElements(file), macroAnchor);
 
     if (exports.isEmpty()) {
-      createNewExport(project, file, function, macroDefinition);
+      createNewExport(project, file, function, macroAnchor);
       return;
     }
 
@@ -262,24 +273,80 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   /**
-   * For a function whose name is a macro, returns the last {@code -define} of that macro in the file.
-   * The macro must be defined above any export entry that uses it.
+   * For a function whose name is a macro defined in this file, returns the element after which its export entry may go:
+   * the last {@code -define} of that macro above the function or, when that {@code -define} is inside
+   * {@code -ifdef}/{@code -ifndef}/{@code -if}, the {@code -endif} that closes the outermost block.
+   * Returns {@code null} when the usual placement applies.
    */
   @Nullable
-  static ErlangMacrosDefinition getLastMacroDefinition(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+  static PsiElement getMacroExportAnchor(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
     var macros = function.getAtomName().getMacros();
     var macrosName = macros != null ? macros.getMacrosName() : null;
     if (macrosName == null) return null;
 
     var name = ErlangPsiImplUtil.getNameIdentifier(macrosName).getText();
-    return ContainerUtil.findLast(file.getMacroses(), definition -> name.equals(definition.getName()));
+    var functionOffset = function.getTextRange().getStartOffset();
+    var definition = ContainerUtil.findLast(
+      file.getMacroses(),
+      d -> name.equals(d.getName()) && d.getTextRange().getEndOffset() <= functionOffset);
+    if (definition == null) return null;
+
+    var definitionOffset = definition.getTextRange().getStartOffset();
+    var depth = getConditionalDepth(file, definitionOffset);
+    if (depth == 0) return definition;
+
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      if (attribute.getTextRange().getStartOffset() < definitionOffset) continue;
+      depth += getConditionalDepthChange(attribute);
+      if (depth == 0) return attribute;
+    }
+    return definition;
+  }
+
+  /**
+   * erlc rejects an {@code -export} below a function definition, so a macro-named function whose macro is defined
+   * (or whose conditional block ends) below the first function of the file cannot be exported.
+   */
+  public static boolean canBeExported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var anchor = getMacroExportAnchor(file, function);
+    return anchor == null || anchor.getTextRange().getEndOffset() <= getFirstFunctionOffset(file);
   }
 
   @NotNull
-  static List<ErlangExport> getExportsBelow(@NotNull List<ErlangExport> exports, @Nullable PsiElement element) {
-    if (element == null) return exports;
-    var offset = element.getTextRange().getEndOffset();
-    return ContainerUtil.filter(exports, export -> export.getTextRange().getStartOffset() >= offset);
+  static List<ErlangExport> getExportsBelow(@NotNull ErlangFile file,
+                                            @NotNull List<ErlangExport> exports,
+                                            @Nullable PsiElement anchor) {
+    if (anchor == null) return exports;
+    var anchorOffset = anchor.getTextRange().getEndOffset();
+    var firstFunctionOffset = getFirstFunctionOffset(file);
+    return ContainerUtil.filter(exports, export -> {
+      var offset = export.getTextRange().getStartOffset();
+      return offset >= anchorOffset && offset < firstFunctionOffset && getConditionalDepth(file, offset) == 0;
+    });
+  }
+
+  private static int getFirstFunctionOffset(@NotNull ErlangFile file) {
+    var first = ContainerUtil.getFirstItem(file.getFunctions());
+    return first != null ? first.getTextRange().getStartOffset() : Integer.MAX_VALUE;
+  }
+
+  private static int getConditionalDepth(@NotNull ErlangFile file, int offset) {
+    var depth = 0;
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      if (attribute.getTextRange().getStartOffset() >= offset) break;
+      depth += getConditionalDepthChange(attribute);
+    }
+    return depth;
+  }
+
+  private static int getConditionalDepthChange(@NotNull ErlangAttribute attribute) {
+    var directive = PsiTreeUtil.nextVisibleLeaf(attribute.getOpMinus());
+    var text = directive != null ? directive.getText() : "";
+    return switch (text) {
+      case "ifdef", "ifndef", "if" -> 1;
+      case "endif" -> -1;
+      default -> 0;
+    };
   }
 
   @NotNull

@@ -51,6 +51,15 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testMacroDefinedTwice()      { doTest("Export function"); }
   public void testMacroSeveralExports()    { doTest("Export function"); }
   public void testMacroNotDefined()        { doTest("Export function"); }
+  public void testMacroRedefinedBelowFunction()   { doTest("Export function"); }
+  public void testMacroDefinedInIfdef()           { doTest("Export function"); }
+  public void testMacroDefinedInIfdefWithExport() { doTest("Export function"); }
+
+  public void testMacroDefinedAfterFunction() {
+    myFixture.configureByFile("macroDefinedAfterFunction.erl");
+    assertNoIntentionsAvailable("Export function", "no -export can be placed below the -define and above the functions");
+  }
+
   public void testQuotedAtomWithExport() { doTest("Export function"); }
   public void testQuotedAtomWithout()    { doTest("Export function"); }
 
@@ -82,9 +91,9 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     myFixture.configureByFile("macroSeveralExports.erl");
     var file = (ErlangFile) myFixture.getFile();
     var function = file.getFunctions().getLast();
-    var definition = ErlangExportFunctionFix.getLastMacroDefinition(file, function);
-    assertNotNull(definition);
-    var exports = ErlangExportFunctionFix.getExportsBelow(ErlangExportFunctionFix.getExportPsiElements(file), definition);
+    var anchor = ErlangExportFunctionFix.getMacroExportAnchor(file, function);
+    assertNotNull(anchor);
+    var exports = ErlangExportFunctionFix.getExportsBelow(file, ErlangExportFunctionFix.getExportPsiElements(file), anchor);
     assertEquals(1, exports.size());
     assertEquals("[another/0]", exports.getFirst().getExportFunctions().getText());
   }
