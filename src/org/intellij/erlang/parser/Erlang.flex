@@ -61,7 +61,7 @@ BasedDigits = [0-9a-zA-Z]+ ( _[0-9a-zA-Z]+ )*
 BasedFloatLiteral = [0-9]{1,2} "#" {BasedDigits} "." {BasedDigits} ("#" {ExponentPart})?
 
 OctalEscape = \\ [0-7]{1,3}
-ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */ 
+ControlName = [@A-Z\[\\\]\^_a-z?] /* \100 - \137, \141 - \172 and ? (\^? is DEL) */
 ControlEscape = \\ \^ {ControlName}
 EscapeSequence = \\\" | "\\b" | "\\d" | "\\e" | "\\f" | "\\n" | "\\r" | "\\s" | "\\t" | "\\v" | "\\'" | "\\\\" | "\\[" | "\\{" | "\\]" | "\\}" | "\\`" | "\\$" | "\\=" | "\\%" | "\\," | "\\." | "\\_" | {ControlEscape} | {OctalEscape}
 
