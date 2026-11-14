@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getCaseHeadBindingRepeatedInPattern;
 
 public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
@@ -43,6 +44,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
     ResolveUtil.treeWalkUp(place, processor);
     List<ErlangQVar> result = processor.getAllResults();
+    if (result.size() == 1) return PsiElementResolveResult.createResults(getCaseHeadBindingRepeatedInPattern(result.get(0)));
     if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
 
     ErlangModule module = getErlangModule();

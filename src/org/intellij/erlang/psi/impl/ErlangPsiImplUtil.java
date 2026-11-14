@@ -49,6 +49,9 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
@@ -1061,8 +1064,17 @@ public class ErlangPsiImplUtil {
     return true;
   }
 
-  @SuppressWarnings("UnusedParameters")
+  private static final Key<Boolean> ALL_CASE_HEAD_MATCHES = Key.create("ERLANG_ALL_CASE_HEAD_MATCHES");
+
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    ErlangExpression head = o.getExpression();
+    // the head is evaluated before the clauses: nothing bound in the clauses is visible from it
+    if (head != null && lastParent == head) return true;
+    // variables bound in the head are visible in the clauses and after 'end'
+    if (head != null) {
+      PsiScopeProcessor headProcessor = caseHeadBindingsOnly(processor, !Boolean.TRUE.equals(state.get(ALL_CASE_HEAD_MATCHES)));
+      if (!head.processDeclarations(headProcessor, state, null, place)) return false;
+    }
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
@@ -1070,6 +1082,74 @@ public class ErlangPsiImplUtil {
       if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
     }
     return result;
+  }
+
+  /**
+   * Offers only the variables that the head of a case expression binds: matched variables that do not resolve
+   * to an earlier binding. A re-match of an already bound variable is skipped, so that uses resolve to that binding.
+   */
+  @NotNull
+  private static PsiScopeProcessor caseHeadBindingsOnly(@NotNull PsiScopeProcessor processor, boolean skipRematches) {
+    return (element, state) -> {
+      if (element instanceof ErlangQVar) {
+        if (!inLeftPartOfAssignment(element)) return true;
+        if (skipRematches && isBoundBefore((ErlangQVar) element)) return true;
+      }
+      return processor.execute(element, state);
+    };
+  }
+
+  /**
+   * Whether a variable of the same name is already bound where {@code var} occurs.
+   * Any earlier case head match counts: if it is a re-match itself, the variable is bound even earlier.
+   * This keeps the check free of nested resolves.
+   */
+  private static boolean isBoundBefore(@NotNull ErlangQVar var) {
+    return CachedValuesManager.getCachedValue(var, () -> {
+      ErlangVarProcessor processor = new ErlangVarProcessor(var.getText(), var);
+      ResolveState state = ResolveState.initial().put(ALL_CASE_HEAD_MATCHES, Boolean.TRUE);
+      ErlangLcExpression lc = PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class);
+      PsiElement place = ObjectUtils.chooseNotNull(lc, var);
+      PsiElement lastParent = null;
+      PsiElement run = place;
+      while (run != null) {
+        if (run != place && !run.processDeclarations(processor, state, lastParent, place)) break;
+        lastParent = run;
+        run = run.getParent();
+      }
+      return CachedValueProvider.Result.create(!processor.getAllResults().isEmpty(), PsiModificationTracker.MODIFICATION_COUNT);
+    });
+  }
+
+  /**
+   * A variable in a clause pattern that repeats a variable bound in the head of a case expression
+   * (for example {@code case X = f() of X -> X end}), or the variable itself when it does not.
+   */
+  @NotNull
+  public static ErlangQVar getCaseHeadBindingRepeatedInPattern(@NotNull ErlangQVar var) {
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(var, ErlangArgumentDefinition.class);
+    if (pattern == null || !(pattern.getParent() instanceof ErlangCrClause)) return var;
+    if (!inClausesOfCaseWithHeadVariable(var)) return var;
+    PsiElement binding = RecursionManager.doPreventingRecursion(var, false, () -> var.getReference().resolve());
+    if (!(binding instanceof ErlangQVar)) return var;
+    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(binding, ErlangCaseExpression.class);
+    if (caseExpression == null || !PsiTreeUtil.isAncestor(caseExpression.getExpression(), binding, false)) return var;
+    return (ErlangQVar) binding;
+  }
+
+  private static boolean inClausesOfCaseWithHeadVariable(@NotNull ErlangQVar var) {
+    String name = var.getText();
+    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(var, ErlangCaseExpression.class);
+    while (caseExpression != null) {
+      ErlangExpression head = caseExpression.getExpression();
+      if (head != null && !PsiTreeUtil.isAncestor(head, var, false)) {
+        for (ErlangQVar headVar : PsiTreeUtil.findChildrenOfType(head, ErlangQVar.class)) {
+          if (name.equals(headVar.getText())) return true;
+        }
+      }
+      caseExpression = PsiTreeUtil.getParentOfType(caseExpression, ErlangCaseExpression.class);
+    }
+    return false;
   }
 
   @SuppressWarnings("UnusedParameters")
