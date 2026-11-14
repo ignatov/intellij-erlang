@@ -17,14 +17,17 @@
 package org.intellij.erlang.resolve;
 
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -62,6 +65,30 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
   public void testFunParameterInSpawnMonitor() { doParameterTest("test.erl", "test.erl", "foo", 1); }
+
+  public void testExportOfImportedFunction()      { doUnresolvedExportTest("test.erl", "incl.erl"); }
+  public void testExportOfAutoImportedBif()       { doUnresolvedExportTest("test.erl"); }
+  public void testExportOfLocalImportedFunction() { doExportTest("test.erl", "test.erl", "incl.erl"); }
+  public void testExportOfIncludedFunction()      { doExportTest("test.erl", "incl.hrl"); }
+
+  private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
+    String[] files = {focusedFile, expectedFile};
+    myFixture.configureByFiles(ArrayUtil.mergeArrays(files, otherFiles));
+
+    ErlangExportFunction exportFunction = getElementAtCaret(ErlangExportFunction.class);
+    String name = ErlangPsiImplUtil.getExportFunctionName(exportFunction);
+    int arity = ErlangPsiImplUtil.getArity(exportFunction.getInteger());
+
+    assertResolvesTo(exportFunction.getReference(), expectedFile, name, arity);
+  }
+
+  private void doUnresolvedExportTest(@NotNull String... files) {
+    myFixture.configureByFiles(files);
+
+    PsiReference reference = getElementAtCaret(ErlangExportFunction.class).getReference();
+    assertNull(reference.resolve());
+    assertEmpty(((PsiPolyVariantReference) reference).multiResolve(false));
+  }
 
   private void doFunctionCallTest(@NotNull String focusedFile, @NotNull String expectedFile,
                                   @NotNull String... otherFiles) {

@@ -83,6 +83,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
   public void test605()               { doTest(); }
+  public void test536()               { doTest("536.erl", "536.hrl"); }
+  public void testExportPseudoFunctions() { doTest(); }
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
@@ -157,4 +159,5 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
   public void testFunctionImportFromInclusion()           { doTestWithApp(); }
+  public void testExportFromInclusion()                   { doTestWithApp(); }
 }
