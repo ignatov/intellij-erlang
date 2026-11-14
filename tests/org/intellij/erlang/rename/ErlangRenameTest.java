@@ -17,6 +17,7 @@
 package org.intellij.erlang.rename;
 
 import com.intellij.openapi.util.text.StringUtil;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -47,6 +48,40 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
   public void testQuotedModule()       { doTest("quotedModule-after", true); }
+
+  public void testFileRenameToErl()          { doFileRenameTest("fileRenameToErlNew.erl"); }
+  public void testFileRenameToUpperCaseErl() { doFileRenameTest("fileRenameToUpperCaseErlNew.ERL"); }
+  public void testFileRenameToBak()          { doFileRenameTest("fileRenameToBak.erl.bak"); }
+  public void testFileRenameToHrl()          { doFileRenameTest("fileRenameToHrlNew.hrl"); }
+  public void testFileRenameToSameNameHrl()  { doFileRenameTest("fileRenameToSameNameHrl.hrl"); }
+
+  public void testFileRenameToErlWithReferences() { doFileRenameWithReferencesTest("fileRenameToErlWithReferencesNew.erl"); }
+  public void testFileRenameToBakWithReferences() { doFileRenameWithReferencesTest("fileRenameToBakWithReferences.erl.bak"); }
+
+  public void testFileRenameToBakAndBack() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    myFixture.renameElement(myFixture.getFile(), getTestName(true) + ".erl.bak");
+    myFixture.renameElement(myFixture.getFile(), getTestName(true) + ".erl");
+    assertEquals(getTestName(true) + ".erl", myFixture.getFile().getName());
+    assertInstanceOf(myFixture.getFile(), ErlangFile.class);
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  private void doFileRenameTest(String newFileName) {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    myFixture.renameElement(myFixture.getFile(), newFileName);
+    assertEquals(newFileName, myFixture.getFile().getName());
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  private void doFileRenameWithReferencesTest(String newFileName) {
+    String caller = getTestName(true) + "Caller";
+    myFixture.configureByFiles(getTestName(true) + ".erl", caller + ".erl");
+    myFixture.renameElement(myFixture.getFile(), newFileName);
+    assertEquals(newFileName, myFixture.getFile().getName());
+    myFixture.checkResultByFile(caller + ".erl", caller + "-after.erl", false);
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
 
   private void doTest(String newName) {
     doTest(newName, false);

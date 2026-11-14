@@ -1,0 +1,3 @@
+-module(fileRenameToErlWithReferencesNew).
+
+f() -> ok.

@@ -1,0 +1,3 @@
+-module(fileRenameToSameNameHrl).
+
+f() -> ok.
