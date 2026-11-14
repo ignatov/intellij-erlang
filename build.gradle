@@ -102,7 +102,7 @@ allprojects {
   intellijPlatformTesting.testIde.register('testCompilation') {
     task {
       group = 'verification'
-      description = 'Runs the Erlang JPS and external build tests; requires -Derlang.sdk.path=<Erlang root>.'
+      description = 'Runs the Erlang JPS and external build tests; requires -Derlang.sdk.path=<Erlang root>, -Drebar.path=<rebar3 escript> is optional.'
       environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
       useJUnitPlatform()
       include compilationPackages
@@ -110,6 +110,8 @@ allprojects {
         exceptionFormat = 'full'
       }
       systemProperty 'erlang.sdk.path', System.getProperty('erlang.sdk.path', '')
+      // The rebar tests run a real rebar3 build when this is set to the rebar3 escript and are skipped otherwise.
+      systemProperty 'rebar.path', System.getProperty('rebar.path', '')
     }
   }
   // Custom test tasks get their own dependency configurations; reuse the test frameworks declared for `test`.

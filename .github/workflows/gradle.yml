@@ -36,7 +36,7 @@ jobs:
         if-no-files-found: error
 
   compilation-tests:
-    # JPS and external build tests: they run erlc, and the IDE starts a real build process that loads the
+    # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
     # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).
     runs-on: ubuntu-latest
 
@@ -52,11 +52,31 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends erlang-nox erlang-dev
+    - name: Install rebar3
+      # The official escript, pinned and checked against the sha256 that GitHub publishes for the release asset.
+      # rebar3 3.28.0 supports Erlang/OTP 27 to 29.
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
     - name: Run compilation tests
       run: |
         erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
         echo "Erlang/OTP $(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().') at $erlang_root"
-        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root"
+        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root" -Drebar.path="$REBAR3_PATH"
+        # The rebar tests skip themselves without rebar; here every test has to run.
+        skipped="$(grep -L 'skipped="0"' build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml || true)"
+        if [[ -n "$skipped" ]]; then
+          echo "::error::Compilation tests were skipped in: $skipped"
+          exit 1
+        fi
     - name: Upload test reports
       if: failure()
       uses: actions/upload-artifact@v7

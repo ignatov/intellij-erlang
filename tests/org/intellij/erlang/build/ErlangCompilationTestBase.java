@@ -54,7 +54,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
-import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +62,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-@Ignore
 public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
   protected CompilationRunner myCompilationRunner;
   private Sdk myErlangSdk;
@@ -265,7 +263,7 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
 
   // Use java.io.File rather than VirtualFile: CompilerTester fails if the output directories get loaded into the VFS.
   @NotNull
-  private static File getOutputDirectory(@NotNull Module module, boolean isTest) {
+  protected static File getOutputDirectory(@NotNull Module module, boolean isTest) {
     CompilerModuleExtension instance = CompilerModuleExtension.getInstance(module);
     assertNotNull(instance);
     String outputUrl = isTest ? instance.getCompilerOutputUrlForTests() : instance.getCompilerOutputUrl();
@@ -305,8 +303,12 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
       myTester = new CompilerTester(myProject, Arrays.asList(scope.getAffectedModules()), getTestRootDisposable());
     }
 
+    public List<CompilerMessage> compileWithoutAssertions() {
+      return myTester.make(myScope);
+    }
+
     public List<CompilerMessage> compile() {
-      List<CompilerMessage> messages = myTester.make(myScope);
+      List<CompilerMessage> messages = compileWithoutAssertions();
       for (CompilerMessage message : messages) {
         switch (message.getCategory()) {
           case ERROR:

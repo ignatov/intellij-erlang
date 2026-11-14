@@ -22,6 +22,7 @@ import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.incremental.CompileContext;
@@ -42,6 +43,8 @@ import java.util.*;
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
   public static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+  private static final String ERL_COMPILER_OPTIONS = "ERL_COMPILER_OPTIONS";
+  private static final String TESTS_REBAR_PATH_PROPERTY = "rebar.path";
 
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
@@ -111,9 +114,11 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     command.add("compile");
 
     Map<String, String> environment = null;
-    if (addDebugInfo) {
+    if (addDebugInfo && System.getenv(ERL_COMPILER_OPTIONS) == null) {
+      // The compiler reads its default options from ERL_COMPILER_OPTIONS, so this works for rebar and rebar3 and
+      // overrides no_debug_info in erl_opts. ERL_FLAGS="+debug_info", used before, is an emulator flag and had no effect.
       environment = new HashMap<>();
-      environment.put("ERL_FLAGS", "+debug_info");
+      environment.put(ERL_COMPILER_OPTIONS, "[debug_info]");
     }
 
     File workingDirectory = contentRootPath != null ? new File(contentRootPath) : null;
@@ -124,6 +129,15 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     if (exitCode != 0) {
       throw new ProjectBuildException("Rebar process finished with exit code " + exitCode);
     }
+  }
+
+  /**
+   * The rebar or rebar3 escript for the tests that run a real rebar build, set with -Drebar.path=...; null if unset.
+   */
+  @TestOnly
+  @Nullable
+  public static String getTestsRebarPath() {
+    return StringUtil.nullize(System.getProperty(TESTS_REBAR_PATH_PROPERTY), true);
   }
 
   @Nullable
