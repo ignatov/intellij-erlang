@@ -20,6 +20,7 @@ import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.ide.scratch.ScratchUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -279,6 +280,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   @Override
   public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+    if (FileTypeRegistry.getInstance().getFileTypeByFileName(name) != ErlangFileType.MODULE) {
+      return super.setName(name);
+    }
     String nameWithoutExtension = FileUtil.getNameWithoutExtension(name);
 
     for (ErlangAttribute moduleAttributes : getAttributes()) {
