@@ -49,7 +49,7 @@ ErlangDigit = [0-9]
 InputCharacter = [^\n]
 
 DecimalLiteral = [0-9]+ ( _[0-9]+ )*
-ExplicitRadixLiteral = [0-9]{1,2} "#" [0-9a-zA-Z]+
+ExplicitRadixLiteral = [0-9]{1,2} "#" {BasedDigits}
 
 IntegerLiteral = {DecimalLiteral} | {ExplicitRadixLiteral}
 
