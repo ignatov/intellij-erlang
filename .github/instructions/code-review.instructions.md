@@ -9,7 +9,7 @@ The project rules are in `AGENTS.md` at the repository root. Review against them
 
 ## Check every pull request for
 1. **Hand-edited generated code.** A change in `gen/` must match a change in `grammars/erlang.bnf` or `src/org/intellij/erlang/parser/Erlang.flex` in the same PR.
-2. **Grammar or lexer changed without regeneration.** If the `.bnf` or `.flex` changed but `gen/` did not, or the changes don't correspond, that is a defect. Also flag a rule added or renamed without its `gen/` PSI class, or a token without its `ErlangTypes` constant.
+2. **Grammar or lexer changed without regeneration.** If the `.bnf` or `.flex` changed but `gen/` did not, or the changes don't correspond, that is a defect. Also flag a rule that generates PSI added or renamed without its `gen/` PSI class, or a token without its `ErlangTypes` constant. `private` rules generate only a parser method and no PSI class; do not flag those.
 3. **Stub shape changed without a version bump.** Changes to `stubs/types/*` (`serialize`, `deserialize`, `createStub`, `shouldCreateStub`), to bnf `stubClass` or stubbed rules, or to a parser change that alters stubbed elements need `VERSION` in `ErlangFileElementType` bumped. Changed index keys, values or externalizers need their index `VERSION` or `INDEX_VERSION` bumped. Also flag code where the stub path and the AST path return different results.
 4. **Threading.** Look for:
    - PSI, VFS or index access outside a read action;
