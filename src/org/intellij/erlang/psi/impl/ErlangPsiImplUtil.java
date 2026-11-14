@@ -1803,7 +1803,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getCallbackSpecArity(@NotNull ErlangCallbackSpec spec) {
-    ErlangFunTypeSigs sigs = spec.getFunTypeSigs();
+    ErlangFunTypeSigs sigs = getFunTypeSigs(spec);
     ErlangSpecFun fun = sigs != null ? sigs.getSpecFun() : null;
     Integer arity = fun != null ? getArity(fun) : null;
     return arity != null ? arity : -1;
