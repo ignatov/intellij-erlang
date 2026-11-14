@@ -1,0 +1,122 @@
+name: Release 253
+
+# Maintenance releases for IntelliJ IDEA 2025.3 (platform 253) from the release/0.11-253 branch.
+# A tag push runs the workflow file from the tagged commit, so only tags on this branch use it.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag on release/0.11-253 to publish, e.g. v0.11.1268'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: refs/tags/${{ inputs.tag || github.ref_name }}
+
+    - name: Derive build number from tag
+      id: version
+      run: |
+        if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+          echo "::error::Tag '$RELEASE_TAG' must look like v<version>.<build>, e.g. v0.11.1268"
+          exit 1
+        fi
+        tag_version="${BASH_REMATCH[1]}"
+        build_number="${BASH_REMATCH[2]}"
+        gradle_version="$(sed -nE 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' gradle.properties)"
+        if [[ "$tag_version" != "$gradle_version" ]]; then
+          echo "::error::Tag version '$tag_version' does not match version '$gradle_version' in gradle.properties"
+          exit 1
+        fi
+        echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+        echo "plugin_version=$gradle_version.$build_number" >> "$GITHUB_OUTPUT"
+        echo "Publishing plugin version $gradle_version.$build_number"
+
+    - name: Check Marketplace token and existing upload
+      id: marketplace
+      env:
+        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+      run: |
+        if [[ -z "$PUBLISH_TOKEN" ]]; then
+          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set"
+          exit 1
+        fi
+        # On a re-run after a failed GitHub release step, do not upload the same version again.
+        if curl -fsS 'https://plugins.jetbrains.com/api/plugins/7083/updates?size=50' \
+            | jq -e --arg v "$PLUGIN_VERSION" 'any(.[]; .version == $v)' > /dev/null; then
+          echo "::notice::$PLUGIN_VERSION is already on Marketplace, skipping upload"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "published=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+
+    - name: Build and publish plugin
+      if: steps.marketplace.outputs.published != 'true'
+      env:
+        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: ./gradlew --no-daemon clean buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
+
+    - name: Build plugin
+      if: steps.marketplace.outputs.published == 'true'
+      env:
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: ./gradlew --no-daemon clean buildPlugin -PbuildNumber="$BUILD_NUMBER"
+
+    - name: Create GitHub release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+      run: |
+        zip="build/distributions/intellij-erlang-$PLUGIN_VERSION.zip"
+        if [[ ! -f "$zip" ]]; then
+          echo "::error::Expected plugin archive $zip was not built"
+          ls -l build/distributions || true
+          exit 1
+        fi
+        perl -0777 -ne '
+          if (m{<change-notes>(.*?)</change-notes>}s) {
+            my $notes = $1;
+            while ($notes =~ m{<li>(.*?)</li>}sg) {
+              my $item = $1;
+              $item =~ s/<[^>]+>//g;
+              $item =~ s/\s+/ /g;
+              $item =~ s/^ | $//g;
+              print "- $item\n";
+            }
+          }
+        ' plugin/resources/META-INF/plugin.xml > release-notes.md
+        printf '\nFor IntelliJ IDEA 2025.3 (build 253.*).\n\nhttps://plugins.jetbrains.com/plugin/7083\n' >> release-notes.md
+        cat release-notes.md
+        gh release create "$RELEASE_TAG" "$zip" \
+          --verify-tag \
+          --latest=false \
+          --title "$RELEASE_TAG" \
+          --notes-file release-notes.md
