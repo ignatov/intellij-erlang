@@ -10,6 +10,7 @@ Plugin id `org.jetbrains.erlang`. It is built against IntelliJ IDEA 2026.3 (plat
 - `tests/`: the tests. `testData/<area>/`: their fixtures. `testData/mockSdk-*`: the mock Erlang SDKs.
 - `resources/META-INF/ErlangPlugin.xml`: every extension registration. `plugin/resources/META-INF/plugin.xml`: the id, the dependencies and `<change-notes>`; it `xi:include`s `ErlangPlugin.xml`.
 - `jps-plugin/`: the external build (JPS) plugin, loaded by the compile server. It is compiled to Java 11 bytecode, with its tests in `jps-plugin/tests/`.
+- `grammar-generator/`: a Gradle module that only hosts the runner of the parser generator. It is not part of the plugin.
 - `libs/OtpErlang.jar`: a vendored library. `resources/debugger/beams/*`: committed `.beam` files built from `resources/debugger/src`.
 
 ## Commands
@@ -25,6 +26,8 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 | Plugin Verifier | `./gradlew verifyPlugin` |
 | Compilation tests (need Erlang/OTP and rebar3) | `./gradlew testCompilation -Derlang.sdk.path="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')" -Drebar.path="$(command -v rebar3)"` |
 | JPS Java 11 check | `./gradlew :jps-plugin:verifyJpsJava11Compatibility` |
+| Regenerate `gen/` | `./gradlew generateLexerAndParser` |
+| Check that `gen/` is up to date (CI runs it) | `./gradlew verifyGeneratedSources` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.
@@ -34,7 +37,9 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 ## Generated code
 - Grammar-Kit generates `gen/org/intellij/erlang/{ErlangTypes.java,parser/ErlangParser.java,psi/**}` from `grammars/erlang.bnf`.
 - JFlex 1.9.2, the IntelliJ-patched one that Grammar-Kit bundles, generates `gen/org/intellij/erlang/parser/_ErlangLexer.java` from `Erlang.flex`.
-- No Gradle task generates them. The maintainer regenerates them in the IDE with the Grammar-Kit plugin ("Generate Parser Code" on the `.bnf`, "Run JFlex Generator" on the `.flex`) and commits the output.
+- `./gradlew generateLexerAndParser` regenerates the lexer, parser, `ErlangTypes` and PSI in place from `Erlang.flex` and `grammars/erlang.bnf`. It reads `psiImplUtilClass`, the mixins and the stub classes from the sources, as "Generate Parser Code" does in the IDE, and does not need the plugin to compile.
+- `./gradlew verifyGeneratedSources` generates them into the build directories and fails if the committed `gen/` differs. CI runs it.
+- After deleting `gen/`, or when a generated signature depends on a PSI type that does not exist yet, run `generateLexerAndParser` a second time and check that the second run changes nothing.
 - Never hand-edit `gen/`. A grammar or lexer change ships in the same commit as the regenerated `gen/` and the updated `testData/parser/*.txt` golden files. If you cannot run the generator, do not change the grammar; stop and say so.
 - Handwritten PSI logic goes in `ErlangPsiImplUtil` (the bnf `psiImplUtilClass`) or in mixins under `src/`. Stubbed rules are wired through `stubClass` and `ErlangElementTypeFactory` in the bnf.
 

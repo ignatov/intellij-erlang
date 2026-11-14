@@ -34,6 +34,9 @@ jobs:
         name: intellij-erlang-plugin
         path: build/distributions/*.zip
         if-no-files-found: error
+    - name: Verify generated lexer, parser and PSI
+      # Regenerates gen/ from Erlang.flex and grammars/erlang.bnf into build/ and fails if the committed gen/ differs.
+      run: ./gradlew --no-daemon verifyGeneratedSources
 
   compilation-tests:
     # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
