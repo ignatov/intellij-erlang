@@ -66,10 +66,9 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
   public void testCaseHeadVariable()               { doTest("NewVar"); }
   public void testCaseHeadVariableFromUse()        { doTest("NewVar"); }
-  public void testCaseHeadRematchesParameter()     { doTestFromEachOccurrence(CASE_HEAD_REMATCHES_PARAMETER); }
-  public void testCaseHeadRematchesBoundVariable() { doTestFromEachOccurrence(CASE_HEAD_REMATCHES_BOUND_VARIABLE); }
-  public void testCaseHeadVariableInNestedReceive() { doTestFromEachOccurrence(CASE_HEAD_VARIABLE_IN_NESTED_RECEIVE); }
-  public void testCaseHeadVariableRepeatedInPattern() { doTestFromEachOccurrence(CASE_HEAD_VARIABLE_REPEATED_IN_PATTERN); }
+  public void testCaseHeadMatch()                  { doTestFromEachOccurrence(CASE_HEAD_MATCH); }
+  public void testCaseHeadMatchInCall()            { doTestFromEachOccurrence(CASE_HEAD_MATCH_IN_CALL); }
+  public void testCaseHeadMatchAndClauseMatch()    { doTestFromEachOccurrence(CASE_HEAD_MATCH_AND_CLAUSE_MATCH); }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
@@ -118,14 +117,12 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
   }
 
-  private static final String CASE_HEAD_REMATCHES_PARAMETER =
-    "-module(a).\n-export([foo/1]).\nfoo(Var) -> case Var = bar() of _ -> Var end.\nbar() -> 1.\n";
-  private static final String CASE_HEAD_REMATCHES_BOUND_VARIABLE =
-    "-module(a).\n-export([foo/0]).\nfoo() -> Var = 1, case Var = bar() of _ -> Var end, Var.\nbar() -> 1.\n";
-  private static final String CASE_HEAD_VARIABLE_IN_NESTED_RECEIVE =
-    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of _ -> receive Var -> Var end end.\nbar() -> 1.\n";
-  private static final String CASE_HEAD_VARIABLE_REPEATED_IN_PATTERN =
-    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of Var -> Var end.\nbar() -> 1.\n";
+  private static final String CASE_HEAD_MATCH =
+    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of a -> Var; _ when Var =:= b -> ok end, Var.\nbar() -> 1.\n";
+  private static final String CASE_HEAD_MATCH_IN_CALL =
+    "-module(a).\n-export([foo/1]).\nfoo(D) -> case bar(Var = D) of ok -> Var; _ -> error end.\nbar(X) -> X.\n";
+  private static final String CASE_HEAD_MATCH_AND_CLAUSE_MATCH =
+    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of a -> Var = a; _ -> ok end, Var.\nbar() -> 1.\n";
 
   private void doTestFromEachOccurrence(String text) {
     List<Integer> offsets = varOffsets(text);

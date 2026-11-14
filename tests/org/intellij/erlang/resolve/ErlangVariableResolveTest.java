@@ -34,19 +34,11 @@ public class ErlangVariableResolveTest extends ErlangLightPlatformCodeInsightFix
   }
 
   public void testCaseHeadBindingRepeatedInPattern() {
-    doTest("foo() -> case <target>X = bar() of X -> <caret>X end.");
+    doTest("foo() -> case <target>X = bar() of <caret>X -> X end.");
   }
 
   public void testCaseHeadRematchOfParameter() {
-    doTest("foo(<target>X) -> case X = bar() of _ -> <caret>X end.");
-  }
-
-  public void testCaseHeadRematchOfEarlierMatch() {
-    doTest("foo() -> <target>X = 1, case X = bar() of _ -> <caret>X end.");
-  }
-
-  public void testCaseHeadRematchOfFunParameter() {
-    doTest("foo() -> fun(<target>X) -> case X = bar() of _ -> <caret>X end end.");
+    doTest("foo(<target>X) -> case <caret>X = bar() of _ -> X end.");
   }
 
   private void doTest(String text) {

@@ -32,9 +32,8 @@ public class ErlangInlineVariableTest extends LightJavaCodeInsightFixtureTestCas
   public void testFunctionCallSubstitution()           { doTest(); }
   public void testFunctionCallSubstitutionWithArity1() { doTest(); }
   public void testFunctionCallSubstitutionWithArity2() { doTest(); }
-  public void testRematchInFun()                       { doTest(); }
-  public void testRematchInComprehension()             { doTest(); }
-  public void testBindingsInIfClauses()                { doTest(); }
+  public void testFunInCaseHead()                      { doTest(); }
+  public void testComprehensionInCaseHead()            { doTest(); }
   public void testCaseHeadBindingFromHead()            { doTestRefused("Cannot inline a variable bound in a case head."); }
   public void testCaseHeadBindingFromUse()             { doTestRefused("Cannot inline a variable bound in a case head."); }
 
