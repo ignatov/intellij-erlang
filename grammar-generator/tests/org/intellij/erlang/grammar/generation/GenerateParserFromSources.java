@@ -46,7 +46,9 @@ import java.lang.reflect.InvocationTargetException;
 /**
  * Not a test: runs Grammar-Kit's "Generate Parser Code" on grammars/erlang.bnf the way the IDE does, so that
  * psiImplUtilClass, mixins and stub classes are read from the Java sources in src/ and gen/. The Gradle task
- * generateParserFromSources runs it with the Grammar-Kit plugin on the classpath; the test task excludes it.
+ * generateParserFromSources of the grammar-generator project runs it with the Grammar-Kit plugin on the classpath.
+ * It refers to no class of the Erlang plugin, which is not compiled for it: Java PSI reads src/ and gen/ even when they
+ * don't compile.
  * <p>
  * In unit test mode Grammar-Kit defaults to the long local names (builder_, level_) instead of the short ones of the
  * IDE, hence names="short" in the bnf.
@@ -71,8 +73,6 @@ public class GenerateParserFromSources extends LightJavaCodeInsightFixtureTestCa
         for (String path : new String[]{"src", "gen"}) {
           VirtualFile root = fileSystem.refreshAndFindFileByIoFile(new File(PROJECT_DIR, path));
           assertNotNull(path, root);
-          // The VFS and the indices persist in the test sandbox between runs; pick up the files changed since then.
-          VfsUtil.markDirtyAndRefresh(false, true, true, root);
           model.addContentEntry(root).addSourceFolder(root, false);
         }
         Library.ModifiableModel library = model.getModuleLibraryTable().createLibrary("compileClasspath").getModifiableModel();
@@ -87,7 +87,7 @@ public class GenerateParserFromSources extends LightJavaCodeInsightFixtureTestCa
     };
   }
 
-  public void testGenerateParser() throws Exception {
+  public void testGenerateParser() throws Throwable {
     assertFalse("grammarKit.projectDir is not set", PROJECT_DIR.isEmpty());
     assertFalse("grammarKit.outputDir is not set", OUTPUT_DIR.isEmpty());
     IndexingTestUtil.waitUntilIndexesAreReady(getProject());
@@ -126,7 +126,7 @@ public class GenerateParserFromSources extends LightJavaCodeInsightFixtureTestCa
       generatorClass.getMethod("generate").invoke(generator);
     }
     catch (InvocationTargetException e) {
-      throw (Exception)e.getCause();
+      throw e.getCause();
     }
   }
 }
