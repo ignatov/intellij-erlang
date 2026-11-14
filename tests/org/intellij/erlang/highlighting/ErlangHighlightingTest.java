@@ -58,6 +58,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
   public void testIllegalPattern()    { doTest(); }
+  public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
+  public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
