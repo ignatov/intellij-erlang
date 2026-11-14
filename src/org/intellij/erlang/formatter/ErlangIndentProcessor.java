@@ -125,6 +125,11 @@ public class ErlangIndentProcessor {
     if (parent.getPsi() instanceof ErlangListOpExpression && (grandfather == null || grandfather.getPsi() instanceof ErlangExpression)) {
       return Indent.getNormalIndent();
     }
+    if (parentType == ERL_TOP_TYPE && prevSibling != null) {
+      boolean grandfatherContainerNormal = ErlangFormattingBlock.isContainerNormal(grandfatherType);
+      return ErlangFormattingBlock.isContainerContinuation(grandfatherType, grandfatherContainerNormal) ?
+             Indent.getContinuationIndent() : Indent.getNormalIndent();
+    }
     if (parentType == ERL_PREFIX_EXPRESSION) {
       return Indent.getNoneIndent();
     }
