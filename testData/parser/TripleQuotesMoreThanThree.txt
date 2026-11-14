@@ -1,0 +1,27 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('f')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_STRING_LITERAL
+          PsiElement(string)('""""\n  a """ inside\n  """"')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('g')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_STRING_LITERAL
+          PsiElement(sigil_string)('~""""\n  b """ inside\n  """"')
+    PsiElement(.)('.')
