@@ -65,7 +65,8 @@ ControlName = [@A-Z\[\\\]\^_a-z?] /* \100 - \137, \141 - \172 and ? (\^? is DEL)
 ControlEscape = \\ \^ {ControlName}
 /* Any other character after a backslash stands for itself (or for its control code, as \n does); \x and \^ have their own forms */
 GenericEscape = \\ [^x\^]
-EscapeSequence = {GenericEscape} | {ControlEscape} | {OctalEscape}
+HexEscape = \\ x ( [0-9a-fA-F]{2} | \{ [0-9a-fA-F]+ \} )
+EscapeSequence = {GenericEscape} | {ControlEscape} | {OctalEscape} | {HexEscape}
 
 CharLiteralChar = {InputCharacter} | {EscapeSequence} | (\\ {WhitespaceChar})
 CharLiteral = \$ {CharLiteralChar} | \$
