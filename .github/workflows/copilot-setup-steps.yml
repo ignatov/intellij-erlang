@@ -31,15 +31,51 @@ jobs:
         distribution: temurin
         java-version: '25'
         cache: gradle
-    # Same packages as the compilation-tests job of gradle.yml, so that the agent can run testCompilation.
+    # The setup steps run outside the agent firewall, which does not allow the JetBrains hosts the IntelliJ
+    # Platform, its test dependencies and the Plugin Verifier come from. Resolve all of them now by running
+    # one small test class, buildPlugin and verifyPlugin. It runs before the Erlang steps because it does not
+    # need Erlang, so a broken Erlang or rebar3 install cannot skip it.
+    - name: Resolve dependencies and warm up the build
+      run: ./gradlew --no-daemon test --tests 'org.intellij.erlang.parser.ErlangAppParserTest' buildPlugin verifyPlugin
+    # A pinned Erlang/OTP from builds.hex.pm rather than apt, so that the agent can run testCompilation with the
+    # rebar3 below, which needs OTP 27 to 29. The agent session does not run on the image that runs-on gives a
+    # normal run: run 43591669649 got ubuntu-24.04, where apt has OTP 25, while ubuntu-latest runs got
+    # ubuntu-26.04 with OTP 27. OTP 27 is also what apt gives the compilation-tests job of gradle.yml.
+    # The links in /usr/local/bin put this Erlang on PATH without GITHUB_PATH.
     - name: Install Erlang/OTP
+      id: erlang
+      if: ${{ !cancelled() }}
+      env:
+        OTP_VERSION: '27.3.4.9'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends erlang-nox erlang-dev
-        erl -noshell -eval 'io:put_chars(code:root_dir()), halt().'
+        . /etc/os-release
+        base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
+        sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::$base/builds.txt has no OTP-$OTP_VERSION"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "$base/OTP-$OTP_VERSION.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
     # Same pinned escript and sha256 as the compilation-tests job. It is put on PATH rather than in GITHUB_ENV, which is
     # not documented to reach the agent, so the agent passes -Drebar.path="$(command -v rebar3)" to testCompilation.
     - name: Install rebar3
+      if: ${{ !cancelled() && steps.erlang.outcome == 'success' }}
       env:
         REBAR3_VERSION: '3.28.0'
         REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
@@ -48,9 +84,10 @@ jobs:
         curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
         echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
         sudo install -m 755 "$rebar3" /usr/local/bin/rebar3
-        rebar3 version
-    # The setup steps run outside the agent firewall, which does not allow the JetBrains hosts the IntelliJ
-    # Platform, its test dependencies and the Plugin Verifier come from. Resolve all of them now by running
-    # one small test class, buildPlugin and verifyPlugin.
-    - name: Resolve dependencies and warm up the build
-      run: ./gradlew --no-daemon test --tests 'org.intellij.erlang.parser.ErlangAppParserTest' buildPlugin verifyPlugin
+        command -v rebar3
+        version=$(rebar3 version)
+        echo "$version"
+        case "$version" in
+          "rebar $REBAR3_VERSION on Erlang/OTP "*) ;;
+          *) echo "::error::rebar3 version printed no rebar $REBAR3_VERSION"; exit 1 ;;
+        esac
