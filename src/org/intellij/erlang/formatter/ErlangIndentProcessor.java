@@ -126,9 +126,13 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_TOP_TYPE && prevSibling != null) {
-      boolean grandfatherContainerNormal = ErlangFormattingBlock.isContainerNormal(grandfatherType);
-      return ErlangFormattingBlock.isContainerContinuation(grandfatherType, grandfatherContainerNormal) ?
-             Indent.getContinuationIndent() : Indent.getNormalIndent();
+      boolean inContainerNormal = ErlangFormattingBlock.isContainerNormal(grandfatherType);
+      boolean inContainerContinuation = ErlangFormattingBlock.isContainerContinuation(grandfatherType, inContainerNormal);
+      if (inContainerNormal || inContainerContinuation) {
+        if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return Indent.getNoneIndent();
+        return inContainerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
+      }
+      return Indent.getNormalIndent();
     }
     if (parentType == ERL_PREFIX_EXPRESSION) {
       return Indent.getNoneIndent();
