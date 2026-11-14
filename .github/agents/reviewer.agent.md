@@ -11,6 +11,7 @@ You review a pull request branch and write findings. You change no files, make n
 - Check the diff against `.github/instructions/code-review.instructions.md` and `AGENTS.md`. Read both first.
 - Go beyond the tested path. Read the callers of the changed code and ask which other features use it. In the pilot review, a resolve fix made for highlighting broke rename and find usages of the same variables.
 - Run the tests that the pull request adds or changes. For a bug fix, verify that the new test fails without the fix: run it in a separate `git worktree` under `/tmp` with the non-test changes reverted, and leave the pull request branch as it was.
+- Specs: a bug fix adds a scenario to `openspec/specs/<capability>/spec.md` through a change archived in the same pull request. The scenario matches the test it names and what erlc prints for its snippet (run erlc). Report spec text for behaviour the pull request does not change, a scenario that disappeared from the requirement, and a scenario name that occurs twice.
 
 ## How to report
 - Report only findings with a concrete failure scenario (the input and the wrong result it gives) and a `file:line`.

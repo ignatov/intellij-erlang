@@ -12,6 +12,7 @@ Follow `AGENTS.md`. This profile adds the order of work and how to report it.
 3. Make the smallest fix that removes the root cause.
 4. Run the new test without the fix and with it, then run `./gradlew test`.
 5. Check the neighbouring behaviour that the fix can reach and add tests for it. For a resolve change, that is highlighting, rename, find usages and completion of the same elements.
+6. Record the corrected behaviour in the spec of its area, as "A bug fix" in the Specs section of `AGENTS.md` says: `openspec new change fix-<issue>-<what>`, write only `specs/<capability>/spec.md`, run erlc on the snippet of every scenario, name the test you added in the last step of the scenario, then `openspec validate --all --strict --no-interactive` and `openspec archive fix-<issue>-<what> --yes`. Commit `openspec/specs/` and `openspec/changes/archive/` with the fix. Specify only the behaviour the fix changes.
 
 ## When to stop
 If the task needs anything from the "Stop and ask the maintainer" list in `AGENTS.md`, stop and say what is needed and why. Do not guess.
