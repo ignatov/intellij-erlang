@@ -1,0 +1,3 @@
+-include("536.hrl").
+-import(io, [format/1]).
+-export([<error descr="Unresolved function format/1">format/1</error>, <error descr="Unresolved function self/0">self/0</error>, from_hrl/0]).

@@ -29,6 +29,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testQuotedFunction()    { doTest("bar"); }
   public void testQuoteFunctionName() { doTest("BAR"); }
 
+  public void testImportedFunctionInExport() {
+    myFixture.configureByFiles("importedFunctionInExport.erl", "importedFunctionInExportUser.erl");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResultByFile("importedFunctionInExport-after.erl");
+    myFixture.checkResultByFile("importedFunctionInExportUser.erl", "importedFunctionInExportUser-after.erl", false);
+  }
+
   public void testUnquotedMacro()     { doTest("bar"); }
   public void testQuotedMacro()       { doTest("bar"); }
   public void testUnderscoreMacro()   { doTest("Foo"); }

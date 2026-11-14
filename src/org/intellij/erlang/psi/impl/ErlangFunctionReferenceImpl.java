@@ -77,12 +77,18 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
     if (declaredFunction != null) return declaredFunction;
 
-    ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
-    if (fromImport != null) return fromImport;
+    boolean inExport = isInExport();
+    if (!inExport) {
+      ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
+      if (fromImport != null) return fromImport;
+    }
 
     List<ErlangFunction> declaredInIncludes =
       ErlangPsiImplUtil.getErlangFunctionsFromIncludes(file, false, myReferenceName, myArity);
     if (!declaredInIncludes.isEmpty()) return ContainerUtil.getFirstItem(declaredInIncludes);
+
+    // an -export entry names a function defined in the module itself, not an imported or auto-imported one
+    if (inExport) return null;
 
     List<ErlangImportFunction> importedInIncludes =
       ErlangPsiImplUtil.getImportsFromIncludes(file, false, myReferenceName, myArity);
@@ -120,15 +126,20 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       PsiFile containingFile = getElement().getContainingFile();
       if (containingFile instanceof ErlangFile erlangFile) {
         result = new ArrayList<>();
+        boolean inExport = isInExport();
 
-        for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
-          if (myReferenceName.equals(ErlangPsiImplUtil.getName(importFunction))) {
-            ContainerUtil.addIfNotNull(result, resolveImport(importFunction));
+        if (!inExport) {
+          for (ErlangImportFunction importFunction : erlangFile.getImportedFunctions()) {
+            if (myReferenceName.equals(ErlangPsiImplUtil.getName(importFunction))) {
+              ContainerUtil.addIfNotNull(result, resolveImport(importFunction));
+            }
           }
         }
 
         result.addAll(erlangFile.getFunctionsByName(myReferenceName));
-        result.addAll(getErlangFunctionsFromModule("erlang"));
+        if (!inExport) {
+          result.addAll(getErlangFunctionsFromModule("erlang"));
+        }
       }
       else {
         result = ContainerUtil.emptyList();
@@ -144,6 +155,10 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       result.addAll(file.getFunctionsByName(myReferenceName));
     }
     return result;
+  }
+
+  private boolean isInExport() {
+    return getElement() instanceof ErlangExportFunction;
   }
 
   private boolean suppressResolve() {
