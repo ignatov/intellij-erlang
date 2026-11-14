@@ -27,7 +27,7 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 | JPS Java 11 check | `./gradlew :jps-plugin:verifyJpsJava11Compatibility` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
-- The CI job `compilation-tests` runs `testCompilation` with `erlang-nox erlang-dev` from apt and the pinned rebar3 escript (version and sha256 are in `gradle.yml`). It fails if any test was skipped.
+- The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.
 - The rebar tests skip themselves when `rebar.path` is unset. The Copilot setup steps put `rebar3` on `PATH`, so `command -v rebar3` finds it.
 - `verifyPlugin` checks only against the IDE that is built against. It fails on compatibility problems, missing dependencies, an invalid plugin and override-only API usages.
 

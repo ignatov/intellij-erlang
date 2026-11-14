@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v7
@@ -38,7 +38,7 @@ jobs:
   compilation-tests:
     # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
     # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v7
@@ -49,9 +49,34 @@ jobs:
         java-version: '25'
         cache: gradle
     - name: Install Erlang/OTP
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
+      env:
+        OTP_VERSION: '27.3.4.9'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends erlang-nox erlang-dev
+        . /etc/os-release
+        base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
+        sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::$base/builds.txt has no OTP-$OTP_VERSION"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "$base/OTP-$OTP_VERSION.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
     - name: Install rebar3
       # The official escript, pinned and checked against the sha256 that GitHub publishes for the release asset.
       # rebar3 3.28.0 supports Erlang/OTP 27 to 29.
@@ -90,7 +115,7 @@ jobs:
   nightly:
     needs: [build, compilation-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     concurrency:
