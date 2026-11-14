@@ -41,7 +41,7 @@ import java.util.*;
 
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
-  private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+  public static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
 
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
@@ -59,6 +59,15 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
     if (!compilerOptions.myUseRebarCompiler) return;
 
+    if (!hasRebarConfig(module)) {
+      // ErlangBuilder compiles such modules with erlc instead of skipping them, see #1028.
+      String messageText = "rebar.config is not found in module '" + module.getName() + "', so it is compiled with erlc. " +
+                           "Add rebar.config to the module content root to compile it with rebar, " +
+                           "or turn off 'Compile project with rebar' in the Erlang Compiler settings.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, messageText));
+      return;
+    }
+
     String rebarPath = getRebarExecutablePath(project);
     if (rebarPath == null) {
       String errorMessage = "Rebar path is not set";
@@ -68,19 +77,21 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
-    boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
-      String contentRootPath = JpsPathUtil.urlToPath(contentRootUrl);
-      File contentRootDir = JpsPathUtil.urlToFile(contentRootUrl);
-      File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
-      if (!rebarConfigFile.exists()) continue;
-      runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
-      isRebarRun = true;
+      if (!hasRebarConfig(contentRootUrl)) continue;
+      runRebar(escriptPath, rebarPath, JpsPathUtil.urlToPath(contentRootUrl), compilerOptions.myAddDebugInfoEnabled, context);
     }
-    if (!isRebarRun) {
-      String messageText = "Skipped module '" + module.getName() + "' because rebar.config is not found.";
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, messageText));
+  }
+
+  public static boolean hasRebarConfig(@NotNull JpsModule module) {
+    for (String contentRootUrl : module.getContentRootsList().getUrls()) {
+      if (hasRebarConfig(contentRootUrl)) return true;
     }
+    return false;
+  }
+
+  private static boolean hasRebarConfig(@NotNull String contentRootUrl) {
+    return new File(JpsPathUtil.urlToFile(contentRootUrl), REBAR_CONFIG_FILE_NAME).isFile();
   }
 
   @NotNull

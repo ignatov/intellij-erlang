@@ -22,6 +22,7 @@ import com.intellij.util.CommonProcessors;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.*;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
@@ -68,7 +69,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
     ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
-    if (compilerOptions.myUseRebarCompiler) return;
+    // RebarBuilder compiles modules that have rebar.config; erlc still compiles the rest, see #1028.
+    if (compilerOptions.myUseRebarCompiler && RebarBuilder.hasRebarConfig(module)) return;
 
     LOG.info("Build module " + target.getPresentableName());
     File sourceOutput = getBuildOutputDirectory(module, false, context);
@@ -177,7 +179,12 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     
     BuilderProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, "");
     int exitCode = ProcessRunner.runProcess(command, outputDirectory, null, adapter);
-    
+    if (exitCode != 0 && !adapter.isErrorReported()) {
+      // Don't let a failed erlc run pass for a successful build when its output didn't contain a recognizable error.
+      String message = "erlc finished with exit code " + exitCode + " while compiling module \"" + target.getModule().getName() + "\".";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, message));
+    }
+
     registerBeams(outputConsumer, erlangModulePathsToCompile, outputDirectory);
   }
 

@@ -46,10 +46,10 @@ public class ErlangModuleBuildOrderTargetType extends BuildTargetType<ErlangModu
       @Nullable
       @Override
       public ErlangModuleBuildOrderTarget createTarget(@NotNull String targetId) {
-        if (targetId.equals(model.getProject().getName())) {
-          return new ErlangModuleBuildOrderTarget(model.getProject(), ErlangModuleBuildOrderTargetType.this);
-        }
-        return null;
+        // There is exactly one build order target per project. The IDE sends its own project name as the id, which
+        // need not match the JPS project name (e.g. for .ipr projects or a renamed project), so accept any id.
+        // Rejecting it would skip the build order target and erlc would compile files in an arbitrary order.
+        return new ErlangModuleBuildOrderTarget(model.getProject(), ErlangModuleBuildOrderTargetType.this);
       }
     };
   }

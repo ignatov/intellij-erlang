@@ -35,6 +35,38 @@ jobs:
         path: build/distributions/*.zip
         if-no-files-found: error
 
+  compilation-tests:
+    # JPS and external build tests: they run erlc, and the IDE starts a real build process that loads the
+    # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+    - name: Install Erlang/OTP
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends erlang-nox erlang-dev
+    - name: Run compilation tests
+      run: |
+        erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        echo "Erlang/OTP $(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().') at $erlang_root"
+        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root"
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compilation-test-reports
+        path: |
+          build/reports/tests/testCompilation
+          jps-plugin/build/reports/tests/testCompilation
+          .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
+
   nightly:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'

@@ -47,6 +47,36 @@ public class ErlangCompilerErrorTest extends UsefulTestCase {
     );
   }
 
+  public void testMatchesErrorWithColumn() {
+    doRegexMatchTest(
+      "src/simple.erl:3:7: syntax error before: ')'",
+      "src/simple.erl",
+      "3",
+      null,
+      "syntax error before: ')'"
+    );
+  }
+
+  public void testMatchesWarningWithColumn() {
+    doRegexMatchTest(
+      "simple.erl:1:18: Warning: function foo/0 is unused",
+      "simple.erl",
+      "1",
+      " Warning:",
+      "function foo/0 is unused"
+    );
+  }
+
+  public void testMatchesWarningWithColumnOnWindows() {
+    doRegexMatchTest(
+      "c:/work/src/simple.erl:12:5: Warning: variable 'X' is unused",
+      "c:/work/src/simple.erl",
+      "12",
+      " Warning:",
+      "variable 'X' is unused"
+    );
+  }
+
   private static void doRegexMatchTest(
     @NotNull String erlcMessage,
     @Nullable String path,

@@ -97,16 +97,24 @@ allprojects {
     }
   }
 
-  task testCompilation(type: Test, group: 'Verification', dependsOn: [classes, testClasses]) {
-    useJUnit {
+  // The compilation tests need the same IDE classpath and sandbox as `test`, so let the IntelliJ Platform
+  // Gradle plugin create and configure the task instead of declaring a plain Test task.
+  intellijPlatformTesting.testIde.register('testCompilation') {
+    task {
+      group = 'verification'
+      description = 'Runs the Erlang JPS and external build tests; requires -Derlang.sdk.path=<Erlang root>.'
+      environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
+      useJUnitPlatform()
       include compilationPackages
+      testLogging {
+        exceptionFormat = 'full'
+      }
+      systemProperty 'erlang.sdk.path', System.getProperty('erlang.sdk.path', '')
     }
-    testLogging {
-      exceptionFormat = 'full'
-    }
-    systemProperties = [
-      "erlang.sdk.path": System.getProperty("erlang.sdk.path")
-    ]
+  }
+  // Custom test tasks get their own dependency configurations; reuse the test frameworks declared for `test`.
+  configurations.matching { it.name == 'intellijPlatformTestDependencies_testCompilation' }.configureEach {
+    extendsFrom(configurations.intellijPlatformTestDependencies)
   }
 }
 
@@ -163,6 +171,79 @@ afterEvaluate {
   tasks.named('check') {
     dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
   }
+}
+
+// The external build process loads the Erlang JPS plugin from the jars listed in
+// <compileServer.plugin classpath="..."/>, resolved against the lib/ directory of the installed plugin.
+// If a name doesn't match the packaged jar, the IDE only logs an internal error, the build process doesn't know
+// Erlang modules and a build copies the .erl files to the output directory and reports success (#1077).
+def verifyCompileServerPluginLayout = tasks.register('verifyCompileServerPluginLayout') {
+  group = 'verification'
+  description = 'Verifies that the plugin ZIP contains the jars that compileServer.plugin puts on the build process classpath.'
+  def pluginZip = tasks.named('buildPlugin').flatMap { it.archiveFile }
+  inputs.file(pluginZip)
+
+  doLast {
+    def readEntries = { InputStream jarStream ->
+      def result = [:]
+      def jar = new java.util.zip.ZipInputStream(jarStream)
+      for (def entry = jar.nextEntry; entry != null; entry = jar.nextEntry) {
+        result[entry.name] = entry.name.endsWith('.class') || entry.name.startsWith('META-INF/') ? jar.readAllBytes() : null
+      }
+      result
+    }
+
+    def zip = new java.util.zip.ZipFile(pluginZip.get().asFile)
+    try {
+      def names = zip.entries().collect { it.name }
+      def libDir = names.find { it ==~ /[^\/]+\/lib\// }
+      if (libDir == null) throw new GradleException("No lib/ directory in ${zip.name}")
+      def mainJar = zip.getEntry(libDir + 'intellij-erlang.jar')
+      if (mainJar == null) throw new GradleException("No ${libDir}intellij-erlang.jar in ${zip.name}")
+      def javaDeps = readEntries(zip.getInputStream(mainJar))['META-INF/java-deps.xml']
+      if (javaDeps == null) throw new GradleException('No META-INF/java-deps.xml in intellij-erlang.jar')
+      def classpath = new groovy.xml.XmlSlurper().parse(new ByteArrayInputStream(javaDeps))
+        .depthFirst().find { it.name() == 'compileServer.plugin' }?.@classpath?.text()
+      if (!classpath) throw new GradleException('java-deps.xml does not register compileServer.plugin with a classpath')
+
+      def jpsJarFound = false
+      classpath.split(';').each { String jarName ->
+        def jarEntry = zip.getEntry(libDir + jarName)
+        if (jarEntry == null) {
+          throw new GradleException("compileServer.plugin refers to ${libDir}${jarName}, which is not in ${zip.name}. " +
+                                    "Jars in ${libDir}: ${names.findAll { it.startsWith(libDir) && it != libDir }}")
+        }
+        def jarEntries = readEntries(zip.getInputStream(jarEntry))
+        if (jarEntries.containsKey('META-INF/services/org.jetbrains.jps.incremental.BuilderService')) {
+          jpsJarFound = true
+          ['META-INF/services/org.jetbrains.jps.model.serialization.JpsModelSerializerExtension',
+           'org/intellij/erlang/jps/builder/ErlangBuilder.class',
+           'org/intellij/erlang/jps/model/JpsErlangModelSerializerExtension.class'].each {
+            if (!jarEntries.containsKey(it)) throw new GradleException("${jarName} does not contain ${it}")
+          }
+          // The build process may run on an older JDK than the IDE, so the JPS plugin keeps Java 11 bytecode.
+          jarEntries.findAll { it.key.endsWith('.class') }.each { String name, byte[] bytes ->
+            int major = ((bytes[6] & 0xFF) << 8) | (bytes[7] & 0xFF)
+            if (major > 55) throw new GradleException("${jarName}!/${name} has class file version ${major}, expected Java 11 (55) or lower")
+          }
+        }
+      }
+      if (!jpsJarFound) {
+        throw new GradleException("None of the compileServer.plugin jars (${classpath}) registers a JPS BuilderService")
+      }
+      logger.lifecycle("compileServer.plugin classpath '${classpath}' matches the layout of ${zip.name}")
+    }
+    finally {
+      zip.close()
+    }
+  }
+}
+
+tasks.named('buildPlugin') {
+  finalizedBy verifyCompileServerPluginLayout
+}
+tasks.named('check') {
+  dependsOn verifyCompileServerPluginLayout
 }
 
 apply plugin: 'idea'

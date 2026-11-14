@@ -26,7 +26,6 @@ import org.jetbrains.jps.builders.impl.BuildTargetIndexImpl;
 import org.jetbrains.jps.builders.impl.BuildTargetRegistryImpl;
 import org.jetbrains.jps.builders.logging.BuildLoggingManager;
 import org.jetbrains.jps.builders.storage.BuildDataPaths;
-import org.jetbrains.jps.cmdline.ClasspathBootstrap;
 import org.jetbrains.jps.cmdline.ProjectDescriptor;
 import org.jetbrains.jps.incremental.BuilderRegistry;
 import org.jetbrains.jps.incremental.IncProjectBuilder;
@@ -84,12 +83,8 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   }
 
   private JpsSdk<JpsDummyElement> addJdk(String name) {
-    try {
-      return addJdk(name, FileUtil.toSystemIndependentName(ClasspathBootstrap.getResourceFile(Object.class).getCanonicalPath()));
-    }
-    catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    // JDK classes live in the jrt image since Java 9, so there is no rt.jar to point to; use the JDK home instead.
+    return addJdk(name, FileUtil.toSystemIndependentName(System.getProperty("java.home")));
   }
 
   protected JpsSdk<JpsDummyElement> addJdk(String name, String path) {
@@ -179,7 +174,11 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   }
 
   protected void rebuildAll() {
-    doBuild(CompileScopeTestBuilder.rebuild().all()).assertSuccessful();
+    rebuildAllWithoutAssertions().assertSuccessful();
+  }
+
+  protected BuildResult rebuildAllWithoutAssertions() {
+    return doBuild(CompileScopeTestBuilder.rebuild().all());
   }
 
   private BuildResult doBuild(CompileScopeTestBuilder scope) {
