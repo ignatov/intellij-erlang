@@ -63,7 +63,9 @@ BasedFloatLiteral = [0-9]{1,2} "#" {BasedDigits} "." {BasedDigits} ("#" {Exponen
 OctalEscape = \\ [0-7]{1,3}
 ControlName = [@A-Z\[\\\]\^_a-z?] /* \100 - \137, \141 - \172 and ? (\^? is DEL) */
 ControlEscape = \\ \^ {ControlName}
-EscapeSequence = \\\" | "\\b" | "\\d" | "\\e" | "\\f" | "\\n" | "\\r" | "\\s" | "\\t" | "\\v" | "\\'" | "\\\\" | "\\[" | "\\{" | "\\]" | "\\}" | "\\`" | "\\$" | "\\=" | "\\%" | "\\," | "\\." | "\\_" | {ControlEscape} | {OctalEscape}
+/* Any other character after a backslash stands for itself (or for its control code, as \n does); \x and \^ have their own forms */
+GenericEscape = \\ [^x\^]
+EscapeSequence = {GenericEscape} | {ControlEscape} | {OctalEscape}
 
 CharLiteralChar = {InputCharacter} | {EscapeSequence} | (\\ {WhitespaceChar})
 CharLiteral = \$ {CharLiteralChar} | \$
