@@ -68,7 +68,7 @@ jobs:
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
   nightly:
-    needs: build
+    needs: [build, compilation-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:

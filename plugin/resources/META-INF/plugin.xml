@@ -34,6 +34,9 @@
     <change-notes>
         <![CDATA[
             <ul>
+              <li>Fixed builds that silently produced no .beam files: a missing Erlang build plugin, a failing erlc or a module without rebar.config is now reported instead of ending as "successful" (#1077, #1028)</li>
+              <li>Fixed erlc warnings with column numbers (OTP 24+) being reported as errors and failing the build</li>
+              <li>Fixed build order for parse transforms when the IDE and JPS project names differ</li>
               <li>Fixed false 'multi-valued comprehension' error on map comprehensions (#1093)</li>
               <li>Quick documentation for OTP functions, types and modules works with the new erlang.org documentation (OTP 27+), including links between pages; documentation is downloaded using the IDE proxy settings</li>
               <li>Parameter name hints are shorter (parameter name, spec name or a short pattern summary) and can be turned off in Settings | Editor | Inlay Hints | Parameter names | Erlang (#1064)</li>
