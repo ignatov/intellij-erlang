@@ -115,6 +115,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testImportAutoimported()    { doTestWithInclude(); }
 
+  public void test940() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.addFileToProject("stdlib/include/ms_transform.hrl", "-compile({parse_transform, ms_transform}).");
+    doTest();
+  }
+
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
     doTest();
