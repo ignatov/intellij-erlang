@@ -5,7 +5,7 @@ Tests are light fixture tests on plain copies, with the files created by `myFixt
 order given. `<T>` stands for the test name with a lower-case first letter, the folder that
 `getTestName(true)` gives.
 Each test is seen failing before its implementation task, for the reason given in brackets. A task marked
-"boundary" has a test that passes before and after.
+"boundary" has a test that asserts only its boundary scenario, so it passes before and after.
 
 ## 1. Shared order
 
@@ -29,20 +29,25 @@ Each test is seen failing before its implementation task, for the reason given i
 
 Every test of this section asserts the file of the module reference and the file of the function reference.
 
-- [ ] 3.1 Make `ErlangFunctionReferenceImpl.getExternalFunction` look in the file that the module name resolves to. Scenario "Both parts of a remote call": `testData/resolve/function/<T>/` with `apps/caller/src/caller.erl`, `apps/umb/src/dup.erl`, `_build/default/lib/umb/src/dup.erl` [today the module is the file under `_build` and the function the file under `apps`]
+- [ ] 3.1 Make `ErlangFunctionReferenceImpl.getExternalFunction` look only in the first file of the shared order; its scope stays `GlobalSearchScope.allScope`. Scenario "Both parts of a remote call": `testData/resolve/function/<T>/` with `apps/caller/src/caller.erl`, `apps/umb/src/dup.erl`, `_build/default/lib/umb/src/dup.erl` [today the module is the file under `_build` and the function the file under `apps`]
 - [ ] 3.2 Scenario "Import entry": the files of 3.1 with `-import(dup, [f/0]).` in `caller.erl` [as 3.1]
 - [ ] 3.3 Scenario "Function that only the copy has": the files of 3.1; the copy exports `g/0` [today `g` resolves to the copy]
 - [ ] 3.4 Scenario "Dependency in the default and in the test profile": `src/caller.erl`, `_build/default/lib/dep/src/dep_mod.erl`, `_build/test/lib/dep/src/dep_mod.erl` [today the function is the file under `_build/test`, the shorter path, in either creation order]
 - [ ] 3.5 Scenario "Dependency with the name of an OTP application": `src/caller.erl`, `_build/default/lib/eunit/src/eunit.erl`, with the mock SDK `testData/mockSdk-R15B02` as in `ErlangModuleResolutionTest` [today the function is `lib/eunit-2.2.4/src/eunit.erl` of the SDK]
 - [ ] 3.6 Scenario "Two applications with a module of one name": `caller.erl`, `lib/aaaa/src/dup.erl`, `lib/zzz/src/dup.erl` [today the function is the file under `lib/zzz`, the shorter path, in either creation order]
 - [ ] 3.7 Scenario "Find Usages of the module": `testData/find-usages/<T>/` with the files of 3.1 [today the module of `apps/umb/src/dup.erl` has no usage]
+- [ ] 3.8 Scenario "Release copy of an OTP application": `src/caller.erl`, `_build/prod/rel/myrel/lib/eunit-2.2.4/src/eunit.erl`, with the mock SDK as in 3.5 [today the module is the release copy and the function the SDK's file]
+- [ ] 3.9 Scenario "Release copy of stdlib": `src/caller.erl`, `ebin/stdlib.app` and `src/lists.erl` under `_build/prod/rel/myrel/lib/stdlib-6.2`, with the mock SDK as in 3.5 [today both are the release copy: its directory has the higher version and is taken for stdlib]
+- [ ] 3.10 Scenario "File under a directory whose name starts with a dot": `src/caller.erl`, `src/dup.erl`, `.eunit/dup.erl` [today the module is `.eunit/dup.erl`, first by path]
+- [ ] 3.11 Boundary. Scenario "Boundary: file under a source root and file outside every source root": `caller.erl`, `lib/aaaa/src/dup.erl`, `lib/zzz/src/dup.erl`; the test removes the source root of the fixture and adds `lib/zzz/src` with `PsiTestUtil`, and restores both in `finally`
 
 ## 4. include_lib
 
-- [ ] 4.1 Make the processor of `ErlangApplicationIndex` collect the candidates and choose by the shared order, then by the existing version rule, then by path; verify that `ErlangIncludeLibResolveTest` passes unchanged (`testLatestVersionIsUsed`, `testNoVersionIsUsed`, `test375`)
+- [ ] 4.1 Make the processor of `ErlangApplicationIndex` collect the candidates and choose by the shared order (a project directory outside a release, then a library, then a release), then by the existing version rule, then by path; verify that `ErlangIncludeLibResolveTest` passes unchanged (`testLatestVersionIsUsed`, `testNoVersionIsUsed`, `test375`)
 - [ ] 4.2 Scenario "Header of a project application": `testData/resolve/includeLib/<T>/`, created in this order: `apps/caller/src/caller.erl`, `apps/umb/src/umb.app.src`, `apps/umb/include/dup.hrl`, then `ebin/umb.app` and `include/dup.hrl` under `_build/default/lib/umb`, then the same under `_build/test/lib/umb` [today the target is the directory created last, `_build/test/lib/umb`; in the reverse order the test would pass today]
 - [ ] 4.3 Scenario "Macro and record from that header": the files and the order of 4.2 with `?DUP` and `#duprec{}` in `caller.erl` [as 4.2]
 - [ ] 4.4 Scenario "Header of a fetched dependency": `src/caller.erl`, then `ebin/dep.app` and `include/dep.hrl` under `_build/default/lib/dep`, then the same under `_build/test/lib/dep`, in this order [today the target is the directory created last, `_build/test/lib/dep`; in the reverse order the test would pass today]
+- [ ] 4.5 Scenario "Header of an OTP application in a release": new class `ErlangIncludeLibSdkResolveTest` (`tests/org/intellij/erlang/resolve/`) with the mock SDK as in 3.5; `src/caller.erl`, then `ebin/eunit.app` and `include/eunit.hrl` under `_build/prod/rel/myrel/lib/eunit-2.9` [today the target is the release copy, the higher version]
 
 ## 5. Whole build
 

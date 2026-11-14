@@ -10,18 +10,23 @@ context: |
   Read AGENTS.md at the repository root before writing an artifact. It has the layout, the commands, the platform
   rules, the definition of done and the areas that need the maintainer's consent. It applies to every change.
   The Erlang compiler is the reference for behaviour where it decides the answer: what is valid syntax, what is an
-  error or a warning, what a name refers to. There the plugin does what erlc does. Elsewhere something else
-  decides and the artifact names it: the build tool, the platform convention, the code style setting.
-  Every command below needs `openspec` on PATH. When it is missing, stop and say so; do not write, move or merge
-  files under `openspec/` by hand.
+  error or a warning, what a name refers to. There the plugin does what erlc does. Find Usages and Rename follow
+  from resolve. Elsewhere something else decides and the artifact names it: the build tool, the platform
+  convention, the code style setting.
+  Every command below needs `openspec` on PATH. When it is missing, stop and say so; without the tool, do not do
+  by hand what its commands do (creating a change, archiving it, merging a delta into a spec). With the tool, a
+  delta is written by hand and the `rm` and `mv` steps of the procedures in AGENTS.md are run as written.
   Specs grow from the work that is done. There are three kinds of change:
   - A feature or a change of user-visible behaviour: a proposal with all four artifacts. The proposal and its
     implementation are separate pull requests. The maintainer approves proposal.md by merging the proposal;
     nothing is implemented before that.
   - A bug fix: a change `fix-<issue>-<what>` that has only `.openspec.yaml` and a delta spec. It is created and
     archived inside the pull request of the fix, after the test and the fix. No proposal.md, design.md or tasks.md,
-    no "Open decisions", no approval before the fix. When an open change modifies the same requirement, the fix
-    also copies its scenario into that change ("A fix on a requirement that an open change modifies" in AGENTS.md).
+    no "Open decisions", no approval before the fix. Before archiving, the fix always looks for open changes
+    that name the requirement it touches. When one modifies it, the fix copies its scenario into that `MODIFIED`
+    block. A fix does not change the text of a requirement that an open change modifies, and does not touch one
+    that an open change removes or renames: it stops the spec step and says so at the top of the pull request
+    description ("A fix on a requirement that an open change names" in AGENTS.md).
   - A baseline of existing behaviour: a change `baseline-<capability>-<slice>` that has a delta spec and a
     design.md. It is created and archived in a pull request of its own that changes nothing outside `openspec/`.
 
@@ -44,8 +49,8 @@ rules:
     - >-
       The Erlang compiler is the reference where it decides. Where the change decides what is an error, what a
       name resolves to or what is valid syntax, say what erlc does and propose the same. Name every place where
-      the proposal differs from erlc and why. Where erlc does not decide, name what does (the build tool, the
-      platform convention, the code style setting) and what it does.
+      the proposal differs from erlc and why. Find Usages and Rename follow from resolve. Where erlc does not
+      decide, name what does (the build tool, the platform convention, the code style setting) and what it does.
     - >-
       Do not propose new parser behaviour that depends on macros or on the preprocessor one special case at a
       time. The maintainer's direction is a lexer that substitutes macros; such a proposal waits for that design.
@@ -79,6 +84,10 @@ rules:
       compiles, what it puts on the code path), the platform convention (what the IntelliJ action does), the
       code style setting (formatter).
     - >-
+      Resolve decides Find Usages and Rename. A scenario about Find Usages or Rename says that it follows from
+      which declaration the references resolve to, and what decides that resolve (erlc in one module, the build
+      tool between files). It names no platform convention.
+    - >-
       Check it by running it: erlc on the snippet, the build tool on a project with those files. Do not write it
       from memory. Where erlc rejects the snippet for a reason that the requirement is not about, say so in the
       scenario.
@@ -87,11 +96,13 @@ rules:
       erlc refuses it ("Unknown extension").
     - >-
       A proposal and a bug fix specify the behaviour that the pull request adds or changes, and the boundary
-      cases that its own tests pin, and nothing else. A boundary case is behaviour next to the change that
-      stays as it is. Name its scenario `Boundary: ...` and make its first line "Unchanged by the fix; pinned
-      by its test." (in a proposal "Unchanged by the change; pinned by its test."). The test of a boundary
-      scenario passes before and after; every other test fails before. No requirement consists of boundary
-      scenarios only.
+      cases that its own tests assert, and nothing else. A boundary case is behaviour next to the change that
+      stays as it is. Name its scenario `Boundary: ...` and make its first line exactly "Unchanged by the fix;
+      pinned by its test." (in a proposal "Unchanged by the change; pinned by its test."), also when it names
+      several tests. A boundary scenario names a test that asserts it. That test may assert changed behaviour
+      as well and then fails without the change; the reviewer checks the boundary claim with a probe of the
+      scenario's own snippet on the code before the change. The test of every other scenario fails before. No
+      requirement consists of boundary scenarios only.
     - >-
       Every part of a requirement's text has a scenario. Remove the words that have none.
     - >-
@@ -107,7 +118,8 @@ rules:
       `## MODIFIED Requirements` and add the scenario at its end; a block that leaves out an existing scenario
       is refused. A new requirement goes under `## ADDED Requirements`; archiving refuses a name that exists.
     - >-
-      A scenario name occurs once in a spec; the tool does not check it.
+      A scenario name occurs once in a spec. `openspec validate` does not check it; the step "Check for
+      repeated scenario names" of the `specs` job does.
     - >-
       Use the capability paths of the proposal. A proposal does not specify new parser behaviour that depends
       on macros or on the preprocessor one special case at a time. A bug fix that "Parser and lexer fixes" in
@@ -130,7 +142,8 @@ rules:
     - >-
       Say for every test how it is seen failing before the change. When the result of today's code depends on
       the order in which files are created or the index returns them, fix that order in the test and say which
-      order fails. The test of a boundary scenario passes before and after; mark the task so.
+      order fails. Mark the task of a boundary scenario as such, and say whether its test asserts only
+      the boundary case and so passes before the change.
     - >-
       Follow the definition of done of AGENTS.md: a test fails before the change and passes after it, and
       `./gradlew test` passes. Include the version bumps that AGENTS.md asks for (stub version, index versions).

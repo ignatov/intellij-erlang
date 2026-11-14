@@ -143,6 +143,22 @@ jobs:
         version=$(openspec --version)
         echo "OpenSpec $version"
         openspec validate --all --strict --no-interactive
+    - name: Check for repeated scenario names
+      # openspec validate accepts a scenario name that occurs twice in one spec. Two fixes that each add a scenario
+      # with the same name to different requirements merge without a conflict.
+      run: |
+        status=0
+        for spec in openspec/specs/*/spec.md; do
+          [ -e "$spec" ] || continue
+          repeated="$(grep -h '^#### Scenario:' "$spec" | sed 's/[[:space:]]*$//' | sort | uniq -d)"
+          if [ -n "$repeated" ]; then
+            echo "::error file=$spec::A scenario name occurs more than once in this spec"
+            echo "$spec:"
+            echo "$repeated"
+            status=1
+          fi
+        done
+        exit "$status"
 
   compilation-tests:
     # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the

@@ -4,18 +4,19 @@
 
 In a rebar3 project the build keeps a second view of the sources under `_build`, and the plugin sends "Go to
 definition" there instead of to the file the developer edits
-([#1040](https://github.com/ignatov/intellij-erlang/issues/1040)). The issue asks to prefer the files that are
-not in the rebar build directory and, in its notes, to exclude the folders of `_build` that are built from the
-project's own sources, the test `logs/` and `rel/`, but not the downloaded dependencies. The project's triage
-of the issue, which is not part of the issue itself, sums it up as "Needs a ranking or exclusion policy for
-_build, deps, logs and rel".
+([#1040](https://github.com/ignatov/intellij-erlang/issues/1040)). The issue names two lookups, "Go to symbol
+definition" and "Include files for `-include`", and asks to prefer the results that are not in the rebar build
+directory. In its notes it asks to exclude the folders of `_build` that are built from the project's own
+sources, the test `logs/` and `rel/`, but not the downloaded dependencies. This project's own triage of the
+issue, which is not public, sums it up as the need for a ranking or exclusion policy for `_build`, `deps`,
+`logs` and `rel`.
 
 What goes wrong for the developer who lands in `_build`:
 
 - The IDE treats the path under `_build` as another file. Find Usages of the module, started from the real
   source, finds nothing: the reference in the call belongs to the copy (table below).
-- Where `_build` holds a real copy (a test suite under `_build/test/lib/<app>/test`, the sources in a release),
-  an edit there is lost with the next build. Where it holds a link (`src` and `include` of an application), the
+- Where `_build` holds a real copy (a test suite under `_build/test/lib/<app>/test`, the sources in a release
+  that includes them), an edit there is lost with the next build. Where it holds a link (`src` and `include` of an application), the
   edit reaches the real file, but under a path that the version control and the project view do not show.
 
 Observed on master in a light fixture test, nothing excluded, with `apps/umb/src/dup.erl`, the same file under
@@ -42,11 +43,34 @@ dependency that has the name of the OTP application `eunit`:
 | `eunit` in `eunit:test(x)` | `_build/default/lib/eunit/src/eunit.erl` |
 | `test` in `eunit:test(x)` | `lib/eunit-2.2.4/src/eunit.erl` of the SDK |
 
+With a release that holds copies of OTP applications under `_build/prod/rel/myrel/lib`, against the mock SDK of
+the tests (eunit-2.2.4, stdlib-1.18.2):
+
+| Reference | Resolves to today |
+|---|---|
+| `eunit` in `eunit:test(x)`, with `eunit-2.2.4/src/eunit.erl` in the release | the release copy |
+| `test` in `eunit:test(x)` | `lib/eunit-2.2.4/src/eunit.erl` of the SDK |
+| `lists` and `reverse` in `lists:reverse([])`, with `stdlib-6.2/ebin/stdlib.app` and `stdlib-6.2/src/lists.erl` in the release | both the release copy: its directory has the higher version and is taken for stdlib |
+| The same with `stdlib-1.18.2` in the release, the version of the SDK | both the SDK |
+| `-include_lib("eunit/include/eunit.hrl")`, with `eunit-2.9/ebin/eunit.app` and `eunit-2.9/include/eunit.hrl` in the release | the release copy, the higher version |
+| The same with `eunit-2.2.4` in the release | the SDK |
+
+And where neither file is build output:
+
+| Reference | Resolves to today |
+|---|---|
+| `dup` and `f` in `dup:f()`, with `lib/aaaa/src/dup.erl` and `lib/zzz/src/dup.erl` | `dup` in `lib/aaaa`, `f` in `lib/zzz` |
+| The same, with `lib/zzz/src` as the only source root | both in `lib/zzz` |
+| `dup` and `f` in `dup:f()`, with `.eunit/dup.erl` and `src/dup.erl` | `dup` in `.eunit`, `f` in `src` |
+
 The two halves of one call go to different files because two orders exist: module references sort the
 candidates by path, so `_build` comes before `apps` and `src`; remote calls take the order of
-`ErlangModuleIndex` (source roots, libraries, then shorter paths). `-include_lib` takes the last application
-directory that the index reports. A review of this proposal observed that with `_build` excluded all of the
-first table resolve to `apps/umb`.
+`ErlangModuleIndex` (source roots, not hidden, libraries, then shorter paths). `-include_lib` takes the last
+application directory that the index reports, or the one with the higher version.
+
+With `_build` excluded (the same probe, with `PsiTestUtil.addExcludedRoot`), every row of the first table
+resolves to `apps/umb`, except `g` in `dup:g()`: it is unresolved, because only the copy has `g/0`. Find Usages
+of the module, started in `apps/umb/src/dup.erl`, then lists the four module references of the caller.
 
 What the build tool does, rebar3 3.28.0 on OTP 27, on Linux:
 
@@ -56,8 +80,14 @@ What the build tool does, rebar3 3.28.0 on OTP 27, on Linux:
 - `_build/<profile>/lib/<app>/src` and `include` are links to the application's own folders.
 - A fetched dependency has its one real copy in `_build/default/lib/<dep>`. `_build/test/lib/<dep>` and
   `_build/prod/lib/<dep>` are links to it.
-- A release (`_build/<profile>/rel/<name>/lib/<app>-<vsn>`) holds real copies of `src` and `include` when it
-  includes sources. It is assembled after compilation; nothing is compiled from it.
+- A release (`_build/<profile>/rel/<name>/lib/<app>-<vsn>`) is assembled after compilation; nothing is compiled
+  from it. What it holds depends on the relx options:
+  - `{mode, dev}`, which the template sets: every entry is a link, to `_build/<profile>/lib/<app>` for the
+    project's application and to the directory of the SDK for kernel, stdlib and sasl.
+  - `{mode, prod}`: real directories with `ebin`, and `include` for kernel and stdlib. No `src`.
+  - `{dev_mode, false}, {include_erts, true}, {include_src, true}`: real copies with `src`, of the project's
+    application and of kernel, stdlib and sasl from the SDK (213 `.erl` files, `stdlib-6.2.2.3/src/lists.erl`
+    among them).
 - `_build/test/logs` holds HTML, CSS, JavaScript and log files after `rebar3 ct`: no `.erl`, `.hrl` or `.app`
   file, so nothing in it can be a target and this proposal has no rule for `logs`.
 - The code path that `rebar3 path` prints has the `ebin` folders under `_build/default`. A dependency with the
@@ -71,18 +101,30 @@ the linked paths erlc opens for `-include_lib`.
 ## What Changes
 
 - One order for every lookup that can find several files for a module name or several directories for an
-  application name: kernel and stdlib of the SDK first, as today; then the project before the other SDK
-  libraries; then files outside build output; then `_build/default/lib`; then the rest of `_build` outside a
-  release; then releases. Ties are broken by path, so the answer does not depend on the order in which the
-  index returns files.
-- The module part and the function part of a remote call and of an `-import` entry use that one order, so they
-  end in the same file. A remote type already follows its module reference and moves with it.
+  application name:
+  1. kernel and stdlib of the SDK, as today;
+  2. the project's files that are not in a release: outside build output, then `_build/default/lib`, then the
+     rest of `_build`. They win over the other SDK libraries, as they do for module references today;
+  3. the other SDK libraries;
+  4. releases. A release copy of an OTP application, kernel and stdlib included, never wins over the SDK.
+
+  Ties: a file under a source root before one outside, a file that is not under a directory whose name starts
+  with a dot before one that is, then the path. The answer does not depend on the order in which the index
+  returns files.
+- The module part and the function part of a remote call and of an `-import` entry use that one order. Each
+  keeps the search scope it has today (open decision 7), so they end in the same file wherever both see the
+  same files. A remote type already follows its module reference and moves with it.
 - `-include_lib("app/...")` picks the application directory by the same order.
 - Nothing is excluded and nothing is removed from the indices. A dependency that exists only under
   `_build/default/lib` resolves as it does today.
-- Not changed: kernel and stdlib first, the choice between versions of one application, and `-include` in
-  IntelliJ IDEA, which looks next to the including file and in the include folders of the module and never
-  asks the index. In a small IDE `-include` has one more step that does; see Impact.
+- Not changed: kernel and stdlib of the SDK first, and the choice between versions of one application outside
+  releases.
+- Not changed although the issue names it: `-include` in IntelliJ IDEA. It makes no choice between several
+  files: it takes the file next to the including file, else the first hit in the include folders of the IDE
+  module, and never asks the index (read from `ErlangPsiImplUtil.getDirectlyIncludedFiles`, not probed). From
+  a source file it does not reach a copy unless an include folder of the module points into `_build`. The
+  headers that the issue's case reaches through the index are those of `-include_lib`, which changes. In a
+  small IDE `-include` has one more step that asks the index; see Impact.
 
 Rejected, with the reasons in design.md:
 
@@ -113,7 +155,7 @@ one module name):
 | Caller | What changes |
 |---|---|
 | `ErlangModuleReferenceImpl.resolveInner` | The target of a module reference. Its own comparator goes away |
-| `ErlangFunctionReferenceImpl.getExternalFunction` | The target of the function of a remote call and of an `-import` entry; only the first file counts (open decision 6) |
+| `ErlangFunctionReferenceImpl.getExternalFunction` | The target of the function of a remote call and of an `-import` entry; only the first file counts (open decision 6). The scope stays the whole project (open decision 7) |
 | `ErlangFunctionReferenceImpl.getErlangFunctionsFromModule` | The order of the candidates of a multi-resolve; the set is the same |
 | `ErlangTypeReferenceImpl` | Follows the module reference, as today |
 | `ErlangModulesUtil.getErlangModule`, used by `ErlangApplicationConfiguration.checkConfiguration` | The file in which a run configuration looks for its entry function. The scope is one IDE module |
@@ -140,8 +182,17 @@ Further:
   module in `apps/umb/src/dup.erl` and is renamed with it; today it belongs to the copy. Function usages of
   that call are found today and stay. Files under `_build` are still indexed, so usages inside the copies are
   still listed and renamed when the project does not exclude `_build`.
-- Completion: the one change is the `-include_lib` path completion in the table. Module names are already
-  listed once; functions offered after `dup:` are collected from every file named `dup` as today.
+- Completion: two changes, both in the table above: the `-include_lib` path completion, and in a small IDE
+  the last step of the `-include` path completion. Module names are already listed once; functions offered after `dup:` are collected from every file named `dup` as today.
+- Two IDE modules without a dependency between them: in module A, `b_mod:f()` calls a module of module B, and
+  A does not depend on B. The module reference searches A, its dependencies and the libraries
+  (`ErlangModuleReferenceImpl.getSearchScope`), the function reference the whole project
+  (`ErlangFunctionReferenceImpl.getExternalFunction`). Today `f` resolves and `b_mod` does not, and that stays:
+  this proposal does not narrow the scope of the function part (open decision 7). The rebar import adds a
+  module dependency only for the applications that an application lists, so such projects exist. The same
+  holds for a file outside every source root, which the module reference does not find (the row with one source root in
+  the table above). The scopes are read from the code. Light fixtures have one IDE module, so no test of this change can show the two-module case; the
+  implementation must not change the scope argument of `getExternalFunction`, and its review checks that.
 - Links inside quick documentation look files up by name on their own (`ErlangDocumentationProvider`) and are
   not changed. Go to Symbol still lists the copies.
 - Indices: no key, value or filter changes, so no index version and no stub version bump.
@@ -172,3 +223,11 @@ Further:
    code path. A project with two unrelated modules of one name in different applications then gets "unresolved
    function" for the functions of the second one. Alternative: keep searching the other files and accept that
    the two halves can differ.
+7. **The search scope of the function part of a remote call.** Today it is the whole project; the module part
+   searches the IDE module, its dependencies and the libraries. Proposed: keep both and only add the order. The
+   two parts then still differ where they see different files: a call into an IDE module that the calling
+   module does not depend on, or into a file outside every source root, resolves the function and not the
+   module, as today. Alternative: give the function part the scope of the module part. Both parts then always
+   agree, and what breaks is that such calls turn into "Unresolved function" warnings
+   (`ErlangUnresolvedFunctionInspection`) in projects whose IDE modules lack dependencies, for example after a
+   rebar import of applications that do not list each other. No light fixture test can cover either option.
