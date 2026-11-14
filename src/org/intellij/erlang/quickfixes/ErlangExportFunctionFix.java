@@ -273,10 +273,10 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   /**
-   * For a function whose name is a macro defined in this file, returns the element after which its export entry may go:
-   * the last {@code -define} of that macro above the function or, when that {@code -define} is inside
-   * {@code -ifdef}/{@code -ifndef}/{@code -if}, the {@code -endif} that closes the outermost block.
-   * Returns {@code null} when the usual placement applies.
+   * For a function whose name is a macro whose {@code -define}s are all at the top level of this file, returns the last
+   * such {@code -define} above the function: the export entry must go below it. Returns {@code null} when the usual
+   * placement applies: the macro has no {@code -define} above the function, or the function or any {@code -define}
+   * of the macro is inside {@code -ifdef}/{@code -ifndef}/{@code -if}, whose active branch the plugin does not know.
    */
   @Nullable
   static PsiElement getMacroExportAnchor(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
@@ -285,27 +285,21 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     if (macrosName == null) return null;
 
     var name = ErlangPsiImplUtil.getNameIdentifier(macrosName).getText();
+    var definitions = ContainerUtil.filter(file.getMacroses(), d -> name.equals(d.getName()));
+    if (definitions.isEmpty()) return null;
+
     var functionOffset = function.getTextRange().getStartOffset();
-    var definition = ContainerUtil.findLast(
-      file.getMacroses(),
-      d -> name.equals(d.getName()) && d.getTextRange().getEndOffset() <= functionOffset);
-    if (definition == null) return null;
-
-    var definitionOffset = definition.getTextRange().getStartOffset();
-    var depth = getConditionalDepth(file, definitionOffset);
-    if (depth == 0) return definition;
-
-    for (ErlangAttribute attribute : file.getAttributes()) {
-      if (attribute.getTextRange().getStartOffset() < definitionOffset) continue;
-      depth += getConditionalDepthChange(attribute);
-      if (depth == 0) return attribute;
+    if (isInConditionalBlock(file, functionOffset)) return null;
+    for (var definition : definitions) {
+      if (isInConditionalBlock(file, definition.getTextRange().getStartOffset())) return null;
     }
-    return definition;
+
+    return ContainerUtil.findLast(definitions, d -> d.getTextRange().getEndOffset() <= functionOffset);
   }
 
   /**
    * erlc rejects an {@code -export} below a function definition, so a macro-named function whose macro is defined
-   * (or whose conditional block ends) below the first function of the file cannot be exported.
+   * below the first function of the file cannot be exported.
    */
   public static boolean canBeExported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
     var anchor = getMacroExportAnchor(file, function);
@@ -321,7 +315,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var firstFunctionOffset = getFirstFunctionOffset(file);
     return ContainerUtil.filter(exports, export -> {
       var offset = export.getTextRange().getStartOffset();
-      return offset >= anchorOffset && offset < firstFunctionOffset && getConditionalDepth(file, offset) == 0;
+      return offset >= anchorOffset && offset < firstFunctionOffset;
     });
   }
 
@@ -330,13 +324,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     return first != null ? first.getTextRange().getStartOffset() : Integer.MAX_VALUE;
   }
 
-  private static int getConditionalDepth(@NotNull ErlangFile file, int offset) {
+  private static boolean isInConditionalBlock(@NotNull ErlangFile file, int offset) {
     var depth = 0;
     for (ErlangAttribute attribute : file.getAttributes()) {
       if (attribute.getTextRange().getStartOffset() >= offset) break;
       depth += getConditionalDepthChange(attribute);
     }
-    return depth;
+    return depth > 0;
   }
 
   private static int getConditionalDepthChange(@NotNull ErlangAttribute attribute) {

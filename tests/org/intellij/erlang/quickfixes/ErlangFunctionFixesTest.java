@@ -52,8 +52,14 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testMacroSeveralExports()    { doTest("Export function"); }
   public void testMacroNotDefined()        { doTest("Export function"); }
   public void testMacroRedefinedBelowFunction()   { doTest("Export function"); }
-  public void testMacroDefinedInIfdef()           { doTest("Export function"); }
-  public void testMacroDefinedInIfdefWithExport() { doTest("Export function"); }
+
+  // Known limitation until the plugin evaluates conditional compilation: when the function or a -define of its macro
+  // is inside -ifdef/-ifndef/-if, the export goes where it goes for any other function. The expected files below are not
+  // correct in every configuration: with -DTEST erlc fails with "undefined macro 'name'" (the -export is above the
+  // -define), and without it they compile but export nothing (the -export is inside the -ifdef(TEST) branch).
+  public void testMacroAndFunctionInSeparateIfdefs() { doTest("Export function"); }
+  public void testMacroAndFunctionInSameIfdef()      { doTest("Export function"); }
+  public void testMacroDefinedInIfdefAndElse()       { doTest("Export function"); }
 
   public void testMacroDefinedAfterFunction() {
     myFixture.configureByFile("macroDefinedAfterFunction.erl");

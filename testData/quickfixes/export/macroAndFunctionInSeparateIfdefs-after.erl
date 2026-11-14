@@ -1,9 +1,9 @@
 -module(m).
 -ifdef(TEST).
--define(name, test_name).
--else.
--define(name, prod_name).
--endif.
 -export([?name/0]).
 
+-define(name, x).
+-endif.
+-ifdef(TEST).
 ?na<caret>me() -> ok.
+-endif.
