@@ -21,3 +21,4 @@ plugins {
 
 rootProject.name = 'intellij-erlang'
 include 'jps-plugin'
+include 'grammar-generator'
