@@ -1,6 +1,6 @@
 // initial: https://github.com/erlang/otp/blob/master/lib/stdlib/src/erl_parse.yrl
 {
-  generate = [ token-accessors="yes" ]
+  generate = [ token-accessors="yes" names="short" ]
 
   parserClass="org.intellij.erlang.parser.ErlangParser"
   parserUtilClass="org.intellij.erlang.parser.ErlangParserUtil"

@@ -1,5 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesExtension
+import org.jetbrains.intellij.platform.gradle.tasks.GenerateLexerTask
+import org.jetbrains.intellij.platform.gradle.tasks.GenerateParserTask
 import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
 
 plugins {
@@ -246,6 +248,126 @@ tasks.named('buildPlugin') {
 }
 tasks.named('check') {
   dependsOn verifyCompileServerPluginLayout
+}
+
+// The lexer, parser and PSI in gen/ are generated from Erlang.flex and grammars/erlang.bnf and committed.
+// `./gradlew generateLexerAndParser` regenerates them in place; `./gradlew verifyGeneratedSources` generates them into
+// the build directory and fails if gen/ differs. Neither task is part of compileJava, test or buildPlugin.
+apply plugin: 'org.jetbrains.intellij.platform.grammarkit'
+
+dependencies {
+  intellijPlatform {
+    // Grammar-Kit 2023.3.2 and 2023.3.4 generate the same code from erlang.bnf. JFlex 1.9.2 is the IntelliJ-patched
+    // build that wrote the committed lexer; 1.10.x only changes the version in its header.
+    grammarKit('2023.3.4')
+    jflex('1.9.2')
+  }
+}
+
+def generatedLexer = 'org/intellij/erlang/parser/_ErlangLexer.java'
+def generatedParser = 'org/intellij/erlang/parser/ErlangParser.java'
+def generatedPsi = 'org/intellij/erlang/psi'
+def generatedTypes = 'org/intellij/erlang/ErlangTypes.java'
+
+tasks.withType(GenerateLexerTask).configureEach {
+  group = 'grammar'
+  sourceFile = file('src/org/intellij/erlang/parser/Erlang.flex')
+  pathToClass = generatedLexer
+  purgeOldFiles = true
+  // The lexer refers to the token types in ErlangTypes, so generate it after the parser. It does not need compiled
+  // classes, and compileJava, which reads the old lexer in gen/, has to come first in the same build.
+  mustRunAfter tasks.withType(GenerateParserTask), 'compileJava'
+  outputs.cacheIf { false }
+}
+
+tasks.withType(GenerateParserTask).configureEach {
+  group = 'grammar'
+  sourceFile = file('grammars/erlang.bnf')
+  pathToParser = generatedParser
+  pathToPsiRoot = generatedPsi
+  // Removes the PSI of deleted rules. ErlangTypes.java is outside these paths and is overwritten instead.
+  purgeOldFiles = true
+  // The generator reads psiImplUtilClass, mixins and stub classes from compiled classes, so it runs after
+  // compileJava on the gen/ that is there: a new rule gets the psiImplUtilClass methods that refer to its PSI class
+  // only from a second run, after compileJava has compiled the PSI class of the first.
+  classpath = configurations.intellijPlatformGrammarKit + configurations.intellijPlatformClasspath +
+              sourceSets.main.output.classesDirs
+  // ErlangTypes.java is not a declared output, so neither skip the task nor restore it from the build cache.
+  outputs.upToDateWhen { false }
+  outputs.cacheIf { false }
+  def parserFile = parserFile()
+  doLast {
+    // org.intellij.grammar.Main prints a failure and still exits with 0.
+    if (!parserFile.get().asFile.isFile()) {
+      throw new GradleException("Grammar-Kit did not generate ${parserFile.get().asFile}; see the output above")
+    }
+  }
+}
+
+tasks.named('generateLexer') {
+  targetRootOutputDir = file('gen')
+}
+tasks.named('generateParser') {
+  targetRootOutputDir = file('gen')
+}
+tasks.register('generateLexerAndParser') {
+  group = 'grammar'
+  description = 'Regenerates the lexer, parser and PSI in gen/ from Erlang.flex and grammars/erlang.bnf.'
+  dependsOn 'generateParser', 'generateLexer'
+}
+
+def generatedForCheck = layout.buildDirectory.dir('generated/verifyGeneratedSources')
+def generateLexerForCheck = tasks.register('generateLexerForCheck', GenerateLexerTask) {
+  description = 'Generates the lexer into the build directory for verifyGeneratedSources.'
+  targetRootOutputDir = generatedForCheck
+  classpath = configurations.intellijPlatformJFlex
+}
+def generateParserForCheck = tasks.register('generateParserForCheck', GenerateParserTask) {
+  description = 'Generates the parser and PSI into the build directory for verifyGeneratedSources.'
+  targetRootOutputDir = generatedForCheck
+}
+
+tasks.register('verifyGeneratedSources') {
+  group = 'verification'
+  description = 'Fails if gen/ is not what Erlang.flex and grammars/erlang.bnf generate.'
+  dependsOn generateLexerForCheck, generateParserForCheck
+  mustRunAfter 'generateParser', 'generateLexer'
+  def committedRoot = file('gen')
+  def generatedRoot = generatedForCheck.get().asFile
+  def paths = [generatedLexer, generatedParser, generatedPsi, generatedTypes]
+
+  doLast {
+    def list = { File root ->
+      def files = new TreeMap<String, File>()
+      paths.each { String path ->
+        def file = new File(root, path)
+        if (file.isDirectory()) {
+          file.eachFileRecurse(groovy.io.FileType.FILES) {
+            files[root.toPath().relativize(it.toPath()).toString().replace(File.separatorChar, '/' as char)] = it
+          }
+        }
+        else if (file.isFile()) {
+          files[path] = file
+        }
+      }
+      files
+    }
+    def committed = list(committedRoot)
+    def generated = list(generatedRoot)
+    def problems = []
+    (committed.keySet() + generated.keySet()).toSorted().each { String path ->
+      if (!generated.containsKey(path)) problems << "not generated any more: gen/$path"
+      else if (!committed.containsKey(path)) problems << "missing: gen/$path"
+      else if (committed[path].bytes != generated[path].bytes) problems << "differs: gen/$path"
+    }
+    if (!problems.isEmpty()) {
+      throw new GradleException("gen/ is out of date with Erlang.flex and grammars/erlang.bnf " +
+                                "(${problems.size()} files, fresh output in $generatedRoot).\n" +
+                                "Run ./gradlew generateLexerAndParser and commit gen/.\n  " +
+                                problems.take(50).join('\n  ') + (problems.size() > 50 ? '\n  ...' : ''))
+    }
+    logger.lifecycle("gen/ matches Erlang.flex and grammars/erlang.bnf (${committed.size()} files)")
+  }
 }
 
 apply plugin: 'idea'
