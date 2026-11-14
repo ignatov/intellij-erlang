@@ -24,7 +24,10 @@ import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -63,6 +66,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
   public void testCaseHeadVariable()               { doTest("NewVar"); }
   public void testCaseHeadVariableFromUse()        { doTest("NewVar"); }
+  public void testCaseHeadRematchesParameter()     { doTestFromEachOccurrence(CASE_HEAD_REMATCHES_PARAMETER); }
+  public void testCaseHeadRematchesBoundVariable() { doTestFromEachOccurrence(CASE_HEAD_REMATCHES_BOUND_VARIABLE); }
+  public void testCaseHeadVariableInNestedReceive() { doTestFromEachOccurrence(CASE_HEAD_VARIABLE_IN_NESTED_RECEIVE); }
+  public void testCaseHeadVariableRepeatedInPattern() { doTestFromEachOccurrence(CASE_HEAD_VARIABLE_REPEATED_IN_PATTERN); }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
@@ -109,6 +116,32 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     assertEquals(newFileName, myFixture.getFile().getName());
     myFixture.checkResultByFile(caller + ".erl", caller + "-after.erl", false);
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  private static final String CASE_HEAD_REMATCHES_PARAMETER =
+    "-module(a).\n-export([foo/1]).\nfoo(Var) -> case Var = bar() of _ -> Var end.\nbar() -> 1.\n";
+  private static final String CASE_HEAD_REMATCHES_BOUND_VARIABLE =
+    "-module(a).\n-export([foo/0]).\nfoo() -> Var = 1, case Var = bar() of _ -> Var end, Var.\nbar() -> 1.\n";
+  private static final String CASE_HEAD_VARIABLE_IN_NESTED_RECEIVE =
+    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of _ -> receive Var -> Var end end.\nbar() -> 1.\n";
+  private static final String CASE_HEAD_VARIABLE_REPEATED_IN_PATTERN =
+    "-module(a).\n-export([foo/0]).\nfoo() -> case Var = bar() of Var -> Var end.\nbar() -> 1.\n";
+
+  private void doTestFromEachOccurrence(String text) {
+    List<Integer> offsets = varOffsets(text);
+    String expected = text.replaceAll("\\bVar\\b", "NewVar");
+    for (int offset : offsets) {
+      myFixture.configureByText("a.erl", text.substring(0, offset) + "<caret>" + text.substring(offset));
+      myFixture.renameElementAtCaret("NewVar");
+      assertEquals("Rename from offset " + offset, expected, myFixture.getEditor().getDocument().getText());
+    }
+  }
+
+  private static List<Integer> varOffsets(String text) {
+    List<Integer> offsets = new ArrayList<>();
+    Matcher matcher = Pattern.compile("\\bVar\\b").matcher(text);
+    while (matcher.find()) offsets.add(matcher.start());
+    return offsets;
   }
 
   private void doTest(String newName) {
