@@ -63,6 +63,12 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
 
     if (((ErlangAssignmentExpression) assignment).getLeft() != parent) return;
 
+    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(assignment, ErlangCaseExpression.class);
+    if (caseExpression != null && PsiTreeUtil.isAncestor(caseExpression.getExpression(), assignment, false)) {
+      CommonRefactoringUtil.showErrorHint(project, editor, "Cannot inline a variable bound in a case head.", REFACTORING_NAME, HelpID.INLINE_VARIABLE);
+      return;
+    }
+
     final ErlangExpression rightWithoutParentheses = ErlangPsiImplUtil.getNotParenthesizedExpression(((ErlangAssignmentExpression) assignment).getRight());
 
     if (rightWithoutParentheses == null) {

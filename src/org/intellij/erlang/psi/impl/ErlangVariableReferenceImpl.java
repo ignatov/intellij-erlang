@@ -26,12 +26,10 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
+import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getCaseHeadBindingRepeatedInPattern;
 
 public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<ErlangQVar> {
   public ErlangVariableReferenceImpl(@NotNull ErlangQVar element, TextRange range) {
@@ -41,44 +39,20 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-    Set<ErlangQVar> result = new LinkedHashSet<>();
-    for (ErlangQVar candidate : resolveNearest(myElement)) {
-      result.add(followToBinding(candidate));
-    }
-    return PsiElementResolveResult.createResults(result);
-  }
-
-  /**
-   * The nearest candidate can itself be a match of an already bound variable,
-   * e.g. the head of {@code case X = f() of _ -> X end} after {@code X = 1}.
-   * Follow such matches back to the binding so that every occurrence of a variable resolves to the same element.
-   */
-  @NotNull
-  private ErlangQVar followToBinding(@NotNull ErlangQVar candidate) {
-    Set<ErlangQVar> visited = new HashSet<>();
-    visited.add(myElement);
-    ErlangQVar current = candidate;
-    while (visited.add(current)) {
-      List<ErlangQVar> next = resolveNearest(current);
-      if (next.size() != 1) return current;
-      current = next.get(0);
-    }
-    return candidate;
-  }
-
-  @NotNull
-  private static List<ErlangQVar> resolveNearest(@NotNull ErlangQVar var) {
-    ErlangVarProcessor processor = new ErlangVarProcessor(var.getText(), var);
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, var);
+    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
+    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
+    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
     ResolveUtil.treeWalkUp(place, processor);
     List<ErlangQVar> result = processor.getAllResults();
-    if (!result.isEmpty()) return result;
+    if (result.size() == 1) return PsiElementResolveResult.createResults(getCaseHeadBindingRepeatedInPattern(result.get(0)));
+    if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
 
-    ErlangModule module = getErlangModule(var);
-    if (module == null) return result;
+    ErlangModule module = getErlangModule();
+    if (module == null) return ResolveResult.EMPTY_ARRAY;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
-    return processor.getAllResults();
+
+    List<ErlangQVar> allResults = processor.getAllResults();
+    return PsiElementResolveResult.createResults(allResults);
   }
 
   @Nullable
@@ -100,8 +74,8 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Nullable
-  private static ErlangModule getErlangModule(@NotNull PsiElement element) {
-    PsiFile file = element.getContainingFile();
+  private ErlangModule getErlangModule() {
+    PsiFile file = myElement.getContainingFile();
     ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     return erlangFile != null ? erlangFile.getModule() : null;
   }
