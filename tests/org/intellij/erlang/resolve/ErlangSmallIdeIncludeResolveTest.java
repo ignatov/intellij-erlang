@@ -45,4 +45,8 @@ public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBa
   public void testIncludePathsInRebarConfigWithSigil() {
     doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
   }
+
+  public void testIncludePathsInRebarConfigWithStringSigil() {
+    doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
+  }
 }

@@ -16,7 +16,11 @@ checked() ->
     """</warning>, [a]),
   io:format(<warning>~s"~~"</warning>, [a]),
   io:format(~s"<warning>~q</warning>", [a]),
-  io:format(~s"~p ~p", [a, b]).
+  io:format(~s"~p ~p", [a, b]),
+  io:format(~S"~10.3.\np", []),
+  io:format(<warning>~S"~10.3.\np"</warning>, [a]),
+  io:format(~S(~10.3.\np), []),
+  io:format(~s"~10.3.\np", [a]).
 
 skipped() ->
   io:format(~"~p ~p", [a]),

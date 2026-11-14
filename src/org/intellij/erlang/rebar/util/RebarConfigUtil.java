@@ -76,10 +76,18 @@ public final class RebarConfigUtil {
     return parseTransforms;
   }
 
+  /**
+   * Returns the text of a string or of a ~s/~S string sigil, or null for a binary or triple-quoted sigil.
+   */
   @Nullable
   private static String getStringLiteralText(@NotNull ErlangStringLiteral literal) {
     PsiElement string = literal.getString();
-    return string != null ? StringUtil.unquoteString(string.getText()) : null;
+    if (string != null) return StringUtil.unquoteString(string.getText());
+    PsiElement sigil = literal.getSigilString();
+    String sigilText = sigil != null ? sigil.getText() : "";
+    boolean isStringSigil = sigilText.startsWith("~s") || sigilText.startsWith("~S");
+    if (!isStringSigil || sigilText.length() < 4 || sigilText.startsWith("\"\"\"", 2)) return null;
+    return sigilText.substring(3, sigilText.length() - 1);
   }
 
   @Nullable

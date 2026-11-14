@@ -35,14 +35,18 @@ import java.util.regex.Pattern;
 //TODO make this inspection work when using -import attribute for io, io_lib
 public class ErlangIoFormatInspection extends ErlangInspectionBase {
   private static final Pattern CONTROL_SEQUENCE_PATTERN;
+  // for the verbatim sigil ~S, where a backslash is a character of its own
+  private static final Pattern VERBATIM_CONTROL_SEQUENCE_PATTERN;
   static {
     String fieldWidth =                 "(?:(\\*)|(?:-?\\d+))?";
     String precision =                  "(?:\\.(?:(\\*)|(?:\\d+))?)";
     String oneOfErlangEscapeSequences = "(?:\\\\(?:[bdefnrstv'\"\\\\]|(?:[0-7]{1,3})|(?:x[0-9a-fA-F]{2})|(?:x\\{[0-9a-fA-F]+})|(?:\\^[a-zA-Z])))";
     String paddingCharacter =           "(?:\\.(?:(\\*)|" + oneOfErlangEscapeSequences + "|.))?";
+    String verbatimPaddingCharacter =   "(?:\\.(?:(\\*)|.))?";
     String controlSequenceModifier =    "[tl]?";
     String controlSequenceType =        "(?:([cfegswpWPBX#bx+i])|([~n]))";
     CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + paddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
+    VERBATIM_CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + verbatimPaddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
   }
 
   private static final Set<String> MODULE_NAMES = Set.of("io", "io_lib");
@@ -74,11 +78,11 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         if (formatStart < 0) return;
         String formatString = formatLiteral.getText().substring(formatStart);
         if (formatString.length() < 2) return;
-
+        Pattern pattern = formatLiteral.getText().startsWith("~S") ? VERBATIM_CONTROL_SEQUENCE_PATTERN : CONTROL_SEQUENCE_PATTERN;
 
         int expectedArgumentsCount;
         try {
-          expectedArgumentsCount = getExpectedFormatArgsCount(formatString);
+          expectedArgumentsCount = getExpectedFormatArgsCount(formatString, pattern);
         } catch (InvalidControlSequenceException e) {
           registerProblem(holder, formatLiteral, "Invalid control sequence",
             TextRange.create(formatStart + e.getInvalidSequenceStartIdx(), formatStart + formatString.length() - 1), null);
@@ -105,10 +109,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return sigilText.startsWith("~s") || sigilText.startsWith("~S") ? 2 : -1;
   }
 
-  private static int getExpectedFormatArgsCount(String formatString) throws InvalidControlSequenceException {
+  private static int getExpectedFormatArgsCount(String formatString, Pattern pattern) throws InvalidControlSequenceException {
     int expectedArgumentsCount = 0;
     int previousMatchEnd = 0;
-    Matcher matcher = CONTROL_SEQUENCE_PATTERN.matcher(formatString);
+    Matcher matcher = pattern.matcher(formatString);
     while (matcher.find()) {
       checkNoControlSequencePresent(formatString, previousMatchEnd, matcher.start());
       for (int i = 1; i < 5; i++) {
