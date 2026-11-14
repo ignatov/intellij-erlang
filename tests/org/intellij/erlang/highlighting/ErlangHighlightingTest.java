@@ -121,6 +121,17 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void test940WithoutMsTransform() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
+  public void test940Dbg() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.configureByText("dbg.erl", "-module(dbg).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
     doTest();

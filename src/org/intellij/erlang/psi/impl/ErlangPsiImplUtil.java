@@ -1218,6 +1218,15 @@ public class ErlangPsiImplUtil {
     }
   }
 
+  static boolean isParseTransformDeclared(@NotNull ErlangFile file, @NotNull String parseTransform) {
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    for (ErlangFile includedFile : getIncludedFiles(file)) {
+      includedFile.addDeclaredParseTransforms(parseTransforms);
+    }
+    return parseTransforms.contains(parseTransform);
+  }
+
   public static void extractParseTransforms(@NotNull ErlangListExpression list, @NotNull Set<String> parseTransforms) {
     for (ErlangExpression expr : list.getExpressionList()) {
       if (expr instanceof ErlangTupleExpression) {
