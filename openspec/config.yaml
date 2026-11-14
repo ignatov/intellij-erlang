@@ -1,0 +1,86 @@
+schema: spec-driven
+githubCopilot:
+  cloudAgent: false
+
+# Background for every artifact. Keep it short: the layout, the commands, the platform rules and the definition
+# of done are in AGENTS.md and are not repeated here.
+context: |
+  intellij-erlang is the IntelliJ Platform plugin for Erlang: lexer, parser, PSI, stubs, resolve, inspections,
+  completion, formatter, run and debug, rebar and eunit. Its users are Erlang developers who work in IntelliJ IDEA.
+  Read AGENTS.md at the repository root before writing an artifact. It has the layout, the commands, the platform
+  rules, the definition of done and the areas that need the maintainer's consent. It applies to every change.
+  The Erlang compiler is the reference for behaviour: when it is unclear what the plugin should do, it does what
+  erlc does.
+  A proposal and its implementation are separate pull requests. The maintainer approves proposal.md by merging
+  the proposal; nothing is implemented before that.
+
+# Rules per artifact. OpenSpec accepts only the artifact ids of the schema as keys (proposal, specs, design,
+# tasks); a plain list under `rules` is ignored with a warning.
+rules:
+  proposal:
+    - >-
+      A change needs specs when it adds a feature or changes behaviour that a user can see. A bug fix needs no
+      OpenSpec change at all: its failing test is the spec. Refactoring, tooling and documentation changes that
+      someone still wants to plan set `skip_specs: true` in `.openspec.yaml` and have no delta specs.
+    - >-
+      Name capabilities after lasting feature areas, never after the work item. Take the name from the areas the
+      project already has: the `feat:*` issue labels (navigation, completion, inspections, formatter, syntax,
+      preprocessor, macro, refactor, quick-fixes, rebar, build, run, debug, testing, sdk, shell) and the folders
+      of `testData/`. Reuse an existing folder of `openspec/specs/` before adding a new one.
+    - >-
+      Record the public issue of the change in `.openspec.yaml` as `x-issue: <number>` and link it in "Why".
+    - >-
+      The Erlang compiler is the reference. Where the change decides what is an error, what a name resolves to
+      or what is valid syntax, say what erlc does and propose the same. Name every place where the proposal
+      differs from erlc and why.
+    - >-
+      Do not specify parser behaviour that depends on macros or on the preprocessor one special case at a time.
+      The maintainer's direction is a lexer that substitutes macros; such a change waits for that design. Say so
+      in the proposal and stop.
+    - >-
+      End with a section "Open decisions" that lists every decision the maintainer has to take, each with the
+      options and the proposed one. The maintainer approves proposal.md before the implementation starts.
+    - >-
+      Say what the change does to find usages, rename, completion, the stub and file-based indices and the
+      stub and index versions when it touches resolve, the parser or the indices.
+  specs:
+    - >-
+      The Erlang compiler is the reference. Phrase requirements for the parser, resolve and inspections as "the
+      same as erlc for ...", and say in every scenario what erlc does with its snippet (compiles it, or the
+      error or warning it prints). When erlc alone does not decide the answer, for example when a build tool
+      chooses the files, name the tool and what it does.
+    - >-
+      One mismatch with erlc is accepted and is not a defect: the IDE treats a `.ERL` file as an Erlang file,
+      erlc refuses it ("Unknown extension").
+    - >-
+      Write specs only for the behaviour that this change adds or changes. Do not add requirements for existing
+      behaviour that stays as it is.
+    - >-
+      Use the capability paths of the proposal. Do not specify parser behaviour that depends on macros or on the
+      preprocessor one special case at a time.
+  design:
+    - >-
+      Write design.md only as far as the requirements need it. Where the IDE cannot do what erlc does, say what
+      it does instead and why.
+    - >-
+      Name every area of the "Stop and ask the maintainer" list of AGENTS.md that the implementation will touch.
+  tasks:
+    - >-
+      Every scenario of the delta specs names the test that will prove it, as `Class.testMethod` with its
+      `testData` files. A scenario without a test is not done.
+    - >-
+      Follow the definition of done of AGENTS.md: a test fails before the change and passes after it, and
+      `./gradlew test` passes. Include the version bumps that AGENTS.md asks for (stub version, index versions).
+
+# Advice for the apply and archive workflows. It does not constrain the artifacts.
+operations:
+  apply:
+    guidance:
+      - >-
+        Start only when the proposal is merged into master. Implement in a pull request of its own and follow
+        AGENTS.md.
+  archive:
+    guidance:
+      - >-
+        Archive only after the implementation is merged into master, in a pull request of its own that contains
+        nothing else. `openspec/specs/` changes only through archiving.
