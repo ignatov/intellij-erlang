@@ -21,20 +21,20 @@ import com.intellij.facet.FacetManager;
 import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.PathMacros;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.*;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
+import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -42,16 +42,16 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Ignore;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
+import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Ignore
 public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
-  private static final String MODULE_DIR = "MODULE_DIR";
   private static final String TEST_DATA = "testData/";
   private static final String TEST_DATA_IMPORT = TEST_DATA + "rebar/import/";
   private static final String MOCK_SDK_DIR = TEST_DATA + "mockSdk-R15B02/";
@@ -144,15 +144,8 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   }
 
   private void validateModule(@NotNull Module module) throws Exception {
-    String importedModulePath = getProject().getBasePath();
-
-    Element actualImlElement = new Element("root");
-    ModuleRootManager instance = ModuleRootManager.getInstance(module);
-//    ((ModuleRootManagerImpl) instance).getState().writeExternal(actualImlElement);
-    PathMacros.getInstance().setMacro(MODULE_DIR, importedModulePath);
+    Element actualImlElement = serializeModuleRoots(module);
     PathMacroManager.getInstance(module).collapsePaths(actualImlElement);
-    PathMacroManager.getInstance(getProject()).collapsePaths(actualImlElement);
-    PathMacros.getInstance().setIgnoredMacroNames(Collections.singletonList(MODULE_DIR));
 
     String projectPath = getProject().getBasePath();
     String expectedImlPath = "/expected/" + module.getName() + ".iml";
@@ -174,6 +167,87 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
     assertTrue(errorMsg, JDOMUtil.areElementsEqual(expectedImlElement, actualImlElement));
     validateFacet(module);
+  }
+
+  /**
+   * Writes the module roots in the format of the module's root manager component in a .iml file,
+   * which the expected test data uses. The root manager no longer exposes its serialized state,
+   * so the element is built from the public root model API.
+   */
+  @NotNull
+  private static Element serializeModuleRoots(@NotNull Module module) {
+    ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
+    Element root = new Element("root");
+
+    CompilerModuleExtension compilerExtension = rootManager.getModuleExtension(CompilerModuleExtension.class);
+    if (compilerExtension != null) {
+      if (compilerExtension.isCompilerOutputPathInherited()) {
+        root.setAttribute("inherit-compiler-output", "true");
+      }
+      addUrlElement(root, "output", compilerExtension.getCompilerOutputUrl());
+      addUrlElement(root, "output-test", compilerExtension.getCompilerOutputUrlForTests());
+      if (compilerExtension.isExcludeOutput()) {
+        root.addContent(new Element("exclude-output"));
+      }
+    }
+
+    for (ContentEntry contentEntry : rootManager.getContentEntries()) {
+      Element content = addUrlElement(root, "content", contentEntry.getUrl());
+      for (SourceFolder sourceFolder : contentEntry.getSourceFolders()) {
+        Element sourceFolderElement = addUrlElement(content, "sourceFolder", sourceFolder.getUrl());
+        JpsModuleSourceRootType<?> rootType = sourceFolder.getRootType();
+        if (rootType instanceof JavaSourceRootType) {
+          sourceFolderElement.setAttribute("isTestSource", String.valueOf(sourceFolder.isTestSource()));
+          if (!sourceFolder.getPackagePrefix().isEmpty()) {
+            sourceFolderElement.setAttribute("packagePrefix", sourceFolder.getPackagePrefix());
+          }
+        }
+        else if (rootType == ErlangIncludeSourceRootType.INSTANCE) {
+          sourceFolderElement.setAttribute("type", "erlang-include");
+        }
+        else {
+          fail("Unexpected source root type " + rootType + " of " + sourceFolder.getUrl());
+        }
+      }
+      // The .iml serializer writes exclude folders sorted by url.
+      List<String> excludeFolderUrls = new ArrayList<>(contentEntry.getExcludeFolderUrls());
+      Collections.sort(excludeFolderUrls);
+      for (String excludeFolderUrl : excludeFolderUrls) {
+        addUrlElement(content, "excludeFolder", excludeFolderUrl);
+      }
+    }
+
+    for (OrderEntry orderEntry : rootManager.getOrderEntries()) {
+      Element entry = new Element("orderEntry");
+      if (orderEntry instanceof InheritedJdkOrderEntry) {
+        entry.setAttribute("type", "inheritedJdk");
+      }
+      else if (orderEntry instanceof ModuleSourceOrderEntry) {
+        entry.setAttribute("type", "sourceFolder");
+        entry.setAttribute("forTests", "false");
+      }
+      else if (orderEntry instanceof ModuleOrderEntry moduleEntry) {
+        entry.setAttribute("type", "module");
+        entry.setAttribute("module-name", moduleEntry.getModuleName());
+        if (moduleEntry.isExported()) entry.setAttribute("exported", "");
+        if (moduleEntry.getScope() != DependencyScope.COMPILE) entry.setAttribute("scope", moduleEntry.getScope().name());
+      }
+      else {
+        fail("Unexpected order entry " + orderEntry.getPresentableName() + " (" + orderEntry.getClass().getName() + ")");
+      }
+      root.addContent(entry);
+    }
+    return root;
+  }
+
+  @NotNull
+  private static Element addUrlElement(@NotNull Element parent, @NotNull String name, @Nullable String url) {
+    Element element = new Element(name);
+    if (url != null) {
+      element.setAttribute("url", url);
+      parent.addContent(element);
+    }
+    return element;
   }
 
   private static void validateFacet(@NotNull Module module) {

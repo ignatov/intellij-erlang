@@ -16,26 +16,13 @@
 
 package org.intellij.erlang.jps;
 
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
-import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
-import org.intellij.erlang.jps.model.JpsErlangModuleType;
-import org.intellij.erlang.jps.model.JpsErlangSdkType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.jps.model.JpsDummyElement;
-import org.jetbrains.jps.model.JpsElement;
-import org.jetbrains.jps.model.library.JpsOrderRootType;
-import org.jetbrains.jps.model.library.JpsTypedLibrary;
-import org.jetbrains.jps.model.library.sdk.JpsSdk;
-import org.jetbrains.jps.util.JpsPathUtil;
 
-import java.io.File;
 import java.util.List;
 
-public class ErlangBuilderTest extends JpsBuildTestCase {
+public class ErlangBuilderTest extends ErlangJpsBuildTestCase {
   public void testSimple() {
     doSingleFileTest("src/simple.erl", "-module(simple). foo() -> ok.", "simple.beam");
   }
@@ -76,43 +63,11 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
     assertCompiled("m", "simple.beam");
   }
 
-  private ErlangCompilerOptions setCompilerOptions() {
-    ErlangCompilerOptions options = new ErlangCompilerOptions();
-    myModel.getProject().getContainer().setChild(JpsErlangCompilerOptionsExtension.ROLE, new JpsErlangCompilerOptionsExtension(options));
-    return options;
-  }
-
   private void doSingleFileTest(String relativePath, String text, String expectedOutputFileName) {
     String depFile = createFile(relativePath, text);
     String moduleName = "m";
     addModule(moduleName, PathUtilRt.getParentPath(depFile));
     rebuildAll();
     assertCompiled(moduleName, expectedOutputFileName);
-  }
-
-  private void assertCompiled(@NotNull String moduleName, @NotNull String fileName) {
-    String absolutePath = getAbsolutePath("out/production/" + moduleName);
-    assertNotNull(FileUtil.findFileInProvidedPath(absolutePath, fileName));
-  }
-
-  @Override
-  protected JpsSdk<JpsDummyElement> addJdk(String name, String path) {
-    String homePath = JpsErlangSdkType.getTestsSdkPath();
-    if (!new File(homePath).isDirectory()) {
-      fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
-    }
-    String versionString = "R16B";
-    JpsTypedLibrary<JpsSdk<JpsDummyElement>> jdk = myModel.getGlobal().addSdk(versionString, homePath, versionString, JpsErlangSdkType.INSTANCE);
-    jdk.addRoot(JpsPathUtil.pathToUrl(homePath), JpsOrderRootType.COMPILED);
-    return jdk.getProperties();
-  }
-
-  @Override
-  protected <T extends JpsElement> void addModule(@NotNull String moduleName,
-                                                  @NotNull String[] srcPaths,
-                                                  @Nullable String outputPath,
-                                                  @Nullable String testOutputPath,
-                                                  @NotNull JpsSdk<T> sdk) {
-    addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
   }
 }
