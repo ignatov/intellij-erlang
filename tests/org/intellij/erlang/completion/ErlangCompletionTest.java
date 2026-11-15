@@ -353,6 +353,32 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -type tes() :: <caret>)""", "foo", "buz", "atom", "no_return");
   }
 
+  public void testProbeQualified() {
+    myFixture.addFileToProject("other.erl", """
+      -module(other).
+      -export_type([pub/0]).
+      -type pub() :: atom().
+      -type priv() :: integer().
+      """);
+    for (String t : new String[]{
+      "-spec f() -> other:<caret>.",
+      "-spec f() -> other:<caret>",
+      "-spec f() -> other:p<caret>.",
+      "-spec f() -> other:p<caret>",
+      "-spec f(other:<caret>) -> ok.",
+      "-type t() :: other:<caret>.",
+      "-type t() :: other:<caret>",
+      "-type t() :: [other:<caret>].",
+      "-record(r, {a :: other:<caret>}).",
+      "-spec f() -> oth<caret>.",
+    }) {
+      myFixture.configureByText("a.erl", t);
+      System.out.println("TREE " + t + "\n" + com.intellij.psi.impl.DebugUtil.psiToString(myFixture.getFile(), true));
+      myFixture.complete(CompletionType.BASIC, 1);
+      System.out.println("PROBE " + t + " => " + myFixture.getLookupElementStrings() + " | " + myFixture.getEditor().getDocument().getText());
+    }
+  }
+
   public void testBif() {
     doTestInclude("foo() -> <caret>", "is_function", "is_record", "tuple_size");
   }
