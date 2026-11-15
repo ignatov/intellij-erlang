@@ -92,6 +92,10 @@ class Fixture(unittest.TestCase):
         self.logs = os.path.join(self.temp.name, 'logs')
         os.makedirs(self.root)
         os.makedirs(self.logs)
+        # A checked-out commit that has what the checks need (compat.predating_checks).
+        write(os.path.join(self.root, 'build.gradle'),
+              "def platformVersion = providers.gradleProperty('platformVersion').getOrElse('2026.3')\n")
+        write(os.path.join(self.root, compat.CORPUS_TEST), 'class ErlangCorpusParsingTest {}\n')
 
     def tearDown(self):
         self.temp.cleanup()
@@ -245,6 +249,36 @@ class IdeResultTest(Fixture):
         self.assertEqual('v0.11.1302', released['release'])
         json.dumps(result)
 
+    def test_facts_of_each_check(self):
+        # Finding 1 of the third review: the corpus wording was printed on the test row too.
+        self.check_ran('compile', 0, 'BUILD SUCCESSFUL')
+        self.check_ran('test', 0)
+        write(os.path.join(self.root, 'build/test-results/test/TEST-Bar.xml'), PASSING_XML)
+        self.verify_ran()
+        self.released_ran()
+        summary = compat.summary(compat.ide_result(self.args()))
+        self.assertIn('| compile | passed | 0 compiler errors |', summary)
+        self.assertIn('| test | passed | 1 tests, 0 failed, 0 skipped |', summary)
+        self.assertIn('| verifyPlugin | passed | IU-263.7307.200: %s |' % COMPATIBLE_VERDICT, summary)
+        self.assertIn('| releasedPlugin | passed | v0.11.1302 (intellij-erlang-0.11.1302.zip); IU-263.7307.200: %s |'
+                      % COMPATIBLE_VERDICT, summary)
+
+    def test_commit_that_predates_the_check(self):
+        # Finding 4 of the third review: build.gradle of the commit does not read platformVersion, so the build resolved
+        # its own IDE, not the requested one. The checks are skipped and did not work; the result is still written.
+        write(os.path.join(self.root, 'build.gradle'), 'ijp.intellijIdea("2026.3")\n')
+        self.assertEqual(compat.IDE_CHECKS, compat.predating_checks(self.root, 'ide', '2026.3.1'))
+        self.assertEqual([], compat.predating_checks(self.root, 'ide', ''))
+        write(os.path.join(self.logs, 'released.json'), '{"tag": "v0.11.1302", "asset": "a.zip"}')
+        result = compat.ide_result(self.args('2026.3.1'))
+        self.assertEqual({name: {'status': 'not-run', 'reason': 'the checked commit predates the compatibility check'}
+                          for name in ('compile', 'test', 'verifyPlugin', 'releasedPlugin')}, result['checks'])
+        self.assertIs(False, result['resolved']['ide']['matchesRequest'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertIn('| compile | not-run | the checked commit predates the compatibility check |', compat.summary(result))
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
     def test_released_plugin_not_checked_is_incomplete(self):
         # Finding 7: the question "is the published plugin broken in this IDE" was not answered.
         self.check_ran('compile', 0)
@@ -397,8 +431,9 @@ class IdeResultTest(Fixture):
         self.assertIn('non-zero exit value 134', test['logTail'])
         self.assertEqual('passed', result['checks']['compile']['status'])
 
-    def test_unfinished_check_is_failed_with_a_reason(self):
-        # Decision 7: the step of the check timed out, so run-check.sh wrote NAME.started and a partial log only.
+    def test_unfinished_check_did_not_work(self):
+        # Decision 7, and decision 1 of the third review: the step of the check timed out or was cancelled, so
+        # run-check.sh wrote NAME.started and a partial log only. The check did not work: incomplete, red on both events.
         self.check_ran('compile', 0)
         write(os.path.join(self.logs, 'test.started'), '')
         write(os.path.join(self.logs, 'test.log'), '> Task :test\nFooTest > testHangs STARTED\n')
@@ -406,11 +441,13 @@ class IdeResultTest(Fixture):
         self.released_ran()
         result = compat.ide_result(self.args())
         test = result['checks']['test']
-        self.assertEqual('failed', test['status'])
+        self.assertEqual('not-run', test['status'])
         self.assertIsNone(test['exitCode'])
-        self.assertIn('did not finish', test['reason'])
+        self.assertEqual('timed out or was cancelled', test['reason'])
         self.assertIn('testHangs', test['logTail'])
-        self.assertEqual('failed', result['status'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
 
     def test_unfinished_compile_check(self):
         # Finding 3, probe A: the summary of a compile check without errors used to raise KeyError.
@@ -418,12 +455,15 @@ class IdeResultTest(Fixture):
         write(os.path.join(self.logs, 'compile.log'), '> Task :compileJava\n')
         self.released_ran()
         result = compat.ide_result(self.args())
-        self.assertEqual('failed', result['checks']['compile']['status'])
+        self.assertEqual('not-run', result['checks']['compile']['status'])
         self.assertEqual('the compile check did not finish', result['checks']['test']['reason'])
-        self.assertEqual('failed', result['status'])
+        self.assertEqual('compile', result['checks']['test']['blockedBy'])
+        self.assertEqual('incomplete', result['status'])
         summary = compat.summary(result)
-        self.assertIn('| compile | failed | the check started but did not finish', summary)
+        self.assertIn('| compile | not-run | timed out or was cancelled |', summary)
         self.assertIn('> Task :compileJava', summary)
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
 
     def test_summary_of_every_result(self):
         # Finding 3: summary() works for every result ide_result() can produce.
@@ -524,6 +564,75 @@ class OtpResultTest(Fixture):
         self.assertEqual(['R15B02', '27'], result['checks']['knownRelease']['knownReleases'])
         self.assertEqual(3, result['checks']['corpus']['files'])
 
+    def test_facts_of_each_check(self):
+        # Finding 1 of the third review.
+        args = self.args()
+        self.compilation_passed()
+        self.corpus(args, filesWithErrors=1, errorElements=2,
+                    errors=[{'file': 'a.erl', 'line': 1, 'column': 2, 'description': 'x'}])
+        summary = compat.summary(compat.otp_result(args))
+        self.assertIn('| compilationTests | passed | 1 tests, 0 failed, 0 skipped |', summary)
+        self.assertIn('| corpus | failed | 3 files, 1 with errors, 2 error elements, 0 exceptions, 0 slow files |', summary)
+        self.assertIn('| knownRelease | passed | OTP 27: ErlangSdkRelease V_27_0, testData/mockSdk-R27 |', summary)
+
+    def test_rebar3_failure_next_to_a_check_that_did_not_work(self):
+        # Finding 2 of the third review: the check stays not-run, with the rebar3 failure next to its reason.
+        args = self.args()
+        rebar3_failure = ('rebar3 3.28.0 does not run on Erlang/OTP 27.3.4.9: `escript rebar3 version` exited with 1: '
+                          'escript: exception error')
+        states = {
+            'absent': lambda: None,
+            'started': lambda: write(os.path.join(self.logs, 'compilation.started'), ''),
+            'no-test': lambda: self.check_ran('compilation', 0),
+            'task-missing': lambda: self.check_ran('compilation', 1, "Task 'testCompilation' not found in project"),
+        }
+        for state, run in states.items():
+            shutil.rmtree(self.logs)
+            os.makedirs(self.logs)
+            run()
+            self.corpus(args)
+            with self.subTest(state=state):
+                before = compat.otp_result(args)['checks']['compilationTests']
+                self.assertEqual('not-run', before['status'])
+                self.check_ran('rebar3', 1, 'escript: exception error\nmore\n')
+                result = compat.otp_result(args)
+                check = result['checks']['compilationTests']
+                self.assertEqual('not-run', check['status'])
+                self.assertEqual('%s; also, %s' % (before['reason'], rebar3_failure), check['reason'])
+                self.assertEqual('incomplete', result['status'])
+                self.assertEqual(1, self.conclude(result, 'pull_request'))
+                self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_commit_that_predates_the_check(self):
+        # Finding 4 of the third review: the commit has no ErlangCorpusParsingTest, so the corpus step is skipped.
+        args = self.args()
+        os.remove(os.path.join(self.root, compat.CORPUS_TEST))
+        self.assertEqual(['corpus'], compat.predating_checks(self.root, 'otp'))
+        self.compilation_passed()
+        result = compat.otp_result(args)
+        self.assertEqual({'status': 'not-run', 'reason': 'the checked commit predates the compatibility check'},
+                         result['checks']['corpus'])
+        self.assertEqual('passed', result['checks']['compilationTests']['status'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_corpus_report_that_is_not_valid_json(self):
+        # Finding 5 of the third review: a report cut off in the middle raised JSONDecodeError and left no result.
+        args = self.args()
+        self.compilation_passed()
+        self.check_ran('corpus', 0, 'BUILD SUCCESSFUL')
+        for content, reason in (('{"files": 3, "err', 'the corpus report is not valid JSON: '),
+                                ('[]', 'the corpus report is not a JSON object')):
+            write(args.corpus_report, content)
+            with self.subTest(content=content):
+                result = compat.otp_result(args)
+                corpus = result['checks']['corpus']
+                self.assertEqual('not-run', corpus['status'])
+                self.assertTrue(corpus['reason'].startswith(reason), corpus['reason'])
+                self.assertEqual('incomplete', result['status'])
+                self.assertEqual(1, self.conclude(result, 'pull_request'))
+
     def test_skipped_compilation_tests_fail(self):
         args = self.args()
         self.check_ran('compilation', 1)
@@ -593,8 +702,11 @@ class OtpResultTest(Fixture):
         self.compilation_passed()
         write(os.path.join(self.logs, 'corpus.started'), '')
         result = compat.otp_result(args)
-        self.assertEqual('failed', result['checks']['corpus']['status'])
-        self.assertIn('| corpus | failed | the check started but did not finish', compat.summary(result))
+        self.assertEqual('not-run', result['checks']['corpus']['status'])
+        self.assertIn('| corpus | not-run | timed out or was cancelled |', compat.summary(result))
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
 
     def test_summary_of_every_result(self):
         # Finding 3: summary() works for every result otp_result() can produce.
@@ -750,7 +862,46 @@ class MainTest(Fixture):
                                 '--ide-info', os.path.join(self.root, 'build/compat/ide.json'))
         self.assertEqual(0, code)
         with open(summary, encoding='utf-8') as f:
-            self.assertIn('| compile | failed |', f.read())
+            self.assertIn('| compile | not-run | timed out or was cancelled |', f.read())
+
+    def test_commit_that_predates_the_check_gives_a_result(self):
+        # Finding 4 of the third review: "Write the result" exited with 2 and no artifact.
+        write(os.path.join(self.root, 'build.gradle'), 'ijp.intellijIdea("2026.3")\n')
+        output = os.path.join(self.temp.name, 'output')
+        code, printed = self.run_main('tree', '--job', 'ide', '--root', self.root, '--ide', '2026.3.1', '--output', output)
+        self.assertEqual(0, code)
+        self.assertIn('predates the compatibility check', printed)
+        self.assertEqual(0, self.run_main('tree', '--job', 'ide', '--root', self.root, '--output', output)[0])
+        self.assertEqual(0, self.run_main('tree', '--job', 'otp', '--root', self.root, '--output', output)[0])
+        with open(output, encoding='utf-8') as f:
+            self.assertEqual('current=false\ncurrent=true\ncurrent=true\n', f.read())
+        write(os.path.join(self.root, 'build/compat/ide.json'), json.dumps(IDE_INFO))
+        out = os.path.join(self.temp.name, 'compat-ide.json')
+        code, _ = self.run_main('ide-result', '--root', self.root, '--logs', self.logs, '--commit', 'abc',
+                                '--out', out, '--summary', '', '--ide', '2026.3.1',
+                                '--ide-info', os.path.join(self.root, 'build/compat/ide.json'))
+        self.assertEqual(0, code)
+        with open(out, encoding='utf-8') as f:
+            self.assertEqual('incomplete', json.load(f)['status'])
+        for event in ('pull_request', 'workflow_dispatch'):
+            self.assertEqual(1, self.run_main('conclusion', out, '--event', event)[0])
+
+    def test_corpus_report_that_is_not_valid_json_gives_a_result(self):
+        # Finding 5 of the third review.
+        otp_root = os.path.join(self.temp.name, 'erlang')
+        write(os.path.join(otp_root, 'releases', '27', 'OTP_VERSION'), '27.3.4.9\n')
+        report = os.path.join(self.temp.name, 'corpus.json')
+        write(report, '{"files": 3, "errors": [{"file": "a.erl", "li')
+        self.check_ran('corpus', 0)
+        out = os.path.join(self.temp.name, 'compat-otp.json')
+        code, _ = self.run_main('otp-result', '--root', self.root, '--logs', self.logs, '--commit', 'abc',
+                                '--out', out, '--summary', '', '--otp-version', '27.3.4.9', '--otp-root', otp_root,
+                                '--corpus-report', report)
+        self.assertEqual(0, code)
+        with open(out, encoding='utf-8') as f:
+            corpus = json.load(f)['checks']['corpus']
+        self.assertEqual('not-run', corpus['status'])
+        self.assertIn('not valid JSON', corpus['reason'])
 
     def test_infrastructure_failure_writes_no_result(self):
         out = os.path.join(self.temp.name, 'compat-ide.json')
@@ -783,10 +934,18 @@ EVIL_OTP = '27.3.4.9\nREBAR3_VERSION=../../../../evil/repo/releases/download/v1\
 DEFAULT_SHA = 'a' * 40
 OLD_SHA = '1234567' + '0' * 33
 MERGE_SHA = 'd' * 40
+ANNOTATED_TAG_SHA = '7' * 40
+RELEASE_1268_SHA = '9' * 40
+
+
+def tag_ref(name, sha, kind='commit', ref=None):
+    return {'ref': ref or 'refs/tags/' + name, 'object': {'type': kind, 'sha': sha}}
 
 
 class FakeApi:
-    """The GitHub REST API of a repository with branches master and feature/x, tag v0.11.1302 and a fork commit."""
+    """The GitHub REST API of a repository with branches master, feature/x and tags/v0.3, a fork commit, and tags:
+    v0.11.1302 (lightweight) and v0.11.1268 (annotated) with a release each, v0.1 without a release, v0.4 with a draft
+    release. commits/<ref> falls back to other ref namespaces, as GitHub's does; git/ref/<ref> does not."""
     def __init__(self):
         self.calls = []
 
@@ -796,6 +955,19 @@ class FakeApi:
             'repos/o/r/commits/heads/master': {'sha': DEFAULT_SHA},
             'repos/o/r/commits/heads/feature/x': {'sha': 'b' * 40},
             'repos/o/r/commits/tags/v0.11.1302': {'sha': 'c' * 40},
+            'repos/o/r/commits/tags/v0.1': {'sha': OLD_SHA},
+            'repos/o/r/commits/tags/v0.3': {'sha': 'b' * 40},
+            'repos/o/r/releases/tags/v0.11.1302': {'tag_name': 'v0.11.1302', 'draft': False},
+            'repos/o/r/releases/tags/v0.11.1268': {'tag_name': 'v0.11.1268', 'draft': False},
+            'repos/o/r/releases/tags/v0.3': {'tag_name': 'v0.3', 'draft': False},
+            'repos/o/r/releases/tags/v0.4': {'tag_name': 'v0.4', 'draft': True},
+            'repos/o/r/git/ref/tags/v0.11.1302': tag_ref('v0.11.1302', 'c' * 40),
+            'repos/o/r/git/ref/tags/v0.11.1268': tag_ref('v0.11.1268', ANNOTATED_TAG_SHA, 'tag'),
+            'repos/o/r/git/tags/' + ANNOTATED_TAG_SHA: {'object': {'type': 'commit', 'sha': RELEASE_1268_SHA}},
+            'repos/o/r/git/ref/tags/v0.1': tag_ref('v0.1', OLD_SHA),
+            # A stand-in for an answer from another ref namespace: the branch tags/v0.3.
+            'repos/o/r/git/ref/tags/v0.3': tag_ref('v0.3', 'b' * 40, ref='refs/heads/tags/v0.3'),
+            'repos/o/r/git/ref/tags/v0.4': tag_ref('v0.4', 'e' * 40),
             'repos/o/r/compare/master...' + OLD_SHA: {'status': 'behind', 'merge_base_commit': {'sha': OLD_SHA}},
             'repos/o/r/compare/master...' + DEFAULT_SHA: {'status': 'identical', 'merge_base_commit': {'sha': DEFAULT_SHA}},
             'repos/o/r/compare/master...' + 'f' * 40: {'status': 'diverged', 'merge_base_commit': {'sha': DEFAULT_SHA}},
@@ -885,6 +1057,28 @@ class InputsTest(Fixture):
         self.assertEqual('c' * 40, compat.resolve_ref('v0.11.1302', 'o/r', 'master', api))
         self.assertEqual(DEFAULT_SHA, compat.resolve_ref(DEFAULT_SHA, 'o/r', 'master', api))
         self.assertEqual(OLD_SHA, compat.resolve_ref(OLD_SHA, 'o/r', 'master', api))
+        # Decision 3: a release tag on a maintenance branch is accepted by name. Its tag is annotated.
+        self.assertEqual(RELEASE_1268_SHA, compat.resolve_ref('v0.11.1268', 'o/r', 'master', api))
+
+    def test_tag_must_be_a_published_release_resolved_as_exactly_refs_tags(self):
+        # Decision 2 of the third review: a tag without a release (v0.1), with a draft release (v0.4), or that resolves
+        # to another ref namespace (v0.3, the branch tags/v0.3) is refused, and commits/<ref>, which falls back to
+        # other ref namespaces, is never asked.
+        api = FakeApi()
+        for ref in ('v0.1', 'v0.3', 'v0.4', 'v9.9'):
+            with self.assertRaises(compat.InputError, msg=ref):
+                compat.resolve_ref(ref, 'o/r', 'master', api)
+        self.assertEqual('c' * 40, compat.resolve_ref('v0.11.1302', 'o/r', 'master', api))
+        self.assertEqual([], [call for call in api.calls if '/commits/tags/' in call])
+        self.assertIn('repos/o/r/releases/tags/v0.1', api.calls)
+        self.assertIn('repos/o/r/git/ref/tags/v0.11.1302', api.calls)
+
+    def test_form_is_checked_before_any_request(self):
+        api = FakeApi()
+        for ref in ('master', 'tags/v0.11.1302', 'refs/tags/v0.11.1302', 'v0.11.1302\nX=1'):
+            with self.assertRaises(compat.InputError, msg=ref):
+                compat.check_inputs('ide', 'workflow_dispatch', {'ref': ref}, None, 'o/r', 'master', api=api)
+        self.assertEqual([], api.calls)
 
     def test_ref_from_elsewhere_is_rejected(self):
         # A commit that is not on the default branch (a fork's, a branch's), a tag that does not exist, a branch.
@@ -1024,6 +1218,26 @@ class WorkflowTest(unittest.TestCase):
                 for step_id in set(re.findall(r'steps\.([\w-]+)\.outputs\.', condition)):
                     self.assertIn("steps.%s.outcome == 'success'" % step_id, condition, '%s: %s' % (job, step['name']))
                     self.assertNotIn('||', condition, '%s: %s' % (job, step['name']))
+
+    def test_checks_that_a_predating_commit_cannot_run_are_skipped(self):
+        # Finding 4 of the third review: the tree is checked after its checkout and before any check runs.
+        guarded = {'ide': ['Compile', 'Verify the released plugin'], 'otp': ['Parse the Erlang/OTP sources']}
+        for job in self.jobs:
+            steps = self.steps(job)
+            names = [step.get('name') for step in steps]
+            tree = self.step(job, 'Check the commit')
+            self.assertEqual('tree', tree['id'])
+            self.assertIn('compat.py" tree --job %s --root plugin' % job, tree['run'])
+            self.assertNotIn('if', tree)
+            self.assertGreater(names.index('Check the commit'), names.index('Check out the plugin'))
+            first_check = min(i for i, step in enumerate(steps) if 'run-check.sh' in step.get('run', ''))
+            self.assertLess(names.index('Check the commit'), first_check, job)
+            for name in guarded[job]:
+                self.assertIn("steps.tree.outputs.current == 'true'", self.step(job, name)['if'], '%s: %s' % (job, name))
+        self.assertIn('--ide "$IDE"', self.step('ide', 'Check the commit')['run'])
+        self.assertEqual('${{ steps.inputs.outputs.ide }}', self.step('ide', 'Check the commit')['env']['IDE'])
+        for name in ('Test', 'Verify the plugin'):
+            self.assertIn("steps.compile.outcome == 'success'", self.step('ide', name)['if'])
 
     def test_code_of_ref_gets_no_credentials_and_saves_no_cache(self):
         # Finding 3.

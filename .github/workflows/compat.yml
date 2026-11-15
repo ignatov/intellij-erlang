@@ -3,15 +3,18 @@ name: Compatibility check
 # Answers, for one IntelliJ IDEA build and one Erlang/OTP release, whether the plugin works with it (see AGENTS.md).
 # Each job writes one JSON result (artifact compat-ide or compat-otp) and a summary. A run without the result artifact
 # failed for infrastructure reasons (the IDE or Erlang/OTP could not be set up); a job that was not asked for is
-# skipped and leaves no artifact. A result whose status is incomplete (a check did not run or did not work) makes the
-# job red on every event. On workflow_dispatch a red job with a failed result found problems. On pull_request the job
-# tests the workflow itself: it is green when every check ran and worked, whatever the checks found.
+# skipped and leaves no artifact. A result whose status is incomplete (a check did not run or did not work, timed out or
+# was cancelled, or the checked commit predates this check) makes the job red on every event. On workflow_dispatch a
+# red job with a failed result found problems. On pull_request the job tests the workflow itself: it is green when
+# every check ran and worked, whatever the checks found.
 # The scripts come from the commit of this workflow. On workflow_dispatch the plugin is checked out from `ref` into
 # plugin/; on pull_request it is the same commit as the scripts, the merge commit of the event. Every input is validated
-# before it is used, and `ref` must be a release tag of this repository or a commit of its default branch, because the
-# job runs the Gradle build of that commit. No credentials are persisted and no Gradle cache is saved, and the steps
-# with a token run before any code of `ref`. A step that reads an output of another step also requires that step to
-# have succeeded, because the output of a step that was skipped or timed out is unset.
+# before it is used, and `ref` must be the tag of a published release of this repository or a commit of its default
+# branch, because the job runs the Gradle build of that commit. The step "Check the commit" finds, before any check
+# runs, the checks that the checked-out commit cannot run because it predates this check; they are skipped and
+# reported as not-run. No credentials are persisted and no Gradle cache is saved, and the steps with a token run
+# before any code of `ref`. A step that reads an output of another step also requires that step to have succeeded,
+# because the output of a step that was skipped or timed out is unset.
 
 on:
   workflow_dispatch:
@@ -34,8 +37,10 @@ on:
         default: ''
       ref:
         description: >-
-          A release tag of this repository (v0.11.1302), or the full 40-character SHA of the head of the default branch
-          or of an ancestor of it. Empty: the head of the default branch. Branches are not accepted.
+          The tag v<digits and dots> of a published release of this repository, or the full 40-character SHA of the
+          head of the default branch or of an ancestor of it. Empty: the head of the default branch. Branches are not
+          accepted. Only commits of the default branch from the merge of the compatibility check on, and release tags
+          made after it, have what the checks need; an older commit gives an incomplete result.
         required: false
         type: string
         default: ''
@@ -89,6 +94,12 @@ jobs:
         path: plugin
         ref: ${{ steps.inputs.outputs.commit }}
         persist-credentials: false
+    - name: Check the commit
+      # Reads the checked-out tree only: current=false if the commit predates the compatibility check.
+      id: tree
+      env:
+        IDE: ${{ steps.inputs.outputs.ide }}
+      run: python3 "$TOOL/compat.py" tree --job ide --root plugin --ide "$IDE"
     - name: Download the released plugin
       # Before any code of the plugin checkout runs, because this step has the token.
       id: release
@@ -112,6 +123,7 @@ jobs:
         "$TOOL/gradle.sh" compatIdeInfo
     - name: Compile
       id: compile
+      if: ${{ steps.tree.outcome == 'success' && steps.tree.outputs.current == 'true' }}
       timeout-minutes: 25
       working-directory: plugin
       env:
@@ -138,7 +150,8 @@ jobs:
       # The archive of the published release, the build on JetBrains Marketplace, without building it.
       if: >-
         ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.release.outcome == 'success'
-        && steps.release.outputs.archive != '' }}
+        && steps.release.outputs.archive != '' && steps.tree.outcome == 'success'
+        && steps.tree.outputs.current == 'true' }}
       timeout-minutes: 20
       working-directory: plugin
       env:
@@ -218,6 +231,10 @@ jobs:
         path: plugin
         ref: ${{ steps.inputs.outputs.commit }}
         persist-credentials: false
+    - name: Check the commit
+      # Reads the checked-out tree only: current=false if the commit predates the compatibility check.
+      id: tree
+      run: python3 "$TOOL/compat.py" tree --job otp --root plugin
     - name: Set up JDK 25
       uses: actions/setup-java@v6
       with:
@@ -255,7 +272,9 @@ jobs:
           -Derlang.sdk.path="$ERLANG_ROOT" -Drebar.path="$REBAR3_PATH"
     - name: Parse the Erlang/OTP sources
       # The environment is not an input of the test task, so --rerun makes Gradle run it even when it is cached.
-      if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
+      if: >-
+        ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.tree.outcome == 'success'
+        && steps.tree.outputs.current == 'true' }}
       timeout-minutes: 30
       working-directory: plugin
       env:

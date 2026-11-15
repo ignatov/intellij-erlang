@@ -7,19 +7,22 @@ report, and writes one JSON result and a Markdown summary. The JSON is read by p
 SCHEMA_VERSION and the PR that added this script for the schema.
 
 Every check has a status: passed, failed or not-run. A check that ran and found problems is failed and lists its
-findings; a check that started and did not finish (its step timed out) is failed with a reason. A check that did not
-work is not-run with a reason, also when its step ran: no test ran, the Gradle task or option does not exist, the check
-wrote no report, or its result is missing. A check that was not run because a check it needs found problems has
-blockedBy, the name of that check. The result's status is incomplete if a check is not-run without a failed blockedBy,
-otherwise failed if a check failed, and passed otherwise. When the job could not get as far as its checks (an IDE that
-cannot be resolved, an Erlang/OTP that cannot be installed), no JSON is written and the script exits with 2, so that a
-run without the result artifact means an infrastructure failure. Any other Gradle failure once the IDE is resolved is a
-finding of the check that failed.
+findings. A check that did not work is not-run with a reason, also when its step ran: no test ran, the Gradle task or
+option does not exist, the check wrote no report or an unreadable one, its result is missing, its step started and left
+no exit code (it timed out or was cancelled), or the checked commit predates the compatibility check (PREDATES). A
+check that was not run because a check it needs found problems has blockedBy, the name of that check. The result's
+status is incomplete if a check is not-run without a failed blockedBy, otherwise failed if a check failed, and passed
+otherwise. When the job could not get as far as its checks (an IDE that cannot be resolved, an Erlang/OTP that cannot
+be installed), no JSON is written and the script exits with 2, so that a run without the result artifact means an
+infrastructure failure. Any other Gradle failure once the IDE is resolved is a finding of the check that failed.
 
 Subcommands:
   inputs --job JOB --event EVENT
                           validate the workflow inputs (and the pins of gradle.yml) before anything uses them, resolve
                           `ref` to a commit of this repository and write them to $GITHUB_OUTPUT
+  tree --job JOB --root DIR [--ide IDE]
+                          before the checks run, write current=true to $GITHUB_OUTPUT if the checked-out commit has
+                          what the checks of JOB need, current=false if it predates the compatibility check
   pins GRADLE_YML         print OTP_VERSION, REBAR3_VERSION and REBAR3_SHA256 pinned in gradle.yml as NAME=value lines
   release-tag             print the tag of the published plugin, read from `gh release list --json tagName` on stdin
   ide-result ...          the result of the ide job
@@ -52,6 +55,8 @@ FAILED = 'failed'
 NOT_RUN = 'not-run'
 INCOMPLETE = 'incomplete'
 TRIMMED = '... [trimmed]'
+TIMED_OUT = 'timed out or was cancelled'
+PREDATES = 'the checked commit predates the compatibility check'
 
 # The documented forms of the inputs; nothing else reaches a command or an output file. ASCII digits only: \d would
 # also match other Unicode digits.
@@ -65,7 +70,8 @@ INPUT_FORMS = {
     'ide': 'a release version (2026.3, 2026.3.1), a build number (263.7307.44), latest, 263-EAP-SNAPSHOT, '
            '<build>-EAP-SNAPSHOT or LATEST-EAP-SNAPSHOT',
     'otp': 'an Erlang/OTP version like 27.3.4.9, 29.1 or 30.0-rc1',
-    'ref': 'a release tag of this repository (v0.11.1302) or the full SHA of a commit of its default branch',
+    'ref': 'a published release tag v<digits and dots> of this repository or the full SHA of a commit of its default '
+           'branch',
 }
 PIN_PATTERNS = {
     'OTP_VERSION': INPUT_PATTERNS['otp'],
@@ -155,16 +161,15 @@ def read_exit(logs, name):
 
 
 def unfinished(logs, name):
-    """A failed check if run-check.sh started check `name` and wrote no exit code (its step timed out), else None."""
+    """A check that did not work if run-check.sh started check `name` and wrote no exit code, else None."""
     if read_exit(logs, name) is not None or not os.path.exists(os.path.join(logs, name + '.started')):
         return None
-    return {'status': FAILED, 'exitCode': None,
-            'reason': 'the check started but did not finish: its step timed out or was killed; see logTail',
+    return {'status': NOT_RUN, 'exitCode': None, 'reason': TIMED_OUT,
             'logTail': log_tail(read_file(os.path.join(logs, name + '.log')))}
 
 
 def not_run(logs, name, extra=None):
-    """The check `name` that has no exit code: failed if it did not finish, otherwise not-run."""
+    """The check `name` that has no exit code: not-run, with the reason TIMED_OUT if it started."""
     check = unfinished(logs, name)
     if check is None:
         check = {'status': NOT_RUN}
@@ -384,7 +389,12 @@ def corpus_check(logs, report_path):
         cause = matching_line(BROKEN_PATTERNS, log)
         return broken({'status': NOT_RUN, 'exitCode': exit_code}, 'ErlangCorpusParsingTest wrote no report'
                       + ('; the check could not run: ' + cause if cause else '; see logTail'), log)
-    report = json.loads(content)
+    try:
+        report = json.loads(content)
+    except ValueError as e:
+        return broken({'status': NOT_RUN, 'exitCode': exit_code}, 'the corpus report is not valid JSON: %s' % e, log)
+    if not isinstance(report, dict):
+        return broken({'status': NOT_RUN, 'exitCode': exit_code}, 'the corpus report is not a JSON object', log)
     errors = [dict(e, description=text(e.get('description'))) for e in report.get('errors', [])]
     exceptions = [dict(e, exception=text(e.get('exception'))) for e in report.get('exceptions', [])]
     slow_files = report.get('slowFiles', [])
@@ -434,6 +444,20 @@ def known_release_check(root, otp_release):
 # Inputs
 
 
+IDE_CHECKS = ['compile', 'test', 'verifyPlugin', 'releasedPlugin']
+CORPUS_TEST = 'tests/org/intellij/erlang/parser/ErlangCorpusParsingTest.java'
+
+
+def predating_checks(root, job, ide=''):
+    """The checks of `job` that the commit checked out in `root` cannot run because it predates the compatibility
+    check: for ide, all of them when an IDE is requested and build.gradle does not read the property platformVersion;
+    for otp, corpus when there is no ErlangCorpusParsingTest."""
+    if job == 'ide':
+        build = read_file(os.path.join(root, 'build.gradle')) or ''
+        return IDE_CHECKS if ide and not re.search(r'\bplatformVersion\b', build) else []
+    return [] if os.path.isfile(os.path.join(root, CORPUS_TEST)) else ['corpus']
+
+
 def ide_matches(requested, info):
     """Whether the IDE the build resolved is the one requested (None if nothing was requested)."""
     if not requested:
@@ -452,13 +476,15 @@ def ide_matches(requested, info):
     return version == wanted
 
 
-def resolve_ide(requested, info_path):
+def resolve_ide(requested, info_path, predates=False):
+    """The IDE that the build resolved. Another IDE than the requested one is an infrastructure failure, unless the
+    checked commit predates the compatibility check and so ignores -PplatformVersion (`predates`)."""
     content = read_file(info_path)
     if content is None:
         raise InfrastructureError('the IDE was not resolved: %s is missing' % info_path)
     info = json.loads(content)
     matches = ide_matches(requested, info)
-    if matches is False:
+    if matches is False and not predates:
         raise InfrastructureError('the build resolved %s %s (%s), not the requested %s; does the ref read -PplatformVersion?'
                                   % (info.get('name'), info.get('version'), info.get('buildNumber'), requested))
     return {
@@ -535,11 +561,28 @@ def github_api(path):
         raise InfrastructureError('GitHub API %s: %s' % (path, e))
 
 
-def resolve_ref(ref, repository, default_branch, api=github_api):
-    """The commit SHA of `ref`: empty for the head of the default branch, a release tag v<digits and dots> of
-    `repository`, or the full SHA of the head of the default branch or of an ancestor of it.
+def tag_commit(repository, tag, api):
+    """The commit of the tag `tag`, looked up as exactly refs/tags/<tag> (git/ref does not fall back to other ref
+    namespaces, as commits/<ref> does) and dereferenced through annotated tags; None if there is no such tag."""
+    ref = api('repos/%s/git/ref/tags/%s' % (repository, urllib.parse.quote(tag, safe='')))
+    if not isinstance(ref, dict) or ref.get('ref') != 'refs/tags/' + tag:
+        return None
+    target = ref.get('object') or {}
+    for _ in range(5):
+        if target.get('type') == 'commit':
+            return target.get('sha')
+        if target.get('type') != 'tag' or not SHA.fullmatch(target.get('sha') or ''):
+            return None
+        target = (api('repos/%s/git/tags/%s' % (repository, target['sha'])) or {}).get('object') or {}
+    return None
 
-    Anything else (a branch, a pull request, a fork) is refused: the job runs the Gradle build of that commit."""
+
+def resolve_ref(ref, repository, default_branch, api=github_api):
+    """The commit SHA of `ref`: empty for the head of the default branch, the tag v<digits and dots> of a published
+    release of `repository`, or the full SHA of the head of the default branch or of an ancestor of it.
+
+    Anything else (a branch, a pull request, a fork, a tag without a release) is refused: the job runs the Gradle build
+    of that commit."""
     if not default_branch:
         raise InputError('the default branch of %s is not known' % repository)
     quote = lambda value: urllib.parse.quote(value, safe='/')
@@ -551,11 +594,13 @@ def resolve_ref(ref, repository, default_branch, api=github_api):
         if comparison and comparison.get('status') in ('behind', 'identical'):
             return ref
     else:
-        commit = api('repos/%s/commits/%s' % (repository, quote('tags/' + ref)))
+        release = api('repos/%s/releases/tags/%s' % (repository, urllib.parse.quote(ref, safe='')))
+        if isinstance(release, dict) and release.get('tag_name') == ref and not release.get('draft'):
+            commit = {'sha': tag_commit(repository, ref, api)}
     if isinstance(commit, dict) and SHA.fullmatch(commit.get('sha') or ''):
         return commit['sha']
-    raise InputError('the input ref=%r is not a release tag of %s, nor a commit of its default branch %s'
-                     % (ref, repository, default_branch))
+    raise InputError('the input ref=%r is not the tag of a published release of %s, nor a commit of its default '
+                     'branch %s' % (ref, repository, default_branch))
 
 
 def check_inputs(job, event, raw, workflow_sha=None, repository=None, default_branch=None, gradle_yml=None,
@@ -650,10 +695,16 @@ def ide_result(args):
                                          released_extra),
     }
     for name in ('test', 'verifyPlugin'):
-        if checks[name]['status'] == NOT_RUN and 'exitCode' not in checks[name] and checks['compile']['status'] == FAILED:
-            checks[name]['reason'] = ('the compile check did not finish' if checks['compile']['exitCode'] is None
-                                      else 'the plugin does not compile against this IDE')
+        if checks[name]['status'] != NOT_RUN or 'exitCode' in checks[name]:
+            continue
+        if checks['compile']['status'] == FAILED:
+            checks[name]['reason'] = 'the plugin does not compile against this IDE'
             checks[name]['blockedBy'] = 'compile'
+        elif checks['compile'].get('reason') == TIMED_OUT:
+            checks[name]['reason'] = 'the compile check did not finish'
+            checks[name]['blockedBy'] = 'compile'
+    predates = predating_checks(args.root, 'ide', args.ide)
+    checks.update({name: {'status': NOT_RUN, 'reason': PREDATES} for name in predates})
     return {
         'schemaVersion': SCHEMA_VERSION,
         'job': 'ide',
@@ -661,7 +712,7 @@ def ide_result(args):
         'limits': {'listItems': LIST_LIMIT, 'textChars': TEXT_LIMIT},
         'run': run_info(),
         'inputs': {'ide': args.ide or '', 'ref': args.ref or ''},
-        'resolved': {'commit': args.commit, 'ide': resolve_ide(args.ide, args.ide_info)},
+        'resolved': {'commit': args.commit, 'ide': resolve_ide(args.ide, args.ide_info, bool(predates))},
         'checks': checks,
     }
 
@@ -677,16 +728,22 @@ def otp_result(args):
         os.path.join(args.root, 'jps-plugin/build/test-results/testCompilation')], fail_on_skipped=True)
     rebar3_exit = read_exit(args.logs, 'rebar3')
     if rebar3_exit:
-        # The pinned rebar3 does not run on this Erlang/OTP: the rebar tests cannot pass, and that is a finding.
+        # The pinned rebar3 does not run on this Erlang/OTP: the rebar tests cannot pass, and that is a finding. A
+        # check that did not work stays not-run, with the rebar3 failure next to its reason.
         first_line = (read_file(os.path.join(args.logs, 'rebar3.log')) or '').strip().split('\n')[0]
-        compilation['status'] = FAILED
-        compilation['reason'] = text('rebar3 %s does not run on Erlang/OTP %s: `escript rebar3 version` exited with %d: %s'
-                                     % (args.rebar3_version, otp['version'], rebar3_exit, first_line))
+        rebar3_failure = ('rebar3 %s does not run on Erlang/OTP %s: `escript rebar3 version` exited with %d: %s'
+                          % (args.rebar3_version, otp['version'], rebar3_exit, first_line))
+        if compilation['status'] == NOT_RUN:
+            compilation['reason'] = text('%s; also, %s' % (compilation.get('reason'), rebar3_failure))
+        else:
+            compilation['status'] = FAILED
+            compilation['reason'] = text(rebar3_failure)
     checks = {
         'compilationTests': compilation,
         'corpus': corpus_check(args.logs, args.corpus_report),
         'knownRelease': known_release_check(args.root, otp['release']),
     }
+    checks.update({name: {'status': NOT_RUN, 'reason': PREDATES} for name in predating_checks(args.root, 'otp')})
     return {
         'schemaVersion': SCHEMA_VERSION,
         'job': 'otp',
@@ -721,7 +778,7 @@ def check_facts(name, check):
         facts.append('%s (%s)' % (check['release'], check.get('asset')))
     if 'reports' in check:
         facts.append('; '.join('%s: %s' % (r['ide'], r['verdict']) for r in check['reports']))
-    if 'files' in check:
+    if name == 'corpus' and 'files' in check:
         facts.append('%s files, %s with errors, %s error elements, %d exceptions, %d slow files' % (
             check['files'], check.get('filesWithErrors'), check.get('errorElements'),
             (check.get('exceptions') or {}).get('total', 0), (check.get('slowFiles') or {}).get('total', 0)))
@@ -827,6 +884,12 @@ def main(argv=None):
     inputs.add_argument('--gradle-yml', help='the gradle.yml whose pins the otp job uses')
     inputs.add_argument('--output', default=os.environ.get('GITHUB_OUTPUT'))
 
+    tree = commands.add_parser('tree')
+    tree.add_argument('--job', required=True, choices=['ide', 'otp'])
+    tree.add_argument('--root', required=True, help='the checked-out repository')
+    tree.add_argument('--ide', default='', help='the checked ide input')
+    tree.add_argument('--output', default=os.environ.get('GITHUB_OUTPUT'))
+
     pins = commands.add_parser('pins')
     pins.add_argument('gradle_yml')
 
@@ -863,6 +926,12 @@ def main(argv=None):
                                   os.environ.get('GITHUB_REPOSITORY'), os.environ.get('DEFAULT_BRANCH'), args.gradle_yml)
             write_outputs(values, args.output)
             print('\n'.join('%s=%s' % item for item in values.items()))
+        elif args.command == 'tree':
+            predates = predating_checks(args.root, args.job, args.ide)
+            if predates:
+                print('::warning::The checked commit predates the compatibility check; these checks do not run: %s'
+                      % ', '.join(predates))
+            write_outputs({'current': 'false' if predates else 'true'}, args.output)
         elif args.command == 'pins':
             for name, value in read_pins(args.gradle_yml).items():
                 print('%s=%s' % (name, value))
