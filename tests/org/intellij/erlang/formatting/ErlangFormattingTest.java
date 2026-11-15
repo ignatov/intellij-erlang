@@ -220,6 +220,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTry5() throws Exception { doEnterTest(); }
   public void testTryBodyComma() throws Exception { doEnterTest(); }
   public void testTryBodyComma2() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma2() throws Exception { doEnterTest(); }
 
   public void testTryParasite1() throws Exception { doEnterTest(); }
   public void testTryParasite2() throws Exception { doEnterTest(); }
@@ -227,6 +229,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTryParasite4() throws Exception { doEnterTest(); }
   public void testTryParasite5() throws Exception { doEnterTest(); }
   public void testTryBodyCommaParasite() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineCommaParasite() throws Exception { doEnterTest(); }
 
   public void testBindTry()                 throws Exception { doEnterTest(); }
   public void testBindTryExpr()             throws Exception { doEnterTest(); }
