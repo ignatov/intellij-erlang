@@ -28,6 +28,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.PopupHandler;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +43,7 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
   @Nullable
   @Override
   public PsiElement getTarget(@NotNull DataContext dataContext) {
+    if (ElpEngine.ownsFeature(dataContext.getData(CommonDataKeys.PSI_FILE), ElpEngine.Feature.CALL_HIERARCHY)) return null;
     return PsiTreeUtil.getParentOfType(dataContext.getData(CommonDataKeys.PSI_ELEMENT), ErlangFunction.class, false);
   }
 

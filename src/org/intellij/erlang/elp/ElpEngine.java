@@ -34,6 +34,9 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * The engine switch: decides, per file and feature, whether ELP owns a feature so that the plugin's counterpart stays silent.
  * Every plugin feature that ELP can replace asks {@link #ownsFeature} at its entry point; search for the callers to find them all.
@@ -65,8 +68,22 @@ public final class ElpEngine {
     /** Go to declaration: ELP's {@code textDocument/definition}, asked before the plugin's references. */
     NAVIGATION,
     /** The inspections built on resolve (unresolved and unused names): ELP's diagnostics report the same problems. */
-    RESOLVE_INSPECTIONS
+    RESOLVE_INSPECTIONS,
+    /** Find usages and Show Usages: ELP's {@code textDocument/references} supplies the usages of the plugin's target. */
+    FIND_USAGES,
+    /** Rename: ELP's {@code textDocument/rename}, through the plugin's own rename handler in the LSP part. */
+    RENAME,
+    /** Parameter info: ELP's {@code textDocument/signatureHelp}. */
+    SIGNATURE_HELP,
+    /** Call hierarchy: ELP's {@code callHierarchy/*} requests. */
+    CALL_HIERARCHY,
+    /** Highlight usages in the file: ELP's {@code textDocument/documentHighlight}. */
+    DOCUMENT_HIGHLIGHTS,
+    /** Go to Symbol and Go to Class: ELP's {@code workspace/symbol}. A project feature, see {@link #ownsProjectFeature}. */
+    WORKSPACE_SYMBOLS
   }
+
+  private static final ThreadLocal<Set<Feature>> PLUGIN_FALLBACK = ThreadLocal.withInitial(() -> EnumSet.noneOf(Feature.class));
 
   /**
    * @param context an element of the file the feature works in; for completion and documentation pass an element of the file in the
@@ -80,11 +97,41 @@ public final class ElpEngine {
   }
 
   public static boolean ownsFeature(@NotNull Project project, @Nullable VirtualFile file, @NotNull Feature feature) {
-    if (file == null || project.isDefault() || project.isDisposed() || !ElpFiles.isElpFile(file)) return false;
-    ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
-    if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return false;
-    ElpServerStatus status = project.getService(ElpServerStatus.class);
+    if (file == null || !ElpFiles.isElpFile(file)) return false;
+    ElpServerStatus status = statusIfElpPosition(project, feature);
     return status != null && status.isServing(file, feature);
+  }
+
+  /**
+   * For the features that work on the whole project rather than on a file, such as {@link Feature#WORKSPACE_SYMBOLS}: whether a
+   * running ELP server of the project announced the capability.
+   */
+  public static boolean ownsProjectFeature(@NotNull Project project, @NotNull Feature feature) {
+    ElpServerStatus status = statusIfElpPosition(project, feature);
+    return status != null && status.isServingProject(feature);
+  }
+
+  /**
+   * Runs {@code action} with {@code feature} answered by the plugin on this thread, whatever the position: for an ELP entry point
+   * that falls back to the plugin, for example when ELP refuses to rename the element at the caret.
+   */
+  public static void runWithPlugin(@NotNull Feature feature, @NotNull Runnable action) {
+    Set<Feature> fallback = PLUGIN_FALLBACK.get();
+    boolean added = fallback.add(feature);
+    try {
+      action.run();
+    }
+    finally {
+      if (added) fallback.remove(feature);
+    }
+  }
+
+  @Nullable
+  private static ElpServerStatus statusIfElpPosition(@NotNull Project project, @NotNull Feature feature) {
+    if (project.isDefault() || project.isDisposed() || PLUGIN_FALLBACK.get().contains(feature)) return null;
+    ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
+    if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return null;
+    return project.getService(ElpServerStatus.class);
   }
 
   /**

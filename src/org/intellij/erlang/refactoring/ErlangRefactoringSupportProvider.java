@@ -20,6 +20,7 @@ import com.intellij.lang.refactoring.RefactoringSupportProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.refactoring.RefactoringActionHandler;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.refactoring.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
@@ -44,12 +45,14 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
 
   @Override
   public boolean isInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
+    if (ElpEngine.ownsFeature(context != null ? context : o, ElpEngine.Feature.RENAME)) return false;
     // variable renaming is handled by ErlangRenameVariableProcessor
     return (o instanceof ErlangNamedElement || o instanceof ErlangQAtom) && !(o instanceof ErlangQVar) && o.getUseScope() instanceof LocalSearchScope;
   }
 
   @Override
   public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
+    if (ElpEngine.ownsFeature(context != null ? context : o, ElpEngine.Feature.RENAME)) return false;
     return o instanceof ErlangNamedElement || o instanceof ErlangQAtom;
   }
 

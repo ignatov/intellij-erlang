@@ -9,6 +9,8 @@
         <projectService serviceInterface="org.intellij.erlang.elp.ElpServerStatus"
                         serviceImplementation="org.intellij.erlang.elp.lsp.ElpLspServerStatus"/>
         <gotoDeclarationHandler implementation="org.intellij.erlang.elp.lsp.ElpGotoDeclarationHandler" order="first"/>
+        <findUsagesHandlerFactory implementation="org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory" order="first"/>
+        <renameHandler implementation="org.intellij.erlang.elp.lsp.ElpRenameHandler" order="first"/>
     </extensions>
     <applicationListeners>
         <listener topic="org.intellij.erlang.elp.ElpSettings$Listener"

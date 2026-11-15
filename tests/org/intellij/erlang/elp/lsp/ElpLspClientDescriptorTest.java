@@ -124,9 +124,11 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
-    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer", "getDiagnosticsCustomizer",
-                         "getFoldingRangeCustomizer", "getGoToDefinitionCustomizer", "getHoverCustomizer", "getInlayHintCustomizer",
-                         "getSelectionRangeCustomizer", "getSymbolKindCustomizer"),
+    assertEquals(List.of("getCallHierarchyCustomizer", "getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer",
+                         "getDiagnosticsCustomizer", "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer",
+                         "getGoToDefinitionCustomizer", "getGoToImplementationCustomizer", "getGoToTypeDefinitionCustomizer",
+                         "getHoverCustomizer", "getInlayHintCustomizer", "getSelectionRangeCustomizer", "getSignatureHelpCustomizer",
+                         "getSymbolKindCustomizer"),
                  notDisabledCustomizers(customization));
 
     assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
@@ -137,7 +139,9 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertFalse(codeActions.getExtractRefactoringSupport());
     assertInstanceOf(customization.getFindReferencesCustomizer(), LspFindReferencesDisabled.class);
     assertInstanceOf(customization.getRenameCustomizer(), LspRenameDisabled.class);
-    assertInstanceOf(customization.getSignatureHelpCustomizer(), LspSignatureHelpDisabled.class);
+    assertInstanceOf(customization.getSemanticTokensCustomizer(), LspSemanticTokensDisabled.class);
+    assertTrue(assertInstanceOf(customization.getDocumentHighlightsCustomizer(), LspDocumentHighlightsSupport.class)
+                 .shouldAskServerForDocumentHighlights(myFixture.addFileToProject("src/highlights.erl", "").getContainingFile()));
     assertInstanceOf(customization.getWorkspaceSymbolCustomizer(), LspWorkspaceSymbolDisabled.class);
     assertNotNull(descriptor.getLspServerListener());
   }

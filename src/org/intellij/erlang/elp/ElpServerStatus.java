@@ -31,4 +31,10 @@ public interface ElpServerStatus {
    * {@code file}, and announced the capability that {@code feature} needs
    */
   boolean isServing(@NotNull VirtualFile file, @NotNull ElpEngine.Feature feature);
+
+  /**
+   * @return {@code true} when an ELP server started for the {@link ElpMode#ELP} position is running in the project and announced
+   * the capability that {@code feature} needs
+   */
+  boolean isServingProject(@NotNull ElpEngine.Feature feature);
 }

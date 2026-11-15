@@ -21,14 +21,24 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.refactoring.rename.RenameHandler;
+import com.intellij.refactoring.rename.RenameHandlerRegistry;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.ServiceContainerUtil;
+import com.intellij.testFramework.utils.parameterInfo.MockCreateParameterInfoContext;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangParameterInfoHandler;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.editor.ErlangFoldingBuilder;
 import org.intellij.erlang.editor.ErlangWordSelectioner;
+import org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory;
+import org.intellij.erlang.elp.lsp.ElpRenameHandler;
+import org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
@@ -37,6 +47,7 @@ import org.intellij.erlang.intention.ErlangExportFunctionIntention;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Set;
@@ -62,8 +73,17 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     myOldModeProperty = System.getProperty(ElpConfiguration.MODE_PROPERTY);
     System.clearProperty(ElpConfiguration.PATH_PROPERTY);
     System.clearProperty(ElpConfiguration.MODE_PROPERTY);
-    ServiceContainerUtil.registerOrReplaceServiceInstance(getProject(), ElpServerStatus.class, (file, feature) -> myServing,
-                                                          getTestRootDisposable());
+    ServiceContainerUtil.registerOrReplaceServiceInstance(getProject(), ElpServerStatus.class, new ElpServerStatus() {
+      @Override
+      public boolean isServing(@NotNull VirtualFile file, @NotNull ElpEngine.Feature feature) {
+        return myServing;
+      }
+
+      @Override
+      public boolean isServingProject(@NotNull ElpEngine.Feature feature) {
+        return myServing;
+      }
+    }, getTestRootDisposable());
   }
 
   @Override
@@ -244,6 +264,67 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     DaemonCodeAnalyzer.getInstance(getProject()).restart(myFixture.getFile(), "ELP serves the file now");
     assertEquals(Set.of("Head mismatch: should be 'g/1'"), descriptions(myFixture.doHighlighting()));
+  }
+
+  public void testRunWithPluginSuspendsOwnershipOnThisThread() {
+    PsiFile module = myFixture.addFileToProject("src/a.erl", "-module(a).");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    ElpEngine.runWithPlugin(ElpEngine.Feature.RENAME, () -> {
+      assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.RENAME));
+      assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    });
+    assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.RENAME));
+  }
+
+  public void testRenameHasOneHandlerInEachPosition() {
+    myFixture.configureByText("a.erl", "-module(a).\nf<caret>oo() -> ok.\nbar() -> foo().");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    List<? extends RenameHandler> pluginHandlers = RenameHandlerRegistry.getInstance().getRenameHandlers(dataContext());
+    assertNotEmpty(pluginHandlers);
+    assertFalse(ContainerUtil.exists(pluginHandlers, handler -> handler instanceof ElpRenameHandler));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    List<? extends RenameHandler> elpHandlers = RenameHandlerRegistry.getInstance().getRenameHandlers(dataContext());
+    assertSize(1, elpHandlers);
+    assertInstanceOf(elpHandlers.getFirst(), ElpRenameHandler.class);
+
+    ElpEngine.runWithPlugin(ElpEngine.Feature.RENAME, () -> assertEquals(
+      ContainerUtil.map(pluginHandlers, Object::getClass),
+      ContainerUtil.map(RenameHandlerRegistry.getInstance().getRenameHandlers(dataContext()), Object::getClass)));
+  }
+
+  public void testFindUsagesFallsBackToThePluginWhenElpDoesNotAnswer() {
+    myFixture.configureByText("a.erl", "-module(a).\nf<caret>oo() -> ok.\nbar() -> foo(), foo().");
+    PsiElement target = ((ErlangFile)myFixture.getFile()).getFunction("foo", 0);
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertSize(2, myFixture.findUsages(target));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertTrue(new ElpFindUsagesHandlerFactory().canFindUsages(target));
+    assertSize(2, myFixture.findUsages(target));
+  }
+
+  public void testCallHierarchyAndParameterInfo() {
+    myFixture.configureByText("a.erl", "-module(a).\nf(Name) -> Name.\n<caret>g() -> f(1).");
+    int argument = myFixture.getFile().getText().indexOf("f(1)") + 2;
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertNotNull(new ErlangCallHierarchyProvider().getTarget(dataContext()));
+    assertNotNull(parameterInfoAt(argument));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getFile().getText().indexOf("g()"));
+    assertNull(new ErlangCallHierarchyProvider().getTarget(dataContext()));
+    assertNull(parameterInfoAt(argument));
+  }
+
+  private Object parameterInfoAt(int offset) {
+    myFixture.getEditor().getCaretModel().moveToOffset(offset);
+    return new ErlangParameterInfoHandler().findElementForParameterInfo(
+      new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile()));
+  }
+
+  private DataContext dataContext() {
+    return ((EditorEx)myFixture.getEditor()).getDataContext();
   }
 
   private FoldingDescriptor[] foldingRegions() {
