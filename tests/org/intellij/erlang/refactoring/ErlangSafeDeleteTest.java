@@ -17,6 +17,8 @@
 package org.intellij.erlang.refactoring;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.refactoring.BaseRefactoringProcessor;
 import com.intellij.refactoring.safeDelete.SafeDeleteHandler;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 
@@ -36,4 +38,24 @@ public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
 
   public void testFunction()    { doTest(); }
   public void testWithExports() { doTest(); }
+
+  public void testIncludedHeader() {
+    PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
+    myFixture.addFileToProject("includer.erl", "-module(includer).\n-include(\"header.hrl\").\n");
+    try {
+      SafeDeleteHandler.invoke(myFixture.getProject(), new PsiElement[]{header}, false);
+      fail("The usage of the header in includer.erl must be reported");
+    }
+    catch (BaseRefactoringProcessor.ConflictsInTestsException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("includer.erl"));
+    }
+    assertTrue(header.isValid());
+  }
+
+  public void testNotIncludedHeader() {
+    PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
+    myFixture.addFileToProject("includer.erl", "-module(includer).\n-include(\"other.hrl\").\n");
+    SafeDeleteHandler.invoke(myFixture.getProject(), new PsiElement[]{header}, false);
+    assertFalse(header.isValid());
+  }
 }
