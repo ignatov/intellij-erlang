@@ -49,12 +49,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * Parses every .erl and .hrl file under CORPUS_DIR (or -Dcorpus.dir), for example the root of an Erlang/OTP
  * installation, and writes the syntax errors the plugin's parser reports there as JSON to CORPUS_REPORT
- * (or -Dcorpus.report). Every file shipped with Erlang/OTP compiles, so each error element is a plugin bug.
+ * (or -Dcorpus.report). Every file shipped with Erlang/OTP compiles, so each error element is a plugin bug; the few
+ * files of Erlang/OTP that are not Erlang sources, listed in NOT_ERLANG_SOURCES, are not parsed and are reported in
+ * skippedFiles with the reason. The count files includes only the parsed files.
  * Without a corpus testCorpus does nothing. It never fails because of parse errors; see .github/workflows/compat.yml.
  * A corpus directory that is a symbolic link is followed; links below it are not. Columns count characters (code
  * points), as erlc does. The other tests check the report on small corpora of their own; the one with a symbolic link
@@ -63,6 +67,10 @@ import java.util.stream.Stream;
 @RunWith(JUnit38AssumeSupportRunner.class)
 public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final long SLOW_FILE_MILLIS = 10_000;
+  // Paths relative to the corpus root, with the version of the application directory left out (lib/<app>-<vsn>/).
+  private static final Map<String, String> NOT_ERLANG_SOURCES = Map.of(
+    "lib/parsetools/include/leexinc.hrl", "the template of the leex generator, with ## lines that leex.erl replaces");
+  private static final Pattern APPLICATION_VERSION = Pattern.compile("^lib/([^/]+?)-\\d[^/]*/");
 
   @Override
   protected boolean shouldRunTest() {
@@ -121,6 +129,22 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
     assertTrue(report, report.contains("{\"file\": \"c.erl\", \"line\": 3, \"column\": 19,"));
   }
 
+  public void testKnownFilesThatAreNotErlangSourcesAreSkipped() throws Exception {
+    Path temp = FileUtil.createTempDirectory("corpus", null, true).toPath();
+    String template = "##module\n-export([string/1]).\n";
+    for (String version : new String[]{"2.6", "2.7"}) {
+      Files.writeString(Files.createDirectories(temp.resolve("lib/parsetools-" + version + "/include")).resolve("leexinc.hrl"),
+                        template, StandardCharsets.UTF_8);
+    }
+    Files.writeString(Files.createDirectories(temp.resolve("lib/other-1.0/include")).resolve("leexinc.hrl"), template,
+                      StandardCharsets.UTF_8);
+    String report = writeReport(temp, temp.resolve("report.json"));
+    assertTrue(report, report.contains("\"files\": 1,"));
+    assertTrue(report, report.contains("{\"file\": \"lib/other-1.0/include/leexinc.hrl\", \"line\": 1,"));
+    assertTrue(report, report.contains("{\"file\": \"lib/parsetools-2.6/include/leexinc.hrl\", \"reason\": "));
+    assertTrue(report, report.contains("{\"file\": \"lib/parsetools-2.7/include/leexinc.hrl\", \"reason\": "));
+  }
+
   @NotNull
   private String writeReport(@NotNull Path corpusDir, @NotNull Path report) throws IOException {
     assertTrue("Corpus directory " + corpusDir + " does not exist", Files.isDirectory(corpusDir));
@@ -140,8 +164,16 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
     List<String> errors = new ArrayList<>();
     List<String> exceptions = new ArrayList<>();
     List<String> slowFiles = new ArrayList<>();
+    List<String> skippedFiles = new ArrayList<>();
+    int parsedFiles = 0;
     for (Path file : files) {
       String relativePath = root.relativize(file).toString().replace(File.separatorChar, '/');
+      String skipReason = NOT_ERLANG_SOURCES.get(APPLICATION_VERSION.matcher(relativePath).replaceFirst("lib/$1/"));
+      if (skipReason != null) {
+        skippedFiles.add("{\"file\": " + json(relativePath) + ", \"reason\": " + json(skipReason) + "}");
+        continue;
+      }
+      parsedFiles++;
       long start = System.nanoTime();
       try {
         String text = StringUtil.convertLineSeparators(readText(file));
@@ -172,19 +204,21 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
     String json = "{\n" +
                   "  \"corpusDir\": " + json(root.toString()) + ",\n" +
                   "  \"sdkRelease\": " + json(ErlangSdkType.getRelease(getProject()).toString()) + ",\n" +
-                  "  \"files\": " + files.size() + ",\n" +
+                  "  \"files\": " + parsedFiles + ",\n" +
                   "  \"filesWithErrors\": " + filesWithErrors + ",\n" +
                   "  \"errorElements\": " + errorElements + ",\n" +
                   "  \"slowFileMillis\": " + SLOW_FILE_MILLIS + ",\n" +
                   "  \"errors\": " + jsonArray(errors) + ",\n" +
                   "  \"exceptions\": " + jsonArray(exceptions) + ",\n" +
-                  "  \"slowFiles\": " + jsonArray(slowFiles) + "\n" +
+                  "  \"slowFiles\": " + jsonArray(slowFiles) + ",\n" +
+                  "  \"skippedFiles\": " + jsonArray(skippedFiles) + "\n" +
                   "}\n";
     Files.createDirectories(report.getParent());
     Files.writeString(report, json, StandardCharsets.UTF_8);
-    System.out.println("Parsed " + files.size() + " files under " + root + ": " + filesWithErrors + " with errors, " +
+    System.out.println("Parsed " + parsedFiles + " files under " + root + ": " + filesWithErrors + " with errors, " +
                        errorElements + " error elements, " + exceptions.size() + " exceptions, " +
-                       slowFiles.size() + " slower than " + SLOW_FILE_MILLIS + " ms. Report: " + report);
+                       slowFiles.size() + " slower than " + SLOW_FILE_MILLIS + " ms, " + skippedFiles.size() +
+                       " skipped as not Erlang sources. Report: " + report);
     return json;
   }
 
