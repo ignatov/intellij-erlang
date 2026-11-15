@@ -27,4 +27,5 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
   public void testRtbCoordinator()        { doTest(false); }
   public void testNonExistentParameters() { doTest(false); }
   public void test254()                   { doTest(true);  }
+  public void testVsnGit()                { doTest(false); }
 }
