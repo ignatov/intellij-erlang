@@ -162,7 +162,23 @@ public class ElpRenameHandlerTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals("-record(config2, {}).\n", document(header).getText());
     assertFalse(FileDocumentManager.getInstance().isFileModified(linkedHeader));
     FileDocumentManager.getInstance().saveAllDocuments();
-    assertEquals("-record(config2, {}).\n", Files.readString(src.resolve("jsx_config.hrl"), StandardCharsets.UTF_8));
+    assertEquals("-record(config2, {}).\n", diskTextOnceWritten(src.resolve("jsx_config.hrl"), "-record(config2, {}).\n"));
+  }
+
+  /**
+   * The text of {@code file} on disk once it is {@code expected}, or after five seconds. The local file system of 263
+   * ({@code AsyncableLocalFileSystemImpl}) writes a saved document to disk on a background thread, so right after
+   * {@code saveAllDocuments()} the disk may still hold the old text.
+   */
+  @NotNull
+  private static String diskTextOnceWritten(@NotNull Path file, @NotNull String expected) throws Exception {
+    long deadline = System.nanoTime() + 5_000_000_000L;
+    String text = Files.readString(file, StandardCharsets.UTF_8);
+    while (!text.equals(expected) && System.nanoTime() < deadline) {
+      Thread.sleep(20);
+      text = Files.readString(file, StandardCharsets.UTF_8);
+    }
+    return text;
   }
 
   private void assertModuleRenamed() {
