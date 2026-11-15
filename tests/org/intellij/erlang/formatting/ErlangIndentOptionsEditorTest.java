@@ -19,7 +19,9 @@ package org.intellij.erlang.formatting;
 import com.intellij.application.options.CodeStyle;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.codeStyle.LanguageCodeStyleSettingsProvider;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.formatter.settings.ErlangIndentOptionsEditor;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -48,6 +50,26 @@ public class ErlangIndentOptionsEditorTest extends ErlangLightPlatformCodeInsigh
     editor.reset(CodeStyle.createTestSettings(), indentOptions(target));
     editor.apply(target, indentOptions(target));
     assertEquals(-1, guardIndent(target));
+  }
+
+  public void testSettingsPageUsesErlangEditor() {
+    LanguageCodeStyleSettingsProvider provider = LanguageCodeStyleSettingsProvider.forLanguage(ErlangLanguage.INSTANCE);
+    assertNotNull(provider);
+    assertInstanceOf(provider.getIndentOptionsEditor(), ErlangIndentOptionsEditor.class);
+  }
+
+  public void testGuardIndentHintFollowsIndentField() {
+    CodeStyleSettings settings = CodeStyle.createTestSettings();
+    indentOptions(settings).INDENT_SIZE = 2;
+    ErlangIndentOptionsEditor editor = createEditor(settings);
+    assertEquals("2", editor.getGuardIndentField().getEmptyText().getText());
+
+    editor.getIndentField().setText("6");
+    assertEquals("6", editor.getGuardIndentField().getEmptyText().getText());
+
+    editor.apply(settings, indentOptions(settings));
+    assertEquals(6, indentOptions(settings).INDENT_SIZE);
+    assertEquals(-1, guardIndent(settings));
   }
 
   private static ErlangIndentOptionsEditor createEditor(CodeStyleSettings settings) {

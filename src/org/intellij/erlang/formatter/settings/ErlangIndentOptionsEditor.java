@@ -20,16 +20,47 @@ import com.intellij.application.options.SmartIndentOptionsEditor;
 import com.intellij.psi.codeStyle.CodeStyleConstraints;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.fields.IntegerField;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 
 public class ErlangIndentOptionsEditor extends SmartIndentOptionsEditor {
   private static final String GUARD_INDENT_LABEL = "Guard indent:";
 
+  private IntegerField myIndentField;
+  private boolean myAddingIndentField;
   private JLabel myGuardIndentLabel;
   private IntegerField myGuardIndentField;
+
+  @Override
+  protected void addIndentField() {
+    myAddingIndentField = true;
+    try {
+      super.addIndentField();
+    }
+    finally {
+      myAddingIndentField = false;
+    }
+  }
+
+  @Override
+  protected IntegerField createIndentTextField(String valueName, int minSize, int maxSize, int defaultValue) {
+    IntegerField field = super.createIndentTextField(valueName, minSize, maxSize, defaultValue);
+    if (myAddingIndentField) {
+      myIndentField = field;
+      field.getDocument().addDocumentListener(new DocumentAdapter() {
+        @Override
+        protected void textChanged(@NotNull DocumentEvent e) {
+          updateGuardIndentHint();
+        }
+      });
+    }
+    return field;
+  }
 
   @Override
   protected void addComponents() {
@@ -55,7 +86,13 @@ public class ErlangIndentOptionsEditor extends SmartIndentOptionsEditor {
   public void reset(@NotNull CodeStyleSettings settings, @NotNull CommonCodeStyleSettings.IndentOptions options) {
     super.reset(settings, options);
     myGuardIndentField.setValue(settings.getCustomSettings(ErlangCodeStyleSettings.class).GUARD_INDENT_SIZE);
-    myGuardIndentField.setDefaultValueText(Integer.toString(options.INDENT_SIZE));
+    updateGuardIndentHint();
+  }
+
+  private void updateGuardIndentHint() {
+    if (myGuardIndentField != null) {
+      myGuardIndentField.setDefaultValueText(Integer.toString(getUIIndent()));
+    }
   }
 
   @Override
@@ -79,5 +116,15 @@ public class ErlangIndentOptionsEditor extends SmartIndentOptionsEditor {
   private int getUIGuardIndent() {
     Integer value = myGuardIndentField.getValue();
     return value != null ? value : -1;
+  }
+
+  @TestOnly
+  public IntegerField getIndentField() {
+    return myIndentField;
+  }
+
+  @TestOnly
+  public IntegerField getGuardIndentField() {
+    return myGuardIndentField;
   }
 }
