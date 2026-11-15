@@ -100,7 +100,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
     if (!file.isNoAutoImport(myReferenceName, myArity)) {
       ErlangSdkRelease release = ErlangSdkType.getRelease(file);
-      if (ErlangBifTable.isAutoImported(myReferenceName, myArity, release)) {
+      if (ErlangBifTable.isAutoImported(myReferenceName, myArity, ErlangSdkType.getSdkRelease(file))) {
         ErlangFunction implicitFunction = getExternalFunction("erlang");
         if (implicitFunction != null) return implicitFunction;
 
