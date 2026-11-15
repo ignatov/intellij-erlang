@@ -17,6 +17,7 @@
 package org.intellij.erlang.parser;
 
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.LineColumn;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiErrorElement;
@@ -51,14 +52,16 @@ import java.util.stream.Stream;
  * Parses every .erl and .hrl file under CORPUS_DIR (or -Dcorpus.dir), for example the root of an Erlang/OTP
  * installation, and writes the syntax errors the plugin's parser reports there as JSON to CORPUS_REPORT
  * (or -Dcorpus.report). Every file shipped with Erlang/OTP compiles, so each error element is a plugin bug.
- * Without a corpus the test does nothing. It never fails because of parse errors; see .github/workflows/compat.yml.
+ * Without a corpus testCorpus does nothing. It never fails because of parse errors; see .github/workflows/compat.yml.
+ * A corpus directory that is a symbolic link is followed; links below it are not. Columns count characters (code
+ * points), as erlc does. The other tests check the report on small corpora of their own.
  */
 public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final long SLOW_FILE_MILLIS = 10_000;
 
   @Override
   protected boolean shouldRunTest() {
-    return setting("CORPUS_DIR", "corpus.dir") != null && super.shouldRunTest();
+    return (!"testCorpus".equals(getName()) || setting("CORPUS_DIR", "corpus.dir") != null) && super.shouldRunTest();
   }
 
   @Override
@@ -80,10 +83,37 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
   }
 
   public void testCorpus() throws Exception {
-    Path root = Paths.get(setting("CORPUS_DIR", "corpus.dir")).toAbsolutePath().normalize();
     String reportSetting = setting("CORPUS_REPORT", "corpus.report");
     Path report = Paths.get(reportSetting != null ? reportSetting : "build/corpus-report.json").toAbsolutePath();
-    assertTrue("Corpus directory " + root + " does not exist", Files.isDirectory(root));
+    writeReport(Paths.get(setting("CORPUS_DIR", "corpus.dir")), report);
+  }
+
+  public void testSymbolicLinkToTheCorpusIsFollowed() throws Exception {
+    Path temp = FileUtil.createTempDirectory("corpus", null, true).toPath();
+    Path corpus = Files.createDirectories(temp.resolve("corpus/lib/src"));
+    Files.writeString(corpus.resolve("a.erl"), "-module(a).\nf() -> [1,, 2].\n", StandardCharsets.UTF_8);
+    Files.writeString(corpus.resolve("b.hrl"), "-define(B, 1).\n", StandardCharsets.UTF_8);
+    Path link = Files.createSymbolicLink(temp.resolve("link"), temp.resolve("corpus"));
+    String report = writeReport(link, temp.resolve("report.json"));
+    assertTrue(report, report.contains("\"files\": 2,"));
+    assertTrue(report, report.contains("\"filesWithErrors\": 1,"));
+    assertTrue(report, report.contains("{\"file\": \"lib/src/a.erl\", \"line\": 2, \"column\": 11,"));
+  }
+
+  public void testColumnsCountCharactersOutsideTheBmpOnce() throws Exception {
+    // erlc reports 3:19 for this error: each character, also one outside the BMP, is one column.
+    Path temp = FileUtil.createTempDirectory("corpus", null, true).toPath();
+    Files.writeString(temp.resolve("c.erl"), "-module(c).\n-export([f/0]).\nf() -> \"\u00e9\uD83D\uDE00\" ++ [1,, 2].\n",
+                      StandardCharsets.UTF_8);
+    String report = writeReport(temp, temp.resolve("report.json"));
+    assertTrue(report, report.contains("{\"file\": \"c.erl\", \"line\": 3, \"column\": 19,"));
+  }
+
+  @NotNull
+  private String writeReport(@NotNull Path corpusDir, @NotNull Path report) throws IOException {
+    assertTrue("Corpus directory " + corpusDir + " does not exist", Files.isDirectory(corpusDir));
+    // Files.walk does not follow a root that is a symbolic link, so walk the directory it points to.
+    Path root = corpusDir.toRealPath();
 
     List<Path> files;
     try (Stream<Path> walk = Files.walk(root)) {
@@ -109,10 +139,12 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
         if (!fileErrors.isEmpty()) filesWithErrors++;
         errorElements += fileErrors.size();
         for (PsiErrorElement error : fileErrors) {
-          LineColumn position = StringUtil.offsetToLineColumn(text, error.getTextOffset());
+          int offset = error.getTextOffset();
+          LineColumn position = StringUtil.offsetToLineColumn(text, offset);
+          int column = text.codePointCount(offset - position.column, offset) + 1;
           errors.add("{\"file\": " + json(relativePath) +
                      ", \"line\": " + (position.line + 1) +
-                     ", \"column\": " + (position.column + 1) +
+                     ", \"column\": " + column +
                      ", \"description\": " + json(error.getErrorDescription()) + "}");
         }
       }
@@ -141,6 +173,7 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
     System.out.println("Parsed " + files.size() + " files under " + root + ": " + filesWithErrors + " with errors, " +
                        errorElements + " error elements, " + exceptions.size() + " exceptions, " +
                        slowFiles.size() + " slower than " + SLOW_FILE_MILLIS + " ms. Report: " + report);
+    return json;
   }
 
   @Nullable

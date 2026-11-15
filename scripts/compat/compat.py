@@ -7,15 +7,20 @@ report, and writes one JSON result and a Markdown summary. The JSON is read by p
 SCHEMA_VERSION and the PR that added this script for the schema.
 
 Every check has a status: passed, failed or not-run. A check that ran and found problems is failed and lists its
-findings. When the check itself could not be run because of the infrastructure (an IDE that cannot be resolved, a
-download that fails), no JSON is written and the script exits with 2, so that a run without the result artifact means
-an infrastructure failure.
+findings; a check that started and did not finish (its step timed out) is failed with a reason. The result's status is
+failed if a check failed, incomplete if none failed but one did not run, and passed otherwise. When the job could not
+get as far as its checks (an IDE that cannot be resolved, an Erlang/OTP that cannot be installed), no JSON is written
+and the script exits with 2, so that a run without the result artifact means an infrastructure failure. A Gradle
+failure once the IDE is resolved is a finding of the check that failed.
 
 Subcommands:
+  inputs --job JOB        validate the workflow inputs (and the pins of gradle.yml) before anything uses them, resolve
+                          `ref` to a commit of this repository and write them to $GITHUB_OUTPUT
   pins GRADLE_YML         print OTP_VERSION, REBAR3_VERSION and REBAR3_SHA256 pinned in gradle.yml as NAME=value lines
+  release-tag             print the tag of the published plugin, read from `gh release list --json tagName` on stdin
   ide-result ...          the result of the ide job
   otp-result ...          the result of the otp job
-  conclusion RESULT_JSON  exit with 1 if the result's status is failed
+  conclusion RESULT_JSON  exit with 1 if a check did not run, or if one failed and the event is not pull_request
 
 Python 3 standard library only.
 """
@@ -26,6 +31,9 @@ import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 import xml.etree.ElementTree as ElementTree
 
 SCHEMA_VERSION = 1
@@ -36,6 +44,27 @@ LOG_TAIL_LINES = 40
 PASSED = 'passed'
 FAILED = 'failed'
 NOT_RUN = 'not-run'
+INCOMPLETE = 'incomplete'
+TRIMMED = '... [trimmed]'
+
+# The documented forms of the inputs; nothing else reaches a command or an output file.
+INPUT_PATTERNS = {
+    'ide': re.compile(r'(20\d\d\.\d+(\.\d+)?|\d{3}\.\d+(\.\d+)?|latest|(\d{3}|\d{3}\.\d+(\.\d+)?|LATEST)-EAP-SNAPSHOT)'),
+    'otp': re.compile(r'\d+(\.\d+)*(-rc\d+)?'),
+    'ref': re.compile(r'(?!-)(?!refs/(?!heads/|tags/))(?!.*\.\.)(?!.*//)(?!.*/$)(?!.*\.lock$)[A-Za-z0-9._/-]{1,200}'),
+}
+INPUT_FORMS = {
+    'ide': 'a release version (2026.3, 2026.3.1), a build number (263.7307.44), latest, 263-EAP-SNAPSHOT, '
+           '<build>-EAP-SNAPSHOT or LATEST-EAP-SNAPSHOT',
+    'otp': 'an Erlang/OTP version like 27.3.4.9, 29.1 or 30.0-rc1',
+    'ref': 'a branch, a tag or a commit SHA of this repository',
+}
+PIN_PATTERNS = {
+    'OTP_VERSION': INPUT_PATTERNS['otp'],
+    'REBAR3_VERSION': re.compile(r'\d+\.\d+(\.\d+)*'),
+    'REBAR3_SHA256': re.compile(r'[0-9a-f]{64}'),
+}
+SHA = re.compile(r'[0-9a-f]{7,40}')
 
 # The failure levels of verifyPlugin in build.gradle, and the phrases of verification-verdict.txt that the IntelliJ
 # Platform Gradle Plugin 2.20.1 (VerifyPluginTask.metadataOf) maps to them.
@@ -56,7 +85,8 @@ VERIFIER_VERDICT_MARKERS = {
 # Files next to verification-verdict.txt that are not lists of problems.
 VERIFIER_NON_PROBLEM_FILES = {'verification-verdict.txt', 'dependencies.txt', 'telemetry.txt'}
 
-# Gradle output that means a download failed, not that the plugin has a problem.
+# Gradle output that suggests a download or environment failure. Once the IDE is resolved, such a failure is still a
+# finding of the check that failed; the matching line is only named in its reason.
 INFRASTRUCTURE_PATTERNS = [
     re.compile(p) for p in (
         r'Could not resolve all (files|dependencies|artifacts) for configuration',
@@ -85,10 +115,11 @@ def trimmed(items, limit=LIST_LIMIT):
 
 
 def text(value, limit=TEXT_LIMIT):
+    """`value` as a string of at most `limit` characters; a longer one keeps its start and ends with TRIMMED."""
     if value is None:
         return None
     value = str(value)
-    return value if len(value) <= limit else value[:limit] + '... [trimmed]'
+    return value if len(value) <= limit else value[:max(limit - len(TRIMMED), 0)] + TRIMMED
 
 
 def read_file(path):
@@ -100,24 +131,47 @@ def read_file(path):
 
 
 def read_exit(logs, name):
-    """The exit code that run-check.sh wrote for check `name`, or None if the check did not run."""
+    """The exit code that run-check.sh wrote for check `name`, or None if the check did not run or did not finish."""
     content = read_file(os.path.join(logs, name + '.exit'))
     return int(content.strip()) if content and content.strip() else None
 
 
+def unfinished(logs, name):
+    """A failed check if run-check.sh started check `name` and wrote no exit code (its step timed out), else None."""
+    if read_exit(logs, name) is not None or not os.path.exists(os.path.join(logs, name + '.started')):
+        return None
+    return {'status': FAILED, 'exitCode': None,
+            'reason': 'the check started but did not finish: its step timed out or was killed; see logTail',
+            'logTail': log_tail(read_file(os.path.join(logs, name + '.log')))}
+
+
+def not_run(logs, name, extra=None):
+    """The check `name` that has no exit code: failed if it did not finish, otherwise not-run."""
+    check = unfinished(logs, name)
+    if check is None:
+        check = {'status': NOT_RUN}
+        check.update(extra or {})
+        check.setdefault('reason', 'not run')
+        return check
+    check.update({k: v for k, v in (extra or {}).items() if k not in check})
+    return check
+
+
 def log_tail(log, lines=LOG_TAIL_LINES):
+    """The last `lines` lines of `log`, at most TEXT_LIMIT characters; a longer tail keeps its end."""
     if not log:
         return None
-    return text('\n'.join(log.rstrip('\n').split('\n')[-lines:]), TEXT_LIMIT * 2)
+    tail = '\n'.join(log.rstrip('\n').split('\n')[-lines:])
+    return tail if len(tail) <= TEXT_LIMIT else TRIMMED + tail[len(tail) - TEXT_LIMIT + len(TRIMMED):]
 
 
-def check_infrastructure(name, log):
-    """Raises InfrastructureError if the log of a failed Gradle run shows a download or environment failure."""
+def infrastructure_hint(log):
+    """The first line of a failed Gradle run that suggests a download or environment failure, or None."""
     for pattern in INFRASTRUCTURE_PATTERNS:
         match = pattern.search(log or '')
         if match:
-            line = (log[:match.start()].rsplit('\n', 1)[-1] + log[match.start():].split('\n', 1)[0]).strip()
-            raise InfrastructureError('%s: %s' % (name, line))
+            return (log[:match.start()].rsplit('\n', 1)[-1] + log[match.start():].split('\n', 1)[0]).strip()
+    return None
 
 
 def relative(path, root):
@@ -222,11 +276,14 @@ def parse_verifier_reports(directory):
 # Checks. Each returns a dict with `status` first.
 
 
-def gradle_failure(check, name, log):
-    """Fills a failed check whose Gradle run failed without a recognized finding."""
-    check_infrastructure(name, log)
+def gradle_failure(check, log):
+    """Fills a failed check whose Gradle run failed without a recognized finding. It is a finding of this check only."""
     check['status'] = FAILED
     check['reason'] = 'Gradle failed without a recognized finding; see logTail'
+    hint = infrastructure_hint(log)
+    if hint:
+        check['reason'] += '; the log shows a possible download or environment failure: ' + hint
+    check['reason'] = text(check['reason'])
     check['logTail'] = log_tail(log)
     return check
 
@@ -234,19 +291,19 @@ def gradle_failure(check, name, log):
 def compile_check(logs, root):
     exit_code = read_exit(logs, 'compile')
     if exit_code is None:
-        return {'status': NOT_RUN, 'reason': 'not run'}
+        return not_run(logs, 'compile')
     log = read_file(os.path.join(logs, 'compile.log')) or ''
     errors = parse_javac_errors(log, root)
     check = {'status': PASSED if exit_code == 0 else FAILED, 'exitCode': exit_code, 'errors': trimmed(errors)}
     if exit_code != 0 and not errors:
-        gradle_failure(check, 'compile', log)
+        gradle_failure(check, log)
     return check
 
 
 def tests_check(logs, name, result_dirs, fail_on_skipped=False):
     exit_code = read_exit(logs, name)
     if exit_code is None:
-        return {'status': NOT_RUN, 'reason': 'not run'}
+        return not_run(logs, name)
     log = read_file(os.path.join(logs, name + '.log')) or ''
     totals, failed, skipped = parse_junit_results(result_dirs)
     check = {'status': PASSED, 'exitCode': exit_code}
@@ -262,17 +319,16 @@ def tests_check(logs, name, result_dirs, fail_on_skipped=False):
         check['status'] = FAILED
         check['reason'] = 'no test ran'
     if exit_code != 0 and not failed:
-        gradle_failure(check, name, log)
+        gradle_failure(check, log)
     return check
 
 
 def verifier_check(logs, name, reports_dir, extra=None):
     exit_code = read_exit(logs, name)
+    if exit_code is None:
+        return not_run(logs, name, extra)
     check = {'status': NOT_RUN}
     check.update(extra or {})
-    if exit_code is None:
-        check.setdefault('reason', 'not run')
-        return check
     log = read_file(os.path.join(logs, name + '.log')) or ''
     reports = parse_verifier_reports(reports_dir)
     check['exitCode'] = exit_code
@@ -283,20 +339,20 @@ def verifier_check(logs, name, reports_dir, extra=None):
     elif any(report['failingLevels'] for report in reports):
         check['status'] = FAILED
     else:
-        gradle_failure(check, name, log)
+        gradle_failure(check, log)
     return check
 
 
 def corpus_check(logs, report_path):
     exit_code = read_exit(logs, 'corpus')
     if exit_code is None:
-        return {'status': NOT_RUN, 'reason': 'not run'}
+        return not_run(logs, 'corpus')
     log = read_file(os.path.join(logs, 'corpus.log')) or ''
     content = read_file(report_path)
     if content is None:
         check = {'status': FAILED, 'exitCode': exit_code, 'reason': 'ErlangCorpusParsingTest wrote no report'}
         if exit_code != 0:
-            gradle_failure(check, 'corpus', log)
+            gradle_failure(check, log)
             check['reason'] = 'ErlangCorpusParsingTest wrote no report; see logTail'
         return check
     report = json.loads(content)
@@ -318,6 +374,9 @@ def corpus_check(logs, report_path):
     }
     if errors or exceptions or slow_files:
         check['status'] = FAILED
+    if not report.get('files'):
+        check['status'] = FAILED
+        check['reason'] = 'the corpus has no .erl or .hrl file, so nothing was parsed'
     if exit_code != 0:
         check['status'] = FAILED
         check['reason'] = 'the test task failed after the report was written; see logTail'
@@ -411,6 +470,109 @@ def read_pins(gradle_yml):
     return pins
 
 
+class InputError(Exception):
+    """An input of the workflow is not one of its documented forms; the job fails at once."""
+
+
+def validate_input(name, value):
+    """`value` if it is empty or a documented form of input `name`; raises InputError otherwise."""
+    value = value or ''
+    if value and not INPUT_PATTERNS[name].fullmatch(value):
+        raise InputError('the input %s=%r is not %s' % (name, value, INPUT_FORMS[name]))
+    return value
+
+
+def validate_pins(pins):
+    for name, value in pins.items():
+        if not PIN_PATTERNS[name].fullmatch(value):
+            raise InputError('gradle.yml pins %s=%r, which is not a valid value' % (name, value))
+    return pins
+
+
+def github_api(path):
+    """GET `path` of the GitHub REST API, with $GH_TOKEN if set: the JSON, or None for 404 and 422 (no such ref)."""
+    url = '%s/%s' % (os.environ.get('GITHUB_API_URL', 'https://api.github.com'), path)
+    headers = {'Accept': 'application/vnd.github+json'}
+    if os.environ.get('GH_TOKEN'):
+        headers['Authorization'] = 'Bearer ' + os.environ['GH_TOKEN']
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 422):
+            return None
+        raise InfrastructureError('GitHub API %s: HTTP %d' % (path, e.code))
+    except (urllib.error.URLError, OSError) as e:
+        raise InfrastructureError('GitHub API %s: %s' % (path, e))
+
+
+def resolve_ref(ref, repository, default_branch, api=github_api):
+    """The commit SHA of `ref`, which must be a branch or a tag of `repository` or a commit of its default branch.
+
+    Code from anywhere else (a pull request, a fork) is refused: the job runs the Gradle build of that commit."""
+    ref = ref or default_branch
+    quote = lambda value: urllib.parse.quote(value, safe='/')
+    if SHA.fullmatch(ref):
+        comparison = api('repos/%s/compare/%s...%s' % (repository, quote(default_branch), ref))
+        if comparison and comparison.get('status') in ('behind', 'identical'):
+            return comparison['merge_base_commit']['sha']
+    kinds = ['heads', 'tags']
+    for prefix in ('refs/heads/', 'refs/tags/'):
+        if ref.startswith(prefix):
+            kinds, ref = [prefix.split('/')[1]], ref[len(prefix):]
+    for kind in kinds:
+        commit = api('repos/%s/commits/%s' % (repository, quote('%s/%s' % (kind, ref))))
+        if isinstance(commit, dict) and commit.get('sha'):
+            return commit['sha']
+    raise InputError('the input ref=%r is not a branch or a tag of %s, nor a commit of its default branch %s'
+                     % (ref, repository, default_branch))
+
+
+def check_inputs(job, event, raw, pr_head_sha=None, repository=None, default_branch=None, gradle_yml=None,
+                 api=github_api):
+    """The validated inputs of `job` as step outputs: ide, otp, ref, the commit to check and, for otp, the pins.
+
+    Every value is checked against its documented form before it is used, so no input can add a line to an output."""
+    values = {name: validate_input(name, raw.get(name)) for name in ('ide', 'otp', 'ref')}
+    if event == 'pull_request':
+        if not SHA.fullmatch(pr_head_sha or ''):
+            raise InputError('the pull request head %r is not a commit SHA' % pr_head_sha)
+        values['commit'] = pr_head_sha
+    else:
+        values['commit'] = resolve_ref(values['ref'], repository, default_branch, api)
+    if job == 'otp':
+        pins = validate_pins(read_pins(gradle_yml))
+        values.update(pins)
+        values['otp'] = values['otp'] or pins['OTP_VERSION']
+    return values
+
+
+def write_outputs(values, path):
+    with open(path, 'a', encoding='utf-8') as f:
+        for name, value in values.items():
+            if '\n' in value or '\r' in value:
+                raise InputError('the output %s has a line break' % name)
+            f.write('%s=%s\n' % (name, value))
+
+
+def release_tag(releases, version):
+    """The tag of the published plugin: the release v<version>.<N> with the largest N, not GitHub's latest release."""
+    pattern = re.compile(r'v%s\.(\d+)' % re.escape(version))
+    builds = [(int(match.group(1)), release['tagName']) for release in releases
+              if not release.get('isDraft') and (match := pattern.fullmatch(release.get('tagName') or ''))]
+    if not builds:
+        raise InputError('no release of version %s (a tag v%s.<N>)' % (version, version))
+    return max(builds)[1]
+
+
+def gradle_property(path, name):
+    match = re.search(r'^\s*%s\s*=\s*(\S+)\s*$' % re.escape(name), read_file(path) or '', re.MULTILINE)
+    if not match:
+        raise InputError('%s has no %s' % (path, name))
+    return match.group(1)
+
+
 def run_info():
     server = os.environ.get('GITHUB_SERVER_URL', 'https://github.com')
     repository = os.environ.get('GITHUB_REPOSITORY')
@@ -426,7 +588,9 @@ def run_info():
 
 
 def overall(checks):
-    return FAILED if any(check['status'] == FAILED for check in checks.values()) else PASSED
+    """failed if a check failed, incomplete if none failed but one did not run, passed otherwise."""
+    statuses = [check['status'] for check in checks.values()]
+    return FAILED if FAILED in statuses else INCOMPLETE if NOT_RUN in statuses else PASSED
 
 
 # Results
@@ -447,7 +611,8 @@ def ide_result(args):
     }
     for name in ('test', 'verifyPlugin'):
         if checks[name]['status'] == NOT_RUN and checks['compile']['status'] == FAILED:
-            checks[name]['reason'] = 'the plugin does not compile against this IDE'
+            checks[name]['reason'] = ('the compile check did not finish' if checks['compile']['exitCode'] is None
+                                      else 'the plugin does not compile against this IDE')
     return {
         'schemaVersion': SCHEMA_VERSION,
         'job': 'ide',
@@ -466,10 +631,18 @@ def otp_result(args):
     otp['matchesRequest'] = otp['version'] == args.otp_version
     if otp['release'] != re.split(r'[.-]', args.otp_version)[0]:
         raise InfrastructureError('installed Erlang/OTP %s, not the requested %s' % (otp['version'], args.otp_version))
+    compilation = tests_check(args.logs, 'compilation', [
+        os.path.join(args.root, 'build/test-results/testCompilation'),
+        os.path.join(args.root, 'jps-plugin/build/test-results/testCompilation')], fail_on_skipped=True)
+    rebar3_exit = read_exit(args.logs, 'rebar3')
+    if rebar3_exit:
+        # The pinned rebar3 does not run on this Erlang/OTP: the rebar tests cannot pass, and that is a finding.
+        first_line = (read_file(os.path.join(args.logs, 'rebar3.log')) or '').strip().split('\n')[0]
+        compilation['status'] = FAILED
+        compilation['reason'] = text('rebar3 %s does not run on Erlang/OTP %s: `escript rebar3 version` exited with %d: %s'
+                                     % (args.rebar3_version, otp['version'], rebar3_exit, first_line))
     checks = {
-        'compilationTests': tests_check(args.logs, 'compilation', [
-            os.path.join(args.root, 'build/test-results/testCompilation'),
-            os.path.join(args.root, 'jps-plugin/build/test-results/testCompilation')], fail_on_skipped=True),
+        'compilationTests': compilation,
         'corpus': corpus_check(args.logs, args.corpus_report),
         'knownRelease': known_release_check(args.root, otp['release']),
     }
@@ -559,6 +732,31 @@ def summary(result):
     return '\n'.join(lines + details) + '\n'
 
 
+def conclusion(path, event):
+    """The exit code of the job. A check that did not run, or no result, is red on every event. Findings are red on
+    workflow_dispatch only: on pull_request the job tests the workflow, which works when every check gave a result."""
+    content = read_file(path)
+    if content is None:
+        print('::error::There is no result %s' % path)
+        return 1
+    result = json.loads(content)
+    not_run = [name for name, check in result['checks'].items() if check['status'] == NOT_RUN]
+    failed = [name for name, check in result['checks'].items() if check['status'] == FAILED]
+    if not_run:
+        print('::error::The %s compatibility check did not run: %s' % (result['job'], ', '.join(
+            '%s (%s)' % (name, result['checks'][name].get('reason')) for name in not_run)))
+        return 1
+    if failed and event == 'pull_request':
+        print('::notice::The %s compatibility check found problems in: %s. Every check ran and gave a result, so the '
+              'job passes on pull_request.' % (result['job'], ', '.join(failed)))
+        return 0
+    if failed:
+        print('::error::The %s compatibility check found problems in: %s' % (result['job'], ', '.join(failed)))
+        return 1
+    print('The %s compatibility check passed' % result['job'])
+    return 0
+
+
 def write_result(result, out, summary_path):
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2)
@@ -574,8 +772,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split('\n', 1)[0])
     commands = parser.add_subparsers(dest='command', required=True)
 
+    inputs = commands.add_parser('inputs', help='reads INPUT_IDE, INPUT_OTP and INPUT_REF from the environment')
+    inputs.add_argument('--job', required=True, choices=['ide', 'otp'])
+    inputs.add_argument('--event', default=os.environ.get('GITHUB_EVENT_NAME'))
+    inputs.add_argument('--gradle-yml', help='the gradle.yml whose pins the otp job uses')
+    inputs.add_argument('--output', default=os.environ.get('GITHUB_OUTPUT'))
+
     pins = commands.add_parser('pins')
     pins.add_argument('gradle_yml')
+
+    release = commands.add_parser('release-tag')
+    release.add_argument('--gradle-properties', required=True, help='the gradle.properties whose version is released')
 
     for name in ('ide-result', 'otp-result'):
         command = commands.add_parser(name)
@@ -595,24 +802,31 @@ def main(argv=None):
             command.add_argument('--rebar3-version', default=None)
             command.add_argument('--corpus-report', required=True)
 
-    conclusion = commands.add_parser('conclusion')
-    conclusion.add_argument('result')
+    conclude = commands.add_parser('conclusion')
+    conclude.add_argument('result')
+    conclude.add_argument('--event', default=os.environ.get('GITHUB_EVENT_NAME'))
 
     args = parser.parse_args(argv)
     try:
-        if args.command == 'pins':
+        if args.command == 'inputs':
+            raw = {name: os.environ.get('INPUT_' + name.upper(), '') for name in ('ide', 'otp', 'ref')}
+            values = check_inputs(args.job, args.event, raw, os.environ.get('PR_HEAD_SHA'),
+                                  os.environ.get('GITHUB_REPOSITORY'), os.environ.get('DEFAULT_BRANCH'), args.gradle_yml)
+            write_outputs(values, args.output)
+            print('\n'.join('%s=%s' % item for item in values.items()))
+        elif args.command == 'pins':
             for name, value in read_pins(args.gradle_yml).items():
                 print('%s=%s' % (name, value))
+        elif args.command == 'release-tag':
+            print(release_tag(json.load(sys.stdin), gradle_property(args.gradle_properties, 'version')))
         elif args.command in ('ide-result', 'otp-result'):
             result = ide_result(args) if args.command == 'ide-result' else otp_result(args)
             write_result(result, args.out, args.summary)
         else:
-            result = json.loads(read_file(args.result))
-            failed = [name for name, check in result['checks'].items() if check['status'] == FAILED]
-            if result['status'] == FAILED:
-                print('::error::The %s compatibility check found problems in: %s' % (result['job'], ', '.join(failed)))
-                return 1
-            print('The %s compatibility check passed' % result['job'])
+            return conclusion(args.result, args.event)
+    except InputError as e:
+        print('::error::%s' % e)
+        return 1
     except InfrastructureError as e:
         print('::error::Infrastructure failure, no result: %s' % e)
         summary_path = getattr(args, 'summary', None)
