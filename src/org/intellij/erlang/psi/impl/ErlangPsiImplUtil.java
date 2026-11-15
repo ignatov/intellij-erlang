@@ -91,6 +91,7 @@ public class ErlangPsiImplUtil {
     "nonempty_improper_list", "nonempty_list", "nonempty_maybe_improper_list", "nonempty_string", "number", "pid",
     "port", "pos_integer", "reference", "string", "term", "timeout", "tuple"
   );
+  private static final Set<String> BUILT_IN_TYPES_WITHOUT_ZERO_ARITY = Set.of("nonempty_improper_list");
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
   @NotNull
@@ -776,11 +777,13 @@ public class ErlangPsiImplUtil {
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
         protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-          return false;
+          return BUILT_IN_TYPES_WITHOUT_ZERO_ARITY.contains(item.getLookupString());
         }
       };
 
-      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, s -> PrioritizedLookupElement.withPriority(
+      Set<String> typeNames = ContainerUtil.map2Set(types, ErlangTypeDefinition::getName);
+      List<String> builtInTypeNames = ContainerUtil.filter(BUILT_IN_TYPES, s -> !typeNames.contains(s));
+      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(builtInTypeNames, s -> PrioritizedLookupElement.withPriority(
         LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
         ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.emptyList();
 

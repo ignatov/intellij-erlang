@@ -19,6 +19,7 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -292,6 +293,35 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "nonempty_binary", "nonempty_bitstring", "nonempty_improper_list", "nonempty_list",
       "nonempty_maybe_improper_list", "tuple"
     );
+  }
+
+  public void testBuiltInTypeWithoutZeroArityPutsCaretInsideParentheses() {
+    myFixture.configureByText("a.erl", "-type foo() :: nonempty_imp<caret>.");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    myFixture.getLookup().setCurrentItem(ContainerUtil.find(elements, e -> e.getLookupString().equals("nonempty_improper_list")));
+    myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    myFixture.checkResult("-type foo() :: nonempty_improper_list(<caret>).");
+  }
+
+  public void testLocalTypeHidesBuiltInTypeOfSameName() {
+    doCheckResult(
+      """
+        -type dynamic() :: term().
+        -type foo() :: dyna<caret>.""",
+      """
+        -type dynamic() :: term().
+        -type foo() :: dynamic()<caret>.""");
+  }
+
+  public void testLocalTypeWithArgumentsHidesBuiltInTypeOfSameName() {
+    doCheckResult(
+      """
+        -type identifier(T) :: {id, T}.
+        -type foo() :: identif<caret>.""",
+      """
+        -type identifier(T) :: {id, T}.
+        -type foo() :: identifier(<caret>).""");
   }
 
   public void testNoUndefinedOrDeprecatedBuiltInTypes() {
