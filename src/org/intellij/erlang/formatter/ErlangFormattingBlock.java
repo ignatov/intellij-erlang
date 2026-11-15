@@ -228,7 +228,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     @NotNull
     @Override
     public ChildAttributes getChildAttributes(int newChildIndex) {
-      return new ChildAttributes(Indent.getNormalIndent(true), null);
+      return getFlatChildAttributes(newChildIndex);
     }
 
     @Override
@@ -399,6 +399,19 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
+    List<Block> subBlocks = getSubBlocks();
+    if (newChildIndex > 0 && !subBlocks.isEmpty() && subBlocks.getFirst() instanceof FunHeadBlock funHead) {
+      newChildIndex += funHead.getSubBlocks().size() - 1;
+    }
+    return getFlatChildAttributes(newChildIndex);
+  }
+
+  /**
+   * Computes the attributes of a new child as if a {@link FunHeadBlock} were not there, with the index of the new child
+   * among the sub-blocks whose {@link FunHeadBlock} is replaced by its own sub-blocks.
+   */
+  @NotNull
+  private ChildAttributes getFlatChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
     IElementType type = getPreviousElementType(newChildIndex);
     Alignment alignment = getChildAlignment(type);
@@ -427,7 +440,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Nullable
   private IElementType getPreviousElementType(int newChildIndex) {
     if (newChildIndex <= 0) return null;
-    Block block = getSubBlocks().get(newChildIndex - 1);
+    List<Block> flatSubBlocks = new ArrayList<>();
+    for (Block subBlock : getSubBlocks()) {
+      flatSubBlocks.addAll(subBlock instanceof FunHeadBlock ? subBlock.getSubBlocks() : List.of(subBlock));
+    }
+    Block block = flatSubBlocks.get(newChildIndex - 1);
     while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
       List<Block> subBlocks = block.getSubBlocks();
       Block childBlock = subBlocks.getLast();
