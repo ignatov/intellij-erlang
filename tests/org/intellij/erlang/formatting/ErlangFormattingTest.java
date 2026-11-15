@@ -493,6 +493,11 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTypeUnionStartingLine()        throws Exception { doTest(); }
   public void testTypeUnionBodyOnNewLine()       throws Exception { doTest(); }
   public void testTypeUnionNotFirstAligned()     throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNestedAligned()       throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNewLineAfterArrow()   throws Exception {
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE;
+    doTest();
+  }
 
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;

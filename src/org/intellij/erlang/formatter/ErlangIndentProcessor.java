@@ -152,7 +152,7 @@ public class ErlangIndentProcessor {
     ASTNode item = topType;
     ASTNode container = item.getTreeParent();
     while (true) {
-      if (startsLine(item)) return Indent.getNoneIndent();
+      if (startsLine(item) || isForcedToNewLine(item)) return Indent.getNoneIndent();
       if (container == null || isTopTypeContainer(container.getElementType())) break;
       item = container;
       container = item.getTreeParent();
@@ -163,7 +163,16 @@ public class ErlangIndentProcessor {
     return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
   }
 
-  private static boolean isTopTypeContainer(@NotNull IElementType type) {
+  /**
+   * Whether the formatter itself moves the node to a new line, which {@link #startsLine} does not see yet.
+   */
+  private boolean isForcedToNewLine(@NotNull ASTNode node) {
+    if (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.DO_NOT_FORCE) return false;
+    ASTNode prevLeaf = FormatterUtil.getPreviousNonWhitespaceLeaf(node);
+    return prevLeaf != null && prevLeaf.getElementType() == ERL_ARROW;
+  }
+
+  static boolean isTopTypeContainer(@NotNull IElementType type) {
     return type == ERL_TYPE_DEFINITION || needIndent(type) ||
       ErlangFormattingBlock.isContainerNormal(type) || ErlangFormattingBlock.isContainerContinuation(type, false);
   }
