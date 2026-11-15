@@ -18,8 +18,10 @@ package org.intellij.erlang;
 
 import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.*;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.ProcessingContext;
+import org.intellij.erlang.documentation.ErlangDocLinkReferenceProvider;
 import org.intellij.erlang.psi.ErlangArgumentList;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangMaxExpression;
@@ -45,6 +47,9 @@ public class ErlangReferenceContributor extends PsiReferenceContributor {
 
     registrar.registerReferenceProvider(atom.with(new ErlangFunctionCallModuleArgument()), new ModuleReferenceProvider());
     registrar.registerReferenceProvider(atom.with(new ErlangFunctionCallFunctionArgument()), new FunctionReferenceProvider());
+
+    TokenSet docComments = TokenSet.create(ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT, ErlangParserDefinition.ERL_MODULE_DOC_COMMENT);
+    registrar.registerReferenceProvider(psiElement(PsiComment.class).withElementType(docComments), new ErlangDocLinkReferenceProvider());
   }
 
   @NotNull
