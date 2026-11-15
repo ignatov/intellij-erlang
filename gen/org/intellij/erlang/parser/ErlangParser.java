@@ -1031,31 +1031,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' integer
+  // q_var ':' bin_size_type
   public static boolean bin_base_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_BIN_BASE_TYPE, "<type>");
     r = q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_COLON, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_COLON);
+    r = r && bin_size_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
-  }
-
-  /* ********************************************************** */
-  // bin_base_type ',' bin_unit_type
-  static boolean bin_base_type_list(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "bin_base_type_list")) return false;
-    if (!nextTokenIs(b, ERL_VAR)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = bin_base_type(b, l + 1);
-    p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && bin_unit_type(b, l + 1) && r;
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
   }
 
   /* ********************************************************** */
@@ -1165,7 +1151,83 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' q_var '*' integer
+  // '*' | div | rem | band | '+' | '-' | bor | bxor | bsl | bsr
+  static boolean bin_size_op(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_op")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_OP_AR_MUL);
+    if (!r) r = consumeToken(b, ERL_DIV);
+    if (!r) r = consumeToken(b, ERL_REM);
+    if (!r) r = consumeToken(b, ERL_BAND);
+    if (!r) r = consumeToken(b, ERL_OP_PLUS);
+    if (!r) r = consumeToken(b, ERL_OP_MINUS);
+    if (!r) r = consumeToken(b, ERL_BOR);
+    if (!r) r = consumeToken(b, ERL_BXOR);
+    if (!r) r = consumeToken(b, ERL_BSL);
+    if (!r) r = consumeToken(b, ERL_BSR);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // int_type | '(' bin_size_type ')'
+  static boolean bin_size_term(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_term")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = int_type(b, l + 1);
+    if (!r) r = bin_size_term_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // '(' bin_size_type ')'
+  private static boolean bin_size_term_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_term_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_PAR_LEFT);
+    r = r && bin_size_type(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_RIGHT);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // bin_size_term (bin_size_op bin_size_term)*
+  static boolean bin_size_type(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_type")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<type>");
+    r = bin_size_term(b, l + 1);
+    r = r && bin_size_type_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // (bin_size_op bin_size_term)*
+  private static boolean bin_size_type_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_type_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!bin_size_type_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "bin_size_type_1", c)) break;
+    }
+    return true;
+  }
+
+  // bin_size_op bin_size_term
+  private static boolean bin_size_type_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_size_type_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = bin_size_op(b, l + 1);
+    r = r && bin_size_term(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // q_var ':' q_var '*' bin_size_type
   public static boolean bin_unit_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_unit_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
@@ -1174,7 +1236,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_OP_AR_MUL, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_OP_AR_MUL);
+    r = r && bin_size_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1219,7 +1282,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>'
+  // '<<' [bin_base_type [',' bin_unit_type] | bin_unit_type] '>>'
   public static boolean binary_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_BIN_START)) return false;
@@ -1233,20 +1296,50 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // [bin_base_type | bin_unit_type | bin_base_type_list]
+  // [bin_base_type [',' bin_unit_type] | bin_unit_type]
   private static boolean binary_type_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type_1")) return false;
     binary_type_1_0(b, l + 1);
     return true;
   }
 
-  // bin_base_type | bin_unit_type | bin_base_type_list
+  // bin_base_type [',' bin_unit_type] | bin_unit_type
   private static boolean binary_type_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type_1_0")) return false;
     boolean r;
-    r = bin_base_type(b, l + 1);
+    Marker m = enter_section_(b);
+    r = binary_type_1_0_0(b, l + 1);
     if (!r) r = bin_unit_type(b, l + 1);
-    if (!r) r = bin_base_type_list(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // bin_base_type [',' bin_unit_type]
+  private static boolean binary_type_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "binary_type_1_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = bin_base_type(b, l + 1);
+    r = r && binary_type_1_0_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // [',' bin_unit_type]
+  private static boolean binary_type_1_0_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "binary_type_1_0_0_1")) return false;
+    binary_type_1_0_0_1_0(b, l + 1);
+    return true;
+  }
+
+  // ',' bin_unit_type
+  private static boolean binary_type_1_0_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "binary_type_1_0_0_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_COMMA);
+    r = r && bin_unit_type(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 

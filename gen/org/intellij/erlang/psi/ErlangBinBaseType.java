@@ -8,12 +8,12 @@ import com.intellij.psi.PsiElement;
 public interface ErlangBinBaseType extends ErlangType {
 
   @NotNull
+  List<ErlangIntType> getIntTypeList();
+
+  @NotNull
   ErlangQVar getQVar();
 
   @NotNull
   PsiElement getColon();
-
-  @NotNull
-  PsiElement getInteger();
 
 }
