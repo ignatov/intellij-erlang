@@ -32,6 +32,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.TitledSeparator;
 import org.intellij.erlang.dialyzer.DialyzerSettings;
+import org.intellij.erlang.elp.ElpSettingsPanel;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.rebar.settings.RebarSettings;
@@ -45,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
+import java.awt.*;
 import java.io.File;
 
 import static org.intellij.erlang.utils.ErlangUiUtil.addBrowseFolderListener;
@@ -64,6 +66,8 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private TextFieldWithBrowseButton mySdkPathSelector;
   private TitledSeparator mySdkTitledSeparator;
   private JLabel mySdkPathLabel;
+  private final ElpSettingsPanel myElpSettingsPanel = new ElpSettingsPanel();
+  private JPanel myComponent;
 
   public ErlangExternalToolsConfigurable(@NotNull Project project) {
     myProject = project;
@@ -132,7 +136,14 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   @Nullable
   @Override
   public JComponent createComponent() {
-    return myPanel;
+    if (myComponent == null) {
+      JPanel elpSection = new JPanel(new BorderLayout());
+      elpSection.add(myElpSettingsPanel.getComponent(), BorderLayout.NORTH);
+      myComponent = new JPanel(new BorderLayout());
+      myComponent.add(myPanel, BorderLayout.NORTH);
+      myComponent.add(elpSection, BorderLayout.CENTER);
+    }
+    return myComponent;
   }
 
   @Override
@@ -142,7 +153,8 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
          !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
       || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText())
-      || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText());
+      || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText())
+      || myElpSettingsPanel.isModified();
   }
 
   @Override
@@ -153,6 +165,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     if (ErlangSystemUtil.isSmallIde()) {
       ErlangSdkForSmallIdes.setUpOrUpdateSdk(myProject, mySdkPathSelector.getText());
     }
+    myElpSettingsPanel.apply();
   }
 
   @Override
@@ -161,6 +174,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myEmacsPathSelector.setText(myEmacsSettings.getEmacsPath());
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
     mySdkPathSelector.setText(StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)));
+    myElpSettingsPanel.reset();
     validateEmacsPath();
   }
 
