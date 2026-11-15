@@ -21,6 +21,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.ProcessingContext;
 import com.intellij.util.containers.ContainerUtil;
@@ -41,42 +42,54 @@ import java.util.regex.Pattern;
  */
 public class ErlangDocLinkReferenceProvider extends PsiReferenceProvider {
   private static final String ATOM = "[a-z][a-zA-Z0-9_@]*";
-  private static final Pattern TAG = Pattern.compile("(?:(?<=[%\\s])@see|\\{@link)\\s+([^\\s}]+)");
-  private static final Pattern REFERENCE = Pattern.compile("(//" + ATOM + "/)?(?:(" + ATOM + "):)?(" + ATOM + ")(?:/(\\d+))?");
+  private static final Pattern ATOM_PATTERN = Pattern.compile(ATOM);
+  private static final Pattern REFERENCE = Pattern.compile(
+    "(?:^%+[ \\t]*@see|\\{@link)[ \\t]+" +
+    "(//" + ATOM + "/)?(?:(" + ATOM + ")[ \\t]*:[ \\t]*)?(" + ATOM + ")(?:[ \\t]*/[ \\t]*(\\d+))?" +
+    "(?=[ \\t]*(?:\\.(?:[ \\t]|$)|}|$))");
 
   @Override
   public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
     if (!(element instanceof PsiComment comment)) return PsiReference.EMPTY_ARRAY;
     List<PsiReference> references = new ArrayList<>();
-    Matcher tag = TAG.matcher(comment.getText());
-    while (tag.find()) {
-      Matcher reference = REFERENCE.matcher(tag.group(1));
-      if (!reference.matches()) continue;
-      int offset = tag.start(1);
+    Matcher reference = REFERENCE.matcher(comment.getText());
+    while (reference.find()) {
       String moduleName = reference.group(2);
       String arity = reference.group(4);
       if (arity != null) {
         if (moduleName == null && reference.group(1) != null) continue;
         if (moduleName != null) {
-          references.add(new ModuleReference(comment, range(reference, 2, offset)));
+          references.add(new ModuleReference(comment, range(reference, 2)));
         }
-        references.add(new FunctionReference(comment, range(reference, 3, offset), moduleName, StringUtil.parseInt(arity, -1)));
+        references.add(new FunctionReference(comment, range(reference, 3), moduleName, StringUtil.parseInt(arity, -1)));
       }
       else if (moduleName == null) {
-        references.add(new ModuleReference(comment, range(reference, 3, offset)));
+        references.add(new ModuleReference(comment, range(reference, 3)));
       }
     }
     return references.toArray(PsiReference.EMPTY_ARRAY);
   }
 
   @NotNull
-  private static TextRange range(@NotNull Matcher matcher, int group, int offset) {
-    return new TextRange(matcher.start(group), matcher.end(group)).shiftRight(offset);
+  private static TextRange range(@NotNull Matcher matcher, int group) {
+    return new TextRange(matcher.start(group), matcher.end(group));
   }
 
-  private static final class ModuleReference extends PsiReferenceBase<PsiComment> {
-    private ModuleReference(@NotNull PsiComment comment, @NotNull TextRange range) {
+  private abstract static class DocLinkReference extends PsiReferenceBase<PsiComment> {
+    private DocLinkReference(@NotNull PsiComment comment, @NotNull TextRange range) {
       super(comment, range, true);
+    }
+
+    @Override
+    public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
+      // a name that needs quotes would not be a link anymore, so keep the old one
+      return ATOM_PATTERN.matcher(newElementName).matches() ? super.handleElementRename(newElementName) : myElement;
+    }
+  }
+
+  private static final class ModuleReference extends DocLinkReference {
+    private ModuleReference(@NotNull PsiComment comment, @NotNull TextRange range) {
+      super(comment, range);
     }
 
     @Nullable
@@ -87,13 +100,13 @@ public class ErlangDocLinkReferenceProvider extends PsiReferenceProvider {
     }
   }
 
-  private static final class FunctionReference extends PsiReferenceBase<PsiComment> {
+  private static final class FunctionReference extends DocLinkReference {
     @Nullable
     private final String myModuleName;
     private final int myArity;
 
     private FunctionReference(@NotNull PsiComment comment, @NotNull TextRange range, @Nullable String moduleName, int arity) {
-      super(comment, range, true);
+      super(comment, range);
       myModuleName = moduleName;
       myArity = arity;
     }

@@ -20,6 +20,7 @@ import com.intellij.ide.hierarchy.HierarchyNodeDescriptor;
 import com.intellij.ide.hierarchy.HierarchyTreeStructure;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.SearchScope;
@@ -54,6 +55,7 @@ public class ErlangCallerMethodsTreeStructure extends HierarchyTreeStructure {
       (Consumer<? super PsiReference>) r -> {
         ProgressManager.checkCanceled();
         PsiElement element = r.getElement();
+        if (element instanceof PsiComment) return;
         ErlangFunction f = PsiTreeUtil.getParentOfType(element, ErlangFunction.class, false);
         ContainerUtil.addIfNotNull(result, f);
       }

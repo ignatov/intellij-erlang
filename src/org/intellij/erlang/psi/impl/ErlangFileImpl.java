@@ -291,8 +291,18 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         // todo: use module with dependencies scope
         if (!DumbService.isDumb(getProject())) {
           Query<PsiReference> search = ReferencesSearch.search(module, GlobalSearchScope.allScope(module.getProject()));
-          for (PsiReference psiReference : search) {
-            psiReference.handleElementRename(nameWithoutExtension);
+          // renaming a reference may replace its element, which can hold several references:
+          // rename the last one in an element first and find the others again in the new element
+          List<PsiReference> references = new ArrayList<>(search.findAll());
+          references.sort(Comparator.comparingInt(ErlangFileImpl::getReferenceStartOffset).reversed());
+          SmartPointerManager pointerManager = SmartPointerManager.getInstance(getProject());
+          List<SmartPsiElementPointer<PsiElement>> pointers =
+            ContainerUtil.map(references, r -> pointerManager.createSmartPsiElementPointer(r.getElement()));
+          for (int i = 0; i < references.size(); i++) {
+            PsiReference psiReference = findValidReference(references.get(i), pointers.get(i).getElement());
+            if (psiReference != null) {
+              psiReference.handleElementRename(nameWithoutExtension);
+            }
           }
         }
         module.setName(nameWithoutExtension);
@@ -300,6 +310,17 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     }
 
     return super.setName(name);
+  }
+
+  private static int getReferenceStartOffset(@NotNull PsiReference reference) {
+    return reference.getElement().getTextRange().getStartOffset() + reference.getRangeInElement().getStartOffset();
+  }
+
+  @Nullable
+  private static PsiReference findValidReference(@NotNull PsiReference reference, @Nullable PsiElement element) {
+    if (reference.getElement().isValid()) return reference;
+    if (element == null) return null;
+    return ContainerUtil.find(element.getReferences(), r -> r.getRangeInElement().equals(reference.getRangeInElement()));
   }
 
   @NotNull

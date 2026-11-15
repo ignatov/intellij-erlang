@@ -17,7 +17,9 @@
 package org.intellij.erlang.resolve;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -65,7 +67,27 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
   }
 
   public void testLinkLocalFunctionWithDescription() {
-    doFunctionTest("%% See {@link fo<caret>o/0 the other one}.", "test.erl", "foo", 0);
+    doFunctionTest("%% See {@link fo<caret>o/0. the other one}.", "test.erl", "foo", 0);
+  }
+
+  public void testSeeFunctionFollowedByDescription() {
+    doFunctionTest("%% @see fo<caret>o/1. More text", "test.erl", "foo", 1);
+  }
+
+  public void testSeeModuleFollowedByPeriod() {
+    doModuleTest("%% @see hand<caret>ler.", "handler");
+  }
+
+  public void testSeeFunctionWithSpacedArity() {
+    doFunctionTest("%% @see fo<caret>o / 1", "test.erl", "foo", 1);
+  }
+
+  public void testNoReferenceForLinkWithoutSeparator() {
+    assertNull(configure("%% See {@link fo<caret>o/0 the other one}."));
+  }
+
+  public void testNoReferenceForSeeInsideText() {
+    assertNull(configure("%% @doc Not a tag: @see fo<caret>o/1"));
   }
 
   public void testSeeFunctionWithWrongArity() {
@@ -86,6 +108,33 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
     myFixture.configureByText("test.erl", "-module(test).\n%% @see fo<caret>o/1\nfoo(_) -> foo(1).\n");
     myFixture.renameElement(myFixture.getElementAtCaret(), "bar");
     myFixture.checkResult("-module(test).\n%% @see bar/1\nbar(_) -> bar(1).\n");
+  }
+
+  public void testRenameToQuotedNameKeepsSee() {
+    myFixture.configureByText("test.erl", "-module(test).\n%% @see fo<caret>o/1\nfoo(_) -> foo(1).\n");
+    myFixture.renameElement(myFixture.getElementAtCaret(), "Bar");
+    myFixture.checkResult("-module(test).\n%% @see foo/1\n'Bar'(_) -> 'Bar'(1).\n");
+  }
+
+  public void testRenameModuleFileWithSeveralLinksInOneComment() {
+    PsiFile handler = myFixture.addFileToProject("handler.erl", "-module(handler).\n-export([a/1]).\na(_) -> ok.\n");
+    PsiFile user = myFixture.addFileToProject("user1.erl", "-module(user1).\n%% {@link handler:a/1} or {@link handler}\nx() -> handler:a(1).\n");
+    myFixture.renameElement(handler, "h2.erl");
+    assertEquals("h2.erl", handler.getName());
+    assertEquals("-module(h2).\n-export([a/1]).\na(_) -> ok.\n", handler.getText());
+    assertEquals("-module(user1).\n%% {@link h2:a/1} or {@link h2}\nx() -> h2:a(1).\n", user.getText());
+  }
+
+  public void testSeeDoesNotMakeFunctionUsed() {
+    myFixture.enableInspections(ErlangUnusedFunctionInspection.class);
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -export([foo/0]).
+      %% @see bar/1
+      foo() -> ok.
+      <warning descr="Unused function 'bar/1'">bar</warning>(_) -> ok.
+      """);
+    myFixture.checkHighlighting(true, false, false);
   }
 
   private void doFunctionTest(@NotNull String comment, @NotNull String expectedFile, @NotNull String name, int arity) {
