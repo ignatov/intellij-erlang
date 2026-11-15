@@ -17,10 +17,12 @@
 package org.intellij.erlang.sdk;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.workspace.jps.entities.SdkEntity;
 import com.intellij.platform.workspace.storage.EntityStorage;
 import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileIndexContributor;
 import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileSetRegistrar;
+import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangExcludeHtmlFileIndexContributor implements WorkspaceFileIndexContributor<SdkEntity> {
@@ -38,13 +40,16 @@ public class ErlangExcludeHtmlFileIndexContributor implements WorkspaceFileIndex
     if (!"Erlang SDK".equals(entity.getType())) {
       return;
     }
-    registrar.registerExclusionCondition(entity.getHomePath().append("lib"), virtualFile -> {
+    // The function type is spelled out because 2026.2 adds an overload that takes a WorkspaceFileSetExclusionCondition,
+    // which makes a bare lambda ambiguous there; this overload is the only one in 2026.1.
+    Function1<VirtualFile, Boolean> exclusionCondition = virtualFile -> {
       var name = virtualFile.getName();
       if (name.endsWith("html")) {
         LOG.info("Excluded " + virtualFile.getUrl() + " from Erlang SDK" + entity.getName() + " to speedup indexing");
         return true;
       }
       return false;
-    }, entity);
+    };
+    registrar.registerExclusionCondition(entity.getHomePath().append("lib"), exclusionCondition, entity);
   }
 }
