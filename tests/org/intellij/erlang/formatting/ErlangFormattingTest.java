@@ -137,6 +137,17 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
     doTest();
   }
+  public void test830CommaFirstBroken() throws Exception {
+    setUpCommaFirst();
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830FunArgument() throws Exception {
+    alignBlocks();
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
 
   public void test897() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
