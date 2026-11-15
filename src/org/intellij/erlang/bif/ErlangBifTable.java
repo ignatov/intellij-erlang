@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 public final class ErlangBifTable {
@@ -409,6 +410,21 @@ public final class ErlangBifTable {
 
   public static final String MODULE_INFO = "module_info";
 
+  // functions of the erlang module that erl_internal:bif/2 auto-imports but the table above does not mark as auto-imported
+  private static final Set<String> AUTO_IMPORTED_ERLANG_FUNCTIONS = Set.of(
+    "alias/0", "alias/1", "apply/2", "atom_to_binary/1", "binary_to_atom/1", "binary_to_existing_atom/1", "bitsize/1",
+    "ceil/1", "check_process_code/3", "disconnect_node/1", "error/3", "exit/3", "exit_signal/2", "exit_signal/3",
+    "floor/1", "garbage_collect/2", "get_keys/0", "integer_set_bits/1", "integer_signed_width/1",
+    "integer_to_binary/2", "integer_to_list/2", "integer_trailing_zeroes/1", "integer_unsigned_width/1", "is_map/1",
+    "is_map_key/2", "is_record/1", "link/2", "list_to_port/1", "list_to_ref/1", "load_module/2", "map_get/2",
+    "map_size/1", "max/2", "min/2", "monitor/3", "nodes/0", "nodes/2", "pid_to_binary/1", "port_to_binary/1",
+    "port_to_list/1", "ref_to_binary/1", "ref_to_list/1", "spawn/1", "spawn/2", "spawn/4", "spawn_link/1",
+    "spawn_link/2", "spawn_link/4", "spawn_monitor/1", "spawn_monitor/2", "spawn_monitor/3", "spawn_monitor/4",
+    "spawn_opt/2", "spawn_opt/3", "spawn_opt/4", "spawn_opt/5", "spawn_request/1", "spawn_request/2",
+    "spawn_request/3", "spawn_request/4", "spawn_request/5", "spawn_request_abandon/1", "term_to_iovec/1",
+    "term_to_iovec/2", "unalias/1"
+  );
+
   private static void putGeneratedInfo() {
     bifMap.putValue("", new ErlangBifDescriptor("", "record_info", 2, "Key, Record", true));
     bifMap.putValue("", new ErlangBifDescriptor("", MODULE_INFO, 0, "", true));
@@ -470,5 +486,11 @@ public final class ErlangBifTable {
       }
     }
     return false;
+  }
+
+  public static boolean isAutoImported(@NotNull String functionName, int arity) {
+    ErlangBifDescriptor bifDescriptor = getBif("erlang", functionName, arity);
+    return bifDescriptor != null && bifDescriptor.isAutoImported() ||
+           AUTO_IMPORTED_ERLANG_FUNCTIONS.contains(functionName + "/" + arity);
   }
 }

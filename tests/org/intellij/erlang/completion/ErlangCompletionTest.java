@@ -244,7 +244,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testBif() {
-    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "tuple_size");
   }
 
   public void testBifFromModules() {
@@ -440,7 +440,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testModuleFunctionCompletionForEmptyText() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "finish_after_on_load");
+    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "group_leader");
   }
   
   public void testModuleFunctionCompletionQuoted() {
