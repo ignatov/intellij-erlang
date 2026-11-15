@@ -27,22 +27,49 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract public class ErlangInspectionBase extends LocalInspectionTool implements CustomSuppressableInspectionTool {
   private static final PsiElementVisitor DUMMY_VISITOR = new PsiElementVisitor() { };
   private static final Pattern SUPPRESS_PATTERN = Pattern.compile(SuppressionUtil.COMMON_SUPPRESS_REGEXP);
+  /**
+   * The inspections built on the plugin's resolve: names that do not resolve, or that nothing refers to. In the ELP engine
+   * position ELP's diagnostics (erlc's and ELP's own) report these problems, so these inspections stay silent in the editor while
+   * ELP serves the file. Batch inspection still runs them, because ELP diagnoses only the files open in the editor.
+   */
+  private static final Set<Class<? extends ErlangInspectionBase>> RESOLVE_INSPECTIONS = Set.of(
+    ErlangUnresolvedFunctionInspection.class,
+    ErlangUnresolvedExportFunctionInspection.class,
+    ErlangUnresolvedMacrosInspection.class,
+    ErlangUnresolvedRecordInspection.class,
+    ErlangUnresolvedRecordFieldInspection.class,
+    ErlangUnresolvedIncludeInspection.class,
+    ErlangUnresolvedIncludeLibInspection.class,
+    ErlangUnboundVariableInspection.class,
+    ErlangSpecificationForUndefinedFunctionInspection.class,
+    ErlangUndefinedBehaviourInspection.class,
+    ErlangUndefinedCallbackFunctionInspection.class,
+    ErlangConflictingBehavioursInspection.class,
+    ErlangUnusedFunctionInspection.class,
+    ErlangUnusedTypeInspection.class,
+    ErlangUnusedVariableInspection.class
+  );
 
   @NotNull
   @Override
   public final PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly, @NotNull LocalInspectionToolSession session) {
     ErlangFile file = ObjectUtils.tryCast(session.getFile(), ErlangFile.class);
+    if (isOnTheFly && RESOLVE_INSPECTIONS.contains(getClass()) && ElpEngine.ownsFeature(file, ElpEngine.Feature.RESOLVE_INSPECTIONS)) {
+      return DUMMY_VISITOR;
+    }
     return file != null && canRunOn(file) ? buildErlangVisitor(holder, session) : DUMMY_VISITOR;
   }
 

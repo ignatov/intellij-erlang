@@ -33,6 +33,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.ErlangColonQualifiedExpression;
@@ -52,6 +53,12 @@ public class ErlangKeywordsCompletionContributor extends CompletionContributor i
     "include", "include_lib", "module", "export", "export_type", "import",
     "define", "record", "behaviour", "behavior", "optional_callbacks"
   );
+
+  @Override
+  public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
+    if (ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION)) return;
+    super.fillCompletionVariants(parameters, result);
+  }
 
   public ErlangKeywordsCompletionContributor() {
     extend(CompletionType.BASIC, psiElement().inFile(instanceOf(ErlangFile.class)), new CompletionProvider<>() {

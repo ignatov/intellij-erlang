@@ -27,6 +27,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +45,7 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!(file instanceof ErlangFile)) return false;
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.INTENTIONS)) return false;
 
     var function = findFunction(file, editor.getCaretModel().getOffset());
 

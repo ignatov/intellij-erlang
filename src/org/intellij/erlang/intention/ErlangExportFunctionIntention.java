@@ -21,6 +21,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
@@ -35,6 +36,7 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!file.getManager().isInProject(file)) return false;
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.INTENTIONS)) return false;
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null && file instanceof ErlangFile) {
       return !((ErlangFile) file).getExportedFunctions().contains(function);

@@ -22,6 +22,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.Unit;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,6 +47,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
 
   @Override
   public @Nullable InlayHintsCollector createCollector(@NotNull PsiFile file, @NotNull Editor editor) {
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.PARAMETER_HINTS)) return null;
     return file instanceof ErlangFile ? new Collector() : null;
   }
 

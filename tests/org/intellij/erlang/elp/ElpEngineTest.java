@@ -17,12 +17,31 @@
 
 package org.intellij.erlang.elp;
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.ServiceContainerUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.documentation.ErlangDocumentationProvider;
+import org.intellij.erlang.editor.ErlangFoldingBuilder;
+import org.intellij.erlang.editor.ErlangWordSelectioner;
+import org.intellij.erlang.hints.ErlangParameterHintsProvider;
+import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
+import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
+import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
+import org.intellij.erlang.intention.ErlangExportFunctionIntention;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.util.List;
+import java.util.Set;
+
 /**
- * The engine switch with a stand-in for the running ELP server: {@link ElpEngine#ownsFeature}.
+ * The engine switch with a stand-in for the running ELP server: {@link ElpEngine#ownsFeature} and the plugin features it gates.
  */
 public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ElpSettings.ElpSettingsState myOldState;
@@ -88,6 +107,106 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     System.setProperty(ElpConfiguration.MODE_PROPERTY, "plugin");
     assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+  }
+
+  public void testCompletion() {
+    myFixture.configureByText("a.erl", "-module(a).\nbar1() -> ok.\nbar2() -> ok.\nfoo() -> bar<caret>");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(lookupStrings(myFixture.completeBasic()));
+  }
+
+  public void testVariableCompletion() {
+    myFixture.configureByText("a.erl", "-module(a).\nfoo(Alpha1, Alpha2) -> Al<caret>");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "Alpha1", "Alpha2");
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(lookupStrings(myFixture.completeBasic()));
+  }
+
+  public void testParameterHints() {
+    myFixture.configureByText("a.erl", "-module(a).\nf(Name) -> Name.\ng() -> f(1).");
+    ErlangParameterHintsProvider provider = new ErlangParameterHintsProvider();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertNotNull(provider.createCollector(myFixture.getFile(), myFixture.getEditor()));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertNull(provider.createCollector(myFixture.getFile(), myFixture.getEditor()));
+  }
+
+  public void testFunctionFoldingButNotCommentFolding() {
+    myFixture.configureByText("a.erl", "-module(a).\n%% a comment\nf() ->\n  ok.\n");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertEquals(2, foldingRegions().length);
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    FoldingDescriptor[] regions = foldingRegions();
+    assertEquals(1, regions.length);
+    assertEquals("%% a comment", regions[0].getElement().getText());
+  }
+
+  public void testExportFunctionIntention() {
+    myFixture.configureByText("a.erl", "-module(a).\nf<caret>oo() -> ok.");
+    ErlangExportFunctionIntention intention = new ErlangExportFunctionIntention();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertTrue(intention.isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertFalse(intention.isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+  }
+
+  public void testDocumentation() {
+    myFixture.configureByText("a.erl", "-module(a).\n%% @doc Says hello.\nhello() -> ok.\nf() -> hel<caret>lo().");
+    ErlangFunction function = ((ErlangFile)myFixture.getFile()).getFunction("hello", 0);
+    PsiElement original = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    ErlangDocumentationProvider provider = new ErlangDocumentationProvider();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertNotNull(provider.generateDoc(function, original));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertNull(provider.generateDoc(function, original));
+    assertNotNull("without the element in the editor the plugin answers", provider.generateDoc(function, null));
+  }
+
+  public void testExtendSelection() {
+    myFixture.configureByText("a.erl", "-module(a).\nf() -> o<caret>k.");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertTrue(new ErlangWordSelectioner().canSelect(element));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertFalse(new ErlangWordSelectioner().canSelect(element));
+  }
+
+  public void testResolveInspectionsAreSilentButOthersStay() {
+    myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class, ErlangUnusedFunctionInspection.class,
+                                ErlangHeadMismatchInspection.class);
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0]).\nf() -> undefined_fun().\nunused() -> ok.\n" +
+                                       "g(1) -> ok;\nh(2) -> ok.\n");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertEquals(Set.of("Unresolved function undefined_fun/0", "Unused function 'unused/0'", "Unused function 'g/1'",
+                        "Head mismatch: should be 'g/1'"),
+                 descriptions(myFixture.doHighlighting()));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    DaemonCodeAnalyzer.getInstance(getProject()).restart(myFixture.getFile(), "ELP serves the file now");
+    assertEquals(Set.of("Head mismatch: should be 'g/1'"), descriptions(myFixture.doHighlighting()));
+  }
+
+  private FoldingDescriptor[] foldingRegions() {
+    return new ErlangFoldingBuilder().buildFoldRegions(myFixture.getFile(), myFixture.getEditor().getDocument(), false);
+  }
+
+  private static List<String> lookupStrings(LookupElement[] elements) {
+    assertNotNull("one variant was inserted", elements);
+    return ContainerUtil.map(elements, LookupElement::getLookupString);
+  }
+
+  private static Set<String> descriptions(List<HighlightInfo> infos) {
+    return ContainerUtil.map2Set(ContainerUtil.filter(infos, info -> info.getDescription() != null), HighlightInfo::getDescription);
   }
 
   private void configure(String path, ElpMode mode, boolean serving) {

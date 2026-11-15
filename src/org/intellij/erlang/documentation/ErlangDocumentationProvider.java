@@ -29,6 +29,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,6 +49,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public List<String> getUrlFor(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
+    if (ElpEngine.ownsFeature(originalElement, ElpEngine.Feature.DOCUMENTATION)) return null;
     ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null) {
       return elementDocProvider.getExternalDocUrls();
@@ -58,6 +60,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
+    if (ElpEngine.ownsFeature(originalElement, ElpEngine.Feature.DOCUMENTATION)) return null;
     ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
       return elementDocProvider.getDocText();

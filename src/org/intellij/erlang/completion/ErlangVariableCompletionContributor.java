@@ -28,6 +28,7 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
@@ -55,6 +56,12 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
                  ErlangParserUtil.isConsole(element.getContainingFile());
         }
       });
+
+  @Override
+  public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
+    if (ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION)) return;
+    super.fillCompletionVariants(parameters, result);
+  }
 
   public ErlangVariableCompletionContributor() {
     extend(CompletionType.BASIC, or(psiElement(ErlangTypes.ERL_VAR), ATOM_IN_EXPRESSION), new CompletionProvider<>() {
