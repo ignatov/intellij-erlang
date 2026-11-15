@@ -73,11 +73,15 @@ CharLiteral = \$ {CharLiteralChar} | \$
 
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
 /* \^ takes the next character too, so "\^\" ends after the second backslash */
-ESC = "\\" ( \^ [^] | [^\^] )
+ESC = "\\" ( \^ {ControlName} | [^\^] )
 /* ~B and ~S sigils are verbatim, so \^ does not take the next character there */
 VERBATIM_ESC = "\\" [^]
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
+/* A \^ before a character that is not a control name ends the literal there, as in erl_scan; ErlangAnnotator reports it */
+BadCaret = \\ \^
+NotControlName = [^@A-Z\[\\\]\^_a-z?]
+StringBadCaret = \" ({CHAR} | \')* {BadCaret}
 TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
 StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
@@ -114,6 +118,17 @@ SigilPipeString = "~" [bs]? \| ([^\\\|] | {ESC})* \| | "~" [BS] \| ([^\\\|] | {V
 SigilBacktickString = "~" [bs]? \` ([^\\\`] | {ESC})* \` | "~" [BS] \` ([^\\\`] | {VERBATIM_ESC})* \`
 /* Sigil with hash delimiter */
 SigilHashString = "~" [bs]? "#" ([^\\#] | {ESC})* "#" | "~" [BS] "#" ([^\\#] | {VERBATIM_ESC})* "#"
+
+SigilDoubleQuoteBadCaret = "~" [bs]? \" ([^\\\"] | {ESC})* {BadCaret}
+SigilSingleQuoteBadCaret = "~" [bs]? \' ([^\\\'] | {ESC})* {BadCaret}
+SigilParenBadCaret = "~" [bs]? \( ([^\\\)] | {ESC})* {BadCaret}
+SigilBracketBadCaret = "~" [bs]? \[ ([^\\\]] | {ESC})* {BadCaret}
+SigilBraceBadCaret = "~" [bs]? \{ ([^\\\}] | {ESC} | {HexEscape})* {BadCaret}
+SigilAngleBadCaret = "~" [bs]? \< ([^\\\>] | {ESC})* {BadCaret}
+SigilSlashBadCaret = "~" [bs]? \/ ([^\\\\/] | {ESC})* {BadCaret}
+SigilPipeBadCaret = "~" [bs]? \| ([^\\\|] | {ESC})* {BadCaret}
+SigilBacktickBadCaret = "~" [bs]? \` ([^\\\`] | {ESC})* {BadCaret}
+SigilHashBadCaret = "~" [bs]? "#" ([^\\#] | {ESC})* {BadCaret}
 
 %state IN_QUOTES
 
@@ -199,6 +214,8 @@ SigilHashString = "~" [bs]? "#" ([^\\#] | {ESC})* "#" | "~" [BS] "#" ([^\\#] | {
 <YYINITIAL> {SigilPipeString}             { return ERL_SIGIL_STRING; }
 <YYINITIAL> {SigilBacktickString}         { return ERL_SIGIL_STRING; }
 <YYINITIAL> {SigilHashString}             { return ERL_SIGIL_STRING; }
+<YYINITIAL> {StringBadCaret} / {NotControlName} { return ERL_STRING; }
+<YYINITIAL> ({SigilDoubleQuoteBadCaret} | {SigilSingleQuoteBadCaret} | {SigilParenBadCaret} | {SigilBracketBadCaret} | {SigilBraceBadCaret} | {SigilAngleBadCaret} | {SigilSlashBadCaret} | {SigilPipeBadCaret} | {SigilBacktickBadCaret} | {SigilHashBadCaret}) / {NotControlName} { return ERL_SIGIL_STRING; }
 
 <YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }

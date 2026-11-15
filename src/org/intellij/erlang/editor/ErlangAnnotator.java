@@ -58,11 +58,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         return;
       }
       if (type == ErlangTypes.ERL_CHAR || type == ErlangTypes.ERL_STRING || type == ErlangTypes.ERL_SIGIL_STRING) {
-        checkHexEscapes(leaf, annotationHolder);
+        checkEscapes(leaf, annotationHolder);
         return;
       }
       if (type == ErlangTypes.ERL_ATOM_NAME) {
-        checkHexEscapes(leaf, annotationHolder);
+        checkEscapes(leaf, annotationHolder);
       }
     }
 
@@ -211,7 +211,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     }
   }
 
-  private static void checkHexEscapes(@NotNull PsiElement literal, @NotNull AnnotationHolder holder) {
+  private static void checkEscapes(@NotNull PsiElement literal, @NotNull AnnotationHolder holder) {
     String text = literal.getText();
     if (isVerbatim(text)) return;
     int start = literal.getTextRange().getStartOffset();
@@ -219,6 +219,12 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     while (i >= 0 && i + 1 < text.length()) {
       char next = text.charAt(i + 1);
       int escapeEnd = i + (next == '^' ? 3 : 2);
+      if (next == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2)))) {
+        // erl_scan rejects the control escape and goes on at the character after the caret
+        holder.newAnnotation(HighlightSeverity.ERROR, "illegal character")
+          .range(TextRange.create(start + i, start + i + 2)).create();
+        escapeEnd = i + 2;
+      }
       if (next == 'x' && i + 2 < text.length() && text.charAt(i + 2) == '{') {
         int close = text.indexOf('}', i + 3);
         if (close > i + 3 && isHexDigits(text, i + 3, close)) {
@@ -239,6 +245,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     char modifier = text.charAt(1);
     if (modifier == 'B' || modifier == 'S') return true;
     return text.startsWith("\"\"\"", 1);
+  }
+
+  // The characters that erl_scan accepts after \^
+  private static boolean isControlName(char c) {
+    return c >= '@' && c <= '_' || c >= 'a' && c <= 'z' || c == '?';
   }
 
   private static boolean isHexDigits(@NotNull String text, int from, int to) {
