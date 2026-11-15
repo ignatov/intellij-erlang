@@ -102,7 +102,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       || is(previousByOffset, ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) && !is(previousByOffset, ErlangTypes.ERL_OP_EQ)
-      || typeParent != null || isRecordFunctionCallCompletion(previousByOffset) || behaviour != null) {
+      || typeParent != null || prevIsTypeModuleColon(previousByOffset) || isRecordFunctionCallCompletion(previousByOffset) || behaviour != null) {
       context.setDummyIdentifier("a");
     }
   }
@@ -111,6 +111,18 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement prevSibling = previousByOffset != null ? previousByOffset.getPrevSibling() : null;
     if (prevSibling == null) return false;
     return is(previousByOffset, ErlangTypes.ERL_COMMA) && inIsRecord(0).accepts(prevSibling, new ProcessingContext());
+  }
+
+  private static boolean isModuleQualifiedType(@Nullable PsiElement element) {
+    return element instanceof ErlangTypeRef && PsiTreeUtil.getPrevSiblingOfType(element, ErlangModuleRef.class) != null;
+  }
+
+  private static boolean prevIsTypeModuleColon(@Nullable PsiElement previousByOffset) {
+    if (!is(previousByOffset, ErlangTypes.ERL_COLON)) return false;
+    PsiElement moduleName = PsiTreeUtil.prevVisibleLeaf(previousByOffset);
+    PsiElement beforeModuleName = moduleName != null ? PsiTreeUtil.prevVisibleLeaf(moduleName) : null;
+    return is(beforeModuleName, ErlangTypes.ERL_COLON_COLON)
+      || PsiTreeUtil.getParentOfType(beforeModuleName, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class) != null;
   }
 
   private static boolean prevIsRecordModuleColon(@Nullable PsiElement previousByOffset) {
@@ -155,7 +167,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
         if (grandPa instanceof ErlangType && PsiTreeUtil.getParentOfType(position, ErlangExportTypeAttribute.class) == null) {
-          result.addAllElements(getTypeLookupElements(file, true, false));
+          result.addAllElements(getTypeLookupElements(file, true, false, false));
         }
 
         ErlangRecordRef recordRef = PsiTreeUtil.getParentOfType(originalPosition, ErlangRecordRef.class);
@@ -191,7 +203,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           else if (grandPa instanceof ErlangMacros) {
             return;
           }
-          else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
+          else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null && !isModuleQualifiedType(grandPa)) {
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
             boolean insideBehaviour = PsiTreeUtil.getParentOfType(position, ErlangBehaviour.class) != null;

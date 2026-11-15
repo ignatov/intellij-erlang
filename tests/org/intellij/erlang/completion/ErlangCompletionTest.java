@@ -353,30 +353,53 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -type tes() :: <caret>)""", "foo", "buz", "atom", "no_return");
   }
 
-  public void testProbeQualified() {
+  public void testModuleQualifiedTypesInSpecResult() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> other:<caret>.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInSpecArgument() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f(other:<caret>) -> ok.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTypeDefinition() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: [other:<caret>].", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInRecordField() {
+    addTypesRemoteModule();
+    doTestEquals("-record(r, {a :: other:<caret>}).", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesWithPrefix() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: other:p<caret>", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypeInsertion() {
+    addTypesRemoteModule();
+    doCheckResult("-spec f() -> other:pub_p<caret>.", "-spec f() -> other:pub_param(<caret>).");
+  }
+
+  public void testModuleQualifiedTypesOfOwnModule() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> own:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  private void addTypesRemoteModule() {
     myFixture.addFileToProject("other.erl", """
       -module(other).
-      -export_type([pub/0]).
+      -export_type([pub/0, pub_param/1]).
       -type pub() :: atom().
+      -type pub_param(T) :: [T].
       -type priv() :: integer().
       """);
-    for (String t : new String[]{
-      "-spec f() -> other:<caret>.",
-      "-spec f() -> other:<caret>",
-      "-spec f() -> other:p<caret>.",
-      "-spec f() -> other:p<caret>",
-      "-spec f(other:<caret>) -> ok.",
-      "-type t() :: other:<caret>.",
-      "-type t() :: other:<caret>",
-      "-type t() :: [other:<caret>].",
-      "-record(r, {a :: other:<caret>}).",
-      "-spec f() -> oth<caret>.",
-    }) {
-      myFixture.configureByText("a.erl", t);
-      System.out.println("TREE " + t + "\n" + com.intellij.psi.impl.DebugUtil.psiToString(myFixture.getFile(), true));
-      myFixture.complete(CompletionType.BASIC, 1);
-      System.out.println("PROBE " + t + " => " + myFixture.getLookupElementStrings() + " | " + myFixture.getEditor().getDocument().getText());
-    }
   }
 
   public void testBif() {
