@@ -24,4 +24,9 @@ public class ErlangIncludeResolveTest extends ErlangIncludeResolveTestBase {
   public void testRelativeToDirectParentWithDots() {
     doTest("src/testmodule.erl", "include/testinclude.hrl");
   }
+
+  // #592: erlc run from the application root and rebar3 resolve this include
+  public void testRelativeToOtpAppRoot() {
+    doTest("src/testmodule.erl", "include/testinclude.hrl", "src/test.app.src");
+  }
 }

@@ -49,4 +49,9 @@ public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBa
   public void testIncludePathsInRebarConfigWithStringSigil() {
     doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
   }
+
+  // #592: erlc run from the application root and rebar3 resolve this include
+  public void testRelativeToOtpAppRoot() {
+    doTest("src/testmodule.erl", "include/testinclude.hrl", "src/test.app.src");
+  }
 }
