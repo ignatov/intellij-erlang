@@ -41,6 +41,7 @@ import com.intellij.testFramework.JavaModuleTestCase;
 import com.intellij.testFramework.MapDataContext;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.PsiTestUtil;
+import com.intellij.ui.CollectionListModel;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.ArrayUtil;
@@ -246,20 +247,73 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
 
   public void testEditorKeepsNifsWhenAutoUpdateTurnedOffBeforeTheyAreFound() throws Exception {
     ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
-    JBCheckBox autoUpdateCheckBox = UIUtil.findComponentOfType(editor.getComponent(), JBCheckBox.class);
-    assertNotNull(autoUpdateCheckBox);
+    JBCheckBox autoUpdateCheckBox = getAutoUpdateCheckBox(editor);
+    autoUpdateCheckBox.doClick();
+    ErlangRunConfigurationBase.ErlangDebugOptions applied = applyDebugOptions(editor);
+    assertTrue("auto-update was turned off before the modules were found", applied.isAutoUpdateModulesNotToInterpret());
+
+    waitForModulesNotToInterpret();
     assertTrue(autoUpdateCheckBox.isSelected());
     autoUpdateCheckBox.doClick();
     assertFalse(autoUpdateCheckBox.isSelected());
+    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+    applied = applyDebugOptions(editor);
+    assertFalse(applied.isAutoUpdateModulesNotToInterpret());
+    assertSameElements(applied.getModulesNotToInterpret(), "nifs_in_source");
+  }
+
+  public void testEditorDoesNotBringBackRemovedNif() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    JBCheckBox autoUpdateCheckBox = getAutoUpdateCheckBox(editor);
+    assertFalse("auto-update can be turned off before the modules are found", autoUpdateCheckBox.isEnabled());
 
     waitForModulesNotToInterpret();
-    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+    assertTrue(autoUpdateCheckBox.isEnabled());
+    autoUpdateCheckBox.doClick();
+    assertFalse(autoUpdateCheckBox.isSelected());
+    getModulesNotToInterpretModel(editor).remove("nifs_in_source");
+    waitForModulesNotToInterpret();
+    assertEmpty(getShownModulesNotToInterpret(editor));
+    assertEmpty(applyDebugOptions(editor).getModulesNotToInterpret());
+  }
 
-    ErlangApplicationConfiguration applied = (ErlangApplicationConfiguration) createConfiguration(ErlangApplicationRunConfigurationProducer.class,
-                                                                                                    ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
+  public void testEditorIgnoresSearchOfEarlierReset() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    ErlangApplicationConfiguration withoutAutoUpdate = (ErlangApplicationConfiguration) createConfiguration(
+      ErlangApplicationRunConfigurationProducer.class, ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
+    withoutAutoUpdate.getDebugOptions().setAutoUpdateModulesNotToInterpret(false);
+    withoutAutoUpdate.getDebugOptions().setModulesNotToInterpret(new HashSet<>(List.of("mine")));
+    editor.resetFrom(withoutAutoUpdate);
+    assertTrue(getAutoUpdateCheckBox(editor).isEnabled());
+
+    waitForModulesNotToInterpret();
+    assertSameElements(getShownModulesNotToInterpret(editor), "mine");
+    ErlangRunConfigurationBase.ErlangDebugOptions applied = applyDebugOptions(editor);
+    assertFalse(applied.isAutoUpdateModulesNotToInterpret());
+    assertSameElements(applied.getModulesNotToInterpret(), "mine");
+  }
+
+  @NotNull
+  private ErlangRunConfigurationBase.ErlangDebugOptions applyDebugOptions(@NotNull ErlangRunConfigurationEditorForm editor) throws Exception {
+    ErlangApplicationConfiguration applied = (ErlangApplicationConfiguration) createConfiguration(
+      ErlangApplicationRunConfigurationProducer.class, ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
     editor.applyTo(applied);
-    assertFalse(applied.getDebugOptions().isAutoUpdateModulesNotToInterpret());
-    assertSameElements(applied.getDebugOptions().getModulesNotToInterpret(), "nifs_in_source");
+    return applied.getDebugOptions();
+  }
+
+  @NotNull
+  private static JBCheckBox getAutoUpdateCheckBox(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBCheckBox autoUpdateCheckBox = UIUtil.findComponentOfType(editor.getComponent(), JBCheckBox.class);
+    assertNotNull(autoUpdateCheckBox);
+    return autoUpdateCheckBox;
+  }
+
+  @NotNull
+  @SuppressWarnings("unchecked")
+  private static CollectionListModel<String> getModulesNotToInterpretModel(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBList<?> modulesNotToInterpretList = UIUtil.findComponentOfType(editor.getComponent(), JBList.class);
+    assertNotNull(modulesNotToInterpretList);
+    return (CollectionListModel<String>) modulesNotToInterpretList.getModel();
   }
 
   @NotNull

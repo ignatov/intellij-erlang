@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.runconfig.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.module.Module;
@@ -27,9 +28,13 @@ import com.intellij.util.concurrency.AppExecutorUtil;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.concurrency.CancellablePromise;
+
+import java.util.Set;
 
 public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends ErlangRunConfigurationBase> extends SettingsEditor<RunConfig> {
   private final ErlangDebugOptionsEditorForm myDebugOptionsEditor = new ErlangDebugOptionsEditorForm();
+  private CancellablePromise<Set<String>> myModulesNotToInterpretSearch;
 
   protected ErlangDebuggableRunConfigurationEditor() {
     Disposer.register(this, myDebugOptionsEditor);
@@ -37,23 +42,44 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
 
   @Override
   protected final void resetEditorFrom(@NotNull RunConfig runConfig) {
+    cancelModulesNotToInterpretSearch();
     myDebugOptionsEditor.resetFrom(runConfig.getDebugOptions());
     updateModulesNotToInterpret(runConfig);
     doResetEditorFrom(runConfig);
+  }
+
+  private void cancelModulesNotToInterpretSearch() {
+    CancellablePromise<Set<String>> search = myModulesNotToInterpretSearch;
+    myModulesNotToInterpretSearch = null;
+    if (search != null) search.cancel();
+    myDebugOptionsEditor.setAutoUpdateModulesNotToInterpretEditable(true);
   }
 
   private void updateModulesNotToInterpret(@NotNull RunConfig runConfig) {
     Module module = runConfig.getConfigurationModule().getModule();
     if (module == null || !runConfig.getDebugOptions().isAutoUpdateModulesNotToInterpret()) return;
     boolean includeTests = runConfig.isUseTestCodePath();
-    ReadAction.nonBlocking(() -> ErlangDebuggableRunConfigurationProducer.getErlangModulesWithCallsToLoadNIF(module, includeTests))
-      .inSmartMode(module.getProject())
-      .expireWhen(module::isDisposed)
-      .expireWith(this)
-      .coalesceBy(this)
-      // reset can run before the dialog is shown, so the current modality is not the dialog's; the callback only updates Swing
-      .finishOnUiThread(ModalityState.any(), myDebugOptionsEditor::setAutoUpdatedModulesNotToInterpret)
-      .submit(AppExecutorUtil.getAppExecutorService());
+    // auto-update cannot be turned off before the modules are found, or the list saved with it would miss them
+    myDebugOptionsEditor.setAutoUpdateModulesNotToInterpretEditable(false);
+    CancellablePromise<Set<String>> search =
+      ReadAction.nonBlocking(() -> ErlangDebuggableRunConfigurationProducer.getErlangModulesWithCallsToLoadNIF(module, includeTests))
+        .inSmartMode(module.getProject())
+        .expireWhen(module::isDisposed)
+        .expireWith(this)
+        // reset can run before the dialog is shown, so the current modality is not the dialog's; the callbacks only update Swing
+        .finishOnUiThread(ModalityState.any(), modules -> {
+          myModulesNotToInterpretSearch = null;
+          myDebugOptionsEditor.setAutoUpdatedModulesNotToInterpret(modules);
+          myDebugOptionsEditor.setAutoUpdateModulesNotToInterpretEditable(true);
+        })
+        .submit(AppExecutorUtil.getAppExecutorService());
+    myModulesNotToInterpretSearch = search;
+    search.onError(e -> ApplicationManager.getApplication().invokeLater(() -> {
+      if (myModulesNotToInterpretSearch == search) {
+        myModulesNotToInterpretSearch = null;
+        myDebugOptionsEditor.setAutoUpdateModulesNotToInterpretEditable(true);
+      }
+    }, ModalityState.any()));
   }
 
   protected abstract void doResetEditorFrom(RunConfig runConfig);
