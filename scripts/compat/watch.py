@@ -40,6 +40,8 @@ MAX_IN_FLIGHT = 8
 MAX_ISSUES_PER_CYCLE = 3
 MAX_ATTEMPTS = 3
 RUN_TIMEOUT = datetime.timedelta(hours=6)
+# A complete baseline is run again after this time, well before its artifacts expire.
+BASELINE_MAX_AGE = datetime.timedelta(days=30)
 TABLE_ROWS = 60
 ISSUE_ITEMS = 30
 ISSUE_TEXT_CHARS = 300
@@ -977,6 +979,14 @@ class Watcher:
             self.log('%s %s: run %d finished; waiting for the baseline' % (KINDS[kind], version, entry['run']))
             return
         base = self.result(baseline['run'], kind) if baseline and baseline['state'] == COMPLETE else None
+        if base is None and baseline is not None and baseline['state'] == COMPLETE:
+            # Its artifacts expired or were deleted: a new baseline is started, and the version is checked again
+            # with it without losing an attempt.
+            baseline['state'] = FAILED
+            entry.update(state=QUEUED, sha=None, at=None, run=None, tries=entry['tries'] - 1)
+            self.log('%s %s: the result of the baseline run %d cannot be read any more; checked again'
+                     % (KINDS[kind], version, baseline['run']))
+            return
         if base is None:
             self.attempt_failed(entry, 'there is no complete baseline of commit %s' % entry['sha'])
             return
@@ -1121,7 +1131,8 @@ class Watcher:
             self.error('no run is started: %s' % e)
             return
         baseline = self.baseline_of(sha)
-        need_baseline = baseline is None or baseline['state'] == FAILED
+        need_baseline = (baseline is None or baseline['state'] == FAILED
+                         or (baseline['state'] == COMPLETE and self.now - parse_time(baseline['at']) > BASELINE_MAX_AGE))
         versions = queued[:max(room - (1 if need_baseline else 0), 0)]
         if room <= 0 or (queued and not versions) or (not queued and not need_baseline):
             if queued:

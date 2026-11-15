@@ -502,6 +502,34 @@ class LaterCycleTest(Seeded):
         self.assertIn('<!-- compat-watch:ide:263.8000.12 -->', issue['body'])
         self.assertIn('org.A.testB: boom', issue['body'])
 
+    def test_a_baseline_whose_result_is_gone_is_run_again(self):
+        world = self.world
+        world.artifacts.pop(self.baseline_run)
+        self.finish_otp(self.next)
+        cycle(world, T0 + 2 * HOUR)
+        # The same cycle starts a new baseline and the version again; the lost baseline cost no attempt.
+        e = entry(world.state(), 'otp', self.next)
+        self.assertEqual((e['state'], e['tries']), ('running', 1))
+        self.assertEqual([b['state'] for b in world.state()['baselines']], ['running'])
+        self.assertEqual([i for _, i in world.dispatched[-2:]], [{'ref': SHA}, {'otp': self.next, 'ref': SHA}])
+        base = world.dispatched[-2][0]
+        world.finish(base, {'otp': otp_result(SHA, PINNED, base, errors=BASE_ERRORS),
+                            'ide': ide_result(SHA, BASE_IDE, base)})
+        run_id = world.dispatched[-1][0]
+        world.finish(run_id, {'otp': otp_result(SHA, self.next, run_id, self.next, errors=BASE_ERRORS)})
+        cycle(world, T0 + 4 * HOUR)
+        e = entry(world.state(), 'otp', self.next)
+        self.assertEqual((e['verdict'], e['tries']), ('same', 1))
+
+    def test_an_old_baseline_is_run_again(self):
+        world = self.world
+        self.finish_otp(self.next)
+        cycle(world, T0 + 2 * HOUR)
+        world.otp_feed += 'OTP-%d.0.2 x y\n' % (MAJOR + 1)
+        cycle(world, T0 + watch.BASELINE_MAX_AGE + 3 * HOUR)
+        self.assertEqual([i for _, i in world.dispatched[-2:]], [{'ref': SHA}, {'otp': '%d.0.2' % (MAJOR + 1),
+                                                                              'ref': SHA}])
+
     def test_a_new_head_commit_gets_its_own_baseline(self):
         world = self.world
         self.finish_otp(self.next)
