@@ -282,8 +282,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.CALL_PARAMETERS_WRAP);
     }
-    if (parentType == ERL_ARGUMENT_DEFINITION_LIST && nodePsi instanceof ErlangArgumentDefinition) {
-      return WrappingUtil.getWrapType(mySettings.METHOD_PARAMETERS_WRAP);
+    if (parentType == ERL_ARGUMENT_DEFINITION_LIST) {
+      // aligned fun clauses would anchor wrapped parameters to the clause column
+      if (myErlangSettings.ALIGN_FUN_CLAUSES && parentPsi.getParent() instanceof ErlangFunClause) return null;
+      boolean wrapped = myErlangSettings.NEW_LINE_BEFORE_COMMA ? node.getElementType() == ERL_COMMA : nodePsi instanceof ErlangArgumentDefinition;
+      return wrapped ? WrappingUtil.getWrapType(mySettings.METHOD_PARAMETERS_WRAP) : null;
     }
     if (parentPsi instanceof ErlangFakeBinaryExpression && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.BINARY_OPERATION_WRAP);
