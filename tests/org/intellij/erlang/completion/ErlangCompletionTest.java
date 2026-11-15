@@ -117,6 +117,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     }
   }
 
+  public void testVariablesFromCaseHead() { doTestInclude("foo() -> case V = 1 of _ -> <caret> end.", "V"); }
   public void testFunctions() {
     doTestInclude(
       """
