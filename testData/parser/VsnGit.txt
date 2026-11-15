@@ -50,4 +50,4 @@ ERL_FILE
         PsiElement(})('}')
       PsiElement(])(']')
     PsiElement(})('}')
-  PsiElement(.)('.')
+    PsiElement(.)('.')
