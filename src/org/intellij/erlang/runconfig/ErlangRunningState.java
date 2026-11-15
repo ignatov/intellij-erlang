@@ -18,6 +18,7 @@ package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.filters.TextConsoleBuilder;
@@ -41,6 +42,7 @@ import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.List;
 
@@ -68,10 +70,12 @@ public abstract class ErlangRunningState extends CommandLineState {
     return new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
   }
 
-  private GeneralCommandLine getCommand() throws ExecutionException {
+  @VisibleForTesting
+  GeneralCommandLine getCommand() throws ExecutionException {
     GeneralCommandLine commandLine = new GeneralCommandLine();
     setExePath(commandLine);
     setWorkDirectory(commandLine);
+    setEnvironment(commandLine);
     setCodePath(commandLine);
     setEntryPoint(commandLine);
     setStopErlang(commandLine);
@@ -105,6 +109,9 @@ public abstract class ErlangRunningState extends CommandLineState {
   @Nullable
   protected abstract String getWorkDirectory();
 
+  @NotNull
+  protected abstract EnvironmentVariablesData getEnvData();
+
   public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
     return getEntryPoint();
   }
@@ -125,6 +132,10 @@ public abstract class ErlangRunningState extends CommandLineState {
   public final void setWorkDirectory(GeneralCommandLine commandLine) {
     String workDirectory = getWorkDirectory();
     commandLine.withWorkDirectory(StringUtil.isEmpty(workDirectory) ? ObjectUtils.notNull(myModule.getProject().getBasePath(), "") : workDirectory);
+  }
+
+  public final void setEnvironment(GeneralCommandLine commandLine) {
+    getEnvData().configureCommandLine(commandLine, true);
   }
 
   public final void setStopErlang(GeneralCommandLine commandLine) {

@@ -18,6 +18,7 @@ package org.intellij.erlang.application;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -72,6 +73,12 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
   @Override
   public String getWorkDirectory() {
     return myConfiguration.getWorkDirectory();
+  }
+
+  @NotNull
+  @Override
+  protected EnvironmentVariablesData getEnvData() {
+    return myConfiguration.getEnvData();
   }
 
   @NotNull
