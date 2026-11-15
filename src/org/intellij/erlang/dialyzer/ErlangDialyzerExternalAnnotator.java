@@ -120,6 +120,10 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   @Override
   public void apply(@NotNull PsiFile file, State annotationResult, @NotNull AnnotationHolder holder) {
     if (annotationResult == null || !file.isValid()) return;
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
+    if (key == null) return;
+    InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
+    HighlightSeverity severity = profile.getErrorLevel(key, file).getSeverity();
     String text = file.getText();
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
@@ -131,20 +135,17 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
       TextRange problemRange = TextRange.create(offset, offset + width);
       String message = "Dialyzer: " + problem.myDescription;
-      HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-      if (key != null) {
-        holder
-          .newAnnotation(HighlightSeverity.WARNING, message)
-          .range(problemRange)
-          .withFix(new DisableInspectionToolAction(key) {
-            @NotNull
-            @Override
-            public String getName() {
-              return "Disable 'Dialyzer-based inspections'";
-            }
-          })
-          .create();
-      }
+      holder
+        .newAnnotation(severity, message)
+        .range(problemRange)
+        .withFix(new DisableInspectionToolAction(key) {
+          @NotNull
+          @Override
+          public String getName() {
+            return "Disable 'Dialyzer-based inspections'";
+          }
+        })
+        .create();
     }
   }
 
