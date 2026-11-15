@@ -19,8 +19,11 @@ package org.intellij.erlang.dialyzer;
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.daemon.impl.HighlightInfoType;
+import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
 import com.intellij.lang.ExternalLanguageAnnotators;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.profile.codeInspection.ProjectInspectionProfileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
@@ -50,6 +53,18 @@ public class ErlangDialyzerExternalAnnotatorTest extends ErlangLightPlatformCode
     ProjectInspectionProfileManager.getInstance(getProject()).getCurrentProfile()
                                    .setErrorLevel(key, HighlightDisplayLevel.ERROR, getProject());
     assertEquals(HighlightSeverity.ERROR, highlightDialyzerProblem().getSeverity());
+  }
+
+  public void testNonStandardSeverityIsVisible() {
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
+    assertNotNull(key);
+    HighlightDisplayLevel level = HighlightDisplayLevel.CONSIDERATION_ATTRIBUTES;
+    ProjectInspectionProfileManager.getInstance(getProject()).getCurrentProfile().setErrorLevel(key, level, getProject());
+    HighlightInfo info = highlightDialyzerProblem();
+    assertEquals(level.getSeverity(), info.getSeverity());
+    TextAttributesKey expected = SeverityRegistrar.getSeverityRegistrar(getProject()).getHighlightInfoTypeBySeverity(level.getSeverity()).getAttributesKey();
+    assertFalse(HighlightInfoType.INFORMATION.getAttributesKey().equals(expected));
+    assertEquals(expected, info.forcedTextAttributesKey);
   }
 
   @NotNull

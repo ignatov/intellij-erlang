@@ -17,6 +17,7 @@
 package org.intellij.erlang.dialyzer;
 
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
+import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
 import com.intellij.codeInspection.InspectionProfile;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
 import com.intellij.execution.ExecutionException;
@@ -27,6 +28,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -75,7 +77,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
     InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-    if (!profile.isToolEnabled(key)) return null;
+    if (!profile.isToolEnabled(key, file)) return null;
 
     String workingDir = ObjectUtils.notNull(file.getProject().getBasePath(), "");
     String dialyzerPath = homePath + "/bin/dialyzer" + (SystemInfo.isWindows ? ".exe" : "");
@@ -124,6 +126,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (key == null) return;
     InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
     HighlightSeverity severity = profile.getErrorLevel(key, file).getSeverity();
+    TextAttributesKey attributes = SeverityRegistrar.getSeverityRegistrar(file.getProject()).getHighlightInfoTypeBySeverity(severity).getAttributesKey();
     String text = file.getText();
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
@@ -138,6 +141,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       holder
         .newAnnotation(severity, message)
         .range(problemRange)
+        .textAttributes(attributes)
         .withFix(new DisableInspectionToolAction(key) {
           @NotNull
           @Override
