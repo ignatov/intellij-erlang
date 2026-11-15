@@ -1,0 +1,13 @@
+<!--
+  The experimental ELP (Erlang Language Platform) integration through the platform LSP client.
+  Loaded only when the IDE has the LSP module, see the optional dependency on com.intellij.modules.lsp in plugin.xml.
+  -->
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <platform.lsp.integrationProvider implementation="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider"/>
+    </extensions>
+    <applicationListeners>
+        <listener topic="org.intellij.erlang.elp.ElpSettings$Listener"
+                  class="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider$SettingsListener"/>
+    </applicationListeners>
+</idea-plugin>
