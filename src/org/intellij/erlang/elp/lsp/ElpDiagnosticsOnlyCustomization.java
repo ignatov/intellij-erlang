@@ -20,11 +20,11 @@ import com.intellij.platform.lsp.api.customization.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * The {@code DIAGNOSTICS} mode: ELP supplies diagnostics and the quick fixes attached to them, and the commands those quick
+ * The {@code PLUGIN} position: ELP supplies diagnostics and the quick fixes attached to them, and the commands those quick
  * fixes may run. Every other feature is switched off explicitly, because the plugin's own PSI owns it. The client
  * capabilities are derived from this customization, so the server is not even told about the switched off features.
  */
-final class ElpDiagnosticsOnlyCustomization extends LspCustomization {
+class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   private final LspDiagnosticsCustomizer myDiagnostics;
 
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport() {

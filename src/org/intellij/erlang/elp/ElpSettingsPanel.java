@@ -19,6 +19,7 @@ package org.intellij.erlang.elp;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
@@ -44,6 +45,7 @@ public final class ElpSettingsPanel {
 
   public ElpSettingsPanel() {
     addBrowseFolderListener(myPathField, "Select ELP Executable", "", null, FileChooserDescriptorFactory.singleFile());
+    myModeBox.setRenderer(SimpleListCellRenderer.create("", ElpMode::getPresentableName));
     myOverrideLabel.setComponentStyle(UIUtil.ComponentStyle.SMALL);
     myOverrideLabel.setFontColor(UIUtil.FontColor.BRIGHTER);
     myPanel = FormBuilder.createFormBuilder()
@@ -51,9 +53,11 @@ public final class ElpSettingsPanel {
       .addLabeledComponent("Path to elp:", myPathField)
       .addComponentToRightColumn(hint("Empty path: no server is started. ELP needs erl and rebar3; the SDK bin and the rebar " +
                                       "directory are put first on its PATH."))
-      .addLabeledComponent("Mode:", myModeBox)
-      .addComponentToRightColumn(hint("DIAGNOSTICS: only diagnostics and their quick fixes. ALL: every LSP feature, " +
-                                      "side by side with the plugin's own."))
+      .addLabeledComponent("Engine:", myModeBox)
+      .addComponentToRightColumn(hint("<html>Plugin: the plugin's own resolve serves everything; ELP adds its diagnostics.<br>" +
+                                      "ELP: while ELP runs, it serves completion, parameter hints, documentation, function folding, " +
+                                      "extend selection,<br>go to declaration and its intentions, and its diagnostics replace " +
+                                      "the plugin's unresolved and unused checks.<br>Everything else stays with the plugin.</html>"))
       .addComponentToRightColumn(myEqwalizerBox)
       .addComponentToRightColumn(hint("eqWAlizer is ELP's gradual type checker. Code not written for it gets many type " +
                                       "errors that erlc does not report; they are shown as warnings."))
@@ -82,7 +86,7 @@ public final class ElpSettingsPanel {
 
   public void apply() {
     ElpMode mode = myModeBox.getItem();
-    ElpSettings.getInstance().update(myPathField.getText().trim(), mode != null ? mode : ElpMode.DIAGNOSTICS,
+    ElpSettings.getInstance().update(myPathField.getText().trim(), mode != null ? mode : ElpMode.PLUGIN,
                                      myEqwalizerBox.isSelected());
     updateOverrideLabel();
   }
@@ -109,7 +113,7 @@ public final class ElpSettingsPanel {
     }
     ElpConfiguration effective = ElpSettings.getInstance().getEffectiveConfiguration();
     myOverrideLabel.setText("Overridden by " + String.join(" and ", overridden) +
-                            ": path '" + effective.path() + "', mode " + effective.mode() +
+                            ": path '" + effective.path() + "', engine " + effective.mode().getPresentableName() +
                             ", eqWAlizer " + (effective.eqwalizer() ? "on" : "off"));
   }
 }

@@ -21,14 +21,17 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspClientDescriptor;
+import com.intellij.platform.lsp.api.LspServerListener;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
-import com.intellij.platform.lsp.api.customization.LspDiagnosticsCustomizer;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import org.eclipse.lsp4j.InitializeResult;
 import org.intellij.erlang.elp.ElpConfiguration;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEnvironment;
 import org.intellij.erlang.elp.ElpFiles;
 import org.intellij.erlang.elp.ElpMode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Starts {@code elp server} over stdio for one workspace root. The initialization options are left empty, as ELP's own
@@ -81,14 +84,30 @@ final class ElpLspClientDescriptor extends LspClientDescriptor {
   public synchronized LspCustomization getLspCustomization() {
     if (myCustomization == null) {
       ElpDiagnosticsSupport diagnostics = new ElpDiagnosticsSupport(myConfiguration.eqwalizer());
-      myCustomization = myConfiguration.mode() == ElpMode.ALL ? new LspCustomization() {
-        @NotNull
-        @Override
-        public LspDiagnosticsCustomizer getDiagnosticsCustomizer() {
-          return diagnostics;
-        }
-      } : new ElpDiagnosticsOnlyCustomization(diagnostics);
+      myCustomization = myConfiguration.mode() == ElpMode.ELP ? new ElpEngineCustomization(diagnostics)
+                                                               : new ElpDiagnosticsOnlyCustomization(diagnostics);
     }
     return myCustomization;
+  }
+
+  /**
+   * In the {@code ELP} position the plugin's features switch off once this server runs and back on once it stops, see
+   * {@link ElpEngine}; the open editors are refreshed at both moments.
+   */
+  @Nullable
+  @Override
+  public LspServerListener getLspServerListener() {
+    if (myConfiguration.mode() != ElpMode.ELP) return null;
+    return new LspServerListener() {
+      @Override
+      public void serverInitialized(@NotNull InitializeResult params) {
+        ElpEngine.refreshProject(getProject());
+      }
+
+      @Override
+      public void serverStopped(boolean shutdownNormally) {
+        ElpEngine.refreshProject(getProject());
+      }
+    };
   }
 }
