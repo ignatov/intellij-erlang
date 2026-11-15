@@ -25,6 +25,8 @@ import org.jetbrains.annotations.NotNull;
  * capabilities are derived from this customization, so the server is not even told about the switched off features.
  */
 final class ElpDiagnosticsOnlyCustomization extends LspCustomization {
+  private final LspDiagnosticsCustomizer myDiagnostics;
+
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport() {
     @Override
     public boolean getIntentionActionsSupport() {
@@ -41,6 +43,16 @@ final class ElpDiagnosticsOnlyCustomization extends LspCustomization {
       return false;
     }
   };
+
+  ElpDiagnosticsOnlyCustomization(@NotNull LspDiagnosticsCustomizer diagnostics) {
+    myDiagnostics = diagnostics;
+  }
+
+  @NotNull
+  @Override
+  public LspDiagnosticsCustomizer getDiagnosticsCustomizer() {
+    return myDiagnostics;
+  }
 
   @NotNull
   @Override

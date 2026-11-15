@@ -22,6 +22,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspClientDescriptor;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
+import com.intellij.platform.lsp.api.customization.LspDiagnosticsCustomizer;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEnvironment;
@@ -79,7 +80,14 @@ final class ElpLspClientDescriptor extends LspClientDescriptor {
   @Override
   public synchronized LspCustomization getLspCustomization() {
     if (myCustomization == null) {
-      myCustomization = myConfiguration.mode() == ElpMode.ALL ? super.getLspCustomization() : new ElpDiagnosticsOnlyCustomization();
+      ElpDiagnosticsSupport diagnostics = new ElpDiagnosticsSupport(myConfiguration.eqwalizer());
+      myCustomization = myConfiguration.mode() == ElpMode.ALL ? new LspCustomization() {
+        @NotNull
+        @Override
+        public LspDiagnosticsCustomizer getDiagnosticsCustomizer() {
+          return diagnostics;
+        }
+      } : new ElpDiagnosticsOnlyCustomization(diagnostics);
     }
     return myCustomization;
   }

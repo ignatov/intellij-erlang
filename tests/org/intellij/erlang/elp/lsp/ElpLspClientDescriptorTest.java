@@ -58,6 +58,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     myOldElpState = new ElpSettings.ElpSettingsState();
     myOldElpState.path = old.path;
     myOldElpState.mode = old.mode;
+    myOldElpState.eqwalizer = old.eqwalizer;
     myOldRebarPath = RebarSettings.getInstance(getProject()).getRebarPath();
   }
 
@@ -132,7 +133,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer", "getSymbolKindCustomizer"),
                  notDisabled);
 
-    assertInstanceOf(customization.getDiagnosticsCustomizer(), LspDiagnosticsSupport.class);
+    assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
     LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
     assertTrue(codeActions.getQuickFixesSupport());
     assertFalse(codeActions.getIntentionActionsSupport());
@@ -152,13 +153,44 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testAllModeKeepsThePlatformDefaults() {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ALL);
     LspCustomization customization = descriptor.getLspCustomization();
-    assertEquals(LspCustomization.class, customization.getClass());
+    // Only the diagnostics customizer is ELP's own, to hide eqWAlizer.
+    assertEquals(LspCustomization.class, customization.getClass().getSuperclass());
+    assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
     assertInstanceOf(customization.getHoverCustomizer(), LspHoverSupport.class);
     assertInstanceOf(customization.getCompletionCustomizer(), LspCompletionSupport.class);
     assertInstanceOf(customization.getGoToDefinitionCustomizer(), LspGoToDefinitionSupport.class);
     var textDocument = descriptor.getClientCapabilities().getTextDocument();
     assertNotNull(textDocument.getCompletion());
     assertNotNull(textDocument.getHover());
+  }
+
+  public void testEqwalizerSwitchReachesTheDiagnosticsCustomizerInBothModes() {
+    for (ElpMode mode : ElpMode.values()) {
+      for (boolean eqwalizer : new boolean[]{false, true}) {
+        VirtualFile root = file("src/" + mode + eqwalizer + ".erl").getParent();
+        ElpLspClientDescriptor descriptor =
+          new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", mode, eqwalizer));
+        ElpDiagnosticsSupport diagnostics =
+          assertInstanceOf(descriptor.getLspCustomization().getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class);
+        assertEquals(mode + " " + eqwalizer, eqwalizer, diagnostics.isShowEqwalizer());
+      }
+    }
+  }
+
+  public void testProviderPassesTheStoredEqwalizerSwitch() {
+    String oldProperty = System.getProperty(ElpConfiguration.EQWALIZER_PROPERTY);
+    System.clearProperty(ElpConfiguration.EQWALIZER_PROPERTY);
+    try {
+      ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+      state.path = "/opt/elp/bin/elp";
+      state.eqwalizer = true;
+      ElpSettings.getInstance().loadState(state);
+      List<LspClientDescriptor> started = fileOpened(file("src/a.erl"));
+      assertTrue(assertInstanceOf(started.get(0), ElpLspClientDescriptor.class).getConfiguration().eqwalizer());
+    }
+    finally {
+      if (oldProperty != null) System.setProperty(ElpConfiguration.EQWALIZER_PROPERTY, oldProperty);
+    }
   }
 
   public void testProviderStartsElpOnlyForErlangFilesOnceAPathIsSet() {
