@@ -60,6 +60,18 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     doMacroTest("-include(\"a.hrl\").\nbar() -> ?FOO(<caret>).", 0, "[A], B");
   }
 
+  public void testMacroAsGenericFunctionCall() {
+    doMacroTest("-define(DEF(N, V), N() -> V).\n?DEF(foo, <caret>).", 1, "N, [V]");
+  }
+
+  public void testMacroInIfdefElseBranches() {
+    doMacroTest("-ifdef(TEST).\n-define(L(X), {a, X}).\n-else.\n-define(L(X), {b, X}).\n-endif.\nbar() -> ?L(<caret>).", 0, "[X]");
+  }
+
+  public void testUndefinedMacroDefinitionIsNotShown() {
+    doMacroTest("-define(F(X), X).\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).", 1, "X, [Y]");
+  }
+
   public void testFunctionCallInsideMacro() {
     doTest(FOO + "-define(BAR(X), X).\nbar() -> ?BAR(foo(1, <caret>)).", 1);
     assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);

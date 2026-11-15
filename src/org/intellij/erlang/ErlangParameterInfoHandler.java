@@ -24,18 +24,21 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.SlowOperations;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
   @Override
@@ -62,21 +65,42 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   @NotNull
   private static List<ErlangMacrosDefinition> getCalledMacrosDefinitions(@NotNull ErlangArgumentList args) {
     PsiElement parent = args.getParent();
-    ErlangMacros macros = parent instanceof ErlangFunctionCallExpression ? ((ErlangFunctionCallExpression) parent).getQAtom().getMacros() :
-                          parent instanceof ErlangGenericFunctionCallExpression ? ((ErlangGenericFunctionCallExpression) parent).getMacros() :
-                          null;
+    if (!(parent instanceof ErlangFunctionCallExpression || parent instanceof ErlangGenericFunctionCallExpression)) return Collections.emptyList();
+    PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(args);
+    ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
     PsiReference reference = macros != null ? macros.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
     if (!(resolve instanceof ErlangMacrosDefinition) || !(resolve.getContainingFile() instanceof ErlangFile)) return Collections.emptyList();
-    String name = ((ErlangMacrosDefinition) resolve).getName();
-    List<ErlangMacrosDefinition> definitions = new ArrayList<>();
-    for (ErlangMacrosDefinition definition : ((ErlangFile) resolve.getContainingFile()).getMacroses()) {
-      if (definition.getArgumentDefinitionList() != null && name.equals(definition.getName())) {
-        definitions.add(definition);
+    ErlangMacrosDefinition resolved = (ErlangMacrosDefinition) resolve;
+    ErlangFile file = (ErlangFile) resolve.getContainingFile();
+    String name = resolved.getName();
+    List<Integer> undefOffsets = file == args.getContainingFile() ? getUndefOffsets(file, name, args.getTextOffset()) : Collections.emptyList();
+    Map<Integer, ErlangMacrosDefinition> definitionsByArity = new TreeMap<>();
+    for (ErlangMacrosDefinition definition : file.getMacroses()) {
+      ErlangArgumentDefinitionList argumentDefinitionList = definition.getArgumentDefinitionList();
+      if (argumentDefinitionList == null || !name.equals(definition.getName())) continue;
+      int definitionEnd = definition.getTextRange().getEndOffset();
+      if (ContainerUtil.exists(undefOffsets, offset -> offset >= definitionEnd)) continue;
+      int arity = argumentDefinitionList.getArgumentDefinitionList().size();
+      if (definition == resolved) definitionsByArity.put(arity, definition);
+      else definitionsByArity.putIfAbsent(arity, definition);
+    }
+    return new ArrayList<>(definitionsByArity.values());
+  }
+
+  @NotNull
+  private static List<Integer> getUndefOffsets(@NotNull ErlangFile file, @NotNull String macroName, int before) {
+    List<Integer> offsets = new ArrayList<>();
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      if (atomAttribute == null || !"undef".equals(atomAttribute.getName())) continue;
+      ErlangMacrosName undefName = PsiTreeUtil.getChildOfType(atomAttribute, ErlangMacrosName.class);
+      int offset = attribute.getTextOffset();
+      if (undefName != null && offset < before && macroName.equals(ErlangPsiImplUtil.getNameIdentifier(undefName).getText())) {
+        offsets.add(offset);
       }
     }
-    definitions.sort(Comparator.comparingInt(d -> d.getArgumentDefinitionList().getArgumentDefinitionList().size()));
-    return definitions;
+    return offsets;
   }
 
   @Override
