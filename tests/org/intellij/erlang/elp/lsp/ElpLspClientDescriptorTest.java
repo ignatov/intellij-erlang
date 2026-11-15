@@ -25,7 +25,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspClientDescriptor;
 import com.intellij.platform.lsp.api.LspIntegrationProvider;
 import com.intellij.platform.lsp.api.customization.*;
-import com.intellij.testFramework.IndexingTestUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.EnvironmentUtil;
@@ -43,7 +42,6 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String SDK_HOME = new File("testData/mockSdk-R15B02").getAbsolutePath();
@@ -96,7 +94,8 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     ElpLspClientDescriptor descriptor =
       new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", ElpMode.PLUGIN));
 
-    GeneralCommandLine commandLine = onPooledThread(descriptor::createCommandLine);
+    // On the EDT: waiting there for a pooled thread can deadlock with a scanning write action queued by the files just added.
+    GeneralCommandLine commandLine = descriptor.createCommandLine();
 
     assertEquals("/opt/elp/bin/elp", commandLine.getExePath());
     assertEquals(List.of("server"), commandLine.getParametersList().getList());
@@ -109,7 +108,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
 
   public void testPathIsInheritedWithoutSdkAndRebar() throws Exception {
     RebarSettings.getInstance(getProject()).setRebarPath("");
-    assertEquals(EnvironmentUtil.getValue("PATH"), onPooledThread(() -> ElpEnvironment.serverPath(getProject())));
+    assertEquals(EnvironmentUtil.getValue("PATH"), ElpEnvironment.serverPath(getProject()));
   }
 
   public void testOnlyErlangModulesAndHeadersAreSupported() {
@@ -246,14 +245,5 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
 
   private VirtualFile file(String path) {
     return myFixture.addFileToProject(path, "").getVirtualFile();
-  }
-
-  /**
-   * The EDT blocks here while holding the write-intent lock, so a scanning write action that the files just added queued would
-   * keep the pooled read action waiting forever; let the scanning finish first.
-   */
-  private <T> T onPooledThread(Callable<T> callable) throws Exception {
-    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
-    return ApplicationManager.getApplication().executeOnPooledThread(callable).get();
   }
 }
