@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.completion;
 
+import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -52,6 +53,26 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
+
+  public void testVariableFromLowercasePrefixCaseInsensitive() {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      doCheckResult(
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            my<caret>""",
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            MyName<caret>""");
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
   public void testFunctions() {
     doTestInclude(
       """
