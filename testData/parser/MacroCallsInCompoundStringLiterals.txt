@@ -141,3 +141,48 @@ ERL_FILE
           ERL_STRING_LITERAL
             PsiElement(string)('"x"')
     PsiElement(.)('.')
+  ERL_MACROS_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('define')
+    PsiElement(()('(')
+    ERL_MACROS_NAME
+      PsiElement(var)('S')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      ERL_ARGUMENT_DEFINITION
+        ERL_MAX_EXPRESSION
+          ERL_Q_VAR
+            PsiElement(var)('X')
+      PsiElement())(')')
+    PsiElement(,)(',')
+    ERL_MACROS_BODY
+      PsiElement(?)('?')
+      PsiElement(?)('?')
+      PsiElement(var)('X')
+      PsiElement(string)('" failed"')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('stringified_arg_then_string')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_FUNCTION_CALL_EXPRESSION
+          ERL_Q_ATOM
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('S')
+          ERL_ARGUMENT_LIST
+            PsiElement(()('(')
+            ERL_MAX_EXPRESSION
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('a')
+            PsiElement())(')')
+    PsiElement(.)('.')

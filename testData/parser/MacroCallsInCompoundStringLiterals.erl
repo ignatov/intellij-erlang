@@ -19,3 +19,8 @@ macros_then_string() ->
 
 string_macro_string() ->
   "a" ?M "x".
+
+-define(S(X), ??X " failed").
+
+stringified_arg_then_string() ->
+  ?S(a).
