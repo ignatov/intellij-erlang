@@ -49,6 +49,16 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     setUpProjectSdk();
   }
 
+  public void testNoUnqualifiedNotAutoImportedBifs() {
+    doTestVariants("foo() -> md<caret>. md_local() -> ok.", CompletionType.BASIC, 1, CheckType.EXCLUDES,
+                   "md5", "md5_init", "md5_update", "md5_final");
+  }
+
+  public void testAutoImportedBifsNotMarkedInBifTable() {
+    doCheckResult("foo(P) -> port_to_l<caret>", "foo(P) -> port_to_list(<caret>)");
+    doCheckResult("foo(R) -> ref_to_l<caret>", "foo(R) -> ref_to_list(<caret>)");
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
@@ -239,7 +249,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testBif() {
-    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "tuple_size");
   }
 
   public void testBifFromModules() {
@@ -435,7 +445,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testModuleFunctionCompletionForEmptyText() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "finish_after_on_load");
+    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "group_leader");
   }
   
   public void testModuleFunctionCompletionQuoted() {

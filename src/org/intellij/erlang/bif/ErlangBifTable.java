@@ -17,12 +17,14 @@
 package org.intellij.erlang.bif;
 
 import com.intellij.util.containers.MultiMap;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 public final class ErlangBifTable {
@@ -409,6 +411,28 @@ public final class ErlangBifTable {
 
   public static final String MODULE_INFO = "module_info";
 
+  // functions of the erlang module that erl_internal:bif/2 auto-imports but the table above does not mark as auto-imported:
+  // the ones auto-imported up to OTP 27, then the ones auto-imported from a later release
+  private static final Set<String> AUTO_IMPORTED_ERLANG_FUNCTIONS = Set.of(
+    "alias/0", "alias/1", "apply/2", "atom_to_binary/1", "binary_to_atom/1", "binary_to_existing_atom/1", "bitsize/1",
+    "ceil/1", "check_process_code/3", "disconnect_node/1", "error/3", "floor/1", "garbage_collect/2", "get_keys/0",
+    "integer_to_binary/2", "integer_to_list/2", "is_map/1", "is_map_key/2", "list_to_port/1", "list_to_ref/1",
+    "load_module/2", "map_get/2", "map_size/1", "max/2", "min/2", "monitor/3", "nodes/0", "nodes/2", "port_to_list/1",
+    "ref_to_list/1", "spawn/1", "spawn/2", "spawn/4", "spawn_link/1", "spawn_link/2", "spawn_link/4",
+    "spawn_monitor/1", "spawn_monitor/2", "spawn_monitor/3", "spawn_monitor/4", "spawn_opt/2", "spawn_opt/3",
+    "spawn_opt/4", "spawn_opt/5", "spawn_request/1", "spawn_request/2", "spawn_request/3", "spawn_request/4",
+    "spawn_request/5", "spawn_request_abandon/1", "term_to_iovec/1", "term_to_iovec/2", "unalias/1"
+  );
+
+  private static final Set<String> AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_28 = Set.of("exit/3", "link/2");
+  private static final Set<String> AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_29 = Set.of("exit_signal/2", "exit_signal/3", "is_record/1");
+  // auto-imported on the OTP master branch (30.0-rc0); erts 18.0 is the assumed erts version of OTP 30
+  private static final ErlangSdkRelease V_30_0 = new ErlangSdkRelease("30", "18.0");
+  private static final Set<String> AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_30 = Set.of(
+    "integer_set_bits/1", "integer_signed_width/1", "integer_trailing_zeroes/1", "integer_unsigned_width/1",
+    "pid_to_binary/1", "port_to_binary/1", "ref_to_binary/1"
+  );
+
   private static void putGeneratedInfo() {
     bifMap.putValue("", new ErlangBifDescriptor("", "record_info", 2, "Key, Record", true));
     bifMap.putValue("", new ErlangBifDescriptor("", MODULE_INFO, 0, "", true));
@@ -470,5 +494,19 @@ public final class ErlangBifTable {
       }
     }
     return false;
+  }
+
+  public static boolean isAutoImported(@NotNull String functionName, int arity, @Nullable ErlangSdkRelease release) {
+    ErlangBifDescriptor bifDescriptor = getBif("erlang", functionName, arity);
+    if (bifDescriptor != null && bifDescriptor.isAutoImported()) return true;
+    String key = functionName + "/" + arity;
+    return AUTO_IMPORTED_ERLANG_FUNCTIONS.contains(key) ||
+           AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_28.contains(key) && isAtLeast(release, ErlangSdkRelease.V_28_0) ||
+           AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_29.contains(key) && isAtLeast(release, ErlangSdkRelease.V_29_0) ||
+           AUTO_IMPORTED_ERLANG_FUNCTIONS_SINCE_30.contains(key) && isAtLeast(release, V_30_0);
+  }
+
+  private static boolean isAtLeast(@Nullable ErlangSdkRelease release, @NotNull ErlangSdkRelease since) {
+    return release == null || release.isNewerOrEqualTo(since);
   }
 }

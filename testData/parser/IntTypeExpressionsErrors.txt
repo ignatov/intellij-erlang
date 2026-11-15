@@ -1,0 +1,131 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_MODULE
+      PsiElement(atom_name)('module')
+      PsiElement(()('(')
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(single_quote)(''')
+          PsiElement(atom_name)('IntTypeExpressionsErrors')
+          PsiElement(single_quote)(''')
+      PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t1')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TYPE
+      ERL_INT_TYPE
+        PsiElement(integer)('1')
+      PsiElement(..)('..')
+      PsiErrorElement:<type> expected, got '2.0'
+        <empty list>
+  PsiErrorElement:'-', <attribute>, <function clause> or '?' expected, got '2.0'
+    PsiElement(float)('2.0')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t2')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TYPE
+      ERL_INT_TYPE
+        PsiElement(integer)('1')
+      PsiElement(..)('..')
+      PsiErrorElement:<type> expected, got 'a'
+        <empty list>
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'a'
+    PsiElement(atom_name)('a')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t3')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TYPE
+      ERL_INT_TYPE
+        PsiElement(integer)('1')
+      PsiElement(..)('..')
+      ERL_INT_TYPE
+        PsiElement(integer)('2')
+    PsiErrorElement:'*', '+', '-', '.', band, bor, bsl, bsr, bxor, div, rem or '|' expected, got '..'
+      PsiElement(..)('..')
+  PsiErrorElement:'-', <attribute>, <function clause> or '?' expected, got '3'
+    PsiElement(integer)('3')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t4')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_INT_TYPE
+      PsiElement(integer)('1')
+  PsiErrorElement:'+', '.', '..' or '|' expected, got '+'
+    <empty list>
+  PsiErrorElement:'-', <attribute>, <function clause> or '?' expected, got '+'
+    PsiElement(+)('+')
+  PsiElement(DUMMY_BLOCK)
+    PsiElement(atom_name)('atom')
+  PsiElement(DUMMY_BLOCK)
+    PsiElement(()('(')
+    PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t5')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_INT_TYPE
+      PsiElement(integer)('1')
+    PsiErrorElement:'*', '+', '-', '.', '..', band, bor, bsl, bsr, bxor, div, rem or '|' expected, got '/'
+      PsiElement(/)('/')
+  PsiErrorElement:'-', <attribute>, <function clause> or '?' expected, got '2'
+    PsiElement(integer)('2')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t6')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_INT_TYPE
+      PsiElement(integer)('1')
+    PsiElement(band)('band')
+    PsiElement(()('(')
+    PsiElement(integer)('1')
+    PsiErrorElement:')', '*', '+', '-', band, bor, bsl, bsr, bxor, div or rem expected, got '|'
+      PsiElement(|)('|')
+  PsiElement(integer)('2')
+  PsiElement())(')')
+  PsiElement(ERROR_ELEMENT)('.')
