@@ -56,6 +56,10 @@ public class ErlangCreateRemoteFunctionFixTest extends ErlangLightPlatformCodeIn
   public void testRemoteCall()         { doTest("Create Function remoteCall_target:lll/3"); }
   public void testRemoteCallNoExport() { doTest("Create Function remoteCallNoExport_target:lll/0"); }
   public void testRemoteFun()          { doTest("Create Function remoteFun_target:lll/2"); }
+  public void testArgumentNames()      { doTest("Create Function argumentNames_target:f/9"); }
+  public void testQuotedName()         { doTest("Create Function quotedName_target:'my-func'/1"); }
+  public void testExportOutsideIfdef() { doTest("Create Function exportOutsideIfdef_target:f/1"); }
+  public void testFixAll()             { doTest("Fix all 'Unresolved function' problems in file"); }
   public void testSdkModule()          { doNoFixTest(true); }
   public void testUnresolvedModule()   { doNoFixTest(false); }
 

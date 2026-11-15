@@ -39,17 +39,27 @@ import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.psi.ErlangAtomAttribute;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangClauseBody;
+import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix.FunctionTextProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 /**
  * Creates a function called as {@code module:function(...)} at the end of the module, exports it and opens it.
  */
 public class ErlangCreateRemoteFunctionQuickFix implements LocalQuickFix {
+  private static final Pattern VARIABLE = Pattern.compile("[A-Z_][A-Za-z0-9_@]*");
   private final String myFixMessage;
   private final SmartPsiElementPointer<ErlangFile> myTargetFile;
   @SafeFieldForPreview
@@ -109,6 +119,10 @@ public class ErlangCreateRemoteFunctionQuickFix implements LocalQuickFix {
     PsiDocumentManager manager = PsiDocumentManager.getInstance(project);
     Document document = file != null ? manager.getDocument(file) : null;
     if (document == null) return;
+    manager.doPostponedOperationsAndUnblockDocument(document);
+    manager.commitDocument(document);
+    String name = StringUtil.unquoteString(myFunctionText.getName(), '\'');
+    if (file.getFunction(name, myFunctionText.getArguments().size()) != null) return;
 
     CharSequence text = document.getCharsSequence();
     int textOffset = text.length();
@@ -126,7 +140,8 @@ public class ErlangCreateRemoteFunctionQuickFix implements LocalQuickFix {
     ErlangFunction function = PsiTreeUtil.getParentOfType(period, ErlangFunction.class);
     if (function == null) return;
     if (!function.isExported()) {
-      new ErlangExportFunctionFix(function).invoke(project, file, null, function, null);
+      ErlangExportFunctionFix.exportFunction(project, function, findUnconditionalExport(file));
+      manager.doPostponedOperationsAndUnblockDocument(document);
     }
 
     ErlangClauseBody body = PsiTreeUtil.findChildOfType(function, ErlangClauseBody.class);
@@ -139,9 +154,46 @@ public class ErlangCreateRemoteFunctionQuickFix implements LocalQuickFix {
       ModalityState.nonModal(), project.getDisposed());
   }
 
+  /**
+   * Returns the first export attribute that is not inside -ifdef, -ifndef or -if.
+   */
+  @Nullable
+  private static ErlangExport findUnconditionalExport(@NotNull ErlangFile file) {
+    int depth = 0;
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      String name = atomAttribute != null ? atomAttribute.getName() : null;
+      if ("ifdef".equals(name) || "ifndef".equals(name) || "if".equals(name)) depth++;
+      else if ("endif".equals(name)) depth = Math.max(0, depth - 1);
+      else if (depth == 0 && attribute.getExport() != null) return attribute.getExport();
+    }
+    return null;
+  }
+
   @NotNull
   private String createFunctionText() {
-    return "\n\n" + myFunctionText.getName() + "(" + String.join(", ", myFunctionText.getArguments()) + ") ->\n" +
+    return "\n\n" + myFunctionText.getName() + "(" + String.join(", ", createParameters()) + ") ->\n" +
            ErlangCreateFunctionQuickFix.FUNCTION_BODY_DEFAULT_TEXT;
+  }
+
+  /**
+   * Keeps the argument names that are distinct variables and replaces the others (literals, atoms, empty names,
+   * repeated names) with _ArgN, so the function has the arity of the call and matches any arguments.
+   */
+  @NotNull
+  private List<String> createParameters() {
+    List<String> arguments = myFunctionText.getArguments();
+    Set<String> used = new HashSet<>();
+    List<String> parameters = new ArrayList<>(arguments.size());
+    for (int i = 0; i < arguments.size(); i++) {
+      String name = arguments.get(i);
+      if (!VARIABLE.matcher(name).matches() || "_".equals(name) || !used.add(name)) {
+        String base = "_Arg" + i;
+        name = base;
+        for (int k = 1; !used.add(name); k++) name = base + "_" + k;
+      }
+      parameters.add(name);
+    }
+    return parameters;
   }
 }

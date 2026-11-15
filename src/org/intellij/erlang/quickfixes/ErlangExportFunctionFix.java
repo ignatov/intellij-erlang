@@ -235,7 +235,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @NotNull ErlangFunction function,
                                       @Nullable PsiElement elementAfter) {
     if (elementAfter != null) {
-      file.addAfter(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addAfter(createExport(project, getExportText(function)),
                     elementAfter);
       file.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), elementAfter);
       return;
@@ -244,10 +244,29 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
 
     if (elementBefore != null) {
-      file.addBefore(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addBefore(createExport(project, getExportText(function)),
                      elementBefore);
       file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
     }
+  }
+
+  /**
+   * Adds the function to the given export, or to a new export attribute when the given export is null.
+   */
+  public static void exportFunction(@NotNull Project project,
+                                    @NotNull ErlangFunction function,
+                                    @Nullable ErlangExport export) {
+    if (export != null) {
+      updateExport(project, function, export);
+    }
+    else if (function.getContainingFile() instanceof ErlangFile file) {
+      createNewExport(project, file, function, null);
+    }
+  }
+
+  @NotNull
+  private static String getExportText(@NotNull ErlangFunction function) {
+    return function.getAtomName().getText() + "/" + function.getArity();
   }
 
   private static PsiElement createExport(Project project, String text) {
