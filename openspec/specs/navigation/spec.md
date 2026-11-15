@@ -29,11 +29,11 @@ The boundary scenarios say what still counts as a function of the module.
 - **AND** the tests are `ErlangHighlightingTest.test536` and `ErlangFunctionResolutionTest.testExportOfAutoImportedBif`
 
 #### Scenario: Function imported by an included file
-- **GIVEN** `imports.hrl` with `-import(testapp, [foo/0]).` and `-module(m). -include("imports.hrl"). -export([foo/0]).`
+- **GIVEN** `testapp.erl` with `-module(testapp). -export([foo/0]). foo() -> ok.`, `imports.hrl` with `-import(testapp, [foo/0]).` and `-module(m). -include("imports.hrl"). -export([foo/0]).`
 - **WHEN** the entry `foo/0` is resolved
-- **THEN** it is unresolved and the plugin reports `Unresolved function foo/0`
+- **THEN** it is unresolved and the plugin reports `Unresolved function foo/0`: it does not resolve to `foo/0` of `testapp`
 - **AND** erlc does the same: `function foo/0 undefined`
-- **AND** the test is `ErlangHighlightingTest.testExportFromInclusion`
+- **AND** the test is `ErlangHighlightingTest.testExportFromInclusion`, which includes `imports.hrl` through a second header
 
 #### Scenario: Boundary: function defined in an included file
 Unchanged by the fix; pinned by its test.

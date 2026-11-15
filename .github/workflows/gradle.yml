@@ -143,6 +143,25 @@ jobs:
         version=$(openspec --version)
         echo "OpenSpec $version"
         openspec validate --all --strict --no-interactive
+    - name: Check that archiving would not refuse a delta
+      # openspec validate exits 0 when an open change adds a requirement whose name the spec already has: it only
+      # prints an INFO line, and `openspec archive` then refuses that change. A fix that archives such a name next
+      # to a merged proposal leaves master with a change that cannot be archived.
+      env:
+        OPENSPEC_TELEMETRY: '0'
+      run: |
+        status=0
+        output="$(openspec validate --all --strict --no-interactive 2>&1)" || status=$?
+        if [ "$status" -ne 0 ]; then
+          echo "$output"
+          exit "$status"
+        fi
+        refused="$(echo "$output" | grep -F 'Archive would refuse this delta' || true)"
+        if [ -n "$refused" ]; then
+          echo "::error::openspec archive would refuse an open change on top of the current specs"
+          echo "$refused"
+          exit 1
+        fi
     - name: Check for repeated scenario names
       # openspec validate accepts a scenario name that occurs twice in one spec. Two fixes that each add a scenario
       # with the same name to different requirements merge without a conflict.

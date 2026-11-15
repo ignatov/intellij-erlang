@@ -54,6 +54,7 @@ the tests (eunit-2.2.4, stdlib-1.18.2):
 | The same with `stdlib-1.18.2` in the release, the version of the SDK | both the SDK |
 | `-include_lib("eunit/include/eunit.hrl")`, with `eunit-2.9/ebin/eunit.app` and `eunit-2.9/include/eunit.hrl` in the release | the release copy, the higher version |
 | The same with `eunit-2.2.4` in the release | the SDK |
+| `eunit_new` and `f` in `eunit_new:f()`, with `eunit-2.9/src/eunit_new.erl` in the release and no module of that name in the SDK | both the release copy, the only file of that name |
 
 And where neither file is build output:
 
@@ -62,10 +63,21 @@ And where neither file is build output:
 | `dup` and `f` in `dup:f()`, with `lib/aaaa/src/dup.erl` and `lib/zzz/src/dup.erl` | `dup` in `lib/aaaa`, `f` in `lib/zzz` |
 | The same, with `lib/zzz/src` as the only source root | both in `lib/zzz` |
 | `dup` and `f` in `dup:f()`, with `.eunit/dup.erl` and `src/dup.erl` | `dup` in `.eunit`, `f` in `src` |
+| `dup` and `f` in `dup:f()`, with `other/dup.erl` outside every source root as the only file of that name | `dup` is unresolved, `f` in `other/dup.erl` |
+
+And in a heavy test with two IDE modules, `zzz_a` and `aaa_b`, side by side in one directory, each with the
+source root `src`, and no dependency between them. The caller is `zzz_a/src/caller.erl`:
+
+| Reference | Resolves to today |
+|---|---|
+| `dup` and `f` in `dup:f()`, with `zzz_a/src/dup.erl` that exports `f/0` and `aaa_b/src/dup.erl` that does not | both in `zzz_a/src/dup.erl` |
+| `b_mod` and `g` in `b_mod:g()`, with `aaa_b/src/b_mod.erl` as the only file of that name | `b_mod` is unresolved, `g` in `aaa_b/src/b_mod.erl` |
 
 The two halves of one call go to different files because two orders exist: module references sort the
 candidates by path, so `_build` comes before `apps` and `src`; remote calls take the order of
-`ErlangModuleIndex` (source roots, not hidden, libraries, then shorter paths). `-include_lib` takes the last
+`ErlangModuleIndex` (source roots, not hidden, libraries, then shorter paths) and the first file in it that has
+the function. The two also search different scopes: the module part the IDE module of the caller, its
+dependencies and the libraries, the function part the whole project. `-include_lib` takes the last
 application directory that the index reports, or the one with the higher version.
 
 With `_build` excluded (the same probe, with `PsiTestUtil.addExcludedRoot`), every row of the first table
@@ -84,7 +96,9 @@ What the build tool does, rebar3 3.28.0 on OTP 27, on Linux:
   from it. What it holds depends on the relx options:
   - `{mode, dev}`, which the template sets: every entry is a link, to `_build/<profile>/lib/<app>` for the
     project's application and to the directory of the SDK for kernel, stdlib and sasl.
-  - `{mode, prod}`: real directories with `ebin`, and `include` for kernel and stdlib. No `src`.
+  - `{mode, prod}`: real directories with `ebin`, and a copy of `include` for every application that has
+    that folder: kernel and stdlib, and the project's own application when it has one
+    (`myrel-0.1.0/include/myrel.hrl` next to `ebin/myrel.app`); sasl has none. No `src`.
   - `{dev_mode, false}, {include_erts, true}, {include_src, true}`: real copies with `src`, of the project's
     application and of kernel, stdlib and sasl from the SDK (213 `.erl` files, `stdlib-6.2.2.3/src/lists.erl`
     among them).
@@ -106,14 +120,18 @@ the linked paths erlc opens for `-include_lib`.
   2. the project's files that are not in a release: outside build output, then `_build/default/lib`, then the
      rest of `_build`. They win over the other SDK libraries, as they do for module references today;
   3. the other SDK libraries;
-  4. releases. A release copy of an OTP application, kernel and stdlib included, never wins over the SDK.
+  4. releases. A release copy of a module does not win over the SDK when the SDK has that module, kernel and
+     stdlib included. A module that only the release copy has still resolves there. For `-include_lib` the
+     choice is between application directories: the copy does not win when the SDK has the application.
 
   Ties: a file under a source root before one outside, a file that is not under a directory whose name starts
   with a dot before one that is, then the path. The answer does not depend on the order in which the index
   returns files.
-- The module part and the function part of a remote call and of an `-import` entry use that one order. Each
-  keeps the search scope it has today (open decision 7), so they end in the same file wherever both see the
-  same files. A remote type already follows its module reference and moves with it.
+- The function part of a remote call and of an `-import` entry is looked up in the file that the module part
+  resolved to, and in no other file (open decision 6). So the two parts cannot end in different files. Only
+  when the module part does not resolve within its scope does the function part search as it does today, the
+  whole project and the first file that has the function, in the new order (open decision 7). A remote type
+  already follows its module reference and moves with it.
 - `-include_lib("app/...")` picks the application directory by the same order.
 - Nothing is excluded and nothing is removed from the indices. A dependency that exists only under
   `_build/default/lib` resolves as it does today.
@@ -155,7 +173,7 @@ one module name):
 | Caller | What changes |
 |---|---|
 | `ErlangModuleReferenceImpl.resolveInner` | The target of a module reference. Its own comparator goes away |
-| `ErlangFunctionReferenceImpl.getExternalFunction` | The target of the function of a remote call and of an `-import` entry; only the first file counts (open decision 6). The scope stays the whole project (open decision 7) |
+| `ErlangFunctionReferenceImpl.getExternalFunction` | The target of the function of a remote call and of an `-import` entry: the function is looked up in the file that the module part resolved to (open decision 6). Only when the module part does not resolve does it search the whole project as today, in the new order (open decision 7). The lookup of an auto-imported function in `erlang`, which has no module part, searches as today in the new order |
 | `ErlangFunctionReferenceImpl.getErlangFunctionsFromModule` | The order of the candidates of a multi-resolve; the set is the same |
 | `ErlangTypeReferenceImpl` | Follows the module reference, as today |
 | `ErlangModulesUtil.getErlangModule`, used by `ErlangApplicationConfiguration.checkConfiguration` | The file in which a run configuration looks for its entry function. The scope is one IDE module |
@@ -184,15 +202,20 @@ Further:
   still listed and renamed when the project does not exclude `_build`.
 - Completion: two changes, both in the table above: the `-include_lib` path completion, and in a small IDE
   the last step of the `-include` path completion. Module names are already listed once; functions offered after `dup:` are collected from every file named `dup` as today.
-- Two IDE modules without a dependency between them: in module A, `b_mod:f()` calls a module of module B, and
-  A does not depend on B. The module reference searches A, its dependencies and the libraries
+- Two IDE modules without a dependency between them (the last table of "Why"). The module reference searches
+  the IDE module of the caller, its dependencies and the libraries
   (`ErlangModuleReferenceImpl.getSearchScope`), the function reference the whole project
-  (`ErlangFunctionReferenceImpl.getExternalFunction`). Today `f` resolves and `b_mod` does not, and that stays:
-  this proposal does not narrow the scope of the function part (open decision 7). The rebar import adds a
-  module dependency only for the applications that an application lists, so such projects exist. The same
-  holds for a file outside every source root, which the module reference does not find (the row with one source root in
-  the table above). The scopes are read from the code. Light fixtures have one IDE module, so no test of this change can show the two-module case; the
-  implementation must not change the scope argument of `getExternalFunction`, and its review checks that.
+  (`ErlangFunctionReferenceImpl.getExternalFunction`). Both rows of that table stay as they are:
+  - `dup:f()`: `dup` resolves to the file of the caller's module, and `f` is looked up there. The file of the
+    other module is not asked, although it is the first by path.
+  - `b_mod:g()`: `b_mod` does not resolve, so `g` searches the whole project as today and resolves (open
+    decision 7). The rebar import adds a module dependency only for the applications
+    that an application lists, so such projects exist. The same holds for a file outside every source root,
+    which the module reference does not find.
+
+  A light fixture has one IDE module. The case of a file outside every source root is tested there; the
+  two-module case needs a heavy test (`JavaModuleTestCase`, as `ErlangDebuggableRunConfigurationProducerTest`
+  has) or stays untested (open decision 8).
 - Links inside quick documentation look files up by name on their own (`ErlangDocumentationProvider`) and are
   not changed. Go to Symbol still lists the copies.
 - Indices: no key, value or filter changes, so no index version and no stub version bump.
@@ -218,16 +241,29 @@ Further:
    file in resolve, and still misses a `base_dir` that comes from a profile or from `REBAR_BASE_DIR`.
 5. **Usages inside the copies.** Proposed: keep listing them (see Impact). Alternative: filter usages by the
    same ranking, which hides real files from a search.
-6. **A function that only a lower-ranked file has.** Today `dup:g()` resolves if any file named `dup` has
-   `g/0`. Proposed: only the file that `dup` resolves to counts, because one module of that name is on the
-   code path. A project with two unrelated modules of one name in different applications then gets "unresolved
-   function" for the functions of the second one. Alternative: keep searching the other files and accept that
-   the two halves can differ.
-7. **The search scope of the function part of a remote call.** Today it is the whole project; the module part
-   searches the IDE module, its dependencies and the libraries. Proposed: keep both and only add the order. The
-   two parts then still differ where they see different files: a call into an IDE module that the calling
-   module does not depend on, or into a file outside every source root, resolves the function and not the
-   module, as today. Alternative: give the function part the scope of the module part. Both parts then always
-   agree, and what breaks is that such calls turn into "Unresolved function" warnings
+6. **A function that the file of the module does not have.** Today `dup:g()` resolves if any file named `dup`
+   in the project has `g/0`. Proposed: when `dup` resolves, `g` is looked up in the file that `dup` resolved
+   to, with its includes, and in no other file, because one module of that name is on the code path. A project
+   with two unrelated modules of one name then gets "Unresolved function" for the functions of the one that
+   `dup` does not resolve to. This says nothing about a call whose module part does not resolve; that case is
+   decision 7, and this decision reads the same whichever way decision 7 goes. Alternative: keep searching the
+   other files and accept that the two parts can end in different files.
+7. **A remote call whose module part does not resolve within its scope.** The module part searches the IDE
+   module of the caller, its dependencies and the libraries. A call into an IDE module that the calling module
+   does not depend on, or into a file outside every source root, resolves the function and not the module
+   today, because the function part searches the whole project. Proposed: keep that. The function part then
+   searches as today, the whole project and the first file that has the function, in the new order.
+   Alternative: no search; the function is unresolved when the module is. Both parts then always agree, and
+   what breaks is that such calls turn into "Unresolved function" warnings
    (`ErlangUnresolvedFunctionInspection`) in projects whose IDE modules lack dependencies, for example after a
-   rebar import of applications that do not list each other. No light fixture test can cover either option.
+   rebar import of applications that do not list each other. The alternative removes the last sentence of the
+   requirement "Function of a remote call is looked up in the file of its module" and changes its scenario
+   "Boundary: module in a file outside every source root".
+8. **A test for two IDE modules.** A light fixture has one IDE module, so the two rows of the last table of
+   "Why" can be asserted only by a heavy test. Proposed: one heavy test class, `ErlangTwoModulesResolveTest`
+   (`JavaModuleTestCase`, with the modules created as in `ErlangDebuggableRunConfigurationProducerTest`), for
+   the scenario "Boundary: module of that name in an IDE module that is not a dependency". It passes before
+   and after the change, and fails for an implementation that looks for the function in the first file of the
+   whole project: that is `aaa_b/src/dup.erl`, which has no `f/0`.
+   Alternative: no heavy test. The scenario and task 3.14 are removed, the two-module case stays untested, and
+   the review of the implementation reads the lookup instead.

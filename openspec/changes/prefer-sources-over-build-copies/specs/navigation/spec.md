@@ -95,9 +95,10 @@ Unchanged by the change; pinned by its test.
 - **AND** the test is `ErlangModuleResolutionTest.testDefaultProfileWinsOverRelease`
 
 ### Requirement: Release copy does not win over the SDK
-A release holds copies of the OTP applications that it ships. The plugin SHALL NOT resolve a module name, a
-function name or an `-include_lib` path to such a copy when the SDK has the application. This includes kernel
-and stdlib.
+A release holds copies of the OTP applications that it ships. The plugin SHALL NOT resolve a module name or a
+function name to such a copy when the SDK has a module of that name, and SHALL NOT resolve an `-include_lib`
+path into such a copy when the SDK has the application. This includes kernel and stdlib. A module that only
+the release copy has resolves to the copy.
 
 #### Scenario: Release copy of an OTP application
 - **GIVEN** `_build/prod/rel/myrel/lib/eunit-2.2.4/src/eunit.erl` that exports `test/1`, and an SDK with `lib/eunit-2.2.4/src/eunit.erl`
@@ -120,11 +121,20 @@ and stdlib.
 - **AND** rebar3 decides: the header is read when the SDK compiles the module, before the release is assembled
 - **AND** the test is `ErlangIncludeLibSdkResolveTest.testSdkWinsOverReleaseCopy`
 
-### Requirement: Module and function of a remote call use one order
-The plugin SHALL choose the file for the function name of `Module:Function(...)` and of an `-import` entry by
-the same order as the file for the module name, and SHALL look for the function in that file only: the code
-path that rebar3 builds has one module of a name. A remote type takes the file of its module name. Outside
-kernel and stdlib a project file that is not in a release wins over an SDK library for both parts.
+#### Scenario: Boundary: module that only a release copy has
+Unchanged by the change; pinned by its test.
+- **GIVEN** `_build/prod/rel/myrel/lib/eunit-2.9/src/eunit_new.erl` that exports `f/0`, and an SDK with `lib/eunit-2.2.4` and no module `eunit_new`
+- **WHEN** the user goes to the definition of `eunit_new` and then of `f` in `eunit_new:f()` in `src/caller.erl`
+- **THEN** both targets are in `_build/prod/rel/myrel/lib/eunit-2.9/src/eunit_new.erl`, the only file of that name
+- **AND** nothing outside the plugin decides: the release was built with another OTP than the SDK of the IDE, and the plugin hides no file
+- **AND** the test is `ErlangFunctionResolutionTest.testModuleOnlyInReleaseCopyResolves`
+
+### Requirement: Function of a remote call is looked up in the file of its module
+The plugin SHALL look for the function name of `Module:Function(...)` and of an `-import` entry in the file
+that the module name resolves to, and in no other file: the code path that rebar3 builds has one module of a
+name. A remote type takes the file of its module name. Outside kernel and stdlib a project file that is not in
+a release wins over an SDK library for both parts. When the module name does not resolve, the function name
+is searched in the whole project, as before the change.
 
 #### Scenario: Both parts of a remote call
 - **GIVEN** `apps/umb/src/dup.erl` and `_build/default/lib/umb/src/dup.erl`, both exporting `f/0`
@@ -161,11 +171,27 @@ kernel and stdlib a project file that is not in a release wins over an SDK libra
 - **AND** rebar3 decides: with a dependency named as an OTP application other than kernel and stdlib, `code:which/1` and `code:lib_dir/1` give the dependency
 - **AND** the test is `ErlangFunctionResolutionTest.testDependencyWinsOverSdkLibrary`
 
+#### Scenario: Boundary: module of that name in an IDE module that is not a dependency
+Unchanged by the change; pinned by its test.
+- **GIVEN** two IDE modules side by side, `zzz_a` and `aaa_b`, each with the source root `src` and no dependency between them; `zzz_a/src/dup.erl` exports `f/0`, `aaa_b/src/dup.erl` does not
+- **WHEN** the user goes to the definition of `dup` and then of `f` in `dup:f()` in `zzz_a/src/caller.erl`
+- **THEN** both targets are in `zzz_a/src/dup.erl`, although `aaa_b/src/dup.erl` is the first by path
+- **AND** the dependencies of the IDE module decide which files the module name sees; the function name follows the module name
+- **AND** the test is `ErlangTwoModulesResolveTest.testFunctionFollowsModuleOfCallingIdeModule`, a heavy test
+
+#### Scenario: Boundary: module in a file outside every source root
+Unchanged by the change; pinned by its test.
+- **GIVEN** `other/dup.erl` that exports `f/0`, the only file named `dup.erl`, and `lib/zzz/src` is the only source root of the IDE module
+- **WHEN** the user goes to the definition of `dup` and then of `f` in `dup:f()` in `lib/zzz/src/caller.erl`
+- **THEN** `dup` has no target and `f` resolves to `f/0` in `other/dup.erl`
+- **AND** the settings of the IDE module decide: a file outside every source root is not in the scope of the module name, and the function name then searches the whole project
+- **AND** the test is `ErlangFunctionResolutionTest.testFunctionResolvesWhenModuleIsOutsideSourceRoots`
+
 ### Requirement: Tie-break between files of one name
 When the requirements above do not decide between two files with the name of the module, the plugin SHALL
-take, for the module name and for the function name alike, a file under a source root before a file outside
-every source root, then a file that is not under a directory whose name starts with a dot before one that is,
-then the first by path.
+take a file under a source root before a file outside every source root, then a file that is not under a
+directory whose name starts with a dot before one that is, then the first by path. The function name follows
+the module name (the requirement "Function of a remote call is looked up in the file of its module").
 
 #### Scenario: Two applications with a module of one name
 - **GIVEN** `lib/aaaa/src/dup.erl` and `lib/zzz/src/dup.erl`, both exporting `f/0`, neither in build output
