@@ -23,6 +23,8 @@ import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.util.ui.UIUtil;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
+import org.intellij.erlang.console.ErlangConsoleRunConfigurationType;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfigurationType;
 import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -46,18 +48,32 @@ public class ErlangSmallIdeRunConfigurationEditorTest extends ErlangLightPlatfor
                               .createTemplateConfiguration(getProject()));
   }
 
-  @SuppressWarnings("unchecked")
+  public void testRemoteDebugConfigurationModuleCanBeChosen() {
+    doTestModuleCanBeChosen(ErlangRemoteDebugRunConfigurationType.getInstance().getConfigurationFactories()[0]
+                              .createTemplateConfiguration(getProject()));
+  }
+
+  public void testConsoleConfigurationModuleCanBeChosen() {
+    doTestModuleCanBeChosen(ErlangConsoleRunConfigurationType.getInstance().getConfigurationFactories()[0]
+                              .createTemplateConfiguration(getProject()), JComboBox.class);
+  }
+
   private void doTestModuleCanBeChosen(RunConfiguration configuration) {
+    doTestModuleCanBeChosen(configuration, ModulesComboBox.class);
+  }
+
+  @SuppressWarnings("unchecked")
+  private void doTestModuleCanBeChosen(RunConfiguration configuration, Class<? extends JComboBox> comboBoxClass) {
     assertTrue(ErlangSystemUtil.isSmallIde());
     SettingsEditor<RunConfiguration> editor = (SettingsEditor<RunConfiguration>) configuration.getConfigurationEditor();
     try {
       JComponent component = editor.getComponent();
       editor.resetFrom(configuration);
-      ModulesComboBox comboBox = UIUtil.findComponentOfType(component, ModulesComboBox.class);
+      JComboBox<?> comboBox = UIUtil.findComponentOfType(component, comboBoxClass);
       assertNotNull(comboBox);
       List<Module> choices = new ArrayList<>();
       for (int i = 0; i < comboBox.getModel().getSize(); i++) {
-        Module module = comboBox.getModel().getElementAt(i);
+        Module module = (Module) comboBox.getModel().getElementAt(i);
         if (module != null) choices.add(module);
       }
       assertContainsElements(choices, getModule());
