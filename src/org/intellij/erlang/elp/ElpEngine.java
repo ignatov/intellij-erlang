@@ -67,8 +67,11 @@ public final class ElpEngine {
     SELECTION,
     /** Go to declaration: ELP's {@code textDocument/definition}, asked before the plugin's references. */
     NAVIGATION,
-    /** The inspections built on resolve (unresolved and unused names): ELP's diagnostics report the same problems. */
-    RESOLVE_INSPECTIONS,
+    /**
+     * The plugin inspections whose problems ELP's diagnostics report too, see {@link ElpDiagnosticCounterparts}. Batch inspection
+     * still runs them, because ELP diagnoses only the files open in the editor.
+     */
+    DIAGNOSTICS,
     /** Find usages and Show Usages: ELP's {@code textDocument/references} supplies the usages of the plugin's target. */
     FIND_USAGES,
     /** Rename: ELP's {@code textDocument/rename}, through the plugin's own rename handler in the LSP part. */

@@ -20,6 +20,7 @@ package org.intellij.erlang.elp;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInspection.LocalInspectionEP;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -40,6 +41,7 @@ import org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory;
 import org.intellij.erlang.elp.lsp.ElpRenameHandler;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
+import org.intellij.erlang.inspection.ErlangUndefinedBehaviourInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.intention.ErlangExportFunctionIntention;
@@ -250,19 +252,32 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertFalse(new ErlangWordSelectioner().canSelect(element));
   }
 
-  public void testResolveInspectionsAreSilentButOthersStay() {
+  public void testInspectionsWithAnElpCounterpartAreSilentButOthersStay() {
     myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class, ErlangUnusedFunctionInspection.class,
-                                ErlangHeadMismatchInspection.class);
-    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0]).\nf() -> undefined_fun().\nunused() -> ok.\n" +
-                                       "g(1) -> ok;\nh(2) -> ok.\n");
+                                ErlangHeadMismatchInspection.class, ErlangUndefinedBehaviourInspection.class);
+    myFixture.configureByText("a.erl", "-module(a).\n-behaviour(no_such_behaviour).\n-export([f/0]).\nf() -> undefined_fun().\n" +
+                                       "unused() -> ok.\ng(1) -> ok;\nh(2) -> ok.\n");
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertEquals(Set.of("Unresolved function undefined_fun/0", "Unused function 'unused/0'", "Unused function 'g/1'",
-                        "Head mismatch: should be 'g/1'"),
+                        "Head mismatch: should be 'g/1'", "Unresolved behaviour no_such_behaviour"),
                  descriptions(myFixture.doHighlighting()));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     DaemonCodeAnalyzer.getInstance(getProject()).restart(myFixture.getFile(), "ELP serves the file now");
-    assertEquals(Set.of("Head mismatch: should be 'g/1'"), descriptions(myFixture.doHighlighting()));
+    assertEquals("ELP reports nothing for behaviours, so the plugin keeps that class",
+                 Set.of("Unresolved behaviour no_such_behaviour"), descriptions(myFixture.doHighlighting()));
+  }
+
+  public void testCounterpartTableCoversOnlyRegisteredInspections() {
+    Set<Class<?>> registered = ContainerUtil.map2Set(
+      LocalInspectionEP.LOCAL_INSPECTION.getExtensionList(),
+      ep -> ep.getInstance().getClass());
+    for (var entry : ElpDiagnosticCounterparts.TABLE.entrySet()) {
+      assertTrue(entry.getKey().getSimpleName(), registered.contains(entry.getKey()));
+      assertNotEmpty(entry.getValue().elpCodes());
+      for (String code : entry.getValue().elpCodes()) assertTrue(code, code.matches("[LEPW]\\d{4}"));
+    }
+    assertFalse(ElpDiagnosticCounterparts.hasElpCounterpart(ErlangUndefinedBehaviourInspection.class));
   }
 
   public void testRunWithPluginSuspendsOwnershipOnThisThread() {
