@@ -37,4 +37,8 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang25SyntaxInspection();
     doTest();
   }
+
+  public void testControlEscapeAnyCharOtp25() {
+    doTest();
+  }
 }

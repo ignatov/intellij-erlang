@@ -36,6 +36,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -219,8 +220,9 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     while (i >= 0 && i + 1 < text.length()) {
       char next = text.charAt(i + 1);
       int escapeEnd = i + (next == '^' ? 3 : 2);
-      if (next == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2)))) {
-        // erl_scan rejects the control escape and goes on at the character after the caret
+      // erl_scan of OTP 26+ rejects the control escape and goes on at the character after the caret; older releases take any character
+      if (next == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2))) &&
+          ErlangSdkType.getRelease(literal.getProject()).erlangControlEscapeNeedsControlName()) {
         holder.newAnnotation(HighlightSeverity.ERROR, "illegal character")
           .range(TextRange.create(start + i, start + i + 2)).create();
         escapeEnd = i + 2;

@@ -120,13 +120,13 @@ public class _ErlangLexer implements FlexLexer {
     "\1\32\1\103\1\104\1\32\1\105\2\32\1\106\1\107"+
     "\1\32\1\110\1\0\1\111\1\0\1\111\26\0\1\112"+
     "\1\5\5\0\2\32\1\113\1\32\1\114\1\115\1\116"+
-    "\1\32\1\117\3\32\1\120\32\0\1\71\1\0\1\71"+
+    "\1\32\1\117\3\32\1\120\34\0\1\71\1\0\1\71"+
     "\1\20\1\121\1\32\1\122\1\123\1\124\2\32\1\0"+
-    "\1\125\2\0\1\32\1\126\1\32\2\0\1\127\1\130"+
-    "\1\111";
+    "\11\125\1\0\1\125\2\0\1\32\1\126\1\32\26\0"+
+    "\1\127\1\130\1\131\12\0\1\111\3\0\1\111";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[256];
+    int [] result = new int[303];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -174,18 +174,24 @@ public class _ErlangLexer implements FlexLexer {
     "\0\u06db\0\u1c70\0\u1cb1\0\u1cf2\0\303\0\u1d33\0\u1d74\0\u1db5"+
     "\0\u1df6\0\u1e37\0\u1e78\0\u1eb9\0\u1efa\0\u1f3b\0\u1f7c\0\u1fbd"+
     "\0\u1ffe\0\u203f\0\u2080\0\u20c1\0\u2102\0\u2143\0\u2184\0\u21c5"+
-    "\0\u2206\0\u2247\0\u2288\0\303\0\u22c9\0\u230a\0\u234b\0\u238c"+
-    "\0\u23cd\0\u240e\0\u244f\0\u2490\0\u06db\0\u24d1\0\u06db\0\u06db"+
-    "\0\u06db\0\u2512\0\u06db\0\u2553\0\u2594\0\u25d5\0\u06db\0\u2616"+
-    "\0\u2657\0\u2698\0\u26d9\0\u271a\0\u275b\0\u279c\0\u27dd\0\u281e"+
-    "\0\u285f\0\u28a0\0\u28e1\0\u2922\0\u2963\0\u29a4\0\u29e5\0\u2a26"+
-    "\0\u2a67\0\u2aa8\0\u2ae9\0\u2b2a\0\u2b6b\0\u2bac\0\u2bed\0\u2c2e"+
-    "\0\u2c6f\0\u2cb0\0\u2cf1\0\u2d32\0\u2d73\0\u06db\0\u2db4\0\u06db"+
-    "\0\u06db\0\u06db\0\u2df5\0\u2e36\0\u2e77\0\303\0\u2eb8\0\u2ef9"+
-    "\0\u2f3a\0\u06db\0\u2f7b\0\u2fbc\0\u2ffd\0\u06db\0\u06db\0\u1595";
+    "\0\u2206\0\u2247\0\u2288\0\u22c9\0\u230a\0\u234b\0\u238c\0\u23cd"+
+    "\0\u240e\0\u244f\0\u2490\0\u24d1\0\u06db\0\u2512\0\u06db\0\u06db"+
+    "\0\u06db\0\u2553\0\u06db\0\u2594\0\u25d5\0\u2616\0\u06db\0\u2657"+
+    "\0\u2698\0\u26d9\0\u271a\0\u275b\0\u279c\0\u27dd\0\u281e\0\u285f"+
+    "\0\u28a0\0\u28e1\0\u2922\0\u2963\0\u29a4\0\u29e5\0\u2a26\0\u2a67"+
+    "\0\u2aa8\0\u2ae9\0\u2b2a\0\u2b6b\0\u2bac\0\u2bed\0\u2c2e\0\u2c6f"+
+    "\0\u22c9\0\u2cb0\0\u2cf1\0\u2d32\0\u2d73\0\u2db4\0\u2df5\0\u06db"+
+    "\0\u2e36\0\u06db\0\u06db\0\u06db\0\u2e77\0\u2eb8\0\u2ef9\0\u2f3a"+
+    "\0\u2f7b\0\u2fbc\0\u2ffd\0\u303e\0\u307f\0\u30c0\0\u3101\0\u3142"+
+    "\0\u3183\0\u31c4\0\u3205\0\u3246\0\u3287\0\u06db\0\u32c8\0\u3309"+
+    "\0\u2f3a\0\u334a\0\u2f7b\0\u338b\0\u2fbc\0\u33cc\0\u2ffd\0\u340d"+
+    "\0\u303e\0\u344e\0\u307f\0\u348f\0\u30c0\0\u34d0\0\u3101\0\u3511"+
+    "\0\u3142\0\u3552\0\u3593\0\u31c4\0\u35d4\0\u06db\0\u06db\0\303"+
+    "\0\u3615\0\u3656\0\u3697\0\u36d8\0\u3719\0\u375a\0\u379b\0\u37dc"+
+    "\0\u381d\0\u385e\0\u1595\0\u389f\0\u38e0\0\u3921\0\u3142";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[256];
+    int [] result = new int[303];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -330,48 +336,64 @@ public class _ErlangLexer implements FlexLexer {
     "\2\264\44\163\1\342\34\163\44\164\1\343\34\164\44\166"+
     "\1\344\26\166\1\345\5\166\44\167\1\346\34\167\23\0"+
     "\2\61\7\0\3\61\10\0\6\61\47\0\2\347\7\0"+
-    "\3\347\10\0\6\347\24\0\5\174\1\350\73\174\23\0"+
-    "\1\70\100\0\2\70\7\0\3\70\10\0\6\70\47\0"+
-    "\2\351\7\0\3\351\10\0\6\351\47\0\2\352\7\0"+
-    "\5\352\6\0\26\352\22\0\1\353\1\0\1\353\2\0"+
-    "\2\354\77\0\2\355\7\0\5\355\6\0\26\355\27\0"+
-    "\2\44\6\0\6\44\4\0\1\44\1\0\16\44\1\356"+
-    "\7\44\27\0\2\44\6\0\6\44\4\0\1\44\1\0"+
-    "\12\44\1\357\13\44\27\0\2\44\6\0\6\44\4\0"+
-    "\1\44\1\0\14\44\1\360\11\44\27\0\2\44\6\0"+
-    "\6\44\4\0\1\44\1\0\7\44\1\361\16\44\27\0"+
-    "\2\44\6\0\6\44\4\0\1\44\1\0\4\44\1\362"+
-    "\21\44\27\0\2\44\6\0\6\44\4\0\1\44\1\0"+
-    "\17\44\1\363\6\44\27\0\2\44\6\0\6\44\4\0"+
-    "\1\44\1\0\10\44\1\364\15\44\4\0\5\320\1\365"+
-    "\73\320\32\366\14\242\1\366\26\242\36\366\14\155\1\366"+
-    "\26\155\36\366\14\156\1\366\26\156\36\366\14\157\1\366"+
-    "\26\157\36\366\14\160\1\366\26\160\36\366\14\161\1\366"+
-    "\26\161\4\366\5\327\1\245\34\327\1\330\137\327\101\254"+
-    "\101\255\101\256\101\257\101\260\101\261\101\262\101\263\101\264"+
-    "\32\366\14\163\1\366\26\163\36\366\14\164\1\366\26\164"+
-    "\36\366\14\166\1\366\26\166\4\366\42\166\1\267\32\166"+
-    "\1\367\1\166\1\245\1\166\32\366\14\167\1\366\26\167"+
-    "\4\366\23\0\2\347\7\0\3\347\10\0\6\347\22\0"+
-    "\1\61\1\0\5\174\1\173\73\174\23\0\2\351\7\0"+
-    "\3\351\10\0\6\351\22\0\1\70\7\0\1\370\14\0"+
-    "\2\352\7\0\5\352\4\0\1\300\1\0\26\352\27\0"+
-    "\2\354\77\0\2\354\20\0\1\353\56\0\2\355\7\0"+
-    "\5\355\4\0\1\302\1\0\26\355\27\0\2\44\6\0"+
-    "\6\44\4\0\1\44\1\0\17\44\1\371\6\44\27\0"+
-    "\2\44\6\0\6\44\4\0\1\44\1\0\4\44\1\372"+
-    "\21\44\27\0\2\44\6\0\6\44\4\0\1\44\1\0"+
-    "\22\44\1\373\3\44\4\0\5\320\1\374\73\320\23\166"+
-    "\2\375\7\166\3\375\3\166\1\267\4\166\6\375\22\166"+
-    "\1\245\1\166\36\0\1\301\14\0\1\301\50\0\2\44"+
-    "\6\0\6\44\4\0\1\44\1\0\15\44\1\376\10\44"+
-    "\27\0\2\44\6\0\6\44\4\0\1\44\1\0\4\44"+
-    "\1\377\21\44\4\0\5\320\1\245\73\320\23\166\2\375"+
-    "\7\166\3\375\3\166\1\267\4\166\6\375\22\166\1\u0100"+
-    "\1\166";
+    "\3\347\10\0\6\347\24\0\5\174\1\350\73\174\5\351"+
+    "\1\173\34\351\1\352\36\351\23\0\1\70\100\0\2\70"+
+    "\7\0\3\70\10\0\6\70\47\0\2\353\7\0\3\353"+
+    "\10\0\6\353\47\0\2\354\7\0\5\354\6\0\26\354"+
+    "\22\0\1\355\1\0\1\355\2\0\2\356\77\0\2\357"+
+    "\7\0\5\357\6\0\26\357\27\0\2\44\6\0\6\44"+
+    "\4\0\1\44\1\0\16\44\1\360\7\44\27\0\2\44"+
+    "\6\0\6\44\4\0\1\44\1\0\12\44\1\361\13\44"+
+    "\27\0\2\44\6\0\6\44\4\0\1\44\1\0\14\44"+
+    "\1\362\11\44\27\0\2\44\6\0\6\44\4\0\1\44"+
+    "\1\0\7\44\1\363\16\44\27\0\2\44\6\0\6\44"+
+    "\4\0\1\44\1\0\4\44\1\364\21\44\27\0\2\44"+
+    "\6\0\6\44\4\0\1\44\1\0\17\44\1\365\6\44"+
+    "\27\0\2\44\6\0\6\44\4\0\1\44\1\0\10\44"+
+    "\1\366\15\44\4\0\5\320\1\367\73\320\32\370\14\242"+
+    "\1\370\26\242\4\370\32\371\14\155\1\371\26\155\4\371"+
+    "\32\372\14\156\1\372\26\156\4\372\32\373\14\157\1\373"+
+    "\26\157\4\373\32\374\14\160\1\374\26\160\4\374\32\375"+
+    "\14\161\1\375\26\161\4\375\5\327\1\245\34\327\1\330"+
+    "\137\327\101\254\101\255\101\256\101\257\101\260\101\261\101\262"+
+    "\101\263\101\264\32\376\14\163\1\376\26\163\4\376\32\377"+
+    "\14\164\1\377\26\164\4\377\32\u0100\14\166\1\u0100\26\166"+
+    "\4\u0100\42\166\1\267\32\166\1\u0101\1\166\1\245\1\166"+
+    "\32\u0102\14\167\1\u0102\26\167\4\u0102\23\0\2\347\7\0"+
+    "\3\347\10\0\6\347\22\0\1\61\1\0\5\174\1\173"+
+    "\73\174\44\351\1\u0103\34\351\23\0\2\353\7\0\3\353"+
+    "\10\0\6\353\22\0\1\70\7\0\1\u0104\14\0\2\354"+
+    "\7\0\5\354\4\0\1\300\1\0\26\354\27\0\2\356"+
+    "\77\0\2\356\20\0\1\355\56\0\2\357\7\0\5\357"+
+    "\4\0\1\302\1\0\26\357\27\0\2\44\6\0\6\44"+
+    "\4\0\1\44\1\0\17\44\1\u0105\6\44\27\0\2\44"+
+    "\6\0\6\44\4\0\1\44\1\0\4\44\1\u0106\21\44"+
+    "\27\0\2\44\6\0\6\44\4\0\1\44\1\0\22\44"+
+    "\1\u0107\3\44\4\0\5\320\1\u0108\73\320\5\u0109\1\245"+
+    "\34\u0109\1\u010a\36\u0109\6\u010b\1\245\33\u010b\1\u010c\36\u010b"+
+    "\12\u010d\1\245\27\u010d\1\u010e\36\u010d\14\u010f\1\245\25\u010f"+
+    "\1\u0110\36\u010f\22\u0111\1\245\17\u0111\1\u0112\36\u0111\31\u0113"+
+    "\1\245\10\u0113\1\u0114\36\u0113\42\u0115\1\u0116\1\245\35\u0115"+
+    "\42\u0117\1\u0118\3\u0117\1\245\32\u0117\42\u0119\1\u011a\34\u0119"+
+    "\1\245\1\u0119\23\166\2\u011b\7\166\3\u011b\3\166\1\267"+
+    "\4\166\6\u011b\22\166\1\245\1\166\42\u011c\1\u011d\33\u011c"+
+    "\1\245\2\u011c\101\351\36\0\1\301\14\0\1\301\50\0"+
+    "\2\44\6\0\6\44\4\0\1\44\1\0\15\44\1\u011e"+
+    "\10\44\27\0\2\44\6\0\6\44\4\0\1\44\1\0"+
+    "\4\44\1\u011f\21\44\4\0\5\320\1\u0120\73\320\44\u0109"+
+    "\1\u0121\34\u0109\44\u010b\1\u0122\34\u010b\44\u010d\1\u0123\34\u010d"+
+    "\44\u010f\1\u0124\34\u010f\44\u0111\1\u0125\34\u0111\44\u0113\1\u0126"+
+    "\34\u0113\44\u0115\1\u0127\34\u0115\44\u0117\1\u0128\34\u0117\44\u0119"+
+    "\1\u0129\26\u0119\1\u012a\5\u0119\23\166\2\u011b\7\166\3\u011b"+
+    "\3\166\1\267\4\166\6\u011b\22\166\1\u012b\1\166\44\u011c"+
+    "\1\u012c\34\u011c\101\u0109\101\u010b\101\u010d\101\u010f\101\u0111\101\u0113"+
+    "\101\u0115\101\u0117\143\u0119\1\u011a\32\u0119\1\u012d\1\u0119\1\245"+
+    "\1\u0119\101\u011c\23\u0119\2\u012e\7\u0119\3\u012e\3\u0119\1\u011a"+
+    "\4\u0119\6\u012e\22\u0119\1\245\24\u0119\2\u012e\7\u0119\3\u012e"+
+    "\3\u0119\1\u011a\4\u0119\6\u012e\22\u0119\1\u012f\1\u0119";
 
   private static int [] zzUnpacktrans() {
-    int [] result = new int[12350];
+    int [] result = new int[14690];
     int offset = 0;
     offset = zzUnpacktrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -415,12 +437,12 @@ public class _ErlangLexer implements FlexLexer {
     "\5\11\1\1\1\11\2\0\1\1\1\0\3\11\1\0"+
     "\2\11\2\0\6\11\26\1\1\11\17\0\1\11\2\0"+
     "\1\1\2\0\2\1\1\11\3\1\4\11\27\1\1\0"+
-    "\1\1\1\0\1\11\26\0\1\11\1\1\5\0\15\1"+
-    "\32\0\1\1\1\0\11\1\1\0\1\11\2\0\3\1"+
-    "\2\0\3\1";
+    "\1\1\1\0\1\11\26\0\2\1\5\0\15\1\34\0"+
+    "\1\1\1\0\11\1\1\0\11\1\1\0\1\1\2\0"+
+    "\3\1\26\0\2\1\1\11\12\0\1\1\3\0\1\1";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[256];
+    int [] result = new int[303];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -494,6 +516,25 @@ public class _ErlangLexer implements FlexLexer {
     public _ErlangLexer(@Nullable Project project_) {
       this((java.io.Reader)null);
       this.project = project_;
+    }
+
+    // OTP 26 and later end a string or sigil after a \^ that is not followed by a control name; ErlangAnnotator reports it
+    private IElementType endAtBadControlEscape(IElementType type) {
+      CharSequence text = yytext();
+      if (text.length() < 2 || text.charAt(0) == '"' && text.charAt(1) == '"' || text.charAt(0) == '~' && (text.charAt(1) == 'B' || text.charAt(1) == 'S')) return type;
+      for (int i = 0; i < text.length() - 1; i++) {
+        if (text.charAt(i) != '\\') continue;
+        if (text.charAt(i + 1) == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2)))) {
+          if (ErlangSdkType.getRelease(project).erlangControlEscapeNeedsControlName()) yypushback(text.length() - i - 2);
+          return type;
+        }
+        i += text.charAt(i + 1) == '^' ? 2 : 1;
+      }
+      return type;
+    }
+
+    private static boolean isControlName(char c) {
+      return c >= '@' && c <= '_' || c >= 'a' && c <= 'z' || c == '?';
     }
 
 
@@ -742,367 +783,367 @@ public class _ErlangLexer implements FlexLexer {
             { return com.intellij.psi.TokenType.WHITE_SPACE;
             }
           // fall through
-          case 89: break;
+          case 90: break;
           case 2:
             { yybegin(YYINITIAL); return com.intellij.psi.TokenType.BAD_CHARACTER;
             }
           // fall through
-          case 90: break;
+          case 91: break;
           case 3:
             { return ERL_OP_EXL;
             }
           // fall through
-          case 91: break;
+          case 92: break;
           case 4:
             { return ERL_RADIX;
             }
           // fall through
-          case 92: break;
+          case 93: break;
           case 5:
             { return ERL_CHAR;
             }
           // fall through
-          case 93: break;
+          case 94: break;
           case 6:
             { return ERL_COMMENT;
             }
           // fall through
-          case 94: break;
+          case 95: break;
           case 7:
             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE;
             }
           // fall through
-          case 95: break;
+          case 96: break;
           case 8:
             { return ERL_PAR_LEFT;
             }
           // fall through
-          case 96: break;
+          case 97: break;
           case 9:
             { return ERL_PAR_RIGHT;
             }
           // fall through
-          case 97: break;
+          case 98: break;
           case 10:
             { return ERL_OP_AR_MUL;
             }
           // fall through
-          case 98: break;
+          case 99: break;
           case 11:
             { return ERL_OP_PLUS;
             }
           // fall through
-          case 99: break;
+          case 100: break;
           case 12:
             { return ERL_COMMA;
             }
           // fall through
-          case 100: break;
+          case 101: break;
           case 13:
             { return ERL_OP_MINUS;
             }
           // fall through
-          case 101: break;
+          case 102: break;
           case 14:
             { return ERL_DOT;
             }
           // fall through
-          case 102: break;
+          case 103: break;
           case 15:
             { return ERL_OP_AR_DIV;
             }
           // fall through
-          case 103: break;
+          case 104: break;
           case 16:
             { return ERL_INTEGER;
             }
           // fall through
-          case 104: break;
+          case 105: break;
           case 17:
             { return ERL_COLON;
             }
           // fall through
-          case 105: break;
+          case 106: break;
           case 18:
             { return ERL_SEMI;
             }
           // fall through
-          case 106: break;
+          case 107: break;
           case 19:
             { return ERL_OP_LT;
             }
           // fall through
-          case 107: break;
+          case 108: break;
           case 20:
             { return ERL_OP_EQ;
             }
           // fall through
-          case 108: break;
+          case 109: break;
           case 21:
             { return ERL_OP_GT;
             }
           // fall through
-          case 109: break;
+          case 110: break;
           case 22:
             { return ERL_QMARK;
             }
           // fall through
-          case 110: break;
+          case 111: break;
           case 23:
             { return ERL_VAR;
             }
           // fall through
-          case 111: break;
+          case 112: break;
           case 24:
             { return ERL_BRACKET_LEFT;
             }
           // fall through
-          case 112: break;
+          case 113: break;
           case 25:
             { return ERL_BRACKET_RIGHT;
             }
           // fall through
-          case 113: break;
+          case 114: break;
           case 26:
             { return ERL_ATOM_NAME;
             }
           // fall through
-          case 114: break;
+          case 115: break;
           case 27:
             { return ERL_CURLY_LEFT;
             }
           // fall through
-          case 115: break;
+          case 116: break;
           case 28:
             { return ERL_OP_OR;
             }
           // fall through
-          case 116: break;
+          case 117: break;
           case 29:
             { return ERL_CURLY_RIGHT;
             }
           // fall through
-          case 117: break;
+          case 118: break;
           case 30:
             { yybegin(YYINITIAL); return ERL_SINGLE_QUOTE;
             }
           // fall through
-          case 118: break;
+          case 119: break;
           case 31:
-            { return ERL_STRING;
+            { return endAtBadControlEscape(ERL_STRING);
             }
           // fall through
-          case 119: break;
+          case 120: break;
           case 32:
             { return getTokenStart() == 0 ? ERL_SHEBANG : com.intellij.psi.TokenType.ERROR_ELEMENT;
             }
           // fall through
-          case 120: break;
+          case 121: break;
           case 33:
             { return ERL_FUNCTION_DOC_COMMENT;
             }
           // fall through
-          case 121: break;
+          case 122: break;
           case 34:
             { return ERL_OP_AND_AND;
             }
           // fall through
-          case 122: break;
+          case 123: break;
           case 35:
             { return ERL_OP_PLUS_PLUS;
             }
           // fall through
-          case 123: break;
+          case 124: break;
           case 36:
             { return ERL_OP_MINUS_MINUS;
             }
           // fall through
-          case 124: break;
+          case 125: break;
           case 37:
             { return ERL_ARROW;
             }
           // fall through
-          case 125: break;
+          case 126: break;
           case 38:
             { return ERL_DOT_DOT;
             }
           // fall through
-          case 126: break;
+          case 127: break;
           case 39:
             { return ERL_OP_DIV_EQ;
             }
           // fall through
-          case 127: break;
+          case 128: break;
           case 40:
             { return ERL_COLON_COLON;
             }
           // fall through
-          case 128: break;
+          case 129: break;
           case 41:
             { return ERL_MATCH;
             }
           // fall through
-          case 129: break;
+          case 130: break;
           case 42:
             { return ERL_OP_LT_MINUS;
             }
           // fall through
-          case 130: break;
+          case 131: break;
           case 43:
             { return ERL_BIN_START;
             }
           // fall through
-          case 131: break;
+          case 132: break;
           case 44:
             { return ERL_OP_LT_EQ;
             }
           // fall through
-          case 132: break;
+          case 133: break;
           case 45:
             { return ERL_OP_EQ_LT;
             }
           // fall through
-          case 133: break;
+          case 134: break;
           case 46:
             { return ERL_OP_EQ_EQ;
             }
           // fall through
-          case 134: break;
+          case 135: break;
           case 47:
             { return ERL_ASSOC;
             }
           // fall through
-          case 135: break;
+          case 136: break;
           case 48:
             { return ERL_OP_GT_EQ;
             }
           // fall through
-          case 136: break;
+          case 137: break;
           case 49:
             { return ERL_BIN_END;
             }
           // fall through
-          case 137: break;
+          case 138: break;
           case 50:
             { return ERL_OP_MAYBE_EQ;
             }
           // fall through
-          case 138: break;
+          case 139: break;
           case 51:
             { return ERL_IF;
             }
           // fall through
-          case 139: break;
+          case 140: break;
           case 52:
             { return ERL_OF;
             }
           // fall through
-          case 140: break;
+          case 141: break;
           case 53:
             { return ERL_OR;
             }
           // fall through
-          case 141: break;
+          case 142: break;
           case 54:
             { return ERL_OR_OR;
             }
           // fall through
-          case 142: break;
+          case 143: break;
           case 55:
             { return ERL_MODULE_DOC_COMMENT;
             }
           // fall through
-          case 143: break;
+          case 144: break;
           case 56:
             { return ERL_DOT_DOT_DOT;
             }
           // fall through
-          case 144: break;
+          case 145: break;
           case 57:
             { return ERL_FLOAT;
             }
           // fall through
-          case 145: break;
+          case 146: break;
           case 58:
             { return ERL_OP_LT_COLON_MINUS;
             }
           // fall through
-          case 146: break;
+          case 147: break;
           case 59:
             { return ERL_OP_LT_COLON_EQ;
             }
           // fall through
-          case 147: break;
+          case 148: break;
           case 60:
             { return ERL_OP_EQ_DIV_EQ;
             }
           // fall through
-          case 148: break;
+          case 149: break;
           case 61:
             { return ERL_OP_EQ_COL_EQ;
             }
           // fall through
-          case 149: break;
+          case 150: break;
           case 62:
             { return ERL_AND;
             }
           // fall through
-          case 150: break;
+          case 151: break;
           case 63:
             { return ERL_BOR;
             }
           // fall through
-          case 151: break;
+          case 152: break;
           case 64:
             { return ERL_BSL;
             }
           // fall through
-          case 152: break;
+          case 153: break;
           case 65:
             { return ERL_BSR;
             }
           // fall through
-          case 153: break;
+          case 154: break;
           case 66:
             { return ERL_DIV;
             }
           // fall through
-          case 154: break;
+          case 155: break;
           case 67:
             { return ERL_END;
             }
           // fall through
-          case 155: break;
+          case 156: break;
           case 68:
             { return ERL_FUN;
             }
           // fall through
-          case 156: break;
+          case 157: break;
           case 69:
             { return ERL_NOT;
             }
           // fall through
-          case 157: break;
+          case 158: break;
           case 70:
             { return ERL_REM;
             }
           // fall through
-          case 158: break;
+          case 159: break;
           case 71:
             { return ERL_TRY;
             }
           // fall through
-          case 159: break;
+          case 160: break;
           case 72:
             { return ERL_XOR;
             }
           // fall through
-          case 160: break;
+          case 161: break;
           case 73:
-            { return ERL_SIGIL_STRING;
+            { return endAtBadControlEscape(ERL_SIGIL_STRING);
             }
           // fall through
-          case 161: break;
+          case 162: break;
           case 74:
             // lookahead expression with fixed lookahead length
             zzMarkedPos = Character.offsetByCodePoints
@@ -1110,57 +1151,57 @@ public class _ErlangLexer implements FlexLexer {
             { return ERL_STRING;
             }
           // fall through
-          case 162: break;
+          case 163: break;
           case 75:
             { return ERL_BAND;
             }
           // fall through
-          case 163: break;
+          case 164: break;
           case 76:
             { return ERL_BNOT;
             }
           // fall through
-          case 164: break;
+          case 165: break;
           case 77:
             { return ERL_BXOR;
             }
           // fall through
-          case 165: break;
+          case 166: break;
           case 78:
             { return ERL_CASE;
             }
           // fall through
-          case 166: break;
+          case 167: break;
           case 79:
             { return ERL_ELSE;
             }
           // fall through
-          case 167: break;
+          case 168: break;
           case 80:
             { return ERL_WHEN;
             }
           // fall through
-          case 168: break;
+          case 169: break;
           case 81:
             { return ERL_AFTER;
             }
           // fall through
-          case 169: break;
+          case 170: break;
           case 82:
             { return ERL_BEGIN;
             }
           // fall through
-          case 170: break;
+          case 171: break;
           case 83:
             { return ERL_CATCH;
             }
           // fall through
-          case 171: break;
+          case 172: break;
           case 84:
             { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe(); return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
             }
           // fall through
-          case 172: break;
+          case 173: break;
           case 85:
             // lookahead expression with fixed lookahead length
             zzMarkedPos = Character.offsetByCodePoints
@@ -1168,22 +1209,27 @@ public class _ErlangLexer implements FlexLexer {
             { return ERL_SIGIL_STRING;
             }
           // fall through
-          case 173: break;
+          case 174: break;
           case 86:
             { return ERL_ORELSE;
             }
           // fall through
-          case 174: break;
+          case 175: break;
           case 87:
             { return ERL_ANDALSO;
             }
           // fall through
-          case 175: break;
+          case 176: break;
           case 88:
             { return ERL_RECEIVE;
             }
           // fall through
-          case 176: break;
+          case 177: break;
+          case 89:
+            { return ERL_SIGIL_STRING;
+            }
+          // fall through
+          case 178: break;
           default:
             zzScanError(ZZ_NO_MATCH);
           }

@@ -22,6 +22,10 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testControlEscapeBadNameErrors() {
+    doTest();
+  }
+
   public void testErlang29SyntaxError() {
     enableErlang29SyntaxInspection();
     doTest();
