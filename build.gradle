@@ -212,6 +212,15 @@ afterEvaluate {
   }
 }
 
+// `./gradlew runIde -PrunIdeJvmArgs='-Dkey=value ...' --args=<project dir>` passes extra JVM arguments to the sandbox IDE,
+// for example -Derlang.elp.path=<elp> for the experimental ELP integration, without committing machine-specific paths.
+tasks.named('runIde') {
+  def runIdeJvmArgs = providers.gradleProperty('runIdeJvmArgs')
+  if (runIdeJvmArgs.present) {
+    jvmArgs(runIdeJvmArgs.get().tokenize(' '))
+  }
+}
+
 // The external build process loads the Erlang JPS plugin from the jars listed in
 // <compileServer.plugin classpath="..."/>, resolved against the lib/ directory of the installed plugin.
 // If a name doesn't match the packaged jar, the IDE only logs an internal error, the build process doesn't know
