@@ -501,7 +501,7 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
+binary_comprehension ::= '<<' <<comprehension_element bin_expression>> '||' lc_exprs '>>' {
   pin=3
   elementType=list_comprehension
 }

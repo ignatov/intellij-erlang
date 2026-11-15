@@ -1200,14 +1200,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>'
+  // '<<' <<comprehension_element bin_expression>> '||' lc_exprs '>>'
   public static boolean binary_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
-    r = r && comprehension_element(b, l + 1, ErlangParser::binary_expression);
+    r = r && comprehension_element(b, l + 1, ErlangParser::bin_expression);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 3
     r = r && report_error_(b, lc_exprs(b, l + 1));
