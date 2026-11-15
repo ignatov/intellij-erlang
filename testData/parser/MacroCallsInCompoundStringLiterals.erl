@@ -24,3 +24,13 @@ string_macro_string() ->
 
 stringified_arg_then_string() ->
   ?S(a).
+
+-define(L(X), io:format(?MODULE_STRING ": " ??X " = ~p~n", [X])).
+-define(T(X), ?M "x" ??X).
+
+stringified_arg_after_macro_then_string() ->
+  ?L(1), ?T(a).
+
+-record(r, {a = ?M "x", b = 1}).
+
+macro_then_string_in_head(?M "cd", X) -> {X, #r{}}.

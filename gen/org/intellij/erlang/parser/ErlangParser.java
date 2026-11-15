@@ -776,7 +776,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // &(('?' macros_name)+ string_literal) (string_literal | macros)+ | q_atom !'(' | integer | (string_literal | macros)+ | float | char
+  // &(('?' macros_name)+ string_literal) (string_literal | !('?' '?') macros)+ | q_atom !'(' | integer | (string_literal | macros)+ | float | char
   static boolean atomic(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic")) return false;
     boolean r;
@@ -791,7 +791,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // &(('?' macros_name)+ string_literal) (string_literal | macros)+
+  // &(('?' macros_name)+ string_literal) (string_literal | !('?' '?') macros)+
   private static boolean atomic_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_0")) return false;
     boolean r;
@@ -849,7 +849,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // (string_literal | macros)+
+  // (string_literal | !('?' '?') macros)+
   private static boolean atomic_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_0_1")) return false;
     boolean r;
@@ -864,12 +864,45 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // string_literal | macros
+  // string_literal | !('?' '?') macros
   private static boolean atomic_0_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_0_1_0")) return false;
     boolean r;
+    Marker m = enter_section_(b);
     r = string_literal(b, l + 1);
-    if (!r) r = macros(b, l + 1);
+    if (!r) r = atomic_0_1_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !('?' '?') macros
+  private static boolean atomic_0_1_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = atomic_0_1_0_1_0(b, l + 1);
+    r = r && macros(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !('?' '?')
+  private static boolean atomic_0_1_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !atomic_0_1_0_1_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // '?' '?'
+  private static boolean atomic_0_1_0_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, ERL_QMARK, ERL_QMARK);
+    exit_section_(b, m, null, r);
     return r;
   }
 
