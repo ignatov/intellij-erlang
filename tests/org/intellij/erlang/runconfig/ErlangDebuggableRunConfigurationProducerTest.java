@@ -25,8 +25,10 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.impl.LaterInvocator;
 import com.intellij.openapi.application.impl.NonBlockingReadActionImpl;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -39,6 +41,7 @@ import com.intellij.testFramework.JavaModuleTestCase;
 import com.intellij.testFramework.MapDataContext;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.PsiTestUtil;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ui.UIUtil;
@@ -221,13 +224,53 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
   }
 
   public void testEditorFindsNifsOffUiThread() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    waitForModulesNotToInterpret();
+    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+  }
+
+  public void testEditorShowsNifsInDialogOpenedAfterReset() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    Object dialog = new Object();
+    LaterInvocator.enterModal(dialog);
+    try {
+      // other platform tasks cannot finish in the modal state, so wait for the list itself
+      PlatformTestUtil.waitWithEventsDispatching("The modules with load_nif calls are not shown in a modal dialog",
+                                                 () -> !getShownModulesNotToInterpret(editor).isEmpty(), 10);
+      assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+    }
+    finally {
+      LaterInvocator.leaveModal(dialog);
+    }
+  }
+
+  public void testEditorKeepsNifsWhenAutoUpdateTurnedOffBeforeTheyAreFound() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    JBCheckBox autoUpdateCheckBox = UIUtil.findComponentOfType(editor.getComponent(), JBCheckBox.class);
+    assertNotNull(autoUpdateCheckBox);
+    assertTrue(autoUpdateCheckBox.isSelected());
+    autoUpdateCheckBox.doClick();
+    assertFalse(autoUpdateCheckBox.isSelected());
+
+    waitForModulesNotToInterpret();
+    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+
+    ErlangApplicationConfiguration applied = (ErlangApplicationConfiguration) createConfiguration(ErlangApplicationRunConfigurationProducer.class,
+                                                                                                    ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
+    editor.applyTo(applied);
+    assertFalse(applied.getDebugOptions().isAutoUpdateModulesNotToInterpret());
+    assertSameElements(applied.getDebugOptions().getModulesNotToInterpret(), "nifs_in_source");
+  }
+
+  @NotNull
+  private ErlangRunConfigurationEditorForm createEditorForNifsInSource() throws Exception {
     Module nifsInSource = createErlangModule("nifs_in_source");
     ErlangRunConfigurationBase<?> configuration = createConfiguration(ErlangApplicationRunConfigurationProducer.class, nifsInSource, false);
     configuration.getDebugOptions().setModulesNotToInterpret(new HashSet<>());
 
     ErlangRunConfigurationEditorForm editor = new ErlangRunConfigurationEditorForm();
     Disposer.register(getTestRootDisposable(), editor);
-    JComponent component = editor.getComponent();
+    editor.getComponent();
 
     String forbidSlowOperations = "intellij.idea.forbid.slow.ops";
     String oldValue = System.setProperty(forbidSlowOperations, "true");
@@ -238,18 +281,25 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
       if (oldValue == null) System.clearProperty(forbidSlowOperations);
       else System.setProperty(forbidSlowOperations, oldValue);
     }
+    assertEmpty(getShownModulesNotToInterpret(editor));
+    return editor;
+  }
 
+  private static void waitForModulesNotToInterpret() {
     NonBlockingReadActionImpl.waitForAsyncTaskCompletion();
     PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+  }
 
-    JBList<?> modulesNotToInterpretList = UIUtil.findComponentOfType(component, JBList.class);
+  @NotNull
+  private static List<Object> getShownModulesNotToInterpret(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBList<?> modulesNotToInterpretList = UIUtil.findComponentOfType(editor.getComponent(), JBList.class);
     assertNotNull(modulesNotToInterpretList);
     ListModel<?> model = modulesNotToInterpretList.getModel();
     List<Object> shownModules = new ArrayList<>();
     for (int i = 0; i < model.getSize(); i++) {
       shownModules.add(model.getElementAt(i));
     }
-    assertSameElements(shownModules, "nifs_in_source");
+    return shownModules;
   }
 
   private void doTestDebugOptions(Class<? extends ErlangDebuggableRunConfigurationProducer<?>> producerClass,

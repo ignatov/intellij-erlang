@@ -51,7 +51,8 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
       .expireWhen(module::isDisposed)
       .expireWith(this)
       .coalesceBy(this)
-      .finishOnUiThread(ModalityState.current(), myDebugOptionsEditor::setAutoUpdatedModulesNotToInterpret)
+      // reset can run before the dialog is shown, so the current modality is not the dialog's; the callback only updates Swing
+      .finishOnUiThread(ModalityState.any(), myDebugOptionsEditor::setAutoUpdatedModulesNotToInterpret)
       .submit(AppExecutorUtil.getAppExecutorService());
   }
 

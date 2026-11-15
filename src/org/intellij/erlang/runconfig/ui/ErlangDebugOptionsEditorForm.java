@@ -69,6 +69,13 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
   void setAutoUpdatedModulesNotToInterpret(@NotNull Set<String> modules) {
     if (myAutoUpdateModulesNotToInterpretCheckBox.isSelected()) {
       myModulesNotToInterpretListModel.replaceAll(new ArrayList<>(modules));
+      return;
+    }
+    // auto-update was turned off before the modules were found: keep the user's edits and add the found modules
+    for (String module : modules) {
+      if (!myModulesNotToInterpretListModel.contains(module)) {
+        myModulesNotToInterpretListModel.add(module);
+      }
     }
   }
 
