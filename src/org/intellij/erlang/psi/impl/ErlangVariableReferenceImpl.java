@@ -22,10 +22,12 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.SmartList;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
@@ -38,19 +40,41 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
-    ResolveUtil.treeWalkUp(place, processor);
-    List<ErlangQVar> result = processor.getAllResults();
+    List<ErlangQVar> result = resolveToFirstBindings(myElement);
     if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
 
     ErlangModule module = getErlangModule();
     if (module == null) return ResolveResult.EMPTY_ARRAY;
+    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     module.processDeclarations(processor, ResolveState.initial(), module, module);
 
     List<ErlangQVar> allResults = processor.getAllResults();
     return PsiElementResolveResult.createResults(allResults);
+  }
+
+  // The nearest earlier occurrence in a pattern can itself be a use of an earlier binding
+  // (`Pid = self(), receive {x, Pid} -> Pid end`), so follow it back to the first binding.
+  @NotNull
+  private static List<ErlangQVar> resolveToFirstBindings(@NotNull ErlangQVar var) {
+    List<ErlangQVar> result = new SmartList<>();
+    for (ErlangQVar candidate : resolveInScope(var)) {
+      boolean earlierInSameFile = candidate.getContainingFile() == var.getContainingFile() &&
+                                  candidate.getTextOffset() < var.getTextOffset();
+      List<ErlangQVar> bindings = earlierInSameFile ? resolveToFirstBindings(candidate) : Collections.emptyList();
+      for (ErlangQVar binding : bindings.isEmpty() ? Collections.singletonList(candidate) : bindings) {
+        if (!result.contains(binding)) result.add(binding);
+      }
+    }
+    return result;
+  }
+
+  @NotNull
+  private static List<ErlangQVar> resolveInScope(@NotNull ErlangQVar var) {
+    ErlangVarProcessor processor = new ErlangVarProcessor(var.getText(), var);
+    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class);
+    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, var);
+    ResolveUtil.treeWalkUp(place, processor);
+    return processor.getAllResults();
   }
 
   @Nullable
