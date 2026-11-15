@@ -19,18 +19,19 @@ package org.intellij.erlang.elp.lsp;
 
 import com.intellij.platform.lsp.api.customization.*;
 import com.intellij.psi.PsiFile;
+import org.intellij.erlang.elp.ElpEngine;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent while ELP
- * serves the file ({@link org.intellij.erlang.elp.ElpEngine}): diagnostics, completion, hover documentation, parameter name inlay
- * hints, folding, selection ranges, go to definition and type definition, signature help, highlighting of usages in the file,
- * and code actions as intentions.
+ * serves the file ({@link ElpEngine}): diagnostics, hover documentation, parameter name inlay hints, folding, selection ranges,
+ * go to definition and type definition, signature help, highlighting of usages in the file, and code actions as intentions.
  * <p>
- * Switched off here: find references, which the plugin's own ELP entry point asks for instead ({@code ElpFindUsagesHandlerFactory}),
- * so that there is one target; workspace symbols, because ELP answers them with module names only; call hierarchy, which the
- * client does not deliver for an Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which
- * stay with the plugin; and the features ELP does not offer.
+ * Switched off here: completion, which stays with the plugin as long as {@link ElpEngine#elpMayOwn} says so; find references,
+ * which the plugin's own ELP entry point asks for instead ({@code ElpFindUsagesHandlerFactory}), so that there is one target;
+ * workspace symbols, because ELP answers them with module names only; call hierarchy, which the client does not deliver for an
+ * Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which stay with the plugin; and the
+ * features ELP does not offer.
  * <p>
  * Built against IDEA 2026.1, which has no switch for them, this customization leaves on what later clients added: the client's
  * own rename (2026.2 and later) next to {@code ElpRenameHandler}, go to implementation (2026.3) and the inline and extract
@@ -69,7 +70,7 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @NotNull
   @Override
   public LspCompletionCustomizer getCompletionCustomizer() {
-    return myCompletion;
+    return ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION) ? myCompletion : super.getCompletionCustomizer();
   }
 
   @NotNull

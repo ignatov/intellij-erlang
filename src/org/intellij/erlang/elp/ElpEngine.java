@@ -53,7 +53,7 @@ public final class ElpEngine {
 
   /** The plugin features that ELP replaces in the {@link ElpMode#ELP} position. */
   public enum Feature {
-    /** Basic and smart completion: ELP's {@code textDocument/completion}. */
+    /** Basic and smart completion: ELP's {@code textDocument/completion}. Stays with the plugin, see {@link #elpMayOwn}. */
     COMPLETION,
     /** Parameter name inlay hints: ELP's {@code textDocument/inlayHint}. */
     PARAMETER_HINTS,
@@ -85,6 +85,15 @@ public final class ElpEngine {
   }
 
   private static final ThreadLocal<Set<Feature>> PLUGIN_FALLBACK = ThreadLocal.withInitial(() -> EnumSet.noneOf(Feature.class));
+
+  /**
+   * Whether ELP may own {@code feature} in the {@link ElpMode#ELP} position. Completion stays with the plugin: on the plugin's
+   * completion tests ELP agreed in 6 of 36, and with an empty prefix it offers only keywords. The LSP client asks ELP for
+   * completion only when this allows it, so that the list is filled by exactly one of them.
+   */
+  public static boolean elpMayOwn(@NotNull Feature feature) {
+    return feature != Feature.COMPLETION;
+  }
 
   /**
    * @param context an element of the file the feature works in; for completion and documentation pass an element of the file in the
@@ -129,7 +138,7 @@ public final class ElpEngine {
 
   @Nullable
   private static ElpServerStatus statusIfElpPosition(@NotNull Project project, @NotNull Feature feature) {
-    if (project.isDefault() || project.isDisposed() || PLUGIN_FALLBACK.get().contains(feature)) return null;
+    if (!elpMayOwn(feature) || project.isDefault() || project.isDisposed() || PLUGIN_FALLBACK.get().contains(feature)) return null;
     ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
     if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return null;
     return project.getService(ElpServerStatus.class);

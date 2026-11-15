@@ -29,6 +29,7 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.EnvironmentUtil;
 import org.intellij.erlang.elp.ElpConfiguration;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEnvironment;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpSettings;
@@ -124,7 +125,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
-    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer", "getDiagnosticsCustomizer",
+    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer",
                          "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer", "getGoToDefinitionCustomizer",
                          "getGoToTypeDefinitionCustomizer", "getHoverCustomizer", "getInlayHintCustomizer", "getSelectionRangeCustomizer",
                          "getSignatureHelpCustomizer", "getSymbolKindCustomizer"),
@@ -140,6 +141,11 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
                  .shouldAskServerForDocumentHighlights(myFixture.addFileToProject("src/highlights.erl", "").getContainingFile()));
     assertInstanceOf(customization.getWorkspaceSymbolCustomizer(), LspWorkspaceSymbolDisabled.class);
     assertNotNull(descriptor.getLspServerListener());
+  }
+
+  public void testCompletionStaysWithThePluginInTheElpPosition() {
+    assertFalse(ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION));
+    assertInstanceOf(descriptor(ElpMode.ELP).getLspCustomization().getCompletionCustomizer(), LspCompletionDisabled.class);
   }
 
   private static List<String> notDisabledCustomizers(LspCustomization customization) throws Exception {
