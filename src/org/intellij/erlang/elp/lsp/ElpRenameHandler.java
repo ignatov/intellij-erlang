@@ -39,6 +39,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameHandler;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
+import com.intellij.util.containers.ContainerUtil;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
@@ -49,6 +50,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -140,7 +142,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
       () -> rename(target.client(), new RenameParams(target.id(), target.position(), newName), error), "Renaming with ELP", true,
       project);
     if (edit == null) return "ELP did not rename '" + target.oldName() + "': " + StringUtil.notNullize(error.get(), "no answer");
-    return apply(project, target.client(), edit);
+    return apply(project, target.client().getDescriptor()::findFileByUri, edit);
   }
 
   private record Target(@NotNull LspClient client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
@@ -245,58 +247,82 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     return result;
   }
 
-  /**
-   * @return the file renames of a workspace edit as old URI to new name, or {@code null} when it has other file operations or a
-   * rename to another directory, which this handler refuses
-   */
-  @Nullable
-  static Map<String, String> fileRenames(@NotNull WorkspaceEdit edit) {
-    Map<String, String> result = new LinkedHashMap<>();
-    if (edit.getDocumentChanges() == null) return result;
-    for (Either<TextDocumentEdit, ResourceOperation> change : edit.getDocumentChanges()) {
-      if (change.isLeft()) continue;
-      if (!(change.getRight() instanceof RenameFile rename)) return null;
-      String oldUri = rename.getOldUri();
-      String newUri = rename.getNewUri();
-      int oldSlash = oldUri.lastIndexOf('/');
-      int newSlash = newUri.lastIndexOf('/');
-      if (oldSlash < 0 || newSlash < 0 || !oldUri.substring(0, oldSlash).equals(newUri.substring(0, newSlash))) return null;
-      result.put(oldUri, java.net.URLDecoder.decode(newUri.substring(newSlash + 1), java.nio.charset.StandardCharsets.UTF_8));
+  /** The changes of a workspace edit in their order: {@code documentChanges}, or else the text edits of {@code changes}. */
+  @NotNull
+  private static List<Either<TextDocumentEdit, ResourceOperation>> changes(@NotNull WorkspaceEdit edit) {
+    if (edit.getDocumentChanges() != null) return edit.getDocumentChanges();
+    List<Either<TextDocumentEdit, ResourceOperation>> result = new ArrayList<>();
+    if (edit.getChanges() != null) {
+      edit.getChanges().forEach((uri, edits) -> result.add(Either.forLeft(new TextDocumentEdit(
+        new VersionedTextDocumentIdentifier(uri, null), ContainerUtil.map(edits, Either::forLeft)))));
     }
     return result;
   }
 
   /**
+   * @return the new file name of a rename, or {@code null} when it moves the file to another directory, which this handler refuses
+   */
+  @Nullable
+  private static String newName(@NotNull RenameFile rename) {
+    String oldUri = rename.getOldUri();
+    String newUri = rename.getNewUri();
+    int oldSlash = oldUri.lastIndexOf('/');
+    int newSlash = newUri.lastIndexOf('/');
+    if (oldSlash < 0 || newSlash < 0 || !oldUri.substring(0, oldSlash).equals(newUri.substring(0, newSlash))) return null;
+    return java.net.URLDecoder.decode(newUri.substring(newSlash + 1), java.nio.charset.StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Applies ELP's answer to {@code textDocument/rename}. Its changes take effect in their order, as the LSP specification says:
+   * after a file rename the file has the new URI and the old one names nothing. ELP's module rename relies on it, it renames the
+   * file first and then edits the {@code -module} line under the new URI. Everything is checked before anything changes; then the
+   * text edits and the file renames are applied as one global undoable command.
+   *
+   * @param findFile the file of a document URI, as the LSP client finds it
    * @return why the edit was not applied, or {@code null} when it was
    */
   @Nullable
-  private static String apply(@NotNull Project project, @NotNull LspClient client, @NotNull WorkspaceEdit edit) {
-    Map<String, String> fileRenames = fileRenames(edit);
-    if (fileRenames == null) return "ELP's rename creates, deletes or moves files; nothing was changed.";
-    Map<Document, List<TextEdit>> documents = new LinkedHashMap<>();
-    List<VirtualFile> files = new ArrayList<>();
-    for (Map.Entry<String, List<TextEdit>> entry : edits(edit).entrySet()) {
-      VirtualFile file = client.getDescriptor().findFileByUri(entry.getKey());
+  static String apply(@NotNull Project project, @NotNull Function<String, VirtualFile> findFile, @NotNull WorkspaceEdit edit) {
+    // The URIs that the renames so far moved: the file now under the URI, or null for a URI that a file left.
+    Map<String, VirtualFile> moved = new HashMap<>();
+    Function<String, VirtualFile> fileAt = uri -> moved.containsKey(uri) ? moved.get(uri) : findFile.apply(uri);
+    Map<Document, List<TextEdit>> textEdits = new LinkedHashMap<>();
+    Set<VirtualFile> files = new LinkedHashSet<>();
+    Map<VirtualFile, String> renames = new LinkedHashMap<>();
+    for (Either<TextDocumentEdit, ResourceOperation> change : changes(edit)) {
+      if (change.isRight()) {
+        String name = change.getRight() instanceof RenameFile rename ? newName(rename) : null;
+        if (name == null) return "ELP's rename creates, deletes or moves files; nothing was changed.";
+        RenameFile rename = (RenameFile)change.getRight();
+        VirtualFile file = fileAt.apply(rename.getOldUri());
+        if (file == null) return "ELP's rename renames " + rename.getOldUri() + ", which does not exist; nothing was changed.";
+        VirtualFile existing = fileAt.apply(rename.getNewUri());
+        if (existing != null && !existing.equals(file)) {
+          return "ELP's rename renames " + file.getPresentableUrl() + " to " + name + ", which exists; nothing was changed.";
+        }
+        renames.put(file, name);
+        files.add(file);
+        moved.put(rename.getOldUri(), null);
+        moved.put(rename.getNewUri(), file);
+        continue;
+      }
+      String uri = change.getLeft().getTextDocument().getUri();
+      VirtualFile file = fileAt.apply(uri);
       Document document = file != null ? FileDocumentManager.getInstance().getDocument(file) : null;
-      if (document == null) return "ELP's rename changes " + entry.getKey() + ", which cannot be opened; nothing was changed.";
-      for (TextEdit textEdit : entry.getValue()) {
-        if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getRange()) == null) {
+      if (document == null) return "ELP's rename changes " + uri + ", which cannot be opened; nothing was changed.";
+      List<TextEdit> edits = textEdits.computeIfAbsent(document, key -> new ArrayList<>());
+      files.add(file);
+      for (Either<TextEdit, SnippetTextEdit> textEdit : change.getLeft().getEdits()) {
+        if (!textEdit.isLeft()) continue;
+        if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getLeft().getRange()) == null) {
           return "ELP's rename does not match the text of " + file.getPresentableUrl() + "; nothing was changed.";
         }
+        edits.add(textEdit.getLeft());
       }
-      documents.put(document, entry.getValue());
-      files.add(file);
-    }
-    Map<VirtualFile, String> renames = new LinkedHashMap<>();
-    for (Map.Entry<String, String> entry : fileRenames.entrySet()) {
-      VirtualFile file = client.getDescriptor().findFileByUri(entry.getKey());
-      if (file == null) return "ELP's rename renames " + entry.getKey() + ", which does not exist; nothing was changed.";
-      renames.put(file, entry.getValue());
-      files.add(file);
     }
     if (ReadonlyStatusHandler.getInstance(project).ensureFilesWritable(files).hasReadonlyFiles()) return null;
     WriteCommandAction.writeCommandAction(project).withName("Rename").withGlobalUndo().run(() -> {
-      documents.forEach(Lsp4jUtilKt::applyTextEdits);
+      textEdits.forEach(Lsp4jUtilKt::applyTextEdits);
       PsiDocumentManager.getInstance(project).commitAllDocuments();
       renames.forEach((file, name) -> {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
