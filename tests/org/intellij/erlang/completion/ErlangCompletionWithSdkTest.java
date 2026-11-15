@@ -38,6 +38,10 @@ public class ErlangCompletionWithSdkTest extends ErlangCompletionTestBase {
     doCheckResult("bar() ->ecrc<caret>", "bar() ->erlang:crc32(<caret>)");
   }
 
+  public void testNoUnqualifiedNotAutoImportedFunctionsFromErlangModule() {
+    doTestVariants("foo() -> crc<caret>. crc_local() -> ok.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "crc32");
+  }
+
   public void test353() {
     doTestInclude("-record(aaa, {}). -record(bbb, {}). foo() -> is_record(1, <caret>)", "aaa", "bbb");
   }

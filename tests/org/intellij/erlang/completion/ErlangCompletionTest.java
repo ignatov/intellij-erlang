@@ -49,6 +49,11 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     setUpProjectSdk();
   }
 
+  public void testNoUnqualifiedNotAutoImportedBifs() {
+    doTestVariants("foo() -> md<caret>. md_local() -> ok.", CompletionType.BASIC, 1, CheckType.EXCLUDES,
+                   "md5", "md5_init", "md5_update", "md5_final");
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
