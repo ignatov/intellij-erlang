@@ -282,6 +282,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.CALL_PARAMETERS_WRAP);
     }
+    if (parentType == ERL_ARGUMENT_DEFINITION_LIST && nodePsi instanceof ErlangArgumentDefinition) {
+      return WrappingUtil.getWrapType(mySettings.METHOD_PARAMETERS_WRAP);
+    }
     if (parentPsi instanceof ErlangFakeBinaryExpression && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.BINARY_OPERATION_WRAP);
     }

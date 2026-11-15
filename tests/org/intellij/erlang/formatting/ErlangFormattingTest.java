@@ -130,6 +130,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
   public void test830()    throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830Fun() throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
 
   public void test897() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
