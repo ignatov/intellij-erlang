@@ -18,6 +18,7 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -509,6 +510,18 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testFunctionExpression2() {
     doCheckResult("foo() -> fun <caret>", "foo() -> fun foo/0", Lookup.NORMAL_SELECT_CHAR);
+  }
+
+  public void testFunctionExpressionQuotedRemoteNameWithTypedQuotes() {
+    myFixture.configureByText("mymodule.erl", "-module(mymodule). -export(['тест'/3]). 'тест'(A, B, C) -> ok.");
+    myFixture.configureByText("a.erl", "foo() -> fun mymodule:'т<caret>'");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    LookupElement test = ContainerUtil.find(elements, e -> "тест".equals(e.getLookupString()));
+    assertNotNull(test);
+    myFixture.getLookup().setCurrentItem(test);
+    myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    myFixture.checkResult("foo() -> fun mymodule:'тест'/3<caret>");
   }
 
   public void test211() {
