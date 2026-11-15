@@ -9,7 +9,7 @@ plugins {
 
 apply plugin: 'org.jetbrains.intellij.platform'
 
-def platformVersion = providers.gradleProperty('platformVersion').getOrElse('2026.3')
+def platformVersion = providers.gradleProperty('platformVersion').getOrElse('2026.1')
 
 subprojects {
   apply plugin: 'org.jetbrains.intellij.platform.module'
@@ -82,9 +82,7 @@ allprojects {
         ijp.intellijIdea(platformVersion)
       }
 
-      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi",
-                         "com.intellij.platform.testRunner", "com.intellij.structureView")
-      ijp.bundledModule("intellij.platform.debugger")
+      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
       ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
     }
@@ -144,6 +142,12 @@ dependencies {
 }
 
 intellijPlatform {
+  pluginConfiguration {
+    ideaVersion {
+      // The maintenance line for IntelliJ IDEA 2026.1 and 2026.2; newer IDEs get the releases of master.
+      untilBuild = '262.*'
+    }
+  }
   pluginVerification {
     // The existing Marketplace plugin predates the restriction on org.jetbrains plugin IDs.
     freeArgs = ['-mute', 'ForbiddenPluginIdPrefix']

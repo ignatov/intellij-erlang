@@ -20,7 +20,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.platform.workspace.jps.entities.SdkEntity;
 import com.intellij.platform.workspace.storage.EntityStorage;
 import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileIndexContributor;
-import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileSetExclusionCondition;
 import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileSetRegistrar;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,14 +38,13 @@ public class ErlangExcludeHtmlFileIndexContributor implements WorkspaceFileIndex
     if (!"Erlang SDK".equals(entity.getType())) {
       return;
     }
-    WorkspaceFileSetExclusionCondition exclusionCondition = virtualFile -> {
+    registrar.registerExclusionCondition(entity.getHomePath().append("lib"), virtualFile -> {
       var name = virtualFile.getName();
       if (name.endsWith("html")) {
         LOG.info("Excluded " + virtualFile.getUrl() + " from Erlang SDK" + entity.getName() + " to speedup indexing");
         return true;
       }
       return false;
-    };
-    registrar.registerExclusionCondition(entity.getHomePath().append("lib"), exclusionCondition, entity);
+    }, entity);
   }
 }

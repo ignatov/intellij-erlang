@@ -1,7 +1,7 @@
 # AGENTS.md
 
 This is the IntelliJ Platform plugin for Erlang: lexer, parser, PSI, stubs, inspections, completion, run/debug, rebar and eunit.
-Plugin id `org.jetbrains.erlang`. It is built against IntelliJ IDEA 2026.3 (platform branch 263) with Java 25.
+Plugin id `org.jetbrains.erlang`. This branch, `release/0.11-261`, is the maintenance line for IntelliJ IDEA 2026.1 and 2026.2 (platform branches 261 and 262): it is built against 2026.1 with Java 21, and fixes come here from master as cherry-picks. Releases are tagged `v0.11.1299.<N>`.
 
 ## Layout
 - `src/`: the plugin sources (`org.intellij.erlang.*`).
@@ -14,8 +14,8 @@ Plugin id `org.jetbrains.erlang`. It is built against IntelliJ IDEA 2026.3 (plat
 - `libs/OtpErlang.jar`: a vendored library. `resources/debugger/beams/*`: committed `.beam` files built from `resources/debugger/src`.
 
 ## Commands
-Use JDK 25 (CI uses Temurin 25) and the Gradle wrapper.
-The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts. Running even one test class takes minutes.
+Use JDK 21 (CI uses Temurin 21) and the Gradle wrapper.
+The first build downloads IntelliJ IDEA 2026.1 (several GB) from JetBrains hosts. Running even one test class takes minutes.
 
 | Purpose | Command |
 |---|---|
@@ -84,7 +84,7 @@ You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer 
 - `test` never needs Erlang. `testCompilation` reads `erlang.sdk.path` (default `/usr/lib/erlang/`) and `rebar.path` (the rebar3 escript; without it the rebar tests are skipped).
 
 ## Platform rules
-- Target only 263. `since-build` is derived from `intellijIdea("2026.3")` and there is no `until-build`. Do not use APIs newer than 263. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
+- Target 261 and 262. `since-build` is derived from `intellijIdea("2026.1")` and `until-build` is `262.*`. Do not use APIs newer than 261; CI also tests against 2026.2 and verifies the archive there. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
 - `jps-plugin` must stay Java 11 bytecode (`options.release = 11`) and use only JPS and JDK APIs, no IDE classes. 828089b1 replaced `GeneralCommandLine` with `ProcessBuilder` for this reason.
 - Read PSI, VFS and indices under a read action. Modify PSI and documents in `WriteCommandAction`, which is the pattern in the quick fixes and refactorings.
 - Never block the EDT. Process launches, file or network I/O and index queries go to a background thread (`executeOnPooledThread`, `@RequiresBackgroundThread`). Come back with `invokeLater` and an explicit `ModalityState`. Do not add new `SlowOperations.allowSlowOperations`.

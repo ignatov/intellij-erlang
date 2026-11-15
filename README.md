@@ -8,8 +8,8 @@ and other IntelliJ-based products
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 ## Requirements
-- IntelliJ IDEA 2026.3 or later
-- Java 25 (bundled with the IDE)
+- IntelliJ IDEA 2026.1 or 2026.2 (this branch; newer IDEs are served by master)
+- Java 21 (bundled with the IDE)
 
 ## For Developers
 If you're developing or modifying the plugin, please see the [Development Guide](docs/DEVELOPMENT.md) for information about Java version compatibility requirements.

@@ -1,5 +1,11 @@
 name: Release
 
+# Maintenance releases for IntelliJ IDEA 2026.1 and 2026.2 (platforms 261 and 262) from the branch release/0.11-261.
+# A tag push runs the workflow file of the tagged commit, so only tags on this branch use this file; the releases for
+# newer IDEs are made by the release.yml of master. The versions of this line have four parts, v0.11.1299.<N>: they
+# sort after 0.11.1299, the last version published for these IDEs before the line existed, and before every version
+# of master.
+
 on:
   push:
     tags:
@@ -7,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to publish, e.g. v0.11.1300'
+        description: 'Existing release tag on release/0.11-261 to publish, e.g. v0.11.1299.1'
         required: true
         type: string
 
@@ -17,6 +23,10 @@ permissions:
 concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
+
+env:
+  LINE_BRANCH: release/0.11-261
+  LINE_BUILD: '1299'
 
 jobs:
   publish:
@@ -29,12 +39,13 @@ jobs:
     - uses: actions/checkout@v7
       with:
         ref: refs/tags/${{ inputs.tag || github.ref_name }}
+        fetch-depth: 0
 
     - name: Derive build number from tag
       id: version
       run: |
-        if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
-          echo "::error::Tag '$RELEASE_TAG' must look like v<version>.<build>, e.g. v0.11.1300"
+        if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+\.[0-9]+)\.($LINE_BUILD\.[1-9][0-9]*)$ ]]; then
+          echo "::error::Tag '$RELEASE_TAG' must look like v<version>.$LINE_BUILD.<N>, e.g. v0.11.$LINE_BUILD.1"
           exit 1
         fi
         tag_version="${BASH_REMATCH[1]}"
@@ -44,31 +55,69 @@ jobs:
           echo "::error::Tag version '$tag_version' does not match version '$gradle_version' in gradle.properties"
           exit 1
         fi
+        git fetch --no-tags origin "+refs/heads/$LINE_BRANCH:refs/remotes/origin/$LINE_BRANCH"
+        if ! git merge-base --is-ancestor HEAD "refs/remotes/origin/$LINE_BRANCH"; then
+          echo "::error::Tag '$RELEASE_TAG' is not on $LINE_BRANCH"
+          exit 1
+        fi
         echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
         echo "plugin_version=$gradle_version.$build_number" >> "$GITHUB_OUTPUT"
         echo "Publishing plugin version $gradle_version.$build_number"
 
-    - name: Check Marketplace token
+    - name: Check Marketplace token and existing upload
+      id: marketplace
       env:
         PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
       run: |
         if [[ -z "$PUBLISH_TOKEN" ]]; then
-          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set. Create a token at https://plugins.jetbrains.com/author/me/tokens and run: gh secret set JETBRAINS_MARKETPLACE_TOKEN"
+          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set"
           exit 1
         fi
+        # On a re-run after a failed GitHub release step, do not upload the same version again.
+        updates="$(curl -fsS --retry 3 'https://plugins.jetbrains.com/api/plugins/7083/updates?size=100')"
+        if jq -e --arg v "$PLUGIN_VERSION" 'any(.[]; .version == $v)' <<< "$updates" > /dev/null; then
+          echo "::notice::$PLUGIN_VERSION is already on Marketplace, skipping upload"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "published=false" >> "$GITHUB_OUTPUT"
+        fi
 
-    - name: Set up JDK 25
+    - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
         distribution: temurin
-        java-version: '25'
+        java-version: '21'
         cache: gradle
 
-    - name: Test, build, verify and publish plugin
+    - name: Test, build and verify plugin
+      env:
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
+
+    - name: Verify the archive against IntelliJ IDEA 2026.2
+      # The archive is built against 2026.1; this line also serves 2026.2.
+      env:
+        COMPAT_IDE: '2026.2'
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: |
+        zip="$PWD/build/distributions/intellij-erlang-$PLUGIN_VERSION.zip"
+        if [[ ! -f "$zip" ]]; then
+          echo "::error::Expected plugin archive $zip was not built"
+          ls -l build/distributions || true
+          exit 1
+        fi
+        cp "$zip" "$RUNNER_TEMP/"
+        scripts/compat/gradle.sh verifyPlugin -PbuildNumber="$BUILD_NUMBER" \
+          -PcompatPluginArchive="$RUNNER_TEMP/intellij-erlang-$PLUGIN_VERSION.zip"
+
+    - name: Publish plugin
+      if: steps.marketplace.outputs.published != 'true'
       env:
         PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
-      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
+      run: ./gradlew --no-daemon buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
 
     - name: Create GitHub release
       env:
@@ -93,9 +142,11 @@ jobs:
             }
           }
         ' plugin/resources/META-INF/plugin.xml > release-notes.md
-        printf '\nhttps://plugins.jetbrains.com/plugin/7083\n' >> release-notes.md
+        printf '\nFor IntelliJ IDEA 2026.1 and 2026.2 (builds 261.* and 262.*).\n\nhttps://plugins.jetbrains.com/plugin/7083\n' >> release-notes.md
         cat release-notes.md
+        # Not the latest release: that stays the newest release of master.
         gh release create "$RELEASE_TAG" "$zip" \
           --verify-tag \
+          --latest=false \
           --title "$RELEASE_TAG" \
           --notes-file release-notes.md
