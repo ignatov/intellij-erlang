@@ -26,6 +26,7 @@ import com.intellij.platform.lsp.api.lsWidget.LspClientWidgetItem;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
+import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
@@ -33,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Starts ELP for {@code .erl} and {@code .hrl} files once a path to {@code elp} is configured. Registered in
+ * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set. Registered in
  * {@code erlang-elp-lsp.xml}, which is loaded only when the platform has the LSP module.
  */
 public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
@@ -41,7 +42,8 @@ public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
   public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspClientStarter clientStarter) {
     if (!ElpFiles.isElpFile(file)) return;
     ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
-    if (!configuration.isEnabled()) return;
+    // In the Plugin position ELP is not started at all; the plugin works as without the integration.
+    if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return;
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
     if (root == null) return;
     clientStarter.ensureClientStarted(new ElpLspClientDescriptor(project, root, configuration));

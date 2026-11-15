@@ -52,10 +52,7 @@ public final class ElpSettingsPanel {
       .addComponentToRightColumn(hint("Empty path: no server is started. ELP needs erl and rebar3; the SDK bin and the rebar " +
                                       "directory are put first on its PATH."))
       .addLabeledComponent("Engine:", myModeBox)
-      .addComponentToRightColumn(hint("<html>Plugin: the plugin's own resolve serves everything; ELP adds its diagnostics.<br>" +
-                                      "ELP: while ELP runs, it serves completion, parameter hints, documentation, function folding, " +
-                                      "extend selection,<br>go to declaration and its intentions, and its diagnostics replace " +
-                                      "the plugin's unresolved and unused checks.<br>Everything else stays with the plugin.</html>"))
+      .addComponentToRightColumn(hint("<html>Plugin: ELP is not started.<br>ELP: ELP answers; the plugin fills the gaps.</html>"))
       .addComponentToRightColumn(myEqwalizerBox)
       .addComponentToRightColumn(hint("eqWAlizer is ELP's gradual type checker. Code not written for it gets many type " +
                                       "errors that erlc does not report; they are shown as warnings."))
