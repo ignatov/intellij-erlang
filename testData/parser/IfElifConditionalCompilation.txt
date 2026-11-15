@@ -29,16 +29,19 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    PsiErrorElement:<attribute>, <behaviour>, callback, define, else, export, export_record, export_type, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec or type expected, got 'if'
-      <empty list>
-    PsiElement(if)('if')
-    PsiElement(DUMMY_BLOCK)
+    ERL_IF_ATOM_ATTRIBUTE
+      PsiElement(if)('if')
       PsiElement(()('(')
-      PsiElement(DUMMY_BLOCK)
-        PsiElement(?)('?')
-        PsiElement(var)('OTP_RELEASE')
+      ERL_COMP_OP_EXPRESSION
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('OTP_RELEASE')
         PsiElement(<)('<')
-        PsiElement(integer)('26')
+        ERL_MAX_EXPRESSION
+          PsiElement(integer)('26')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -66,16 +69,19 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    PsiErrorElement:<attribute>, <behaviour>, callback, define, else, export, export_record, export_type, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec or type expected, got 'if'
-      <empty list>
-    PsiElement(if)('if')
-    PsiElement(DUMMY_BLOCK)
+    ERL_IF_ATOM_ATTRIBUTE
+      PsiElement(if)('if')
       PsiElement(()('(')
-      PsiElement(DUMMY_BLOCK)
-        PsiElement(?)('?')
-        PsiElement(var)('OTP_RELEASE')
+      ERL_COMP_OP_EXPRESSION
+        ERL_MAX_EXPRESSION
+          ERL_Q_ATOM
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('OTP_RELEASE')
         PsiElement(>=)('>=')
-        PsiElement(integer)('27')
+        ERL_MAX_EXPRESSION
+          PsiElement(integer)('27')
       PsiElement())(')')
     PsiElement(.)('.')
   ERL_FUNCTION

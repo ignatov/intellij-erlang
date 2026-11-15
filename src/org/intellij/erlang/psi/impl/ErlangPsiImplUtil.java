@@ -502,7 +502,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangIfAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
   public static boolean inSpecification(PsiElement psiElement) {

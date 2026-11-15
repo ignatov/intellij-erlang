@@ -485,6 +485,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testNamedFunExpr()   throws Exception { doTest(); }
 
   public void testComprehensions() throws Exception { doTest(); }
+  public void testIfAttribute()    throws Exception { doTest(); }
 
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
