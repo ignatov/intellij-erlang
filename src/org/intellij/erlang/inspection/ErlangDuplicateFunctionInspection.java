@@ -33,14 +33,26 @@ public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
       map.putValue(Pair.create(fun.getName(), fun.getArity()), fun);
     }
 
+    ErlangConditionalBranches branches = null;
     for (Pair<String, Integer> pair : map.keySet()) {
       Collection<ErlangFunction> erlangFunctions = map.get(pair);
       if (erlangFunctions.size() > 1) {
+        if (branches == null) branches = new ErlangConditionalBranches(file);
         for (ErlangFunction fun : erlangFunctions) {
+          if (!hasDuplicate(fun, erlangFunctions, branches)) continue;
           problemsHolder.registerProblem(fun.getNameIdentifier(), "Duplicate function " + "'" + fun.getName() + "/" + fun.getArity() + "'");
         }
       }
     }
+  }
+
+  private static boolean hasDuplicate(@NotNull ErlangFunction fun,
+                                      @NotNull Collection<ErlangFunction> sameNameAndArity,
+                                      @NotNull ErlangConditionalBranches branches) {
+    for (ErlangFunction other : sameNameAndArity) {
+      if (other != fun && !branches.areExclusive(fun, other)) return true;
+    }
+    return false;
   }
 }
 

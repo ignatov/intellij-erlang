@@ -44,8 +44,9 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
+    ErlangConditionalBranches branches = new ErlangConditionalBranches(file);
     for (ErlangFunction function : file.getFunctions()) {
-      if (!isUnusedFunction(file, function)) continue;
+      if (!isUnusedFunction(file, function) || isAlternativeUsed(file, function, branches)) continue;
 
       PsiElement identifier = function.getNameIdentifier();
       String message = "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'";
@@ -53,6 +54,18 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
       holder.registerProblem(identifier, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, fixes);
     }
+  }
+
+  private static boolean isAlternativeUsed(@NotNull ErlangFile file,
+                                           @NotNull ErlangFunction function,
+                                           @NotNull ErlangConditionalBranches branches) {
+    for (ErlangFunction other : file.getFunctionsByName(function.getName())) {
+      if (other != function && other.getArity() == function.getArity() && branches.areExclusive(function, other) &&
+          !isUnusedFunction(file, other)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
