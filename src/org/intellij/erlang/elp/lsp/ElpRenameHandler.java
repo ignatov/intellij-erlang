@@ -285,7 +285,15 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   static String apply(@NotNull Project project, @NotNull Function<String, VirtualFile> findFile, @NotNull WorkspaceEdit edit) {
     // The URIs that the renames so far moved: the file now under the URI, or null for a URI that a file left.
     Map<String, VirtualFile> moved = new HashMap<>();
-    Function<String, VirtualFile> fileAt = uri -> moved.containsKey(uri) ? moved.get(uri) : findFile.apply(uri);
+    // A file under two paths, such as a header in src and in rebar3's _build/default/lib/APP/src link to it, which ELP edits under
+    // both: the first file found for each canonical file, so that one document gets the edits.
+    Map<VirtualFile, VirtualFile> firstFound = new HashMap<>();
+    Function<String, VirtualFile> fileAt = uri -> {
+      if (moved.containsKey(uri)) return moved.get(uri);
+      VirtualFile file = findFile.apply(uri);
+      VirtualFile canonical = file != null ? file.getCanonicalFile() : null;
+      return file != null ? firstFound.computeIfAbsent(canonical != null ? canonical : file, key -> file) : null;
+    };
     Map<Document, List<TextEdit>> textEdits = new LinkedHashMap<>();
     Set<VirtualFile> files = new LinkedHashSet<>();
     Map<VirtualFile, String> renames = new LinkedHashMap<>();
@@ -317,7 +325,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
         if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getLeft().getRange()) == null) {
           return "ELP's rename does not match the text of " + file.getPresentableUrl() + "; nothing was changed.";
         }
-        edits.add(textEdit.getLeft());
+        if (!edits.contains(textEdit.getLeft())) edits.add(textEdit.getLeft());
       }
     }
     if (ReadonlyStatusHandler.getInstance(project).ensureFilesWritable(files).hasReadonlyFiles()) return null;

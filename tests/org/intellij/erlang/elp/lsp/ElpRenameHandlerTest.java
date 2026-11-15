@@ -19,13 +19,19 @@ package org.intellij.erlang.elp.lsp;
 import com.intellij.openapi.command.undo.UndoManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -131,6 +137,32 @@ public class ElpRenameHandlerTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMoveToAnotherDirectoryChangesNothing() {
     assertRefused(documentChanges("""
       {"kind": "rename", "oldUri": "temp:///src/jsx_encoder.erl", "newUri": "temp:///jsx_encoder111.erl"}""", CALL_SITE_EDIT));
+  }
+
+  /**
+   * In a rebar3 project that was built, {@code _build/default/lib/APP/src} links to {@code src}, and ELP edits a header under both
+   * paths. The first path gets the edits once; the other path is the same file and its document is left alone.
+   */
+  public void testHeaderUnderTwoPathsOfOneFileIsEditedOnce() throws Exception {
+    Path project = FileUtil.createTempDirectory("elp-rename", null, true).toPath();
+    Path src = Files.createDirectories(project.resolve("src"));
+    Files.writeString(src.resolve("jsx_config.hrl"), "-record(config, {}).\n", StandardCharsets.UTF_8);
+    Path lib = Files.createDirectories(project.resolve("_build/default/lib/jsx"));
+    Files.createSymbolicLink(lib.resolve("src"), lib.relativize(src));
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
+    VirtualFile header = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(src.resolve("jsx_config.hrl"));
+    VirtualFile linkedHeader = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(lib.resolve("src/jsx_config.hrl"));
+    assertNotNull(header);
+    assertNotNull(linkedHeader);
+    assertFalse(header.equals(linkedHeader));
+    String headerEdit = """
+      {"edits": [{"newText": "config2", "range": {"start": {"line": 0, "character": 8}, "end": {"line": 0, "character": 14}}}],
+       "textDocument": {"uri": "%s", "version": null}}""";
+    assertApplied(documentChanges(headerEdit.formatted(header.getUrl()), headerEdit.formatted(linkedHeader.getUrl())));
+    assertEquals("-record(config2, {}).\n", document(header).getText());
+    assertFalse(FileDocumentManager.getInstance().isFileModified(linkedHeader));
+    FileDocumentManager.getInstance().saveAllDocuments();
+    assertEquals("-record(config2, {}).\n", Files.readString(src.resolve("jsx_config.hrl"), StandardCharsets.UTF_8));
   }
 
   private void assertModuleRenamed() {
