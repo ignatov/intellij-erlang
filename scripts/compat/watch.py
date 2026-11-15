@@ -7,9 +7,10 @@ Called by .github/workflows/compat-watch.yml (see AGENTS.md). One cycle does, in
      part of the lookup); a block that is missing or does not parse, or a second such issue, stops the cycle;
   2. collect the results of the runs that earlier cycles started, compare each with the baseline (the result of the
      default inputs on the same commit) and file one issue for each version with problems that neither the baseline
-     has nor an earlier issue of the same major Erlang/OTP release or IDE branch reported;
+     has nor an earlier issue of the same major Erlang/OTP release or IDE branch showed;
   3. discover new versions in the feeds of builds.hex.pm and data.services.jetbrains.com;
-  4. start runs of compat.yml for them on the head commit of the default branch, together with the baseline run;
+  4. start runs of compat.yml: the baseline run of the head commit of the default branch when no complete baseline
+     can be used, and otherwise, only for a commit that has a complete baseline, the runs of the versions;
   5. write the state.
 Every step can be repeated after a crash without doing anything twice: a run is recorded as starting before it is
 started, a run whose id is not known is found by the content of its result, and the issue of a version is found by its
@@ -46,15 +47,25 @@ MAX_COLLECT_ERRORS = 8
 RUN_TIMEOUT = datetime.timedelta(hours=6)
 # A complete baseline is run again after this time, well before its artifacts expire.
 BASELINE_MAX_AGE = datetime.timedelta(days=30)
+# The versions are checked on the commit of the newest complete baseline while it is not older than this, also when the
+# default branch has moved on since: commits that come faster than the cycles must not keep the versions waiting.
+BASELINE_FRESH = datetime.timedelta(hours=24)
+# After MAX_ATTEMPTS baselines in a row without a complete result, at most one baseline is started in this time.
+BASELINE_PAUSE = datetime.timedelta(hours=24)
 TABLE_ROWS = 60
-# The characters of the key of a reported problem in the state.
+# The characters of the key of a reported problem in the state, and the keys that the state keeps for one major
+# Erlang/OTP release or IDE branch.
 KEY_CHARS = 10
+KEYS_PER_LINE = 400
 VERSION_CHARS = 40
+# An issue shows this many problems of a check in the open and, with the ones in the collapsed block, this many in all.
 ISSUE_ITEMS = 30
+ISSUE_ITEMS_PER_CHECK = 200
 ISSUE_TEXT_CHARS = 300
 BODY_LIMIT = 65536
-STATE_BODY_TARGET = 30000
-ISSUE_BODY_TARGET = 60000
+STATE_BODY_TARGET = 40000
+# The characters of the lists of problems in the body of an issue; the rest of the body is below 5000 characters.
+ISSUE_BODY_BUDGET = 55000
 DOWNLOAD_LIMIT = 64 * 1024 * 1024
 # A run of compat.yml whose id the dispatch did not return is searched among the runs created in this window.
 RECOVERY_WINDOW = (datetime.timedelta(minutes=2), datetime.timedelta(minutes=30))
@@ -290,11 +301,14 @@ class GitHub:
         return self.pages('/actions/workflows/%s/runs' % WORKFLOW, query, key='workflow_runs')
 
     def artifact_id(self, run_id, name):
-        """The id of the newest artifact `name` of run `run_id` that has not expired; None if there is none."""
+        """The id of the artifact `name` of run `run_id` that was created last and has not expired; None if there is
+        none. Ids are not in the order of creation, so the id only breaks a tie; an artifact without a valid time of
+        creation is older than any with one."""
         artifacts = self.pages('/actions/runs/%d/artifacts' % run_id, {'name': name}, key='artifacts')
-        ids = [a['id'] for a in artifacts if isinstance(a, dict) and a.get('name') == name and not a.get('expired')
-               and isinstance(a.get('id'), int) and not isinstance(a['id'], bool) and a['id'] > 0]
-        return max(ids) if ids else None
+        found = [(created(a.get('created_at')), a['id']) for a in artifacts
+                 if isinstance(a, dict) and a.get('name') == name and not a.get('expired')
+                 and isinstance(a.get('id'), int) and not isinstance(a['id'], bool) and a['id'] > 0]
+        return max(found)[1] if found else None
 
     def artifact_file(self, artifact_id, member):
         """The file `member` of the artifact `artifact_id`; None if there is no such artifact or file."""
@@ -347,6 +361,14 @@ class GitHub:
         except (ValueError, AttributeError, RecursionError):
             return None
         return run_id if isinstance(run_id, int) and run_id > 0 else None
+
+
+def created(value):
+    """The time `value` of the API (2026-11-15T15:38:37Z, with or without fractions of a second) as a sort key; the
+    lowest key if it is not one."""
+    match = re.fullmatch(r'([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(\.[0-9]{1,9})?Z',
+                         value if isinstance(value, str) else '')
+    return (match.group(1), (match.group(2) or '.').ljust(10, '0')) if match else ('', '')
 
 
 def is_ours(issue):
@@ -420,15 +442,20 @@ ENTRY_DEFAULTS = {'name': None, 'verdict': None, 'sha': None, 'at': None, 'run':
                   'issue': None, 'errors': 0}
 # `artifacts` of a complete baseline: the ids of the artifacts that were accepted, {'ide': id, 'otp': id, 'logs': id
 # or None}; a comparison reads exactly those.
-BASELINE_DEFAULTS = {'run': None, 'ide': None, 'otp': None, 'tries': 1, 'errors': 0, 'artifacts': None}
+BASELINE_DEFAULTS = {'run': None, 'ide': None, 'otp': None, 'errors': 0, 'artifacts': None}
 KEY = re.compile(r'[0-9a-f]{%d}' % KEY_CHARS)
+# The count of failed baselines in a row stops here; only whether it has reached MAX_ATTEMPTS matters.
+MAX_FAILURES = 99
 
 
 def new_state(now):
-    """`reported` maps each kind to {major release or branch: {'issue': the latest issue of that line, 'keys': the
-    keys of the problems that the issues of that line reported}}."""
+    """`reported` maps each kind to {major release or branch (a line): {'issue': the latest issue of that line,
+    'keys': the keys of the problems that the issues of that line showed, at most KEYS_PER_LINE, 'full': whether the
+    line is saturated, which is when its keys are not all the problems that were reported}}. `failures` is the number
+    of baseline runs in a row, on whatever commits, that gave no complete result."""
     return {'format': STATE_FORMAT, 'created': iso(now), 'pending': sorted(KINDS), 'floor': {'ide': None, 'otp': None},
-            'seen': {'ide': [], 'otp': []}, 'reported': {'ide': {}, 'otp': {}}, 'baselines': [], 'entries': []}
+            'seen': {'ide': [], 'otp': []}, 'reported': {'ide': {}, 'otp': {}}, 'failures': 0, 'baselines': [],
+            'entries': []}
 
 
 def _check(condition, what):
@@ -468,9 +495,11 @@ def validate_state(state):
         _check(isinstance(lines, dict), 'reported lines')
         for line, reported in lines.items():
             _check(re.fullmatch(r'[0-9]{1,9}', line) and isinstance(reported, dict)
-                   and set(reported) == {'issue', 'keys'} and _int_or_none(reported['issue']) and reported['issue']
-                   and isinstance(reported['keys'], list)
+                   and set(reported) == {'issue', 'keys', 'full'} and _int_or_none(reported['issue'])
+                   and reported['issue'] and isinstance(reported['full'], bool)
+                   and isinstance(reported['keys'], list) and len(reported['keys']) <= KEYS_PER_LINE
                    and all(isinstance(key, str) and KEY.fullmatch(key) for key in reported['keys']), 'reported line')
+    _check(_count(state.get('failures'), MAX_FAILURES), 'failures')
     _check(isinstance(state.get('baselines'), list), 'baselines')
     baselines = []
     for baseline in state['baselines']:
@@ -479,7 +508,7 @@ def validate_state(state):
         baselines.append(baseline)
         _check(set(baseline) == set(BASELINE_DEFAULTS) | {'sha', 'at', 'state'}, 'baseline keys')
         artifacts = baseline['artifacts']
-        _check(_count(baseline['tries'], MAX_ATTEMPTS) and _count(baseline['errors'], MAX_COLLECT_ERRORS)
+        _check(_count(baseline['errors'], MAX_COLLECT_ERRORS)
                and (artifacts is None or (isinstance(artifacts, dict) and set(artifacts) == {'ide', 'otp', 'logs'}
                                           and all(_int_or_none(a) for a in artifacts.values())
                                           and artifacts['ide'] and artifacts['otp'])), 'baseline attempts')
@@ -552,6 +581,14 @@ def render_state(state, server_url, repository):
         'one issue (label `%s`) for each version with problems that the default configuration does not have. '
         'The watcher rewrites this issue on every run; the JSON block at the end is its state.' % ISSUE_LABEL,
         '',
+        'The table has the newest %d versions; older rows are dropped. For each major Erlang/OTP release and each IDE '
+        'branch the state keeps the keys of at most %d problems that its issues showed. A version that takes its '
+        'release or branch past that still gets its issue; the later ones with new problems are then recorded as '
+        '`known problems` with the link of that issue, until a version has the same problems as the baseline. Table '
+        'rows are never dropped to make room for keys: if the state is still too large, the keys of the release or '
+        'branch whose newest version is the oldest are dropped, and it is treated in the same way.'
+        % (TABLE_ROWS, KEYS_PER_LINE),
+        '',
         '| Kind | Version | Seen | Verdict | Run | Issue |',
         '|---|---|---|---|---|---|',
     ]
@@ -619,29 +656,31 @@ def corpus_key(error):
     return without_app_version(error.get('file')), str(error.get('description'))
 
 
-# The lists that are compared: (check, title, the list of the check, the key of an item, the line of an item).
+# The lists of each check that are compared: (title, the list of the check, the key of an item, the line of an item).
+# Every list of a result is here, except the lists of the Plugin Verifier that are not of the gated levels.
+FAILED_TESTS = (lambda c: trimmed_list(c.get('failedTests')), test_name,
+                lambda t: '%s: %s' % (test_name(t), t.get('message')))
+SKIPPED_TESTS = (lambda c: trimmed_list(c.get('skippedTests')), test_name, test_name)
+VERIFIER = (verifier_problems, lambda p: str(p['text']), lambda p: '%s: %s' % (p['category'], p['text']))
+CORPUS_ERRORS = 'parser errors in the Erlang/OTP sources'
 LISTS = {
-    'ide': [
-        ('compile', 'compiler errors', lambda c: trimmed_list(c.get('errors')),
-         lambda e: (str(e.get('file')), str(e.get('message'))), lambda e: '%s: %s' % (e.get('file'), e.get('message'))),
-        ('test', 'failed tests', lambda c: trimmed_list(c.get('failedTests')),
-         test_name, lambda t: '%s: %s' % (test_name(t), t.get('message'))),
-        ('verifyPlugin', 'Plugin Verifier problems of the built plugin', verifier_problems,
-         lambda p: str(p['text']), lambda p: '%s: %s' % (p['category'], p['text'])),
-        ('releasedPlugin', 'Plugin Verifier problems of the released plugin', verifier_problems,
-         lambda p: str(p['text']), lambda p: '%s: %s' % (p['category'], p['text'])),
-    ],
-    'otp': [
-        ('compilationTests', 'failed compilation tests', lambda c: trimmed_list(c.get('failedTests')),
-         test_name, lambda t: '%s: %s' % (test_name(t), t.get('message'))),
-        ('compilationTests', 'skipped compilation tests', lambda c: trimmed_list(c.get('skippedTests')),
-         test_name, test_name),
-        ('corpus', 'parser errors in the Erlang/OTP sources', lambda c: trimmed_list(c.get('errors')),
-         corpus_key, lambda e: '%s: %s' % (e.get('file'), e.get('description'))),
-        ('corpus', 'parser exceptions in the Erlang/OTP sources', lambda c: trimmed_list(c.get('exceptions')),
-         lambda e: (without_app_version(e.get('file')), str(e.get('exception'))),
-         lambda e: '%s: %s' % (e.get('file'), e.get('exception'))),
-    ],
+    'compile': [('compiler errors', lambda c: trimmed_list(c.get('errors')),
+                 lambda e: (str(e.get('file')), str(e.get('message'))),
+                 lambda e: '%s: %s' % (e.get('file'), e.get('message')))],
+    'test': [('failed tests',) + FAILED_TESTS, ('skipped tests',) + SKIPPED_TESTS],
+    'verifyPlugin': [('Plugin Verifier problems of the built plugin',) + VERIFIER],
+    'releasedPlugin': [('Plugin Verifier problems of the released plugin',) + VERIFIER],
+    'compilationTests': [('failed compilation tests',) + FAILED_TESTS,
+                         ('skipped compilation tests',) + SKIPPED_TESTS],
+    'corpus': [(CORPUS_ERRORS, lambda c: trimmed_list(c.get('errors')),
+                corpus_key, lambda e: '%s: %s' % (e.get('file'), e.get('description'))),
+               ('parser exceptions in the Erlang/OTP sources', lambda c: trimmed_list(c.get('exceptions')),
+                lambda e: (without_app_version(e.get('file')), str(e.get('exception'))),
+                lambda e: '%s: %s' % (e.get('file'), e.get('exception'))),
+               ('files of the Erlang/OTP sources that the parser is slow on',
+                lambda c: trimmed_list(c.get('slowFiles')), lambda e: without_app_version(e.get('file')),
+                lambda e: '%s: %s ms' % (e.get('file'), e.get('millis')))],
+    'knownRelease': [],
 }
 CHECKS = {'ide': ['compile', 'test', 'verifyPlugin', 'releasedPlugin'],
           'otp': ['compilationTests', 'corpus', 'knownRelease']}
@@ -649,6 +688,10 @@ CHECKS = {'ide': ['compile', 'test', 'verifyPlugin', 'releasedPlugin'],
 # A problem that the baseline does not have: `key` identifies it in the state (reported), `line` goes into the issue,
 # `count` is how many more times it occurs than in the baseline.
 Problem = collections.namedtuple('Problem', 'key line count')
+# The new problems of one list of a check, or of the check itself (its exit code, its status). `cut` says, if the list
+# of the version was cut at the limit of the result file and its full form could not be read, that it was: its
+# problems are then the ones among the listed items.
+Section = collections.namedtuple('Section', 'check title problems cut', defaults=(None,))
 
 
 def problem(check, title, key, line, count=1):
@@ -677,60 +720,94 @@ def new_items(items, baseline_items, key):
     return [(k, first[k], n) for k, n in counts.items() if n > 0]
 
 
+def exit_code(check):
+    code = check.get('exitCode')
+    return code if isinstance(code, int) and not isinstance(code, bool) else None
+
+
 def compare(kind, result, baseline, full_corpus=None):
-    """The problems of `result` that `baseline` does not have: {'sections': [(check, title, [Problem])], 'notes':
-    [...]}. With notes the comparison is not complete, because a list was trimmed in a result and its full form could
-    not be read: the sections then say neither that there are new problems nor that there are none.
+    """The problems of `result` that `baseline` does not have: {'sections': [Section], 'notes': [...]}. With notes the
+    comparison is not complete, because a list of the baseline was trimmed and its full form could not be read: the
+    sections then say neither that there are new problems nor that there are none.
+
+    A list of the result that is trimmed is compared by its listed items, and its section says that it was cut: the
+    baseline's list is complete, so a listed item that it does not have is new.
 
     `full_corpus` maps 'result' and 'baseline' to the full list of parser errors, read from corpus-report.json when the
     list of the result was trimmed, or to the reason why it could not be read."""
     checks, base = checks_of(result), checks_of(baseline)
-    sections, notes, reported = [], [], set()
-    for name, title, of, key, line in LISTS[kind]:
-        mine, theirs = of(checks.get(name, {})), of(base.get(name, {}))
-        (items, total, trimmed), (base_items, base_total, base_trimmed) = mine, theirs
-        if name == 'corpus' and title.startswith('parser errors') and (trimmed or base_trimmed):
-            full = full_corpus or {}
-            for side, cut in (('result', trimmed), ('baseline', base_trimmed)):
-                if not cut:
-                    continue
-                if isinstance(full.get(side), list):
-                    if side == 'result':
-                        items, trimmed = full[side], False
-                    else:
-                        base_items, base_trimmed = full[side], False
-                else:
-                    notes.append('the full list of parser errors of the %s could not be read: %s' % (
-                        'version' if side == 'result' else 'baseline', full.get(side) or 'it was not read'))
-        elif trimmed or base_trimmed:
-            notes.append('%s: the version has %d, the baseline %d, and the result lists only the first %d'
-                         % (title, total, base_total, compat.LIST_LIMIT))
-        problems = [problem(name, title, k, line(item), n) for k, item, n in new_items(items, base_items, key)]
-        if problems:
-            sections.append((name, title, problems))
-            reported.add(name)
-    known = checks.get('knownRelease')
-    if kind == 'otp' and known and known.get('status') == compat.FAILED:
-        sections.append(('knownRelease', 'the release is unknown to the plugin', [
-            problem('knownRelease', 'release', str(known.get('release')),
-                    'Erlang/OTP %s: ErlangSdkRelease constant %s, %s' % (
-                        known.get('release'), known.get('sdkReleaseConstant') or 'missing',
-                        known.get('mockSdk') or 'no testData/mockSdk-R%s' % known.get('release')))]))
-        reported.add('knownRelease')
+    full = full_corpus or {}
+    # The problems of the checks themselves come before the lists, so that a long list does not push them out of an
+    # issue.
+    first, sections, notes = [], [], []
     for name in CHECKS[kind]:
-        status = checks.get(name, {}).get('status')
-        if (base.get(name, {}).get('status') == compat.PASSED and status in (compat.FAILED, compat.NOT_RUN)
-                and name not in reported):
-            reason = checks[name].get('reason')
-            text = '%s: passed in the baseline, %s here%s' % (name, status, ': %s' % reason if reason else '')
-            sections.append((name, 'status', [problem(name, 'status', status, text)]))
-    return {'sections': sections, 'notes': notes}
+        check, base_check = checks.get(name, {}), base.get(name, {})
+        lists = []
+        for title, of, key, line in LISTS[name]:
+            (items, total, trimmed), (base_items, base_total, base_trimmed) = of(check), of(base_check)
+            why = ''
+            if title == CORPUS_ERRORS:
+                if trimmed and isinstance(full.get('result'), list):
+                    items, total, trimmed = full['result'], len(full['result']), False
+                elif trimmed:
+                    why = '; its full list could not be read: %s' % (full.get('result') or 'it was not read')
+                if base_trimmed and isinstance(full.get('baseline'), list):
+                    base_items, base_total, base_trimmed = full['baseline'], len(full['baseline']), False
+                elif base_trimmed:
+                    notes.append('the full list of parser errors of the baseline could not be read: %s'
+                                 % (full.get('baseline') or 'it was not read'))
+                    continue
+            if base_trimmed:
+                notes.append('%s: the baseline has %d and its result lists only the first %d'
+                             % (title, base_total, len(base_items)))
+                continue
+            problems = [problem(name, title, k, line(item), n) for k, item, n in new_items(items, base_items, key)]
+            cut = None
+            if trimmed:
+                cut = 'the result file lists only the first %d of %d%s' % (len(items), total, why)
+                more = total - len(base_items)
+                if not problems and more <= 0:
+                    notes.append('%s: the result lists only the first %d of %d, and none of them is new'
+                                 % (title, len(items), total))
+                    continue
+                if not problems:
+                    # More items than the baseline has in all, so some that are not listed are new.
+                    problems = [problem(name, title, 'beyond the limit of the result file',
+                                        '%d in all, %d in the baseline: at least %d more, none of them among the '
+                                        'listed ones' % (total, len(base_items), more))]
+            if problems:
+                lists.append(Section(name, title, problems, cut))
+        general = []
+        code, status, reason = exit_code(check), check.get('status'), check.get('reason')
+        because = ': %s' % reason if reason else ''
+        if code and exit_code(base_check) == 0:
+            # Also when the check has failed in the baseline already: its findings there did not fail its task.
+            general.append(Section(name, 'exit code', [problem(name, 'exit code', 'non-zero', (
+                '%s: exit code %s here, 0 in the baseline%s' % (name, code, because)))]))
+        if name == 'knownRelease' and status == compat.FAILED and not (
+                base_check.get('status') == compat.FAILED and base_check.get('release') == check.get('release')):
+            general.append(Section(name, 'the release is unknown to the plugin', [
+                problem(name, 'release', str(check.get('release')),
+                        'Erlang/OTP %s: ErlangSdkRelease constant %s, %s' % (
+                            check.get('release'), check.get('sdkReleaseConstant') or 'missing',
+                            check.get('mockSdk') or 'no testData/mockSdk-R%s' % check.get('release')))]))
+        if (base_check.get('status') == compat.PASSED and status in (compat.FAILED, compat.NOT_RUN)
+                and not lists and not general):
+            general.append(Section(name, 'status', [problem(name, 'status', status, (
+                '%s: passed in the baseline, %s here%s' % (name, status, because)))]))
+        first += general
+        sections += lists
+    return {'sections': first + sections, 'notes': notes}
+
+
+def text_of(found):
+    """The line of a problem as it is listed in an issue."""
+    return found.line + (' (%d times)' % found.count if found.count > 1 else '')
 
 
 def lines_of(sections):
-    """(check, title, the lines of the problems) of each section, as they are listed in an issue."""
-    return [(check, title, [p.line + (' (%d times)' % p.count if p.count > 1 else '') for p in problems])
-            for check, title, problems in sections]
+    """(check, title, the lines of the problems) of each section."""
+    return [(section.check, section.title, [text_of(found) for found in section.problems]) for section in sections]
 
 
 # Issues of versions
@@ -751,9 +828,14 @@ def line_name(kind, version):
     return '%s %d' % (KINDS[kind], group(version))
 
 
-def issue_body(entry, sections, run_url, baseline_url, items=ISSUE_ITEMS, earlier=None):
-    """The body of the issue of a version. `sections` are the problems that no earlier issue of its major release or
-    branch reported; `earlier` is the number of the latest such issue."""
+def issue_body(entry, sections, run_url, baseline_url, earlier=None):
+    """The body of the issue of a version and the keys of the problems that it shows; only those count as reported.
+    `sections` are the problems that no earlier issue of its major release or branch showed; `earlier` is the number
+    of the latest such issue.
+
+    Of each check the first ISSUE_ITEMS problems are in the open and the next ones in a collapsed block, at most
+    ISSUE_ITEMS_PER_CHECK in all, while the lists of the body are within ISSUE_BODY_BUDGET characters. A line says how
+    many problems are not shown; a later version of the same major release or branch that has them reports them."""
     kind, version, sha = entry['kind'], entry['version'], entry['sha']
     lines = [
         marker(kind, version),
@@ -766,18 +848,41 @@ def issue_body(entry, sections, run_url, baseline_url, items=ISSUE_ITEMS, earlie
         '- Baseline run (the default inputs on the same commit): %s' % baseline_url,
     ]
     if earlier:
-        lines.append('- Earlier issue of %s: #%d. The problems reported there are not repeated here.'
+        lines.append('- Earlier issue of %s: #%d. The problems shown there are not repeated here.'
                      % (line_name(kind, version), earlier))
     lines += ['', '### New problems']
-    for (check, title, problems), (_, _, texts) in zip(sections, lines_of(sections)):
-        shown = texts[:items]
-        cut = ', the first %d listed' % len(shown) if len(shown) < len(texts) else ''
-        lines += ['', '**%s, %s**: %d distinct, %d occurrences%s' % (check, title, len(problems),
-                                                                    sum(p.count for p in problems), cut), '', '```']
-        lines += [safe(text) for text in shown]
-        lines.append('```')
+    in_the_open, in_all = collections.Counter(), collections.Counter()
+    used, shown = 0, []
+    for section in sections:
+        check = section.check
+        opened, folded = [], []
+        for found in section.problems:
+            text = safe(text_of(found))
+            if in_all[check] >= ISSUE_ITEMS_PER_CHECK or used + len(text) + 1 > ISSUE_BODY_BUDGET:
+                break
+            if in_the_open[check] < ISSUE_ITEMS:
+                opened.append(text)
+                in_the_open[check] += 1
+            else:
+                folded.append(text)
+            in_all[check] += 1
+            used += len(text) + 1
+            shown.append(found.key)
+        lines += ['', '**%s, %s**: %d distinct, %d occurrences%s' % (
+            check, section.title, len(section.problems), sum(found.count for found in section.problems),
+            '; %s' % safe(section.cut, 600) if section.cut else '')]
+        if opened:
+            lines += ['', '```'] + opened + ['```']
+        if folded:
+            lines += ['', '<details><summary>%d more</summary>' % len(folded), '', '```'] + folded + ['```', '',
+                                                                                                    '</details>']
+        hidden = len(section.problems) - len(opened) - len(folded)
+        if hidden:
+            lines += ['', '%d more are not shown: an issue shows at most %d problems of a check and %d characters of '
+                          'them. A later version of %s that has them reports them.'
+                      % (hidden, ISSUE_ITEMS_PER_CHECK, ISSUE_BODY_BUDGET, line_name(kind, version))]
     lines += ['', 'To repeat the check: `gh workflow run %s -f %s=%s -f ref=%s`' % (WORKFLOW, kind, version, sha), '']
-    return '\n'.join(lines)
+    return '\n'.join(lines), shown
 
 
 # The cycle
@@ -817,6 +922,9 @@ class Watcher:
         self.discover()
         self.start_runs()
         self.write_state('at the end of the cycle')
+        if self.state['failures'] >= MAX_ATTEMPTS:
+            self.error('the last %d baseline runs gave no complete result, so no version is checked; at most one '
+                       'baseline is started in %s until one is complete' % (self.state['failures'], BASELINE_PAUSE))
         return 1 if self.failed else 0
 
     # 1. The state
@@ -870,9 +978,10 @@ class Watcher:
     def prune(self):
         """Keeps the state small. Dropped, in this order: the table rows beyond the newest TABLE_ROWS and the
         baselines that nothing needs; the reported keys of the lines that are not watched any more; then, while the
-        body is above STATE_BODY_TARGET (room for about 2000 keys), the oldest table row and, when no row is left, the
-        oldest reported keys of the line that has the most. The versions seen are never dropped. A problem whose
-        reported key was dropped is reported again by the next version of its line that has it."""
+        body is above STATE_BODY_TARGET, the keys of the line (a major Erlang/OTP release or an IDE branch) whose
+        newest version is the oldest. A table row is never dropped to make room for keys, and the versions seen are
+        never dropped. A line whose keys were dropped is saturated: its later versions with new problems are recorded
+        as known problems, so that nothing is reported twice."""
         state = self.state
         entries = state['entries']
         room = max(TABLE_ROWS - sum(1 for e in entries if e['state'] != DONE), 0)
@@ -886,26 +995,25 @@ class Watcher:
         state['entries'] = kept
         needed = {e['sha'] for e in kept if e['state'] in ACTIVE + (REPORT,)}
         latest = self.latest_baseline()
-        # The latest failed one is kept for its attempts: no baseline is started again for a commit that used them up.
-        failed = [b for b in state['baselines'] if b['state'] == FAILED]
-        last_failed = max(failed, key=lambda b: b['at']) if failed else None
+        # The baseline that was started last is kept for its time: BASELINE_PAUSE counts from it.
+        last = max(state['baselines'], key=lambda b: b['at'], default=None)
         state['baselines'] = [b for b in state['baselines']
-                              if b['state'] in ACTIVE or b['sha'] in needed or b is latest or b is last_failed]
+                              if b['state'] in ACTIVE or b['sha'] in needed or b is latest or b is last]
         for kind, lines in state['reported'].items():
             floor = state['floor'][kind]
             for line in list(lines):
                 if floor is not None and int(line) < floor:
                     del lines[line]
         while len(render_state(state, self.server_url, self.github.repository)) > STATE_BODY_TARGET:
-            done = [i for i, e in enumerate(state['entries']) if e['state'] == DONE]
-            if done:
-                del state['entries'][done[-1]]
-                continue
-            longest = max((reported for lines in state['reported'].values() for reported in lines.values()),
-                          key=lambda reported: len(reported['keys']), default=None)
-            if longest is None or not longest['keys']:
+            # The date on which the newest version of the line in the table was seen; a line without a row is older.
+            age = lambda kind, line: max((e['seen'] for e in state['entries']
+                                          if e['kind'] == kind and str(group(e['version'])) == line), default='')
+            oldest = min(((age(kind, line), reported['issue'], kind, line)
+                          for kind, lines in state['reported'].items() for line, reported in lines.items()
+                          if reported['keys']), default=None)
+            if oldest is None:
                 break
-            del longest['keys'][:50]
+            state['reported'][oldest[2]][oldest[3]].update(keys=[], full=True)
 
     def latest_baseline(self):
         complete = [b for b in self.state['baselines'] if b['state'] == COMPLETE]
@@ -1054,15 +1162,12 @@ class Watcher:
         return None
 
     def baseline_failed(self, baseline, reason):
-        """An attempt of the baseline without a complete result. After MAX_ATTEMPTS no baseline is started for its
-        commit any more, and the cycle is red."""
+        """A baseline run without a complete result. After MAX_ATTEMPTS of them in a row, on whatever commits, at
+        most one baseline is started in BASELINE_PAUSE and every cycle is red, until a baseline is complete."""
         baseline.update(state=FAILED, artifacts=None, errors=0)
-        message = 'Baseline of %s: attempt %d without a complete result: %s' % (baseline['sha'], baseline['tries'],
-                                                                               reason)
-        if baseline['tries'] >= MAX_ATTEMPTS:
-            self.error('%s; no baseline is started for this commit any more' % message)
-        else:
-            self.log(message)
+        self.state['failures'] = min(self.state['failures'] + 1, MAX_FAILURES)
+        self.log('Baseline of %s: no complete result (%d in a row): %s' % (baseline['sha'], self.state['failures'],
+                                                                           reason))
 
     def collect_baseline(self, baseline):
         if baseline['run'] is None:
@@ -1094,6 +1199,7 @@ class Watcher:
         # A comparison reads exactly these artifacts, whatever a later attempt of the run uploads.
         artifacts['logs'] = self.artifact(baseline['run'], LOGS_ARTIFACT)
         baseline.update(state=COMPLETE, ide=ide, otp=otp, artifacts=artifacts)
+        self.state['failures'] = 0
         self.log('Baseline of %s (run %d): complete, IntelliJ IDEA %s, Erlang/OTP %s'
                  % (baseline['sha'], baseline['run'], ide, otp))
 
@@ -1162,8 +1268,8 @@ class Watcher:
             return
         base = self.read_result(baseline['artifacts'][kind], kind)
         if base is None:
-            # Its artifacts expired or were deleted: a new baseline is started, with its attempts anew.
-            baseline.update(state=FAILED, artifacts=None, tries=0)
+            # Its artifacts expired or were deleted: a new baseline is started. This is not a failed baseline run.
+            baseline.update(state=FAILED, artifacts=None)
             self.check_again(entry, 'the result of the baseline run %d cannot be read any more' % baseline['run'])
             return
         full = {}
@@ -1173,22 +1279,28 @@ class Watcher:
             full['baseline'] = self.corpus_errors(baseline['artifacts']['logs'])
         comparison = compare(kind, result, base, full)
         if comparison['notes']:
-            # Neither the same nor new problems: a list was trimmed and its full form could not be read.
+            # Neither the same nor new problems: a list of the baseline was trimmed and its full form could not be read.
             self.attempt_failed(entry, 'the comparison of run %d is not complete: %s' % (
                 entry['run'], safe('; '.join(comparison['notes']), 1000)))
             return
         sections = comparison['sections']
+        lines = self.state['reported'][kind]
+        line = lines.get(str(group(version)))
         if not sections:
+            # The problems of the line are gone: if they come back, they are reported again.
+            lines.pop(str(group(version)), None)
             entry.update(state=DONE, verdict=SAME)
             self.log('%s %s: the same problems as the baseline' % (KINDS[kind], version))
             return
-        line = self.state['reported'][kind].get(str(group(version)))
         known = set(line['keys']) if line else set()
-        fresh = [(check, title, [p for p in problems if p.key not in known]) for check, title, problems in sections]
-        fresh = [section for section in fresh if section[2]]
-        if not fresh:
+        fresh = [section._replace(problems=[p for p in section.problems if p.key not in known]) for section in sections]
+        fresh = [section for section in fresh if section.problems]
+        if not fresh or (line and line['full']):
             entry.update(state=DONE, verdict=KNOWN_PROBLEMS, issue=line['issue'])
-            self.log('%s %s: only problems that #%d reported' % (KINDS[kind], version, line['issue']))
+            self.log('%s %s: %s' % (KINDS[kind], version, 'only problems that #%d showed' % line['issue'] if not fresh
+                                    else 'new problems, but #%d has shown more than the %d that the state keeps for %s; '
+                                         'no issue until a version of it has the same problems as the baseline'
+                                         % (line['issue'], KEYS_PER_LINE, line_name(kind, version))))
             return
         entry['state'] = REPORT
         self.report(entry, fresh, baseline, line['issue'] if line else None)
@@ -1201,32 +1313,30 @@ class Watcher:
         return next((i['number'] for i in self.version_issues
                      if (i.get('body') or '').replace('\r\n', '\n').split('\n', 1)[0] == tag), None)
 
-    def reported(self, entry, sections, number):
-        """Issue `number` reported `sections`: no later version of the same major release or branch reports them
-        again."""
-        line = self.state['reported'][entry['kind']].setdefault(str(group(entry['version'])), {'issue': number,
-                                                                                               'keys': []})
-        line['issue'] = number
-        line['keys'] += [p.key for _, _, problems in sections for p in problems if p.key not in line['keys']]
+    def reported(self, entry, shown, number):
+        """Issue `number` shows the problems with the keys `shown`: no later version of the same major release or
+        branch reports them again. A line keeps at most KEYS_PER_LINE keys; the issue that takes it past that is its
+        last one until a version of the line has the same problems as the baseline."""
+        line = self.state['reported'][entry['kind']].setdefault(str(group(entry['version'])),
+                                                                {'issue': number, 'keys': [], 'full': False})
+        keys = line['keys'] + [key for key in dict.fromkeys(shown) if key not in line['keys']]
+        line.update(issue=number, keys=keys[:KEYS_PER_LINE], full=line['full'] or len(keys) > KEYS_PER_LINE)
         entry.update(state=DONE, verdict=NEW_PROBLEMS, issue=number)
 
     def report(self, entry, sections, baseline, earlier):
         what = '%s %s' % (KINDS[entry['kind']], entry['version'])
+        # The same body as the one of an issue that a crashed cycle filed: the state has not changed since.
+        body, shown = issue_body(entry, sections, self.run_url(entry['run']), self.run_url(baseline['run']), earlier)
         try:
             existing = self.find_version_issue(entry['kind'], entry['version'])
             if existing:
-                self.reported(entry, sections, existing)
+                self.reported(entry, shown, existing)
                 self.log('%s: new problems, already reported in #%d' % (what, existing))
                 return
             if self.filed >= MAX_ISSUES_PER_CYCLE:
                 self.log('%s: new problems; the issue waits for the next cycle' % what)
                 return
             title = issue_title(entry)
-            for items in (ISSUE_ITEMS, 10, 3):
-                body = issue_body(entry, sections, self.run_url(entry['run']), self.run_url(baseline['run']), items,
-                                  earlier)
-                if len(body) <= ISSUE_BODY_TARGET:
-                    break
             self.filed += 1
             if self.dry_run:
                 self.log('[dry run] would file the issue "%s":' % title)
@@ -1238,7 +1348,7 @@ class Watcher:
             self.error('%s: the issue could not be filed: %s' % (what, e))
             return
         self.version_issues.append({'number': number, 'body': body})
-        self.reported(entry, sections, number)
+        self.reported(entry, shown, number)
         self.log('%s: new problems, filed #%d' % (what, number))
 
     # 3. Discover
@@ -1324,51 +1434,67 @@ class Watcher:
 
     # 4. Start
 
+    def baseline_for_versions(self, head):
+        """The complete baseline on whose commit versions are checked now: the one of `head`, or else the newest one
+        if it is not older than BASELINE_FRESH; None if a baseline has to be run first."""
+        baseline = self.baseline_of(head)
+        if (baseline is not None and baseline['state'] == COMPLETE
+                and self.now - parse_time(baseline['at']) <= BASELINE_MAX_AGE):
+            return baseline
+        latest = self.latest_baseline()
+        if latest is not None and self.now - parse_time(latest['at']) <= BASELINE_FRESH:
+            return latest
+        return None
+
     def start_runs(self):
+        """Starts the runs of the queued versions on a commit that has a complete baseline. Without such a commit it
+        starts the baseline of the head commit and nothing else: the versions wait for it."""
         state = self.state
         queued = [e for e in reversed(state['entries']) if e['state'] == QUEUED
                   and (e['kind'] != 'ide' or state['floor']['ide'] is not None)]
-        active_baselines = [b for b in state['baselines'] if b['state'] in ACTIVE]
-        need_branch = 'ide' in state['pending'] and state['floor']['ide'] is None and not active_baselines
+        need_branch = 'ide' in state['pending'] and state['floor']['ide'] is None
         if not queued and not need_branch:
             return
+        active_baselines = [b for b in state['baselines'] if b['state'] in ACTIVE]
         in_flight = len(active_baselines) + sum(1 for e in state['entries'] if e['state'] in ACTIVE)
         room = min(MAX_STARTS_PER_CYCLE, MAX_IN_FLIGHT - in_flight)
         try:
             branch = self.github.default_branch()
-            sha = self.github.head_commit(branch)
+            head = self.github.head_commit(branch)
         except ApiError as e:
             self.error('no run is started: %s' % e)
             return
-        baseline = self.baseline_of(sha)
-        if baseline is not None and baseline['state'] == FAILED and baseline['tries'] >= MAX_ATTEMPTS:
-            self.error('no run is started: the baseline of %s gave no complete result in %d attempts; the watcher '
-                       'waits for a new commit on %s' % (sha, MAX_ATTEMPTS, branch))
-            return
-        need_baseline = (baseline is None or baseline['state'] == FAILED
-                         or (baseline['state'] == COMPLETE and self.now - parse_time(baseline['at']) > BASELINE_MAX_AGE))
-        versions = queued[:max(room - (1 if need_baseline else 0), 0)]
-        if room <= 0 or (queued and not versions) or (not queued and not need_baseline):
-            if queued:
-                self.log('%d versions wait: %d runs are in flight' % (len(queued), in_flight))
-            return
+        baseline = self.baseline_for_versions(head)
         starts, previous = [], None
-        if need_baseline:
-            previous = baseline
+        if baseline is not None:
+            versions = queued[:max(room, 0)]
+            if len(queued) > len(versions):
+                self.log('%d versions wait for the next cycle%s' % (
+                    len(queued) - len(versions), '' if versions else ': %d runs are in flight' % in_flight))
+            for entry in versions:
+                entry.update(state=STARTING, sha=baseline['sha'], at=iso(self.now), run=None, tries=entry['tries'] + 1)
+                starts.append((entry, {entry['kind']: entry['version'], 'ref': baseline['sha']}))
+        elif active_baselines:
+            self.log('%d versions wait for the baseline of %s' % (len(queued), active_baselines[0]['sha']))
+        elif room <= 0:
+            self.log('The baseline of %s waits: %d runs are in flight' % (head, in_flight))
+        elif (state['failures'] >= MAX_ATTEMPTS and state['baselines']
+              and self.now - max(parse_time(b['at']) for b in state['baselines']) < BASELINE_PAUSE):
+            self.log('No baseline is started: the last %d gave no complete result, and the last one was started less '
+                     'than %s ago' % (state['failures'], BASELINE_PAUSE))
+        else:
+            previous = self.baseline_of(head)
             if previous is not None:
                 state['baselines'].remove(previous)
-            # A baseline whose result is gone or old starts its attempts anew.
-            tries = previous['tries'] + 1 if previous is not None and previous['state'] == FAILED else 1
-            baseline = dict(BASELINE_DEFAULTS, sha=sha, at=iso(self.now), state=STARTING, tries=tries)
+            baseline = dict(BASELINE_DEFAULTS, sha=head, at=iso(self.now), state=STARTING)
             state['baselines'].insert(0, baseline)
-            starts.append((baseline, {'ref': sha}))
-        for entry in versions:
-            entry.update(state=STARTING, sha=sha, at=iso(self.now), run=None, tries=entry['tries'] + 1)
-            starts.append((entry, {entry['kind']: entry['version'], 'ref': sha}))
-        if len(queued) > len(versions):
-            self.log('%d versions wait for the next cycle' % (len(queued) - len(versions)))
-        # Before the runs start, so that a crash does not start them twice: a version that is starting is found by
-        # the content of its result in the next cycles.
+            starts.append((baseline, {'ref': head}))
+            if queued:
+                self.log('%d versions wait for the baseline of %s' % (len(queued), head))
+        if not starts:
+            return
+        # Before the runs start, so that a crash does not start them twice: a run that is starting is found by the
+        # content of its result in the next cycles.
         self.write_state('before starting the runs')
         for index, (record, inputs) in enumerate(starts):
             what = record.get('version') or 'the baseline'
@@ -1383,7 +1509,7 @@ class Watcher:
                 # A refused request started nothing; after any other failure the run is searched by its result.
                 not_started = starts[index:] if e.status is not None and 400 <= e.status < 500 else starts[index + 1:]
                 for other, _ in not_started:
-                    if other is baseline and 'version' not in other:
+                    if 'version' not in other:
                         state['baselines'].remove(other)
                         if previous is not None:
                             state['baselines'].insert(0, previous)
