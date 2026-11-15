@@ -109,6 +109,8 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBasedIntegerBaseSeparators()          { doTest(false); }
   public void testBasedIntegerBaseSeparatorsErrors()    { doTest(true);  }
   public void testVerbatimSigilControlEscape()          { doTest(false); }
+  public void testHexEscapeInBraceSigil()               { doTest(false); }
+  public void testHexEscapeInBraceSigilErrors()         { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
   public void testOtp28Generators()                     { doTest(false); }

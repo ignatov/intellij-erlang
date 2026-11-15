@@ -102,8 +102,8 @@ SigilSingleQuoteString = "~" [bs]? \' ([^\\\'] | {ESC})* \' | "~" [BS] \' ([^\\\
 SigilParenString = "~" [bs]? \( ([^\\\)] | {ESC})* \) | "~" [BS] \( ([^\\\)] | {VERBATIM_ESC})* \)
 /* Sigil with brackets delimiter */
 SigilBracketString = "~" [bs]? \[ ([^\\\]] | {ESC})* \] | "~" [BS] \[ ([^\\\]] | {VERBATIM_ESC})* \]
-/* Sigil with braces delimiter */
-SigilBraceString = "~" [bs]? \{ ([^\\\}] | {ESC})* \} | "~" [BS] \{ ([^\\\}] | {VERBATIM_ESC})* \}
+/* Sigil with braces delimiter; the } of a \x{...} escape does not end it */
+SigilBraceString = "~" [bs]? \{ ([^\\\}] | {ESC} | {HexEscape})* \} | "~" [BS] \{ ([^\\\}] | {VERBATIM_ESC})* \}
 /* Sigil with angle brackets delimiter */
 SigilAngleString = "~" [bs]? \< ([^\\\>] | {ESC})* \> | "~" [BS] \< ([^\\\>] | {VERBATIM_ESC})* \>
 /* Sigil with slash delimiter */
