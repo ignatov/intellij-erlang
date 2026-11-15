@@ -78,6 +78,11 @@ public final class ErlangConsoleUtil {
         codePath.add("-pa");
         codePath.add(buildOutput.getCanonicalPath());
       }
+      VirtualFile rebar3Output = getRebar3OutputPath(codePathModule);
+      if (rebar3Output != null && !rebar3Output.equals(buildOutput)) {
+        codePath.add("-pa");
+        codePath.add(rebar3Output.getPath());
+      }
       for (VirtualFile contentRoot : ModuleRootManager.getInstance(codePathModule).getContentRoots()) {
         codePath.add("-pa");
         codePath.add(contentRoot.getPath());
@@ -85,6 +90,23 @@ public final class ErlangConsoleUtil {
     }
 
     return codePath;
+  }
+
+  /**
+   * The directory where `rebar3 compile`, which the Rebar build runs, writes the module's beams:
+   * _build/default/lib/&lt;app&gt;/ebin in a content root of the module or in the nearest directory above it,
+   * which is the root of an umbrella project.
+   */
+  @Nullable
+  private static VirtualFile getRebar3OutputPath(@NotNull Module module) {
+    String relativePath = "_build/default/lib/" + module.getName() + "/ebin";
+    for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
+      for (VirtualFile dir = contentRoot; dir != null; dir = dir.getParent()) {
+        VirtualFile ebin = dir.findFileByRelativePath(relativePath);
+        if (ebin != null && ebin.isDirectory()) return ebin;
+      }
+    }
+    return null;
   }
 
   @Nullable

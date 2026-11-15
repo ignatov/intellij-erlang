@@ -138,6 +138,23 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     assertEquals("-pa", codePath.get(index - 1));
   }
 
+  public void testRebar3UmbrellaCodePath() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module module = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    assertEquals("foo", module.getName());
+    // rebar3 writes the output of every app of an umbrella project into the _build directory of the project root.
+    File rebar3Ebin = new File(projectPath, "test/_build/default/lib/foo/ebin");
+    FileUtil.writeToFile(new File(rebar3Ebin, "foo.beam"), "");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    for (boolean forTests : new boolean[]{false, true}) {
+      List<String> codePath = ErlangConsoleUtil.getCodePath(module, forTests);
+      int index = codePath.indexOf(FileUtil.toSystemIndependentName(rebar3Ebin.getPath()));
+      assertTrue("The rebar3 output directory is not on the code path: " + codePath, index > 0);
+      assertEquals("-pa", codePath.get(index - 1));
+    }
+  }
+
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR, ErlangSdkRelease.V_R15B02);
     ApplicationManager.getApplication().runWriteAction(() -> ProjectJdkTable.getInstance().addJdk(mockSdk));
