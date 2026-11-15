@@ -95,7 +95,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     }
     if (uncached.size() < 2) return;
     List<ErlangQVar> oldestFirst = new ArrayList<>(uncached);
-    oldestFirst.sort(Comparator.comparingInt(ErlangVariableReferenceImpl::getEvaluationOffset));
+    oldestFirst.sort((a, b) -> a == b ? 0 : isEarlier(a, b) ? -1 : 1);
     for (ErlangQVar candidate : oldestFirst) {
       resolveCandidate(candidate);
     }
@@ -108,9 +108,23 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
              .getCachedResults((ErlangVariableReferenceImpl) reference, var.getContainingFile().isPhysical(), false, true) != null;
   }
 
+  // Evaluation order: the head of a comprehension comes after its generators and filters.
   private static boolean isEarlier(@NotNull ErlangQVar candidate, @NotNull ErlangQVar var) {
-    return candidate.getContainingFile() == var.getContainingFile() &&
-           getEvaluationOffset(candidate) < getEvaluationOffset(var);
+    if (candidate == var || candidate.getContainingFile() != var.getContainingFile()) return false;
+    PsiElement commonParent = PsiTreeUtil.findCommonParent(candidate, var);
+    ErlangListComprehension comprehension = PsiTreeUtil.getParentOfType(commonParent, ErlangListComprehension.class, false);
+    if (comprehension != null) {
+      boolean candidateInHead = inHead(candidate, comprehension);
+      boolean varInHead = inHead(var, comprehension);
+      if (candidateInHead != varInHead) return varInHead;
+    }
+    return candidate.getTextOffset() < var.getTextOffset();
+  }
+
+  private static boolean inHead(@NotNull PsiElement element, @NotNull ErlangListComprehension comprehension) {
+    PsiElement child = element;
+    while (child.getParent() != comprehension) child = child.getParent();
+    return !(child instanceof ErlangLcExpression);
   }
 
   @NotNull
@@ -122,14 +136,6 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       if (resolveResult.getElement() instanceof ErlangQVar binding) result.add(binding);
     }
     return result;
-  }
-
-  // The head of a comprehension is evaluated after its generators and filters.
-  private static int getEvaluationOffset(@NotNull ErlangQVar var) {
-    ErlangListComprehension comprehension = PsiTreeUtil.getParentOfType(var, ErlangListComprehension.class);
-    boolean inHead = comprehension != null &&
-                     PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class, true, ErlangListComprehension.class) == null;
-    return inHead ? comprehension.getTextRange().getEndOffset() : var.getTextOffset();
   }
 
   @NotNull
