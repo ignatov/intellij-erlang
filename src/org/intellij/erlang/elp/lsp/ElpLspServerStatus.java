@@ -83,7 +83,6 @@ public final class ElpLspServerStatus implements ElpServerStatus {
       case FIND_USAGES -> isOn(capabilities.getReferencesProvider());
       case RENAME -> isOn(capabilities.getRenameProvider());
       case SIGNATURE_HELP -> capabilities.getSignatureHelpProvider() != null;
-      case CALL_HIERARCHY -> isOn(capabilities.getCallHierarchyProvider());
       case DOCUMENT_HIGHLIGHTS -> isOn(capabilities.getDocumentHighlightProvider());
       case WORKSPACE_SYMBOLS -> isOn(capabilities.getWorkspaceSymbolProvider());
       // Diagnostics are pushed by the server; there is no capability to announce.

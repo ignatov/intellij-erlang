@@ -38,7 +38,6 @@ import org.intellij.erlang.editor.ErlangFoldingBuilder;
 import org.intellij.erlang.editor.ErlangWordSelectioner;
 import org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory;
 import org.intellij.erlang.elp.lsp.ElpRenameHandler;
-import org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
@@ -304,16 +303,13 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertSize(2, myFixture.findUsages(target));
   }
 
-  public void testCallHierarchyAndParameterInfo() {
-    myFixture.configureByText("a.erl", "-module(a).\nf(Name) -> Name.\n<caret>g() -> f(1).");
+  public void testParameterInfo() {
+    myFixture.configureByText("a.erl", "-module(a).\nf(Name) -> Name.\ng() -> f(1).");
     int argument = myFixture.getFile().getText().indexOf("f(1)") + 2;
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
-    assertNotNull(new ErlangCallHierarchyProvider().getTarget(dataContext()));
     assertNotNull(parameterInfoAt(argument));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getFile().getText().indexOf("g()"));
-    assertNull(new ErlangCallHierarchyProvider().getTarget(dataContext()));
     assertNull(parameterInfoAt(argument));
   }
 

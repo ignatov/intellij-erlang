@@ -24,13 +24,14 @@ import org.jetbrains.annotations.NotNull;
 /**
  * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent while ELP
  * serves the file ({@link org.intellij.erlang.elp.ElpEngine}): diagnostics, completion, hover documentation, parameter name inlay
- * hints, folding, selection ranges, go to definition, implementation and type definition, signature help, call hierarchy,
- * highlighting of usages in the file, and code actions as intentions.
+ * hints, folding, selection ranges, go to definition and type definition, signature help, highlighting of usages in the file,
+ * and code actions as intentions.
  * <p>
  * Switched off here: find references and rename, which the plugin's own ELP entry points ask for instead
  * ({@code ElpFindUsagesHandlerFactory}, {@code ElpRenameHandler}), so that there is one target and one rename; workspace symbols,
- * because ELP answers them with module names only; semantic tokens, document symbols and code lenses, which stay with the
- * plugin; and the features ELP does not offer. The inline and extract refactorings of the code actions stay off too, so ELP's
+ * because ELP answers them with module names only; call hierarchy and implementations, which the client does not deliver for an
+ * Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which stay with the plugin; and
+ * the features ELP does not offer. The inline and extract refactorings of the code actions stay off too, so ELP's
  * refactoring actions appear as intentions and the plugin's refactorings keep their shortcuts.
  */
 final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
@@ -53,10 +54,8 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   private final LspSelectionRangeCustomizer mySelection = new LspSelectionRangeSupport();
   private final LspGoToDefinitionCustomizer myGoToDefinition = new LspGoToDefinitionSupport();
 
-  private final LspGoToImplementationCustomizer myGoToImplementation = new LspGoToImplementationSupport();
   private final LspGoToTypeDefinitionCustomizer myGoToTypeDefinition = new LspGoToTypeDefinitionSupport();
   private final LspSignatureHelpCustomizer mySignatureHelp = new LspSignatureHelpSupport();
-  private final LspCallHierarchyCustomizer myCallHierarchy = new LspCallHierarchySupport();
   /** The client asks only for files of the plain text and TextMate languages by default. */
   private final LspDocumentHighlightsCustomizer myDocumentHighlights = new LspDocumentHighlightsSupport() {
     @Override
@@ -113,12 +112,6 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
 
   @NotNull
   @Override
-  public LspGoToImplementationCustomizer getGoToImplementationCustomizer() {
-    return myGoToImplementation;
-  }
-
-  @NotNull
-  @Override
   public LspGoToTypeDefinitionCustomizer getGoToTypeDefinitionCustomizer() {
     return myGoToTypeDefinition;
   }
@@ -127,12 +120,6 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @Override
   public LspSignatureHelpCustomizer getSignatureHelpCustomizer() {
     return mySignatureHelp;
-  }
-
-  @NotNull
-  @Override
-  public LspCallHierarchyCustomizer getCallHierarchyCustomizer() {
-    return myCallHierarchy;
   }
 
   @NotNull

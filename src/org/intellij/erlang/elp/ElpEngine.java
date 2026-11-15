@@ -75,8 +75,6 @@ public final class ElpEngine {
     RENAME,
     /** Parameter info: ELP's {@code textDocument/signatureHelp}. */
     SIGNATURE_HELP,
-    /** Call hierarchy: ELP's {@code callHierarchy/*} requests. */
-    CALL_HIERARCHY,
     /** Highlight usages in the file: ELP's {@code textDocument/documentHighlight}. */
     DOCUMENT_HIGHLIGHTS,
     /** Go to Symbol and Go to Class: ELP's {@code workspace/symbol}. A project feature, see {@link #ownsProjectFeature}. */
