@@ -7,19 +7,13 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangIntType extends ErlangType {
 
-  @Nullable
-  ErlangArgumentList getArgumentList();
+  @NotNull
+  List<ErlangArgumentList> getArgumentListList();
 
-  @Nullable
-  ErlangMacros getMacros();
+  @NotNull
+  List<ErlangIntType> getIntTypeList();
 
-  @Nullable
-  PsiElement getOpMinus();
-
-  @Nullable
-  PsiElement getChar();
-
-  @Nullable
-  PsiElement getInteger();
+  @NotNull
+  List<ErlangMacros> getMacrosList();
 
 }

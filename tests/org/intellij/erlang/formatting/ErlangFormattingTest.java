@@ -431,6 +431,21 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBindFunExpressionFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
   public void testBindFunExpressionLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
 
+  public void testFunBodyAfterAssignment()         throws Exception { doTest(); }
+  public void testFunBodyAfterAssignment__IR_OFF() throws Exception { doTest(); }
+
+  public void testBindFunExpressionInline()                throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInlineBody()            throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInlineBodyBeforeEnd()   throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInlineBodyComma()       throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInlineFirstClause()     throws Exception { doEnterTest(); }
+  public void testFunArgumentInline()                      throws Exception { doEnterTest(); }
+  public void testFunArgumentInlineBody()                  throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInline__IR_OFF()        throws Exception { doEnterTest(); }
+
+  public void testBindFunExpressionInlineBodyParasite()        throws Exception { doEnterTest(); }
+  public void testBindFunExpressionInlineFirstClauseParasite() throws Exception { doEnterTest(); }
+
 
   public void testFunCallNoArgs()         throws Exception{ doEnterTest(); }
   public void testFunCallBeforeFirstArg() throws Exception{ doEnterTest(); }

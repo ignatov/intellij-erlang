@@ -9,6 +9,8 @@ plugins {
 
 apply plugin: 'org.jetbrains.intellij.platform'
 
+def platformVersion = providers.gradleProperty('platformVersion').getOrElse('2026.3')
+
 subprojects {
   apply plugin: 'org.jetbrains.intellij.platform.module'
 }
@@ -70,7 +72,15 @@ allprojects {
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
       // https://data.services.jetbrains.com/products?code=IC
-      ijp.intellijIdea("2026.3")
+      // -PplatformVersion overrides the IDE to build, test and verify against (the compatibility check, see AGENTS.md).
+      // A -SNAPSHOT version comes from the IntelliJ Maven snapshots repository, whose archives have no JetBrains Runtime.
+      if (platformVersion.endsWith('-SNAPSHOT')) {
+        ijp.intellijIdea(platformVersion) { useInstaller = false }
+        ijp.jetbrainsRuntime()
+      }
+      else {
+        ijp.intellijIdea(platformVersion)
+      }
 
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi",
                          "com.intellij.platform.testRunner", "com.intellij.structureView")
@@ -143,6 +153,7 @@ intellijPlatform {
                     VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
                     VerifyPluginTask.FailureLevel.OVERRIDE_ONLY_API_USAGES]
     ides {
+      // The IDE the plugin is built against, so -PplatformVersion selects the verified IDE too.
       current()
     }
   }

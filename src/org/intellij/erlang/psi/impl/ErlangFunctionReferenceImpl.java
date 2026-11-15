@@ -79,7 +79,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
     boolean inExport = isInExport();
     if (!inExport) {
-      ErlangFunction fromImport = resolveImport(file.getImportedFunction(myReferenceName, myArity));
+      PsiElement fromImport = resolveImportedCall(file.getImportedFunction(myReferenceName, myArity));
       if (fromImport != null) return fromImport;
     }
 
@@ -94,18 +94,20 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     List<ErlangImportFunction> importedInIncludes =
       ErlangPsiImplUtil.getImportsFromIncludes(file, false, myReferenceName, myArity);
     for (ErlangImportFunction importFromInclude : importedInIncludes) {
-      ErlangFunction importedFunction = resolveImport(importFromInclude);
+      PsiElement importedFunction = resolveImportedCall(importFromInclude);
       if (importedFunction != null) return importedFunction;
     }
 
     if (!file.isNoAutoImport(myReferenceName, myArity)) {
-      ErlangFunction implicitFunction = getExternalFunction("erlang");
-      if (implicitFunction != null) return implicitFunction;
-
       ErlangSdkRelease release = ErlangSdkType.getRelease(file);
-      if ((release == null || release.needBifCompletion("erlang")) &&
-          ErlangBifTable.isBif("erlang", myReferenceName, myArity) ||
-          ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
+      if (ErlangBifTable.isAutoImported(myReferenceName, myArity, ErlangSdkType.getSdkRelease(file))) {
+        ErlangFunction implicitFunction = getExternalFunction("erlang");
+        if (implicitFunction != null) return implicitFunction;
+
+        if ((release == null || release.needBifCompletion("erlang")) &&
+            ErlangBifTable.isBif("erlang", myReferenceName, myArity)) return getElement();
+      }
+      if (ErlangBifTable.isBif("", myReferenceName, myArity)) return getElement();
     }
 
     return null;
@@ -208,6 +210,15 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Override
   public int getArity() {
     return myArity;
+  }
+
+  // an imported BIF that the SDK sources do not define resolves to the import entry itself
+  @Nullable
+  private PsiElement resolveImportedCall(@Nullable ErlangImportFunction importFunction) {
+    PsiReference reference = importFunction != null ? importFunction.getReference() : null;
+    PsiElement resolve = reference != null ? reference.resolve() : null;
+    if (resolve instanceof ErlangFunction) return resolve;
+    return resolve != null && resolve == importFunction ? getElement() : null;
   }
 
   @Nullable
