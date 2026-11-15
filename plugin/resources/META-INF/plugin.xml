@@ -36,13 +36,28 @@
     <change-notes>
         <![CDATA[
             <ul>
+              <li>Works in IntelliJ IDEA 2026.1, 2026.2 and 2026.3: one build serves all three</li>
+              <li>Structure view: Autoscroll from Source now selects the function or clause at the caret</li>
+              <li>Variables in named funs: the name and calls in every clause now resolve to the name in the first clause (#438)</li>
+              <li>Completion offers variables for a lowercase prefix when "Match case" is off</li>
+              <li>Unqualified completion and resolve no longer offer functions of the <code>erlang</code> module that are not auto-imported</li>
+              <li>Formatter: with relative indents, the body of a fun whose first clause is on the <code>fun</code> line is now indented from <code>fun</code>, like <code>case</code> and <code>if</code> (#707)</li>
+              <li>Formatter: fixed misaligned multi-line <code>andalso</code>/<code>orelse</code> chains and comments when "Align multiline blocks" is on</li>
+              <li>Integer constant expressions in integer and range types (<code>1..10-1</code>, <code>0..1 bsl 8</code>) and binary types with both a size and a unit are no longer marked as syntax errors</li>
+              <li>Fixed an exception in the io:format inspection on OTP 27 sigil format strings; <code>~s</code>/<code>~S</code> sigil formats are now checked</li>
+              <li><code>fun Var/Arity</code> without a module is reported as an error</li>
+              <li><code>-export</code> entries that name imported functions or auto-imported BIFs are reported as unresolved</li>
+              <li>Renaming an Erlang module file to a non-module name (e.g. <code>.bak</code>) no longer rewrites the module attribute or the references to it</li>
+              <li>Fixed a false "Undefined or non-exported callback function" warning, and a broken quick fix, for behaviours that declare callbacks as <code>-callback(Name(Args) -&gt; Ret).</code></li>
+              <li>Fixed false "Unused variable" for a bound variable used as a map key in a fun head</li>
+              <li>Dialyzer findings now use the severity and scopes set for "Dialyzer based inspections" in the inspection profile</li>
+              <li>Fixed Rebar EUnit run configurations failing with "Wrong line separators" when rebar.config has CRLF line endings</li>
               <li>Fixed builds that silently produced no .beam files: a missing Erlang build plugin, a failing erlc or a module without rebar.config is now reported instead of ending as "successful" (#1077, #1028)</li>
               <li>Fixed erlc warnings with column numbers (OTP 24+) being reported as errors and failing the build</li>
               <li>Fixed build order for parse transforms when the IDE and JPS project names differ</li>
               <li>Fixed false 'multi-valued comprehension' error on map comprehensions (#1093)</li>
               <li>Quick documentation for OTP functions, types and modules works with the new erlang.org documentation (OTP 27+), including links between pages; documentation is downloaded using the IDE proxy settings</li>
               <li>Parameter name hints are shorter (parameter name, spec name or a short pattern summary) and can be turned off in Settings | Editor | Inlay Hints | Parameter names | Erlang (#1064)</li>
-              <li>Works in IntelliJ IDEA 2026.1, 2026.2 and 2026.3: one build serves all three</li>
               <li>Added support for Erlang/OTP 29 syntax and native records</li>
               <li>Added support for Erlang/OTP 28 comprehension generators, based float literals and nominal types</li>
               <li>Added support for Erlang/OTP 27 sigil string literals</li>
