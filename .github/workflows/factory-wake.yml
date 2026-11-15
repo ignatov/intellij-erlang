@@ -1,26 +1,20 @@
 name: Factory wake
 
-# Wakes the project's automation when something it waits for has happened. The dispatcher (a workflow of
+# Wakes the project's automation when a pull request is merged or closed. The dispatcher (a workflow of
 # the private repository ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the
-# next; each of its steps waits for one of these events of this repository:
-#   - an agent session ended: every session of the Copilot cloud agent (a fix, a review, a reproduction)
-#     is a run of the workflow "Copilot cloud agent";
-#   - the CI of an agent's branch ended ("Java CI");
-#   - a pull request was merged or closed.
-# The job starts one dispatcher tick and does nothing else. It reads nothing from the run or the pull
-# request that triggered it, and it never checks out code.
+# next, and a merged pull request ends an item and frees the queue.
+# The job starts one dispatcher tick and does nothing else. It reads nothing from the pull request that
+# triggered it, and it never checks out code.
 #
-# workflow_run and pull_request_target run the workflow of master, and FACTORY_CLOCK_TOKEN is a secret of
-# the environment factory-clock, which only jobs of master can use. It is a fine-grained token for the
-# private repository with the permission Actions: write and nothing else.
+# The end of an agent session or of a CI run is not a trigger: GitHub holds every workflow run whose actor
+# is Copilot until a person approves it, also a workflow_run of master, so such a run would only wait.
+# factory-timer.yml covers those within five minutes.
+#
+# pull_request_target runs the workflow of master, and FACTORY_CLOCK_TOKEN is a secret of the environment
+# factory-clock, which only jobs of master can use. It is a fine-grained token for the private repository
+# with the permission Actions: write and nothing else.
 
 on:
-  workflow_run:
-    workflows:
-      - Copilot cloud agent
-      - Java CI
-    types:
-      - completed
   pull_request_target:
     types:
       - closed
@@ -34,13 +28,9 @@ concurrency:
 
 jobs:
   wake:
-    # Only the agent's branches and the pull requests of this repository's own branches matter to the
-    # dispatcher; a pull request from a fork must not be able to start ticks.
-    if: >-
-      (github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_branch, 'copilot/')
-       && github.event.workflow_run.head_repository.full_name == github.repository)
-      || (github.event_name == 'pull_request_target'
-          && github.event.pull_request.head.repo.full_name == github.repository)
+    # Only pull requests of this repository's own branches matter to the dispatcher; a pull request from a
+    # fork must not be able to start ticks.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment:

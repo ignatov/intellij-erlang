@@ -1,9 +1,9 @@
 name: Factory timer
 
-# The backstop clock of the project's automation. The dispatcher (a workflow of the private repository
-# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next. It is woken by
-# events (factory-wake.yml); this timer covers what gives no event. GitHub drops most scheduled runs of a
-# quiet repository, so the dispatcher arms the timer at the end of each tick instead:
+# The clock of the project's automation. The dispatcher (a workflow of the private repository
+# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next and has to see the
+# end of each session and CI run. GitHub drops most scheduled runs of a quiet repository, so the dispatcher
+# arms this timer at the end of each tick instead:
 #   1. the job "wait" waits for the wait timer of its environment (5 minutes while work is in flight,
 #      30 minutes otherwise); no runner is used while it waits;
 #   2. the job "wake" starts the next dispatcher tick.
