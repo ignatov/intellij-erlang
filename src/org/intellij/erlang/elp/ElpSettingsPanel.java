@@ -56,7 +56,7 @@ public final class ElpSettingsPanel {
                                       "side by side with the plugin's own."))
       .addComponentToRightColumn(myEqwalizerBox)
       .addComponentToRightColumn(hint("eqWAlizer is ELP's gradual type checker. Code not written for it gets many type " +
-                                      "errors that erlc does not report."))
+                                      "errors that erlc does not report; they are shown as warnings."))
       .addComponentToRightColumn(myOverrideLabel)
       .getPanel();
   }
