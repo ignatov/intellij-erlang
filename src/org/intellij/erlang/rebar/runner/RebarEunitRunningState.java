@@ -52,6 +52,7 @@ import org.intellij.erlang.psi.ErlangTupleExpression;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.rebar.util.ErlangTermFileUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -142,7 +143,7 @@ public class RebarEunitRunningState extends CommandLineState {
       File configFile = new File(tempDirectory, CONFIG_FILE_NAME);
 
       writeModifiedConfig(myConfiguration.getProject(), new File(workingDirectory, CONFIG_FILE_NAME), configFile);
-      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
+      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(myConfiguration.getProject()));
 
       return tempDirectory;
     } catch (IOException e) {

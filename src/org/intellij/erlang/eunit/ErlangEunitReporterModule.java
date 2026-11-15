@@ -19,6 +19,7 @@ package org.intellij.erlang.eunit;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.io.URLUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -31,8 +32,9 @@ public class ErlangEunitReporterModule {
   public static final String MODULE_NAME = "eunit_teamcity";
   private static final String MODULE_BEAM = MODULE_NAME + ".beam";
 
-  public static void putReporterModuleTo(@NotNull File directory) throws IOException {
-    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(), "/eunit", MODULE_BEAM);
+  public static void putReporterModuleTo(@NotNull File directory, @NotNull ErlangSdkRelease release) throws IOException {
+    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(),
+                                             "/eunit/beams/" + release.getBundledBeamDirectory(), MODULE_BEAM);
     if (moduleUrl == null) {
       throw new IOException("Failed to locate eunit reporter module.");
     }
