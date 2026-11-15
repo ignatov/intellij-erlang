@@ -2,11 +2,12 @@
 """Watches new IntelliJ IDEA builds and Erlang/OTP releases and runs the compatibility check (compat.yml) for them.
 
 Called by .github/workflows/compat-watch.yml (see AGENTS.md). One cycle does, in this order:
-  1. read the state: the JSON block in the body of the issue "Compatibility watch" (label compatibility-watch, author
-     github-actions[bot]); a body whose block is missing or does not parse stops the cycle;
+  1. read the state: the JSON block between the state markers in the body of the one issue by github-actions[bot]
+     that has them (the watcher creates it as "Compatibility watch" with the label compatibility-watch; neither is
+     part of the lookup); a block that is missing or does not parse, or a second such issue, stops the cycle;
   2. collect the results of the runs that earlier cycles started, compare each with the baseline (the result of the
-     default inputs on the same commit) and file one issue for each version with problems that the baseline does not
-     have;
+     default inputs on the same commit) and file one issue for each version with problems that neither the baseline
+     has nor an earlier issue of the same major Erlang/OTP release or IDE branch reported;
   3. discover new versions in the feeds of builds.hex.pm and data.services.jetbrains.com;
   4. start runs of compat.yml for them on the head commit of the default branch, together with the baseline run;
   5. write the state.
@@ -21,6 +22,7 @@ writes nothing.
 import argparse
 import collections
 import datetime
+import hashlib
 import io
 import json
 import os
@@ -39,10 +41,16 @@ MAX_STARTS_PER_CYCLE = 4
 MAX_IN_FLIGHT = 8
 MAX_ISSUES_PER_CYCLE = 3
 MAX_ATTEMPTS = 3
+# A run whose result cannot be read (the API fails) in this many cycles in a row is an attempt without a result.
+MAX_COLLECT_ERRORS = 8
 RUN_TIMEOUT = datetime.timedelta(hours=6)
 # A complete baseline is run again after this time, well before its artifacts expire.
 BASELINE_MAX_AGE = datetime.timedelta(days=30)
 TABLE_ROWS = 60
+# The keys of the problems already reported that are kept for each major Erlang/OTP release and IDE branch.
+REPORTED_KEYS = 400
+KEY_CHARS = 10
+VERSION_CHARS = 40
 ISSUE_ITEMS = 30
 ISSUE_TEXT_CHARS = 300
 BODY_LIMIT = 65536
@@ -78,7 +86,8 @@ CORPUS_REPORT = 'corpus-report.json'
 QUEUED, STARTING, RUNNING, REPORT, DONE = 'queued', 'starting', 'running', 'report', 'done'
 ACTIVE = (STARTING, RUNNING)
 SAME, NEW_PROBLEMS, UNCHECKED, SUPERSEDED, BASELINE = 'same', 'new problems', 'unchecked', 'superseded', 'baseline'
-VERDICTS = (SAME, NEW_PROBLEMS, UNCHECKED, SUPERSEDED, BASELINE)
+KNOWN_PROBLEMS = 'known problems'
+VERDICTS = (SAME, NEW_PROBLEMS, KNOWN_PROBLEMS, UNCHECKED, SUPERSEDED, BASELINE)
 # The states of a baseline run; ACTIVE ones too.
 COMPLETE, FAILED = 'complete', 'failed'
 
@@ -108,9 +117,10 @@ class ApiError(Exception):
 
 
 def valid_version(kind, value):
-    """Whether `value` is a version of `kind` that the watcher uses: a form of the input of compat.py (its patterns),
-    for ide only its build-number form, whose first number is the branch."""
-    if not isinstance(value, str) or not compat.INPUT_PATTERNS[kind].fullmatch(value):
+    """Whether `value` is a version of `kind` that the watcher uses: a form of the input of compat.py (its patterns)
+    of at most VERSION_CHARS characters, for ide only its build-number form, whose first number is the branch."""
+    if (not isinstance(value, str) or len(value) > VERSION_CHARS
+            or not compat.INPUT_PATTERNS[kind].fullmatch(value)):
         return False
     if kind == 'otp':
         return True
@@ -120,7 +130,8 @@ def valid_version(kind, value):
 
 def valid_ide_name(value):
     """Whether `value` is a release version of IntelliJ IDEA (2026.3.1), a form of the ide input of compat.py."""
-    return (isinstance(value, str) and bool(compat.INPUT_PATTERNS['ide'].fullmatch(value)) and value.startswith('20')
+    return (isinstance(value, str) and len(value) <= VERSION_CHARS
+            and bool(compat.INPUT_PATTERNS['ide'].fullmatch(value)) and value.startswith('20')
             and all(part.isdigit() for part in value.split('.')))
 
 
@@ -153,10 +164,10 @@ def parse_time(value):
 
 
 def safe(value, limit=ISSUE_TEXT_CHARS):
-    """`value` for a code block or code span of an issue: one line, no backtick, no @ that could mention anyone, at
-    most `limit` characters."""
+    """`value` for a code block or code span of an issue: one line, no backtick, no @ that could mention anyone, no
+    HTML comment that could be read as a marker, at most `limit` characters."""
     value = ''.join(ch if ch.isprintable() else ' ' for ch in str(value))
-    value = value.replace('`', "'").replace('@', '\uff20')
+    value = value.replace('`', "'").replace('@', '\uff20').replace('<!--', '<! --').replace('-->', '-- >')
     return value if len(value) <= limit else value[:limit - 1] + '\u2026'
 
 
@@ -240,7 +251,7 @@ class GitHub:
             return None
         try:
             return response.json()
-        except ValueError:
+        except (ValueError, RecursionError):
             raise ApiError('GitHub API GET %s: the response is not JSON' % path)
 
     def pages(self, path, query, key=None, limit=10, missing=(404,)):
@@ -277,14 +288,16 @@ class GitHub:
         query = {'event': 'workflow_dispatch', 'created': '%s..%s' % (iso(start), iso(end))}
         return self.pages('/actions/workflows/%s/runs' % WORKFLOW, query, key='workflow_runs')
 
-    def artifact_member(self, run_id, name, member):
-        """The file `member` of the artifact `name` of run `run_id`; None if there is no such artifact or file."""
+    def artifact_id(self, run_id, name):
+        """The id of the newest artifact `name` of run `run_id` that has not expired; None if there is none."""
         artifacts = self.pages('/actions/runs/%d/artifacts' % run_id, {'name': name}, key='artifacts')
         ids = [a['id'] for a in artifacts if isinstance(a, dict) and a.get('name') == name and not a.get('expired')
-               and isinstance(a.get('id'), int)]
-        if not ids:
-            return None
-        response = self.call('GET', '/actions/artifacts/%d/zip' % max(ids), missing=(404, 410))
+               and isinstance(a.get('id'), int) and not isinstance(a['id'], bool) and a['id'] > 0]
+        return max(ids) if ids else None
+
+    def artifact_file(self, artifact_id, member):
+        """The file `member` of the artifact `artifact_id`; None if there is no such artifact or file."""
+        response = self.call('GET', '/actions/artifacts/%d/zip' % artifact_id, missing=(404, 410))
         if response is None:
             return None
         try:
@@ -297,8 +310,11 @@ class GitHub:
             return None
 
     def issues(self, label):
-        # A 404 is an error: it must never look like "no state issue".
         return self.pages('/issues', {'labels': label, 'state': 'all'}, missing=())
+
+    def bot_issues(self):
+        """The issues that BOT created, open and closed. A 404 is an error: it must never look like "no state issue"."""
+        return self.pages('/issues', {'creator': BOT, 'state': 'all'}, missing=())
 
     def ensure_label(self, name):
         if self.get_json('/labels/' + urllib.parse.quote(name, safe='')) is None:
@@ -316,7 +332,8 @@ class GitHub:
         return number
 
     def update_issue(self, number, body):
-        self.call('PATCH', '/issues/%d' % number, body={'body': body})
+        # A 404 is an error: a state that was not written must never look written.
+        self.call('PATCH', '/issues/%d' % number, body={'body': body}, missing=())
 
     def dispatch(self, branch, inputs):
         """Starts compat.yml; the id of its run, or None if the response does not name it."""
@@ -326,7 +343,7 @@ class GitHub:
             return None
         try:
             run_id = response.json().get('workflow_run_id')
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, RecursionError):
             return None
         return run_id if isinstance(run_id, int) and run_id > 0 else None
 
@@ -334,6 +351,11 @@ class GitHub:
 def is_ours(issue):
     return (isinstance(issue, dict) and (issue.get('user') or {}).get('login') == BOT
             and 'pull_request' not in issue and isinstance(issue.get('number'), int))
+
+
+def label_names(issue):
+    labels = issue.get('labels')
+    return [label.get('name') for label in labels if isinstance(label, dict)] if isinstance(labels, list) else []
 
 
 # Feeds
@@ -373,7 +395,7 @@ def read_ide_feed(http):
         raise SourceError('%s: HTTP %d' % (IDE_FEED, response.status))
     try:
         releases = response.json().get('IIU')
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError, RecursionError):
         raise SourceError('%s is not a JSON object' % IDE_FEED)
     if not isinstance(releases, list):
         raise SourceError('%s has no list IIU' % IDE_FEED)
@@ -394,12 +416,18 @@ def read_ide_feed(http):
 
 
 ENTRY_DEFAULTS = {'name': None, 'verdict': None, 'sha': None, 'at': None, 'run': None, 'runs': [], 'tries': 0,
-                  'issue': None, 'partial': False}
+                  'issue': None, 'errors': 0}
+# `artifacts` of a complete baseline: the ids of the artifacts that were accepted, {'ide': id, 'otp': id, 'logs': id
+# or None}; a comparison reads exactly those.
+BASELINE_DEFAULTS = {'run': None, 'ide': None, 'otp': None, 'tries': 1, 'errors': 0, 'artifacts': None}
+KEY = re.compile(r'[0-9a-f]{%d}' % KEY_CHARS)
 
 
 def new_state(now):
+    """`reported` maps each kind to {major release or branch: {'issue': the latest issue of that line, 'keys': the
+    keys of the problems that the issues of that line reported}}."""
     return {'format': STATE_FORMAT, 'created': iso(now), 'pending': sorted(KINDS), 'floor': {'ide': None, 'otp': None},
-            'seen': {'ide': [], 'otp': []}, 'baselines': [], 'entries': []}
+            'seen': {'ide': [], 'otp': []}, 'reported': {'ide': {}, 'otp': {}}, 'baselines': [], 'entries': []}
 
 
 def _check(condition, what):
@@ -421,6 +449,10 @@ def _int_or_none(value):
     return value is None or (isinstance(value, int) and not isinstance(value, bool) and value > 0)
 
 
+def _count(value, limit):
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= limit
+
+
 def validate_state(state):
     """`state` with the defaults of its entries filled in; WatchError if any value is not one the watcher writes."""
     _check(isinstance(state, dict) and state.get('format') == STATE_FORMAT, 'format')
@@ -430,14 +462,34 @@ def validate_state(state):
     _check(isinstance(state.get('seen'), dict) and set(state['seen']) == set(KINDS), 'seen')
     for kind, versions in state['seen'].items():
         _check(isinstance(versions, list) and all(valid_version(kind, v) for v in versions), 'seen ' + kind)
+    _check(isinstance(state.get('reported'), dict) and set(state['reported']) == set(KINDS), 'reported')
+    for lines in state['reported'].values():
+        _check(isinstance(lines, dict), 'reported lines')
+        for line, reported in lines.items():
+            _check(re.fullmatch(r'[0-9]{1,9}', line) and isinstance(reported, dict)
+                   and set(reported) == {'issue', 'keys'} and _int_or_none(reported['issue']) and reported['issue']
+                   and isinstance(reported['keys'], list)
+                   and all(isinstance(key, str) and KEY.fullmatch(key) for key in reported['keys']), 'reported line')
     _check(isinstance(state.get('baselines'), list), 'baselines')
+    baselines = []
     for baseline in state['baselines']:
-        _check(isinstance(baseline, dict) and compat.SHA.fullmatch(baseline.get('sha') or '')
+        _check(isinstance(baseline, dict), 'baseline')
+        baseline = dict(BASELINE_DEFAULTS, **baseline)
+        baselines.append(baseline)
+        _check(set(baseline) == set(BASELINE_DEFAULTS) | {'sha', 'at', 'state'}, 'baseline keys')
+        artifacts = baseline['artifacts']
+        _check(_count(baseline['tries'], MAX_ATTEMPTS) and _count(baseline['errors'], MAX_COLLECT_ERRORS)
+               and (artifacts is None or (isinstance(artifacts, dict) and set(artifacts) == {'ide', 'otp', 'logs'}
+                                          and all(_int_or_none(a) for a in artifacts.values())
+                                          and artifacts['ide'] and artifacts['otp'])), 'baseline attempts')
+        _check((baseline.get('state') == COMPLETE) == (artifacts is not None), 'baseline artifacts')
+        _check(compat.SHA.fullmatch(baseline.get('sha') or '')
                and baseline.get('state') in ACTIVE + (COMPLETE, FAILED) and _int_or_none(baseline.get('run'))
                and _time_or_none(baseline.get('at')) and baseline.get('at') is not None
                and (baseline.get('ide') is None or valid_version('ide', baseline['ide']))
                and (baseline.get('otp') is None or valid_version('otp', baseline['otp'])), 'baseline')
         _check(baseline['state'] != COMPLETE or (baseline.get('ide') and baseline.get('otp')), 'complete baseline')
+    state['baselines'] = baselines
     _check(isinstance(state.get('entries'), list), 'entries')
     entries = []
     for entry in state['entries']:
@@ -454,7 +506,7 @@ def validate_state(state):
         _check(entry['sha'] is None or compat.SHA.fullmatch(entry['sha']), 'entry commit')
         _check(_time_or_none(entry['at']) and _int_or_none(entry['run']) and _int_or_none(entry['issue']), 'entry run')
         _check(isinstance(entry['runs'], list) and all(_int_or_none(r) and r for r in entry['runs']), 'entry runs')
-        _check(isinstance(entry['tries'], int) and 0 <= entry['tries'] <= MAX_ATTEMPTS, 'entry tries')
+        _check(_count(entry['tries'], MAX_ATTEMPTS) and _count(entry['errors'], MAX_COLLECT_ERRORS), 'entry tries')
         _check(entry['state'] not in ACTIVE + (REPORT,) or (entry['sha'] and entry['at']), 'active entry')
         _check(entry['state'] not in (RUNNING, REPORT) or entry['run'], 'running entry')
         entries.append(entry)
@@ -500,8 +552,6 @@ def render_state(state, server_url, repository):
     ]
     for entry in state['entries']:
         verdict = entry['verdict'] or {REPORT: 'new problems, issue to be filed'}.get(entry['state'], entry['state'])
-        if entry['partial']:
-            verdict += ' (comparison incomplete)'
         runs = entry['runs'] if entry['verdict'] == UNCHECKED else entry['runs'][-1:]
         lines.append('| %s | %s | %s | %s | %s | %s |' % (
             KINDS[entry['kind']], display_version(entry), entry['seen'], verdict,
@@ -527,14 +577,30 @@ def trimmed_list(value):
     return value['items'], total, bool(value.get('trimmed'))
 
 
+# The lists of the Plugin Verifier that count: the ones of the levels that failureLevel of verifyPlugin in build.gradle
+# gates (compat.VERIFIER_FAILURE_LEVELS). MISSING_DEPENDENCIES has no list of its own in the result. Deprecated,
+# experimental, internal and non-extendable usages are never compared.
+VERIFIER_CATEGORIES = {'COMPATIBILITY_PROBLEMS': 'compatibility-problems',
+                       'OVERRIDE_ONLY_API_USAGES': 'override-only-usages',
+                       'INVALID_PLUGIN': 'invalid-plugin'}
+
+
 def verifier_problems(check):
+    """The problems of the gated levels of all reports of `check`; a failing level without a listed problem is one
+    item of the category verdict."""
     items, total, trimmed = [], 0, False
     for report in check.get('reports') or []:
-        if not isinstance(report, dict) or not isinstance(report.get('problems'), dict):
+        if not isinstance(report, dict):
             continue
-        for category, problems in sorted(report['problems'].items()):
-            lines, count, cut = trimmed_list(problems)
-            items += [{'category': category, 'text': line} for line in lines]
+        problems = report.get('problems') if isinstance(report.get('problems'), dict) else {}
+        levels = report.get('failingLevels') if isinstance(report.get('failingLevels'), list) else []
+        for level in compat.VERIFIER_FAILURE_LEVELS:
+            lines, count, cut = trimmed_list(problems.get(VERIFIER_CATEGORIES.get(level)))
+            if not count and level in levels:
+                items.append({'category': 'verdict', 'text': level})
+                count = 1
+            else:
+                items += [{'category': VERIFIER_CATEGORIES[level], 'text': line} for line in lines]
             total += count
             trimmed = trimmed or cut
     return items, total, trimmed
@@ -575,25 +641,37 @@ LISTS = {
 CHECKS = {'ide': ['compile', 'test', 'verifyPlugin', 'releasedPlugin'],
           'otp': ['compilationTests', 'corpus', 'knownRelease']}
 
+# A problem that the baseline does not have: `key` identifies it in the state (reported), `line` goes into the issue,
+# `count` is how many more times it occurs than in the baseline.
+Problem = collections.namedtuple('Problem', 'key line count')
+
+
+def problem(check, title, key, line, count=1):
+    digest = hashlib.sha256(json.dumps([check, title, key]).encode('utf-8')).hexdigest()
+    return Problem(digest[:KEY_CHARS], line, count)
+
 
 def checks_of(result):
     checks = result.get('checks') if isinstance(result, dict) else None
     return {name: check for name, check in (checks or {}).items() if isinstance(check, dict)}
 
 
-def new_items(items, baseline_items, key, line):
-    """The lines of the items whose key is more often in `items` than in `baseline_items`."""
+def new_items(items, baseline_items, key):
+    """(key, the first item with it, the number of times more) of the keys that are more often in `items` than in
+    `baseline_items`."""
     items = [item for item in items if isinstance(item, dict)]
     counts = collections.Counter(key(item) for item in items)
     counts.subtract(key(item) for item in baseline_items if isinstance(item, dict))
     first = {}
     for item in items:
         first.setdefault(key(item), item)
-    return [line(first[k]) + (' (%d times)' % n if n > 1 else '') for k, n in counts.items() if n > 0]
+    return [(k, first[k], n) for k, n in counts.items() if n > 0]
 
 
 def compare(kind, result, baseline, full_corpus=None):
-    """The problems of `result` that `baseline` does not have: {'sections': [(check, title, lines)], 'notes': [...]}.
+    """The problems of `result` that `baseline` does not have: {'sections': [(check, title, [Problem])], 'notes':
+    [...]}. With notes the comparison is not complete, because a list was trimmed in a result and its full form could
+    not be read: the sections then say neither that there are new problems nor that there are none.
 
     `full_corpus` maps 'result' and 'baseline' to the full list of parser errors, read from corpus-report.json when the
     list of the result was trimmed, or to the reason why it could not be read."""
@@ -615,31 +693,35 @@ def compare(kind, result, baseline, full_corpus=None):
                 else:
                     notes.append('the full list of parser errors of the %s could not be read: %s' % (
                         'version' if side == 'result' else 'baseline', full.get(side) or 'it was not read'))
-        lines = new_items(items, base_items, key, line)
-        if trimmed or base_trimmed:
-            notes.append('%s: the version has %d, the baseline %d; only the first %d of each were compared'
+        elif trimmed or base_trimmed:
+            notes.append('%s: the version has %d, the baseline %d, and the result lists only the first %d'
                          % (title, total, base_total, compat.LIST_LIMIT))
-            if not lines and total > base_total:
-                lines = ['%d %s, %d in the baseline; the ones beyond the first %d were not compared'
-                         % (total, title, base_total, compat.LIST_LIMIT)]
-        if lines:
-            sections.append((name, title, lines))
+        problems = [problem(name, title, k, line(item), n) for k, item, n in new_items(items, base_items, key)]
+        if problems:
+            sections.append((name, title, problems))
             reported.add(name)
     known = checks.get('knownRelease')
     if kind == 'otp' and known and known.get('status') == compat.FAILED:
         sections.append(('knownRelease', 'the release is unknown to the plugin', [
-            'Erlang/OTP %s: ErlangSdkRelease constant %s, %s' % (
-                known.get('release'), known.get('sdkReleaseConstant') or 'missing',
-                known.get('mockSdk') or 'no testData/mockSdk-R%s' % known.get('release'))]))
+            problem('knownRelease', 'release', str(known.get('release')),
+                    'Erlang/OTP %s: ErlangSdkRelease constant %s, %s' % (
+                        known.get('release'), known.get('sdkReleaseConstant') or 'missing',
+                        known.get('mockSdk') or 'no testData/mockSdk-R%s' % known.get('release')))]))
         reported.add('knownRelease')
     for name in CHECKS[kind]:
         status = checks.get(name, {}).get('status')
         if (base.get(name, {}).get('status') == compat.PASSED and status in (compat.FAILED, compat.NOT_RUN)
                 and name not in reported):
             reason = checks[name].get('reason')
-            sections.append((name, 'status', ['%s: passed in the baseline, %s here%s' % (
-                name, status, ': %s' % reason if reason else '')]))
+            text = '%s: passed in the baseline, %s here%s' % (name, status, ': %s' % reason if reason else '')
+            sections.append((name, 'status', [problem(name, 'status', status, text)]))
     return {'sections': sections, 'notes': notes}
+
+
+def lines_of(sections):
+    """(check, title, the lines of the problems) of each section, as they are listed in an issue."""
+    return [(check, title, [p.line + (' (%d times)' % p.count if p.count > 1 else '') for p in problems])
+            for check, title, problems in sections]
 
 
 # Issues of versions
@@ -655,7 +737,14 @@ def issue_title(entry):
     return 'Compatibility: IntelliJ IDEA %s' % display_version(entry)
 
 
-def issue_body(entry, comparison, run_url, baseline_url, items=ISSUE_ITEMS):
+def line_name(kind, version):
+    """The major Erlang/OTP release or the IDE branch of `version`, as it is named in an issue."""
+    return '%s %d' % (KINDS[kind], group(version))
+
+
+def issue_body(entry, sections, run_url, baseline_url, items=ISSUE_ITEMS, earlier=None):
+    """The body of the issue of a version. `sections` are the problems that no earlier issue of its major release or
+    branch reported; `earlier` is the number of the latest such issue."""
     kind, version, sha = entry['kind'], entry['version'], entry['sha']
     lines = [
         marker(kind, version),
@@ -666,19 +755,18 @@ def issue_body(entry, comparison, run_url, baseline_url, items=ISSUE_ITEMS):
         '- Commit: `%s`' % sha,
         '- Run: %s' % run_url,
         '- Baseline run (the default inputs on the same commit): %s' % baseline_url,
-        '',
-        '### New problems',
     ]
-    for check, title, problems in comparison['sections']:
-        shown = problems[:items]
-        lines += ['', '**%s, %s**: %d%s' % (check, title, len(problems),
-                                            ', the first %d listed' % len(shown) if len(shown) < len(problems) else ''),
-                  '', '```']
-        lines += [safe(problem) for problem in shown]
+    if earlier:
+        lines.append('- Earlier issue of %s: #%d. The problems reported there are not repeated here.'
+                     % (line_name(kind, version), earlier))
+    lines += ['', '### New problems']
+    for (check, title, problems), (_, _, texts) in zip(sections, lines_of(sections)):
+        shown = texts[:items]
+        cut = ', the first %d listed' % len(shown) if len(shown) < len(texts) else ''
+        lines += ['', '**%s, %s**: %d distinct, %d occurrences%s' % (check, title, len(problems),
+                                                                    sum(p.count for p in problems), cut), '', '```']
+        lines += [safe(text) for text in shown]
         lines.append('```')
-    if comparison['notes']:
-        lines += ['', '### The comparison is incomplete', '']
-        lines += ['- %s' % safe(note, 500) for note in comparison['notes']]
     lines += ['', 'To repeat the check: `gh workflow run %s -f %s=%s -f ref=%s`' % (WORKFLOW, kind, version, sha), '']
     return '\n'.join(lines)
 
@@ -699,6 +787,7 @@ class Watcher:
         self.issue = None
         self.state = None
         self.results = {}
+        self.artifact_ids = {}
         self.version_issues = None
         self.filed = 0
         self.started = []
@@ -724,18 +813,26 @@ class Watcher:
     # 1. The state
 
     def read_state(self):
-        issues = sorted((i for i in self.github.issues(STATE_LABEL) if is_ours(i) and i.get('title') == STATE_TITLE),
-                        key=lambda i: i['number'])
-        if not issues:
-            self.log('No state issue "%s" by %s: this is the first cycle, it seeds.' % (STATE_TITLE, BOT))
+        """The state issue is the issue by BOT whose body has a state marker, open or closed; its title and labels
+        are not part of the lookup, so renaming it or removing its label does not make the watcher seed again."""
+        issues = sorted((i for i in self.github.bot_issues() if is_ours(i)), key=lambda i: i['number'])
+        states = [i for i in issues if STATE_BEGIN in (i.get('body') or '') or STATE_END in (i.get('body') or '')]
+        if len(states) > 1:
+            raise WatchError('%d issues by %s have the state markers (%s); there must be one, so the watcher stops'
+                             % (len(states), BOT, ', '.join('#%d' % i['number'] for i in states)))
+        if not states:
+            # The issue that the watcher created, with its block removed: not a first cycle.
+            emptied = [i for i in issues if i.get('title') == STATE_TITLE or STATE_LABEL in label_names(i)]
+            if emptied:
+                raise WatchError('#%d: the state issue has no state block between %s and %s; the watcher stops and '
+                                 'does not seed again over an existing state issue'
+                                 % (emptied[0]['number'], STATE_BEGIN, STATE_END))
+            self.log('No issue by %s with the state markers: this is the first cycle, it seeds.' % BOT)
             self.state = new_state(self.now)
             return
-        if len(issues) > 1:
-            print('::warning::%d state issues; using the oldest, #%d' % (len(issues), issues[0]['number']),
-                  file=self.out)
-        self.issue = issues[0]['number']
+        self.issue = states[0]['number']
         try:
-            self.state = parse_state(issues[0].get('body'))
+            self.state = parse_state(states[0].get('body'))
         except WatchError as e:
             raise WatchError('#%d: %s; the watcher stops and does not seed again over an existing state issue'
                              % (self.issue, e))
@@ -760,7 +857,11 @@ class Watcher:
             self.log('Wrote the state %s' % when)
 
     def prune(self):
-        """Keeps the state small: rows beyond the newest TABLE_ROWS, and baselines that nothing needs, are dropped."""
+        """Keeps the state small. Dropped, in this order: the table rows beyond the newest TABLE_ROWS and the
+        baselines that nothing needs; the reported keys of the lines that are not watched any more and, of each line,
+        the oldest beyond REPORTED_KEYS; then, while the body is above STATE_BODY_TARGET, the oldest table row and,
+        when no row is left, the oldest reported keys of the line that has the most. The versions seen are never
+        dropped. A problem whose reported key was dropped is reported once more."""
         state = self.state
         entries = state['entries']
         room = max(TABLE_ROWS - sum(1 for e in entries if e['state'] != DONE), 0)
@@ -774,13 +875,28 @@ class Watcher:
         state['entries'] = kept
         needed = {e['sha'] for e in kept if e['state'] in ACTIVE + (REPORT,)}
         latest = self.latest_baseline()
+        # The latest failed one is kept for its attempts: no baseline is started again for a commit that used them up.
+        failed = [b for b in state['baselines'] if b['state'] == FAILED]
+        last_failed = max(failed, key=lambda b: b['at']) if failed else None
         state['baselines'] = [b for b in state['baselines']
-                              if b['state'] in ACTIVE or b['sha'] in needed or b is latest]
+                              if b['state'] in ACTIVE or b['sha'] in needed or b is latest or b is last_failed]
+        for kind, lines in state['reported'].items():
+            floor = state['floor'][kind]
+            for line in list(lines):
+                if floor is not None and int(line) < floor:
+                    del lines[line]
+                else:
+                    del lines[line]['keys'][:-REPORTED_KEYS]
         while len(render_state(state, self.server_url, self.github.repository)) > STATE_BODY_TARGET:
             done = [i for i, e in enumerate(state['entries']) if e['state'] == DONE]
-            if not done:
+            if done:
+                del state['entries'][done[-1]]
+                continue
+            longest = max((reported for lines in state['reported'].values() for reported in lines.values()),
+                          key=lambda reported: len(reported['keys']), default=None)
+            if longest is None or not longest['keys']:
                 break
-            del state['entries'][done[-1]]
+            del longest['keys'][:50]
 
     def latest_baseline(self):
         complete = [b for b in self.state['baselines'] if b['state'] == COMPLETE]
@@ -797,29 +913,44 @@ class Watcher:
 
     # 2. Collect
 
-    def result(self, run_id, kind):
-        """The JSON result of kind `kind` of run `run_id`, or None if there is none or it does not parse."""
-        if (run_id, kind) not in self.results:
-            data = self.github.artifact_member(run_id, ARTIFACTS[kind], ARTIFACTS[kind] + '.json')
+    def artifact(self, run_id, name):
+        """The id of the artifact `name` of run `run_id`, or None."""
+        if (run_id, name) not in self.artifact_ids:
+            self.artifact_ids[(run_id, name)] = self.github.artifact_id(run_id, name)
+        return self.artifact_ids[(run_id, name)]
+
+    def read_result(self, artifact_id, kind):
+        """The JSON result of kind `kind` in the artifact `artifact_id`, or None if there is none or it does not
+        parse."""
+        if artifact_id is None:
+            return None
+        if artifact_id not in self.results:
+            data = self.github.artifact_file(artifact_id, ARTIFACTS[kind] + '.json')
             try:
                 result = json.loads(data.decode('utf-8')) if data is not None else None
-            except ValueError:
+            except (ValueError, RecursionError):
                 result = None
-            self.results[(run_id, kind)] = result if isinstance(result, dict) else None
-        return self.results[(run_id, kind)]
+            self.results[artifact_id] = result if isinstance(result, dict) else None
+        return self.results[artifact_id]
 
-    def corpus_errors(self, run_id):
-        """The full list of parser errors in corpus-report.json of compat-otp-logs of run `run_id`, or the reason why
-        there is none."""
-        data = self.github.artifact_member(run_id, LOGS_ARTIFACT, CORPUS_REPORT)
+    def result(self, run_id, kind):
+        """The JSON result of kind `kind` of run `run_id`, or None if there is none or it does not parse."""
+        return self.read_result(self.artifact(run_id, ARTIFACTS[kind]), kind)
+
+    def corpus_errors(self, artifact_id):
+        """The full list of parser errors in corpus-report.json of the compat-otp-logs artifact `artifact_id`, or the
+        reason why there is none."""
+        if artifact_id is None:
+            return 'the run has no artifact %s' % LOGS_ARTIFACT
+        data = self.github.artifact_file(artifact_id, CORPUS_REPORT)
         if data is None:
-            return 'the artifact %s of run %d has no %s' % (LOGS_ARTIFACT, run_id, CORPUS_REPORT)
+            return 'the artifact %s (%d) has no %s' % (LOGS_ARTIFACT, artifact_id, CORPUS_REPORT)
         try:
             errors = json.loads(data.decode('utf-8')).get('errors')
-        except (ValueError, AttributeError):
-            return '%s of run %d is not a JSON object' % (CORPUS_REPORT, run_id)
+        except (ValueError, AttributeError, RecursionError):
+            return '%s of the artifact %d is not a JSON object' % (CORPUS_REPORT, artifact_id)
         if not isinstance(errors, list):
-            return '%s of run %d has no list of errors' % (CORPUS_REPORT, run_id)
+            return '%s of the artifact %d has no list of errors' % (CORPUS_REPORT, artifact_id)
         # The same description as in the result, which compat.py cuts to compat.TEXT_LIMIT characters.
         return [dict(e, description=compat.text(e.get('description'))) for e in errors if isinstance(e, dict)]
 
@@ -872,50 +1003,81 @@ class Watcher:
     def collect(self):
         for baseline in list(self.state['baselines']):
             if baseline['state'] in ACTIVE:
-                try:
-                    self.collect_baseline(baseline)
-                except ApiError as e:
-                    self.error('baseline of %s: %s' % (baseline['sha'], e))
+                self.reading(baseline, self.collect_baseline, self.baseline_failed, 'baseline of %s' % baseline['sha'])
         self.apply_baseline()
         for entry in reversed(list(self.state['entries'])):
             if entry['state'] in ACTIVE + (REPORT,):
-                try:
-                    self.collect_entry(entry)
-                except ApiError as e:
-                    self.error('%s %s: %s' % (KINDS[entry['kind']], entry['version'], e))
+                self.reading(entry, self.collect_entry, self.attempt_failed,
+                             '%s %s' % (KINDS[entry['kind']], entry['version']))
+
+    def reading(self, record, collect, give_up, what):
+        """Collects `record`. A request that fails is an error of this cycle and is tried again in the next one;
+        after MAX_COLLECT_ERRORS cycles in a row the run counts as an attempt without a result."""
+        try:
+            collect(record)
+            record['errors'] = 0
+        except ApiError as e:
+            self.error('%s: %s' % (what, e))
+            record['errors'] += 1
+            if record['errors'] >= MAX_COLLECT_ERRORS:
+                give_up(record, 'its result could not be read in %d cycles in a row' % MAX_COLLECT_ERRORS)
+
+    def unusable(self, result, kind, sha, version, run_id):
+        """Why `result` is not the complete result of `version` (the empty string for the baseline) on commit `sha`
+        by run `run_id`; None if it is."""
+        if result is None:
+            return 'run %d has no result artifact %s' % (run_id, ARTIFACTS[kind])
+        if result.get('schemaVersion') != compat.SCHEMA_VERSION:
+            self.error('the result %s of run %d has a schemaVersion that %s does not know (it knows %d)'
+                       % (ARTIFACTS[kind], run_id, os.path.basename(__file__), compat.SCHEMA_VERSION))
+            return 'the result of run %d has an unknown schemaVersion' % run_id
+        if not self.matches(result, kind, sha, version, run_id):
+            return 'the result of run %d is not the one of %s on %s' % (run_id, version or 'the default inputs', sha)
+        if result.get('status') == compat.INCOMPLETE:
+            return 'the result of run %d is incomplete' % run_id
+        return None
+
+    def baseline_failed(self, baseline, reason):
+        """An attempt of the baseline without a complete result. After MAX_ATTEMPTS no baseline is started for its
+        commit any more, and the cycle is red."""
+        baseline.update(state=FAILED, artifacts=None, errors=0)
+        message = 'Baseline of %s: attempt %d without a complete result: %s' % (baseline['sha'], baseline['tries'],
+                                                                               reason)
+        if baseline['tries'] >= MAX_ATTEMPTS:
+            self.error('%s; no baseline is started for this commit any more' % message)
+        else:
+            self.log(message)
 
     def collect_baseline(self, baseline):
         if baseline['run'] is None:
             baseline['run'] = self.recover(baseline)
             if baseline['run'] is None:
                 if self.timed_out(baseline):
-                    baseline['state'] = FAILED
-                    self.log('Baseline of %s: no run with its result was found' % baseline['sha'])
+                    self.baseline_failed(baseline, 'no run with its result was found')
                 return
             baseline['state'] = RUNNING
         status = self.finished_run(baseline['run'])
         if status == 'running':
             if self.timed_out(baseline):
-                baseline['state'] = FAILED
-                self.log('Baseline of %s: run %d did not finish within %s' % (baseline['sha'], baseline['run'],
-                                                                            RUN_TIMEOUT))
+                self.baseline_failed(baseline, 'run %d did not finish within %s' % (baseline['run'], RUN_TIMEOUT))
             return
         if status != 'done':
-            baseline['state'] = FAILED
-            self.log('Baseline of %s: %s' % (baseline['sha'], status))
+            self.baseline_failed(baseline, status)
             return
-        results = {kind: self.result(baseline['run'], kind) for kind in KINDS}
-        problems = [ARTIFACTS[kind] for kind, result in sorted(results.items())
-                    if result is None or result.get('status') == compat.INCOMPLETE
-                    or not self.matches(result, kind, baseline['sha'], '', baseline['run'])]
+        artifacts = {kind: self.artifact(baseline['run'], ARTIFACTS[kind]) for kind in KINDS}
+        results = {kind: self.read_result(artifacts[kind], kind) for kind in KINDS}
+        problems = [self.unusable(results[kind], kind, baseline['sha'], '', baseline['run']) for kind in sorted(KINDS)]
+        problems = [problem for problem in problems if problem]
         ide = build_number((((results['ide'] or {}).get('resolved') or {}).get('ide') or {}).get('buildNumber'))
         otp = (((results['otp'] or {}).get('resolved') or {}).get('otp') or {}).get('version')
-        if problems or not valid_version('ide', ide) or not valid_version('otp', otp):
-            baseline['state'] = FAILED
-            self.log('Baseline of %s (run %d): no complete result (%s)' % (
-                baseline['sha'], baseline['run'], ', '.join(problems) or 'no valid version'))
+        if not problems and not (valid_version('ide', ide) and valid_version('otp', otp)):
+            problems = ['the results of run %d name no valid version' % baseline['run']]
+        if problems:
+            self.baseline_failed(baseline, '; '.join(problems))
             return
-        baseline.update(state=COMPLETE, ide=ide, otp=otp)
+        # A comparison reads exactly these artifacts, whatever a later attempt of the run uploads.
+        artifacts['logs'] = self.artifact(baseline['run'], LOGS_ARTIFACT)
+        baseline.update(state=COMPLETE, ide=ide, otp=otp, artifacts=artifacts)
         self.log('Baseline of %s (run %d): complete, IntelliJ IDEA %s, Erlang/OTP %s'
                  % (baseline['sha'], baseline['run'], ide, otp))
 
@@ -938,11 +1100,18 @@ class Watcher:
     def attempt_failed(self, entry, reason):
         self.log('%s %s: attempt %d without a result: %s' % (KINDS[entry['kind']], entry['version'], entry['tries'],
                                                               reason))
-        entry.update(sha=None, at=None, run=None)
+        entry.update(sha=None, at=None, run=None, errors=0)
         if entry['tries'] >= MAX_ATTEMPTS:
             entry.update(state=DONE, verdict=UNCHECKED)
+            self.error('%s %s: unchecked, %d attempts gave no result' % (KINDS[entry['kind']], entry['version'],
+                                                                         MAX_ATTEMPTS))
         else:
             entry['state'] = QUEUED
+
+    def check_again(self, entry, reason):
+        """The version is checked again without losing an attempt: its own run gave a result."""
+        self.log('%s %s: %s; checked again' % (KINDS[entry['kind']], entry['version'], reason))
+        entry.update(state=QUEUED, sha=None, at=None, run=None, errors=0, tries=max(entry['tries'] - 1, 0))
 
     def collect_entry(self, entry):
         kind, version = entry['kind'], entry['version']
@@ -964,77 +1133,97 @@ class Watcher:
                 self.attempt_failed(entry, status)
                 return
         result = self.result(entry['run'], kind)
-        if result is None:
-            self.attempt_failed(entry, 'run %d has no result artifact %s' % (entry['run'], ARTIFACTS[kind]))
-            return
-        if not self.matches(result, kind, entry['sha'], version, entry['run']):
-            self.attempt_failed(entry, 'the result of run %d is not the one of %s on %s' % (entry['run'], version,
-                                                                                          entry['sha']))
-            return
-        if result.get('status') == compat.INCOMPLETE:
-            self.attempt_failed(entry, 'the result of run %d is incomplete' % entry['run'])
+        reason = self.unusable(result, kind, entry['sha'], version, entry['run'])
+        if reason:
+            self.attempt_failed(entry, reason)
             return
         baseline = self.baseline_of(entry['sha'])
         if baseline is not None and baseline['state'] in ACTIVE:
             self.log('%s %s: run %d finished; waiting for the baseline' % (KINDS[kind], version, entry['run']))
             return
-        base = self.result(baseline['run'], kind) if baseline and baseline['state'] == COMPLETE else None
-        if base is None and baseline is not None and baseline['state'] == COMPLETE:
-            # Its artifacts expired or were deleted: a new baseline is started, and the version is checked again
-            # with it without losing an attempt.
-            baseline['state'] = FAILED
-            entry.update(state=QUEUED, sha=None, at=None, run=None, tries=entry['tries'] - 1)
-            self.log('%s %s: the result of the baseline run %d cannot be read any more; checked again'
-                     % (KINDS[kind], version, baseline['run']))
+        if baseline is None or baseline['state'] != COMPLETE:
+            self.check_again(entry, 'there is no complete baseline of commit %s' % entry['sha'])
             return
+        base = self.read_result(baseline['artifacts'][kind], kind)
         if base is None:
-            self.attempt_failed(entry, 'there is no complete baseline of commit %s' % entry['sha'])
+            # Its artifacts expired or were deleted: a new baseline is started, with its attempts anew.
+            baseline.update(state=FAILED, artifacts=None, tries=0)
+            self.check_again(entry, 'the result of the baseline run %d cannot be read any more' % baseline['run'])
             return
         full = {}
         if trimmed_list(checks_of(result).get('corpus', {}).get('errors'))[2]:
-            full['result'] = self.corpus_errors(entry['run'])
+            full['result'] = self.corpus_errors(self.artifact(entry['run'], LOGS_ARTIFACT))
         if trimmed_list(checks_of(base).get('corpus', {}).get('errors'))[2]:
-            full['baseline'] = self.corpus_errors(baseline['run'])
+            full['baseline'] = self.corpus_errors(baseline['artifacts']['logs'])
         comparison = compare(kind, result, base, full)
-        entry['partial'] = bool(comparison['notes'])
-        if not comparison['sections']:
+        if comparison['notes']:
+            # Neither the same nor new problems: a list was trimmed and its full form could not be read.
+            self.attempt_failed(entry, 'the comparison of run %d is not complete: %s' % (
+                entry['run'], safe('; '.join(comparison['notes']), 1000)))
+            return
+        sections = comparison['sections']
+        if not sections:
             entry.update(state=DONE, verdict=SAME)
             self.log('%s %s: the same problems as the baseline' % (KINDS[kind], version))
             return
+        line = self.state['reported'][kind].get(str(group(version)))
+        known = set(line['keys']) if line else set()
+        fresh = [(check, title, [p for p in problems if p.key not in known]) for check, title, problems in sections]
+        fresh = [section for section in fresh if section[2]]
+        if not fresh:
+            entry.update(state=DONE, verdict=KNOWN_PROBLEMS, issue=line['issue'])
+            self.log('%s %s: only problems that #%d reported' % (KINDS[kind], version, line['issue']))
+            return
         entry['state'] = REPORT
-        self.report(entry, comparison, baseline)
+        self.report(entry, fresh, baseline, line['issue'] if line else None)
 
     def find_version_issue(self, kind, version):
+        """The issue by BOT with the label whose body begins with the marker of the version."""
         if self.version_issues is None:
             self.version_issues = [i for i in self.github.issues(ISSUE_LABEL) if is_ours(i)]
         tag = marker(kind, version)
-        return next((i['number'] for i in self.version_issues if tag in (i.get('body') or '')), None)
+        return next((i['number'] for i in self.version_issues
+                     if (i.get('body') or '').replace('\r\n', '\n').split('\n', 1)[0] == tag), None)
 
-    def report(self, entry, comparison, baseline):
-        existing = self.find_version_issue(entry['kind'], entry['version'])
-        if existing:
-            entry.update(state=DONE, verdict=NEW_PROBLEMS, issue=existing)
-            self.log('%s %s: new problems, already reported in #%d' % (KINDS[entry['kind']], entry['version'],
-                                                                       existing))
-            return
-        if self.filed >= MAX_ISSUES_PER_CYCLE:
-            self.log('%s %s: new problems; the issue waits for the next cycle' % (KINDS[entry['kind']],
-                                                                                 entry['version']))
-            return
-        title = issue_title(entry)
-        for items in (ISSUE_ITEMS, 10, 3):
-            body = issue_body(entry, comparison, self.run_url(entry['run']), self.run_url(baseline['run']), items)
-            if len(body) <= ISSUE_BODY_TARGET:
-                break
-        self.filed += 1
-        if self.dry_run:
-            self.log('[dry run] would file the issue "%s":' % title)
-            print_untrusted(body, self.out)
-            return
-        number = self.github.create_issue(title, body, ISSUE_LABEL)
-        self.version_issues.append({'number': number, 'body': body})
+    def reported(self, entry, sections, number):
+        """Issue `number` reported `sections`: no later version of the same major release or branch reports them
+        again."""
+        line = self.state['reported'][entry['kind']].setdefault(str(group(entry['version'])), {'issue': number,
+                                                                                               'keys': []})
+        line['issue'] = number
+        line['keys'] += [p.key for _, _, problems in sections for p in problems if p.key not in line['keys']]
         entry.update(state=DONE, verdict=NEW_PROBLEMS, issue=number)
-        self.log('%s %s: new problems, filed #%d' % (KINDS[entry['kind']], entry['version'], number))
+
+    def report(self, entry, sections, baseline, earlier):
+        what = '%s %s' % (KINDS[entry['kind']], entry['version'])
+        try:
+            existing = self.find_version_issue(entry['kind'], entry['version'])
+            if existing:
+                self.reported(entry, sections, existing)
+                self.log('%s: new problems, already reported in #%d' % (what, existing))
+                return
+            if self.filed >= MAX_ISSUES_PER_CYCLE:
+                self.log('%s: new problems; the issue waits for the next cycle' % what)
+                return
+            title = issue_title(entry)
+            for items in (ISSUE_ITEMS, 10, 3):
+                body = issue_body(entry, sections, self.run_url(entry['run']), self.run_url(baseline['run']), items,
+                                  earlier)
+                if len(body) <= ISSUE_BODY_TARGET:
+                    break
+            self.filed += 1
+            if self.dry_run:
+                self.log('[dry run] would file the issue "%s":' % title)
+                print_untrusted(body, self.out)
+                return
+            number = self.github.create_issue(title, body, ISSUE_LABEL)
+        except ApiError as e:
+            # The result was read: the issue is filed in a later cycle.
+            self.error('%s: the issue could not be filed: %s' % (what, e))
+            return
+        self.version_issues.append({'number': number, 'body': body})
+        self.reported(entry, sections, number)
+        self.log('%s: new problems, filed #%d' % (what, number))
 
     # 3. Discover
 
@@ -1067,18 +1256,22 @@ class Watcher:
         self.state['entries'].insert(0, entry)
         self.log('%s %s: %s' % (KINDS[kind], display_version(entry), verdict or 'new, queued'))
 
-    def queue_newest(self, kind, versions, superseding):
+    def queue_newest(self, kind, versions, superseding, known=()):
         """Queues the newest of `versions` in each group; with `superseding`, the older ones and the queued ones of
-        the group that are older are recorded as superseded."""
+        the group that are older are recorded as superseded, and so are all of them when the state already has a
+        newer version of the group (`known`): an older version that appears later is never checked."""
         groups = collections.defaultdict(list)
         for version in versions:
             groups[group(version)].append(version)
-        for _, members in sorted(groups.items()):
+        for number, members in sorted(groups.items()):
             members.sort(key=order)
             newest = members[-1]
             if superseding:
-                for older in members[:-1]:
+                top = max((order(v) for v in known if group(v) == number), default=None)
+                for older in members[:-1] if top is None or top < order(newest) else members:
                     self.add_entry(kind, older, versions[older], SUPERSEDED)
+                if top is not None and order(newest) < top:
+                    continue
                 for entry in self.state['entries']:
                     if (entry['kind'] == kind and entry['state'] == QUEUED and group(entry['version']) == group(newest)
                             and order(entry['version']) < order(newest)):
@@ -1089,6 +1282,7 @@ class Watcher:
         state = self.state
         floor = state['floor'][kind]
         seen = set(state['seen'][kind])
+        known = seen | {e['version'] for e in state['entries'] if e['kind'] == kind}
         if kind in state['pending']:
             if floor is None:
                 # Seeded once a baseline names the branch; until then nothing is recorded.
@@ -1104,7 +1298,7 @@ class Watcher:
             new = {v: n for v, n in versions.items() if v not in seen and (floor is None or group(v) >= floor)}
             seen.update(new)
             self.log('%s: %d new versions' % (KINDS[kind], len(new)))
-            self.queue_newest(kind, new, superseding=True)
+            self.queue_newest(kind, new, superseding=True, known=known)
         if floor is not None:
             seen = {v for v in seen if group(v) >= floor}
             for entry in list(state['entries']):
@@ -1131,6 +1325,10 @@ class Watcher:
             self.error('no run is started: %s' % e)
             return
         baseline = self.baseline_of(sha)
+        if baseline is not None and baseline['state'] == FAILED and baseline['tries'] >= MAX_ATTEMPTS:
+            self.error('no run is started: the baseline of %s gave no complete result in %d attempts; the watcher '
+                       'waits for a new commit on %s' % (sha, MAX_ATTEMPTS, branch))
+            return
         need_baseline = (baseline is None or baseline['state'] == FAILED
                          or (baseline['state'] == COMPLETE and self.now - parse_time(baseline['at']) > BASELINE_MAX_AGE))
         versions = queued[:max(room - (1 if need_baseline else 0), 0)]
@@ -1138,11 +1336,14 @@ class Watcher:
             if queued:
                 self.log('%d versions wait: %d runs are in flight' % (len(queued), in_flight))
             return
-        starts = []
+        starts, previous = [], None
         if need_baseline:
-            if baseline is not None:
-                state['baselines'].remove(baseline)
-            baseline = {'sha': sha, 'run': None, 'at': iso(self.now), 'state': STARTING, 'ide': None, 'otp': None}
+            previous = baseline
+            if previous is not None:
+                state['baselines'].remove(previous)
+            # A baseline whose result is gone or old starts its attempts anew.
+            tries = previous['tries'] + 1 if previous is not None and previous['state'] == FAILED else 1
+            baseline = dict(BASELINE_DEFAULTS, sha=sha, at=iso(self.now), state=STARTING, tries=tries)
             state['baselines'].insert(0, baseline)
             starts.append((baseline, {'ref': sha}))
         for entry in versions:
@@ -1168,6 +1369,8 @@ class Watcher:
                 for other, _ in not_started:
                     if other is baseline and 'version' not in other:
                         state['baselines'].remove(other)
+                        if previous is not None:
+                            state['baselines'].insert(0, previous)
                     else:
                         other.update(state=QUEUED, sha=None, at=None, tries=other['tries'] - 1)
                 break

@@ -114,6 +114,7 @@ class World:
         self.dispatch_status = 200
         self.crash_on_dispatch = None
         self.writes = []
+        self.issue_queries = []
         self.now = T0
 
     # Setting up
@@ -196,7 +197,10 @@ class World:
                         return watch.Response(200, data)
             return watch.Response(404)
         if method == 'GET' and path == '/issues':
-            found = [i for i in self.issues if query['labels'] in [label['name'] for label in i['labels']]]
+            self.issue_queries.append(query)
+            found = [i for i in self.issues
+                     if ('labels' not in query or query['labels'] in [label['name'] for label in i['labels']])
+                     and ('creator' not in query or query['creator'] == i['user']['login'])]
             return self.json(copy.deepcopy(found) if query.get('page') == '1' else [])
         match = re.fullmatch(r'/labels/(.+)', path)
         if method == 'GET' and match:
@@ -454,12 +458,14 @@ class LaterCycleTest(Seeded):
         for attempt, how in enumerate(['no artifact', 'incomplete', 'no artifact']):
             self.finish_without_result(self.next, how)
             code, out = cycle(world, T0 + (2 + attempt) * HOUR)
-            self.assertEqual(code, 0, out)
+            # The cycle in which the version becomes unchecked is red, after the state is written.
+            self.assertEqual(code, 1 if attempt == 2 else 0, out)
             e = entry(world.state(), 'otp', self.next)
             if attempt < 2:
                 self.assertEqual((e['state'], e['tries']), ('running', attempt + 2), out)
         e = entry(world.state(), 'otp', self.next)
         self.assertEqual((e['state'], e['verdict'], len(e['runs'])), ('done', 'unchecked', 3))
+        self.assertIn('::error::Erlang/OTP %s: unchecked' % self.next, out)
         self.assertEqual(world.version_issues(), [])
         body = world.state_issue()['body']
         for run_id in e['runs']:
@@ -544,6 +550,282 @@ class LaterCycleTest(Seeded):
         self.assertEqual(world.dispatched[-1][1], {'otp': '%d.0.3' % (MAJOR + 1), 'ref': SHA2})
 
 
+class SecondCycleTest(Seeded):
+    """After the second cycle: the baseline of SHA is complete and the run of self.next is in flight."""
+
+    def setUp(self):
+        super().setUp()
+        self.next = '%d.0.1' % (MAJOR + 1)
+        cycle(self.world, T0 + HOUR)
+
+    def add_version(self, version, hour):
+        self.world.otp_feed += 'OTP-%s x y\n' % version
+        return cycle(self.world, T0 + hour * HOUR)
+
+    def failing(self, condition, status):
+        """Makes the fake API answer `status` to the requests for which `condition` (method, path) holds."""
+        handle = self.world.handle
+        self.world.handle = lambda method, path, query, body: (
+            watch.Response(status) if condition(method, path) else handle(method, path, query, body))
+
+    # The state issue
+
+    def test_renaming_unlabelling_or_closing_the_state_issue_does_not_seed_again(self):
+        world = self.world
+        issue = world.state_issue()
+        issue.update(title='Compatibility watch (state, do not edit)', labels=[], state='closed')
+        started = len(world.dispatched)
+        code, out = cycle(world, T0 + 2 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertIn('State: issue #%d' % issue['number'], out)
+        self.assertEqual(len(world.issues), 1)
+        self.assertEqual(len(world.dispatched), started)
+        self.assertIn({'creator': 'github-actions[bot]', 'state': 'all', 'per_page': '100', 'page': '1'},
+                      world.issue_queries)
+
+    def test_two_state_issues_stop_the_cycle(self):
+        world = self.world
+        world.add_issue('Another title', world.state_issue()['body'], 'other')
+        world.otp_feed += 'OTP-%d.0.2 x y\n' % (MAJOR + 1)
+        started = len(world.dispatched)
+        world.writes.clear()
+        code, out = cycle(world, T0 + 2 * HOUR)
+        self.assertEqual(code, 1)
+        self.assertIn('::error::2 issues by github-actions[bot] have the state markers (#1, #2)', out)
+        self.assertEqual((world.writes, len(world.dispatched)), ([], started))
+
+    def test_a_state_that_cannot_be_written_is_an_error(self):
+        self.failing(lambda method, path: method == 'PATCH', 404)
+        started = len(self.world.dispatched)
+        code, out = self.add_version('%d.0.2' % (MAJOR + 1), 2)
+        self.assertEqual(code, 1)
+        self.assertIn('::error::GitHub API PATCH /issues/1: HTTP 404', out)
+        self.assertNotIn('Wrote the state', out)
+        self.assertEqual(len(self.world.dispatched), started)
+
+    # Attribution
+
+    def test_a_later_attempt_of_the_baseline_run_does_not_change_the_baseline(self):
+        world = self.world
+        # Someone runs the failed otp job of the baseline run again, and the new attempt uploads an incomplete result.
+        again = otp_result(SHA, PINNED, self.baseline_run, status='incomplete')
+        again['checks']['corpus'] = {'status': 'not-run', 'reason': 'timed out or was cancelled'}
+        world.add_artifact(self.baseline_run, 'compat-otp', {'compat-otp.json': again})
+        self.finish_otp(self.next)
+        code, out = cycle(world, T0 + 2 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(entry(world.state(), 'otp', self.next)['verdict'], 'same')
+        self.assertEqual(world.version_issues(), [])
+        baseline = world.state()['baselines'][0]
+        self.assertEqual(baseline['artifacts'], {'ide': 2, 'otp': 1, 'logs': None})
+
+    def test_a_marker_in_a_result_is_not_the_marker_of_an_issue(self):
+        world = self.world
+        later = '%d.0.2' % (MAJOR + 1)
+        planted = corpus_error('lib/x-1/src/e.erl', 'unexpected <!-- compat-watch:otp:%s --> '
+                                                    '<!-- compat-watch-state:begin -->' % later)
+        self.finish_otp(self.next, BASE_ERRORS + [planted])
+        cycle(world, T0 + 2 * HOUR)
+        first = world.version_issues()[0]
+        self.assertEqual(first['body'].count('<!--'), 1)
+        self.assertEqual(first['body'].count('-->'), 1)
+        self.assertTrue(first['body'].startswith('<!-- compat-watch:otp:%s -->\n' % self.next))
+        self.add_version(later, 3)
+        self.finish_otp(later, BASE_ERRORS + [planted, corpus_error('lib/kernel-10/src/k.erl', 'a real new problem')])
+        code, out = cycle(world, T0 + 4 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(world.version_issues()), 2)
+        self.assertIn('a real new problem', world.version_issues()[1]['body'])
+        # The state issue is still the only issue with the state markers.
+        code, out = cycle(world, T0 + 5 * HOUR)
+        self.assertEqual(code, 0, out)
+
+    # Attempts without a result
+
+    def retried(self, hour, red=False):
+        """A cycle in which self.next has an attempt without a result and is started again."""
+        tries = entry(self.world.state(), 'otp', self.next)['tries']
+        code, out = cycle(self.world, T0 + hour * HOUR)
+        self.assertEqual(code, 1 if red else 0, out)
+        e = entry(self.world.state(), 'otp', self.next)
+        self.assertEqual((e['state'], e['verdict'], e['tries']), ('running', None, tries + 1), out)
+        self.assertEqual(self.world.version_issues(), [])
+        return out
+
+    def test_a_trimmed_corpus_list_without_the_full_report_is_an_attempt_without_a_result(self):
+        errors = BASE_ERRORS + [corpus_error('lib/a-1/src/f%d.erl' % i, 'e') for i in range(148)]
+        self.finish_otp(self.next, errors)
+        out = self.retried(2)
+        self.assertIn('the comparison of run', out)
+        self.assertIn('the full list of parser errors of the version could not be read', out)
+
+    def test_a_trimmed_baseline_without_the_full_report_never_gives_the_same(self):
+        version = '%d.0' % (MAJOR + 1)
+        world = World([PINNED, version], Seeded.IDE)
+        cycle(world)
+        errors = [corpus_error('lib/a-1/src/f%03d.erl' % i, 'e') for i in range(150)]
+        base = world.run_of({'ref': SHA})
+        world.finish(base, {'otp': otp_result(SHA, PINNED, base, errors=errors),
+                            'ide': ide_result(SHA, BASE_IDE, base)}, logs={'errors': errors})
+        # The same total, but the last 50 are new; the run has no logs artifact.
+        run_id = world.run_of({'otp': version, 'ref': SHA})
+        new = errors[:100] + [corpus_error('lib/b-1/src/g%d.erl' % i, 'new') for i in range(50)]
+        world.finish(run_id, {'otp': otp_result(SHA, version, run_id, version, errors=new)})
+        code, out = cycle(world, T0 + HOUR)
+        self.assertEqual(code, 0, out)
+        e = entry(world.state(), 'otp', version)
+        self.assertEqual((e['state'], e['verdict'], e['tries']), ('running', None, 2), out)
+        # With the full report of the version the 50 new ones are found.
+        run_id = e['run']
+        world.finish(run_id, {'otp': otp_result(SHA, version, run_id, version, errors=new)}, logs={'errors': new})
+        cycle(world, T0 + 2 * HOUR)
+        self.assertIn('50 distinct, 50 occurrences', world.version_issues()[0]['body'])
+
+    def test_another_trimmed_list_is_an_attempt_without_a_result(self):
+        tests = [{'class': 'C', 'name': 't%d' % i, 'message': 'm'} for i in range(120)]
+        for attempt in range(3):
+            run_id = entry(self.world.state(), 'otp', self.next)['run']
+            self.world.finish(run_id, {'otp': otp_result(SHA, self.next, run_id, self.next, errors=BASE_ERRORS,
+                                                         failed_tests=tests)})
+            if attempt < 2:
+                self.assertIn('failed compilation tests: the version has 120', self.retried(2 + attempt))
+        code, out = cycle(self.world, T0 + 4 * HOUR)
+        self.assertEqual(code, 1)
+        self.assertEqual(entry(self.world.state(), 'otp', self.next)['verdict'], 'unchecked')
+        self.assertEqual(self.world.version_issues(), [])
+
+    def test_an_unknown_schema_version_is_an_attempt_without_a_result_and_red(self):
+        run_id = self.world.run_of({'otp': self.next, 'ref': SHA})
+        result = otp_result(SHA, self.next, run_id, self.next, errors=BASE_ERRORS)
+        result['schemaVersion'] = compat.SCHEMA_VERSION + 1
+        result['checks'] = {'parser': {'status': 'failed', 'problems': listed([corpus_error('a.erl', 'new')])}}
+        self.world.finish(run_id, {'otp': result})
+        out = self.retried(2, red=True)
+        self.assertIn('::error::the result compat-otp of run %d has a schemaVersion that watch.py does not know'
+                      % run_id, out)
+
+    def test_a_result_that_is_nested_too_deeply_is_an_attempt_without_a_result(self):
+        run_id = self.world.run_of({'otp': self.next, 'ref': SHA})
+        self.world.runs[run_id]['status'] = 'completed'
+        self.world.add_artifact(run_id, 'compat-otp', {'compat-otp.json': '[' * 200000})
+        self.assertIn('run %d has no result artifact compat-otp' % run_id, self.retried(2))
+
+    def test_a_result_that_cannot_be_read_in_eight_cycles_is_an_attempt_without_a_result(self):
+        run_id = self.finish_otp(self.next)
+        broken = ['/actions/artifacts/%d/zip' % i for i, _, _ in self.world.artifacts[run_id]]
+        self.failing(lambda method, path: path in broken, 500)
+        for n in range(watch.MAX_COLLECT_ERRORS - 1):
+            code, out = cycle(self.world, T0 + (2 + n) * HOUR)
+            self.assertEqual(code, 1)
+            e = entry(self.world.state(), 'otp', self.next)
+            self.assertEqual((e['state'], e['tries'], e['errors'], e['run']), ('running', 1, n + 1, run_id), out)
+        out = self.retried(2 + watch.MAX_COLLECT_ERRORS, red=True)
+        self.assertIn('its result could not be read in 8 cycles in a row', out)
+        self.assertEqual(entry(self.world.state(), 'otp', self.next)['errors'], 0)
+
+    # One issue for each problem of a major release
+
+    def test_problems_that_an_issue_of_the_major_release_reported_are_not_reported_again(self):
+        world = self.world
+        first = BASE_ERRORS + [corpus_error('lib/ssl-12/src/x.erl', 'first', n) for n in range(3)]
+        self.finish_otp(self.next, first)
+        cycle(world, T0 + 2 * HOUR)
+        issue = world.version_issues()[0]
+        self.assertIn('**corpus, parser errors in the Erlang/OTP sources**: 1 distinct, 3 occurrences', issue['body'])
+        self.assertNotIn('Earlier issue', issue['body'])
+        reported = world.state()['reported']['otp'][str(MAJOR + 1)]
+        self.assertEqual((reported['issue'], len(reported['keys'])), (issue['number'], 1))
+        self.assertRegex(reported['keys'][0], '^[0-9a-f]{10}$')
+        # The next patch release has the same problem: no issue, the verdict links the earlier one.
+        second = '%d.0.2' % (MAJOR + 1)
+        self.add_version(second, 3)
+        self.finish_otp(second, [corpus_error('lib/ssl-12.1/src/x.erl', 'first', 70)] + BASE_ERRORS)
+        code, out = cycle(world, T0 + 4 * HOUR)
+        self.assertEqual(code, 0, out)
+        e = entry(world.state(), 'otp', second)
+        self.assertEqual((e['state'], e['verdict'], e['issue']), ('done', 'known problems', issue['number']))
+        self.assertEqual(len(world.version_issues()), 1)
+        self.assertIn('| Erlang/OTP | %s | 2026-11-15 | known problems |' % second, world.state_issue()['body'])
+        # The one after it has one more: its issue lists only that one and names the earlier issue.
+        third = '%d.0.3' % (MAJOR + 1)
+        self.add_version(third, 5)
+        self.finish_otp(third, first + [corpus_error('lib/ssl-12.2/src/y.erl', 'second')])
+        cycle(world, T0 + 6 * HOUR)
+        self.assertEqual(len(world.version_issues()), 2)
+        body = world.version_issues()[1]['body']
+        self.assertIn('- Earlier issue of Erlang/OTP %d: #%d. The problems reported there are not repeated here.'
+                      % (MAJOR + 1, issue['number']), body)
+        self.assertIn('lib/ssl-12.2/src/y.erl: second', body)
+        self.assertNotIn('first', body)
+        reported = world.state()['reported']['otp'][str(MAJOR + 1)]
+        self.assertEqual((reported['issue'], len(reported['keys'])), (world.version_issues()[1]['number'], 2))
+        # Another major release has its own issue for the same problem.
+        other = '%d.0' % (MAJOR + 2)
+        self.add_version(other, 7)
+        self.finish_otp(other, first)
+        cycle(world, T0 + 8 * HOUR)
+        self.assertEqual(len(world.version_issues()), 3)
+
+    def test_an_older_version_that_appears_later_is_superseded(self):
+        started = len(self.world.dispatched)
+        older = '%d.0.0.5' % (MAJOR + 1)
+        code, out = self.add_version(older, 2)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(entry(self.world.state(), 'otp', older)['verdict'], 'superseded')
+        self.assertEqual(len(self.world.dispatched), started)
+
+
+class BaselineAttemptsTest(unittest.TestCase):
+    VERSION = '%d.0' % (MAJOR + 1)
+
+    def finish(self, world, complete):
+        for run_id, inputs in world.dispatched:
+            if world.runs[run_id]['status'] == 'completed':
+                continue
+            sha = inputs['ref']
+            if 'otp' in inputs:
+                world.finish(run_id, {'otp': otp_result(sha, inputs['otp'], run_id, inputs['otp'], errors=BASE_ERRORS)})
+            else:
+                world.finish(run_id, {'otp': otp_result(sha, PINNED, run_id, errors=BASE_ERRORS),
+                                      'ide': ide_result(sha, BASE_IDE, run_id,
+                                                        status='passed' if complete else 'incomplete')})
+
+    def test_a_baseline_has_three_attempts_for_a_commit_and_costs_the_versions_none(self):
+        world = World([PINNED, self.VERSION], Seeded.IDE)
+        codes = []
+        for hour in range(6):
+            code, out = cycle(world, T0 + hour * HOUR)
+            codes.append(code)
+            self.finish(world, complete=False)
+        # Red from the cycle in which the third attempt failed; nothing is started after it.
+        self.assertEqual(codes, [0, 0, 0, 1, 1, 1], out)
+        self.assertIn('::error::no run is started: the baseline of %s gave no complete result in 3 attempts' % SHA, out)
+        self.assertEqual([i for _, i in world.dispatched].count({'ref': SHA}), watch.MAX_ATTEMPTS)
+        self.assertEqual(len(world.dispatched), 2 * watch.MAX_ATTEMPTS)
+        state = world.state()
+        self.assertEqual([(b['state'], b['tries']) for b in state['baselines']], [('failed', 3)])
+        e = entry(state, 'otp', self.VERSION)
+        self.assertEqual((e['state'], e['verdict'], e['tries']), ('queued', None, 0))
+        # A new commit has its own attempts.
+        world.head = SHA2
+        code, out = cycle(world, T0 + 6 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertEqual([i for _, i in world.dispatched[-2:]], [{'ref': SHA2}, {'otp': self.VERSION, 'ref': SHA2}])
+        self.finish(world, complete=True)
+        code, out = cycle(world, T0 + 7 * HOUR)
+        self.assertEqual(code, 0, out)
+        e = entry(world.state(), 'otp', self.VERSION)
+        self.assertEqual((e['verdict'], e['tries']), ('same', 1))
+
+    def test_a_baseline_without_a_version_to_check_is_not_started_without_end(self):
+        world = World([PINNED], Seeded.IDE)
+        for hour in range(8):
+            code, out = cycle(world, T0 + hour * HOUR)
+            self.finish(world, complete=False)
+        self.assertEqual(code, 1)
+        self.assertEqual(len(world.dispatched), watch.MAX_ATTEMPTS)
+
+
 class StateTest(unittest.TestCase):
     def test_an_unparsable_state_body_stops_the_cycle(self):
         for body in ['no block', '<!-- compat-watch-state:begin -->\n```json\n{oops\n```\n<!-- compat-watch-state:end -->',
@@ -561,14 +843,13 @@ class StateTest(unittest.TestCase):
         world = World([PINNED, '%d.0' % (MAJOR + 1)], [(BASE_IDE, '2026.3')])
         state = watch.render_state(watch.new_state(T0), 'https://github.com', 'owner/repo')
         world.add_issue('Compatibility watch', state, 'compatibility-watch', user={'login': 'mallory'})
-        world.add_issue('Compatibility watch', state, 'other', user=BOT)
         world.add_issue('Compatibility: Erlang/OTP %d.0' % (MAJOR + 1),
                         '<!-- compat-watch:otp:%d.0 -->' % (MAJOR + 1), 'compatibility', user={'login': 'mallory'})
         code, out = cycle(world)
         self.assertEqual(code, 0, out)
-        # Neither the issue of another author with the label nor the bot's issue without it is the state.
-        self.assertEqual(world.state_issue()['number'], 4)
-        self.assertEqual([i['body'] for i in world.issues[:2]], [state, state])
+        # The issue of another author with the title, the label and the markers is not the state.
+        self.assertEqual(world.state_issue()['number'], 3)
+        self.assertEqual(world.issues[0]['body'], state)
         self.assertEqual(world.state()['pending'], ['ide'])
         base = world.run_of({'ref': SHA})
         world.finish(base, {'otp': otp_result(SHA, PINNED, base), 'ide': ide_result(SHA, BASE_IDE, base)})
@@ -578,13 +859,13 @@ class StateTest(unittest.TestCase):
         cycle(world, T0 + HOUR)
         mine = [i for i in world.version_issues() if i['user'] == BOT]
         self.assertEqual(len(mine), 1)
-        self.assertEqual(world.issues[2]['body'], '<!-- compat-watch:otp:%d.0 -->' % (MAJOR + 1))
+        self.assertEqual(world.issues[1]['body'], '<!-- compat-watch:otp:%d.0 -->' % (MAJOR + 1))
 
     def test_the_issue_of_a_version_is_found_after_a_crash(self):
         world = World([PINNED, '%d.0' % (MAJOR + 1)], [(BASE_IDE, '2026.3')])
         cycle(world)
-        world.add_issue('Compatibility: Erlang/OTP %d.0' % (MAJOR + 1), 'filed before the crash\n'
-                        '<!-- compat-watch:otp:%d.0 -->' % (MAJOR + 1), 'compatibility')
+        world.add_issue('Compatibility: Erlang/OTP %d.0' % (MAJOR + 1), '<!-- compat-watch:otp:%d.0 -->\n'
+                        'filed before the crash' % (MAJOR + 1), 'compatibility')
         base = world.run_of({'ref': SHA})
         world.finish(base, {'otp': otp_result(SHA, PINNED, base), 'ide': ide_result(SHA, BASE_IDE, base)})
         run_id = world.run_of({'otp': '%d.0' % (MAJOR + 1), 'ref': SHA})
@@ -608,6 +889,35 @@ class StateTest(unittest.TestCase):
         self.assertLess(len(body), watch.STATE_BODY_TARGET)
         self.assertEqual(watch.parse_state(body)['seen'], state['seen'])
 
+    def test_the_reported_keys_stay_small_and_the_table_rows_are_dropped_first(self):
+        state = watch.new_state(T0)
+        state['floor'] = {'ide': 263, 'otp': MAJOR}
+        state['seen']['otp'] = ['%d.%d.%d' % (MAJOR, i, j) for i in range(30) for j in range(20)]
+        state['entries'] = [dict(watch.ENTRY_DEFAULTS, kind='otp', version='%d.%d' % (MAJOR, i), seen='2026-11-15',
+                                 state='done', verdict='same', run=10 ** 11 + i, runs=[10 ** 11 + i])
+                            for i in range(200)]
+        keys = ['%010x' % i for i in range(3000)]
+        state['reported']['otp'] = {str(MAJOR - 1): {'issue': 5, 'keys': keys[:10]},
+                                    str(MAJOR): {'issue': 7, 'keys': keys[:1000]},
+                                    str(MAJOR + 1): {'issue': 8, 'keys': keys[1000:1300]},
+                                    str(MAJOR + 2): {'issue': 9, 'keys': keys[2000:]}}
+        state['reported']['ide'] = {'263': {'issue': 6, 'keys': keys[:900]}}
+        watcher = watch.Watcher(watch.GitHub(None, 'owner/repo'), None, {'OTP_VERSION': PINNED}, T0)
+        watcher.state = state
+        watcher.prune()
+        body = watch.render_state(state, 'https://github.com', 'owner/repo')
+        self.assertLess(len(body), watch.STATE_BODY_TARGET)
+        parsed = watch.parse_state(body)
+        self.assertEqual(parsed['seen'], state['seen'])
+        # A major release that is not watched any more is dropped; of the others the newest keys are kept.
+        reported = parsed['reported']['otp']
+        self.assertEqual(sorted(reported), [str(MAJOR), str(MAJOR + 1), str(MAJOR + 2)])
+        self.assertEqual(reported[str(MAJOR)], {'issue': 7, 'keys': keys[1000 - watch.REPORTED_KEYS:1000]})
+        self.assertEqual(reported[str(MAJOR + 1)]['keys'], keys[1000:1300])
+        self.assertEqual(parsed['reported']['ide']['263']['keys'], keys[900 - watch.REPORTED_KEYS:900])
+        # The table rows went before any of the newest REPORTED_KEYS keys of a line.
+        self.assertLess(len(parsed['entries']), watch.TABLE_ROWS)
+
     def test_the_state_rejects_values_the_watcher_never_writes(self):
         state = watch.new_state(T0)
         state['seen']['otp'] = ['27.0`@x']
@@ -615,6 +925,9 @@ class StateTest(unittest.TestCase):
         self.assertEqual(watch.parse_state(body)['pending'], ['ide', 'otp'])
         with self.assertRaises(watch.WatchError):
             watch.parse_state(body.replace('"otp":[]', '"otp":["27.0`@x"]'))
+        with self.assertRaises(watch.WatchError):
+            watch.parse_state(body.replace('"reported":{"ide":{}',
+                                           '"reported":{"ide":{"263":{"issue":1,"keys":["@x"]}}'))
 
 
 class MatchTest(unittest.TestCase):
@@ -655,6 +968,34 @@ class FeedTest(unittest.TestCase):
         self.assertIsNone(entry(state, 'ide', '263.9999.1')['name'])  # its hostile release version is dropped
         self.assertNotIn('@', world.state_issue()['body'])
 
+    def test_a_number_too_long_to_convert_is_not_a_version(self):
+        huge = '9' * 5000
+        self.assertTrue(compat.INPUT_PATTERNS['otp'].fullmatch(huge))
+        self.assertFalse(watch.valid_version('otp', huge))
+        self.assertFalse(watch.valid_version('otp', '%d%s' % (MAJOR + 1, '.1' * 30)))
+        self.assertFalse(watch.valid_version('ide', '263.' + huge))
+        self.assertFalse(watch.valid_ide_name('2026.' + huge))
+        world = World([PINNED, '%d.0' % (MAJOR + 1)], Seeded.IDE)
+        world.otp_feed += 'OTP-%s x y\nOTP-%d.%s x y\n' % (huge, MAJOR + 1, huge)
+        code, out = cycle(world)
+        self.assertEqual(code, 0, out)
+        self.assertIn('Erlang/OTP: 2 entries without a valid version were ignored', out)
+        self.assertEqual(world.dispatched[-1][1], {'otp': '%d.0' % (MAJOR + 1), 'ref': SHA})
+
+    def test_a_feed_that_is_nested_too_deeply_stops_only_its_kind(self):
+        world = World([PINNED, '%d.0' % (MAJOR + 1)], Seeded.IDE)
+        request = world.request
+
+        def nested(method, url, **kwargs):
+            return watch.Response(200, b'[' * 200000) if url == watch.IDE_FEED else request(method, url, **kwargs)
+        world.request = nested
+        code, out = cycle(world)
+        self.assertEqual(code, 1)
+        self.assertIn('::error::IntelliJ IDEA: %s is not a JSON object' % watch.IDE_FEED, out)
+        # The cycle went on: Erlang/OTP was discovered, its run was started and the state was written.
+        self.assertEqual(world.state()['pending'], ['ide'])
+        self.assertEqual(world.dispatched[-1][1], {'otp': '%d.0' % (MAJOR + 1), 'ref': SHA})
+
     def test_feed_parsing(self):
         world = World([PINNED, '%d.0-rc1' % (MAJOR + 2)], [(BASE_IDE, '2026.3'), ('263.1.2', '2026.2.0.1')])
         versions, rejected = watch.read_otp_feed(world)
@@ -691,7 +1032,7 @@ class CompareTest(unittest.TestCase):
         self.assertEqual(watch.compare('otp', result, base)['sections'], [])
         result = otp_result(SHA, '29.0', 2, errors=[corpus_error('lib/stdlib-7.0/src/x.erl', 'e', 40, 7),
                                                     corpus_error('lib/stdlib-7.0/src/x.erl', 'e', 50, 7)])
-        self.assertEqual(watch.compare('otp', result, base)['sections'],
+        self.assertEqual(watch.lines_of(watch.compare('otp', result, base)['sections']),
                          [('corpus', 'parser errors in the Erlang/OTP sources', ['lib/stdlib-7.0/src/x.erl: e'])])
         self.assertEqual(watch.without_app_version('lib/stdlib-6.2.2.3/src/x.erl'), 'lib/stdlib/src/x.erl')
         self.assertEqual(watch.without_app_version('erts-17.0/preloaded/src/init.erl'), 'erts/preloaded/src/init.erl')
@@ -699,7 +1040,9 @@ class CompareTest(unittest.TestCase):
     def test_occurrences_are_counted(self):
         base = otp_result(SHA, PINNED, 1, errors=[corpus_error('a-1/x.erl', 'e')])
         result = otp_result(SHA, '29.0', 2, errors=[corpus_error('a-2/x.erl', 'e', n) for n in range(4)])
-        self.assertEqual(watch.compare('otp', result, base)['sections'][0][2], ['a-2/x.erl: e (3 times)'])
+        sections = watch.compare('otp', result, base)['sections']
+        self.assertEqual(watch.lines_of(sections)[0][2], ['a-2/x.erl: e (3 times)'])
+        self.assertEqual([(len(problems), sum(p.count for p in problems)) for _, _, problems in sections], [(1, 3)])
 
     def test_a_trimmed_corpus_list_is_compared_in_full(self):
         shared = [corpus_error('lib/a-1/src/f%d.erl' % i, 'e') for i in range(60)]
@@ -729,19 +1072,17 @@ class CompareTest(unittest.TestCase):
                      logs={'errors': errors})
         cycle(world, T0 + HOUR)
         body = world.version_issues()[0]['body']
-        self.assertIn('**corpus, parser errors in the Erlang/OTP sources**: 127, the first 30 listed', body)
-        self.assertNotIn('incomplete', body)
-        self.assertFalse(entry(world.state(), 'otp', version)['partial'])
+        self.assertIn('**corpus, parser errors in the Erlang/OTP sources**: 127 distinct, 127 occurrences, '
+                      'the first 30 listed', body)
+        self.assertEqual(entry(world.state(), 'otp', version)['verdict'], 'new problems')
 
     def test_other_trimmed_lists_make_the_comparison_incomplete(self):
         tests = [{'class': 'C', 'name': 't%d' % i, 'message': 'm'} for i in range(150)]
         base = ide_result(SHA, BASE_IDE, 1, failed_tests=tests[:120])
         result = ide_result(SHA, '263.8.1', 2, failed_tests=tests)
         comparison = watch.compare('ide', result, base)
-        self.assertIn('failed tests: the version has 150, the baseline 120; only the first 100 of each were compared',
-                      comparison['notes'])
-        self.assertEqual(comparison['sections'][0][2][0], '150 failed tests, 120 in the baseline; the ones beyond '
-                                                          'the first 100 were not compared')
+        self.assertEqual(comparison['notes'], ['failed tests: the version has 150, the baseline 120, and the result '
+                                               'lists only the first 100'])
 
     def test_checks_and_keys(self):
         base = ide_result(SHA, BASE_IDE, 1, verifier=['old problem'])
@@ -752,17 +1093,54 @@ class CompareTest(unittest.TestCase):
                                                                               'message': 'cannot find symbol'}])}
         base['checks']['compile'] = {'status': 'failed', 'errors': listed([{'file': 'A.java', 'line': 9,
                                                                             'message': 'cannot find symbol'}])}
-        sections = watch.compare('ide', result, base)['sections']
+        sections = watch.lines_of(watch.compare('ide', result, base)['sections'])
         self.assertEqual(sections, [
             ('verifyPlugin', 'Plugin Verifier problems of the built plugin', ['compatibility-problems: new problem']),
             ('releasedPlugin', 'status', ['releasedPlugin: passed in the baseline, not-run here: the release has no '
                                           'archive'])])
         skipped = otp_result(SHA, '29.0', 2)
         skipped['checks']['compilationTests']['skippedTests'] = listed([{'class': 'R', 'name': 'testRebar'}])
-        self.assertEqual(watch.compare('otp', skipped, otp_result(SHA, PINNED, 1))['sections'],
+        self.assertEqual(watch.lines_of(watch.compare('otp', skipped, otp_result(SHA, PINNED, 1))['sections']),
                          [('compilationTests', 'skipped compilation tests', ['R.testRebar'])])
         unknown = otp_result(SHA, '30.0', 2, known=False)
         self.assertEqual(watch.compare('otp', unknown, otp_result(SHA, PINNED, 1))['sections'][0][0], 'knownRelease')
+
+    def test_only_the_gated_levels_of_the_plugin_verifier_are_problems(self):
+        def check(status, problems, failing=()):
+            lists = {name: listed(lines) for name, lines in problems.items()}
+            return {'status': status, 'reports': [{'ide': 'IU-263.1', 'failingLevels': list(failing),
+                                                   'problems': lists}]}
+        self.assertEqual(sorted(list(watch.VERIFIER_CATEGORIES) + ['MISSING_DEPENDENCIES']),
+                         sorted(compat.VERIFIER_FAILURE_LEVELS))
+        base, result = ide_result(SHA, BASE_IDE, 1), ide_result(SHA, '263.8.1', 2)
+        base['checks']['verifyPlugin'] = check('passed', {'deprecated-usages': ['d1'], 'internal-api-usages': ['i1']})
+        result['checks']['verifyPlugin'] = check('passed', {
+            'deprecated-usages': ['d1', 'd2'], 'internal-api-usages': ['i1', 'i2'], 'experimental-api-usages': ['e1'],
+            'non-extendable-api-usages': ['n1'], 'compatibility-warnings': ['w1']})
+        self.assertEqual(watch.compare('ide', result, base), {'sections': [], 'notes': []})
+        result['checks']['verifyPlugin'] = check('failed', {
+            'deprecated-usages': ['d1', 'd2'], 'compatibility-problems': ['c1'], 'override-only-usages': ['o1'],
+            'invalid-plugin': ['p1']}, ['COMPATIBILITY_PROBLEMS', 'OVERRIDE_ONLY_API_USAGES', 'INVALID_PLUGIN'])
+        self.assertEqual(watch.lines_of(watch.compare('ide', result, base)['sections']), [
+            ('verifyPlugin', 'Plugin Verifier problems of the built plugin',
+             ['compatibility-problems: c1', 'invalid-plugin: p1', 'override-only-usages: o1'])])
+        # Missing dependencies have no list in the result: the level itself is the problem.
+        result['checks']['verifyPlugin'] = check('failed', {'deprecated-usages': ['d2']}, ['MISSING_DEPENDENCIES'])
+        self.assertEqual(watch.lines_of(watch.compare('ide', result, base)['sections']), [
+            ('verifyPlugin', 'Plugin Verifier problems of the built plugin', ['verdict: MISSING_DEPENDENCIES'])])
+        # A trimmed list that is not compared does not make the comparison incomplete.
+        result['checks']['verifyPlugin'] = check('passed', {'deprecated-usages': ['d%d' % i for i in range(150)]})
+        self.assertEqual(watch.compare('ide', result, base), {'sections': [], 'notes': []})
+
+    def test_a_trimmed_list_is_never_compared_by_its_first_items(self):
+        # The baseline has 150 errors; the version has the same without the first 10, so the first 100 of each differ.
+        errors = [corpus_error('lib/a-1/src/f%03d.erl' % i, 'e') for i in range(150)]
+        base = otp_result(SHA, PINNED, 1, errors=errors)
+        result = otp_result(SHA, '29.0', 2, errors=errors[10:])
+        unread = {'result': 'no artifact', 'baseline': 'no artifact'}
+        self.assertEqual(len(watch.compare('otp', result, base, unread)['notes']), 2)
+        self.assertEqual(watch.compare('otp', result, base, {'result': errors[10:], 'baseline': errors}),
+                         {'sections': [], 'notes': []})
 
     def test_a_hostile_string_in_a_result_is_neutralised_in_the_issue(self):
         hostile = 'x```\n# @maintainer see [here](https://evil)\u202e `' + 'y' * 1000
@@ -770,10 +1148,12 @@ class CompareTest(unittest.TestCase):
         result = otp_result(SHA, '29.0', 2, errors=[corpus_error('lib/a-1/' + hostile, hostile)])
         comparison = watch.compare('otp', result, base, {})
         entry_ = dict(watch.ENTRY_DEFAULTS, kind='otp', version='29.0', sha=SHA, run=2)
-        body = watch.issue_body(entry_, comparison, 'https://github.com/o/r/actions/runs/2',
+        body = watch.issue_body(entry_, comparison['sections'], 'https://github.com/o/r/actions/runs/2',
                                 'https://github.com/o/r/actions/runs/1')
         self.assertNotIn('@', body)
         self.assertNotIn('\u202e', body)
+        self.assertEqual(watch.safe('a <!-- compat-watch:otp:29.1 --> <!----> b'),
+                         'a <! -- compat-watch:otp:29.1 -- > <! ---- > b')
         fences = [line for line in body.splitlines() if '`' in line and line.strip().startswith('```')]
         self.assertEqual(fences, ['```', '```'])
         problem = body.split('```\n')[1].split('\n')[0]
@@ -804,9 +1184,13 @@ class WorkflowTest(unittest.TestCase):
         writers = [job for job in jobs.values() if 'write' in job.get('permissions', {}).values()]
         self.assertEqual(len(writers), 1)
         self.assertEqual(writers[0]['permissions'], {'contents': 'read', 'actions': 'write', 'issues': 'write'})
-        self.assertEqual(writers[0]['if'], "github.event_name != 'pull_request'")
+        # Never on pull_request, only in this repository and only on its default branch.
+        self.assertEqual(writers[0]['if'], "${{ github.event_name != 'pull_request' "
+                         "&& github.repository == 'ignatov/intellij-erlang' && (github.event_name == 'schedule' "
+                         "|| github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) }}")
         readers = [job for job in jobs.values() if job is not writers[0]]
-        self.assertEqual([job['permissions'] for job in readers], [{'contents': 'read'}])
+        self.assertEqual([job['permissions'] for job in readers],
+                         [{'contents': 'read', 'actions': 'read', 'issues': 'read'}])
         self.assertEqual(readers[0]['if'], "github.event_name == 'pull_request'")
         self.assertIn('--dry-run', ''.join(step.get('run', '') for step in readers[0]['steps']))
         self.assertEqual(writers[0]['concurrency'], {'group': 'compat-watch', 'cancel-in-progress': False})
