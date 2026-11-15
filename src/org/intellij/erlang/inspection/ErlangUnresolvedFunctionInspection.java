@@ -29,7 +29,9 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
+import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix.DefaultFunctionTextProvider;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix.FunctionTextProvider;
+import org.intellij.erlang.quickfixes.ErlangCreateRemoteFunctionQuickFix;
 import org.intellij.erlang.refactoring.ErlangRefactoringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,9 +61,11 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
         String fixMessage = "Create Function " + (moduleRef != null ? moduleRef.getText() + ":" : "") + presentation;
 
-        LocalQuickFix[] fixes = parent instanceof ErlangGenericFunctionCallExpression ||
-                                parent instanceof ErlangGlobalFunctionCallExpression ? new LocalQuickFix[0] :
-                                new LocalQuickFix[]{createFix(call, fixMessage)};
+        LocalQuickFix fix = parent instanceof ErlangGenericFunctionCallExpression ? null :
+                            moduleRef != null ? ErlangCreateRemoteFunctionQuickFix.create(
+                              fixMessage, ErlangPsiImplUtil.resolveToFile(moduleRef), createTextProvider(call)) :
+                            new ErlangCreateFunctionQuickFix(fixMessage, createTextProvider(call));
+        LocalQuickFix[] fixes = fix != null ? new LocalQuickFix[]{fix} : LocalQuickFix.EMPTY_ARRAY;
 
         registerProblem(holder, call.getNameIdentifier(), "Unresolved function " + presentation, fixes);
       }
@@ -87,21 +91,32 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         if (arity < 0 || name == null) return;
 
         String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
-        String fixMessage = "Create Function " + functionPresentation;
-
-        LocalQuickFix[] qfs = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ?
-          new LocalQuickFix[]{} : new LocalQuickFix[]{new ErlangCreateFunctionQuickFix(fixMessage, name, arity)};
+        ErlangModuleRef moduleRef = what instanceof ErlangFunctionWithArity ?
+                                    PsiTreeUtil.getPrevSiblingOfType(what, ErlangModuleRef.class) : null;
+        LocalQuickFix fix;
+        if (moduleRef != null && moduleRef.getQAtom().getMacros() == null) {
+          String fixMessage = "Create Function " + moduleRef.getText() + ":" + functionPresentation;
+          String atomName = ObjectUtils.defaultIfNull(ErlangPsiImplUtil.toAtomName(name), name);
+          fix = ErlangCreateRemoteFunctionQuickFix.create(fixMessage, ErlangPsiImplUtil.resolveToFile(moduleRef),
+                                                          new DefaultFunctionTextProvider(atomName, arity));
+        }
+        else {
+          String fixMessage = "Create Function " + functionPresentation;
+          fix = PsiTreeUtil.getNextSiblingOfType(what, ErlangModuleRef.class) != null ? null :
+                new ErlangCreateFunctionQuickFix(fixMessage, name, arity);
+        }
+        LocalQuickFix[] qfs = fix != null ? new LocalQuickFix[]{fix} : LocalQuickFix.EMPTY_ARRAY;
 
         registerProblem(holder, target, "Unresolved function " + functionPresentation, qfs);
       }
     };
   }
 
-  private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression call,
-                                                        @NotNull String fixMessage) {
+  @NotNull
+  private static FunctionTextProvider createTextProvider(@NotNull ErlangFunctionCallExpression call) {
     final SmartPsiElementPointer<ErlangFunctionCallExpression> myPointer =
       SmartPointerManager.getInstance(call.getProject()).createSmartPsiElementPointer(call);
-    return new ErlangCreateFunctionQuickFix(fixMessage, new FunctionTextProvider() {
+    return new FunctionTextProvider() {
       @NotNull
       @Override
       public String getName() {
@@ -119,6 +134,6 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         List<ErlangExpression> expressions = call.getArgumentList().getExpressionList();
         return ContainerUtil.map(expressions, ErlangRefactoringUtil::shorten);
       }
-    });
+    };
   }
 }
