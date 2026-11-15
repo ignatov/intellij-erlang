@@ -123,6 +123,10 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test222__IR_OFF()  throws Exception { doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
+  public void testLineCommentAddSpace() throws Exception {
+    getCommonSettings().LINE_COMMENT_ADD_SPACE_ON_REFORMAT = true;
+    doTest();
+  }
   public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
   public void test434()    throws Exception { alignBlocks(); doTest(); }
   public void test451()    throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
