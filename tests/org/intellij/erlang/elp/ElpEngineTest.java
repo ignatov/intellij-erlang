@@ -108,27 +108,37 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     PsiFile appSrc = myFixture.addFileToProject("src/a.app.src", "{application, a, []}.");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
     assertTrue(ElpEngine.ownsFeature(header, ElpEngine.Feature.NAVIGATION));
-    assertFalse("ELP does not get .app.src", ElpEngine.ownsFeature(appSrc, ElpEngine.Feature.COMPLETION));
-    assertFalse(ElpEngine.ownsFeature(null, ElpEngine.Feature.COMPLETION));
-    assertFalse(ElpEngine.ownsFeature(getProject(), null, ElpEngine.Feature.COMPLETION));
+    assertFalse("ELP does not get .app.src", ElpEngine.ownsFeature(appSrc, ElpEngine.Feature.DOCUMENTATION));
+    assertFalse(ElpEngine.ownsFeature(null, ElpEngine.Feature.DOCUMENTATION));
+    assertFalse(ElpEngine.ownsFeature(getProject(), null, ElpEngine.Feature.DOCUMENTATION));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
-    assertFalse("no running server, the plugin answers", ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    assertFalse("no running server, the plugin answers", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
 
     configure("/opt/elp/bin/elp", ElpMode.PLUGIN, true);
-    assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
 
     configure("", ElpMode.ELP, true);
-    assertFalse("no path, no ELP", ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    assertFalse("no path, no ELP", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
   }
 
   public void testModePropertyOverridesTheStoredPosition() {
     PsiFile module = myFixture.addFileToProject("src/a.erl", "-module(a).");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     System.setProperty(ElpConfiguration.MODE_PROPERTY, "plugin");
+    assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+  }
+
+  public void testCompletionStaysWithThePlugin() {
+    PsiFile module = myFixture.addFileToProject("src/a.erl", "-module(a).");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertFalse(ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION));
     assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+    for (ElpEngine.Feature feature : ElpEngine.Feature.values()) {
+      if (feature != ElpEngine.Feature.COMPLETION) assertTrue(feature.name(), ElpEngine.elpMayOwn(feature));
+    }
   }
 
   public void testCompletion() {
@@ -137,7 +147,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertEmpty(lookupStrings(myFixture.completeBasic()));
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
   }
 
   public void testCompletionOfReferenceVariants() {
@@ -148,7 +158,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertEmpty(lookupStrings(myFixture.completeBasic()));
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
   }
 
   public void testCompletionOfMacroAndRecordVariants() {
@@ -157,13 +167,13 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "MACRO1", "MACRO2");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertEmpty(lookupStrings(myFixture.completeBasic()));
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "MACRO1", "MACRO2");
 
     myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getFile().getText().indexOf("#rec") + 4);
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "rec1", "rec2");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertEmpty(lookupStrings(myFixture.completeBasic()));
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "rec1", "rec2");
   }
 
   public void testVariableCompletion() {
@@ -172,7 +182,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "Alpha1", "Alpha2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertEmpty(lookupStrings(myFixture.completeBasic()));
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "Alpha1", "Alpha2");
   }
 
   public void testParameterHints() {
@@ -285,7 +295,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     ElpEngine.runWithPlugin(ElpEngine.Feature.RENAME, () -> {
       assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.RENAME));
-      assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
+      assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
     });
     assertTrue(ElpEngine.ownsFeature(module, ElpEngine.Feature.RENAME));
   }
