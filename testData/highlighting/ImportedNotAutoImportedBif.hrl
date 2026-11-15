@@ -1,0 +1,1 @@
+-import(erlang, [crc32/1]).

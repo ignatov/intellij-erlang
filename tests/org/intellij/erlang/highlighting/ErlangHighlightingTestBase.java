@@ -112,6 +112,16 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
     myFixture.checkHighlighting(true, false, false);
   }
 
+  protected void addErlangModuleWithFunctionsAutoImportedSince28() {
+    myFixture.addFileToProject("erlang.erl", """
+      -module(erlang).
+      -export([max/2, link/2, exit_signal/2]).
+      max(A, _) -> A.
+      link(_, _) -> true.
+      exit_signal(_, _) -> true.
+      """);
+  }
+
   protected void enableUnresolvedMacroInspection() {
     //noinspection unchecked
     myFixture.enableInspections(ErlangUnresolvedMacrosInspection.class);
