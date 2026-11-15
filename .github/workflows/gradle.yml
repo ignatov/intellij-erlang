@@ -18,16 +18,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-    - name: Set up JDK 25
+    - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
         distribution: temurin
-        java-version: '25'
+        java-version: '21'
         cache: gradle
     - name: Test, Build and Verify Plugin
       env:
         BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
       run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
+    - name: Check the compatibility range of the archive
+      # The archive must be the one built against the oldest supported IDE, with the upper bound that CI covers.
+      run: |
+        shopt -s nullglob
+        zips=(build/distributions/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected one plugin archive, found ${#zips[@]}"
+          exit 1
+        fi
+        unzip -q "${zips[0]}" -d "$RUNNER_TEMP/archive"
+        range=""
+        for jar in "$RUNNER_TEMP"/archive/*/lib/*.jar; do
+          if unzip -l "$jar" META-INF/plugin.xml > /dev/null 2>&1; then
+            range="$(unzip -p "$jar" META-INF/plugin.xml | grep -o '<idea-version[^>]*>')"
+          fi
+        done
+        echo "$range"
+        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+          echo "::error::Unexpected compatibility range in ${zips[0]}: '$range'"
+          exit 1
+        fi
     - name: Upload Plugin Artifact
       uses: actions/upload-artifact@v7
       with:
@@ -38,6 +59,60 @@ jobs:
       # Regenerates gen/ from Erlang.flex and grammars/erlang.bnf into build/ and fails if the committed gen/ differs.
       run: ./gradlew --no-daemon verifyGeneratedSources
 
+  other-ides:
+    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.1.
+    # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
+    # archive against it. The list ends at the IDE of until-build (supportedUntilBuild in build.gradle).
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ide: '2026.2'
+            java: '21'
+          - ide: '2026.3'
+            java: '25'
+    name: ide-${{ matrix.ide }}
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.java }}
+        cache: gradle
+    - name: Test against IntelliJ IDEA ${{ matrix.ide }}
+      env:
+        IDE: ${{ matrix.ide }}
+      run: ./gradlew --no-daemon clean test -PplatformVersion="$IDE"
+    - name: Download Plugin Artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: intellij-erlang-plugin
+        path: ${{ runner.temp }}/plugin
+    - name: Verify the archive against IntelliJ IDEA ${{ matrix.ide }}
+      env:
+        COMPAT_IDE: ${{ matrix.ide }}
+      run: |
+        shopt -s nullglob
+        zips=("$RUNNER_TEMP"/plugin/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected one plugin archive, found ${#zips[@]}"
+          exit 1
+        fi
+        scripts/compat/gradle.sh verifyPlugin -PcompatPluginArchive="${zips[0]}"
+    - name: Upload test and verifier reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ide-${{ matrix.ide }}-reports
+        path: |
+          build/reports/tests/test
+          build/compat/released-verifier
+        if-no-files-found: ignore
+
   compilation-tests:
     # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
     # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).
@@ -45,11 +120,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-    - name: Set up JDK 25
+    - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
         distribution: temurin
-        java-version: '25'
+        java-version: '21'
         cache: gradle
     - name: Install Erlang/OTP
       # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
@@ -116,7 +191,7 @@ jobs:
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
   nightly:
-    needs: [build, compilation-tests]
+    needs: [build, other-ides, compilation-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     permissions:
