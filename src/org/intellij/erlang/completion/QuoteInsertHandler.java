@@ -19,10 +19,16 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.AutoPopupController;
 import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.Document;
+import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class QuoteInsertHandler extends SingleCharInsertHandler {
   private static final char QUOTE = '\'';
@@ -43,32 +49,58 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   }
 
   public static void process(@NotNull String name, @Nullable String moduleName, @NotNull InsertionContext context) {
+    CharSequence text = context.getDocument().getCharsSequence();
     if (moduleName != null && ErlangPsiImplUtil.needQuotation(moduleName)) {
       int startOffset = context.getStartOffset();
-      insertQuotesIfAbsent(context, startOffset, startOffset + moduleName.length());
+      int tailOffset = startOffset + moduleName.length();
+      insertQuotes(context, startOffset, tailOffset, isQuoteAt(text, startOffset - 1), isQuoteAt(text, tailOffset));
     }
     int tailOffset = context.getTailOffset();
     int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
-    CharSequence text = context.getDocument().getCharsSequence();
-    if (ErlangPsiImplUtil.needQuotation(name) || isQuoteAt(text, startOffset - 1) || isQuoteAt(text, tailOffset)) {
-      tailOffset = insertQuotesIfAbsent(context, startOffset, tailOffset);
+    List<Integer> quotes = getQuoteTokenOffsets(context, startOffset, tailOffset);
+    int openingIndex = quotes.indexOf(startOffset - 1);
+    int closingIndex = quotes.indexOf(tailOffset);
+    // a quote before the name opens it unless it closes a previous atom
+    boolean hasOpeningQuote = openingIndex != -1 && openingIndex % 2 == 0;
+    // a quote after the name closes it unless it opens a following, closed atom
+    boolean hasClosingQuote = closingIndex != -1 && (closingIndex % 2 == 1 || closingIndex == quotes.size() - 1);
+    if (ErlangPsiImplUtil.needQuotation(name) || hasOpeningQuote || hasClosingQuote) {
+      tailOffset = insertQuotes(context, startOffset, tailOffset, hasOpeningQuote, hasClosingQuote);
       context.getEditor().getCaretModel().moveToOffset(tailOffset);
       context.setTailOffset(tailOffset);
     }
   }
 
   /**
+   * @return the offsets of the quote tokens of quoted atoms on the lines from the one before the name to the one after it
+   */
+  @NotNull
+  private static List<Integer> getQuoteTokenOffsets(@NotNull InsertionContext context, int startOffset, int tailOffset) {
+    Document document = context.getDocument();
+    int lineStart = document.getLineStartOffset(document.getLineNumber(Math.max(0, startOffset - 1)));
+    int lineEnd = document.getLineEndOffset(document.getLineNumber(tailOffset));
+    List<Integer> quotes = new ArrayList<>();
+    Lexer lexer = new ErlangLexer(context.getProject());
+    lexer.start(document.getCharsSequence(), lineStart, lineEnd);
+    for (; lexer.getTokenType() != null; lexer.advance()) {
+      if (lexer.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE) {
+        quotes.add(lexer.getTokenStart());
+      }
+    }
+    return quotes;
+  }
+
+  /**
    * @return the offset after the closing quote
    */
-  private static int insertQuotesIfAbsent(@NotNull InsertionContext context, int startOffset, int tailOffset) {
+  private static int insertQuotes(@NotNull InsertionContext context, int startOffset, int tailOffset,
+                                  boolean hasOpeningQuote, boolean hasClosingQuote) {
     Document document = context.getEditor().getDocument();
-    CharSequence fileText = document.getCharsSequence();
-
-    if (!isQuoteAt(fileText, startOffset - 1)) {
+    if (!hasOpeningQuote) {
       document.insertString(startOffset, String.valueOf(QUOTE));
       tailOffset++;
     }
-    if (!isQuoteAt(fileText, tailOffset)) {
+    if (!hasClosingQuote) {
       document.insertString(tailOffset, String.valueOf(QUOTE));
     }
     return tailOffset + 1;
