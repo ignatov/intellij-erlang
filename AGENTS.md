@@ -31,14 +31,15 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 | Build, test and verify against another IDE | `./gradlew test buildPlugin verifyPlugin -PplatformVersion=263.7307.44` (or `2026.3.1`, `263-EAP-SNAPSHOT`) |
 | Parse every `.erl`/`.hrl` under a directory (corpus check) | `CORPUS_DIR=/usr/local/lib/erlang CORPUS_REPORT=/tmp/corpus.json ./gradlew test --tests 'org.intellij.erlang.parser.ErlangCorpusParsingTest' --rerun` |
 | Unit tests of the compatibility check scripts | `python3 -m unittest discover -s scripts/compat -p 'test_*.py' -v` |
-| Compatibility check on GitHub | `gh workflow run compat.yml -f ide=263.7307.44 -f otp=28.0 -f ref=master` |
+| Compatibility check on GitHub | `gh workflow run compat.yml -f ide=263.7307.44 -f otp=28.0` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.
 - The rebar tests skip themselves when `rebar.path` is unset. The Copilot setup steps put `rebar3` on `PATH`, so `command -v rebar3` finds it.
 - `verifyPlugin` checks only against the IDE that is built against. It fails on compatibility problems, missing dependencies, an invalid plugin and override-only API usages.
 - The compatibility check, `.github/workflows/compat.yml` with `scripts/compat/`, answers whether the plugin works with one IDE build (job `ide`: compile, `test`, `verifyPlugin` with `-PplatformVersion`, and the Plugin Verifier on the archive of the published release, `v<version>.<N>` with the largest N) and one Erlang/OTP release (job `otp`: `testCompilation` and `ErlangCorpusParsingTest` on that installation, and whether `ErlangSdkRelease` and `testData/mockSdk-R<NN>` know the release).
-- Each job uploads one JSON result (`compat-ide`, `compat-otp`); a job that was not asked for is `skipped` and uploads none. A run without the result failed for infrastructure reasons (the IDE or Erlang/OTP could not be set up). A check that did not run makes the job red. Findings make the job red on `workflow_dispatch` only; on `pull_request` it is green when every check gave a result. `ErlangCorpusParsingTest.testCorpus` does nothing without `CORPUS_DIR`.
+- `ref` is empty (the head of the default branch), a release tag `v<digits and dots>`, or the full SHA of a commit of the default branch; branches are refused. On `pull_request` the plugin is the merge commit that the scripts come from.
+- Each job uploads one JSON result (`compat-ide`, `compat-otp`); a job that was not asked for is `skipped` and uploads none. A run without the result failed for infrastructure reasons (the IDE or Erlang/OTP could not be set up). A result that is `incomplete` (a check did not run or did not work: no test ran, a missing Gradle task, no report) makes the job red on every event. Findings of checks that ran make the job red on `workflow_dispatch` only; on `pull_request` it is green. `ErlangCorpusParsingTest.testCorpus` does nothing without `CORPUS_DIR`.
 
 ## Generated code
 - Grammar-Kit generates `gen/org/intellij/erlang/{ErlangTypes.java,parser/ErlangParser.java,psi/**}` from `grammars/erlang.bnf`.

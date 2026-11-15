@@ -7,20 +7,25 @@ report, and writes one JSON result and a Markdown summary. The JSON is read by p
 SCHEMA_VERSION and the PR that added this script for the schema.
 
 Every check has a status: passed, failed or not-run. A check that ran and found problems is failed and lists its
-findings; a check that started and did not finish (its step timed out) is failed with a reason. The result's status is
-failed if a check failed, incomplete if none failed but one did not run, and passed otherwise. When the job could not
-get as far as its checks (an IDE that cannot be resolved, an Erlang/OTP that cannot be installed), no JSON is written
-and the script exits with 2, so that a run without the result artifact means an infrastructure failure. A Gradle
-failure once the IDE is resolved is a finding of the check that failed.
+findings; a check that started and did not finish (its step timed out) is failed with a reason. A check that did not
+work is not-run with a reason, also when its step ran: no test ran, the Gradle task or option does not exist, the check
+wrote no report, or its result is missing. A check that was not run because a check it needs found problems has
+blockedBy, the name of that check. The result's status is incomplete if a check is not-run without a failed blockedBy,
+otherwise failed if a check failed, and passed otherwise. When the job could not get as far as its checks (an IDE that
+cannot be resolved, an Erlang/OTP that cannot be installed), no JSON is written and the script exits with 2, so that a
+run without the result artifact means an infrastructure failure. Any other Gradle failure once the IDE is resolved is a
+finding of the check that failed.
 
 Subcommands:
-  inputs --job JOB        validate the workflow inputs (and the pins of gradle.yml) before anything uses them, resolve
+  inputs --job JOB --event EVENT
+                          validate the workflow inputs (and the pins of gradle.yml) before anything uses them, resolve
                           `ref` to a commit of this repository and write them to $GITHUB_OUTPUT
   pins GRADLE_YML         print OTP_VERSION, REBAR3_VERSION and REBAR3_SHA256 pinned in gradle.yml as NAME=value lines
   release-tag             print the tag of the published plugin, read from `gh release list --json tagName` on stdin
   ide-result ...          the result of the ide job
   otp-result ...          the result of the otp job
-  conclusion RESULT_JSON  exit with 1 if a check did not run, or if one failed and the event is not pull_request
+  conclusion RESULT_JSON --event EVENT
+                          exit with 1 if the result is incomplete, or if it failed and the event is not pull_request
 
 Python 3 standard library only.
 """
@@ -41,30 +46,33 @@ LIST_LIMIT = 100
 TEXT_LIMIT = 2000
 LOG_TAIL_LINES = 40
 
+EVENTS = ['pull_request', 'workflow_dispatch']
 PASSED = 'passed'
 FAILED = 'failed'
 NOT_RUN = 'not-run'
 INCOMPLETE = 'incomplete'
 TRIMMED = '... [trimmed]'
 
-# The documented forms of the inputs; nothing else reaches a command or an output file.
+# The documented forms of the inputs; nothing else reaches a command or an output file. ASCII digits only: \d would
+# also match other Unicode digits.
 INPUT_PATTERNS = {
-    'ide': re.compile(r'(20\d\d\.\d+(\.\d+)?|\d{3}\.\d+(\.\d+)?|latest|(\d{3}|\d{3}\.\d+(\.\d+)?|LATEST)-EAP-SNAPSHOT)'),
-    'otp': re.compile(r'\d+(\.\d+)*(-rc\d+)?'),
-    'ref': re.compile(r'(?!-)(?!refs/(?!heads/|tags/))(?!.*\.\.)(?!.*//)(?!.*/$)(?!.*\.lock$)[A-Za-z0-9._/-]{1,200}'),
+    'ide': re.compile(r'(20[0-9][0-9]\.[0-9]+(\.[0-9]+)?|[0-9]{3}\.[0-9]+(\.[0-9]+)?|latest'
+                      r'|([0-9]{3}|[0-9]{3}\.[0-9]+(\.[0-9]+)?|LATEST)-EAP-SNAPSHOT)'),
+    'otp': re.compile(r'[0-9]+(\.[0-9]+)*(-rc[0-9]+)?'),
+    'ref': re.compile(r'v[0-9]+(\.[0-9]+)*|[0-9a-f]{40}'),
 }
 INPUT_FORMS = {
     'ide': 'a release version (2026.3, 2026.3.1), a build number (263.7307.44), latest, 263-EAP-SNAPSHOT, '
            '<build>-EAP-SNAPSHOT or LATEST-EAP-SNAPSHOT',
     'otp': 'an Erlang/OTP version like 27.3.4.9, 29.1 or 30.0-rc1',
-    'ref': 'a branch, a tag or a commit SHA of this repository',
+    'ref': 'a release tag of this repository (v0.11.1302) or the full SHA of a commit of its default branch',
 }
 PIN_PATTERNS = {
     'OTP_VERSION': INPUT_PATTERNS['otp'],
-    'REBAR3_VERSION': re.compile(r'\d+\.\d+(\.\d+)*'),
+    'REBAR3_VERSION': re.compile(r'[0-9]+\.[0-9]+(\.[0-9]+)*'),
     'REBAR3_SHA256': re.compile(r'[0-9a-f]{64}'),
 }
-SHA = re.compile(r'[0-9a-f]{7,40}')
+SHA = re.compile(r'[0-9a-f]{40}')
 
 # The failure levels of verifyPlugin in build.gradle, and the phrases of verification-verdict.txt that the IntelliJ
 # Platform Gradle Plugin 2.20.1 (VerifyPluginTask.metadataOf) maps to them.
@@ -96,6 +104,16 @@ INFRASTRUCTURE_PATTERNS = [
         r'Connection (reset|refused|timed out)',
         r'Read timed out',
         r'No space left on device',
+    )
+]
+
+# Gradle output of a check that could not run at all in the checked-out build: the check is not-run, not a finding.
+BROKEN_PATTERNS = [
+    re.compile(p) for p in (
+        r"Task '[^']+' not found in (root )?project",
+        r'Cannot locate tasks? that match',
+        r"Unknown command-line option '[^']+'",
+        r'No tests found for given includes',
     )
 ]
 
@@ -165,9 +183,9 @@ def log_tail(log, lines=LOG_TAIL_LINES):
     return tail if len(tail) <= TEXT_LIMIT else TRIMMED + tail[len(tail) - TEXT_LIMIT + len(TRIMMED):]
 
 
-def infrastructure_hint(log):
-    """The first line of a failed Gradle run that suggests a download or environment failure, or None."""
-    for pattern in INFRASTRUCTURE_PATTERNS:
+def matching_line(patterns, log):
+    """The first line of `log` that matches one of `patterns`, or None."""
+    for pattern in patterns:
         match = pattern.search(log or '')
         if match:
             return (log[:match.start()].rsplit('\n', 1)[-1] + log[match.start():].split('\n', 1)[0]).strip()
@@ -276,11 +294,23 @@ def parse_verifier_reports(directory):
 # Checks. Each returns a dict with `status` first.
 
 
+def broken(check, reason, log):
+    """Makes `check` not-run: it did not work, so it gives no answer, even though its step ran."""
+    check['status'] = NOT_RUN
+    check['reason'] = text(reason)
+    check['logTail'] = log_tail(log)
+    return check
+
+
 def gradle_failure(check, log):
-    """Fills a failed check whose Gradle run failed without a recognized finding. It is a finding of this check only."""
+    """Fills a check whose Gradle run failed without a recognized finding: not-run if the check could not run in this
+    build (BROKEN_PATTERNS), otherwise failed, a finding of this check only."""
+    cause = matching_line(BROKEN_PATTERNS, log)
+    if cause:
+        return broken(check, 'the check could not run: ' + cause, log)
     check['status'] = FAILED
     check['reason'] = 'Gradle failed without a recognized finding; see logTail'
-    hint = infrastructure_hint(log)
+    hint = matching_line(INFRASTRUCTURE_PATTERNS, log)
     if hint:
         check['reason'] += '; the log shows a possible download or environment failure: ' + hint
     check['reason'] = text(check['reason'])
@@ -315,11 +345,10 @@ def tests_check(logs, name, result_dirs, fail_on_skipped=False):
     if fail_on_skipped and skipped:
         check['status'] = FAILED
         check['reason'] = 'tests were skipped'
-    if fail_on_skipped and totals['tests'] == 0 and exit_code == 0:
-        check['status'] = FAILED
-        check['reason'] = 'no test ran'
     if exit_code != 0 and not failed:
         gradle_failure(check, log)
+    elif totals['tests'] == 0:
+        broken(check, 'no test ran', log)
     return check
 
 
@@ -334,7 +363,9 @@ def verifier_check(logs, name, reports_dir, extra=None):
     check['exitCode'] = exit_code
     check['failureLevels'] = VERIFIER_FAILURE_LEVELS
     check['reports'] = reports
-    if exit_code == 0:
+    if exit_code == 0 and not reports:
+        broken(check, 'the Plugin Verifier wrote no report', log)
+    elif exit_code == 0:
         check['status'] = PASSED
     elif any(report['failingLevels'] for report in reports):
         check['status'] = FAILED
@@ -350,11 +381,9 @@ def corpus_check(logs, report_path):
     log = read_file(os.path.join(logs, 'corpus.log')) or ''
     content = read_file(report_path)
     if content is None:
-        check = {'status': FAILED, 'exitCode': exit_code, 'reason': 'ErlangCorpusParsingTest wrote no report'}
-        if exit_code != 0:
-            gradle_failure(check, log)
-            check['reason'] = 'ErlangCorpusParsingTest wrote no report; see logTail'
-        return check
+        cause = matching_line(BROKEN_PATTERNS, log)
+        return broken({'status': NOT_RUN, 'exitCode': exit_code}, 'ErlangCorpusParsingTest wrote no report'
+                      + ('; the check could not run: ' + cause if cause else '; see logTail'), log)
     report = json.loads(content)
     errors = [dict(e, description=text(e.get('description'))) for e in report.get('errors', [])]
     exceptions = [dict(e, exception=text(e.get('exception'))) for e in report.get('exceptions', [])]
@@ -374,13 +403,12 @@ def corpus_check(logs, report_path):
     }
     if errors or exceptions or slow_files:
         check['status'] = FAILED
-    if not report.get('files'):
-        check['status'] = FAILED
-        check['reason'] = 'the corpus has no .erl or .hrl file, so nothing was parsed'
     if exit_code != 0:
         check['status'] = FAILED
         check['reason'] = 'the test task failed after the report was written; see logTail'
         check['logTail'] = log_tail(log)
+    if not report.get('files'):
+        broken(check, 'the corpus has no .erl or .hrl file, so nothing was parsed', log)
     return check
 
 
@@ -508,39 +536,44 @@ def github_api(path):
 
 
 def resolve_ref(ref, repository, default_branch, api=github_api):
-    """The commit SHA of `ref`, which must be a branch or a tag of `repository` or a commit of its default branch.
+    """The commit SHA of `ref`: empty for the head of the default branch, a release tag v<digits and dots> of
+    `repository`, or the full SHA of the head of the default branch or of an ancestor of it.
 
-    Code from anywhere else (a pull request, a fork) is refused: the job runs the Gradle build of that commit."""
-    ref = ref or default_branch
+    Anything else (a branch, a pull request, a fork) is refused: the job runs the Gradle build of that commit."""
+    if not default_branch:
+        raise InputError('the default branch of %s is not known' % repository)
     quote = lambda value: urllib.parse.quote(value, safe='/')
-    if SHA.fullmatch(ref):
+    commit = None
+    if not ref:
+        commit = api('repos/%s/commits/%s' % (repository, quote('heads/' + default_branch)))
+    elif SHA.fullmatch(ref):
         comparison = api('repos/%s/compare/%s...%s' % (repository, quote(default_branch), ref))
         if comparison and comparison.get('status') in ('behind', 'identical'):
-            return comparison['merge_base_commit']['sha']
-    kinds = ['heads', 'tags']
-    for prefix in ('refs/heads/', 'refs/tags/'):
-        if ref.startswith(prefix):
-            kinds, ref = [prefix.split('/')[1]], ref[len(prefix):]
-    for kind in kinds:
-        commit = api('repos/%s/commits/%s' % (repository, quote('%s/%s' % (kind, ref))))
-        if isinstance(commit, dict) and commit.get('sha'):
-            return commit['sha']
-    raise InputError('the input ref=%r is not a branch or a tag of %s, nor a commit of its default branch %s'
+            return ref
+    else:
+        commit = api('repos/%s/commits/%s' % (repository, quote('tags/' + ref)))
+    if isinstance(commit, dict) and SHA.fullmatch(commit.get('sha') or ''):
+        return commit['sha']
+    raise InputError('the input ref=%r is not a release tag of %s, nor a commit of its default branch %s'
                      % (ref, repository, default_branch))
 
 
-def check_inputs(job, event, raw, pr_head_sha=None, repository=None, default_branch=None, gradle_yml=None,
+def check_inputs(job, event, raw, workflow_sha=None, repository=None, default_branch=None, gradle_yml=None,
                  api=github_api):
     """The validated inputs of `job` as step outputs: ide, otp, ref, the commit to check and, for otp, the pins.
 
-    Every value is checked against its documented form before it is used, so no input can add a line to an output."""
+    Every value is checked against its documented form before it is used, so no input can add a line to an output.
+    On pull_request the commit is `workflow_sha`, the merge commit of the event that the scripts come from, so that
+    the scripts and the plugin come from one tree."""
     values = {name: validate_input(name, raw.get(name)) for name in ('ide', 'otp', 'ref')}
     if event == 'pull_request':
-        if not SHA.fullmatch(pr_head_sha or ''):
-            raise InputError('the pull request head %r is not a commit SHA' % pr_head_sha)
-        values['commit'] = pr_head_sha
-    else:
+        if not SHA.fullmatch(workflow_sha or ''):
+            raise InputError('the commit of the workflow %r is not a commit SHA' % workflow_sha)
+        values['commit'] = workflow_sha
+    elif event == 'workflow_dispatch':
         values['commit'] = resolve_ref(values['ref'], repository, default_branch, api)
+    else:
+        raise InputError('the event %r is neither pull_request nor workflow_dispatch' % event)
     if job == 'otp':
         pins = validate_pins(read_pins(gradle_yml))
         values.update(pins)
@@ -558,7 +591,7 @@ def write_outputs(values, path):
 
 def release_tag(releases, version):
     """The tag of the published plugin: the release v<version>.<N> with the largest N, not GitHub's latest release."""
-    pattern = re.compile(r'v%s\.(\d+)' % re.escape(version))
+    pattern = re.compile(r'v%s\.([0-9]+)' % re.escape(version))
     builds = [(int(match.group(1)), release['tagName']) for release in releases
               if not release.get('isDraft') and (match := pattern.fullmatch(release.get('tagName') or ''))]
     if not builds:
@@ -587,10 +620,17 @@ def run_info():
     }
 
 
+def incomplete_checks(checks):
+    """The checks that gave no answer: not-run, unless the check named by their blockedBy failed with findings."""
+    return [name for name, check in checks.items() if check['status'] == NOT_RUN
+            and (checks.get(check.get('blockedBy')) or {}).get('status') != FAILED]
+
+
 def overall(checks):
-    """failed if a check failed, incomplete if none failed but one did not run, passed otherwise."""
-    statuses = [check['status'] for check in checks.values()]
-    return FAILED if FAILED in statuses else INCOMPLETE if NOT_RUN in statuses else PASSED
+    """incomplete if a check gave no answer, otherwise failed if a check failed, and passed otherwise."""
+    if incomplete_checks(checks):
+        return INCOMPLETE
+    return FAILED if any(check['status'] == FAILED for check in checks.values()) else PASSED
 
 
 # Results
@@ -598,9 +638,9 @@ def overall(checks):
 
 def ide_result(args):
     released_meta = json.loads(read_file(os.path.join(args.logs, 'released.json')) or '{}')
-    released_extra = {'release': released_meta.get('tag'), 'asset': released_meta.get('asset')}
+    released_extra = {'release': text(released_meta.get('tag')), 'asset': text(released_meta.get('asset'))}
     if released_meta.get('error'):
-        released_extra['reason'] = released_meta['error']
+        released_extra['reason'] = text(released_meta['error'])
     checks = {
         'compile': compile_check(args.logs, args.root),
         'test': tests_check(args.logs, 'test', [os.path.join(args.root, 'build/test-results/test'),
@@ -610,9 +650,10 @@ def ide_result(args):
                                          released_extra),
     }
     for name in ('test', 'verifyPlugin'):
-        if checks[name]['status'] == NOT_RUN and checks['compile']['status'] == FAILED:
+        if checks[name]['status'] == NOT_RUN and 'exitCode' not in checks[name] and checks['compile']['status'] == FAILED:
             checks[name]['reason'] = ('the compile check did not finish' if checks['compile']['exitCode'] is None
                                       else 'the plugin does not compile against this IDE')
+            checks[name]['blockedBy'] = 'compile'
     return {
         'schemaVersion': SCHEMA_VERSION,
         'job': 'ide',
@@ -661,30 +702,35 @@ def otp_result(args):
 # Summary
 
 
+def items(check, key):
+    """The items of the list `key` of `check`; none if the check has no such list (it did not run or finish)."""
+    return (check.get(key) or {}).get('items', [])
+
+
 def check_facts(name, check):
+    """One line about `check`. Works for every check a result can have: any key but status may be missing."""
     if check['status'] == NOT_RUN:
         return check.get('reason', '')
-    if 'errors' in check and name == 'compile':
-        return '%d compiler errors' % check['errors']['total']
+    facts = []
+    if name == 'compile' and 'errors' in check:
+        facts.append('%d compiler errors' % check['errors']['total'])
     if 'tests' in check:
-        facts = '%d tests, %d failed, %d skipped' % (check['tests'], check['failures'] + check['errors'], check['skipped'])
-    elif 'reports' in check:
-        verdicts = ['%s: %s' % (r['ide'], r['verdict']) for r in check['reports']]
-        facts = '; '.join(verdicts)
-        if check.get('release'):
-            facts = '%s (%s): %s' % (check['release'], check.get('asset'), facts)
-    elif 'files' in check:
-        facts = '%s files, %s with errors, %s error elements, %d exceptions, %d slow files' % (
-            check['files'], check['filesWithErrors'], check['errorElements'], check['exceptions']['total'],
-            check['slowFiles']['total'])
-    elif 'release' in check:
-        facts = 'OTP %s: ErlangSdkRelease %s, %s' % (check['release'], check['sdkReleaseConstant'] or 'missing',
-                                                    check['mockSdk'] or 'no mock SDK')
-    else:
-        facts = ''
+        facts.append('%d tests, %d failed, %d skipped' % (check['tests'], check['failures'] + check['errors'],
+                                                          check['skipped']))
+    if name == 'releasedPlugin' and check.get('release'):
+        facts.append('%s (%s)' % (check['release'], check.get('asset')))
+    if 'reports' in check:
+        facts.append('; '.join('%s: %s' % (r['ide'], r['verdict']) for r in check['reports']))
+    if 'files' in check:
+        facts.append('%s files, %s with errors, %s error elements, %d exceptions, %d slow files' % (
+            check['files'], check.get('filesWithErrors'), check.get('errorElements'),
+            (check.get('exceptions') or {}).get('total', 0), (check.get('slowFiles') or {}).get('total', 0)))
+    if name == 'knownRelease':
+        facts.append('OTP %s: ErlangSdkRelease %s, %s' % (check['release'], check['sdkReleaseConstant'] or 'missing',
+                                                         check['mockSdk'] or 'no mock SDK'))
     if check.get('reason'):
-        facts = (facts + '; ' if facts else '') + check['reason']
-    return facts
+        facts.append(check['reason'])
+    return '; '.join(fact for fact in facts if fact)
 
 
 def markdown_cell(value):
@@ -707,47 +753,49 @@ def summary(result):
         lines.append('| %s | %s | %s |' % (name, check['status'], markdown_cell(check_facts(name, check))))
     details = []
     for name, check in result['checks'].items():
-        if check['status'] != FAILED:
+        if check['status'] == PASSED:
             continue
-        items = []
+        lines_of_check = []
         if name == 'compile':
-            items = ['%s:%s: %s' % (e['file'], e['line'], e['message']) for e in check['errors']['items']]
-        elif 'failedTests' in check:
-            items = ['%s.%s: %s' % (t['class'], t['name'], t['message']) for t in check['failedTests']['items']]
-            items += ['skipped: %s.%s' % (t['class'], t['name']) for t in check['skippedTests']['items']]
-        elif 'reports' in check:
-            for report in check['reports']:
-                for category, problems in report['problems'].items():
-                    items += ['%s: %s' % (category, p) for p in problems['items']]
+            lines_of_check = ['%s:%s: %s' % (e['file'], e['line'], e['message']) for e in items(check, 'errors')]
         elif name == 'corpus':
-            items = ['%s:%s:%s: %s' % (e['file'], e['line'], e['column'], e['description']) for e in check['errors']['items']]
-            items += ['%s: %s' % (e['file'], e['exception']) for e in check['exceptions']['items']]
-            items += ['%s: %d ms' % (e['file'], e['millis']) for e in check['slowFiles']['items']]
+            lines_of_check = ['%s:%s:%s: %s' % (e['file'], e['line'], e['column'], e['description'])
+                              for e in items(check, 'errors')]
+            lines_of_check += ['%s: %s' % (e['file'], e['exception']) for e in items(check, 'exceptions')]
+            lines_of_check += ['%s: %s ms' % (e['file'], e['millis']) for e in items(check, 'slowFiles')]
+        else:
+            lines_of_check = ['%s.%s: %s' % (t['class'], t['name'], t['message']) for t in items(check, 'failedTests')]
+            lines_of_check += ['skipped: %s.%s' % (t['class'], t['name']) for t in items(check, 'skippedTests')]
+            for report in check.get('reports', []):
+                for category, problems in report['problems'].items():
+                    lines_of_check += ['%s: %s' % (category, p) for p in problems['items']]
         if check.get('logTail'):
-            items.append(check['logTail'])
-        if items:
+            lines_of_check.append(check['logTail'])
+        if lines_of_check:
             details += ['', '<details><summary>%s</summary>' % name, '', '```']
-            details += [text(item, 500) for item in items[:30]]
+            details += [text(line, 500) for line in lines_of_check[:30]]
             details += ['```', '</details>']
     return '\n'.join(lines + details) + '\n'
 
 
 def conclusion(path, event):
-    """The exit code of the job. A check that did not run, or no result, is red on every event. Findings are red on
-    workflow_dispatch only: on pull_request the job tests the workflow, which works when every check gave a result."""
+    """The exit code of the job. An incomplete result (a check that did not run or did not work), or no result, is red
+    on every event. Findings are red on workflow_dispatch only: on pull_request the job tests the workflow, which works
+    when every check ran and gave an answer."""
     content = read_file(path)
     if content is None:
         print('::error::There is no result %s' % path)
         return 1
     result = json.loads(content)
-    not_run = [name for name, check in result['checks'].items() if check['status'] == NOT_RUN]
-    failed = [name for name, check in result['checks'].items() if check['status'] == FAILED]
-    if not_run:
-        print('::error::The %s compatibility check did not run: %s' % (result['job'], ', '.join(
-            '%s (%s)' % (name, result['checks'][name].get('reason')) for name in not_run)))
+    checks = result['checks']
+    incomplete = incomplete_checks(checks)
+    failed = [name for name, check in checks.items() if check['status'] == FAILED]
+    if incomplete:
+        print('::error::The %s compatibility check is incomplete; these checks did not run or did not work: %s' % (
+            result['job'], ', '.join('%s (%s)' % (name, checks[name].get('reason')) for name in incomplete)))
         return 1
     if failed and event == 'pull_request':
-        print('::notice::The %s compatibility check found problems in: %s. Every check ran and gave a result, so the '
+        print('::notice::The %s compatibility check found problems in: %s. Every check ran and gave an answer, so the '
               'job passes on pull_request.' % (result['job'], ', '.join(failed)))
         return 0
     if failed:
@@ -772,9 +820,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split('\n', 1)[0])
     commands = parser.add_subparsers(dest='command', required=True)
 
-    inputs = commands.add_parser('inputs', help='reads INPUT_IDE, INPUT_OTP and INPUT_REF from the environment')
+    inputs = commands.add_parser('inputs', help='reads INPUT_IDE, INPUT_OTP, INPUT_REF, WORKFLOW_SHA, GITHUB_REPOSITORY '
+                                                'and DEFAULT_BRANCH from the environment')
     inputs.add_argument('--job', required=True, choices=['ide', 'otp'])
-    inputs.add_argument('--event', default=os.environ.get('GITHUB_EVENT_NAME'))
+    inputs.add_argument('--event', required=True, choices=EVENTS)
     inputs.add_argument('--gradle-yml', help='the gradle.yml whose pins the otp job uses')
     inputs.add_argument('--output', default=os.environ.get('GITHUB_OUTPUT'))
 
@@ -804,13 +853,13 @@ def main(argv=None):
 
     conclude = commands.add_parser('conclusion')
     conclude.add_argument('result')
-    conclude.add_argument('--event', default=os.environ.get('GITHUB_EVENT_NAME'))
+    conclude.add_argument('--event', required=True, choices=EVENTS)
 
     args = parser.parse_args(argv)
     try:
         if args.command == 'inputs':
             raw = {name: os.environ.get('INPUT_' + name.upper(), '') for name in ('ide', 'otp', 'ref')}
-            values = check_inputs(args.job, args.event, raw, os.environ.get('PR_HEAD_SHA'),
+            values = check_inputs(args.job, args.event, raw, os.environ.get('WORKFLOW_SHA'),
                                   os.environ.get('GITHUB_REPOSITORY'), os.environ.get('DEFAULT_BRANCH'), args.gradle_yml)
             write_outputs(values, args.output)
             print('\n'.join('%s=%s' % item for item in values.items()))

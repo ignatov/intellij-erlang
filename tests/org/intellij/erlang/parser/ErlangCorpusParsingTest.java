@@ -24,6 +24,7 @@ import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.ErlangFileType;
@@ -32,6 +33,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assume;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,8 +57,10 @@ import java.util.stream.Stream;
  * (or -Dcorpus.report). Every file shipped with Erlang/OTP compiles, so each error element is a plugin bug.
  * Without a corpus testCorpus does nothing. It never fails because of parse errors; see .github/workflows/compat.yml.
  * A corpus directory that is a symbolic link is followed; links below it are not. Columns count characters (code
- * points), as erlc does. The other tests check the report on small corpora of their own.
+ * points), as erlc does. The other tests check the report on small corpora of their own; the one with a symbolic link
+ * is skipped where the platform cannot create one (Windows without the privilege).
  */
+@RunWith(JUnit38AssumeSupportRunner.class)
 public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final long SLOW_FILE_MILLIS = 10_000;
 
@@ -93,7 +98,14 @@ public class ErlangCorpusParsingTest extends ErlangLightPlatformCodeInsightFixtu
     Path corpus = Files.createDirectories(temp.resolve("corpus/lib/src"));
     Files.writeString(corpus.resolve("a.erl"), "-module(a).\nf() -> [1,, 2].\n", StandardCharsets.UTF_8);
     Files.writeString(corpus.resolve("b.hrl"), "-define(B, 1).\n", StandardCharsets.UTF_8);
-    Path link = Files.createSymbolicLink(temp.resolve("link"), temp.resolve("corpus"));
+    Path link;
+    try {
+      link = Files.createSymbolicLink(temp.resolve("link"), temp.resolve("corpus"));
+    }
+    catch (IOException | UnsupportedOperationException | SecurityException e) {
+      Assume.assumeNoException("This platform cannot create a symbolic link", e);
+      return;
+    }
     String report = writeReport(link, temp.resolve("report.json"));
     assertTrue(report, report.contains("\"files\": 2,"));
     assertTrue(report, report.contains("\"filesWithErrors\": 1,"));

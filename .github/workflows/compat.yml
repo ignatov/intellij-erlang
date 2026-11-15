@@ -3,12 +3,15 @@ name: Compatibility check
 # Answers, for one IntelliJ IDEA build and one Erlang/OTP release, whether the plugin works with it (see AGENTS.md).
 # Each job writes one JSON result (artifact compat-ide or compat-otp) and a summary. A run without the result artifact
 # failed for infrastructure reasons (the IDE or Erlang/OTP could not be set up); a job that was not asked for is
-# skipped and leaves no artifact. On workflow_dispatch a red job with its result found problems. On pull_request the
-# job tests the workflow itself: it is green when every check ran and gave a result, whatever the checks found.
-# The scripts come from the commit of this workflow; the plugin is checked out from `ref` into plugin/. Every input is
-# validated before it is used, and `ref` must be a branch or a tag of this repository or a commit of its default
-# branch, because the job runs the Gradle build of that commit. No credentials are persisted and no Gradle cache is
-# saved, and the steps with a token run before any code of `ref`.
+# skipped and leaves no artifact. A result whose status is incomplete (a check did not run or did not work) makes the
+# job red on every event. On workflow_dispatch a red job with a failed result found problems. On pull_request the job
+# tests the workflow itself: it is green when every check ran and worked, whatever the checks found.
+# The scripts come from the commit of this workflow. On workflow_dispatch the plugin is checked out from `ref` into
+# plugin/; on pull_request it is the same commit as the scripts, the merge commit of the event. Every input is validated
+# before it is used, and `ref` must be a release tag of this repository or a commit of its default branch, because the
+# job runs the Gradle build of that commit. No credentials are persisted and no Gradle cache is saved, and the steps
+# with a token run before any code of `ref`. A step that reads an output of another step also requires that step to
+# have succeeded, because the output of a step that was skipped or timed out is unset.
 
 on:
   workflow_dispatch:
@@ -31,7 +34,8 @@ on:
         default: ''
       ref:
         description: >-
-          Branch or tag of this repository, or a commit SHA of its default branch, to check. Empty: the default branch.
+          A release tag of this repository (v0.11.1302), or the full 40-character SHA of the head of the default branch
+          or of an ancestor of it. Empty: the head of the default branch. Branches are not accepted.
         required: false
         type: string
         default: ''
@@ -75,10 +79,10 @@ jobs:
         INPUT_IDE: ${{ inputs.ide }}
         INPUT_OTP: ${{ inputs.otp }}
         INPUT_REF: ${{ inputs.ref }}
-        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        WORKFLOW_SHA: ${{ github.sha }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: python3 "$TOOL/compat.py" inputs --job ide
+      run: python3 "$TOOL/compat.py" inputs --job ide --event "$GITHUB_EVENT_NAME"
     - name: Check out the plugin
       uses: actions/checkout@v7
       with:
@@ -115,7 +119,7 @@ jobs:
       run: |
         "$TOOL/run-check.sh" compile "$TOOL/gradle.sh" buildPlugin testClasses :jps-plugin:testClasses
     - name: Test
-      if: ${{ !cancelled() && steps.compile.outputs.exit == '0' }}
+      if: ${{ !cancelled() && steps.compile.outcome == 'success' && steps.compile.outputs.exit == '0' }}
       timeout-minutes: 60
       working-directory: plugin
       env:
@@ -123,7 +127,7 @@ jobs:
       run: |
         "$TOOL/run-check.sh" test "$TOOL/gradle.sh" test --continue
     - name: Verify the plugin
-      if: ${{ !cancelled() && steps.compile.outputs.exit == '0' }}
+      if: ${{ !cancelled() && steps.compile.outcome == 'success' && steps.compile.outputs.exit == '0' }}
       timeout-minutes: 20
       working-directory: plugin
       env:
@@ -132,7 +136,9 @@ jobs:
         "$TOOL/run-check.sh" verify "$TOOL/gradle.sh" verifyPlugin
     - name: Verify the released plugin
       # The archive of the published release, the build on JetBrains Marketplace, without building it.
-      if: ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.release.outputs.archive != '' }}
+      if: >-
+        ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.release.outcome == 'success'
+        && steps.release.outputs.archive != '' }}
       timeout-minutes: 20
       working-directory: plugin
       env:
@@ -170,7 +176,7 @@ jobs:
         if-no-files-found: ignore
     - name: Conclusion
       if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
-      run: python3 "$TOOL/compat.py" conclusion compat-ide.json
+      run: python3 "$TOOL/compat.py" conclusion compat-ide.json --event "$GITHUB_EVENT_NAME"
 
   otp:
     # Runs for an otp input, for no input at all, and on pull requests.
@@ -200,10 +206,12 @@ jobs:
         INPUT_IDE: ${{ inputs.ide }}
         INPUT_OTP: ${{ inputs.otp }}
         INPUT_REF: ${{ inputs.ref }}
-        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        WORKFLOW_SHA: ${{ github.sha }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: python3 "$TOOL/compat.py" inputs --job otp --gradle-yml compat-tool/.github/workflows/gradle.yml
+      run: |
+        python3 "$TOOL/compat.py" inputs --job otp --event "$GITHUB_EVENT_NAME" \
+          --gradle-yml compat-tool/.github/workflows/gradle.yml
     - name: Check out the plugin
       uses: actions/checkout@v7
       with:
@@ -288,4 +296,4 @@ jobs:
         if-no-files-found: ignore
     - name: Conclusion
       if: ${{ !cancelled() && steps.resolve.outcome == 'success' }}
-      run: python3 "$TOOL/compat.py" conclusion compat-otp.json
+      run: python3 "$TOOL/compat.py" conclusion compat-otp.json --event "$GITHUB_EVENT_NAME"

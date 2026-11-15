@@ -3,8 +3,11 @@
 import argparse
 import contextlib
 import io
+import itertools
 import json
 import os
+import re
+import shutil
 import tempfile
 import textwrap
 import unittest
@@ -103,6 +106,21 @@ class Fixture(unittest.TestCase):
         write(os.path.join(plugin, 'dependencies.txt'), 'a huge dependency tree\n')
         for name, lines in (problems or {}).items():
             write(os.path.join(plugin, name + '.txt'), '\n'.join(lines) + '\n')
+
+    def verify_ran(self):
+        self.check_ran('verify', 0)
+        self.verdict('build/reports/pluginVerifier', COMPATIBLE_VERDICT)
+
+    def released_ran(self):
+        self.check_ran('released', 0)
+        self.verdict('build/compat/released-verifier', COMPATIBLE_VERDICT)
+        write(os.path.join(self.logs, 'released.json'), '{"tag": "v0.11.1302", "asset": "intellij-erlang-0.11.1302.zip"}')
+
+    def conclude(self, result, event):
+        path = os.path.join(self.temp.name, 'result-%s.json' % event)
+        write(path, json.dumps(result))
+        with contextlib.redirect_stdout(io.StringIO()):
+            return compat.conclusion(path, event)
 
 
 class TrimTest(unittest.TestCase):
@@ -246,8 +264,17 @@ class IdeResultTest(Fixture):
                 self.assertEqual(1, compat.conclusion(out, event))
             self.assertIn('releasedPlugin (cannot list the releases', printed.getvalue())
 
+    def test_released_plugin_reason_is_cut(self):
+        # Finding 9: the reason comes from released.json, which holds raw gh output.
+        self.check_ran('compile', 0)
+        write(os.path.join(self.logs, 'released.json'), json.dumps({'error': 'cannot list the releases: ' + 'x' * 6000}))
+        released = compat.ide_result(self.args())['checks']['releasedPlugin']
+        self.assertEqual(compat.TEXT_LIMIT, len(released['reason']))
+        self.assertTrue(released['reason'].endswith(compat.TRIMMED))
+
     def test_compile_failure_is_a_finding(self):
         self.check_ran('compile', 1, JAVAC_LOG.replace('/repo', self.root))
+        self.released_ran()
         result = compat.ide_result(self.args())
         self.assertEqual('failed', result['status'])
         compile_check = result['checks']['compile']
@@ -256,6 +283,36 @@ class IdeResultTest(Fixture):
         self.assertEqual('src/org/intellij/erlang/Foo.java', compile_check['errors']['items'][0]['file'])
         self.assertEqual('not-run', result['checks']['test']['status'])
         self.assertEqual('the plugin does not compile against this IDE', result['checks']['test']['reason'])
+        self.assertEqual('compile', result['checks']['test']['blockedBy'])
+        # Decision 2: a real finding, with the checks it blocks, is green on pull_request only.
+        self.assertEqual(0, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_task_that_does_not_exist_is_incomplete(self):
+        # Decision 2: the check did not work, so it is not a finding.
+        self.check_ran('compile', 1, "FAILURE: Build failed with an exception.\n\n* What went wrong:\n"
+                                     "Cannot locate tasks that match 'buildPlugin' as task 'buildPlugin' not found in "
+                                     "root project 'intellij-erlang'.\n")
+        self.released_ran()
+        result = compat.ide_result(self.args())
+        compile_check = result['checks']['compile']
+        self.assertEqual('not-run', compile_check['status'])
+        self.assertIn("task 'buildPlugin' not found in root project", compile_check['reason'])
+        self.assertNotIn('blockedBy', result['checks']['test'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_no_test_and_no_verifier_report_are_incomplete(self):
+        self.check_ran('compile', 0)
+        self.check_ran('test', 0)
+        self.check_ran('verify', 0)
+        self.released_ran()
+        result = compat.ide_result(self.args())
+        self.assertEqual(('not-run', 'no test ran'), tuple(result['checks']['test'][k] for k in ('status', 'reason')))
+        self.assertEqual(('not-run', 'the Plugin Verifier wrote no report'),
+                         tuple(result['checks']['verifyPlugin'][k] for k in ('status', 'reason')))
+        self.assertEqual('incomplete', result['status'])
 
     def test_failed_tests_and_verifier_problems(self):
         self.check_ran('compile', 0)
@@ -306,6 +363,7 @@ class IdeResultTest(Fixture):
             > Could not resolve all dependencies for configuration ':compileClasspath'.
                > Could not find bundled plugin with ID: 'tanvd.grazi.removed'
             """))
+        self.released_ran()
         result = compat.ide_result(self.args())
         self.assertEqual('failed', result['status'])
         check = result['checks']['compile']
@@ -319,6 +377,7 @@ class IdeResultTest(Fixture):
         self.check_ran('test', 1, 'There were failing tests')
         write(os.path.join(self.root, 'build/test-results/test/TEST-Foo.xml'), JUNIT_XML)
         self.check_ran('verify', 1, "> Could not resolve all files for configuration ':intellijPluginVerifier'.")
+        self.released_ran()
         result = compat.ide_result(self.args())
         self.assertEqual('failed', result['status'])
         self.assertEqual(2, result['checks']['test']['failedTests']['total'])
@@ -343,6 +402,8 @@ class IdeResultTest(Fixture):
         self.check_ran('compile', 0)
         write(os.path.join(self.logs, 'test.started'), '')
         write(os.path.join(self.logs, 'test.log'), '> Task :test\nFooTest > testHangs STARTED\n')
+        self.verify_ran()
+        self.released_ran()
         result = compat.ide_result(self.args())
         test = result['checks']['test']
         self.assertEqual('failed', test['status'])
@@ -352,10 +413,61 @@ class IdeResultTest(Fixture):
         self.assertEqual('failed', result['status'])
 
     def test_unfinished_compile_check(self):
+        # Finding 3, probe A: the summary of a compile check without errors used to raise KeyError.
         write(os.path.join(self.logs, 'compile.started'), '')
+        write(os.path.join(self.logs, 'compile.log'), '> Task :compileJava\n')
+        self.released_ran()
         result = compat.ide_result(self.args())
         self.assertEqual('failed', result['checks']['compile']['status'])
         self.assertEqual('the compile check did not finish', result['checks']['test']['reason'])
+        self.assertEqual('failed', result['status'])
+        summary = compat.summary(result)
+        self.assertIn('| compile | failed | the check started but did not finish', summary)
+        self.assertIn('> Task :compileJava', summary)
+
+    def test_summary_of_every_result(self):
+        # Finding 3: summary() works for every result ide_result() can produce.
+        states = {
+            'absent': lambda name: None,
+            'started': lambda name: write(os.path.join(self.logs, name + '.started'), ''),
+            'passed': lambda name: self.ide_check_ran(name, 0, results=True),
+            'no-results': lambda name: self.ide_check_ran(name, 0, results=False),
+            'findings': lambda name: self.ide_check_ran(name, 1, results=True),
+            'gradle-failed': lambda name: self.ide_check_ran(name, 1, results=False, log='* What went wrong: x'),
+            'task-missing': lambda name: self.ide_check_ran(name, 1, results=False,
+                                                            log="Task '%s' not found in root project 'p'." % name),
+        }
+        released_meta = ['', '{"tag": "v0.11.1302", "asset": "a.zip"}', '{"error": "no published plugin"}']
+        seen = set()
+        for combination in itertools.product(states, states, states, states, released_meta):
+            shutil.rmtree(self.root)
+            shutil.rmtree(self.logs)
+            os.makedirs(self.logs)
+            for name, state in zip(('compile', 'test', 'verify', 'released'), combination):
+                states[state](name)
+            if combination[-1]:
+                write(os.path.join(self.logs, 'released.json'), combination[-1])
+            with self.subTest(combination=combination):
+                result = compat.ide_result(self.args())
+                json.dumps(result)
+                self.assertTrue(compat.summary(result).startswith('## Compatibility check: ide, '))
+                self.assertEqual(result['status'] == 'incomplete', bool(compat.incomplete_checks(result['checks'])))
+                self.assertEqual(int(result['status'] != 'passed'), self.conclude(result, 'workflow_dispatch'))
+                self.assertEqual(int(result['status'] == 'incomplete'), self.conclude(result, 'pull_request'))
+                seen.add(result['status'])
+        self.assertEqual({'passed', 'failed', 'incomplete'}, seen)
+
+    def ide_check_ran(self, name, exit_code, results, log=''):
+        if name == 'compile':
+            log = log or (JAVAC_LOG.replace('/repo', self.root) if exit_code else 'BUILD SUCCESSFUL')
+        elif name == 'test' and results:
+            write(os.path.join(self.root, 'build/test-results/test/TEST-Foo.xml'),
+                  JUNIT_XML if exit_code else PASSING_XML)
+        elif results:
+            reports = 'build/reports/pluginVerifier' if name == 'verify' else 'build/compat/released-verifier'
+            self.verdict(reports, BROKEN_VERDICT if exit_code else COMPATIBLE_VERDICT,
+                         {'compatibility-problems': ['Missing class B']} if exit_code else None)
+        self.check_ran(name, exit_code, log)
 
     def test_unresolved_ide_is_infrastructure(self):
         args = self.args()
@@ -423,10 +535,116 @@ class OtpResultTest(Fixture):
         self.assertEqual([{'class': 'org.intellij.erlang.FooTest', 'name': 'testSkipped'}], check['skippedTests']['items'])
         self.assertEqual('not-run', result['checks']['corpus']['status'])
 
-    def test_no_compilation_tests_fail(self):
+    def test_no_compilation_test_is_incomplete(self):
+        # Decision 2, probe 1: the check did not work, so it is not a finding; red on both events.
         args = self.args()
         self.check_ran('compilation', 0)
-        self.assertEqual('no test ran', compat.otp_result(args)['checks']['compilationTests']['reason'])
+        self.corpus(args)
+        result = compat.otp_result(args)
+        check = result['checks']['compilationTests']
+        self.assertEqual(('not-run', 'no test ran'), (check['status'], check['reason']))
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_task_that_does_not_exist_is_incomplete(self):
+        # Decision 2, probe 2.
+        args = self.args()
+        self.check_ran('compilation', 1, "FAILURE: Build failed with an exception.\n\n* What went wrong:\n"
+                                         "Task 'testCompilation' not found in root project 'intellij-erlang'.\n")
+        self.corpus(args)
+        result = compat.otp_result(args)
+        check = result['checks']['compilationTests']
+        self.assertEqual('not-run', check['status'])
+        self.assertIn("Task 'testCompilation' not found", check['reason'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_corpus_without_report_is_incomplete(self):
+        # Decision 2, probe 3, and finding 3, probe C: the summary used to raise KeyError.
+        args = self.args()
+        self.compilation_passed()
+        self.check_ran('corpus', 0, 'BUILD SUCCESSFUL')
+        result = compat.otp_result(args)
+        corpus = result['checks']['corpus']
+        self.assertEqual('not-run', corpus['status'])
+        self.assertIn('wrote no report', corpus['reason'])
+        self.assertEqual('incomplete', result['status'])
+        self.assertIn('| corpus | not-run | ErlangCorpusParsingTest wrote no report', compat.summary(result))
+        self.assertEqual(1, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_findings_of_checks_that_ran_are_green_on_pull_request_only(self):
+        # Decision 2: skipped compilation tests and parse errors are findings.
+        args = self.args()
+        self.check_ran('compilation', 0)
+        write(os.path.join(self.root, 'build/test-results/testCompilation/TEST-Foo.xml'), JUNIT_XML)
+        self.corpus(args, filesWithErrors=1, errorElements=1,
+                    errors=[{'file': 'a.erl', 'line': 1, 'column': 2, 'description': '<expression> expected'}])
+        result = compat.otp_result(args)
+        self.assertEqual('failed', result['status'])
+        self.assertEqual(0, self.conclude(result, 'pull_request'))
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_unfinished_corpus_check(self):
+        # Finding 3, probe B.
+        args = self.args()
+        self.compilation_passed()
+        write(os.path.join(self.logs, 'corpus.started'), '')
+        result = compat.otp_result(args)
+        self.assertEqual('failed', result['checks']['corpus']['status'])
+        self.assertIn('| corpus | failed | the check started but did not finish', compat.summary(result))
+
+    def test_summary_of_every_result(self):
+        # Finding 3: summary() works for every result otp_result() can produce.
+        args = self.args()
+        compilation = {
+            'absent': lambda: None,
+            'started': lambda: write(os.path.join(self.logs, 'compilation.started'), ''),
+            'passed': self.compilation_passed,
+            'no-test': lambda: self.check_ran('compilation', 0),
+            'findings': lambda: (self.check_ran('compilation', 1), write(
+                os.path.join(self.root, 'build/test-results/testCompilation/TEST-Foo.xml'), JUNIT_XML)),
+            'task-missing': lambda: self.check_ran('compilation', 1, "Task 'testCompilation' not found in project"),
+            'gradle-failed': lambda: self.check_ran('compilation', 1, 'FAILURE'),
+        }
+        rebar3 = {'absent': lambda: None, 'runs': lambda: self.check_ran('rebar3', 0, 'rebar 3.28.0'),
+                  'fails': lambda: self.check_ran('rebar3', 1, 'escript: exception error')}
+        corpus = {
+            'absent': lambda: None,
+            'started': lambda: write(os.path.join(self.logs, 'corpus.started'), ''),
+            'passed': lambda: self.corpus(args),
+            'findings': lambda: self.corpus(args, errors=[{'file': 'a.erl', 'line': 1, 'column': 2, 'description': 'x'}],
+                                            exceptions=[{'file': 'b.erl', 'exception': 'E'}],
+                                            slowFiles=[{'file': 'c.erl', 'millis': 12000}]),
+            'empty': lambda: self.corpus(args, files=0),
+            'failed-after-report': lambda: (self.corpus(args), self.check_ran('corpus', 1, 'FAILURE')),
+            'no-report': lambda: self.check_ran('corpus', 0),
+            'no-report-failed': lambda: self.check_ran('corpus', 1, 'No tests found for given includes: [X]'),
+        }
+        seen = set()
+        for combination in itertools.product(compilation, rebar3, corpus):
+            for path in (os.path.join(self.root, 'build'), self.logs):
+                shutil.rmtree(path, ignore_errors=True)
+            os.makedirs(self.logs)
+            if os.path.exists(args.corpus_report):
+                os.remove(args.corpus_report)
+            compilation[combination[0]]()
+            rebar3[combination[1]]()
+            corpus[combination[2]]()
+            with self.subTest(combination=combination):
+                result = compat.otp_result(args)
+                json.dumps(result)
+                self.assertTrue(compat.summary(result).startswith('## Compatibility check: otp, '))
+                self.assertEqual(int(result['status'] != 'passed'), self.conclude(result, 'workflow_dispatch'))
+                self.assertEqual(int(result['status'] == 'incomplete'), self.conclude(result, 'pull_request'))
+                seen.add(result['status'])
+        self.assertEqual({'passed', 'failed', 'incomplete'}, seen)
+
+    def compilation_passed(self):
+        self.check_ran('compilation', 0)
+        write(os.path.join(self.root, 'build/test-results/testCompilation/TEST-Bar.xml'), PASSING_XML)
 
     def test_corpus_findings(self):
         args = self.args()
@@ -442,17 +660,17 @@ class OtpResultTest(Fixture):
         self.assertEqual(1, check['exceptions']['total'])
         self.assertEqual(1, check['slowFiles']['total'])
 
-    def test_empty_corpus_fails(self):
-        # Finding 6: an installation without sources, or a corpus root that was not walked, parsed nothing.
+    def test_empty_corpus_is_incomplete(self):
+        # Finding 6 and decision 2: an installation without sources, or a corpus root that was not walked, parsed
+        # nothing, so the check did not work.
         args = self.args()
-        self.check_ran('compilation', 0)
-        write(os.path.join(self.root, 'build/test-results/testCompilation/TEST-Bar.xml'), PASSING_XML)
+        self.compilation_passed()
         self.corpus(args, files=0)
         result = compat.otp_result(args)
         corpus = result['checks']['corpus']
-        self.assertEqual('failed', corpus['status'])
+        self.assertEqual('not-run', corpus['status'])
         self.assertIn('no .erl or .hrl file', corpus['reason'])
-        self.assertEqual('failed', result['status'])
+        self.assertEqual('incomplete', result['status'])
 
     def test_rebar3_that_does_not_run_is_a_finding(self):
         # Decision 6: the pinned rebar3 does not run on the requested Erlang/OTP.
@@ -477,6 +695,8 @@ class OtpResultTest(Fixture):
     def test_unknown_release(self):
         args = self.args('30.0-rc1')
         os.rename(os.path.join(args.otp_root, 'releases', '27'), os.path.join(args.otp_root, 'releases', '30'))
+        self.compilation_passed()
+        self.corpus(args)
         result = compat.otp_result(args)
         self.assertEqual('30', result['resolved']['otp']['release'])
         self.assertEqual('failed', result['checks']['knownRelease']['status'])
@@ -500,11 +720,37 @@ class MainTest(Fixture):
         path = os.path.join(self.temp.name, 'result.json')
         write(path, json.dumps({'job': 'otp', 'status': 'failed',
                                 'checks': {'corpus': {'status': 'failed'}, 'knownRelease': {'status': 'passed'}}}))
-        code, out = self.run_main('conclusion', path)
+        code, out = self.run_main('conclusion', path, '--event', 'workflow_dispatch')
         self.assertEqual(1, code)
         self.assertIn('corpus', out)
+        self.assertEqual(0, self.run_main('conclusion', path, '--event', 'pull_request')[0])
         write(path, json.dumps({'job': 'otp', 'status': 'passed', 'checks': {}}))
-        self.assertEqual(0, self.run_main('conclusion', path)[0])
+        self.assertEqual(0, self.run_main('conclusion', path, '--event', 'workflow_dispatch')[0])
+
+    def test_event_is_not_read_from_the_environment(self):
+        # Finding 1: the event came from GITHUB_EVENT_NAME, so the tests depended on the runner.
+        path = os.path.join(self.temp.name, 'result.json')
+        write(path, json.dumps({'job': 'otp', 'status': 'passed', 'checks': {}}))
+        for event in ('pull_request', 'workflow_dispatch'):
+            with unittest.mock.patch.dict(os.environ, {'GITHUB_EVENT_NAME': event}), \
+                    contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                self.run_main('conclusion', path)
+            with unittest.mock.patch.dict(os.environ, {'GITHUB_EVENT_NAME': event, 'INPUT_IDE': '2026.3'}), \
+                    contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                self.run_main('inputs', '--job', 'ide', '--output', os.path.join(self.temp.name, 'output'))
+
+    def test_summary_is_written_for_an_unfinished_check(self):
+        # Finding 3: "Write the result" exited with 1 and wrote no step summary.
+        write(os.path.join(self.root, 'build/compat/ide.json'), json.dumps(IDE_INFO))
+        write(os.path.join(self.logs, 'compile.started'), '')
+        out = os.path.join(self.temp.name, 'compat-ide.json')
+        summary = os.path.join(self.temp.name, 'summary.md')
+        code, _ = self.run_main('ide-result', '--root', self.root, '--logs', self.logs, '--commit', 'abc',
+                                '--out', out, '--summary', summary,
+                                '--ide-info', os.path.join(self.root, 'build/compat/ide.json'))
+        self.assertEqual(0, code)
+        with open(summary, encoding='utf-8') as f:
+            self.assertIn('| compile | failed |', f.read())
 
     def test_infrastructure_failure_writes_no_result(self):
         out = os.path.join(self.temp.name, 'compat-ide.json')
@@ -535,10 +781,12 @@ class MainTest(Fixture):
 
 EVIL_OTP = '27.3.4.9\nREBAR3_VERSION=../../../../evil/repo/releases/download/v1\nREBAR3_SHA256=' + 'e' * 64
 DEFAULT_SHA = 'a' * 40
+OLD_SHA = '1234567' + '0' * 33
+MERGE_SHA = 'd' * 40
 
 
 class FakeApi:
-    """The GitHub REST API of a repository with branch master, tag v0.11.1302 and a fork commit."""
+    """The GitHub REST API of a repository with branches master and feature/x, tag v0.11.1302 and a fork commit."""
     def __init__(self):
         self.calls = []
 
@@ -548,8 +796,10 @@ class FakeApi:
             'repos/o/r/commits/heads/master': {'sha': DEFAULT_SHA},
             'repos/o/r/commits/heads/feature/x': {'sha': 'b' * 40},
             'repos/o/r/commits/tags/v0.11.1302': {'sha': 'c' * 40},
-            'repos/o/r/compare/master...1234567': {'status': 'behind', 'merge_base_commit': {'sha': '1234567' + '0' * 33}},
+            'repos/o/r/compare/master...' + OLD_SHA: {'status': 'behind', 'merge_base_commit': {'sha': OLD_SHA}},
+            'repos/o/r/compare/master...' + DEFAULT_SHA: {'status': 'identical', 'merge_base_commit': {'sha': DEFAULT_SHA}},
             'repos/o/r/compare/master...' + 'f' * 40: {'status': 'diverged', 'merge_base_commit': {'sha': DEFAULT_SHA}},
+            'repos/o/r/compare/master...' + 'b' * 40: {'status': 'ahead', 'merge_base_commit': {'sha': DEFAULT_SHA}},
         }
         return responses.get(path)
 
@@ -561,7 +811,7 @@ class InputsTest(Fixture):
             self.assertEqual(ide, compat.validate_input('ide', ide))
         for otp in ('', '27.3.4.9', '29.1', '30.0-rc1', '28'):
             self.assertEqual(otp, compat.validate_input('otp', otp))
-        for ref in ('', 'master', 'feature/x', 'v0.11.1302', 'refs/heads/master', 'refs/tags/v0.11.1302', 'a1b2c3d'):
+        for ref in ('', 'v0.11.1302', 'v1', DEFAULT_SHA, OLD_SHA):
             self.assertEqual(ref, compat.validate_input('ref', ref))
 
     def test_other_values_are_rejected(self):
@@ -571,8 +821,15 @@ class InputsTest(Fixture):
                     'LATEST', '263-CANDIDATE-SNAPSHOT', ' 2026.3'],
             'otp': [EVIL_OTP, '27.3.4.9\n', '-rc1', '27.3;rm', 'OTP-27.3', '27..3'],
             'ref': ['refs/pull/5/head', 'refs/remotes/origin/x', '-x', '--upload-pack=x', 'a..b', 'a//b', 'a/',
-                    'x.lock', 'a\nb', 'a b', 'HEAD@{1}', 'x' * 201],
+                    'x.lock', 'a\nb', 'a b', 'HEAD@{1}', 'x' * 201,
+                    # Decision 1: branches, other tags, short or uppercase SHAs are refused.
+                    'master', 'feature/x', 'copilot/fix', 'refs/heads/master', 'refs/tags/v0.11.1302', 'a1b2c3d',
+                    'V0.11', 'v0.11-rc', 'v0..11', 'v', DEFAULT_SHA.upper(), DEFAULT_SHA + 'a', 'v\u0661'],
         }
+        # Finding 4: only ASCII digits.
+        rejected['ide'] += ['\uff12\uff16\uff13.\uff17\uff13\uff10\uff17.\uff14\uff14', '\u0662\u0666\u0663.\u0661',
+                            '2026.\u0663', '\u0662\u0666\u0663-EAP-SNAPSHOT']
+        rejected['otp'] += ['\uff12\uff17.\uff13', '27.\u0663', '30.0-rc\u0661']
         for name, values in rejected.items():
             for value in values:
                 with self.assertRaises(compat.InputError, msg='%s=%r' % (name, value)):
@@ -583,10 +840,11 @@ class InputsTest(Fixture):
         gradle_yml = os.path.join(REPOSITORY, '.github/workflows/gradle.yml')
         output = os.path.join(self.temp.name, 'output')
         write(output, '')
-        env = {'INPUT_OTP': EVIL_OTP, 'PR_HEAD_SHA': DEFAULT_SHA, 'GITHUB_EVENT_NAME': 'pull_request'}
+        env = {'INPUT_OTP': EVIL_OTP, 'WORKFLOW_SHA': MERGE_SHA}
         out = io.StringIO()
         with unittest.mock.patch.dict(os.environ, env), contextlib.redirect_stdout(out):
-            code = compat.main(['inputs', '--job', 'otp', '--gradle-yml', gradle_yml, '--output', output])
+            code = compat.main(['inputs', '--job', 'otp', '--event', 'pull_request', '--gradle-yml', gradle_yml,
+                                '--output', output])
         self.assertEqual(1, code)
         self.assertIn('::error::the input otp=', out.getvalue())
         with open(output, encoding='utf-8') as f:
@@ -595,19 +853,24 @@ class InputsTest(Fixture):
     def test_otp_inputs_of_a_pull_request(self):
         gradle_yml = os.path.join(REPOSITORY, '.github/workflows/gradle.yml')
         output = os.path.join(self.temp.name, 'output')
-        env = {'PR_HEAD_SHA': DEFAULT_SHA, 'GITHUB_EVENT_NAME': 'pull_request'}
+        # Decision 4: on pull_request the plugin is the merge commit of the event, the commit of the scripts.
+        env = {'WORKFLOW_SHA': MERGE_SHA, 'INPUT_IDE': '', 'INPUT_OTP': '', 'INPUT_REF': ''}
         with unittest.mock.patch.dict(os.environ, env), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(0, compat.main(['inputs', '--job', 'otp', '--gradle-yml', gradle_yml, '--output', output]))
+            self.assertEqual(0, compat.main(['inputs', '--job', 'otp', '--event', 'pull_request',
+                                             '--gradle-yml', gradle_yml, '--output', output]))
         with open(output, encoding='utf-8') as f:
             lines = dict(line.split('=', 1) for line in f.read().splitlines())
         pins = compat.read_pins(gradle_yml)
-        self.assertEqual({'ide': '', 'otp': pins['OTP_VERSION'], 'ref': '', 'commit': DEFAULT_SHA,
+        self.assertEqual({'ide': '', 'otp': pins['OTP_VERSION'], 'ref': '', 'commit': MERGE_SHA,
                           'OTP_VERSION': pins['OTP_VERSION'], 'REBAR3_VERSION': pins['REBAR3_VERSION'],
                           'REBAR3_SHA256': pins['REBAR3_SHA256']}, lines)
 
     def test_invalid_pins_are_rejected(self):
         with self.assertRaises(compat.InputError):
             compat.validate_pins({'REBAR3_VERSION': '../evil'})
+        for name, value in (('REBAR3_VERSION', '\uff13.28.0'), ('OTP_VERSION', '\u0662\u0667.3')):
+            with self.assertRaises(compat.InputError, msg=name):
+                compat.validate_pins({name: value})
         with self.assertRaises(compat.InputError):
             compat.validate_pins({'REBAR3_SHA256': 'abc'})
 
@@ -616,27 +879,38 @@ class InputsTest(Fixture):
             compat.write_outputs({'otp': EVIL_OTP}, os.path.join(self.temp.name, 'output'))
 
     def test_ref_of_this_repository(self):
+        # Decision 1: empty, a release tag, or the full SHA of the head of the default branch or an ancestor of it.
         api = FakeApi()
         self.assertEqual(DEFAULT_SHA, compat.resolve_ref('', 'o/r', 'master', api))
-        self.assertEqual(DEFAULT_SHA, compat.resolve_ref('refs/heads/master', 'o/r', 'master', api))
-        self.assertEqual('b' * 40, compat.resolve_ref('feature/x', 'o/r', 'master', api))
         self.assertEqual('c' * 40, compat.resolve_ref('v0.11.1302', 'o/r', 'master', api))
-        self.assertEqual('c' * 40, compat.resolve_ref('refs/tags/v0.11.1302', 'o/r', 'master', api))
-        self.assertEqual('1234567' + '0' * 33, compat.resolve_ref('1234567', 'o/r', 'master', api))
+        self.assertEqual(DEFAULT_SHA, compat.resolve_ref(DEFAULT_SHA, 'o/r', 'master', api))
+        self.assertEqual(OLD_SHA, compat.resolve_ref(OLD_SHA, 'o/r', 'master', api))
 
     def test_ref_from_elsewhere_is_rejected(self):
-        # Finding 3: a commit that is not on the default branch (a fork's) or not a branch or tag of this repository.
+        # A commit that is not on the default branch (a fork's, a branch's), a tag that does not exist, a branch.
         api = FakeApi()
-        for ref in ('f' * 40, 'no-such-branch', 'refs/tags/master'):
+        for ref in ('f' * 40, 'b' * 40, 'e' * 40, 'v9.9'):
             with self.assertRaises(compat.InputError, msg=ref):
                 compat.resolve_ref(ref, 'o/r', 'master', api)
-        with self.assertRaises(compat.InputError):
-            compat.check_inputs('ide', 'workflow_dispatch', {'ref': 'refs/pull/5/head'}, None, 'o/r', 'master', api=api)
+        for ref in ('refs/pull/5/head', 'feature/x', 'master', 'refs/heads/master'):
+            with self.assertRaises(compat.InputError, msg=ref):
+                compat.check_inputs('ide', 'workflow_dispatch', {'ref': ref}, None, 'o/r', 'master', api=api)
+        self.assertFalse(any('heads/feature' in call for call in api.calls), api.calls)
 
     def test_dispatch_resolves_the_ref(self):
-        values = compat.check_inputs('ide', 'workflow_dispatch', {'ide': '263-EAP-SNAPSHOT', 'ref': 'feature/x'},
-                                     None, 'o/r', 'master', api=FakeApi())
-        self.assertEqual({'ide': '263-EAP-SNAPSHOT', 'otp': '', 'ref': 'feature/x', 'commit': 'b' * 40}, values)
+        values = compat.check_inputs('ide', 'workflow_dispatch', {'ide': '263-EAP-SNAPSHOT', 'ref': 'v0.11.1302'},
+                                     MERGE_SHA, 'o/r', 'master', api=FakeApi())
+        self.assertEqual({'ide': '263-EAP-SNAPSHOT', 'otp': '', 'ref': 'v0.11.1302', 'commit': 'c' * 40}, values)
+
+    def test_pull_request_checks_the_commit_of_the_scripts(self):
+        # Decision 4: not the head of the pull request, which differs from the merge commit when it is behind.
+        api = FakeApi()
+        values = compat.check_inputs('ide', 'pull_request', {}, MERGE_SHA, 'o/r', 'master', api=api)
+        self.assertEqual(MERGE_SHA, values['commit'])
+        self.assertEqual([], api.calls)
+        for sha in ('', None, 'abc', MERGE_SHA + '\nX=1'):
+            with self.assertRaises(compat.InputError, msg=sha):
+                compat.check_inputs('ide', 'pull_request', {}, sha, 'o/r', 'master', api=api)
 
 
 class ReleaseTagTest(unittest.TestCase):
@@ -727,6 +1001,29 @@ class WorkflowTest(unittest.TestCase):
             env = self.step(job, 'Check the inputs')['env']
             self.assertEqual({'INPUT_IDE', 'INPUT_OTP', 'INPUT_REF'}, {k for k in env if k.startswith('INPUT_')})
             self.assertEqual('${{ steps.inputs.outputs.commit }}', self.step(job, 'Check out the plugin')['with']['ref'])
+
+    def test_plugin_on_pull_request_is_the_commit_of_the_scripts(self):
+        # Decision 4: the checkout of the scripts has no ref, so it is github.sha, the merge commit on pull_request.
+        for job in self.jobs:
+            self.assertNotIn('ref', self.step(job, 'Check out the compatibility check')['with'])
+            env = self.step(job, 'Check the inputs')['env']
+            self.assertEqual('${{ github.sha }}', env['WORKFLOW_SHA'])
+            self.assertNotIn('PR_HEAD_SHA', env)
+
+    def test_event_is_passed_explicitly(self):
+        # Finding 1.
+        for job in self.jobs:
+            for name in ('Check the inputs', 'Conclusion'):
+                self.assertIn('--event "$GITHUB_EVENT_NAME"', self.step(job, name)['run'], '%s: %s' % (job, name))
+
+    def test_conditions_on_an_output_guard_the_outcome_of_its_step(self):
+        # Finding 2: an output of a step that was skipped or timed out is unset, and an unset output == '0' is true.
+        for job in self.jobs:
+            for step in self.steps(job):
+                condition = str(step.get('if', ''))
+                for step_id in set(re.findall(r'steps\.([\w-]+)\.outputs\.', condition)):
+                    self.assertIn("steps.%s.outcome == 'success'" % step_id, condition, '%s: %s' % (job, step['name']))
+                    self.assertNotIn('||', condition, '%s: %s' % (job, step['name']))
 
     def test_code_of_ref_gets_no_credentials_and_saves_no_cache(self):
         # Finding 3.
