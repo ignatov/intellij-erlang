@@ -25,6 +25,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -306,6 +307,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
+      if ((childType == ERL_BRACKET_RIGHT || childType == ERL_BIN_END) && myErlangSettings.ALIGN_MULTILINE_BLOCK &&
+        FormatterUtil.isPrecededBy(child, ERL_COMMA, TokenType.ERROR_ELEMENT)) {
+        return baseAlignment; // the closing bracket takes the place of the element that is being typed after the comma
+      }
       if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END &&
         childType != ERL_COMMA && childType != ERL_OP_OR) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;

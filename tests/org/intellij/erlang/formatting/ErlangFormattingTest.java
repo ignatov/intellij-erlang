@@ -477,8 +477,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
   
   public void testListAlignOnEnter()                 throws Exception { alignBlocks(); doEnterTest(); }
+  public void testListAlignOnEnterBeforeBracket()    throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportAlignOnEnter()               throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportTypeAlignOnEnter()           throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportOnEnter()                    throws Exception { doEnterTest(); }
 
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnterExport()  throws Exception { setUpCommaFirst(); doEnterTest(); }
 
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }
