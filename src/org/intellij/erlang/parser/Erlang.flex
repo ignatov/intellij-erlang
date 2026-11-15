@@ -74,6 +74,8 @@ CharLiteral = \$ {CharLiteralChar} | \$
 /* Without the \\\" at the start the lexer won't find it, for unknown reasons */
 /* \^ takes the next character too, so "\^\" ends after the second backslash */
 ESC = "\\" ( \^ [^] | [^\^] )
+/* ~B and ~S sigils are verbatim, so \^ does not take the next character there */
+VERBATIM_ESC = "\\" [^]
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
 TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
@@ -91,27 +93,27 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 /* Sigil support (OTP 27+) */
 /* Sigil with double-quoted string delimiter */
-SigilDoubleQuoteString = "~" [bBsS]? \" ([^\\\"] | {ESC})* \"
+SigilDoubleQuoteString = "~" [bs]? \" ([^\\\"] | {ESC})* \" | "~" [BS] \" ([^\\\"] | {VERBATIM_ESC})* \"
 /* Sigil with triple-quoted string delimiter */
 SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
 /* Sigil with single-quote delimiter */
-SigilSingleQuoteString = "~" [bBsS]? \' ([^\\\'] | {ESC})* \'
+SigilSingleQuoteString = "~" [bs]? \' ([^\\\'] | {ESC})* \' | "~" [BS] \' ([^\\\'] | {VERBATIM_ESC})* \'
 /* Sigil with parentheses delimiter */
-SigilParenString = "~" [bBsS]? \( ([^\\\)] | {ESC})* \)
+SigilParenString = "~" [bs]? \( ([^\\\)] | {ESC})* \) | "~" [BS] \( ([^\\\)] | {VERBATIM_ESC})* \)
 /* Sigil with brackets delimiter */
-SigilBracketString = "~" [bBsS]? \[ ([^\\\]] | {ESC})* \]
+SigilBracketString = "~" [bs]? \[ ([^\\\]] | {ESC})* \] | "~" [BS] \[ ([^\\\]] | {VERBATIM_ESC})* \]
 /* Sigil with braces delimiter */
-SigilBraceString = "~" [bBsS]? \{ ([^\\\}] | {ESC})* \}
+SigilBraceString = "~" [bs]? \{ ([^\\\}] | {ESC})* \} | "~" [BS] \{ ([^\\\}] | {VERBATIM_ESC})* \}
 /* Sigil with angle brackets delimiter */
-SigilAngleString = "~" [bBsS]? \< ([^\\\>] | {ESC})* \>
+SigilAngleString = "~" [bs]? \< ([^\\\>] | {ESC})* \> | "~" [BS] \< ([^\\\>] | {VERBATIM_ESC})* \>
 /* Sigil with slash delimiter */
-SigilSlashString = "~" [bBsS]? \/ ([^\\\\/] | {ESC})* \/
+SigilSlashString = "~" [bs]? \/ ([^\\\\/] | {ESC})* \/ | "~" [BS] \/ ([^\\\\/] | {VERBATIM_ESC})* \/
 /* Sigil with pipe delimiter */
-SigilPipeString = "~" [bBsS]? \| ([^\\\|] | {ESC})* \|
+SigilPipeString = "~" [bs]? \| ([^\\\|] | {ESC})* \| | "~" [BS] \| ([^\\\|] | {VERBATIM_ESC})* \|
 /* Sigil with backtick delimiter */
-SigilBacktickString = "~" [bBsS]? \` ([^\\\`] | {ESC})* \`
+SigilBacktickString = "~" [bs]? \` ([^\\\`] | {ESC})* \` | "~" [BS] \` ([^\\\`] | {VERBATIM_ESC})* \`
 /* Sigil with hash delimiter */
-SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
+SigilHashString = "~" [bs]? "#" ([^\\#] | {ESC})* "#" | "~" [BS] "#" ([^\\#] | {VERBATIM_ESC})* "#"
 
 %state IN_QUOTES
 
