@@ -124,11 +124,10 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
-    assertEquals(List.of("getCallHierarchyCustomizer", "getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer",
-                         "getDiagnosticsCustomizer", "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer",
-                         "getGoToDefinitionCustomizer", "getGoToImplementationCustomizer", "getGoToTypeDefinitionCustomizer",
-                         "getHoverCustomizer", "getInlayHintCustomizer", "getSelectionRangeCustomizer", "getSignatureHelpCustomizer",
-                         "getSymbolKindCustomizer"),
+    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer", "getDiagnosticsCustomizer",
+                         "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer", "getGoToDefinitionCustomizer",
+                         "getGoToTypeDefinitionCustomizer", "getHoverCustomizer", "getInlayHintCustomizer", "getSelectionRangeCustomizer",
+                         "getSignatureHelpCustomizer", "getSymbolKindCustomizer"),
                  notDisabledCustomizers(customization));
 
     assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());

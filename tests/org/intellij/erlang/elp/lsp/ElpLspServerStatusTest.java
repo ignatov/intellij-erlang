@@ -51,7 +51,6 @@ public class ElpLspServerStatusTest extends ErlangLightPlatformCodeInsightFixtur
     capabilities.setReferencesProvider(true);
     capabilities.setRenameProvider(new RenameOptions(false));
     capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of("(", ",")));
-    capabilities.setCallHierarchyProvider(true);
     capabilities.setDocumentHighlightProvider(true);
     capabilities.setWorkspaceSymbolProvider(true);
     for (ElpEngine.Feature feature : ElpEngine.Feature.values()) {
