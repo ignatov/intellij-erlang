@@ -83,6 +83,12 @@ allprojects {
       }
 
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
+      // From 2026.2 on the test runner and the structure view are separate modules. The archive of this line is built
+      // against 2026.1, where they are part of the platform; they are added only to compile and test against a newer IDE.
+      if (!(platformVersion.startsWith('2026.1') || platformVersion.startsWith('261.'))) {
+        ijp.bundledPlugins("com.intellij.platform.testRunner", "com.intellij.structureView")
+        ijp.bundledModule("intellij.platform.debugger")
+      }
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
       ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
     }
@@ -166,6 +172,9 @@ intellijPlatform {
   publishing {
     token = providers.environmentVariable('PUBLISH_TOKEN')
     channels = ['default']
+    // -PpublishHidden=true uploads the update hidden: Marketplace checks and stores it, and users get it only after
+    // it is made visible on the plugin page.
+    hidden = providers.gradleProperty('publishHidden').map { it == 'true' }.orElse(false)
   }
 }
 

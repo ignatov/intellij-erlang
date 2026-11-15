@@ -27,6 +27,9 @@ concurrency:
 env:
   LINE_BRANCH: release/0.11-261
   LINE_BUILD: '1299'
+  # With the repository variable RELEASE_261_HIDDEN set to true the update is uploaded hidden and the GitHub release
+  # is a draft: Marketplace checks and stores the update, and nobody gets it until both are made visible by hand.
+  PUBLISH_HIDDEN: ${{ vars.RELEASE_261_HIDDEN == 'true' }}
 
 jobs:
   publish:
@@ -117,7 +120,7 @@ jobs:
       env:
         PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
-      run: ./gradlew --no-daemon buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
+      run: ./gradlew --no-daemon buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER" -PpublishHidden="$PUBLISH_HIDDEN"
 
     - name: Create GitHub release
       env:
@@ -144,9 +147,9 @@ jobs:
         ' plugin/resources/META-INF/plugin.xml > release-notes.md
         printf '\nFor IntelliJ IDEA 2026.1 and 2026.2 (builds 261.* and 262.*).\n\nhttps://plugins.jetbrains.com/plugin/7083\n' >> release-notes.md
         cat release-notes.md
-        # Not the latest release: that stays the newest release of master.
-        gh release create "$RELEASE_TAG" "$zip" \
-          --verify-tag \
-          --latest=false \
-          --title "$RELEASE_TAG" \
-          --notes-file release-notes.md
+        # Not the latest release: that stays the newest release of master. A draft while the update is hidden.
+        args=(--verify-tag --latest=false --title "$RELEASE_TAG" --notes-file release-notes.md)
+        if [[ "$PUBLISH_HIDDEN" == true ]]; then
+          args+=(--draft)
+        fi
+        gh release create "$RELEASE_TAG" "$zip" "${args[@]}"
