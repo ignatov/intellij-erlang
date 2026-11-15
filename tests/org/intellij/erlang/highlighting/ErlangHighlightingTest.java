@@ -100,6 +100,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(false, true, false, false);
   }
 
+  public void testIfAttributeAnnotations() {
+    testAttributeAnnotations();
+  }
+
   private void doTestWithInclude() {
     myFixture.configureByText("incl.erl",
                               """

@@ -16,15 +16,18 @@
 
 package org.intellij.erlang;
 
+import com.intellij.codeInsight.highlighting.PairedBraceMatcherAdapter;
 import com.intellij.lang.BracePair;
 import com.intellij.lang.PairedBraceMatcher;
+import com.intellij.openapi.editor.highlighter.HighlighterIterator;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangBraceMatcher implements PairedBraceMatcher {
+public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
   public static final BracePair[] PAIRS = new BracePair[]{
     new BracePair(ErlangTypes.ERL_PAR_LEFT, ErlangTypes.ERL_PAR_RIGHT, false),
     new BracePair(ErlangTypes.ERL_CURLY_LEFT, ErlangTypes.ERL_CURLY_RIGHT, false),
@@ -39,27 +42,63 @@ public class ErlangBraceMatcher implements PairedBraceMatcher {
     new BracePair(ErlangTypes.ERL_MAYBE, ErlangTypes.ERL_END, true),
   };
 
-  @NotNull
-  @Override
-  public BracePair @NotNull [] getPairs() {
-    return PAIRS;
+  public ErlangBraceMatcher() {
+    super(new ErlangPairedBraceMatcher(), ErlangLanguage.INSTANCE);
   }
 
   @Override
-  public boolean isPairedBracesAllowedBeforeType(@NotNull IElementType lbraceType, @Nullable IElementType type) {
-    return TokenType.WHITE_SPACE == type
-      || ErlangParserDefinition.COMMENTS.contains(type)
-      || type == ErlangTypes.ERL_SEMI
-      || type == ErlangTypes.ERL_COMMA
-      || type == ErlangTypes.ERL_DOT
-      || type == ErlangTypes.ERL_PAR_RIGHT
-      || type == ErlangTypes.ERL_BRACKET_RIGHT
-      || type == ErlangTypes.ERL_CURLY_RIGHT
-      || null == type;
+  public @Nullable BracePair findPair(boolean left, @NotNull HighlighterIterator iterator, @NotNull CharSequence fileText, @NotNull FileType fileType) {
+    if (left && iterator.getTokenType() == ErlangTypes.ERL_IF && isIfAttribute(iterator)) return null;
+    return super.findPair(left, iterator, fileText, fileType);
   }
 
-  @Override
-  public int getCodeConstructStart(PsiFile file, int openingBraceOffset) {
-    return openingBraceOffset;
+  // The 'if' of '-if(Expr).' starts a form, while '- if ... end' in an expression follows an operand or an operator.
+  private static boolean isIfAttribute(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    try {
+      steps += retreatOverWhitespaceAndComments(iterator);
+      if (iterator.atEnd() || iterator.getTokenType() != ErlangTypes.ERL_OP_MINUS) return false;
+      steps += retreatOverWhitespaceAndComments(iterator);
+      return iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_DOT;
+    }
+    finally {
+      for (int i = 0; i < steps; i++) iterator.advance();
+    }
+  }
+
+  private static int retreatOverWhitespaceAndComments(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    do {
+      iterator.retreat();
+      steps++;
+    }
+    while (!iterator.atEnd() &&
+           (iterator.getTokenType() == TokenType.WHITE_SPACE || ErlangParserDefinition.COMMENTS.contains(iterator.getTokenType())));
+    return steps;
+  }
+
+  private static class ErlangPairedBraceMatcher implements PairedBraceMatcher {
+    @Override
+    public BracePair @NotNull [] getPairs() {
+      return PAIRS;
+    }
+
+    @Override
+    public boolean isPairedBracesAllowedBeforeType(@NotNull IElementType lbraceType, @Nullable IElementType type) {
+      return TokenType.WHITE_SPACE == type
+        || ErlangParserDefinition.COMMENTS.contains(type)
+        || type == ErlangTypes.ERL_SEMI
+        || type == ErlangTypes.ERL_COMMA
+        || type == ErlangTypes.ERL_DOT
+        || type == ErlangTypes.ERL_PAR_RIGHT
+        || type == ErlangTypes.ERL_BRACKET_RIGHT
+        || type == ErlangTypes.ERL_CURLY_RIGHT
+        || null == type;
+    }
+
+    @Override
+    public int getCodeConstructStart(PsiFile file, int openingBraceOffset) {
+      return openingBraceOffset;
+    }
   }
 }
