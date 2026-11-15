@@ -25,8 +25,12 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,6 +70,7 @@ public final class ErlangConsoleUtil {
       codePathModules.addAll(Arrays.asList(ModuleManager.getInstance(project).getModules()));
     }
 
+    boolean useRebarBuild = ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled();
     List<String> codePath = new ArrayList<>(codePathModules.size() * 2);
     for (Module codePathModule : codePathModules) {
       ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(codePathModule);
@@ -78,10 +83,10 @@ public final class ErlangConsoleUtil {
         codePath.add("-pa");
         codePath.add(buildOutput.getCanonicalPath());
       }
-      VirtualFile rebar3Output = getRebar3OutputPath(codePathModule);
-      if (rebar3Output != null && !rebar3Output.equals(buildOutput)) {
+      String rebar3Output = useRebarBuild ? getRebar3OutputPath(codePathModule) : null;
+      if (rebar3Output != null && (buildOutput == null || !FileUtil.pathsEqual(rebar3Output, buildOutput.getPath()))) {
         codePath.add("-pa");
-        codePath.add(rebar3Output.getPath());
+        codePath.add(rebar3Output);
       }
       for (VirtualFile contentRoot : ModuleRootManager.getInstance(codePathModule).getContentRoots()) {
         codePath.add("-pa");
@@ -93,20 +98,42 @@ public final class ErlangConsoleUtil {
   }
 
   /**
-   * The directory where `rebar3 compile`, which the Rebar build runs, writes the module's beams:
-   * _build/default/lib/&lt;app&gt;/ebin in a content root of the module or in the nearest directory above it,
-   * which is the root of an umbrella project.
+   * The directory where the Rebar build writes the module's beams. It runs `rebar3 compile` in each content root that
+   * has rebar.config, and rebar3 writes into _build/default/lib/&lt;app&gt;/ebin there, where &lt;app&gt; is the name
+   * of the application resource file, which may differ from the module name. The directory is checked on disk,
+   * because the IDE may not know about _build yet when it was created by the build that ran just before the launch.
    */
   @Nullable
-  private static VirtualFile getRebar3OutputPath(@NotNull Module module) {
-    String relativePath = "_build/default/lib/" + module.getName() + "/ebin";
+  private static String getRebar3OutputPath(@NotNull Module module) {
     for (VirtualFile contentRoot : ModuleRootManager.getInstance(module).getContentRoots()) {
-      for (VirtualFile dir = contentRoot; dir != null; dir = dir.getParent()) {
-        VirtualFile ebin = dir.findFileByRelativePath(relativePath);
-        if (ebin != null && ebin.isDirectory()) return ebin;
+      File root = VfsUtilCore.virtualToIoFile(contentRoot);
+      if (!new File(root, RebarBuilder.REBAR_CONFIG_FILE_NAME).isFile()) continue;
+      for (String appName : getApplicationNames(root, module.getName())) {
+        File ebin = new File(root, "_build/default/lib/" + appName + "/ebin");
+        if (ebin.isDirectory()) return FileUtil.toSystemIndependentName(ebin.getPath());
       }
     }
     return null;
+  }
+
+  @NotNull
+  private static Set<String> getApplicationNames(@NotNull File root, @NotNull String moduleName) {
+    Set<String> appNames = new LinkedHashSet<>();
+    addApplicationNames(appNames, new File(root, "src"), ".app.src");
+    addApplicationNames(appNames, new File(root, "ebin"), ".app");
+    appNames.add(moduleName);
+    return appNames;
+  }
+
+  private static void addApplicationNames(@NotNull Set<String> appNames, @NotNull File dir, @NotNull String extension) {
+    String[] fileNames = dir.list();
+    if (fileNames == null) return;
+    Arrays.sort(fileNames);
+    for (String fileName : fileNames) {
+      if (fileName.endsWith(extension) && fileName.length() > extension.length()) {
+        appNames.add(fileName.substring(0, fileName.length() - extension.length()));
+      }
+    }
   }
 
   @Nullable
