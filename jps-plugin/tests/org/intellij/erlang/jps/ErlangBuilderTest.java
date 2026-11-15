@@ -16,11 +16,15 @@
 
 package org.intellij.erlang.jps;
 
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ErlangBuilderTest extends ErlangJpsBuildTestCase {
   public void testSimple() {
@@ -33,6 +37,16 @@ public class ErlangBuilderTest extends ErlangJpsBuildTestCase {
 
   public void testAppSrcFilesAreCopiedToOutputDirectory() {
     doSingleFileTest("src/simple.app.src", "", "simple.app");
+  }
+
+  public void testAppSrcModulesAreFilledInOutputAppFile() throws IOException {
+    String file = createFile("src/simple.erl", "-module(simple).\n-export([foo/0]).\nfoo() -> ok.\n");
+    createFile("src/simple.app.src", "{application, simple, [{vsn, \"1\"}, {modules, []}, {registered, []}, {applications, [kernel, stdlib]}]}.\n");
+    addModule("m", PathUtilRt.getParentPath(file));
+    rebuildAll();
+    assertCompiled("m", "simple.beam");
+    String app = FileUtil.loadFile(new File(getAbsolutePath("out/production/m/simple.app")));
+    assertTrue(app, Pattern.compile("\\{\\s*modules\\s*,\\s*\\[\\s*simple\\s*]\\s*}").matcher(app).find());
   }
 
   public void testWarningsDoNotFailBuild() {
