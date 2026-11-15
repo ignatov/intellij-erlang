@@ -43,8 +43,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class ErlangDebuggerOtpApplicationTest extends BasePlatformTestCase {
   private static final int TIMEOUT_SECONDS = 30;
-  private static final int INIT_LINE = 11;
-  private static final int HANDLE_INFO_TIMEOUT_LINE = 20;
+  private static final int STAYS_UP_SECONDS = 5;
+  // zero-based, as ErlangDebuggerNode takes and reports them: ti_server.erl lines 11 and 20
+  private static final int INIT_LINE = 10;
+  private static final int HANDLE_INFO_TIMEOUT_LINE = 19;
   private static final String[] DEBUGGER_BEAMS =
     {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
 
@@ -86,6 +88,9 @@ public class ErlangDebuggerOtpApplicationTest extends BasePlatformTestCase {
       assertEquals("breakpoint ti_server:" + INIT_LINE, nextEvent(events, erl, output));
       node.resume();
       assertEquals("breakpoint ti_server:" + HANDLE_INFO_TIMEOUT_LINE, nextEvent(events, erl, output));
+      // ti_server is suspended at the breakpoint, so the debugger must stay up until the user resumes it
+      String unexpected = events.poll(STAYS_UP_SECONDS, TimeUnit.SECONDS);
+      assertNull(unexpected == null ? null : withNodeOutput(unexpected, erl, output), unexpected);
       node.resume();
     }
     finally {
@@ -96,12 +101,13 @@ public class ErlangDebuggerOtpApplicationTest extends BasePlatformTestCase {
 
   private static String nextEvent(BlockingQueue<String> events, Process erl, File output) throws Exception {
     String event = events.poll(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    if (event == null || !event.startsWith("breakpoint")) {
-      erl.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-      String text = output.exists() ? Files.readString(output.toPath(), StandardCharsets.UTF_8) : "";
-      return event + "\nErlang node output:\n" + text;
-    }
-    return event;
+    return event != null && event.startsWith("breakpoint") ? event : withNodeOutput(event, erl, output);
+  }
+
+  private static String withNodeOutput(String event, Process erl, File output) throws Exception {
+    erl.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    String text = output.exists() ? Files.readString(output.toPath(), StandardCharsets.UTF_8) : "";
+    return event + "\nErlang node output:\n" + text;
   }
 
   private static void copyDebuggerBeams(String sdkHome, File directory) throws Exception {
