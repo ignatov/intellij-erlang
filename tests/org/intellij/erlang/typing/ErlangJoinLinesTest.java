@@ -12,6 +12,8 @@ public class ErlangJoinLinesTest extends ErlangLightPlatformCodeInsightFixtureTe
 
   public void testSinglePercentComments() { doTest(); }
   public void testDoublePercentComments() { doTest(); }
+  public void testTriplePercentComments() { doTest(); }
+  public void testSinglePercentCommentsWrap() { doTest(); }
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");

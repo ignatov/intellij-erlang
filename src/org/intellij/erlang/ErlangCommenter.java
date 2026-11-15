@@ -18,9 +18,16 @@ package org.intellij.erlang;
 
 import com.intellij.lang.Commenter;
 
+import java.util.List;
+
 public class ErlangCommenter implements Commenter {
   public String getLineCommentPrefix() {
     return "%%";
+  }
+
+  @Override
+  public List<String> getLineCommentPrefixes() {
+    return List.of("%%%", "%%", "%");
   }
 
   public String getBlockCommentPrefix() {
