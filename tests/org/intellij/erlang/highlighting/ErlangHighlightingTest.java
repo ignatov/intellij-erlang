@@ -86,6 +86,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport5()     { doTest(); }
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
+  public void testNoAutoImport8()     { doTest(); }
   public void test605()               { doTest(); }
   public void test821()               { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }

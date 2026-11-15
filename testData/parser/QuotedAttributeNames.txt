@@ -11,41 +11,25 @@ ERL_FILE
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    PsiErrorElement:<attribute>, <behaviour>, callback, define, else, export, export_record, export_type, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec or type expected, got '''
-      <empty list>
-  ERL_FUNCTION
-    ERL_FUNCTION_CLAUSE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(single_quote)(''')
-          PsiElement(atom_name)('атрибут')
-          PsiElement(single_quote)(''')
-      ERL_ARGUMENT_DEFINITION_LIST
+    ERL_ATOM_ATTRIBUTE
+      PsiElement(single_quote)(''')
+      PsiElement(atom_name)('атрибут')
+      PsiElement(single_quote)(''')
+      ERL_ATTR_VAL
         PsiElement(()('(')
-        ERL_ARGUMENT_DEFINITION
-          ERL_MAX_EXPRESSION
-            PsiElement(integer)('1')
+        ERL_MAX_EXPRESSION
+          PsiElement(integer)('1')
         PsiElement())(')')
-      PsiErrorElement:'->' or when expected, got '.'
-        <empty list>
     PsiElement(.)('.')
   ERL_ATTRIBUTE
     PsiElement(-)('-')
-    PsiErrorElement:<attribute>, <behaviour>, callback, define, else, export, export_record, export_type, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec or type expected, got '''
-      <empty list>
-  ERL_FUNCTION
-    ERL_FUNCTION_CLAUSE
-      ERL_Q_ATOM
-        ERL_ATOM
-          PsiElement(single_quote)(''')
-          PsiElement(atom_name)('attribute')
-          PsiElement(single_quote)(''')
-      ERL_ARGUMENT_DEFINITION_LIST
+    ERL_ATOM_ATTRIBUTE
+      PsiElement(single_quote)(''')
+      PsiElement(atom_name)('attribute')
+      PsiElement(single_quote)(''')
+      ERL_ATTR_VAL
         PsiElement(()('(')
-        ERL_ARGUMENT_DEFINITION
-          ERL_MAX_EXPRESSION
-            PsiElement(integer)('2')
+        ERL_MAX_EXPRESSION
+          PsiElement(integer)('2')
         PsiElement())(')')
-      PsiErrorElement:'->' or when expected, got '.'
-        <empty list>
     PsiElement(.)('.')

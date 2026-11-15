@@ -231,7 +231,7 @@ type_ref ::= q_atom {
 ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')' {pin=2 elementType=atom_attribute}
 else_atom_attribute ::= 'else' {pin=1}
 on_load ::= &'on_load' atom_name '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
-atom_attribute ::= atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
+atom_attribute ::= (atom_name | single_quote atom_name single_quote) ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*
 export_function ::= q_atom '/' integer {
