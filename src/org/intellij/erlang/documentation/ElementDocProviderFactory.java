@@ -60,6 +60,9 @@ public final class ElementDocProviderFactory {
       }
       return null; // TODO implement TypeDocProvider
     }
+    else if (psiElement instanceof ErlangMacrosDefinition macrosDefinition) {
+      return new ErlangMacroDocProvider(macrosDefinition);
+    }
     else {
       ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
         psiElement, ErlangGlobalFunctionCallExpression.class);

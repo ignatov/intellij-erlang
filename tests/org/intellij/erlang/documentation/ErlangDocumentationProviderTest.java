@@ -663,6 +663,50 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         """);
   }
 
+  public void testMacroDoc() {
+    doTestGenerateDoc("<pre>-define(INC(X), X + 1).<br/><br/><b>Comment:</b><br/> Adds one.<br/> Second line.<br/><br/>" +
+                      "<b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        %% Adds one.
+                        %% Second line.
+                        -define(INC(X), X + 1).
+                        test() -> ?IN<caret>C(1).
+                        """);
+  }
+
+  public void testMacroDocEscapesBody() {
+    doTestGenerateDoc("<pre>-define(BIN, &lt;&lt;&quot;a&amp;b&quot;&gt;&gt;).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(BIN, <<"a&b">>).
+                        test() -> ?B<caret>IN.
+                        """);
+  }
+
+  public void testMacroDocIgnoresTrailingCommentOfPreviousForm() {
+    doTestGenerateDoc("<pre>-define(B, 2).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(A, 1). % about A
+                        -define(B, 2).
+                        test() -> ?<caret>B.
+                        """);
+  }
+
+  public void testMacroDocFromInclude() {
+    myFixture.addFileToProject("inc.hrl", """
+      %%% Answer.
+      -define(ANSWER, 42).
+      """);
+    doTestGenerateDoc("<pre>-define(ANSWER, 42).<br/><br/><b>Comment:</b><br/> Answer.<br/><br/><b>Defined in:</b> inc.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("inc.hrl").
+                        test() -> ?ANS<caret>WER.
+                        """);
+  }
+
   public void testResolveLinkModule() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
@@ -710,6 +754,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         });
       }
     };
+  }
+
+  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
   }
 
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {
