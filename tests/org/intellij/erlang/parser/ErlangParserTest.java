@@ -88,6 +88,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testComprehensions()                      { doTest(false); }
   public void testMacrosHacks()                         { doTest(false); }
   public void testMacrosUnderscore()                    { doTest(false); }
+  public void testMacroInCatchPattern840()              { doTest(false); }
   public void testOptionalCallbacks()                   { doTest(false); }
   public void testComprehensionsRecovery()              { doTest(true);  }
   public void testSendExpressionPriority()              { doTest(false); }
