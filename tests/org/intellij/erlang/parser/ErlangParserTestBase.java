@@ -20,7 +20,11 @@ import com.intellij.core.CoreApplicationEnvironment;
 import com.intellij.lang.LanguageExtensionPoint;
 import com.intellij.lang.ParserDefinition;
 import com.intellij.openapi.extensions.Extensions;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.ParsingTestCase;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 
 public abstract class ErlangParserTestBase extends ParsingTestCase {
   protected ErlangParserTestBase(String dataPath, String fileExt, ParserDefinition... definitions) {
@@ -56,5 +60,14 @@ public abstract class ErlangParserTestBase extends ParsingTestCase {
   @Override
   protected boolean isCheckNoPsiEventsOnReparse() {
     return false;
+  }
+
+  @Override
+  protected void checkResult(@NotNull String targetDataName, @NotNull PsiFile file) throws IOException {
+    // The platform's message of the error element for unparsed input starts with a capital letter from 2026.3 on.
+    // The dumps have that form, so that they are the same on every platform this branch is tested against.
+    String tree = toParseTreeText(file, skipSpaces(), includeRanges())
+      .replace("PsiErrorElement:unmatched input", "PsiErrorElement:Unmatched input");
+    doCheckResult(myFullDataPath, targetDataName + ".txt", tree.trim());
   }
 }

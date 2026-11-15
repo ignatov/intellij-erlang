@@ -31,11 +31,13 @@ The plugin uses the Gradle build system with the IntelliJ Platform Gradle Plugin
 
 ## Continuous Integration
 
-All builds run on GitHub Actions with JDK 25 and the checked-in Gradle wrapper.
+All builds run on GitHub Actions with the checked-in Gradle wrapper: on JDK 21, and on JDK 25 for the job that tests against IntelliJ IDEA 2026.3.
 
 - **Pull requests and branch pushes** (`.github/workflows/gradle.yml`) run
   `./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber=SNAPSHOT-<run>`
   and upload the plugin ZIP as the `intellij-erlang-plugin` workflow artifact.
+  The jobs `ide-2026.2` and `ide-2026.3` then run the tests against the newer supported IDEs
+  and the Plugin Verifier on that ZIP.
 - **Pushes to master** also update the rolling `nightly` pre-release: the `nightly` tag
   is moved to the built commit and the unsigned development build is uploaded as
   [`intellij-erlang-nightly.zip`](https://github.com/ignatov/intellij-erlang/releases/download/nightly/intellij-erlang-nightly.zip).
@@ -48,8 +50,9 @@ verification report and should be reviewed before publishing.
 
 ## Releasing to JetBrains Marketplace
 
-The plugin targets the 263 platform branch; the Gradle plugin derives the minimum
-supported IDE build from this SDK. The plugin version is `<version>.<buildNumber>`,
+One plugin archive serves the platform branches 261 to 263. It is built against
+IntelliJ IDEA 2026.1; the Gradle plugin derives the minimum supported IDE build from
+this SDK, and `build.gradle` sets the upper bound (`until-build`) to `263.*`. The plugin version is `<version>.<buildNumber>`,
 with `version` taken from `gradle.properties` and `buildNumber` taken from the tag.
 
 `.github/workflows/release.yml` publishes a release when a `v*` tag is pushed. It
@@ -80,9 +83,9 @@ To smoke-test a release archive locally, run
 The IntelliJ Erlang plugin has specific Java version requirements for different components:
 
 ### Main Plugin
-- Built with Java 25
-- Targets Java 25 bytecode (class file version 69.0)
-- Targets IntelliJ Platform 2026.3
+- Built with Java 21
+- Targets Java 21 bytecode (class file version 65.0)
+- Built against IntelliJ Platform 2026.1, the oldest supported one; serves 2026.1 to 2026.3
 
 ### JPS (JetBrains Project System) Module
 - Built with Java 11 compatibility
@@ -93,7 +96,7 @@ The IntelliJ Erlang plugin has specific Java version requirements for different 
 
 The JPS module is loaded by the IntelliJ build system, which may run on various Java versions depending on the IDE version. To ensure maximum compatibility, the JPS module targets Java 11 bytecode.
 
-The main plugin can target the latest Java version supported by the current IntelliJ platform.
+The main plugin targets the Java version of the oldest supported IntelliJ platform.
 
 ## Common Issues
 

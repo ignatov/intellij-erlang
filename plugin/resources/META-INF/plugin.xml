@@ -18,8 +18,10 @@
     <id>org.jetbrains.erlang</id>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <depends>com.intellij.modules.lang</depends>
-    <depends>com.intellij.platform.testRunner</depends>
-    <depends>com.intellij.structureView</depends>
+    <!-- The test runner and the structure view are part of the platform in 2026.1 and separate plugins from 2026.2 on.
+         These are their ids in 2026.2; later IDEs keep them as aliases. Optional, so that 2026.1 loads the plugin. -->
+    <depends optional="true" config-file="test-runner-deps.xml">intellij.testRunner.plugin</depends>
+    <depends optional="true" config-file="structure-view-deps.xml">intellij.structureView.plugin</depends>
     <name>Erlang</name>
     <description><![CDATA[
     <p>Erlang support for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine and other JetBrains IDE.</p>
