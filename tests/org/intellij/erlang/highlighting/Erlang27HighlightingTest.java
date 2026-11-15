@@ -28,6 +28,11 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testErlang27MoreThanThreeQuotes() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
+
   public void testErlang29SyntaxError() {
     enableErlang29SyntaxInspection();
     doTest();

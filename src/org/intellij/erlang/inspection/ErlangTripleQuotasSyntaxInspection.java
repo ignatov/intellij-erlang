@@ -26,8 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
-  private static final Pattern PATTERN = Pattern.compile("\\n\\s*\"\"\"$");
-
   @Override
   protected @NotNull ErlangVisitor buildErlangVisitor(@NotNull ProblemsHolder holder,
                                                       @NotNull LocalInspectionToolSession session) {
@@ -35,18 +33,27 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
       @Override
       public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
         String text = o.getText();
-        if (text.startsWith("\"\"\"") && !text.startsWith("\"\"\"\n")) {
+        String quotes = "\"".repeat(Math.max(3, countOpeningQuotes(text)));
+        if (text.startsWith(quotes) && !text.startsWith(quotes + "\n")) {
           holder.registerProblem(o, "Not white space after start of triple-quoted string");
         }
-        if (text.endsWith("\"\"\"") && !endsWithPattern(text)) {
+        if (text.endsWith(quotes) && !endsWithPattern(text, quotes)) {
           holder.registerProblem(o, "Bad indentation in triple-quoted string");
         }
       }
     };
   }
 
-  private static boolean endsWithPattern(String tripleQuotedString) {
-    Matcher matcher = PATTERN.matcher(tripleQuotedString);
+  // A triple-quoted string or sigil may open with more than three quotes and then ends at the same number (EEP 64)
+  private static int countOpeningQuotes(String text) {
+    int start = text.startsWith("~") ? (text.length() > 1 && text.charAt(1) != '"' ? 2 : 1) : 0;
+    int end = start;
+    while (end < text.length() && text.charAt(end) == '"') end++;
+    return end - start;
+  }
+
+  private static boolean endsWithPattern(String tripleQuotedString, String quotes) {
+    Matcher matcher = Pattern.compile("\\n\\s*" + quotes + "$").matcher(tripleQuotedString);
     return matcher.find();
   }
 }
