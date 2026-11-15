@@ -347,9 +347,9 @@ public class ErlangPsiImplUtil {
 
                ErlangFile file = (ErlangFile) myElement.getContainingFile();
                VirtualFile virtualFile = file.getVirtualFile();
-               File ioFile = VfsUtilCore.virtualToIoFile(virtualFile);
+               File ioDir = VfsUtilCore.virtualToIoFile(virtualFile.getParent());
 
-               String relativePath = FileUtilRt.getRelativePath(ioFile, newHeaderIoFile);
+               String relativePath = FileUtilRt.getRelativePath(ioDir, newHeaderIoFile);
 
                Module module = ModuleUtilCore.findModuleForPsiElement(file);
                for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
