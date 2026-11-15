@@ -82,6 +82,19 @@ jobs:
           ls -l build/distributions || true
           exit 1
         fi
+        # The range that the IDEs below cover; gradle.yml makes the same check on every push.
+        unzip -q "$zip" -d "$RUNNER_TEMP/archive"
+        range=""
+        for jar in "$RUNNER_TEMP"/archive/*/lib/*.jar; do
+          if unzip -l "$jar" META-INF/plugin.xml > /dev/null 2>&1; then
+            range="$(unzip -p "$jar" META-INF/plugin.xml | grep -o '<idea-version[^>]*>')"
+          fi
+        done
+        echo "$range"
+        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+          echo "::error::Unexpected compatibility range in $zip: '$range'"
+          exit 1
+        fi
         cp "$zip" "$RUNNER_TEMP/"
         for ide in 2026.2 2026.3; do
           echo "::group::Plugin Verifier against IntelliJ IDEA $ide"
