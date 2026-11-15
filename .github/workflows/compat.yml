@@ -1,0 +1,230 @@
+name: Compatibility check
+
+# Answers, for one IntelliJ IDEA build and one Erlang/OTP release, whether the plugin works with it (see AGENTS.md).
+# Each job writes one JSON result (artifact compat-ide or compat-otp) and a summary. A job that fails with its result
+# artifact found problems; a run without the result artifact failed for infrastructure reasons.
+# The scripts come from the commit of this workflow; the plugin is checked out from `ref` into plugin/.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ide:
+        description: >-
+          IntelliJ IDEA to check against. Empty: the version in build.gradle.
+          Installers from data.services.jetbrains.com: a release version (2026.3, 2026.3.1), a build number of a
+          release, RC or EAP (263.7307.44), or latest (the newest release).
+          IntelliJ Maven snapshots: 263-EAP-SNAPSHOT, LATEST-EAP-SNAPSHOT, <build>-EAP-SNAPSHOT.
+        required: false
+        type: string
+        default: ''
+      otp:
+        description: >-
+          Erlang/OTP version as builds.hex.pm names it without OTP- (27.3.4.9, 29.1, 30.0-rc1).
+          Empty: the version pinned in gradle.yml.
+        required: false
+        type: string
+        default: ''
+      ref:
+        description: Commit, branch or tag of this repository to check. Empty - the default branch.
+        required: false
+        type: string
+        default: ''
+  pull_request:
+    paths:
+      - .github/workflows/compat.yml
+      - scripts/compat/**
+
+permissions:
+  contents: read
+
+env:
+  REF: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || github.event.repository.default_branch) || github.event.pull_request.head.sha }}
+  COMPAT_LOGS: ${{ github.workspace }}/compat-logs
+  TOOL: ${{ github.workspace }}/compat-tool/scripts/compat
+
+jobs:
+  ide:
+    # Runs for an ide input, for no input at all, and on pull requests.
+    if: github.event_name == 'pull_request' || inputs.ide != '' || inputs.otp == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      COMPAT_IDE: ${{ inputs.ide }}
+    steps:
+    - name: Check out the compatibility check
+      uses: actions/checkout@v7
+      with:
+        path: compat-tool
+        sparse-checkout: scripts/compat
+    - name: Check out the plugin
+      uses: actions/checkout@v7
+      with:
+        path: plugin
+        ref: ${{ env.REF }}
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+        cache-dependency-path: plugin/**/*.gradle*
+    - name: Test the result script
+      run: python3 -m unittest discover -s "$TOOL" -p 'test_*.py'
+    - name: Resolve the IDE
+      # Fails, and so writes no result, when the IDE cannot be downloaded or the build cannot be configured.
+      working-directory: plugin
+      run: |
+        "$TOOL/gradle.sh" compatIdeInfo
+        echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      id: resolve
+    - name: Compile
+      id: compile
+      working-directory: plugin
+      run: |
+        "$TOOL/run-check.sh" compile "$TOOL/gradle.sh" buildPlugin testClasses :jps-plugin:testClasses
+    - name: Test
+      if: steps.compile.outputs.exit == '0'
+      working-directory: plugin
+      run: |
+        "$TOOL/run-check.sh" test "$TOOL/gradle.sh" test --continue
+    - name: Verify the plugin
+      if: steps.compile.outputs.exit == '0'
+      working-directory: plugin
+      run: |
+        "$TOOL/run-check.sh" verify "$TOOL/gradle.sh" verifyPlugin
+    - name: Download the released plugin
+      id: release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        "$TOOL/fetch-release.sh" "$RUNNER_TEMP/released"
+    - name: Verify the released plugin
+      # The archive of the latest GitHub release, the build on JetBrains Marketplace, without building it.
+      if: steps.release.outputs.archive != ''
+      working-directory: plugin
+      env:
+        ARCHIVE: ${{ steps.release.outputs.archive }}
+      run: |
+        "$TOOL/run-check.sh" released "$TOOL/gradle.sh" verifyPlugin -PcompatPluginArchive="$ARCHIVE"
+    - name: Write the result
+      env:
+        IDE: ${{ inputs.ide }}
+        REF_INPUT: ${{ inputs.ref }}
+        COMMIT: ${{ steps.resolve.outputs.commit }}
+      run: |
+        python3 "$TOOL/compat.py" ide-result --root plugin --logs "$COMPAT_LOGS" --commit "$COMMIT" --ref "$REF_INPUT" \
+          --ide "$IDE" --ide-info plugin/build/compat/ide.json --out compat-ide.json
+    - name: Upload the result
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compat-ide
+        path: compat-ide.json
+        if-no-files-found: ignore
+    - name: Upload the logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compat-ide-logs
+        path: |
+          compat-logs
+          plugin/build/reports/tests/test
+          plugin/build/reports/pluginVerifier
+          plugin/build/compat
+        if-no-files-found: ignore
+    - name: Conclusion
+      run: python3 "$TOOL/compat.py" conclusion compat-ide.json
+
+  otp:
+    # Runs for an otp input, for no input at all, and on pull requests.
+    if: github.event_name == 'pull_request' || inputs.otp != '' || inputs.ide == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+    - name: Check out the compatibility check
+      uses: actions/checkout@v7
+      with:
+        path: compat-tool
+        sparse-checkout: |
+          scripts/compat
+          .github/workflows
+    - name: Check out the plugin
+      uses: actions/checkout@v7
+      with:
+        path: plugin
+        ref: ${{ env.REF }}
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+        cache-dependency-path: plugin/**/*.gradle*
+    - name: Test the result script
+      run: python3 -m unittest discover -s "$TOOL" -p 'test_*.py'
+    - name: Read the pins of gradle.yml
+      id: pins
+      env:
+        OTP: ${{ inputs.otp }}
+      run: |
+        python3 "$TOOL/compat.py" pins compat-tool/.github/workflows/gradle.yml | tee -a "$GITHUB_OUTPUT"
+        echo "otp=${OTP:-$(python3 "$TOOL/compat.py" pins compat-tool/.github/workflows/gradle.yml | sed -n 's/^OTP_VERSION=//p')}" >> "$GITHUB_OUTPUT"
+        echo "commit=$(git -C plugin rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+    - name: Install Erlang/OTP
+      # A copy of the step in gradle.yml with the version as an argument: builds.hex.pm, sha256 from builds.txt.
+      env:
+        OTP: ${{ steps.pins.outputs.otp }}
+      run: |
+        "$TOOL/install-otp.sh" "$OTP"
+        echo "ERLANG_ROOT=$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')" >> "$GITHUB_ENV"
+    - name: Install rebar3
+      # The rebar3 of gradle.yml. It supports a range of Erlang/OTP releases (3.28.0: 27 to 29).
+      env:
+        REBAR3_VERSION: ${{ steps.pins.outputs.REBAR3_VERSION }}
+        REBAR3_SHA256: ${{ steps.pins.outputs.REBAR3_SHA256 }}
+      run: |
+        "$TOOL/install-rebar3.sh" "$REBAR3_VERSION" "$REBAR3_SHA256"
+    - name: Run the compilation tests
+      working-directory: plugin
+      run: |
+        "$TOOL/run-check.sh" compilation "$TOOL/gradle.sh" testCompilation --continue \
+          -Derlang.sdk.path="$ERLANG_ROOT" -Drebar.path="$REBAR3_PATH"
+    - name: Parse the Erlang/OTP sources
+      # The environment is not an input of the test task, so --rerun makes Gradle run it even when it is cached.
+      working-directory: plugin
+      env:
+        CORPUS_REPORT: ${{ github.workspace }}/corpus-report.json
+      run: |
+        CORPUS_DIR="$ERLANG_ROOT" "$TOOL/run-check.sh" corpus "$TOOL/gradle.sh" test \
+          --tests org.intellij.erlang.parser.ErlangCorpusParsingTest --rerun
+    - name: Write the result
+      env:
+        OTP: ${{ inputs.otp }}
+        OTP_VERSION: ${{ steps.pins.outputs.otp }}
+        REBAR3_VERSION: ${{ steps.pins.outputs.REBAR3_VERSION }}
+        REF_INPUT: ${{ inputs.ref }}
+        COMMIT: ${{ steps.pins.outputs.commit }}
+      run: |
+        python3 "$TOOL/compat.py" otp-result --root plugin --logs "$COMPAT_LOGS" --commit "$COMMIT" --ref "$REF_INPUT" \
+          --otp "$OTP" --otp-version "$OTP_VERSION" --otp-root "$ERLANG_ROOT" --rebar3-version "$REBAR3_VERSION" \
+          --corpus-report corpus-report.json --out compat-otp.json
+    - name: Upload the result
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compat-otp
+        path: compat-otp.json
+        if-no-files-found: ignore
+    - name: Upload the logs
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compat-otp-logs
+        path: |
+          compat-logs
+          corpus-report.json
+          plugin/build/reports/tests/testCompilation
+          plugin/jps-plugin/build/reports/tests/testCompilation
+        if-no-files-found: ignore
+    - name: Conclusion
+      run: python3 "$TOOL/compat.py" conclusion compat-otp.json
