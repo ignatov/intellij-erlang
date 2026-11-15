@@ -17,15 +17,8 @@
 package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
-import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.registry.Registry;
-import com.intellij.psi.impl.source.tree.injected.InjectedLanguageManagerImpl;
 import com.intellij.testFramework.UsefulTestCase;
-import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
-import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
-import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
-import com.intellij.testFramework.fixtures.TestFixtureBuilder;
-import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,28 +39,6 @@ abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeIn
 
   protected String getTestDataPath() {
     return "testData/completion/";
-  }
-
-  protected void localFileSystemSetUp() throws Exception {
-    final CodeInsightTestFixture oldFixture = myFixture;
-    Disposer.register(getTestRootDisposable(), () -> {
-      try {
-        oldFixture.tearDown();
-      }
-      catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    });
-
-    IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
-    TestFixtureBuilder<IdeaProjectTestFixture> fixtureBuilder = factory.createLightFixtureBuilder(getProjectDescriptor(), getProject().getName());
-
-    IdeaProjectTestFixture fixture = fixtureBuilder.getFixture();
-    myFixture = IdeaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(fixture, new TempDirTestFixtureImpl());
-
-    InjectedLanguageManagerImpl.checkInjectorsAreDisposed(getProject());
-    myFixture.setUp();
-    myFixture.setTestDataPath(getTestDataPath());
   }
 
   protected void doCheckResult(@NotNull String before, @NotNull String after) { doCheckResult(before, after, null); }

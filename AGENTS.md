@@ -1,7 +1,7 @@
 # AGENTS.md
 
 This is the IntelliJ Platform plugin for Erlang: lexer, parser, PSI, stubs, inspections, completion, run/debug, rebar and eunit.
-Plugin id `org.jetbrains.erlang`. It is built against IntelliJ IDEA 2026.3 (platform branch 263) with Java 25.
+Plugin id `org.jetbrains.erlang`. One archive serves IntelliJ IDEA 2026.1, 2026.2 and 2026.3 (platform branches 261 to 263). It is built against the oldest of them, 2026.1, with Java 21.
 
 ## Layout
 - `src/`: the plugin sources (`org.intellij.erlang.*`).
@@ -14,8 +14,8 @@ Plugin id `org.jetbrains.erlang`. It is built against IntelliJ IDEA 2026.3 (plat
 - `libs/OtpErlang.jar`: a vendored library. `resources/debugger/beams/*`: committed `.beam` files built from `resources/debugger/src`.
 
 ## Commands
-Use JDK 25 (CI uses Temurin 25) and the Gradle wrapper.
-The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts. Running even one test class takes minutes.
+Use JDK 21 (CI uses Temurin 21) and the Gradle wrapper. Building or testing against 2026.3 (`-PplatformVersion=2026.3`) needs JDK 25.
+The first build downloads IntelliJ IDEA 2026.1 (several GB) from JetBrains hosts. Running even one test class takes minutes.
 
 | Purpose | Command |
 |---|---|
@@ -28,11 +28,18 @@ The first build downloads IntelliJ IDEA 2026.3 (several GB) from JetBrains hosts
 | JPS Java 11 check | `./gradlew :jps-plugin:verifyJpsJava11Compatibility` |
 | Regenerate `gen/` | `./gradlew generateLexerAndParser` |
 | Check that `gen/` is up to date (CI runs it) | `./gradlew verifyGeneratedSources` |
+| Build, test and verify against another IDE | `./gradlew test buildPlugin verifyPlugin -PplatformVersion=263.7307.44` (or `2026.3.1`, `263-EAP-SNAPSHOT`) |
+| Parse every `.erl`/`.hrl` under a directory (corpus check) | `CORPUS_DIR=/usr/local/lib/erlang CORPUS_REPORT=/tmp/corpus.json ./gradlew test --tests 'org.intellij.erlang.parser.ErlangCorpusParsingTest' --rerun` |
+| Unit tests of the compatibility check scripts | `python3 -m unittest discover -s scripts/compat -p 'test_*.py' -v` |
+| Compatibility check on GitHub | `gh workflow run compat.yml -f ide=263.7307.44 -f otp=28.0` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.
 - The rebar tests skip themselves when `rebar.path` is unset. The Copilot setup steps put `rebar3` on `PATH`, so `command -v rebar3` finds it.
 - `verifyPlugin` checks only against the IDE that is built against. It fails on compatibility problems, missing dependencies, an invalid plugin and override-only API usages.
+- The compatibility check, `.github/workflows/compat.yml` with `scripts/compat/`, answers whether the plugin works with one IDE build (job `ide`: compile, `test`, `verifyPlugin` with `-PplatformVersion`, and the Plugin Verifier on the archive of the published release, `v<version>.<N>` with the largest N) and one Erlang/OTP release (job `otp`: `testCompilation` and `ErlangCorpusParsingTest` on that installation, and whether `ErlangSdkRelease` and `testData/mockSdk-R<NN>` know the release).
+- `ref` is empty (the head of the default branch), the tag `v<digits and dots>` of a published GitHub release (resolved as exactly `refs/tags/<name>`), or the full SHA of a commit of the default branch; branches and tags without a release are refused. Only commits of the default branch from the merge of the compatibility check on, and release tags made after it, have what the checks need (`platformVersion` in `build.gradle`, `ErlangCorpusParsingTest`); with an older commit the checks it cannot run are `not-run` with the reason "the checked commit predates the compatibility check" and the result is `incomplete`. On `pull_request` the plugin is the merge commit that the scripts come from.
+- Each job uploads one JSON result (`compat-ide`, `compat-otp`); a job that was not asked for is `skipped` and uploads none. A run without the result failed for infrastructure reasons (the IDE or Erlang/OTP could not be set up). A result that is `incomplete` (a check did not run or did not work: no test ran, a missing Gradle task, no report or an unreadable one, a step that timed out or was cancelled, a commit that predates the check) makes the job red on every event. Findings of checks that ran make the job red on `workflow_dispatch` only; on `pull_request` it is green. `ErlangCorpusParsingTest.testCorpus` does nothing without `CORPUS_DIR`.
 
 ## Generated code
 - Grammar-Kit generates `gen/org/intellij/erlang/{ErlangTypes.java,parser/ErlangParser.java,psi/**}` from `grammars/erlang.bnf`.
@@ -77,7 +84,10 @@ You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer 
 - `test` never needs Erlang. `testCompilation` reads `erlang.sdk.path` (default `/usr/lib/erlang/`) and `rebar.path` (the rebar3 escript; without it the rebar tests are skipped).
 
 ## Platform rules
-- Target only 263. `since-build` is derived from `intellijIdea("2026.3")` and there is no `until-build`. Do not use APIs newer than 263. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
+- Target 261 to 263. `since-build` is derived from `intellijIdea("2026.1")` and `until-build` is `263.*` (`supportedUntilBuild` in `build.gradle`). Do not use APIs newer than 261, and no Java language features or JDK APIs newer than 21. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
+- CI job `ide-2026.2` and `ide-2026.3` compile and test the same sources against the newer IDEs and run the Plugin Verifier on the archive there. Code must compile against all three: when an API differs between them, use the form all three have. A Copilot cloud session has only 2026.1 (the firewall blocks the downloads of the other IDEs), so do not run `-PplatformVersion` there: push and read the two CI jobs. A test that needs an API only some of them have looks it up by reflection (`ErlangMethodSeparatorProviderTest`).
+- The test runner and the structure view are part of the platform in 2026.1 and separate plugins from 2026.2 on. `plugin.xml` depends on them optionally, and `build.gradle` adds them per IDE.
+- `until-build` is raised only after the tests and the Plugin Verifier pass on the new IDE: add the IDE to the `other-ides` job of `gradle.yml` and to `release.yml`, then raise `supportedUntilBuild`.
 - `jps-plugin` must stay Java 11 bytecode (`options.release = 11`) and use only JPS and JDK APIs, no IDE classes. 828089b1 replaced `GeneralCommandLine` with `ProcessBuilder` for this reason.
 - Read PSI, VFS and indices under a read action. Modify PSI and documents in `WriteCommandAction`, which is the pattern in the quick fixes and refactorings.
 - Never block the EDT. Process launches, file or network I/O and index queries go to a background thread (`executeOnPooledThread`, `@RequiresBackgroundThread`). Come back with `invokeLater` and an explicit `ModalityState`. Do not add new `SlowOperations.allowSlowOperations`.
@@ -114,3 +124,11 @@ The PR description must state:
 4. The commands you ran and their results.
 5. What was not verified, for example `testCompilation` without Erlang, `verifyPlugin`, or a manual check in the IDE.
 6. Any area from the stop-and-ask list that the PR touches, and the proposed change note.
+
+### Small and big pull requests
+Every pull request is small or big. The maintainer decides a small one with one click and reads a big one in full, so keep a fix small and about one thing.
+- Source lines are the added plus the deleted lines in files outside `gen/`, `testData/` and `tests/`.
+- The fix area is `src/`, `tests/`, `testData/`, `gen/` and `grammars/erlang.bnf`.
+- A pull request is big when it changes more than 150 source lines, or more than 50 source lines outside the fix area (workflows, build files, descriptors, documentation, specs), or when the maintainer says so. Otherwise it is small. The maintainer can also call a big one small.
+- A small pull request is merged without the maintainer reading the diff only when the review of the head commit says it is ready, CI is green on that commit, and it changes no file outside the fix area. Everything else waits for the maintainer.
+- Do not split one change into several pull requests, or move logic into tests or test data, to stay under the limits. If a fix cannot be small, say so at the top of the description and explain why.

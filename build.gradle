@@ -9,6 +9,14 @@ plugins {
 
 apply plugin: 'org.jetbrains.intellij.platform'
 
+// The oldest supported IDE: the released archive is built against it and serves every IDE up to supportedUntilBuild.
+// -PplatformVersion selects another IDE to compile, test and verify against.
+def platformVersionOverride = providers.gradleProperty('platformVersion').orNull
+def platformVersion = platformVersionOverride ?: '2026.1'
+// The newest IDE branch CI tests the sources and verifies the archive against. Raise it only together with the
+// IDE list of the other-ides job in .github/workflows/gradle.yml and of release.yml.
+def supportedUntilBuild = '263.*'
+
 subprojects {
   apply plugin: 'org.jetbrains.intellij.platform.module'
 }
@@ -70,11 +78,29 @@ allprojects {
   dependencies {
     intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
       // https://data.services.jetbrains.com/products?code=IC
-      ijp.intellijIdea("2026.3")
+      // -PplatformVersion overrides the IDE to build, test and verify against (the compatibility check, see AGENTS.md).
+      // A -SNAPSHOT version comes from the IntelliJ Maven snapshots repository, whose archives have no JetBrains Runtime.
+      if (platformVersion.endsWith('-SNAPSHOT')) {
+        ijp.intellijIdea(platformVersion) { useInstaller = false }
+        ijp.jetbrainsRuntime()
+      }
+      else {
+        ijp.intellijIdea(platformVersion)
+      }
 
-      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi",
-                         "com.intellij.platform.testRunner", "com.intellij.structureView")
-      ijp.bundledModule("intellij.platform.debugger")
+      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
+      // The test runner and the structure view are part of the platform in 2026.1 and separate plugins of the IDE
+      // from 2026.2 on, under other ids in 2026.2 than later. plugin.xml depends on them optionally.
+      if (platformVersion ==~ /(2026\.1|261)([.-].*)?/) {
+        // Nothing to add.
+      }
+      else if (platformVersion ==~ /(2026\.2|262)([.-].*)?/) {
+        ijp.bundledPlugins("intellij.testRunner.plugin", "intellij.structureView.plugin")
+      }
+      else {
+        ijp.bundledPlugins("com.intellij.platform.testRunner", "com.intellij.structureView")
+        ijp.bundledModule("intellij.platform.debugger")
+      }
       ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
       ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
     }
@@ -134,6 +160,15 @@ dependencies {
 }
 
 intellijPlatform {
+  pluginConfiguration {
+    ideaVersion {
+      // since-build is the branch of the IDE built against. The upper bound is set only on the default build, the one
+      // that is released: a build against another IDE (-PplatformVersion) is for tests and the compatibility check.
+      if (platformVersionOverride == null) {
+        untilBuild = supportedUntilBuild
+      }
+    }
+  }
   pluginVerification {
     // The existing Marketplace plugin predates the restriction on org.jetbrains plugin IDs.
     freeArgs = ['-mute', 'ForbiddenPluginIdPrefix']
@@ -143,6 +178,7 @@ intellijPlatform {
                     VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
                     VerifyPluginTask.FailureLevel.OVERRIDE_ONLY_API_USAGES]
     ides {
+      // The IDE the plugin is built against, so -PplatformVersion selects the verified IDE too.
       current()
     }
   }

@@ -18,9 +18,11 @@ package org.intellij.erlang.marker;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzerSettings;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
-import com.intellij.codeInsight.daemon.impl.LineMarkersPass;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.project.Project;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -46,14 +48,37 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
     settings.SHOW_METHOD_SEPARATORS = b;
   }
 
-  private void doTest(Integer... expectedLineMarkers) {
+  private void doTest(Integer... expectedLineMarkers) throws Exception {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.doHighlighting();
     assertSameElements(getMarkedLineNumbers(), expectedLineMarkers);
   }
 
-  private Integer[] getMarkedLineNumbers() {
-    List<? extends LineMarkerInfo<?>> lineMarkers = LineMarkersPass.getDisplayedLineMarkers(myFixture.getEditor().getDocument(), myFixture.getProject());
+  /**
+   * The line markers that the highlighting left in the editor. 2026.3 removed DaemonCodeAnalyzerImpl.getLineMarkers();
+   * LineMarkersPass.getDisplayedLineMarkers(), which the platform's test fixture uses there, does not exist in 2026.1
+   * and 2026.2. This branch is tested against all three, so the method is looked up by name.
+   */
+  @SuppressWarnings("unchecked")
+  private List<? extends LineMarkerInfo<?>> getLineMarkers() throws Exception {
+    String[][] candidates = {{"com.intellij.codeInsight.daemon.impl.LineMarkersPass", "getDisplayedLineMarkers"},
+                             {"com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl", "getLineMarkers"}};
+    for (String[] candidate : candidates) {
+      Method method;
+      try {
+        method = Class.forName(candidate[0]).getMethod(candidate[1], Document.class, Project.class);
+      }
+      catch (NoSuchMethodException | ClassNotFoundException e) {
+        continue;
+      }
+      return (List<? extends LineMarkerInfo<?>>)method.invoke(null, myFixture.getEditor().getDocument(), myFixture.getProject());
+    }
+    fail("No method to read the line markers in this platform");
+    return null;
+  }
+
+  private Integer[] getMarkedLineNumbers() throws Exception {
+    List<? extends LineMarkerInfo<?>> lineMarkers = getLineMarkers();
     assertNotNull(lineMarkers);
     Integer[] markedLineNumbers = new Integer[lineMarkers.size()];
     for (int i = 0; i < lineMarkers.size(); i++) {
@@ -62,12 +87,12 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
     return markedLineNumbers;
   }
 
-  public void testFunction()              { doTest(0); }
-  public void testTwoFunctions()          { doTest(0, 3); }
-  public void testSpec()                  { doTest(0); }
-  public void testComment()               { doTest(0); }
-  public void testSpecAndComment()        { doTest(0); }
-  public void testCommentAndSpec()        { doTest(0); }
-  public void testCommentSpecAndComment() { doTest(0); }
-  public void testSpecOfOtherFunction()   { doTest(1); }
+  public void testFunction() throws Exception              { doTest(0); }
+  public void testTwoFunctions() throws Exception          { doTest(0, 3); }
+  public void testSpec() throws Exception                  { doTest(0); }
+  public void testComment() throws Exception               { doTest(0); }
+  public void testSpecAndComment() throws Exception        { doTest(0); }
+  public void testCommentAndSpec() throws Exception        { doTest(0); }
+  public void testCommentSpecAndComment() throws Exception { doTest(0); }
+  public void testSpecOfOtherFunction() throws Exception   { doTest(1); }
 }
