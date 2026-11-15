@@ -463,6 +463,14 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-export([f<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.");
   }
 
+  public void testOptionalCallbackTupleFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\nfoobar(X) -> X.", "-optional_callbacks([{foobar, 1<caret>}]).\nfoobar(X) -> X.");
+  }
+
+  public void testOptionalCallbackSlashFunction() {
+    doCheckResult("-optional_callbacks([fo<caret>]).\nfoobar(X) -> X.", "-optional_callbacks([foobar/1<caret>]).\nfoobar(X) -> X.");
+  }
+
   public void testLager() {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }
