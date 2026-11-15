@@ -66,6 +66,19 @@ public class ErlangApplicationCommandLineTest extends ErlangLightPlatformCodeIns
     assertTrue("'-s init stop' must come after '-eval': " + params, params.indexOf("init") > eval);
   }
 
+  // everything after -extra is plain arguments, so -extra and what follows it must stay at the end
+  public void testExtraArgumentsStayLast() throws Exception {
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModuleAndFunction("riak_dt_runner boot");
+    configuration.setErlFlags("-s lager start -extra foo bar");
+
+    List<String> params = getCommandParameters(new ErlangApplicationRunningState(null, getModule(), configuration));
+
+    assertEquals(List.of("-pa", "/src", "-s", "lager", "start", "-eval", "riak_dt_runner:boot().", "-s", "init", "stop",
+                         "-noshell", "-extra", "foo", "bar"), params);
+  }
+
   private static List<String> getCommandParameters(ErlangRunningState state) throws Exception {
     Method getCommand = ErlangRunningState.class.getDeclaredMethod("getCommand");
     getCommand.setAccessible(true);
