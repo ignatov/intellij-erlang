@@ -22,11 +22,18 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.testFramework.utils.parameterInfo.MockParameterInfoUIContext;
 import com.intellij.testFramework.utils.parameterInfo.MockUpdateParameterInfoContext;
 import org.intellij.erlang.ErlangParameterInfoHandler;
 import org.intellij.erlang.psi.ErlangArgumentList;
+import org.intellij.erlang.psi.ErlangFunctionClause;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String FOO = "foo(Arg1, Arg2) -> ok.\n";
@@ -35,6 +42,52 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
   public void testSecond()    { doTest(FOO + "bar() -> foo(1, <caret>)", 1); }
   public void testBif()       { doTest("bar() -> hash({}, <caret>)", 1); }
   public void testModuleBif() { doTest("bar() -> math:sin(<caret>)", 0); }
+
+  public void testMacro() {
+    doMacroTest("-define(FOO(A, B), {A, B}).\nbar() -> ?FOO(1, <caret>).", 1, "A, [B]");
+  }
+
+  public void testMacroOverloaded() {
+    doMacroTest("-define(F(X, Y), {X, Y}).\n-define(F(X), X).\nbar() -> ?F(1, <caret>).", 1, "X", "X, [Y]");
+  }
+
+  public void testMacroInsideFunctionCall() {
+    doMacroTest(FOO + "-define(BAR(X), X).\nbar() -> foo(?BAR(<caret>), 2).", 0, "[X]");
+  }
+
+  public void testMacroFromInclude() {
+    myFixture.addFileToProject("a.hrl", "-define(FOO(A, B), {A, B}).");
+    doMacroTest("-include(\"a.hrl\").\nbar() -> ?FOO(<caret>).", 0, "[A], B");
+  }
+
+  public void testFunctionCallInsideMacro() {
+    doTest(FOO + "-define(BAR(X), X).\nbar() -> ?BAR(foo(1, <caret>)).", 1);
+    assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
+  }
+
+  private Object[] myItemsToShow;
+
+  private Object[] getItemsToShow() {
+    return myItemsToShow;
+  }
+
+  private void doMacroTest(String text, int highlightedParameterIndex, String... expectedPresentations) {
+    doTest(text, highlightedParameterIndex);
+    ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
+    List<String> presentations = new ArrayList<>();
+    for (Object item : getItemsToShow()) {
+      assertInstanceOf(item, ErlangMacrosDefinition.class);
+      MockParameterInfoUIContext<PsiElement> uiContext = new MockParameterInfoUIContext<>((PsiElement) item);
+      uiContext.setCurrentParameterIndex(highlightedParameterIndex);
+      parameterInfoHandler.updateUI(item, uiContext);
+      String presentation = uiContext.getText();
+      int start = uiContext.getHighlightStart();
+      int end = uiContext.getHighlightEnd();
+      presentations.add(uiContext.isTextDisabled() ? presentation :
+                        presentation.substring(0, start) + "[" + presentation.substring(start, end) + "]" + presentation.substring(end));
+    }
+    assertEquals(Arrays.asList(expectedPresentations), presentations);
+  }
 
   private void doTest(String text, int highlightedParameterIndex) {
     myFixture.configureByText("a.erl", text);
@@ -48,6 +101,7 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
       Object[] itemsToShow = createContext.getItemsToShow();
       assertNotNull(itemsToShow);
       assertTrue(itemsToShow.length > 0);
+      myItemsToShow = itemsToShow;
     }
     MockUpdateParameterInfoContext updateContext = new MockUpdateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
     ErlangArgumentList element = parameterInfoHandler.findElementForUpdatingParameterInfo(updateContext);

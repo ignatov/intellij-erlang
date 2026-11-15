@@ -34,12 +34,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
   @Override
   public ErlangArgumentList findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
-    return getErlangArgumentList(context);
+    ErlangArgumentList args = getErlangArgumentList(context);
+    List<ErlangMacrosDefinition> macrosDefinitions = args != null ? getCalledMacrosDefinitions(args) : Collections.emptyList();
+    if (!macrosDefinitions.isEmpty()) {
+      context.setItemsToShow(ArrayUtil.toObjectArray(macrosDefinitions));
+    }
+    return args;
   }
 
   @Override
@@ -53,8 +59,33 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     return PsiTreeUtil.getParentOfType(at, ErlangArgumentList.class);
   }
 
+  @NotNull
+  private static List<ErlangMacrosDefinition> getCalledMacrosDefinitions(@NotNull ErlangArgumentList args) {
+    PsiElement parent = args.getParent();
+    ErlangMacros macros = parent instanceof ErlangFunctionCallExpression ? ((ErlangFunctionCallExpression) parent).getQAtom().getMacros() :
+                          parent instanceof ErlangGenericFunctionCallExpression ? ((ErlangGenericFunctionCallExpression) parent).getMacros() :
+                          null;
+    PsiReference reference = macros != null ? macros.getReference() : null;
+    PsiElement resolve = reference != null ? reference.resolve() : null;
+    if (!(resolve instanceof ErlangMacrosDefinition) || !(resolve.getContainingFile() instanceof ErlangFile)) return Collections.emptyList();
+    String name = ((ErlangMacrosDefinition) resolve).getName();
+    List<ErlangMacrosDefinition> definitions = new ArrayList<>();
+    for (ErlangMacrosDefinition definition : ((ErlangFile) resolve.getContainingFile()).getMacroses()) {
+      if (definition.getArgumentDefinitionList() != null && name.equals(definition.getName())) {
+        definitions.add(definition);
+      }
+    }
+    definitions.sort(Comparator.comparingInt(d -> d.getArgumentDefinitionList().getArgumentDefinitionList().size()));
+    return definitions;
+  }
+
   @Override
   public void showParameterInfo(@NotNull ErlangArgumentList args, @NotNull CreateParameterInfoContext context) {
+    Object[] macrosDefinitions = context.getItemsToShow();
+    if (macrosDefinitions != null && macrosDefinitions.length > 0) {
+      context.showHint(args, args.getTextRange().getStartOffset(), this);
+      return;
+    }
     ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
     if (erlFunctionCall != null) {
       PsiReference reference = erlFunctionCall.getReference();
@@ -180,6 +211,17 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       String text = clauseGuard != null ? " " + clauseGuard.getText() : "";
       builder.append(text);
 
+      disabled = index >= args.size();
+    }
+    else if (p instanceof ErlangMacrosDefinition) {
+      ErlangArgumentDefinitionList argumentDefinitionList = ((ErlangMacrosDefinition) p).getArgumentDefinitionList();
+      List<ErlangArgumentDefinition> args = argumentDefinitionList != null ? argumentDefinitionList.getArgumentDefinitionList() : Collections.emptyList();
+      for (int i = 0; i < args.size(); i++) {
+        if (i != 0) builder.append(", ");
+        if (index == i) start = builder.length();
+        builder.append(args.get(i).getText().trim());
+        if (index == i) end = builder.length();
+      }
       disabled = index >= args.size();
     }
     else if (p instanceof ErlangBifDescriptor) {
