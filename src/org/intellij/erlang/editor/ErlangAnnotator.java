@@ -74,7 +74,8 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       public void visitFunctionWithArityVariables(@NotNull ErlangFunctionWithArityVariables o) {
         PsiElement parent = o.getParent();
         List<ErlangQVar> vars = o.getQVarList();
-        if (parent instanceof ErlangFunExpression && ((ErlangFunExpression) parent).getColon() == null && !vars.isEmpty()) {
+        if (parent instanceof ErlangFunExpression && ((ErlangFunExpression) parent).getColon() == null && !vars.isEmpty() &&
+            PsiTreeUtil.getParentOfType(o, ErlangMacrosDefinition.class) == null) {
           annotationHolder.newAnnotation(HighlightSeverity.ERROR, "A fun with a variable function name needs a module: fun M:F/Arity")
             .range(vars.get(0))
             .create();
