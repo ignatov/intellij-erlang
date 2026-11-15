@@ -1,5 +1,13 @@
-f(Y) ->
+f(Y, L) ->
   SomeLongVar = fun() ->
                   Y
                 end,
-  SomeLongVar.
+  lists:map(fun(X) ->
+              X + 1
+            end, L),
+  F = fun(a) ->
+        Y;
+        (b) ->
+          L
+      end,
+  {SomeLongVar, F}.
