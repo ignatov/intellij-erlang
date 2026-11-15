@@ -86,7 +86,7 @@ public final class ElpLspServerStatus implements ElpServerStatus {
       case DOCUMENT_HIGHLIGHTS -> isOn(capabilities.getDocumentHighlightProvider());
       case WORKSPACE_SYMBOLS -> isOn(capabilities.getWorkspaceSymbolProvider());
       // Diagnostics are pushed by the server; there is no capability to announce.
-      case RESOLVE_INSPECTIONS -> true;
+      case DIAGNOSTICS -> true;
     };
   }
 

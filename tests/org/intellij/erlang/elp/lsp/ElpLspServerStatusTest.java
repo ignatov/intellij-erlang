@@ -66,7 +66,7 @@ public class ElpLspServerStatusTest extends ErlangLightPlatformCodeInsightFixtur
     for (ElpEngine.Feature feature : ElpEngine.Feature.values()) {
       if (ElpLspServerStatus.supports(capabilities, feature)) supported.add(feature);
     }
-    assertEquals(EnumSet.of(ElpEngine.Feature.RESOLVE_INSPECTIONS), supported);
-    assertFalse(ElpLspServerStatus.supports(null, ElpEngine.Feature.RESOLVE_INSPECTIONS));
+    assertEquals(EnumSet.of(ElpEngine.Feature.DIAGNOSTICS), supported);
+    assertFalse(ElpLspServerStatus.supports(null, ElpEngine.Feature.DIAGNOSTICS));
   }
 }
