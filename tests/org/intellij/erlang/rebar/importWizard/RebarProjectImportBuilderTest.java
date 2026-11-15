@@ -31,7 +31,9 @@ import com.intellij.openapi.roots.*;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
@@ -117,6 +119,23 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  public void testRebar3AppCodePath() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module module = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    String appRoot = ModuleRootManager.getInstance(module).getContentRoots()[0].getPath();
+    // What `rebar3 compile` writes for the app, as the build or the debug session does after the import.
+    File rebar3Ebin = new File(appRoot, "_build/default/lib/myapp/ebin");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp.app"), "{application, myapp, [{modules, [myapp_app, myapp_sup]}]}.");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp_app.beam"), "");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp_sup.beam"), "");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    List<String> codePath = ErlangConsoleUtil.getCodePath(module, false);
+    int index = codePath.indexOf(FileUtil.toSystemIndependentName(rebar3Ebin.getPath()));
+    assertTrue("The rebar3 output directory is not on the code path: " + codePath, index > 0);
+    assertEquals("-pa", codePath.get(index - 1));
   }
 
   private static void createMockSdk() {
