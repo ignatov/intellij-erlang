@@ -47,7 +47,7 @@ public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
       fail("The usage of the header in includer.erl must be reported");
     }
     catch (BaseRefactoringProcessor.ConflictsInTestsException e) {
-      assertTrue(e.getMessage(), e.getMessage().contains("includer.erl"));
+      assertTrue(e.getMessage(), e.getMessage().contains("header.hrl"));
     }
     assertTrue(header.isValid());
   }
