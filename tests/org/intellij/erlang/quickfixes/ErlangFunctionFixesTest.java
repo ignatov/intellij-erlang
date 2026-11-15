@@ -59,6 +59,19 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testFewNonEmpties1()      { doTest("Export function"); }
   public void testFewNonEmpties2()      { doTest("Export function"); }
 
+  public void testExportFromAttributeSingle()    { doTest("Export function bar/1"); }
+  public void testExportFromAttributeEmptyList() { doTest("Export function foo/0"); }
+  public void testExportFromAttributeSeveral()   { doTest("Export functions..."); }
+
+  public void testExportFromAttributeAllExported() { doTestNoExportFromAttribute(); }
+  public void testExportFromAttributeExportAll()   { doTestNoExportFromAttribute(); }
+  public void testExportFromAttributeOutside()     { doTestNoExportFromAttribute(); }
+
+  private void doTestNoExportFromAttribute() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    assertNoIntentionsAvailable("Export function");
+  }
+
   public void testExportsToShowInPopupAllEmpty() {
     myFixture.configureByFile("without.erl");
     assertEquals(0, getExportsToShow(myFixture.getFile()).size());

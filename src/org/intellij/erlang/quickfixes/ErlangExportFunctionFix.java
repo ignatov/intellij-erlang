@@ -215,14 +215,19 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                    @NotNull ErlangFunction function,
                                    @Nullable ErlangExport oldExport) {
     if (oldExport == null) return;
+    addToExport(project, oldExport, List.of(ErlangPsiImplUtil.createFunctionPresentation(function)));
+  }
 
+  public static void addToExport(@NotNull Project project,
+                                 @NotNull ErlangExport oldExport,
+                                 @NotNull List<String> functionPresentations) {
     var exportFunctions = oldExport.getExportFunctions();
 
-    if (exportFunctions == null) return;
+    if (exportFunctions == null || functionPresentations.isEmpty()) return;
 
     var replace = exportFunctions.getText().replace("[", "").replace("]", "");
     var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-            ErlangPsiImplUtil.createFunctionPresentation(function);
+            String.join(", ", functionPresentations);
     var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
 
     if (attribute == null) return;
