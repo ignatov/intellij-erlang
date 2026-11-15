@@ -17,13 +17,14 @@ started, a run whose id is not known is found by the content of its result, and 
 marker before one is created.
 
 Python 3 standard library only. With --dry-run it reads everything, prints what it would start, write and file, and
-writes nothing.
+writes nothing; it exits with 0 unless the script itself fails, and lists what would make the cycle end red.
 """
 
 import argparse
 import collections
 import datetime
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -230,11 +231,17 @@ class Http:
                 content = response.read(DOWNLOAD_LIMIT + 1)
                 if len(content) > DOWNLOAD_LIMIT:
                     raise ApiError('%s %s: the response is larger than %d bytes' % (method, url, DOWNLOAD_LIMIT))
+                length = response.headers.get('Content-Length', '').strip()
+                if length.isascii() and length.isdigit() and len(content) < int(length):
+                    # read(n) returns what came before the connection was closed, without an error.
+                    raise ApiError('%s %s: the response was cut off after %d of %s bytes'
+                                   % (method, url, len(content), length))
                 return Response(response.status, content)
         except urllib.error.HTTPError as e:
             return Response(e.code)
-        except (urllib.error.URLError, OSError, ValueError) as e:
-            raise ApiError('%s %s: %s' % (method, url, e))
+        except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError) as e:
+            # http.client.IncompleteRead, of a chunked response that was cut off, is not an OSError.
+            raise ApiError('%s %s: %s' % (method, url, str(e) or type(e).__name__))
 
 
 class GitHub:
@@ -586,7 +593,9 @@ def render_state(state, server_url, repository):
         'release or branch past that still gets its issue; the later ones with new problems are then recorded as '
         '`known problems` with the link of that issue, until a version has the same problems as the baseline. Table '
         'rows are never dropped to make room for keys: if the state is still too large, the keys of the release or '
-        'branch whose newest version is the oldest are dropped, and it is treated in the same way.'
+        'branch whose newest version is the oldest are dropped, and it is treated in the same way. The key of a '
+        'parser error has no list of expected tokens; a key that was made with that list no longer matches, so such a '
+        'problem can be shown once more, in at most one issue of its release.'
         % (TABLE_ROWS, KEYS_PER_LINE),
         '',
         '| Kind | Version | Seen | Verdict | Run | Issue |',
@@ -652,8 +661,16 @@ def test_name(test):
     return '%s.%s' % (test.get('class'), test.get('name'))
 
 
+# The description of a parser error that names what the parser expected: "<list> expected, got '<token>'".
+EXPECTED_GOT = re.compile(r".*? (expected, got '.*')", re.DOTALL)
+
+
 def corpus_key(error):
-    return without_app_version(error.get('file')), str(error.get('description'))
+    """The file without the versions of its applications, and the description without the list of expected tokens:
+    that list changes with the grammar of the plugin, and the key must not."""
+    description = str(error.get('description'))
+    match = EXPECTED_GOT.fullmatch(description)
+    return without_app_version(error.get('file')), match.group(1) if match else description
 
 
 # The lists of each check that are compared: (title, the list of the check, the key of an item, the line of an item).
@@ -733,18 +750,23 @@ def compare(kind, result, baseline, full_corpus=None):
     A list of the result that is trimmed is compared by its listed items, and its section says that it was cut: the
     baseline's list is complete, so a listed item that it does not have is new.
 
+    A check that failed in the result with no item in its lists, or did not run there while it ran in the baseline,
+    and that has no section, is never the same as the baseline, whatever the exit code of the baseline is: if nothing
+    else is new either, a note says so.
+
     `full_corpus` maps 'result' and 'baseline' to the full list of parser errors, read from corpus-report.json when the
     list of the result was trimmed, or to the reason why it could not be read."""
     checks, base = checks_of(result), checks_of(baseline)
     full = full_corpus or {}
     # The problems of the checks themselves come before the lists, so that a long list does not push them out of an
     # issue.
-    first, sections, notes = [], [], []
+    first, sections, notes, unexplained = [], [], [], []
     for name in CHECKS[kind]:
         check, base_check = checks.get(name, {}), base.get(name, {})
-        lists = []
+        lists, listed = [], 0
         for title, of, key, line in LISTS[name]:
             (items, total, trimmed), (base_items, base_total, base_trimmed) = of(check), of(base_check)
+            listed += max(len(items), total)
             why = ''
             if title == CORPUS_ERRORS:
                 if trimmed and isinstance(full.get('result'), list):
@@ -795,8 +817,15 @@ def compare(kind, result, baseline, full_corpus=None):
                 and not lists and not general):
             general.append(Section(name, 'status', [problem(name, 'status', status, (
                 '%s: passed in the baseline, %s here%s' % (name, status, because)))]))
+        if not lists and not general and LISTS[name] and (
+                (status == compat.FAILED and not listed)
+                or (status == compat.NOT_RUN and base_check.get('status') == compat.FAILED)):
+            unexplained.append('%s: %s here with nothing listed to compare, %s in the baseline'
+                               % (name, status, base_check.get('status')))
         first += general
         sections += lists
+    if not first and not sections:
+        notes += unexplained
     return {'sections': first + sections, 'notes': notes}
 
 
@@ -897,7 +926,7 @@ class Watcher:
         self.server_url = server_url.rstrip('/')
         self.dry_run = dry_run
         self.out = out or sys.stdout
-        self.failed = False
+        self.errors = []
         self.issue = None
         self.state = None
         self.results = {}
@@ -910,8 +939,11 @@ class Watcher:
         print(message, file=self.out)
 
     def error(self, message):
-        print('::error::%s' % message, file=self.out)
-        self.failed = True
+        """The cycle ends red because of `message`. A dry run only lists the messages at its end: it exits with 0
+        whenever the script itself worked, whatever the state of the watcher is."""
+        if not self.dry_run:
+            print('::error::%s' % message, file=self.out)
+        self.errors.append(message)
 
     def run_url(self, run_id):
         return '%s/%s/actions/runs/%d' % (self.server_url, self.github.repository, run_id)
@@ -925,7 +957,13 @@ class Watcher:
         if self.state['failures'] >= MAX_ATTEMPTS:
             self.error('the last %d baseline runs gave no complete result, so no version is checked; at most one '
                        'baseline is started in %s until one is complete' % (self.state['failures'], BASELINE_PAUSE))
-        return 1 if self.failed else 0
+        if self.dry_run:
+            if self.errors:
+                self.log('[dry run] would end red because:')
+                for message in self.errors:
+                    self.log('- %s' % message)
+            return 0
+        return 1 if self.errors else 0
 
     # 1. The state
 
@@ -956,6 +994,13 @@ class Watcher:
             raise WatchError('#%d: %s; the watcher stops and does not seed again over an existing state issue'
                              % (self.issue, e))
         self.log('State: issue #%d' % self.issue)
+        for record in self.state['baselines'] + self.state['entries']:
+            if record['at'] is not None and parse_time(record['at']) > self.now:
+                # Otherwise its run would never time out, and BASELINE_PAUSE would never end.
+                self.log('The state has the time %s for %s, which is later than the start of this cycle: it is read '
+                         'as the start of this cycle' % (record['at'], record.get('version') or 'the baseline of %s'
+                                                         % record['sha']))
+                record['at'] = iso(self.now)
 
     def write_state(self, when):
         self.prune()
@@ -1013,7 +1058,17 @@ class Watcher:
                           if reported['keys']), default=None)
             if oldest is None:
                 break
-            state['reported'][oldest[2]][oldest[3]].update(keys=[], full=True)
+            line = state['reported'][oldest[2]][oldest[3]]
+            if not line['full']:
+                self.saturated(oldest[2], oldest[3], line['issue'],
+                               'the state had to shrink below %d characters' % STATE_BODY_TARGET)
+            line.update(keys=[], full=True)
+
+    def saturated(self, kind, line, issue, reason):
+        """The line has become saturated: the cycle in which that happens is red, once."""
+        self.error('%s %s is saturated: %s. Its later versions with new problems are recorded as known problems with '
+                   'the link of #%d and get no issue, until a version of it has the same problems as the baseline'
+                   % (KINDS[kind], line, reason, issue))
 
     def latest_baseline(self):
         complete = [b for b in self.state['baselines'] if b['state'] == COMPLETE]
@@ -1287,8 +1342,13 @@ class Watcher:
         lines = self.state['reported'][kind]
         line = lines.get(str(group(version)))
         if not sections:
-            # The problems of the line are gone: if they come back, they are reported again.
-            lines.pop(str(group(version)), None)
+            # The problems of the line are gone: if they come back, they are reported again. Not when a newer version
+            # of the line has them: this one is then an older version whose run finished later.
+            newest = max((order(e['version']) for e in self.state['entries']
+                          if e['kind'] == kind and group(e['version']) == group(version)
+                          and e['verdict'] in (NEW_PROBLEMS, KNOWN_PROBLEMS)), default=None)
+            if newest is None or order(version) >= newest:
+                lines.pop(str(group(version)), None)
             entry.update(state=DONE, verdict=SAME)
             self.log('%s %s: the same problems as the baseline' % (KINDS[kind], version))
             return
@@ -1320,6 +1380,9 @@ class Watcher:
         line = self.state['reported'][entry['kind']].setdefault(str(group(entry['version'])),
                                                                 {'issue': number, 'keys': [], 'full': False})
         keys = line['keys'] + [key for key in dict.fromkeys(shown) if key not in line['keys']]
+        if not line['full'] and len(keys) > KEYS_PER_LINE:
+            self.saturated(entry['kind'], str(group(entry['version'])), number,
+                           'its issues have shown more than the %d problems that the state keeps' % KEYS_PER_LINE)
         line.update(issue=number, keys=keys[:KEYS_PER_LINE], full=line['full'] or len(keys) > KEYS_PER_LINE)
         entry.update(state=DONE, verdict=NEW_PROBLEMS, issue=number)
 
