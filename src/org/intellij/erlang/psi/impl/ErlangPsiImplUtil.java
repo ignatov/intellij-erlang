@@ -1077,6 +1077,9 @@ public class ErlangPsiImplUtil {
     for (ErlangCrClause c : crClauseList) {
       ErlangClauseBody clauseBody = c.getClauseBody();
       if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+      // a variable bound in the clause patterns is visible after the case expression
+      ErlangArgumentDefinition pattern = c.getArgumentDefinition();
+      if (lastParent == null && pattern != null) result &= processDeclarationRecursive(pattern, processor, state);
     }
     return result;
   }

@@ -60,6 +60,10 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
     }
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
+    ErlangFunExpression namedFun = getNamedFunOfName(myOrigin);
+    if (namedFun != null && namedFun != getNamedFunOfName(psiElement)) return true;
+    ErlangArgumentDefinition generatorPattern = getFreshGeneratorPattern(myOrigin);
+    if (generatorPattern != null && !PsiTreeUtil.isAncestor(generatorPattern, psiElement, false)) return true;
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
@@ -94,6 +98,22 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private static boolean inFunArgList(PsiElement psiElement) {
     ErlangArgumentDefinitionList list = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinitionList.class);
     return list != null && list.getParent() instanceof ErlangFunClause;
+  }
+
+  // The name of a named fun shadows an outer variable with the same name.
+  private static ErlangFunExpression getNamedFunOfName(PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    PsiElement clause = definition != null ? definition.getParent() : null;
+    if (!(clause instanceof ErlangFunClause) || ((ErlangFunClause) clause).getArgumentDefinition() != definition) return null;
+    return PsiTreeUtil.getParentOfType(clause, ErlangFunExpression.class);
+  }
+
+  // A generator pattern binds fresh variables that shadow outer ones, except in map keys and binary sizes.
+  private static ErlangArgumentDefinition getFreshGeneratorPattern(PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    if (definition == null || !(definition.getParent() instanceof ErlangLcExpression)) return null;
+    if (inMapPatternKey(psiElement) || isBinaryWidthExpression(psiElement)) return null;
+    return definition;
   }
 
   private static boolean inMapPatternKey(PsiElement psiElement) {

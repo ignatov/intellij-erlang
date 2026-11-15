@@ -16,8 +16,10 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
@@ -27,8 +29,7 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.fromTheSameCaseExpression;
 
@@ -37,9 +38,16 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     super(element, range);
   }
 
+  private static final ResolveCache.PolyVariantResolver<ErlangVariableReferenceImpl> MY_POLY_RESOLVER =
+    (reference, incompleteCode) -> reference.multiResolveInner();
+
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
+    return ResolveCache.getInstance(myElement.getProject()).resolveWithCaching(this, MY_POLY_RESOLVER, false, incompleteCode);
+  }
+
+  private ResolveResult @NotNull [] multiResolveInner() {
     List<ErlangQVar> result = resolveToFirstBindings(myElement);
     if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
 
@@ -56,12 +64,11 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   // (`Pid = self(), receive {x, Pid} -> Pid end`), so follow it back to the first binding.
   @NotNull
   private static List<ErlangQVar> resolveToFirstBindings(@NotNull ErlangQVar var) {
+    List<ErlangQVar> candidates = resolveInScope(var);
+    resolveUncachedEarlierCandidates(var, candidates);
     List<ErlangQVar> result = new SmartList<>();
-    for (ErlangQVar candidate : resolveInScope(var)) {
-      boolean earlierInSameFile = candidate.getContainingFile() == var.getContainingFile() &&
-                                  candidate.getTextOffset() < var.getTextOffset();
-      boolean follow = earlierInSameFile && !inGeneratorPattern(candidate);
-      List<ErlangQVar> bindings = follow ? resolveToFirstBindings(candidate) : Collections.emptyList();
+    for (ErlangQVar candidate : candidates) {
+      List<ErlangQVar> bindings = isEarlier(candidate, var) ? resolveCandidate(candidate) : Collections.emptyList();
       for (ErlangQVar binding : bindings.isEmpty() ? Collections.singletonList(candidate) : bindings) {
         if (!result.contains(binding)) result.add(binding);
       }
@@ -69,10 +76,60 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     return result;
   }
 
-  // A generator pattern binds a fresh variable that shadows an outer one with the same name.
-  private static boolean inGeneratorPattern(@NotNull ErlangQVar var) {
-    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(var, ErlangArgumentDefinition.class);
-    return definition != null && definition.getParent() instanceof ErlangLcExpression;
+  // Resolves the not yet cached part of the chain oldest first, so that every resolve finds
+  // its candidates in the cache: a long chain neither recurses deeply nor is walked twice.
+  private static void resolveUncachedEarlierCandidates(@NotNull ErlangQVar var, @NotNull List<ErlangQVar> candidates) {
+    Set<ErlangQVar> uncached = new HashSet<>();
+    Deque<ErlangQVar> queue = new ArrayDeque<>();
+    for (ErlangQVar candidate : candidates) {
+      if (isEarlier(candidate, var)) queue.add(candidate);
+    }
+    while (!queue.isEmpty()) {
+      ProgressManager.checkCanceled();
+      ErlangQVar candidate = queue.remove();
+      if (uncached.contains(candidate) || isResolveCached(candidate)) continue;
+      uncached.add(candidate);
+      for (ErlangQVar earlier : resolveInScope(candidate)) {
+        if (isEarlier(earlier, candidate)) queue.add(earlier);
+      }
+    }
+    if (uncached.size() < 2) return;
+    List<ErlangQVar> oldestFirst = new ArrayList<>(uncached);
+    oldestFirst.sort(Comparator.comparingInt(ErlangVariableReferenceImpl::getEvaluationOffset));
+    for (ErlangQVar candidate : oldestFirst) {
+      resolveCandidate(candidate);
+    }
+  }
+
+  private static boolean isResolveCached(@NotNull ErlangQVar var) {
+    PsiReference reference = var.getReference();
+    return !(reference instanceof ErlangVariableReferenceImpl) ||
+           ResolveCache.getInstance(var.getProject())
+             .getCachedResults((ErlangVariableReferenceImpl) reference, var.getContainingFile().isPhysical(), false, true) != null;
+  }
+
+  private static boolean isEarlier(@NotNull ErlangQVar candidate, @NotNull ErlangQVar var) {
+    return candidate.getContainingFile() == var.getContainingFile() &&
+           getEvaluationOffset(candidate) < getEvaluationOffset(var);
+  }
+
+  @NotNull
+  private static List<ErlangQVar> resolveCandidate(@NotNull ErlangQVar candidate) {
+    List<ErlangQVar> result = new SmartList<>();
+    PsiReference reference = candidate.getReference();
+    if (!(reference instanceof ErlangVariableReferenceImpl)) return result;
+    for (ResolveResult resolveResult : ((ErlangVariableReferenceImpl) reference).multiResolve(false)) {
+      if (resolveResult.getElement() instanceof ErlangQVar binding) result.add(binding);
+    }
+    return result;
+  }
+
+  // The head of a comprehension is evaluated after its generators and filters.
+  private static int getEvaluationOffset(@NotNull ErlangQVar var) {
+    ErlangListComprehension comprehension = PsiTreeUtil.getParentOfType(var, ErlangListComprehension.class);
+    boolean inHead = comprehension != null &&
+                     PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class, true, ErlangListComprehension.class) == null;
+    return inHead ? comprehension.getTextRange().getEndOffset() : var.getTextOffset();
   }
 
   @NotNull

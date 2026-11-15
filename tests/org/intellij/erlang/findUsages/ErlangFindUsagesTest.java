@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.findUsages;
 
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -35,6 +37,24 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapKeyInFunHeadGuard()              { doTest(2); }
   public void testMapKeyInNestedFunHeads()            { doTest(2); }
   public void testVarInReceivePatternsUsedInBody()    { doTest(3); }
+
+  public void testLongChainOfMatchesIsResolvedInLinearTime() {
+    int matches = 3000;
+    myFixture.configureByText("chain.erl", "f() ->\n  A<caret> = 1,\n" + "  A = 1,\n".repeat(matches) + "  A.\n");
+    long start = System.nanoTime();
+    assertEquals(matches + 1, myFixture.findUsages(myFixture.getElementAtCaret()).size());
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertTrue("Find usages took " + millis + " ms", millis < 5000);
+  }
+
+  public void testUseAtEndOfLongChainOfMatchesResolvesToFirstBinding() {
+    myFixture.configureByText("chain.erl", "f() ->\n  A = 1,\n" + "  A = 1,\n".repeat(20000) + "  <caret>A.\n");
+    PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset());
+    assertNotNull(reference);
+    PsiElement target = reference.resolve();
+    assertNotNull(target);
+    assertEquals(myFixture.getFile().getText().indexOf('A'), target.getTextOffset());
+  }
 
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
