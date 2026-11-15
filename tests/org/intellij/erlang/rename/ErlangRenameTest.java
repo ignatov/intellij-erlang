@@ -50,6 +50,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }
+  public void testTypedMacroRecordField() { doTest("uid"); }
 
   public void testMapKeyInFunHeadBody()           { doTest("Key2"); }
   public void testMapKeyInFunHeadBodyFromKey()    { doTest("Key2"); }

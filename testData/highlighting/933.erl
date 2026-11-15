@@ -21,4 +21,13 @@
 
 -record(link, {?BUTTON_BASE(element_link), url = "" :: text()}).
 
-test() -> {#button{id=button, text = "submit"}, #link{id=link, postback=click, style="", url = "/"}, #link{<error descr="Unresolved record field 'missing'">missing</error>=1}}.
+-define(TYPED, tid :: id()).
+-define(TYPED_EXT, ?TYPED, textra :: term()).
+-record(typed_ext, {?TYPED_EXT, tz}).
+
+-define(PLAIN, pid).
+-define(PLAIN_EXT, ?PLAIN, pextra).
+-record(plain_ext, {?PLAIN_EXT, pz}).
+
+test() -> {#button{id=button, text = "submit"}, #link{id=link, postback=click, style="", url = "/"}, #link{<error descr="Unresolved record field 'missing'">missing</error>=1},
+  #typed_ext{tid = a, textra = 1, tz = 2}, #plain_ext{pid = a, pextra = 1, pz = 2}}.

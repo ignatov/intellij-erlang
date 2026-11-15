@@ -112,4 +112,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
   public void testTypedMacroBody()                      { doTest(false); }
+  public void testTypedMacroBodyIncomplete()            { doTest(false); }
 }

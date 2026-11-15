@@ -218,15 +218,20 @@ public class ErlangPsiImplUtil {
 
    // for #149: Nitrogen support
   private static void processRecordFields(@NotNull ErlangMacros macros, @NotNull List<ErlangQAtom> atoms) {
+    processRecordFields(macros, atoms, new HashSet<>());
+  }
+
+  private static void processRecordFields(@NotNull ErlangMacros macros,
+                                          @NotNull List<ErlangQAtom> atoms,
+                                          @NotNull Set<ErlangMacrosDefinition> visited) {
     PsiReference psiReference = macros.getReference();
     PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
-    if (macrosDefinition instanceof ErlangMacrosDefinition) {
+    if (macrosDefinition instanceof ErlangMacrosDefinition && visited.add((ErlangMacrosDefinition) macrosDefinition)) {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
       List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.emptyList();
       for (ErlangExpression ee : expressionList) {
         if (ee instanceof ErlangMaxExpression) {
-          ErlangQAtom qAtom = ((ErlangMaxExpression) ee).getQAtom();
-          ContainerUtil.addIfNotNull(atoms, qAtom);
+          processRecordField(((ErlangMaxExpression) ee).getQAtom(), atoms, visited);
         }
         else if (ee instanceof ErlangAssignmentExpression) {
           ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
@@ -238,22 +243,34 @@ public class ErlangPsiImplUtil {
         else if (ee instanceof ErlangFunctionCallExpression) {
           ErlangMacros m = ((ErlangFunctionCallExpression) ee).getQAtom().getMacros();
           if (m != null) {
-            processRecordFields(m, atoms);
+            processRecordFields(m, atoms, visited);
           }
         }
         else if (ee instanceof ErlangGenericFunctionCallExpression) {
           ErlangQAtom qAtom = ContainerUtil.getFirstItem(((ErlangGenericFunctionCallExpression) ee).getQAtomList());
           ErlangMacros m = qAtom == null ? null : qAtom.getMacros();
           if (m != null) {
-            processRecordFields(m, atoms);
+            processRecordFields(m, atoms, visited);
           }
         }
       }
       if (macrosBody != null) {
-        for (ErlangTypedExpr typedExpr : macrosBody.getTypedExprList()) {
-          ContainerUtil.addIfNotNull(atoms, typedExpr.getQAtom());
+        for (ErlangTypedExpr typedExpr : PsiTreeUtil.getChildrenOfTypeAsList(macrosBody, ErlangTypedExpr.class)) {
+          processRecordField(typedExpr.getQAtom(), atoms, visited);
         }
       }
+    }
+  }
+
+  private static void processRecordField(@Nullable ErlangQAtom qAtom,
+                                         @NotNull List<ErlangQAtom> atoms,
+                                         @NotNull Set<ErlangMacrosDefinition> visited) {
+    ErlangMacros m = qAtom == null ? null : qAtom.getMacros();
+    if (m != null) {
+      processRecordFields(m, atoms, visited);
+    }
+    else {
+      ContainerUtil.addIfNotNull(atoms, qAtom);
     }
   }
 
@@ -284,6 +301,15 @@ public class ErlangPsiImplUtil {
           }
         }
         return null;
+      }
+
+      @Override
+      public boolean isReferenceTo(@NotNull PsiElement element) {
+        // a typed field in a macro body resolves to its q_atom (#149, #933)
+        if (element instanceof ErlangTypedExpr && element.getParent() instanceof ErlangMacrosBody) {
+          return getElement().getManager().areElementsEquivalent(resolve(), ((ErlangTypedExpr) element).getQAtom());
+        }
+        return super.isReferenceTo(element);
       }
 
       @NotNull
