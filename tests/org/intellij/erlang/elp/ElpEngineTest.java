@@ -23,6 +23,7 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.ServiceContainerUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
@@ -161,6 +162,29 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     assertNull(provider.createCollector(myFixture.getFile(), myFixture.getEditor()));
+  }
+
+  public void testRefreshRecomputesTheParameterHintsOfOpenEditors() {
+    myFixture.configureByText("a.erl", "-module(a).\nf(Name) -> Name.\ng() -> f(1).");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    myFixture.doHighlighting();
+    assertEquals(1, inlineInlays());
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    ElpEngine.refreshProject(getProject());
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    myFixture.doHighlighting();
+    assertEquals("ELP owns the hints now", 0, inlineInlays());
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    ElpEngine.refreshProject(getProject());
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    myFixture.doHighlighting();
+    assertEquals("the server stopped, the plugin's hints are back", 1, inlineInlays());
+  }
+
+  private int inlineInlays() {
+    return myFixture.getEditor().getInlayModel().getInlineElementsInRange(0, myFixture.getEditor().getDocument().getTextLength()).size();
   }
 
   public void testFunctionFoldingButNotCommentFolding() {

@@ -20,7 +20,7 @@ package org.intellij.erlang.elp;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInsight.daemon.impl.InlayHintsPassFactoryInternal;
 import com.intellij.codeInsight.folding.CodeFoldingManager;
-import com.intellij.codeInsight.hints.HintUtilsKt;
+import com.intellij.codeInsight.hints.declarative.impl.DeclarativeInlayHintsPassFactory;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
@@ -95,7 +95,6 @@ public final class ElpEngine {
    */
   public static void refreshProject(@NotNull Project project) {
     ApplicationManager.getApplication().invokeLater(() -> {
-      HintUtilsKt.refreshParameterHintsOnNextPass();
       InlayHintsPassFactoryInternal.Companion.forceHintsUpdateOnNextPass();
       DaemonCodeAnalyzer.getInstance(project).restart("ELP engine switch");
       CodeFoldingManager foldingManager = CodeFoldingManager.getInstance(project);
@@ -104,6 +103,7 @@ public final class ElpEngine {
         VirtualFile file = fileEditor.getFile();
         if (file == null || !ElpFiles.isElpFile(file)) continue;
         Editor editor = textEditor.getEditor();
+        DeclarativeInlayHintsPassFactory.Companion.scheduleRecompute(editor, project);
         foldingManager.scheduleAsyncFoldingUpdate(editor);
       }
     }, ModalityState.nonModal(), project.getDisposed());
