@@ -326,6 +326,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
       }
     }
     if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD && childType != ERL_COMMA) return baseAlignment;
+    if (myErlangSettings.ALIGN_MULTILINE_BLOCK && parentType == ERL_TOP_TYPE && child != parent.getFirstChildNode() &&
+        ErlangIndentProcessor.startsLine(child)) {
+      return getAlignment();
+    }
     return null;
   }
 

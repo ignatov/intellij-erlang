@@ -18,6 +18,8 @@ package org.intellij.erlang.formatter;
 
 import com.intellij.formatting.Indent;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
@@ -126,12 +128,9 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_TOP_TYPE && prevSibling != null) {
-      boolean inContainerNormal = ErlangFormattingBlock.isContainerNormal(grandfatherType);
-      boolean inContainerContinuation = ErlangFormattingBlock.isContainerContinuation(grandfatherType, inContainerNormal);
-      if (inContainerNormal || inContainerContinuation) {
-        if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return Indent.getNoneIndent();
-        return inContainerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
-      }
+      return getTopTypeContinuationIndent(parent);
+    }
+    if (elementType == ERL_TOP_TYPE && parentType == ERL_TYPE_DEFINITION) {
       return Indent.getNormalIndent();
     }
     if (parentType == ERL_PREFIX_EXPRESSION) {
@@ -141,6 +140,37 @@ public class ErlangIndentProcessor {
       return Indent.getNormalIndent();
     }
     return Indent.getNoneIndent();
+  }
+
+  /**
+   * Indent of the lines of a multi-line type union after its first member. The indent is relative to the line
+   * where the union starts: if the union, or the list item that holds it, starts a line, the union lines are
+   * aligned with it; otherwise they get the indent the item itself would get on a new line.
+   */
+  @NotNull
+  private Indent getTopTypeContinuationIndent(@NotNull ASTNode topType) {
+    ASTNode item = topType;
+    ASTNode container = item.getTreeParent();
+    while (true) {
+      if (startsLine(item)) return Indent.getNoneIndent();
+      if (container == null || isTopTypeContainer(container.getElementType())) break;
+      item = container;
+      container = item.getTreeParent();
+    }
+    IElementType containerType = container != null ? container.getElementType() : null;
+    boolean containerNormal = ErlangFormattingBlock.isContainerNormal(containerType);
+    boolean containerContinuation = ErlangFormattingBlock.isContainerContinuation(containerType, containerNormal);
+    return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
+  }
+
+  private static boolean isTopTypeContainer(@NotNull IElementType type) {
+    return type == ERL_TYPE_DEFINITION || needIndent(type) ||
+      ErlangFormattingBlock.isContainerNormal(type) || ErlangFormattingBlock.isContainerContinuation(type, false);
+  }
+
+  static boolean startsLine(@NotNull ASTNode node) {
+    PsiElement prevLeaf = PsiTreeUtil.prevLeaf(node.getPsi());
+    return prevLeaf == null || prevLeaf instanceof PsiWhiteSpace && prevLeaf.textContains('\n');
   }
 
   private static boolean needIndent(@Nullable IElementType type) {
