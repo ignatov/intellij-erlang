@@ -209,8 +209,12 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
           fail("Unexpected source root type " + rootType + " of " + sourceFolder.getUrl());
         }
       }
-      // The .iml serializer writes exclude folders sorted by url.
-      List<String> excludeFolderUrls = new ArrayList<>(contentEntry.getExcludeFolderUrls());
+      // The .iml serializer writes exclude folders sorted by url. Only the folders excluded explicitly: in 2026.1
+      // getExcludeFolderUrls() also returns the output directories that <exclude-output /> excludes.
+      List<String> excludeFolderUrls = new ArrayList<>();
+      for (ExcludeFolder excludeFolder : contentEntry.getExcludeFolders()) {
+        excludeFolderUrls.add(excludeFolder.getUrl());
+      }
       Collections.sort(excludeFolderUrls);
       for (String excludeFolderUrl : excludeFolderUrls) {
         addUrlElement(content, "excludeFolder", excludeFolderUrl);
