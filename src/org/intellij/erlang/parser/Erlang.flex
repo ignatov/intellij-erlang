@@ -86,28 +86,29 @@ EmptyAtom = ''
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 
 /* Sigil support (OTP 27+) */
+/* Sigils with the prefixes ~, ~b and ~s take escapes; in the verbatim ~B and ~S a backslash is an ordinary character */
 /* Sigil with double-quoted string delimiter */
-SigilDoubleQuoteString = "~" [bBsS]? \" ([^\\\"] | {ESC})* \"
+SigilDoubleQuoteString = "~" [bs]? \" ([^\\\"] | {ESC})* \" | "~" [BS] \" [^\"]* \"
 /* Sigil with triple-quoted string delimiter */
 SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
 /* Sigil with single-quote delimiter */
-SigilSingleQuoteString = "~" [bBsS]? \' ([^\\\'] | {ESC})* \'
+SigilSingleQuoteString = "~" [bs]? \' ([^\\\'] | {ESC})* \' | "~" [BS] \' [^\']* \'
 /* Sigil with parentheses delimiter */
-SigilParenString = "~" [bBsS]? \( ([^\\\)] | {ESC})* \)
+SigilParenString = "~" [bs]? \( ([^\\\)] | {ESC})* \) | "~" [BS] \( [^\)]* \)
 /* Sigil with brackets delimiter */
-SigilBracketString = "~" [bBsS]? \[ ([^\\\]] | {ESC})* \]
+SigilBracketString = "~" [bs]? \[ ([^\\\]] | {ESC})* \] | "~" [BS] \[ [^\]]* \]
 /* Sigil with braces delimiter */
-SigilBraceString = "~" [bBsS]? \{ ([^\\\}] | {ESC})* \}
+SigilBraceString = "~" [bs]? \{ ([^\\\}] | {ESC})* \} | "~" [BS] \{ [^\}]* \}
 /* Sigil with angle brackets delimiter */
-SigilAngleString = "~" [bBsS]? \< ([^\\\>] | {ESC})* \>
+SigilAngleString = "~" [bs]? \< ([^\\\>] | {ESC})* \> | "~" [BS] \< [^\>]* \>
 /* Sigil with slash delimiter */
-SigilSlashString = "~" [bBsS]? \/ ([^\\\\/] | {ESC})* \/
+SigilSlashString = "~" [bs]? \/ ([^\\\\/] | {ESC})* \/ | "~" [BS] \/ [^\/]* \/
 /* Sigil with pipe delimiter */
-SigilPipeString = "~" [bBsS]? \| ([^\\\|] | {ESC})* \|
+SigilPipeString = "~" [bs]? \| ([^\\\|] | {ESC})* \| | "~" [BS] \| [^\|]* \|
 /* Sigil with backtick delimiter */
-SigilBacktickString = "~" [bBsS]? \` ([^\\\`] | {ESC})* \`
+SigilBacktickString = "~" [bs]? \` ([^\\\`] | {ESC})* \` | "~" [BS] \` [^\`]* \`
 /* Sigil with hash delimiter */
-SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
+SigilHashString = "~" [bs]? "#" ([^\\#] | {ESC})* "#" | "~" [BS] "#" [^#]* "#"
 
 %state IN_QUOTES
 

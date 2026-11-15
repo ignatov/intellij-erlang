@@ -36,6 +36,20 @@ ERL_FILE
               PsiElement(atom_name)('h')
           PsiElement(/)('/')
           PsiElement(integer)('0')
+        PsiElement(,)(',')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('delimiters')
+          PsiElement(/)('/')
+          PsiElement(integer)('0')
+        PsiElement(,)(',')
+        ERL_EXPORT_FUNCTION
+          ERL_Q_ATOM
+            ERL_ATOM
+              PsiElement(atom_name)('others')
+          PsiElement(/)('/')
+          PsiElement(integer)('0')
         PsiElement(])(']')
       PsiElement())(')')
     PsiElement(.)('.')
@@ -83,4 +97,75 @@ ERL_FILE
         PsiElement(->)('->')
         ERL_STRING_LITERAL
           PsiElement(sigil_string)('~B[\]')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('delimiters')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_LIST_EXPRESSION
+          PsiElement([)('[')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B'\'')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~S(\)')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B{\}')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~S<\>')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B/\/')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~S|\|')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B`\`')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~S#\#')
+          PsiElement(])(']')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('others')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_TUPLE_EXPRESSION
+          PsiElement({)('{')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B"..\.."')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B"\\"')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~S"a\nb"')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~b"\""')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~s(\))')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~"\""')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(sigil_string)('~B"""\n    \\n    """')
+          PsiElement(})('}')
     PsiElement(.)('.')
