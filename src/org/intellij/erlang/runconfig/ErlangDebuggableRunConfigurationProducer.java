@@ -20,6 +20,7 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -91,7 +92,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
   }
 
   @NotNull
-  private static Set<String> getErlangModulesWithCallsToLoadNIF(@Nullable final Module module, boolean includeTests) {
+  public static Set<String> getErlangModulesWithCallsToLoadNIF(@Nullable final Module module, boolean includeTests) {
     if (module == null) return Collections.emptySet();
 
     // We want to process Erlang modules in current module, it's dependencies, and tests if includeTests is true
@@ -102,6 +103,7 @@ public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends
 
     final HashSet<String> modules = new HashSet<>();
     Processor<PsiFile> collector = psiFile -> {
+      ProgressManager.checkCanceled();
       String moduleName = psiFile.getVirtualFile().getNameWithoutExtension();
       if (!modules.contains(moduleName) && containsErlangLoadNifCall(psiFile)) {
         modules.add(moduleName);

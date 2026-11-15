@@ -16,10 +16,14 @@
 
 package org.intellij.erlang.runconfig.ui;
 
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.HideableTitledPanel;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.jetbrains.annotations.NotNull;
@@ -33,9 +37,22 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
 
   @Override
   protected final void resetEditorFrom(@NotNull RunConfig runConfig) {
-    ErlangDebuggableRunConfigurationProducer.updateDebugOptions(runConfig);
     myDebugOptionsEditor.resetFrom(runConfig.getDebugOptions());
+    updateModulesNotToInterpret(runConfig);
     doResetEditorFrom(runConfig);
+  }
+
+  private void updateModulesNotToInterpret(@NotNull RunConfig runConfig) {
+    Module module = runConfig.getConfigurationModule().getModule();
+    if (module == null || !runConfig.getDebugOptions().isAutoUpdateModulesNotToInterpret()) return;
+    boolean includeTests = runConfig.isUseTestCodePath();
+    ReadAction.nonBlocking(() -> ErlangDebuggableRunConfigurationProducer.getErlangModulesWithCallsToLoadNIF(module, includeTests))
+      .inSmartMode(module.getProject())
+      .expireWhen(module::isDisposed)
+      .expireWith(this)
+      .coalesceBy(this)
+      .finishOnUiThread(ModalityState.current(), myDebugOptionsEditor::setAutoUpdatedModulesNotToInterpret)
+      .submit(AppExecutorUtil.getAppExecutorService());
   }
 
   protected abstract void doResetEditorFrom(RunConfig runConfig);
