@@ -24,13 +24,18 @@ import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
 import com.intellij.lang.ExternalLanguageAnnotators;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
+import com.intellij.openapi.editor.markup.EffectType;
+import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.profile.codeInspection.ProjectInspectionProfileManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.ui.JBColor;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.util.List;
 
 public class ErlangDialyzerExternalAnnotatorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -65,6 +70,23 @@ public class ErlangDialyzerExternalAnnotatorTest extends ErlangLightPlatformCode
     TextAttributesKey expected = SeverityRegistrar.getSeverityRegistrar(getProject()).getHighlightInfoTypeBySeverity(level.getSeverity()).getAttributesKey();
     assertFalse(HighlightInfoType.INFORMATION.getAttributesKey().equals(expected));
     assertEquals(expected, info.forcedTextAttributesKey);
+  }
+
+  public void testUserDefinedSeverityIsVisible() {
+    SeverityRegistrar registrar = SeverityRegistrar.getSeverityRegistrar(getProject());
+    HighlightSeverity severity = new HighlightSeverity("DialyzerTestCustom", 350);
+    TextAttributes attributes = new TextAttributes(null, null, JBColor.MAGENTA, EffectType.WAVE_UNDERSCORE, Font.PLAIN);
+    attributes.setErrorStripeColor(JBColor.MAGENTA);
+    registrar.registerSeverity(new SeverityRegistrar.SeverityBasedTextAttributes(attributes, new HighlightInfoType.HighlightInfoTypeImpl(severity, TextAttributesKey.createTextAttributesKey("DialyzerTestCustom"))), JBColor.MAGENTA);
+    Disposer.register(getTestRootDisposable(), () -> registrar.unregisterSeverity(severity));
+
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
+    assertNotNull(key);
+    ProjectInspectionProfileManager.getInstance(getProject()).getCurrentProfile()
+                                   .setErrorLevel(key, new HighlightDisplayLevel(severity), getProject());
+    HighlightInfo info = highlightDialyzerProblem();
+    assertEquals(severity, info.getSeverity());
+    assertEquals(attributes, info.forcedTextAttributes);
   }
 
   @NotNull

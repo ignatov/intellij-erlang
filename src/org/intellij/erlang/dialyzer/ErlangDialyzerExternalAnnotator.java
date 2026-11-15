@@ -22,6 +22,7 @@ import com.intellij.codeInspection.InspectionProfile;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -29,6 +30,7 @@ import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
+import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
@@ -126,7 +128,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (key == null) return;
     InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
     HighlightSeverity severity = profile.getErrorLevel(key, file).getSeverity();
-    TextAttributesKey attributes = SeverityRegistrar.getSeverityRegistrar(file.getProject()).getHighlightInfoTypeBySeverity(severity).getAttributesKey();
+    SeverityRegistrar registrar = SeverityRegistrar.getSeverityRegistrar(file.getProject());
+    TextAttributes customAttributes = registrar.getTextAttributesBySeverity(severity);
+    TextAttributesKey attributesKey = registrar.getHighlightInfoTypeBySeverity(severity).getAttributesKey();
     String text = file.getText();
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
@@ -138,10 +142,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
       TextRange problemRange = TextRange.create(offset, offset + width);
       String message = "Dialyzer: " + problem.myDescription;
-      holder
-        .newAnnotation(severity, message)
-        .range(problemRange)
-        .textAttributes(attributes)
+      AnnotationBuilder builder = holder.newAnnotation(severity, message).range(problemRange);
+      builder = customAttributes != null ? builder.enforcedTextAttributes(customAttributes) : builder.textAttributes(attributesKey);
+      builder
         .withFix(new DisableInspectionToolAction(key) {
           @NotNull
           @Override
