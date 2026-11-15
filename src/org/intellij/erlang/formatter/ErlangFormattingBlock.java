@@ -111,7 +111,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   private List<Block> buildSubBlocks() {
     final List<Block> blocks = new ArrayList<>();
-    final Alignment baseAlignment = Alignment.createAlignment(true);
+    final Alignment baseAlignment = Alignment.createAlignment(!(myNode.getPsi() instanceof ErlangFakeBinaryExpression));
     final Alignment baseAlignment2 = Alignment.createAlignment(true);
     final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
     final Ref<Wrap> chopDownIfLongWrap = new Ref<>();

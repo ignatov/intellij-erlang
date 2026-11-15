@@ -130,6 +130,18 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
 
+  public void test897() throws Exception {
+    ErlangCodeStyleSettings erlangSettings = getErlangSettings();
+    erlangSettings.ALIGN_MULTILINE_BLOCK = true;
+    erlangSettings.ALIGN_GUARDS = true;
+    CodeStyleSettings.IndentOptions indentOptions = myTemporarySettings.getIndentOptions(ErlangFileType.MODULE);
+    assertNotNull(indentOptions);
+    indentOptions.TAB_SIZE = 8;
+    indentOptions.INDENT_SIZE = 4;
+    indentOptions.CONTINUATION_INDENT_SIZE = 8;
+    doTest();
+  }
+
   public void test292() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
     erlangSettings.ALIGN_MULTILINE_BLOCK = true;
