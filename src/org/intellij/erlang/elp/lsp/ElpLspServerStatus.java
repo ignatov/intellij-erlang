@@ -47,18 +47,23 @@ public final class ElpLspServerStatus implements ElpServerStatus {
     return findClient(myProject, file, feature) != null;
   }
 
+  @Override
+  public boolean isServingProject(@NotNull ElpEngine.Feature feature) {
+    return findClient(myProject, null, feature) != null;
+  }
+
   /**
-   * @return a running ELP client of the {@link ElpMode#ELP} position that gets {@code file} and announced the capability that
-   * {@code feature} needs. A client still initializing, or stopped, does not count. The platform sends a client every file its
+   * @return a running ELP client of the {@link ElpMode#ELP} position that gets {@code file} (any file when it is {@code null}) and
+   * announced the capability that {@code feature} needs. A client still initializing, or stopped, does not count. The platform sends a client every file its
    * descriptor supports, also files outside its root such as the OTP sources, so the root is not checked.
    */
   @Nullable
-  static LspClient findClient(@NotNull Project project, @NotNull VirtualFile file, @NotNull ElpEngine.Feature feature) {
+  static LspClient findClient(@NotNull Project project, @Nullable VirtualFile file, @NotNull ElpEngine.Feature feature) {
     if (project.isDisposed()) return null;
     for (LspClient client : LspClientManager.getInstance(project).getClients(ElpLspIntegrationProvider.class)) {
       if (client.getState() != LspServerState.Running) continue;
       if (!(client.getDescriptor() instanceof ElpLspClientDescriptor descriptor)) continue;
-      if (descriptor.getConfiguration().mode() != ElpMode.ELP || !descriptor.isSupportedFile(file)) continue;
+      if (descriptor.getConfiguration().mode() != ElpMode.ELP || file != null && !descriptor.isSupportedFile(file)) continue;
       InitializeResult result = client.getInitializeResult();
       if (result != null && supports(result.getCapabilities(), feature)) return client;
     }
@@ -75,6 +80,12 @@ public final class ElpLspServerStatus implements ElpServerStatus {
       case INTENTIONS -> isOn(capabilities.getCodeActionProvider());
       case SELECTION -> isOn(capabilities.getSelectionRangeProvider());
       case NAVIGATION -> isOn(capabilities.getDefinitionProvider());
+      case FIND_USAGES -> isOn(capabilities.getReferencesProvider());
+      case RENAME -> isOn(capabilities.getRenameProvider());
+      case SIGNATURE_HELP -> capabilities.getSignatureHelpProvider() != null;
+      case CALL_HIERARCHY -> isOn(capabilities.getCallHierarchyProvider());
+      case DOCUMENT_HIGHLIGHTS -> isOn(capabilities.getDocumentHighlightProvider());
+      case WORKSPACE_SYMBOLS -> isOn(capabilities.getWorkspaceSymbolProvider());
       // Diagnostics are pushed by the server; there is no capability to announce.
       case RESOLVE_INSPECTIONS -> true;
     };
