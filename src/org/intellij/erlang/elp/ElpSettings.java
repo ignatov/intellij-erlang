@@ -42,6 +42,7 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
   public static final class ElpSettingsState {
     public String path = "";
     public String mode = ElpMode.DIAGNOSTICS.name();
+    public boolean eqwalizer;
   }
 
   @NotNull private ElpSettingsState myState = new ElpSettingsState();
@@ -74,15 +75,21 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     return Objects.requireNonNullElse(ElpMode.parse(myState.mode), ElpMode.DIAGNOSTICS);
   }
 
-  public void update(@NotNull String path, @NotNull ElpMode mode) {
-    if (path.equals(getStoredPath()) && mode == getStoredMode()) return;
+  /** The stored eqWAlizer switch, without the system property override. */
+  public boolean getStoredEqwalizer() {
+    return myState.eqwalizer;
+  }
+
+  public void update(@NotNull String path, @NotNull ElpMode mode, boolean eqwalizer) {
+    if (path.equals(getStoredPath()) && mode == getStoredMode() && eqwalizer == getStoredEqwalizer()) return;
     myState.path = path;
     myState.mode = mode.name();
+    myState.eqwalizer = eqwalizer;
     ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
   }
 
   @NotNull
   public ElpConfiguration getEffectiveConfiguration() {
-    return ElpConfiguration.resolve(myState.path, myState.mode);
+    return ElpConfiguration.resolve(myState.path, myState.mode, myState.eqwalizer);
   }
 }

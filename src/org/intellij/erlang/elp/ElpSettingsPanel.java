@@ -20,12 +20,15 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.intellij.erlang.utils.ErlangUiUtil.addBrowseFolderListener;
 
@@ -35,6 +38,7 @@ import static org.intellij.erlang.utils.ErlangUiUtil.addBrowseFolderListener;
 public final class ElpSettingsPanel {
   private final TextFieldWithBrowseButton myPathField = new TextFieldWithBrowseButton();
   private final ComboBox<ElpMode> myModeBox = new ComboBox<>(ElpMode.values());
+  private final JBCheckBox myEqwalizerBox = new JBCheckBox("Show eqWAlizer type errors");
   private final JBLabel myOverrideLabel = new JBLabel();
   private final JPanel myPanel;
 
@@ -50,6 +54,9 @@ public final class ElpSettingsPanel {
       .addLabeledComponent("Mode:", myModeBox)
       .addComponentToRightColumn(hint("DIAGNOSTICS: only diagnostics and their quick fixes. ALL: every LSP feature, " +
                                       "side by side with the plugin's own."))
+      .addComponentToRightColumn(myEqwalizerBox)
+      .addComponentToRightColumn(hint("eqWAlizer is ELP's gradual type checker. Code not written for it gets many type " +
+                                      "errors that erlc does not report."))
       .addComponentToRightColumn(myOverrideLabel)
       .getPanel();
   }
@@ -69,12 +76,14 @@ public final class ElpSettingsPanel {
 
   public boolean isModified() {
     ElpSettings settings = ElpSettings.getInstance();
-    return !settings.getStoredPath().equals(myPathField.getText().trim()) || settings.getStoredMode() != myModeBox.getItem();
+    return !settings.getStoredPath().equals(myPathField.getText().trim()) || settings.getStoredMode() != myModeBox.getItem() ||
+           settings.getStoredEqwalizer() != myEqwalizerBox.isSelected();
   }
 
   public void apply() {
     ElpMode mode = myModeBox.getItem();
-    ElpSettings.getInstance().update(myPathField.getText().trim(), mode != null ? mode : ElpMode.DIAGNOSTICS);
+    ElpSettings.getInstance().update(myPathField.getText().trim(), mode != null ? mode : ElpMode.DIAGNOSTICS,
+                                     myEqwalizerBox.isSelected());
     updateOverrideLabel();
   }
 
@@ -82,20 +91,25 @@ public final class ElpSettingsPanel {
     ElpSettings settings = ElpSettings.getInstance();
     myPathField.setText(settings.getStoredPath());
     myModeBox.setItem(settings.getStoredMode());
+    myEqwalizerBox.setSelected(settings.getStoredEqwalizer());
     updateOverrideLabel();
   }
 
   private void updateOverrideLabel() {
     boolean pathOverridden = System.getProperty(ElpConfiguration.PATH_PROPERTY) != null;
     boolean modeOverridden = ElpMode.parse(System.getProperty(ElpConfiguration.MODE_PROPERTY)) != null;
-    if (!pathOverridden && !modeOverridden) {
+    boolean eqwalizerOverridden = ElpConfiguration.parseBoolean(System.getProperty(ElpConfiguration.EQWALIZER_PROPERTY)) != null;
+    List<String> overridden = new ArrayList<>();
+    if (pathOverridden) overridden.add("-D" + ElpConfiguration.PATH_PROPERTY);
+    if (modeOverridden) overridden.add("-D" + ElpConfiguration.MODE_PROPERTY);
+    if (eqwalizerOverridden) overridden.add("-D" + ElpConfiguration.EQWALIZER_PROPERTY);
+    if (overridden.isEmpty()) {
       myOverrideLabel.setText("");
       return;
     }
     ElpConfiguration effective = ElpSettings.getInstance().getEffectiveConfiguration();
-    myOverrideLabel.setText("Overridden by -D" + (pathOverridden ? ElpConfiguration.PATH_PROPERTY : "") +
-                            (pathOverridden && modeOverridden ? " and -D" : "") +
-                            (modeOverridden ? ElpConfiguration.MODE_PROPERTY : "") +
-                            ": path '" + effective.path() + "', mode " + effective.mode());
+    myOverrideLabel.setText("Overridden by " + String.join(" and ", overridden) +
+                            ": path '" + effective.path() + "', mode " + effective.mode() +
+                            ", eqWAlizer " + (effective.eqwalizer() ? "on" : "off"));
   }
 }
