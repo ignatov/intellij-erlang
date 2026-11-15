@@ -155,6 +155,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testUnresolvedMacrosInConditionalBranches() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testAlreadyImported1()      { doTestWithInclude(); }
   public void testAlreadyImported2()      { doTestWithInclude(); }
   public void test176() {                    
