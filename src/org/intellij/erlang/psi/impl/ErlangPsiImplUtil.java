@@ -805,12 +805,16 @@ public class ErlangPsiImplUtil {
   @NotNull
   private static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
     Set<String> result = new HashSet<>();
-    for (ErlangAttribute attribute : file.getAttributes()) {
-      ErlangExportTypeAttribute exportTypeAttribute = attribute.getExportTypeAttribute();
-      ErlangExportTypes exportTypes = exportTypeAttribute != null ? exportTypeAttribute.getExportTypes() : null;
-      if (exportTypes == null) continue;
-      for (ErlangExportType exportType : exportTypes.getExportTypeList()) {
-        result.add(getName(exportType.getQAtom()) + "/" + getArity(exportType.getInteger()));
+    List<ErlangFile> files = new ArrayList<>(getIncludedFiles(file));
+    files.add(file);
+    for (ErlangFile f : files) {
+      for (ErlangAttribute attribute : f.getAttributes()) {
+        ErlangExportTypeAttribute exportTypeAttribute = attribute.getExportTypeAttribute();
+        ErlangExportTypes exportTypes = exportTypeAttribute != null ? exportTypeAttribute.getExportTypes() : null;
+        if (exportTypes == null) continue;
+        for (ErlangExportType exportType : exportTypes.getExportTypeList()) {
+          result.add(getName(exportType.getQAtom()) + "/" + getArity(exportType.getInteger()));
+        }
       }
     }
     return result;
@@ -1120,7 +1124,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
+  static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
     HashSet<ErlangFile> includedFiles = new HashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;

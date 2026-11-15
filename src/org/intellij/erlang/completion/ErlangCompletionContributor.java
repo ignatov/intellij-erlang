@@ -120,9 +120,16 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static boolean prevIsTypeModuleColon(@Nullable PsiElement previousByOffset) {
     if (!is(previousByOffset, ErlangTypes.ERL_COLON)) return false;
     PsiElement moduleName = PsiTreeUtil.prevVisibleLeaf(previousByOffset);
-    PsiElement beforeModuleName = moduleName != null ? PsiTreeUtil.prevVisibleLeaf(moduleName) : null;
-    return is(beforeModuleName, ErlangTypes.ERL_COLON_COLON)
-      || PsiTreeUtil.getParentOfType(beforeModuleName, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class) != null;
+    // A broken type, such as a tuple, is rolled back, so look further back for the start of the type
+    for (PsiElement leaf = moduleName != null ? PsiTreeUtil.prevVisibleLeaf(moduleName) : null;
+         leaf != null && !is(leaf, ErlangTypes.ERL_DOT) && !is(leaf, ErlangTypes.ERL_OP_EQ);
+         leaf = PsiTreeUtil.prevVisibleLeaf(leaf)) {
+      if (is(leaf, ErlangTypes.ERL_COLON_COLON)
+          || PsiTreeUtil.getParentOfType(leaf, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean prevIsRecordModuleColon(@Nullable PsiElement previousByOffset) {

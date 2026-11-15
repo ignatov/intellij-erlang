@@ -373,6 +373,71 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestEquals("-record(r, {a :: other:<caret>}).", "pub", "pub_param");
   }
 
+  public void testModuleQualifiedTypesInTuple() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> {ok, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInUnion() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> ok | {error, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInSpecArgument() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f({ok, other:<caret>}) -> ok.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInTypeDefinition() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: {ok, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInRecordField() {
+    addTypesRemoteModule();
+    doTestEquals("-record(r, {a :: {ok, other:<caret>}}).", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesExportedInHeader() {
+    myFixture.addFileToProject("other3.hrl", """
+      -export_type([h/0, h2/0]).
+      -type h() :: ok.
+      -type h2() :: ok.
+      -type hp() :: ok.
+      """);
+    myFixture.addFileToProject("other3.erl", """
+      -module(other3).
+      -include("other3.hrl").
+      """);
+    doTestEquals("-spec f() -> other3:h<caret>.", "h", "h2");
+  }
+
+  public void testModuleQualifiedTypesOfOwnModuleInHeader() {
+    myFixture.addFileToProject("own.erl", """
+      -module(own).
+      -include("own.hrl").
+      """);
+    myFixture.configureByText("own.hrl", """
+      -type hpriv() :: ok.
+      -type hpriv2() :: ok.
+      -spec f() -> own:hp<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "hpriv", "hpriv2");
+  }
+
+  public void testModuleQualifiedTypesOfUnknownModule() {
+    doTestVariants("""
+      -type loc() :: ok.
+      -type loc2() :: ok.
+      -spec f() -> nosuch:<caret>.""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "loc", "loc2");
+  }
+
+  public void testModuleQualifiedTypesOfUnknownModuleWithPrefix() {
+    doTestVariants("""
+      -type loc() :: ok.
+      -type loc2() :: ok.
+      -spec f() -> nosuch:l<caret>.""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "loc", "loc2");
+  }
+
   public void testModuleQualifiedTypesWithPrefix() {
     addTypesRemoteModule();
     doTestEquals("-type t() :: other:p<caret>", "pub", "pub_param");
@@ -398,7 +463,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       -export_type([pub/0, pub_param/1]).
       -type pub() :: atom().
       -type pub_param(T) :: [T].
-      -type priv() :: integer().
+      -type pub_priv() :: integer().
       """);
   }
 

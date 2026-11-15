@@ -20,6 +20,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -61,9 +62,20 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Override
   public Object @NotNull [] getVariants() {
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
-    PsiFile psiFile = getPsiFile();
-    boolean exportedOnly = myModuleRef != null && psiFile.getOriginalFile() != myElement.getContainingFile().getOriginalFile();
+    ErlangFile moduleFile = null;
+    if (myModuleRef != null) {
+      PsiElement resolve = myModuleRef.getReference().resolve();
+      moduleFile = resolve != null ? ObjectUtils.tryCast(resolve.getContainingFile(), ErlangFile.class) : null;
+      if (moduleFile == null) return ArrayUtil.EMPTY_OBJECT_ARRAY;
+    }
+    PsiFile psiFile = moduleFile != null ? moduleFile : myElement.getContainingFile();
+    boolean exportedOnly = moduleFile != null && !isSameModule(moduleFile);
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(psiFile, myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null, exportedOnly));
+  }
+
+  private boolean isSameModule(@NotNull ErlangFile moduleFile) {
+    PsiFile currentFile = myElement.getContainingFile().getOriginalFile();
+    return moduleFile.getOriginalFile() == currentFile || ErlangPsiImplUtil.getIncludedFiles(moduleFile).contains(currentFile);
   }
 
   @Override
