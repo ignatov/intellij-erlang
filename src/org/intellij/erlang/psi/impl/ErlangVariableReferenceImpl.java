@@ -23,7 +23,6 @@ import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.SmartList;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -122,9 +121,8 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   private static boolean inHead(@NotNull PsiElement element, @NotNull ErlangListComprehension comprehension) {
-    PsiElement child = element;
-    while (child.getParent() != comprehension) child = child.getParent();
-    return !(child instanceof ErlangLcExpression);
+    PsiElement orOr = comprehension.getOrOr();
+    return orOr != null && element.getTextOffset() < orOr.getTextOffset();
   }
 
   @NotNull
@@ -138,13 +136,37 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     return result;
   }
 
+  // Walks up like ResolveUtil.treeWalkUp, but sees in a comprehension only the qualifiers evaluated before
+  // the variable, and never the pattern of the generator that the variable is in.
   @NotNull
   private static List<ErlangQVar> resolveInScope(@NotNull ErlangQVar var) {
     ErlangVarProcessor processor = new ErlangVarProcessor(var.getText(), var);
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(var, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, var);
-    ResolveUtil.treeWalkUp(place, processor);
+    PsiElement lastParent = var;
+    for (PsiElement run = var.getParent(); run != null; lastParent = run, run = run.getParent()) {
+      if (run instanceof ErlangLcExpression) continue;
+      boolean proceed = run instanceof ErlangListComprehension comprehension && comprehension.getOrOr() != null
+                        ? processEarlierQualifiers(comprehension, lastParent, processor, var)
+                        : run.processDeclarations(processor, ResolveState.initial(), lastParent, var);
+      if (!proceed) break;
+    }
     return processor.getAllResults();
+  }
+
+  private static boolean processEarlierQualifiers(@NotNull ErlangListComprehension comprehension,
+                                                  @NotNull PsiElement lastParent,
+                                                  @NotNull ErlangVarProcessor processor,
+                                                  @NotNull ErlangQVar place) {
+    PsiElement orOr = comprehension.getOrOr();
+    PsiElement run = inHead(lastParent, comprehension) ? comprehension.getLastChild() : lastParent.getPrevSibling();
+    for (; run != null && run != orOr; run = run.getPrevSibling()) {
+      // only the pattern of a generator binds variables; its source does not export them
+      PsiElement qualifier = run instanceof ErlangLcExpression lc ? lc.getArgumentDefinition() : run;
+      if (qualifier instanceof ErlangCompositeElement &&
+          !qualifier.processDeclarations(processor, ResolveState.initial(), null, place)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Nullable

@@ -56,6 +56,15 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals(myFixture.getFile().getText().indexOf('A'), target.getTextOffset());
   }
 
+  public void testSizeVarResolvesToBindingInSameGeneratorPattern() {
+    myFixture.configureByText("size.erl", "f(B) -> [X || <<N:8, X:<caret>N>> <= B].\n");
+    PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset());
+    assertNotNull(reference);
+    PsiElement target = reference.resolve();
+    assertNotNull(target);
+    assertEquals(myFixture.getFile().getText().indexOf("N:8"), target.getTextOffset());
+  }
+
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
 //  public void testEmptyAtomFunctionInMultipleFiles() { doTest(3, "emptyAtomFunctionInSingleFile.erl"); }

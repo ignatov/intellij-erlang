@@ -1084,6 +1084,21 @@ public class ErlangPsiImplUtil {
     return result;
   }
 
+  // Like a case expression, a receive exports the variables bound in all of its clauses.
+  static boolean processReceiveDeclarations(@NotNull ErlangReceiveExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
+    boolean result = true;
+    for (ErlangCrClause c : o.getCrClauseList()) {
+      ErlangClauseBody clauseBody = c.getClauseBody();
+      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+      ErlangArgumentDefinition pattern = c.getArgumentDefinition();
+      if (pattern != null) result &= processDeclarationRecursive(pattern, processor, state);
+    }
+    ErlangAfterClauseBody afterClauseBody = o.getAfterClauseBody();
+    ErlangClauseBody afterBody = afterClauseBody != null ? afterClauseBody.getClauseBody() : null;
+    if (afterBody != null) result &= processDeclarationRecursive(afterBody, processor, state);
+    return result;
+  }
+
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangModule o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     return processDeclarationRecursive(o, processor, state);

@@ -63,6 +63,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testVarShadowedByNamedFunFromOuter()  { doTest("Zz"); }
   public void testVarExportedFromCase()             { doTest("Zz"); }
   public void testVarMatchedAgainInComprehensionHead() { doTest("Zz"); }
+  public void testVarInNestedComprehensionSource()  { doTest("Zz"); }
+  public void testVarMatchedInComprehensionFilter() { doTest("Zz"); }
+  public void testVarShadowedByLaterGenerator()     { doTest("Zz"); }
+  public void testVarExportedFromReceive()          { doTest("Zz"); }
   public void testVarInCasePattern()                { doTest("B"); }
 
   public void testMapKeyInFunHeadBody()           { doTest("Key2"); }

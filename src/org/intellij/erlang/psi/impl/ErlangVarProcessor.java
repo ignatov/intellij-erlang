@@ -140,7 +140,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
-      ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
+      ErlangCompositeElement caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class, ErlangReceiveExpression.class);
       if (Comparing.equal(
         PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
         PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
@@ -155,8 +155,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (crClause == null || crClauseOrigin == null) return false;
     if (crClause.getParent() != crClauseOrigin.getParent()) return false;
 
-    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
-    ErlangCaseExpression caseExpressionOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCaseExpression.class);
+    ErlangCompositeElement caseExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class, ErlangReceiveExpression.class);
+    ErlangCompositeElement caseExpressionOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCaseExpression.class, ErlangReceiveExpression.class);
 
     if (caseExpressionOrigin != null && caseExpression == caseExpressionOrigin && crClause != crClauseOrigin) return true;
     return false;
