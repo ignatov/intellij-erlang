@@ -25,6 +25,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspClientDescriptor;
 import com.intellij.platform.lsp.api.LspIntegrationProvider;
 import com.intellij.platform.lsp.api.customization.*;
+import com.intellij.testFramework.IndexingTestUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.EnvironmentUtil;
@@ -247,7 +248,12 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     return myFixture.addFileToProject(path, "").getVirtualFile();
   }
 
-  private static <T> T onPooledThread(Callable<T> callable) throws Exception {
+  /**
+   * The EDT blocks here while holding the write-intent lock, so a scanning write action that the files just added queued would
+   * keep the pooled read action waiting forever; let the scanning finish first.
+   */
+  private <T> T onPooledThread(Callable<T> callable) throws Exception {
+    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
     return ApplicationManager.getApplication().executeOnPooledThread(callable).get();
   }
 }
