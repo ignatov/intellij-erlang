@@ -17,6 +17,7 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -33,6 +34,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
   private static final Set<String> STRING_MACROS = Set.of("MODULE_STRING", "FILE");
   private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY");
+  private static final Set<String> FUNCTION_MACROS = Set.of("FUNCTION_NAME", "FUNCTION_ARITY");
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
@@ -126,7 +128,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
             checkExpressionAndReport(classAndPrefix.get(0), problemsHolder);
             left = classAndPrefix.size() > 1 ? classAndPrefix.get(1) : null;
           }
-          if (o.getOpPlusPlus() != null && isListPrefix(left) && o.getRight() != null && !isInMapKey(o)) {
+          if (o.getOpPlusPlus() != null && isListPrefix(left) && o.getRight() != null && !isInGuardExpression(o)) {
             checkExpressionAndReport(o.getRight(), problemsHolder);
           }
           else {
@@ -213,6 +215,9 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           if (o.getFirstChild() != o.getRadix()) {
             registerProblem(problemsHolder, o, ERROR);
           }
+          else if (isInGuardExpression(o)) {
+            super.visitRecordExpression(o);
+          }
         }
       });
     }
@@ -223,20 +228,27 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     return name instanceof ErlangMacros || name instanceof ErlangQAtom && ((ErlangQAtom) name).getMacros() != null;
   }
 
-  // In a catch clause, Class:Prefix ++ Tail is parsed as (Class:Prefix) ++ Tail
+  // In a catch clause, Class:Prefix ++ Tail [= Pattern] is parsed as ((Class:Prefix) ++ Tail) [= Pattern]
   private static boolean isCatchClausePattern(@NotNull ErlangListOpExpression o) {
+    PsiElement child = o;
     PsiElement parent = o.getParent();
+    while (parent instanceof ErlangAssignmentExpression assignment && assignment.getLeft() == child) {
+      child = parent;
+      parent = parent.getParent();
+    }
     return parent instanceof ErlangArgumentDefinition && parent.getParent() instanceof ErlangTryClause;
   }
 
-  // A map key in a pattern is a guard expression, where ++ and -- are not allowed
-  private static boolean isInMapKey(@NotNull PsiElement o) {
+  // A binary segment and a map key in a pattern are guard expressions, where ++ and -- are not allowed
+  private static boolean isInGuardExpression(@NotNull PsiElement o) {
     PsiElement child = o;
     for (PsiElement parent = o.getParent(); parent != null; child = parent, parent = parent.getParent()) {
-      if (parent instanceof ErlangArgumentDefinition || parent instanceof ErlangAssignmentExpression) return false;
+      if (parent instanceof ErlangArgumentDefinition) return false;
+      if (parent instanceof ErlangAssignmentExpression assignment && assignment.getLeft() == child) return false;
+      if (parent instanceof ErlangBinElement) return true;
       if (parent instanceof ErlangMapEntry entry) {
         List<ErlangExpression> keyAndValue = entry.getExpressionList();
-        return keyAndValue.size() == 2 && keyAndValue.get(0) == child;
+        if (keyAndValue.size() == 2 && keyAndValue.get(0) == child) return true;
       }
     }
     return false;
@@ -244,8 +256,17 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
   // A predefined macro of a known kind may stand only where its kind may; any other macro may expand to anything
   private static boolean mayExpandTo(@NotNull ErlangMacros macros, @NotNull Set<String> kind) {
-    String name = macros.getMacrosName().getText();
-    return !ErlangPsiImplUtil.KNOWN_MACROS.contains(name) || kind.contains(name);
+    String name = getPredefinedMacroName(macros.getMacrosName());
+    return name == null || kind.contains(name);
+  }
+
+  // epp accepts the quoted spelling of the predefined macros, except ?'FUNCTION_NAME' and ?'FUNCTION_ARITY'
+  @Nullable
+  private static String getPredefinedMacroName(@NotNull ErlangMacrosName macrosName) {
+    boolean quoted = macrosName.getAtom() != null;
+    String name = quoted ? StringUtil.unquoteString(macrosName.getText(), '\'') : macrosName.getText();
+    if (quoted && FUNCTION_MACROS.contains(name)) return null;
+    return ErlangPsiImplUtil.KNOWN_MACROS.contains(name) ? name : null;
   }
 
   private static boolean isMacro(@Nullable ErlangExpression o, @NotNull Set<String> kind) {
