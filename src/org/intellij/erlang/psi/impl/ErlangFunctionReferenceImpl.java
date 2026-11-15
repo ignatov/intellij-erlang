@@ -26,6 +26,7 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.bif.ErlangOperatorTable;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -187,6 +188,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public Object @NotNull [] getVariants() {
+    if (ElpEngine.ownsFeature(myQAtom, ElpEngine.Feature.COMPLETION)) return EMPTY_ARRAY;
     if (PsiTreeUtil.getParentOfType(myQAtom, ErlangExportFunction.class) != null) return EMPTY_ARRAY;
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getFunctionLookupElements(getElement().getContainingFile(), true, myModuleAtom));
   }

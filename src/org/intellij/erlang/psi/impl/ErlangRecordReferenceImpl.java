@@ -23,6 +23,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangExportRecordAttribute;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangImportRecordAttribute;
@@ -69,6 +70,7 @@ public class ErlangRecordReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @NotNull
   @Override
   public Object @NotNull [] getVariants() {
+    if (ElpEngine.ownsFeature(myElement, ElpEngine.Feature.COMPLETION)) return ArrayUtil.EMPTY_OBJECT_ARRAY;
     ErlangRecordRef recordRef = ObjectUtils.tryCast(myElement, ErlangRecordRef.class);
     if (recordRef != null) {
       return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getRecordLookupElements(recordRef));

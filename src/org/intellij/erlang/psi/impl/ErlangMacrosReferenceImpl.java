@@ -24,6 +24,7 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
@@ -64,6 +65,7 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
   @NotNull
   @Override
   public Object @NotNull [] getVariants() {
+    if (ElpEngine.ownsFeature(myElement, ElpEngine.Feature.COMPLETION)) return ArrayUtil.EMPTY_OBJECT_ARRAY;
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getMacrosLookupElements(myElement.getContainingFile()));
   }
 
