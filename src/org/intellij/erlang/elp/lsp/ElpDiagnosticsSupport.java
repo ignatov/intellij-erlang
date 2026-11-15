@@ -41,12 +41,14 @@ final class ElpDiagnosticsSupport extends LspDiagnosticsSupport {
   }
 
   /**
-   * @return {@code null}, which means no annotation, for a hidden eqWAlizer diagnostic
+   * @return {@code null}, which means no annotation, for a hidden eqWAlizer diagnostic, and at most a warning for a shown one:
+   * eqWAlizer reports its type errors as errors, but the code compiles, so they must not paint the file red
    */
   @Nullable
   @Override
   public HighlightSeverity getHighlightSeverity(@NotNull Diagnostic diagnostic) {
-    return myShowEqwalizer || !isEqwalizer(diagnostic) ? super.getHighlightSeverity(diagnostic) : null;
+    if (!isEqwalizer(diagnostic)) return super.getHighlightSeverity(diagnostic);
+    return myShowEqwalizer ? HighlightSeverity.WARNING : null;
   }
 
   static boolean isEqwalizer(@NotNull Diagnostic diagnostic) {

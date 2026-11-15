@@ -37,11 +37,19 @@ public class ElpDiagnosticsSupportTest extends TestCase {
     assertNotNull(support.getHighlightSeverity(diagnostic(null, "W0066", DiagnosticSeverity.Hint)));
   }
 
-  public void testEqwalizerDiagnosticsAreShownWhenSwitchedOn() {
+  public void testEqwalizerDiagnosticsAreWarningsWhenSwitchedOn() {
     ElpDiagnosticsSupport support = new ElpDiagnosticsSupport(true);
-    assertEquals(HighlightSeverity.ERROR,
-                 support.getHighlightSeverity(diagnostic("eqWAlizer", "incompatible_types", DiagnosticSeverity.Error)));
+    for (DiagnosticSeverity severity : DiagnosticSeverity.values()) {
+      assertEquals(severity.toString(), HighlightSeverity.WARNING,
+                   support.getHighlightSeverity(diagnostic("eqWAlizer", "incompatible_types", severity)));
+    }
+    assertEquals(HighlightSeverity.WARNING, support.getHighlightSeverity(diagnostic("eqWAlizer", "incompatible_types", null)));
+  }
+
+  public void testOtherDiagnosticsKeepTheirSeverityWhenEqwalizerIsSwitchedOn() {
+    ElpDiagnosticsSupport support = new ElpDiagnosticsSupport(true);
     assertEquals(HighlightSeverity.ERROR, support.getHighlightSeverity(diagnostic("elp", "L1262", DiagnosticSeverity.Error)));
+    assertEquals(HighlightSeverity.WARNING, support.getHighlightSeverity(diagnostic("elp", "W0017", DiagnosticSeverity.Warning)));
   }
 
   public void testEqwalizerIsRecognizedBySourceOnly() {
