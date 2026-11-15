@@ -50,27 +50,27 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
     if (ErlangPsiImplUtil.needQuotation(name)) {
       int tailOffset = context.getTailOffset();
       int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
-      tailOffset += insertQuotesIfAbsent(context, startOffset, tailOffset);
+      tailOffset = insertQuotesIfAbsent(context, startOffset, tailOffset);
       context.getEditor().getCaretModel().moveToOffset(tailOffset);
       context.setTailOffset(tailOffset);
     }
   }
 
+  /**
+   * @return the offset after the closing quote
+   */
   private static int insertQuotesIfAbsent(@NotNull InsertionContext context, int startOffset, int tailOffset) {
-    int insertedQuotesCount = 0;
     Document document = context.getEditor().getDocument();
     CharSequence fileText = document.getCharsSequence();
 
     if (!isQuoteAt(fileText, startOffset - 1)) {
       document.insertString(startOffset, String.valueOf(QUOTE));
-      insertedQuotesCount++;
       tailOffset++;
     }
     if (!isQuoteAt(fileText, tailOffset)) {
       document.insertString(tailOffset, String.valueOf(QUOTE));
-      insertedQuotesCount++;
     }
-    return insertedQuotesCount;
+    return tailOffset + 1;
   }
 
   private static boolean isQuoteAt(@NotNull CharSequence sequence, int position) {

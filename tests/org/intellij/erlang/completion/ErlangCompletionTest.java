@@ -626,6 +626,48 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> fun <caret>", "foo() -> fun foo/0", Lookup.NORMAL_SELECT_CHAR);
   }
 
+  public void testRemoteFunctionExpressionQuotedWithStartQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>'", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotesAscii() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionCallQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:dec_<caret>'", "dec_D-1", "foo() -> mymodule:'dec_D-1'(<caret>)");
+  }
+
+  public void testModuleCompletionQuotedWithEndQuote() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResultWithItem("foo() -> quo<caret>'", "quoted-behaviour", "foo() -> 'quoted-behaviour':<caret>");
+  }
+
+  private void doCheckQuotedRemoteFunction(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("mymodule.erl",
+                              "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok.");
+    doCheckResultWithItem(before, item, after);
+  }
+
+  private void doCheckResultWithItem(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("a.erl", before);
+    if (myFixture.completeBasic() != null) {
+      LookupElement element = ContainerUtil.find(myFixture.getLookupElements(), e -> item.equals(e.getLookupString()));
+      assertNotNull(element);
+      myFixture.getLookup().setCurrentItem(element);
+      myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    }
+    myFixture.checkResult(after);
+  }
+
   public void test211() {
     doTestInclude("-module(test, [Id, Name::string()]). foo() -> <caret>", "Id", "Name");
   }
