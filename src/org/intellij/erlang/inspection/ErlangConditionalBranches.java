@@ -31,22 +31,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tells whether two top-level functions of a file are defined in different branches of the same
+ * Tells whether two elements of a file are in different branches of the same
  * {@code -ifdef/-ifndef/-if ... -elif/-else ... -endif} block, so that at most one of them is compiled.
  */
 final class ErlangConditionalBranches {
   private record Branch(@NotNull PsiElement block, int index) {
   }
 
-  private final Map<ErlangFunction, List<Branch>> myBranches = new HashMap<>();
+  private final ErlangFile myFile;
+  private final Map<PsiElement, List<Branch>> myBranches = new HashMap<>();
 
   ErlangConditionalBranches(@NotNull ErlangFile file) {
+    myFile = file;
     List<Branch> stack = new ArrayList<>();
     for (PsiElement child = file.getFirstChild(); child != null; child = child.getNextSibling()) {
-      if (child instanceof ErlangFunction function) {
-        myBranches.put(function, List.copyOf(stack));
-      }
-      else if (child instanceof ErlangAttribute attribute) {
+      if (child instanceof PsiWhiteSpace || child instanceof PsiComment) continue;
+      myBranches.put(child, List.copyOf(stack));
+      if (child instanceof ErlangAttribute attribute) {
         String directive = getDirective(attribute);
         if (directive == null) continue;
         switch (directive) {
@@ -67,9 +68,9 @@ final class ErlangConditionalBranches {
     }
   }
 
-  boolean areExclusive(@NotNull ErlangFunction first, @NotNull ErlangFunction second) {
-    List<Branch> firstBranches = myBranches.get(first);
-    List<Branch> secondBranches = myBranches.get(second);
+  boolean areExclusive(@NotNull PsiElement first, @NotNull PsiElement second) {
+    List<Branch> firstBranches = myBranches.get(getTopLevelElement(first));
+    List<Branch> secondBranches = myBranches.get(getTopLevelElement(second));
     if (firstBranches == null || secondBranches == null) return false;
     for (int i = 0; i < Math.min(firstBranches.size(), secondBranches.size()); i++) {
       Branch a = firstBranches.get(i);
@@ -78,6 +79,15 @@ final class ErlangConditionalBranches {
       if (a.index() != b.index()) return true;
     }
     return false;
+  }
+
+  @Nullable
+  private PsiElement getTopLevelElement(@NotNull PsiElement element) {
+    PsiElement current = element;
+    while (current != null && current.getParent() != myFile) {
+      current = current.getParent();
+    }
+    return current;
   }
 
   @Nullable

@@ -24,7 +24,6 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -33,8 +32,6 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
@@ -46,7 +43,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
     ErlangConditionalBranches branches = new ErlangConditionalBranches(file);
     for (ErlangFunction function : file.getFunctions()) {
-      if (!isUnusedFunction(file, function) || isAlternativeUsed(file, function, branches)) continue;
+      if (!isUnusedFunction(file, function, branches)) continue;
 
       PsiElement identifier = function.getNameIdentifier();
       String message = "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'";
@@ -56,26 +53,24 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
     }
   }
 
-  private static boolean isAlternativeUsed(@NotNull ErlangFile file,
-                                           @NotNull ErlangFunction function,
-                                           @NotNull ErlangConditionalBranches branches) {
-    for (ErlangFunction other : file.getFunctionsByName(function.getName())) {
-      if (other != function && other.getArity() == function.getArity() && branches.areExclusive(function, other) &&
-          !isUnusedFunction(file, other)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
+  private static boolean isUnusedFunction(@NotNull ErlangFile file,
+                                          @NotNull final ErlangFunction function,
+                                          @NotNull ErlangConditionalBranches branches) {
     if (ErlangPsiImplUtil.isEunitImported(file) && ErlangPsiImplUtil.isEunitTestFunction(function)) return false;
     LocalSearchScope scope = new LocalSearchScope(file);
-    // filtered specs out
-    List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), psiReference -> {
-      PsiElement element = psiReference.getElement();
-      return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
-    });
-    return ContainerUtil.getFirstItem(refs) == null;
+    // calls resolve to the first definition, so also look at the definitions in exclusive -ifdef/-else branches
+    for (ErlangFunction candidate : file.getFunctionsByName(function.getName())) {
+      if (candidate != function && (candidate.getArity() != function.getArity() || !branches.areExclusive(function, candidate))) continue;
+      // filtered specs out
+      for (PsiReference psiReference : ReferencesSearch.search(candidate, scope).findAll()) {
+        PsiElement element = psiReference.getElement();
+        if (PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null &&
+            !ErlangPsiImplUtil.isRecursiveCall(element, function) &&
+            !branches.areExclusive(element, function)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }

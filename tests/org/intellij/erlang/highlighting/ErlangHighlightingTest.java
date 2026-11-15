@@ -33,6 +33,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDuplicate()         { doTest(); }
   public void testIfdefElseFunction() { doTest(); }
   public void testIfdefNestedFunction() { doTest(); }
+  public void testIfdefRecursiveFunction() { doTest(); }
+  public void testIfdefBranchUse()    { doTest(); }
+  public void testIfElseFunction()    { doTest(); }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
