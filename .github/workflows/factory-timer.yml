@@ -1,0 +1,69 @@
+name: Factory timer
+
+# The backstop clock of the project's automation. The dispatcher (a workflow of the private repository
+# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next. It is woken by
+# events (factory-wake.yml); this timer covers what gives no event. GitHub drops most scheduled runs of a
+# quiet repository, so the dispatcher arms the timer at the end of each tick instead:
+#   1. the job "wait" waits for the wait timer of its environment (5 minutes while work is in flight,
+#      30 minutes otherwise); no runner is used while it waits;
+#   2. the job "wake" starts the next dispatcher tick.
+# A new run cancels the one that is still waiting, so there is always one timer.
+#
+# FACTORY_CLOCK_TOKEN is a secret of the environment factory-clock, which only jobs of master can use. It is
+# a fine-grained token for the private repository with the permission Actions: write and nothing else.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pace:
+        description: active waits 5 minutes, idle waits 30 minutes
+        type: choice
+        options:
+          - active
+          - idle
+        default: idle
+
+permissions: {}
+
+concurrency:
+  group: factory-timer
+  cancel-in-progress: true
+
+jobs:
+  wait:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: factory-timer-${{ inputs.pace }}
+      # The environment is used for its wait timer only; this is not a deployment.
+      deployment: false
+    steps:
+      - run: echo "The wait is over."
+
+  wake:
+    needs: wait
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: factory-clock
+      deployment: false
+    steps:
+      - name: Start the next dispatcher tick
+        env:
+          CLOCK_TOKEN: ${{ secrets.FACTORY_CLOCK_TOKEN }}
+        run: |
+          if [ -z "$CLOCK_TOKEN" ]; then
+            echo "::error::The environment secret FACTORY_CLOCK_TOKEN is not set."
+            exit 1
+          fi
+          code=$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $CLOCK_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            --data '{"ref":"main","inputs":{"live":"true"}}' \
+            https://api.github.com/repos/ignatov/intellij-erlang-triage/actions/workflows/dispatcher.yml/dispatches)
+          echo "HTTP $code"
+          case "$code" in
+            2??) ;;
+            *) echo "::error::The dispatcher could not be started."; exit 1 ;;
+          esac
