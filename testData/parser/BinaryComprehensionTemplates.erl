@@ -13,3 +13,5 @@ nested(L) -> << << Y || Y <- X >> || X <- L >>.
 macro_template(L) -> << ?BIN || _ <- L >>.
 
 begin_template(L) -> << begin <<X>> end || X <- L >>.
+
+macro_call_template(L) -> << ?BIN(X) || X <- L >>.

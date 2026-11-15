@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 
 public class ErlangParserTest extends ErlangParserTestBase {
@@ -112,4 +114,21 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
   public void testBinaryComprehensionTemplates()        { doTest(false); }
+
+  public void testDeeplyNestedBinariesParseWithoutBacktracking() {
+    int depth = 20;
+    String parenthesized = "X";
+    String caseTemplates = "<<>>";
+    for (int i = 0; i < depth; i++) {
+      parenthesized = "<<(" + parenthesized + ")/binary>>";
+      caseTemplates = "<< case X of _ -> " + caseTemplates + " end >>";
+    }
+    String text = "f(X) -> " + parenthesized + ".\ng(X) -> " + caseTemplates + ".\n";
+    long start = System.nanoTime();
+    PsiFile file = createPsiFile("nested", text);
+    boolean hasErrors = PsiTreeUtil.hasErrorElements(file);
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertFalse("PsiFile contains error elements", hasErrors);
+    assertTrue("Parsing took " + millis + " ms", millis < 5000);
+  }
 }

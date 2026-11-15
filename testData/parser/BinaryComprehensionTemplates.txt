@@ -299,3 +299,43 @@ ERL_FILE
                 PsiElement(var)('L')
           PsiElement(>>)('>>')
     PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('macro_call_template')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('L')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_LIST_COMPREHENSION
+          PsiElement(<<)('<<')
+          ERL_GENERIC_FUNCTION_CALL_EXPRESSION
+            ERL_Q_ATOM
+              ERL_MACROS
+                PsiElement(?)('?')
+                ERL_MACROS_NAME
+                  PsiElement(var)('BIN')
+            ERL_ARGUMENT_LIST
+              PsiElement(()('(')
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('X')
+              PsiElement())(')')
+          PsiElement(||)('||')
+          ERL_LC_EXPRESSION
+            ERL_ARGUMENT_DEFINITION
+              ERL_MAX_EXPRESSION
+                ERL_Q_VAR
+                  PsiElement(var)('X')
+            PsiElement(<-)('<-')
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('L')
+          PsiElement(>>)('>>')
+    PsiElement(.)('.')
