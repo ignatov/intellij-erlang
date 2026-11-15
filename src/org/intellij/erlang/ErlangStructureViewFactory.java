@@ -50,7 +50,7 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
       @NotNull
       @Override
       public StructureViewModel createStructureViewModel(@Nullable Editor editor) {
-        return new Model(psiFile);
+        return new Model(psiFile, editor);
       }
 
       @Override
@@ -61,9 +61,18 @@ public class ErlangStructureViewFactory implements PsiStructureViewFactory {
   }
 
   public static class Model extends StructureViewModelBase implements StructureViewModel.ElementInfoProvider {
-    public Model(@NotNull PsiFile psiFile) {
-      super(psiFile, new Element(psiFile));
+    public Model(@NotNull PsiFile psiFile, @Nullable Editor editor) {
+      super(psiFile, editor, new Element(psiFile));
       withSuitableClasses(ErlangFile.class, ErlangFunction.class, ErlangFunctionClause.class);
+    }
+
+    @Override
+    protected boolean isSuitable(PsiElement element) {
+      if (element instanceof ErlangFunctionClause) {
+        // a clause is a node of its own only when the function has several clauses, see Element.getChildren()
+        return element.getParent() instanceof ErlangFunction function && function.getFunctionClauseList().size() != 1;
+      }
+      return super.isSuitable(element);
     }
 
     @Override
