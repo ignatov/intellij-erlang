@@ -51,6 +51,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testMapKeyInFunHeadGuard()          { doTest("Key2"); }
   public void testMapKeyInNestedFunHeads()        { doTest("Key2"); }
   public void testMapKeyInNestedFunHeadsFromOuter() { doTest("Key2"); }
+
+  public void testNamedFunName()                  { doTest("Fact"); }
+  public void testNamedFunShadowingArgument()     { doTest("Arg"); }
+  public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
