@@ -118,6 +118,32 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertEmpty(lookupStrings(myFixture.completeBasic()));
   }
 
+  public void testCompletionOfReferenceVariants() {
+    // The platform also completes the variants of the reference at the caret, outside the plugin's contributors.
+    myFixture.configureByText("a.erl", "-module(a).\n-define(MACRO1, 1).\n-define(MACRO2, 2).\n-record(rec1, {}).\n-record(rec2, {}).\n" +
+                                       "bar1() -> ok.\nbar2() -> ok.\nfoo() -> bar<caret>().");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(lookupStrings(myFixture.completeBasic()));
+  }
+
+  public void testCompletionOfMacroAndRecordVariants() {
+    myFixture.configureByText("a.erl", "-module(a).\n-define(MACRO1, 1).\n-define(MACRO2, 2).\n-record(rec1, {}).\n-record(rec2, {}).\n" +
+                                       "foo() -> {?MAC<caret>, #rec}.");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "MACRO1", "MACRO2");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(lookupStrings(myFixture.completeBasic()));
+
+    myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getFile().getText().indexOf("#rec") + 4);
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "rec1", "rec2");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(lookupStrings(myFixture.completeBasic()));
+  }
+
   public void testVariableCompletion() {
     myFixture.configureByText("a.erl", "-module(a).\nfoo(Alpha1, Alpha2) -> Al<caret>");
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
