@@ -1361,14 +1361,38 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '/' integer
+  // q_atom '/' integer | '{' q_atom ',' integer '}'
   public static boolean callback_function(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "callback_function")) return false;
-    boolean r, p;
+    boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_CALLBACK_FUNCTION, "<callback function>");
+    r = callback_function_0(b, l + 1);
+    if (!r) r = callback_function_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // q_atom '/' integer
+  private static boolean callback_function_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
     r = q_atom(b, l + 1);
-    p = r; // pin = 1
+    p = r; // pin = q_atom
     r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // '{' q_atom ',' integer '}'
+  private static boolean callback_function_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_1")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_CURLY_LEFT);
+    r = r && q_atom(b, l + 1);
+    p = r; // pin = q_atom
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_COMMA, ERL_INTEGER, ERL_CURLY_RIGHT));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
