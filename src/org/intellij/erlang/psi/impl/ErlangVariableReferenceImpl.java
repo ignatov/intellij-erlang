@@ -60,12 +60,19 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     for (ErlangQVar candidate : resolveInScope(var)) {
       boolean earlierInSameFile = candidate.getContainingFile() == var.getContainingFile() &&
                                   candidate.getTextOffset() < var.getTextOffset();
-      List<ErlangQVar> bindings = earlierInSameFile ? resolveToFirstBindings(candidate) : Collections.emptyList();
+      boolean follow = earlierInSameFile && !inGeneratorPattern(candidate);
+      List<ErlangQVar> bindings = follow ? resolveToFirstBindings(candidate) : Collections.emptyList();
       for (ErlangQVar binding : bindings.isEmpty() ? Collections.singletonList(candidate) : bindings) {
         if (!result.contains(binding)) result.add(binding);
       }
     }
     return result;
+  }
+
+  // A generator pattern binds a fresh variable that shadows an outer one with the same name.
+  private static boolean inGeneratorPattern(@NotNull ErlangQVar var) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(var, ErlangArgumentDefinition.class);
+    return definition != null && definition.getParent() instanceof ErlangLcExpression;
   }
 
   @NotNull
