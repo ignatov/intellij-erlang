@@ -22,13 +22,17 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
+  private static final Set<String> STRING_MACROS = Set.of("MODULE_STRING", "FILE");
+  private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY");
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
@@ -116,7 +120,13 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
-          if (o.getOpPlusPlus() != null && isListPrefix(o.getLeft()) && o.getRight() != null) {
+          ErlangExpression left = o.getLeft();
+          if (left instanceof ErlangColonQualifiedExpression qualified && isCatchClausePattern(o)) {
+            List<ErlangExpression> classAndPrefix = qualified.getExpressionList();
+            checkExpressionAndReport(classAndPrefix.get(0), problemsHolder);
+            left = classAndPrefix.size() > 1 ? classAndPrefix.get(1) : null;
+          }
+          if (o.getOpPlusPlus() != null && isListPrefix(left) && o.getRight() != null && !isInMapKey(o)) {
             checkExpressionAndReport(o.getRight(), problemsHolder);
           }
           else {
@@ -213,20 +223,44 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     return name instanceof ErlangMacros || name instanceof ErlangQAtom && ((ErlangQAtom) name).getMacros() != null;
   }
 
-  private static boolean isMacro(@Nullable ErlangExpression o) {
-    if (o instanceof ErlangFunctionCallExpression) return ((ErlangFunctionCallExpression) o).getQAtom().getMacros() != null;
-    if (o instanceof ErlangGenericFunctionCallExpression call) return call.getColon() == null && isMacroCall(call);
-    return o instanceof ErlangMaxExpression && isStringsAndMacros((ErlangMaxExpression) o, false);
+  // In a catch clause, Class:Prefix ++ Tail is parsed as (Class:Prefix) ++ Tail
+  private static boolean isCatchClausePattern(@NotNull ErlangListOpExpression o) {
+    PsiElement parent = o.getParent();
+    return parent instanceof ErlangArgumentDefinition && parent.getParent() instanceof ErlangTryClause;
   }
 
-  private static boolean isStringsAndMacros(@NotNull ErlangMaxExpression o, boolean allowStrings) {
+  // A map key in a pattern is a guard expression, where ++ and -- are not allowed
+  private static boolean isInMapKey(@NotNull PsiElement o) {
+    PsiElement child = o;
+    for (PsiElement parent = o.getParent(); parent != null; child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangArgumentDefinition || parent instanceof ErlangAssignmentExpression) return false;
+      if (parent instanceof ErlangMapEntry entry) {
+        List<ErlangExpression> keyAndValue = entry.getExpressionList();
+        return keyAndValue.size() == 2 && keyAndValue.get(0) == child;
+      }
+    }
+    return false;
+  }
+
+  // A predefined macro of a known kind may stand only where its kind may; any other macro may expand to anything
+  private static boolean mayExpandTo(@NotNull ErlangMacros macros, @NotNull Set<String> kind) {
+    String name = macros.getMacrosName().getText();
+    return !ErlangPsiImplUtil.KNOWN_MACROS.contains(name) || kind.contains(name);
+  }
+
+  private static boolean isMacro(@Nullable ErlangExpression o, @NotNull Set<String> kind) {
+    if (o instanceof ErlangFunctionCallExpression) return ((ErlangFunctionCallExpression) o).getQAtom().getMacros() != null;
+    if (o instanceof ErlangGenericFunctionCallExpression call) return call.getColon() == null && isMacroCall(call);
+    return o instanceof ErlangMaxExpression && isStringsAndMacros((ErlangMaxExpression) o, false, kind);
+  }
+
+  private static boolean isStringsAndMacros(@NotNull ErlangMaxExpression o, boolean allowStrings, @NotNull Set<String> kind) {
     for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
-      if (child instanceof PsiWhiteSpace || child instanceof PsiComment ||
-          allowStrings && child instanceof ErlangStringLiteral || child instanceof ErlangMacros ||
-          child instanceof ErlangQAtom && ((ErlangQAtom) child).getMacros() != null) {
+      if (child instanceof PsiWhiteSpace || child instanceof PsiComment || allowStrings && child instanceof ErlangStringLiteral) {
         continue;
       }
-      return false;
+      ErlangMacros macros = child instanceof ErlangQAtom ? ((ErlangQAtom) child).getMacros() : child instanceof ErlangMacros ? (ErlangMacros) child : null;
+      if (macros == null || !mayExpandTo(macros, kind)) return false;
     }
     return true;
   }
@@ -236,14 +270,14 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     if (o instanceof ErlangMaxExpression && (((ErlangMaxExpression) o).getChar() != null || ((ErlangMaxExpression) o).getInteger() != null)) {
       return true;
     }
-    return isMacro(o);
+    return isMacro(o, INTEGER_MACROS);
   }
 
   // The left operand of ++ in a pattern: a string, or a list of characters and integers ending in [] or such a prefix (erl_lint)
   private static boolean isListPrefix(@Nullable ErlangExpression o) {
     while (o instanceof ErlangParenthesizedExpression) o = ((ErlangParenthesizedExpression) o).getExpression();
-    if (o instanceof ErlangStringLiteral || isMacro(o)) return true;
-    if (o instanceof ErlangMaxExpression) return isStringsAndMacros((ErlangMaxExpression) o, true);
+    if (o instanceof ErlangStringLiteral || isMacro(o, STRING_MACROS)) return true;
+    if (o instanceof ErlangMaxExpression) return isStringsAndMacros((ErlangMaxExpression) o, true, STRING_MACROS);
     if (!(o instanceof ErlangListExpression list)) return false;
     List<ErlangExpression> expressions = list.getExpressionList();
     int elements = list.getOpOr() != null ? expressions.size() - 1 : expressions.size();
