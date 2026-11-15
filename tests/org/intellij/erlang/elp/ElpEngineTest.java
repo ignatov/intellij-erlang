@@ -20,6 +20,7 @@ package org.intellij.erlang.elp;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.codeInspection.LocalInspectionEP;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.actionSystem.DataContext;
@@ -250,6 +251,20 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     assertNull(provider.generateDoc(function, original));
     assertNotNull("without the element in the editor the plugin answers", provider.generateDoc(function, null));
+  }
+
+  public void testDocumentationOfACompletionItemComesFromThePlugin() {
+    myFixture.configureByText("a.erl", "-module(a).\n%% @doc Says hello.\nhello1() -> ok.\nhello2() -> ok.\nf() -> hel<caret>");
+    ErlangFunction function = ((ErlangFile)myFixture.getFile()).getFunction("hello1", 0);
+    ErlangDocumentationProvider provider = new ErlangDocumentationProvider();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertContainsElements(lookupStrings(myFixture.completeBasic()), "hello1", "hello2");
+    // The platform passes the element at the caret as the original element of a lookup item too.
+    PsiElement original = myFixture.getFile().findElementAt(myFixture.getCaretOffset() - 1);
+    assertNotNull("the plugin completes, so it documents its items", provider.generateDoc(function, original));
+
+    LookupManager.getInstance(getProject()).hideActiveLookup();
+    assertNull("without a lookup ELP's hover documents the caret", provider.generateDoc(function, original));
   }
 
   public void testExtendSelection() {
