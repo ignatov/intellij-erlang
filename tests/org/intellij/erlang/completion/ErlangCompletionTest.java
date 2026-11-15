@@ -285,6 +285,19 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     );
   }
 
+  public void testErlInternalBuiltInTypes() {
+    doTestInclude(
+      "-type foo() :: <caret>.",
+      "arity", "binary", "bitstring", "dynamic", "function", "identifier", "iodata", "map", "nil",
+      "nonempty_binary", "nonempty_bitstring", "nonempty_improper_list", "nonempty_list",
+      "nonempty_maybe_improper_list", "tuple"
+    );
+  }
+
+  public void testNoUndefinedOrDeprecatedBuiltInTypes() {
+    doTestVariants("-type foo() :: <caret>.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "improper_list", "bool");
+  }
+
   public void testTypesInSpec() {
     doTestInclude(
       """

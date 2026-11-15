@@ -85,9 +85,11 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
-    "any", "atom", "boolean", "byte", "char", "float", "integer", "iolist", "list", "maybe_improper_list", "mfa",
-    "module", "neg_integer", "no_return", "node", "non_neg_integer", "none", "nonempty_string", "number", "pid", "port",
-    "pos_integer", "reference", "string", "term", "timeout"
+    "any", "arity", "atom", "binary", "bitstring", "boolean", "byte", "char", "dynamic", "float", "function",
+    "identifier", "integer", "iodata", "iolist", "list", "map", "maybe_improper_list", "mfa", "module", "neg_integer",
+    "nil", "no_return", "node", "non_neg_integer", "none", "nonempty_binary", "nonempty_bitstring",
+    "nonempty_improper_list", "nonempty_list", "nonempty_maybe_improper_list", "nonempty_string", "number", "pid",
+    "port", "pos_integer", "reference", "string", "term", "timeout", "tuple"
   );
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
