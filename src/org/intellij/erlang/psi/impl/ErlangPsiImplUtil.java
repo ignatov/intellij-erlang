@@ -571,7 +571,7 @@ public class ErlangPsiImplUtil {
         ErlangFile erlangFile = (ErlangFile) containingFile;
         functions.addAll(erlangFile.getFunctions());
         functions.addAll(ContainerUtil.filter(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"),
-                                              f -> ErlangBifTable.isAutoImported(f.getName(), f.getArity())));
+                                              f -> ErlangBifTable.isAutoImported(f.getName(), f.getArity(), release)));
 
         List<ErlangImportFunction> directlyImported = erlangFile.getImportedFunctions();
         List<ErlangImportFunction> importsFromIncludes = getImportsFromIncludes(erlangFile, true, "", 0);
@@ -581,7 +581,8 @@ public class ErlangPsiImplUtil {
         }
 
         if (!withArity && (release == null || release.needBifCompletion("erlang"))) {
-          addBifs(lookupElements, ContainerUtil.filter(ErlangBifTable.getBifs("erlang"), ErlangBifDescriptor::isAutoImported));
+          addBifs(lookupElements, ContainerUtil.filter(ErlangBifTable.getBifs("erlang"),
+                                                      b -> ErlangBifTable.isAutoImported(b.getName(), b.getArity(), release)));
         }
         if (!withArity && (release == null || release.needBifCompletion(""))) {
           addBifs(lookupElements, ErlangBifTable.getBifs(""));

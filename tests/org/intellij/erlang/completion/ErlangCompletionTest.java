@@ -54,6 +54,11 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                    "md5", "md5_init", "md5_update", "md5_final");
   }
 
+  public void testAutoImportedBifsNotMarkedInBifTable() {
+    doCheckResult("foo(P) -> port_to_l<caret>", "foo(P) -> port_to_list(<caret>)");
+    doCheckResult("foo(R) -> ref_to_l<caret>", "foo(R) -> ref_to_list(<caret>)");
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }

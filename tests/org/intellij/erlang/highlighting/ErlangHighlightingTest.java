@@ -75,6 +75,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAutoimportCall2()   { doTest(); }
   public void testAutoimportCall3()   { doTest(); }
   public void testNotAutoImportedCall() { doTest(); }
+  public void testImportedNotAutoImportedBif() { doTest("ImportedNotAutoImportedBif.erl", "ImportedNotAutoImportedBif.hrl"); }
 
   public void testNoAutoImport1()     { doTest(); }
   public void testNoAutoImport2()     { doTest(); }

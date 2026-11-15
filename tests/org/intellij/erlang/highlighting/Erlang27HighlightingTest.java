@@ -31,4 +31,9 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang29SyntaxInspection();
     doTest();
   }
+
+  public void testAutoImportByRelease27() {
+    addErlangModuleWithFunctionsAutoImportedSince28();
+    doTest();
+  }
 }
