@@ -776,6 +776,68 @@ class SecondCycleTest(Seeded):
         cycle(world, T0 + 8 * HOUR)
         self.assertEqual(len(world.version_issues()), 3)
 
+    def test_a_result_of_an_unexpected_shape_is_an_attempt_without_a_result(self):
+        def with_(**changes):
+            result = otp_result(SHA, self.next, 0, self.next, errors=BASE_ERRORS)
+            result.update(changes)
+            return result
+        for result in [with_(resolved='x'), with_(inputs='x'), with_(resolved={'commit': SHA, 'otp': 'x'})]:
+            self.assertFalse(watch.Watcher.matches(result, 'otp', SHA, self.next, 0), result)
+        watch.Watcher.matches(with_(run='x'), 'otp', SHA, self.next, 0)  # no run id to check, and no crash
+        # A result without its checks has nothing to compare: it is not the same as the baseline.
+        for hour, checks in enumerate([[1], {'corpus': {'status': 'passed'}, 'knownRelease': 'passed'}]):
+            run_id = entry(self.world.state(), 'otp', self.next)['run']
+            self.world.finish(run_id, {'otp': with_(checks=checks, run={'runId': run_id})})
+            self.assertIn('has no check compilationTests', self.retried(2 + hour))
+        # A list that is not one: the comparison finds nothing to read there and does not crash.
+        odd = ide_result(SHA, '263.8.1', 2)
+        odd['checks']['verifyPlugin'] = {'status': 'passed', 'reports': 5}
+        odd['checks']['test'] = {'status': 'passed', 'failedTests': {'items': 'x', 'total': []}}
+        self.assertEqual(watch.compare('ide', odd, ide_result(SHA, BASE_IDE, 1)), {'sections': [], 'notes': []})
+
+    def test_an_unexpected_failure_while_collecting_does_not_stop_the_cycle(self):
+        self.finish_otp(self.next)
+        with unittest.mock.patch.object(watch, 'compare', side_effect=TypeError('text from a result @x')):
+            code, out = self.add_version('%d.0' % (MAJOR + 2), 2)
+        self.assertEqual(code, 1)
+        self.assertIn('::error::Erlang/OTP %s: unexpected TypeError' % self.next, out)
+        self.assertNotIn('@x', out)
+        # The cycle went on, and the failure is counted like a result that cannot be read.
+        self.assertEqual(self.world.dispatched[-1][1], {'otp': '%d.0' % (MAJOR + 2), 'ref': SHA})
+        e = entry(self.world.state(), 'otp', self.next)
+        self.assertEqual((e['state'], e['errors']), ('running', 1))
+
+    def test_the_runs_of_a_version_are_its_own(self):
+        world = self.world
+        version = '%d.0' % (MAJOR + 2)
+        world.dispatch_status = 422
+        self.add_version(version, 2)
+        self.assertEqual(entry(world.state(), 'otp', version)['state'], 'queued')
+        world.dispatch_status = 200
+        code, out = cycle(world, T0 + 3 * HOUR)
+        self.assertEqual(code, 0, out)
+        run_id = world.run_of({'otp': version, 'ref': SHA})
+        state = world.state()
+        self.assertEqual(entry(state, 'otp', version)['runs'], [run_id])
+        self.assertEqual([e['version'] for e in state['entries'] if run_id in e['runs']], [version])
+        self.assertEqual(world.state_issue()['body'].count('/actions/runs/%d' % run_id), 1)
+
+    def test_more_problems_than_one_issue_lists_stay_known(self):
+        errors = BASE_ERRORS + [corpus_error('lib/a-1/src/f%d.erl' % i, 'e') for i in range(450)]
+        run_id = self.world.run_of({'otp': self.next, 'ref': SHA})
+        self.world.finish(run_id, {'otp': otp_result(SHA, self.next, run_id, self.next, errors=errors)},
+                          logs={'errors': errors})
+        cycle(self.world, T0 + 2 * HOUR)
+        later = '%d.0.2' % (MAJOR + 1)
+        self.add_version(later, 3)
+        run_id = self.world.run_of({'otp': later, 'ref': SHA})
+        self.world.finish(run_id, {'otp': otp_result(SHA, later, run_id, later, errors=errors)},
+                          logs={'errors': errors})
+        code, out = cycle(self.world, T0 + 4 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(entry(self.world.state(), 'otp', later)['verdict'], 'known problems')
+        self.assertEqual(len(self.world.version_issues()), 1)
+
     def test_an_older_version_that_appears_later_is_superseded(self):
         started = len(self.world.dispatched)
         older = '%d.0.0.5' % (MAJOR + 1)
@@ -919,14 +981,23 @@ class StateTest(unittest.TestCase):
         self.assertLess(len(body), watch.STATE_BODY_TARGET)
         parsed = watch.parse_state(body)
         self.assertEqual(parsed['seen'], state['seen'])
-        # A major release that is not watched any more is dropped; of the others the newest keys are kept.
+        # A major release that is not watched any more is dropped.
         reported = parsed['reported']['otp']
         self.assertEqual(sorted(reported), [str(MAJOR), str(MAJOR + 1), str(MAJOR + 2)])
-        self.assertEqual(reported[str(MAJOR)], {'issue': 7, 'keys': keys[1000 - watch.REPORTED_KEYS:1000]})
+        # The table rows went first, then the oldest keys of the lines that have the most.
+        self.assertEqual(parsed['entries'], [])
+        kept = len(reported[str(MAJOR)]['keys'])
+        self.assertTrue(300 < kept < 1000, kept)
+        self.assertEqual(reported[str(MAJOR)], {'issue': 7, 'keys': keys[1000 - kept:1000]})
         self.assertEqual(reported[str(MAJOR + 1)]['keys'], keys[1000:1300])
-        self.assertEqual(parsed['reported']['ide']['263']['keys'], keys[900 - watch.REPORTED_KEYS:900])
-        # The table rows went before any of the newest REPORTED_KEYS keys of a line.
-        self.assertLess(len(parsed['entries']), watch.TABLE_ROWS)
+        kept = len(parsed['reported']['ide']['263']['keys'])
+        self.assertEqual(parsed['reported']['ide']['263']['keys'], keys[900 - kept:900])
+        # Without the pressure of the size nothing is dropped: 450 problems of one issue stay known.
+        state = watch.new_state(T0)
+        state['reported']['otp'] = {str(MAJOR): {'issue': 7, 'keys': keys[:450]}}
+        watcher.state = state
+        watcher.prune()
+        self.assertEqual(len(state['reported']['otp'][str(MAJOR)]['keys']), 450)
 
     def test_the_state_rejects_values_the_watcher_never_writes(self):
         state = watch.new_state(T0)
@@ -935,6 +1006,13 @@ class StateTest(unittest.TestCase):
         self.assertEqual(watch.parse_state(body)['pending'], ['ide', 'otp'])
         with self.assertRaises(watch.WatchError):
             watch.parse_state(body.replace('"otp":[]', '"otp":["27.0`@x"]'))
+        # Values of a wrong type are an invalid state too, not a crash.
+        for old, new in [('"pending":["ide","otp"]', '"pending":[[]]'), ('"entries":[]', '"entries":[{"kind":[]}]'),
+                         ('"baselines":[]', '"baselines":[{"sha":5,"at":"x","state":"failed"}]'),
+                         ('"entries":[]', '"entries":%s' % ('[' * 100000))]:
+            self.assertIn(old, body)
+            with self.assertRaises(watch.WatchError):
+                watch.parse_state(body.replace(old, new))
         with self.assertRaises(watch.WatchError):
             watch.parse_state(body.replace('"reported":{"ide":{}',
                                            '"reported":{"ide":{"263":{"issue":1,"keys":["@x"]}}'))
@@ -984,6 +1062,9 @@ class FeedTest(unittest.TestCase):
         self.assertFalse(watch.valid_version('otp', huge))
         self.assertFalse(watch.valid_version('otp', '%d%s' % (MAJOR + 1, '.1' * 30)))
         self.assertFalse(watch.valid_version('ide', '263.' + huge))
+        # The major release is a key of the state, where it has at most 9 digits.
+        self.assertFalse(watch.valid_version('otp', '1234567890.0'))
+        self.assertTrue(watch.valid_version('otp', '123456789.0-rc1'))
         self.assertFalse(watch.valid_ide_name('2026.' + huge))
         world = World([PINNED, '%d.0' % (MAJOR + 1)], Seeded.IDE)
         world.otp_feed += 'OTP-%s x y\nOTP-%d.%s x y\n' % (huge, MAJOR + 1, huge)

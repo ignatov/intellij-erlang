@@ -47,8 +47,7 @@ RUN_TIMEOUT = datetime.timedelta(hours=6)
 # A complete baseline is run again after this time, well before its artifacts expire.
 BASELINE_MAX_AGE = datetime.timedelta(days=30)
 TABLE_ROWS = 60
-# The keys of the problems already reported that are kept for each major Erlang/OTP release and IDE branch.
-REPORTED_KEYS = 400
+# The characters of the key of a reported problem in the state.
 KEY_CHARS = 10
 VERSION_CHARS = 40
 ISSUE_ITEMS = 30
@@ -118,9 +117,11 @@ class ApiError(Exception):
 
 def valid_version(kind, value):
     """Whether `value` is a version of `kind` that the watcher uses: a form of the input of compat.py (its patterns)
-    of at most VERSION_CHARS characters, for ide only its build-number form, whose first number is the branch."""
+    of at most VERSION_CHARS characters and numbers of at most 9 digits, for ide only its build-number form, whose
+    first number is the branch."""
     if (not isinstance(value, str) or len(value) > VERSION_CHARS
-            or not compat.INPUT_PATTERNS[kind].fullmatch(value)):
+            or not compat.INPUT_PATTERNS[kind].fullmatch(value)
+            or any(len(number) > 9 for number in re.findall('[0-9]+', value))):
         return False
     if kind == 'otp':
         return True
@@ -509,6 +510,7 @@ def validate_state(state):
         _check(_count(entry['tries'], MAX_ATTEMPTS) and _count(entry['errors'], MAX_COLLECT_ERRORS), 'entry tries')
         _check(entry['state'] not in ACTIVE + (REPORT,) or (entry['sha'] and entry['at']), 'active entry')
         _check(entry['state'] not in (RUNNING, REPORT) or entry['run'], 'running entry')
+        entry['runs'] = list(entry['runs'])  # never the list of ENTRY_DEFAULTS, which every entry would share
         entries.append(entry)
     state['entries'] = entries
     return state
@@ -526,9 +528,12 @@ def parse_state(body):
         raise WatchError('the state block of the state issue is not one fenced JSON block')
     try:
         state = json.loads(match.group(1))
-    except ValueError as e:
+    except (ValueError, RecursionError) as e:
         raise WatchError('the state block of the state issue does not parse: %s' % e)
-    return validate_state(state)
+    try:
+        return validate_state(state)
+    except (TypeError, AttributeError, KeyError, ValueError, RecursionError) as e:
+        raise WatchError('the state is not valid: %s' % type(e).__name__)
 
 
 def compact(entry):
@@ -589,7 +594,7 @@ def verifier_problems(check):
     """The problems of the gated levels of all reports of `check`; a failing level without a listed problem is one
     item of the category verdict."""
     items, total, trimmed = [], 0, False
-    for report in check.get('reports') or []:
+    for report in check.get('reports') if isinstance(check.get('reports'), list) else []:
         if not isinstance(report, dict):
             continue
         problems = report.get('problems') if isinstance(report.get('problems'), dict) else {}
@@ -651,9 +656,13 @@ def problem(check, title, key, line, count=1):
     return Problem(digest[:KEY_CHARS], line, count)
 
 
+def mapping(value):
+    """`value` if it is a JSON object, an empty one otherwise: a result is read without trusting its shape."""
+    return value if isinstance(value, dict) else {}
+
+
 def checks_of(result):
-    checks = result.get('checks') if isinstance(result, dict) else None
-    return {name: check for name, check in (checks or {}).items() if isinstance(check, dict)}
+    return {name: check for name, check in mapping(mapping(result).get('checks')).items() if isinstance(check, dict)}
 
 
 def new_items(items, baseline_items, key):
@@ -860,10 +869,10 @@ class Watcher:
 
     def prune(self):
         """Keeps the state small. Dropped, in this order: the table rows beyond the newest TABLE_ROWS and the
-        baselines that nothing needs; the reported keys of the lines that are not watched any more and, of each line,
-        the oldest beyond REPORTED_KEYS; then, while the body is above STATE_BODY_TARGET, the oldest table row and,
-        when no row is left, the oldest reported keys of the line that has the most. The versions seen are never
-        dropped. A problem whose reported key was dropped is reported once more."""
+        baselines that nothing needs; the reported keys of the lines that are not watched any more; then, while the
+        body is above STATE_BODY_TARGET (room for about 2000 keys), the oldest table row and, when no row is left, the
+        oldest reported keys of the line that has the most. The versions seen are never dropped. A problem whose
+        reported key was dropped is reported again by the next version of its line that has it."""
         state = self.state
         entries = state['entries']
         room = max(TABLE_ROWS - sum(1 for e in entries if e['state'] != DONE), 0)
@@ -887,8 +896,6 @@ class Watcher:
             for line in list(lines):
                 if floor is not None and int(line) < floor:
                     del lines[line]
-                else:
-                    del lines[line]['keys'][:-REPORTED_KEYS]
         while len(render_state(state, self.server_url, self.github.repository)) > STATE_BODY_TARGET:
             done = [i for i, e in enumerate(state['entries']) if e['state'] == DONE]
             if done:
@@ -960,16 +967,16 @@ class Watcher:
     def matches(result, kind, sha, version, run_id):
         """Whether `result` is the result of `version` (the empty string for the baseline) on commit `sha` by run
         `run_id`."""
-        resolved, inputs = result.get('resolved') or {}, result.get('inputs') or {}
+        resolved, inputs = mapping(result.get('resolved')), mapping(result.get('inputs'))
         if result.get('job') != kind or resolved.get('commit') != sha or inputs.get('ref') != sha:
             return False
-        if (result.get('run') or {}).get('runId') not in (None, run_id) or inputs.get(kind) != version:
+        if mapping(result.get('run')).get('runId') not in (None, run_id) or inputs.get(kind) != version:
             return False
         if not version:
             return True
         if kind == 'otp':
-            return (resolved.get('otp') or {}).get('version') == version
-        return build_number((resolved.get('ide') or {}).get('buildNumber')) == version
+            return mapping(resolved.get('otp')).get('version') == version
+        return build_number(mapping(resolved.get('ide')).get('buildNumber')) == version
 
     def timed_out(self, record):
         return self.now - parse_time(record['at']) > RUN_TIMEOUT
@@ -1014,12 +1021,14 @@ class Watcher:
 
     def reading(self, record, collect, give_up, what):
         """Collects `record`. A request that fails is an error of this cycle and is tried again in the next one;
-        after MAX_COLLECT_ERRORS cycles in a row the run counts as an attempt without a result."""
+        after MAX_COLLECT_ERRORS cycles in a row the run counts as an attempt without a result. So does a result
+        that the script cannot handle: one record never stops the cycle of the others."""
         try:
             collect(record)
             record['errors'] = 0
-        except ApiError as e:
-            self.error('%s: %s' % (what, e))
+        except Exception as e:
+            # Only the type of an unexpected exception: its text may come from a result.
+            self.error('%s: %s' % (what, e if isinstance(e, ApiError) else 'unexpected %s' % type(e).__name__))
             record['errors'] += 1
             if record['errors'] >= MAX_COLLECT_ERRORS:
                 give_up(record, 'its result could not be read in %d cycles in a row' % MAX_COLLECT_ERRORS)
@@ -1035,6 +1044,11 @@ class Watcher:
             return 'the result of run %d has an unknown schemaVersion' % run_id
         if not self.matches(result, kind, sha, version, run_id):
             return 'the result of run %d is not the one of %s on %s' % (run_id, version or 'the default inputs', sha)
+        statuses = (compat.PASSED, compat.FAILED, compat.NOT_RUN)
+        missing = [name for name in CHECKS[kind] if checks_of(result).get(name, {}).get('status') not in statuses]
+        if missing:
+            # Without them the comparison would find nothing and call it the same.
+            return 'the result of run %d has no check %s' % (run_id, ', '.join(missing))
         if result.get('status') == compat.INCOMPLETE:
             return 'the result of run %d is incomplete' % run_id
         return None
@@ -1070,8 +1084,8 @@ class Watcher:
         results = {kind: self.read_result(artifacts[kind], kind) for kind in KINDS}
         problems = [self.unusable(results[kind], kind, baseline['sha'], '', baseline['run']) for kind in sorted(KINDS)]
         problems = [problem for problem in problems if problem]
-        ide = build_number((((results['ide'] or {}).get('resolved') or {}).get('ide') or {}).get('buildNumber'))
-        otp = (((results['otp'] or {}).get('resolved') or {}).get('otp') or {}).get('version')
+        ide = build_number(mapping(mapping(mapping(results['ide']).get('resolved')).get('ide')).get('buildNumber'))
+        otp = mapping(mapping(mapping(results['otp']).get('resolved')).get('otp')).get('version')
         if not problems and not (valid_version('ide', ide) and valid_version('otp', otp)):
             problems = ['the results of run %d name no valid version' % baseline['run']]
         if problems:
