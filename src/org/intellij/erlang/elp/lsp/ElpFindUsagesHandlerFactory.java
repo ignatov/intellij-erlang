@@ -111,19 +111,19 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
    */
   @Nullable
   static List<UsageInfo> elpUsages(@NotNull PsiElement element) {
-    Request request = ReadAction.compute(() -> request(element));
+    Request request = ReadAction.nonBlocking(() -> request(element)).executeSynchronously();
     if (request == null) return null;
     List<? extends Location> locations = request.client().sendRequestSync(
       TIMEOUT_MS, server -> server.getTextDocumentService().references(request.params()));
     if (locations == null) return null;
-    return ReadAction.compute(() -> {
+    return ReadAction.nonBlocking(() -> {
       List<UsageInfo> usages = new ArrayList<>();
       for (Location location : locations) {
         UsageInfo usage = usage(element.getProject(), request.client(), location);
         if (usage != null) usages.add(usage);
       }
       return usages;
-    });
+    }).executeSynchronously();
   }
 
   @Nullable
