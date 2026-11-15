@@ -36,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingReferenceBase<PsiElement> implements ErlangFunctionReference {
   @NotNull
@@ -45,9 +44,6 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   private final ErlangQAtom myModuleAtom;
   private final String myReferenceName;
   private final int myArity;
-
-  private static final Set<String> MS_TRANSFORM_MODULES = Set.of("ets", "dbg");
-  private static final Set<String> MS_TRANSFORM_PSEUDO_FUNCTIONS = Set.of("object", "bindings");
 
   public ErlangFunctionReferenceImpl(@NotNull PsiElement owner,
                                      @NotNull ErlangQAtom qAtom,
@@ -102,7 +98,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       if (importedFunction != null) return importedFunction;
     }
 
-    if (isMsTransformPseudoFunction(file)) return getElement();
+    if (ErlangPsiImplUtil.isMsTransformPseudoFunctionCall(getElement(), myReferenceName, myArity)) return getElement();
 
     if (!file.isNoAutoImport(myReferenceName, myArity)) {
       ErlangSdkRelease release = ErlangSdkType.getRelease(file);
@@ -164,20 +160,6 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       result.addAll(file.getFunctionsByName(myReferenceName));
     }
     return result;
-  }
-
-  // object() and bindings() in the literal fun passed to ets:fun2ms/1 or dbg:fun2ms/1 are rewritten by ms_transform
-  private boolean isMsTransformPseudoFunction(@NotNull ErlangFile file) {
-    if (myArity != 0 || !MS_TRANSFORM_PSEUDO_FUNCTIONS.contains(myReferenceName)) return false;
-    ErlangFunExpression fun = PsiTreeUtil.getParentOfType(getElement(), ErlangFunExpression.class);
-    ErlangArgumentList arguments = fun != null ? ObjectUtils.tryCast(fun.getParent(), ErlangArgumentList.class) : null;
-    if (arguments == null || arguments.getExpressionList().size() != 1) return false;
-    ErlangFunctionCallExpression call = ObjectUtils.tryCast(arguments.getParent(), ErlangFunctionCallExpression.class);
-    ErlangGlobalFunctionCallExpression globalCall = call != null ? ObjectUtils.tryCast(call.getParent(), ErlangGlobalFunctionCallExpression.class) : null;
-    return globalCall != null &&
-           "fun2ms".equals(call.getName()) &&
-           MS_TRANSFORM_MODULES.contains(ErlangPsiImplUtil.getName(globalCall.getModuleRef().getQAtom())) &&
-           ErlangPsiImplUtil.isParseTransformDeclared(file, "ms_transform");
   }
 
   private boolean isInExport() {
