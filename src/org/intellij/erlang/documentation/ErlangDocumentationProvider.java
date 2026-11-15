@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
 import com.intellij.lang.documentation.ExternalDocumentationProvider;
 import com.intellij.openapi.application.ApplicationManager;
@@ -49,7 +51,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public List<String> getUrlFor(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    if (ElpEngine.ownsFeature(originalElement, ElpEngine.Feature.DOCUMENTATION)) return null;
+    if (isElpDocumentation(originalElement)) return null;
     ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null) {
       return elementDocProvider.getExternalDocUrls();
@@ -60,12 +62,23 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    if (ElpEngine.ownsFeature(originalElement, ElpEngine.Feature.DOCUMENTATION)) return null;
+    if (isElpDocumentation(originalElement)) return null;
     ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
     if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
       return elementDocProvider.getDocText();
     }
     return null;
+  }
+
+  /**
+   * ELP's hover documents the element at the caret. The items of the completion list are the plugin's (completion stays with the
+   * plugin, see {@link ElpEngine#elpMayOwn}), and the platform passes the element at the caret as the original element for them
+   * too, so while a lookup is shown in the file the plugin documents its items.
+   */
+  private static boolean isElpDocumentation(@Nullable PsiElement originalElement) {
+    if (!ElpEngine.ownsFeature(originalElement, ElpEngine.Feature.DOCUMENTATION)) return false;
+    Lookup lookup = LookupManager.getInstance(originalElement.getProject()).getActiveLookup();
+    return lookup == null || !originalElement.getContainingFile().getOriginalFile().equals(lookup.getPsiFile());
   }
 
   @Nullable
