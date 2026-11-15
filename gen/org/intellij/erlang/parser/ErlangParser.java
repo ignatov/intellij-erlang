@@ -1200,20 +1200,41 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>'
+  // '<<' <<comprehension_element binary_comprehension_element>> '||' lc_exprs '>>'
   public static boolean binary_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
-    r = r && comprehension_element(b, l + 1, ErlangParser::binary_expression);
+    r = r && comprehension_element(b, l + 1, ErlangParser::binary_comprehension_element);
     r = r && consumeToken(b, ERL_OR_OR);
     p = r; // pin = 3
     r = r && report_error_(b, lc_exprs(b, l + 1));
     r = p && consumeToken(b, ERL_BIN_END) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // '<<' bin_element_list? '>>'
+  public static boolean binary_comprehension_element(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "binary_comprehension_element")) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, ERL_BINARY_EXPRESSION, "<expression>");
+    r = consumeToken(b, ERL_BIN_START);
+    r = r && binary_comprehension_element_1(b, l + 1);
+    r = r && consumeToken(b, ERL_BIN_END);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // bin_element_list?
+  private static boolean binary_comprehension_element_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "binary_comprehension_element_1")) return false;
+    bin_element_list(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */
