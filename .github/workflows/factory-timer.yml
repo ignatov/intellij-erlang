@@ -1,16 +1,16 @@
 name: Factory timer
 
-# The clock of the project's automation. The dispatcher (a workflow of the private repository
-# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next, and it has to be
-# woken every few minutes. GitHub drops most scheduled runs of a quiet repository, so the dispatcher arms
-# this timer at the end of each tick instead:
-#   1. the run waits for the wait timer of its environment (5 minutes while work is in flight, 30 minutes
-#      otherwise); no runner is used while it waits;
-#   2. then it starts the next dispatcher tick.
+# The backstop clock of the project's automation. The dispatcher (a workflow of the private repository
+# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next. It is woken by
+# events (factory-wake.yml); this timer covers what gives no event. GitHub drops most scheduled runs of a
+# quiet repository, so the dispatcher arms the timer at the end of each tick instead:
+#   1. the job "wait" waits for the wait timer of its environment (5 minutes while work is in flight,
+#      30 minutes otherwise); no runner is used while it waits;
+#   2. the job "wake" starts the next dispatcher tick.
 # A new run cancels the one that is still waiting, so there is always one timer.
 #
-# FACTORY_CLOCK_TOKEN is a secret of the two environments, which only jobs of master can use. It is a
-# fine-grained token for the private repository with the permission Actions: write and nothing else.
+# FACTORY_CLOCK_TOKEN is a secret of the environment factory-clock, which only jobs of master can use. It is
+# a fine-grained token for the private repository with the permission Actions: write and nothing else.
 
 on:
   workflow_dispatch:
@@ -30,12 +30,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  wake:
+  wait:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment:
       name: factory-timer-${{ inputs.pace }}
-      # The environment is used for its wait timer and its secret; this is not a deployment.
+      # The environment is used for its wait timer only; this is not a deployment.
+      deployment: false
+    steps:
+      - run: echo "The wait is over."
+
+  wake:
+    needs: wait
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: factory-clock
       deployment: false
     steps:
       - name: Start the next dispatcher tick
