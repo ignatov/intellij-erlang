@@ -66,6 +66,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testMultiTarget()       { doTest(); }
   public void testInFunClause()       { doTest(); }
   public void testMapKeyInFunHead()   { doTest(); }
+  public void testNamedFunVariables() { doTest(); }
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testDefineImported1()   { doTest(); }
