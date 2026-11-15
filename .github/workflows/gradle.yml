@@ -71,9 +71,8 @@ jobs:
         fi
         scripts/compat/gradle.sh verifyPlugin -PcompatPluginArchive="${zips[0]}"
 
-  probe-2026-3:
-    # A one-off probe: does the archive built against 2026.1 pass the Plugin Verifier against 2026.3?
-    needs: build
+  probe-2026-2:
+    # A one-off probe that does not wait for the build job: the tests against 2026.2, every failure listed.
     runs-on: ubuntu-24.04
 
     steps:
@@ -84,17 +83,30 @@ jobs:
         distribution: temurin
         java-version: '21'
         cache: gradle
-    - name: Download Plugin Artifact
-      uses: actions/download-artifact@v8
+    - name: Test against IntelliJ IDEA 2026.2
+      run: ./gradlew --no-daemon clean test -PplatformVersion=2026.2
+
+  probe-2026-3:
+    # A one-off probe: does the archive built against 2026.1 pass the Plugin Verifier against 2026.3?
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
       with:
-        name: intellij-erlang-plugin
-        path: ${{ runner.temp }}/plugin
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+    - name: Build the archive against IntelliJ IDEA 2026.1
+      run: ./gradlew --no-daemon clean buildPlugin
     - name: Verify the archive against IntelliJ IDEA 2026.3
       env:
         COMPAT_IDE: '2026.3'
       run: |
-        zips=("$RUNNER_TEMP"/plugin/*.zip)
-        scripts/compat/gradle.sh verifyPlugin -PcompatPluginArchive="${zips[0]}"
+        zips=("$PWD"/build/distributions/*.zip)
+        cp "${zips[0]}" "$RUNNER_TEMP/probe.zip"
+        scripts/compat/gradle.sh verifyPlugin -PcompatPluginArchive="$RUNNER_TEMP/probe.zip"
     - name: Upload the verifier reports
       if: always()
       uses: actions/upload-artifact@v7
