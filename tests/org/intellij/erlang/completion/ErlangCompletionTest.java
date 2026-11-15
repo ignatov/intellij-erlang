@@ -73,6 +73,38 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       settings.setCompletionCaseSensitive(oldCaseSensitive);
     }
   }
+
+  public void testVariablesFromLowercasePrefixCaseInsensitive() {
+    doCaseInsensitiveTest(() -> doTestInclude(
+      """
+        foo(MyArg) ->
+          MyName = 1,
+          my<caret>""", "MyArg", "MyName"));
+  }
+
+  public void testNoVariablesFromLowercasePrefixInRemoteCall() {
+    doCaseInsensitiveTest(() -> doTestVariants(
+      """
+        -module(a).
+        my_one() -> ok.
+        my_two() -> ok.
+        foo(MyArg) ->
+          MyName = 1,
+          a:my<caret>""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "MyArg", "MyName"));
+  }
+
+  private static void doCaseInsensitiveTest(@NotNull Runnable test) {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      test.run();
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
+
   public void testFunctions() {
     doTestInclude(
       """
