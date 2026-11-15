@@ -25,6 +25,29 @@ public class ElpConfigurationTest extends TestCase {
     assertFalse(configuration.isEnabled());
     assertEquals("", configuration.path());
     assertEquals(ElpMode.DIAGNOSTICS, configuration.mode());
+    assertFalse(configuration.eqwalizer());
+  }
+
+  public void testEqwalizerIsOffByDefault() {
+    ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+    assertFalse(ElpConfiguration.resolve("/opt/elp", state.mode, state.eqwalizer, null, null, null).eqwalizer());
+    assertFalse(new ElpConfiguration("/opt/elp", ElpMode.ALL).eqwalizer());
+  }
+
+  public void testStoredEqwalizer() {
+    assertTrue(ElpConfiguration.resolve("/opt/elp", "ALL", true, null, null, null).eqwalizer());
+  }
+
+  public void testEqwalizerPropertyOverridesStoredEqwalizer() {
+    assertTrue(ElpConfiguration.resolve("/opt/elp", null, false, null, null, "true").eqwalizer());
+    assertTrue(ElpConfiguration.resolve("/opt/elp", null, false, null, null, " TRUE ").eqwalizer());
+    assertFalse(ElpConfiguration.resolve("/opt/elp", null, true, null, null, "false").eqwalizer());
+  }
+
+  public void testUnknownEqwalizerPropertyIsIgnored() {
+    assertTrue(ElpConfiguration.resolve("/opt/elp", null, true, null, null, "").eqwalizer());
+    assertTrue(ElpConfiguration.resolve("/opt/elp", null, true, null, null, "no").eqwalizer());
+    assertFalse(ElpConfiguration.resolve("/opt/elp", null, false, null, null, "yes").eqwalizer());
   }
 
   public void testStoredSettings() {
@@ -66,19 +89,24 @@ public class ElpConfigurationTest extends TestCase {
   public void testSystemProperties() {
     String oldPath = System.getProperty(ElpConfiguration.PATH_PROPERTY);
     String oldMode = System.getProperty(ElpConfiguration.MODE_PROPERTY);
+    String oldEqwalizer = System.getProperty(ElpConfiguration.EQWALIZER_PROPERTY);
     try {
       System.clearProperty(ElpConfiguration.PATH_PROPERTY);
       System.clearProperty(ElpConfiguration.MODE_PROPERTY);
-      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ALL), ElpConfiguration.resolve("/opt/elp", "ALL"));
+      System.clearProperty(ElpConfiguration.EQWALIZER_PROPERTY);
+      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ALL), ElpConfiguration.resolve("/opt/elp", "ALL", false));
+      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ALL, true), ElpConfiguration.resolve("/opt/elp", "ALL", true));
 
       System.setProperty(ElpConfiguration.PATH_PROPERTY, "/sandbox/elp");
       System.setProperty(ElpConfiguration.MODE_PROPERTY, "DIAGNOSTICS");
-      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS), ElpConfiguration.resolve("/opt/elp", "ALL"));
-      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS), ElpConfiguration.resolve("", null));
+      System.setProperty(ElpConfiguration.EQWALIZER_PROPERTY, "true");
+      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS, true), ElpConfiguration.resolve("/opt/elp", "ALL", false));
+      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS, true), ElpConfiguration.resolve("", null, false));
     }
     finally {
       restore(ElpConfiguration.PATH_PROPERTY, oldPath);
       restore(ElpConfiguration.MODE_PROPERTY, oldMode);
+      restore(ElpConfiguration.EQWALIZER_PROPERTY, oldEqwalizer);
     }
   }
 
