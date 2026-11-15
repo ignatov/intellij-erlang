@@ -55,22 +55,19 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
   }
 
   private String doWriteModifiedConfig(String oldConfigText) throws IOException {
+    // Both directories are inside the temporary directory of the test, which the test framework deletes in tearDown.
+    // They must not be deleted here: the platform finishes the write of the new config (its timestamp) later, and
+    // from 2026.3 on tearDown fails with NoSuchFileException when the file is gone by then.
     File projectDirectory = FileUtil.createTempDirectory("rebar_project", null);
     File outputDirectory = FileUtil.createTempDirectory("rebar_eunit", null);
-    try {
-      File oldConfig = new File(projectDirectory, "rebar.config");
-      if (oldConfigText != null) {
-        FileUtil.writeToFile(oldConfig, oldConfigText);
-      }
-      File newConfig = new File(outputDirectory, "rebar.config");
-      RebarEunitRunningState.writeModifiedConfig(getProject(), oldConfig, newConfig);
-      FileDocumentManager.getInstance().saveAllDocuments();
-      assertTrue(newConfig.exists());
-      return FileUtil.loadFile(newConfig);
+    File oldConfig = new File(projectDirectory, "rebar.config");
+    if (oldConfigText != null) {
+      FileUtil.writeToFile(oldConfig, oldConfigText);
     }
-    finally {
-      FileUtil.delete(projectDirectory);
-      FileUtil.delete(outputDirectory);
-    }
+    File newConfig = new File(outputDirectory, "rebar.config");
+    RebarEunitRunningState.writeModifiedConfig(getProject(), oldConfig, newConfig);
+    FileDocumentManager.getInstance().saveAllDocuments();
+    assertTrue(newConfig.exists());
+    return FileUtil.loadFile(newConfig);
   }
 }
