@@ -86,6 +86,21 @@ jobs:
     - name: Test against IntelliJ IDEA 2026.2
       run: ./gradlew --no-daemon clean test -PplatformVersion=2026.2
 
+  probe-2026-3-tests:
+    # A one-off probe: the same sources compiled and tested against 2026.3 (on JDK 25, which 2026.3 needs).
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache: gradle
+    - name: Test against IntelliJ IDEA 2026.3
+      run: ./gradlew --no-daemon clean test -PplatformVersion=2026.3
+
   probe-2026-3:
     # A one-off probe: does the archive built against 2026.1 pass the Plugin Verifier against 2026.3?
     runs-on: ubuntu-24.04
