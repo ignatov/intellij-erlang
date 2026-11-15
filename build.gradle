@@ -152,12 +152,6 @@ dependencies {
 }
 
 intellijPlatform {
-  pluginConfiguration {
-    ideaVersion {
-      // The maintenance line for IntelliJ IDEA 2026.1 and 2026.2; newer IDEs get the releases of master.
-      untilBuild = '262.*'
-    }
-  }
   pluginVerification {
     // The existing Marketplace plugin predates the restriction on org.jetbrains plugin IDs.
     freeArgs = ['-mute', 'ForbiddenPluginIdPrefix']
