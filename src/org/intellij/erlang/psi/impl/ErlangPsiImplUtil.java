@@ -241,6 +241,18 @@ public class ErlangPsiImplUtil {
             processRecordFields(m, atoms);
           }
         }
+        else if (ee instanceof ErlangGenericFunctionCallExpression) {
+          ErlangQAtom qAtom = ContainerUtil.getFirstItem(((ErlangGenericFunctionCallExpression) ee).getQAtomList());
+          ErlangMacros m = qAtom == null ? null : qAtom.getMacros();
+          if (m != null) {
+            processRecordFields(m, atoms);
+          }
+        }
+      }
+      if (macrosBody != null) {
+        for (ErlangTypedExpr typedExpr : macrosBody.getTypedExprList()) {
+          ContainerUtil.addIfNotNull(atoms, typedExpr.getQAtom());
+        }
       }
     }
   }

@@ -3858,12 +3858,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<consumeMacroBody>>
+  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | (typed_exprs &properly_parsed) | <<consumeMacroBody>>
   public static boolean macros_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MACROS_BODY, "<macros body>");
     r = macros_body_0(b, l + 1);
+    if (!r) r = macros_body_1(b, l + 1);
     if (!r) r = consumeMacroBody(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
@@ -3916,6 +3917,27 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // &properly_parsed
   private static boolean macros_body_0_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body_0_2")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = properly_parsed(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // typed_exprs &properly_parsed
+  private static boolean macros_body_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = typed_exprs(b, l + 1);
+    r = r && macros_body_1_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &properly_parsed
+  private static boolean macros_body_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
     r = properly_parsed(b, l + 1);

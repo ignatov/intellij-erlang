@@ -10,4 +10,7 @@ public interface ErlangMacrosBody extends ErlangCompositeElement {
   @NotNull
   List<ErlangExpression> getExpressionList();
 
+  @NotNull
+  List<ErlangTypedExpr> getTypedExprList();
+
 }

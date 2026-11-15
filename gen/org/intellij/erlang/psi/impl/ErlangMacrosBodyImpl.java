@@ -32,4 +32,10 @@ public class ErlangMacrosBodyImpl extends ErlangCompositeElementImpl implements 
     return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangExpression.class);
   }
 
+  @Override
+  @NotNull
+  public List<ErlangTypedExpr> getTypedExprList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangTypedExpr.class);
+  }
+
 }
