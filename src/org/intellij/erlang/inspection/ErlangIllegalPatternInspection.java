@@ -25,6 +25,8 @@ import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
 
@@ -114,7 +116,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
-          if (isStringOrMacroPrefix(o.getLeft()) && o.getRight() != null) {
+          if (o.getOpPlusPlus() != null && isListPrefix(o.getLeft()) && o.getRight() != null) {
             checkExpressionAndReport(o.getRight(), problemsHolder);
           }
           else {
@@ -191,7 +193,7 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitGenericFunctionCallExpression(@NotNull ErlangGenericFunctionCallExpression o) {
-          if (!isMacroCall(o)) {
+          if (!(o.getParent() instanceof ErlangBinElement && isMacroCall(o))) {
             registerProblem(problemsHolder, o, ERROR);
           }
         }
@@ -211,20 +213,44 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     return name instanceof ErlangMacros || name instanceof ErlangQAtom && ((ErlangQAtom) name).getMacros() != null;
   }
 
-  private static boolean isStringOrMacroPrefix(@Nullable ErlangExpression o) {
-    if (o instanceof ErlangStringLiteral) return true;
+  private static boolean isMacro(@Nullable ErlangExpression o) {
     if (o instanceof ErlangFunctionCallExpression) return ((ErlangFunctionCallExpression) o).getQAtom().getMacros() != null;
-    if (o instanceof ErlangGenericFunctionCallExpression) return isMacroCall((ErlangGenericFunctionCallExpression) o);
-    if (!(o instanceof ErlangMaxExpression)) return false;
+    if (o instanceof ErlangGenericFunctionCallExpression call) return call.getColon() == null && isMacroCall(call);
+    return o instanceof ErlangMaxExpression && isStringsAndMacros((ErlangMaxExpression) o, false);
+  }
+
+  private static boolean isStringsAndMacros(@NotNull ErlangMaxExpression o, boolean allowStrings) {
     for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
       if (child instanceof PsiWhiteSpace || child instanceof PsiComment ||
-          child instanceof ErlangStringLiteral || child instanceof ErlangMacros ||
+          allowStrings && child instanceof ErlangStringLiteral || child instanceof ErlangMacros ||
           child instanceof ErlangQAtom && ((ErlangQAtom) child).getMacros() != null) {
         continue;
       }
       return false;
     }
     return true;
+  }
+
+  private static boolean isCharOrIntegerOrMacro(@Nullable ErlangExpression o) {
+    while (o instanceof ErlangParenthesizedExpression) o = ((ErlangParenthesizedExpression) o).getExpression();
+    if (o instanceof ErlangMaxExpression && (((ErlangMaxExpression) o).getChar() != null || ((ErlangMaxExpression) o).getInteger() != null)) {
+      return true;
+    }
+    return isMacro(o);
+  }
+
+  // The left operand of ++ in a pattern: a string, or a list of characters and integers ending in [] or such a prefix (erl_lint)
+  private static boolean isListPrefix(@Nullable ErlangExpression o) {
+    while (o instanceof ErlangParenthesizedExpression) o = ((ErlangParenthesizedExpression) o).getExpression();
+    if (o instanceof ErlangStringLiteral || isMacro(o)) return true;
+    if (o instanceof ErlangMaxExpression) return isStringsAndMacros((ErlangMaxExpression) o, true);
+    if (!(o instanceof ErlangListExpression list)) return false;
+    List<ErlangExpression> expressions = list.getExpressionList();
+    int elements = list.getOpOr() != null ? expressions.size() - 1 : expressions.size();
+    for (int i = 0; i < elements; i++) {
+      if (!isCharOrIntegerOrMacro(expressions.get(i))) return false;
+    }
+    return elements == expressions.size() || isListPrefix(expressions.get(elements));
   }
 
   private static class ConstantExpressionChecker extends ErlangRecursiveVisitor {
@@ -247,6 +273,26 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
       if (o.getQAtom().getMacros() == null) {
         myIsNonConstant = true;
       }
+    }
+
+    @Override
+    public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
+      myIsNonConstant = true;
+    }
+
+    @Override
+    public void visitListExpression(@NotNull ErlangListExpression o) {
+      myIsNonConstant = true;
+    }
+
+    @Override
+    public void visitTupleExpression(@NotNull ErlangTupleExpression o) {
+      myIsNonConstant = true;
+    }
+
+    @Override
+    public void visitBinaryExpression(@NotNull ErlangBinaryExpression o) {
+      myIsNonConstant = true;
     }
 
     public boolean isNonConstant() {
