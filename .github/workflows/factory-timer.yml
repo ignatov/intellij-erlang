@@ -5,7 +5,7 @@ name: Factory timer
 # end of each session and CI run. GitHub drops most scheduled runs of a quiet repository, so the dispatcher
 # arms this timer at the end of each tick instead:
 #   1. the job "wait" waits for the wait timer of its environment (5 minutes while work is in flight,
-#      30 minutes otherwise); no runner is used while it waits;
+#      60 minutes otherwise); no runner is used while it waits;
 #   2. the job "wake" starts the next dispatcher tick.
 # A new run cancels the one that is still waiting, so there is always one timer.
 #
@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       pace:
-        description: active waits 5 minutes, idle waits 30 minutes
+        description: active waits 5 minutes, idle waits 60 minutes
         type: choice
         options:
           - active
