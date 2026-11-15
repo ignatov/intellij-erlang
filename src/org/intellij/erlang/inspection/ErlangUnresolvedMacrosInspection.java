@@ -18,12 +18,20 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangInclude;
+import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangVisitor;
@@ -34,6 +42,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   @NotNull
@@ -58,10 +69,26 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
     while (form.getParent() != null && !(form.getParent() instanceof PsiFile)) {
       form = form.getParent();
     }
-    if (form.getParent() == null) return false;
+    if (!(form.getParent() instanceof ErlangFile file)) return false;
 
+    String unquotedName = unquote(name);
     Deque<Condition> conditions = new ArrayDeque<>();
-    for (PsiElement child = form.getParent().getFirstChild(); child != null && child != form; child = child.getNextSibling()) {
+    for (PsiElement child = file.getFirstChild(); child != null && child != form; child = child.getNextSibling()) {
+      if (child instanceof ErlangInclude || child instanceof ErlangIncludeLib) {
+        if (hasOpenCondition(conditions, unquotedName)) {
+          List<ErlangFile> includedFiles = child instanceof ErlangInclude include
+                                           ? ErlangPsiImplUtil.getDirectlyIncludedFiles(include, file)
+                                           : ErlangPsiImplUtil.getDirectlyIncludedFiles((ErlangIncludeLib) child, file);
+          Set<ErlangFile> visited = new HashSet<>();
+          for (ErlangFile includedFile : includedFiles) {
+            if (undefinesMacro(includedFile, unquotedName, visited)) {
+              markUndefined(conditions, unquotedName);
+              break;
+            }
+          }
+        }
+        continue;
+      }
       if (!(child instanceof ErlangAttribute attribute)) continue;
       if (attribute.getElseAtomAttribute() != null) {
         Condition top = conditions.peek();
@@ -69,38 +96,85 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         continue;
       }
       ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
-      if (atomAttribute == null) continue;
+      if (atomAttribute == null) {
+        if (isIfAttribute(attribute)) conditions.push(new Condition(null, false));
+        continue;
+      }
       String directive = atomAttribute.getName();
       String macroName = getMacroName(atomAttribute);
       switch (directive) {
         case "ifdef" -> conditions.push(new Condition(macroName, true));
         case "ifndef" -> conditions.push(new Condition(macroName, false));
+        case "elif" -> {
+          Condition top = conditions.peek();
+          if (top != null) top.afterElif = true;
+        }
         case "endif" -> conditions.poll();
         case "undef" -> {
-          for (Condition condition : conditions) {
-            if (name.equals(condition.macroName)) condition.undefined = true;
-          }
+          if (unquotedName.equals(macroName)) markUndefined(conditions, unquotedName);
         }
         default -> {
         }
       }
     }
     for (Condition condition : conditions) {
-      if (name.equals(condition.macroName) && condition.ifdef != condition.inElse && !condition.undefined) return true;
+      if (unquotedName.equals(condition.macroName) && condition.ifdef != condition.inElse && !condition.afterElif && !condition.undefined) {
+        return true;
+      }
     }
     return false;
+  }
+
+  private static boolean hasOpenCondition(@NotNull Deque<Condition> conditions, @NotNull String name) {
+    for (Condition condition : conditions) {
+      if (name.equals(condition.macroName)) return true;
+    }
+    return false;
+  }
+
+  private static void markUndefined(@NotNull Deque<Condition> conditions, @NotNull String name) {
+    for (Condition condition : conditions) {
+      if (name.equals(condition.macroName)) condition.undefined = true;
+    }
+  }
+
+  private static boolean undefinesMacro(@NotNull ErlangFile file, @NotNull String name, @NotNull Set<ErlangFile> visited) {
+    if (!visited.add(file)) return false;
+    for (PsiElement child = file.getFirstChild(); child != null; child = child.getNextSibling()) {
+      if (child instanceof ErlangAttribute attribute) {
+        ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+        if (atomAttribute != null && "undef".equals(atomAttribute.getName()) && name.equals(getMacroName(atomAttribute))) {
+          return true;
+        }
+      }
+    }
+    for (ErlangFile includedFile : ErlangPsiImplUtil.getDirectlyIncludedFiles(file)) {
+      if (undefinesMacro(includedFile, name, visited)) return true;
+    }
+    return false;
+  }
+
+  private static boolean isIfAttribute(@NotNull ErlangAttribute attribute) {
+    PsiElement next = PsiTreeUtil.skipSiblingsForward(attribute.getOpMinus(), PsiWhiteSpace.class, PsiComment.class, PsiErrorElement.class);
+    return next != null && next.getNode().getElementType() == ErlangTypes.ERL_IF;
   }
 
   @Nullable
   private static String getMacroName(@NotNull ErlangAtomAttribute attribute) {
     ErlangMacrosName macrosName = PsiTreeUtil.getChildOfType(attribute, ErlangMacrosName.class);
-    return macrosName != null ? macrosName.getText() : null;
+    return macrosName != null ? unquote(macrosName.getText()) : null;
+  }
+
+  @NotNull
+  private static String unquote(@NotNull String name) {
+    return StringUtil.unquoteString(name, '\'');
   }
 
   private static final class Condition {
     private final String macroName;
     private final boolean ifdef;
     private boolean inElse;
+    private boolean afterElif;
     private boolean undefined;
 
     private Condition(@Nullable String macroName, boolean ifdef) {
