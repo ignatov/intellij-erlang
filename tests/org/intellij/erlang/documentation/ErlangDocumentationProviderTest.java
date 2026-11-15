@@ -696,7 +696,7 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
 
   public void testMacroDocFromInclude() {
     myFixture.addFileToProject("inc.hrl", """
-      %%% Answer.
+      %% Answer.
       -define(ANSWER, 42).
       """);
     doTestGenerateDoc("<pre>-define(ANSWER, 42).<br/><br/><b>Comment:</b><br/> Answer.<br/><br/><b>Defined in:</b> inc.hrl</pre>",
@@ -704,6 +704,99 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                         -module(test).
                         -include("inc.hrl").
                         test() -> ?ANS<caret>WER.
+                        """);
+  }
+
+  public void testMacroDocPicksArityOfUse() {
+    doTestGenerateDoc("<pre>-define(M(X, Y), X + Y).<br/><br/><b>Comment:</b><br/> two<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        %% one
+                        -define(M(X), X).
+                        %% two
+                        -define(M(X, Y), X + Y).
+                        test() -> ?<caret>M(1, 2).
+                        """);
+  }
+
+  public void testMacroDocPicksFunctionMacroOverConstant() {
+    doTestGenerateDoc("<pre>-define(C(X), {c, X}).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(C, 0).
+                        -define(C(X), {c, X}).
+                        test() -> ?<caret>C(1).
+                        """);
+  }
+
+  public void testMacroDocPicksConstantWithoutArguments() {
+    doTestGenerateDoc("<pre>-define(C, 0).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(C(X), {c, X}).
+                        -define(C, 0).
+                        test() -> ?<caret>C.
+                        """);
+  }
+
+  public void testMacroDocRedefinedAfterUndef() {
+    doTestGenerateDoc("<pre>-define(X, 2).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(X, 1).
+                        -undef(X).
+                        -define(X, 2).
+                        test() -> ?<caret>X.
+                        """);
+  }
+
+  public void testMacroDocShowsEveryConditionalDefinition() {
+    doTestGenerateDoc("<pre>-define(D, 1).<br/><br/><b>Defined in:</b> test.erl</pre>" +
+                      "<pre>-define(D, 2).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -ifdef(TEST).
+                        -define(D, 1).
+                        -else.
+                        -define(D, 2).
+                        -endif.
+                        test() -> ?<caret>D.
+                        """);
+  }
+
+  public void testMacroDocIgnoresCommentAfterBlankLine() {
+    doTestGenerateDoc("<pre>-define(A, 1).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        %% Licensed under the Apache License, Version 2.0 (the "License");
+                        %% you may not use this file except in compliance with the License.
+
+                        -module(test).
+                        %% Section
+
+                        -define(A, 1).
+                        test() -> ?<caret>A.
+                        """);
+  }
+
+  public void testMacroDocIgnoresBanner() {
+    doTestGenerateDoc("<pre>-define(A, 1).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        %%%===================================================================
+                        %%% Macros
+                        %%%===================================================================
+                        -define(A, 1).
+                        test() -> ?<caret>A.
+                        """);
+  }
+
+  public void testMacroDocIgnoresCommentedOutCode() {
+    doTestGenerateDoc("<pre>-define(A, 1).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        %-define(A, 2).
+                        -define(A, 1).
+                        test() -> ?<caret>A.
                         """);
   }
 
@@ -758,7 +851,8 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
 
   private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
-    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
+    PsiElement originalElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
+    assertEquals(expected, myErlangDocProvider.generateDoc(element, originalElement));
   }
 
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {

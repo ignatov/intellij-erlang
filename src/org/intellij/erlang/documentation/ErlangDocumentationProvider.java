@@ -58,7 +58,7 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
   @Nullable
   @Override
   public String generateDoc(@NotNull PsiElement element, @Nullable PsiElement originalElement) {
-    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element);
+    ElementDocProvider elementDocProvider = ElementDocProviderFactory.create(element, originalElement);
     if (elementDocProvider != null && !(elementDocProvider instanceof ErlangSdkDocProviderBase)) {
       return elementDocProvider.getDocText();
     }
