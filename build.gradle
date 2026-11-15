@@ -83,9 +83,13 @@ allprojects {
       }
 
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
-      // From 2026.2 on the test runner and the structure view are separate modules. The archive of this line is built
-      // against 2026.1, where they are part of the platform; they are added only to compile and test against a newer IDE.
-      if (!(platformVersion.startsWith('2026.1') || platformVersion.startsWith('261.'))) {
+      // From 2026.2 on the test runner and the structure view are separate plugins of the IDE, under other ids in
+      // 2026.2 than later. The archive of this line is built against 2026.1, where they are part of the platform;
+      // they are added only to compile and test against a newer IDE.
+      if (platformVersion.startsWith('2026.2') || platformVersion.startsWith('262.')) {
+        ijp.bundledPlugins("intellij.testRunner.plugin", "intellij.structureView.plugin")
+      }
+      else if (!(platformVersion.startsWith('2026.1') || platformVersion.startsWith('261.'))) {
         ijp.bundledPlugins("com.intellij.platform.testRunner", "com.intellij.structureView")
         ijp.bundledModule("intellij.platform.debugger")
       }
