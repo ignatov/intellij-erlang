@@ -24,18 +24,18 @@ public class ElpConfigurationTest extends TestCase {
                                                               new ElpSettings.ElpSettingsState().mode, null, null);
     assertFalse(configuration.isEnabled());
     assertEquals("", configuration.path());
-    assertEquals(ElpMode.DIAGNOSTICS, configuration.mode());
+    assertEquals(ElpMode.PLUGIN, configuration.mode());
     assertFalse(configuration.eqwalizer());
   }
 
   public void testEqwalizerIsOffByDefault() {
     ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
     assertFalse(ElpConfiguration.resolve("/opt/elp", state.mode, state.eqwalizer, null, null, null).eqwalizer());
-    assertFalse(new ElpConfiguration("/opt/elp", ElpMode.ALL).eqwalizer());
+    assertFalse(new ElpConfiguration("/opt/elp", ElpMode.ELP).eqwalizer());
   }
 
   public void testStoredEqwalizer() {
-    assertTrue(ElpConfiguration.resolve("/opt/elp", "ALL", true, null, null, null).eqwalizer());
+    assertTrue(ElpConfiguration.resolve("/opt/elp", "ELP", true, null, null, null).eqwalizer());
   }
 
   public void testEqwalizerPropertyOverridesStoredEqwalizer() {
@@ -51,10 +51,10 @@ public class ElpConfigurationTest extends TestCase {
   }
 
   public void testStoredSettings() {
-    ElpConfiguration configuration = ElpConfiguration.resolve("/opt/elp/bin/elp", "ALL", null, null);
+    ElpConfiguration configuration = ElpConfiguration.resolve("/opt/elp/bin/elp", "ELP", null, null);
     assertTrue(configuration.isEnabled());
     assertEquals("/opt/elp/bin/elp", configuration.path());
-    assertEquals(ElpMode.ALL, configuration.mode());
+    assertEquals(ElpMode.ELP, configuration.mode());
   }
 
   public void testPathIsTrimmed() {
@@ -62,28 +62,35 @@ public class ElpConfigurationTest extends TestCase {
     assertFalse(ElpConfiguration.resolve("   ", null, null, null).isEnabled());
   }
 
-  public void testDiagnosticsIsTheDefaultModeOnceAPathIsSet() {
-    assertEquals(ElpMode.DIAGNOSTICS, ElpConfiguration.resolve("/opt/elp", null, null, null).mode());
-    assertEquals(ElpMode.DIAGNOSTICS, ElpConfiguration.resolve("/opt/elp", "", null, null).mode());
-    assertEquals(ElpMode.DIAGNOSTICS, ElpConfiguration.resolve("/opt/elp", "bogus", null, null).mode());
+  public void testPluginIsTheDefaultModeOnceAPathIsSet() {
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", null, null, null).mode());
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", "", null, null).mode());
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", "bogus", null, null).mode());
   }
 
   public void testPathPropertyOverridesStoredPath() {
-    assertEquals("/sandbox/elp", ElpConfiguration.resolve("/opt/elp", "ALL", "/sandbox/elp", null).path());
+    assertEquals("/sandbox/elp", ElpConfiguration.resolve("/opt/elp", "ELP", "/sandbox/elp", null).path());
     assertEquals("/sandbox/elp", ElpConfiguration.resolve("", null, "/sandbox/elp", null).path());
   }
 
   public void testEmptyPathPropertySwitchesTheServerOff() {
-    assertFalse(ElpConfiguration.resolve("/opt/elp", "ALL", "", null).isEnabled());
+    assertFalse(ElpConfiguration.resolve("/opt/elp", "ELP", "", null).isEnabled());
   }
 
   public void testModePropertyOverridesStoredMode() {
-    assertEquals(ElpMode.ALL, ElpConfiguration.resolve("/opt/elp", "DIAGNOSTICS", null, "ALL").mode());
-    assertEquals(ElpMode.DIAGNOSTICS, ElpConfiguration.resolve("/opt/elp", "ALL", null, "diagnostics").mode());
+    assertEquals(ElpMode.ELP, ElpConfiguration.resolve("/opt/elp", "PLUGIN", null, "ELP").mode());
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", "ELP", null, "plugin").mode());
+  }
+
+  public void testPrototypeModeNamesMapToTheEnginePositions() {
+    assertEquals(ElpMode.ELP, ElpConfiguration.resolve("/opt/elp", "ALL", null, null).mode());
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", "DIAGNOSTICS", null, null).mode());
+    assertEquals(ElpMode.ELP, ElpConfiguration.resolve("/opt/elp", "PLUGIN", null, "all").mode());
+    assertEquals(ElpMode.PLUGIN, ElpConfiguration.resolve("/opt/elp", "ELP", null, "diagnostics").mode());
   }
 
   public void testUnknownModePropertyIsIgnored() {
-    assertEquals(ElpMode.ALL, ElpConfiguration.resolve("/opt/elp", "ALL", null, "everything").mode());
+    assertEquals(ElpMode.ELP, ElpConfiguration.resolve("/opt/elp", "ELP", null, "everything").mode());
   }
 
   public void testSystemProperties() {
@@ -94,14 +101,14 @@ public class ElpConfigurationTest extends TestCase {
       System.clearProperty(ElpConfiguration.PATH_PROPERTY);
       System.clearProperty(ElpConfiguration.MODE_PROPERTY);
       System.clearProperty(ElpConfiguration.EQWALIZER_PROPERTY);
-      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ALL), ElpConfiguration.resolve("/opt/elp", "ALL", false));
-      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ALL, true), ElpConfiguration.resolve("/opt/elp", "ALL", true));
+      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ELP), ElpConfiguration.resolve("/opt/elp", "ELP", false));
+      assertEquals(new ElpConfiguration("/opt/elp", ElpMode.ELP, true), ElpConfiguration.resolve("/opt/elp", "ELP", true));
 
       System.setProperty(ElpConfiguration.PATH_PROPERTY, "/sandbox/elp");
-      System.setProperty(ElpConfiguration.MODE_PROPERTY, "DIAGNOSTICS");
+      System.setProperty(ElpConfiguration.MODE_PROPERTY, "PLUGIN");
       System.setProperty(ElpConfiguration.EQWALIZER_PROPERTY, "true");
-      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS, true), ElpConfiguration.resolve("/opt/elp", "ALL", false));
-      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.DIAGNOSTICS, true), ElpConfiguration.resolve("", null, false));
+      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.PLUGIN, true), ElpConfiguration.resolve("/opt/elp", "ELP", false));
+      assertEquals(new ElpConfiguration("/sandbox/elp", ElpMode.PLUGIN, true), ElpConfiguration.resolve("", null, false));
     }
     finally {
       restore(ElpConfiguration.PATH_PROPERTY, oldPath);

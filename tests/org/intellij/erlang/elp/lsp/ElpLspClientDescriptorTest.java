@@ -93,7 +93,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     RebarSettings.getInstance(getProject()).setRebarPath(REBAR);
     VirtualFile root = file("src/a.erl").getParent().getParent();
     ElpLspClientDescriptor descriptor =
-      new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", ElpMode.DIAGNOSTICS));
+      new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", ElpMode.PLUGIN));
 
     GeneralCommandLine commandLine = onPooledThread(descriptor::createCommandLine);
 
@@ -112,7 +112,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   }
 
   public void testOnlyErlangModulesAndHeadersAreSupported() {
-    ElpLspClientDescriptor descriptor = descriptor(ElpMode.DIAGNOSTICS);
+    ElpLspClientDescriptor descriptor = descriptor(ElpMode.PLUGIN);
     assertTrue(descriptor.isSupportedFile(file("src/a.erl")));
     assertTrue(descriptor.isSupportedFile(file("include/a.hrl")));
     assertFalse(descriptor.isSupportedFile(file("rebar.config")));
@@ -121,17 +121,10 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEquals("erlang", descriptor.getLanguageId(file("src/b.erl")));
   }
 
-  public void testDiagnosticsModeKeepsOnlyDiagnosticsAndQuickFixes() throws Exception {
-    LspCustomization customization = descriptor(ElpMode.DIAGNOSTICS).getLspCustomization();
-    List<String> notDisabled = new ArrayList<>();
-    for (Method method : LspCustomization.class.getMethods()) {
-      if (method.getParameterCount() != 0 || !method.getName().endsWith("Customizer")) continue;
-      Object customizer = method.invoke(customization);
-      if (!customizer.getClass().getSimpleName().endsWith("Disabled")) notDisabled.add(method.getName());
-    }
-    notDisabled.sort(null);
+  public void testPluginModeKeepsOnlyDiagnosticsAndQuickFixes() throws Exception {
+    LspCustomization customization = descriptor(ElpMode.PLUGIN).getLspCustomization();
     assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer", "getSymbolKindCustomizer"),
-                 notDisabled);
+                 notDisabledCustomizers(customization));
 
     assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
     LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
@@ -139,29 +132,49 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertFalse(codeActions.getIntentionActionsSupport());
     assertFalse(codeActions.getInlineRefactoringSupport());
     assertFalse(codeActions.getExtractRefactoringSupport());
+    assertNull(new ElpLspClientDescriptor(getProject(), file("src/listener.erl").getParent(),
+                                          new ElpConfiguration("/opt/elp/bin/elp", ElpMode.PLUGIN)).getLspServerListener());
   }
 
-  public void testDiagnosticsModeClientCapabilities() {
+  public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
+    ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
+    LspCustomization customization = descriptor.getLspCustomization();
+    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer", "getDiagnosticsCustomizer",
+                         "getFoldingRangeCustomizer", "getGoToDefinitionCustomizer", "getHoverCustomizer", "getInlayHintCustomizer",
+                         "getSelectionRangeCustomizer", "getSymbolKindCustomizer"),
+                 notDisabledCustomizers(customization));
+
+    assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
+    LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
+    assertTrue(codeActions.getQuickFixesSupport());
+    assertTrue(codeActions.getIntentionActionsSupport());
+    assertFalse(codeActions.getInlineRefactoringSupport());
+    assertFalse(codeActions.getExtractRefactoringSupport());
+    assertInstanceOf(customization.getFindReferencesCustomizer(), LspFindReferencesDisabled.class);
+    assertInstanceOf(customization.getRenameCustomizer(), LspRenameDisabled.class);
+    assertInstanceOf(customization.getSignatureHelpCustomizer(), LspSignatureHelpDisabled.class);
+    assertInstanceOf(customization.getWorkspaceSymbolCustomizer(), LspWorkspaceSymbolDisabled.class);
+    assertNotNull(descriptor.getLspServerListener());
+  }
+
+  private static List<String> notDisabledCustomizers(LspCustomization customization) throws Exception {
+    List<String> notDisabled = new ArrayList<>();
+    for (Method method : LspCustomization.class.getMethods()) {
+      if (method.getParameterCount() != 0 || !method.getName().endsWith("Customizer")) continue;
+      Object customizer = method.invoke(customization);
+      if (!customizer.getClass().getSimpleName().endsWith("Disabled")) notDisabled.add(method.getName());
+    }
+    notDisabled.sort(null);
+    return notDisabled;
+  }
+
+  public void testPluginModeClientCapabilities() {
     // The platform derives only the semantic tokens capability from the customization; it still advertises the other
     // features, but sends no requests for the switched off ones.
-    var textDocument = descriptor(ElpMode.DIAGNOSTICS).getClientCapabilities().getTextDocument();
+    var textDocument = descriptor(ElpMode.PLUGIN).getClientCapabilities().getTextDocument();
     assertNotNull(textDocument.getPublishDiagnostics());
     assertNotNull(textDocument.getCodeAction());
     assertNull(textDocument.getSemanticTokens());
-  }
-
-  public void testAllModeKeepsThePlatformDefaults() {
-    ElpLspClientDescriptor descriptor = descriptor(ElpMode.ALL);
-    LspCustomization customization = descriptor.getLspCustomization();
-    // Only the diagnostics customizer is ELP's own, to hide eqWAlizer.
-    assertEquals(LspCustomization.class, customization.getClass().getSuperclass());
-    assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
-    assertInstanceOf(customization.getHoverCustomizer(), LspHoverSupport.class);
-    assertInstanceOf(customization.getCompletionCustomizer(), LspCompletionSupport.class);
-    assertInstanceOf(customization.getGoToDefinitionCustomizer(), LspGoToDefinitionSupport.class);
-    var textDocument = descriptor.getClientCapabilities().getTextDocument();
-    assertNotNull(textDocument.getCompletion());
-    assertNotNull(textDocument.getHover());
   }
 
   public void testEqwalizerSwitchReachesTheDiagnosticsCustomizerInBothModes() {
@@ -195,14 +208,14 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
 
   public void testProviderStartsElpOnlyForErlangFilesOnceAPathIsSet() {
     VirtualFile module = file("src/a.erl");
-    configure("", ElpMode.DIAGNOSTICS);
+    configure("", ElpMode.PLUGIN);
     assertEmpty(fileOpened(module));
 
-    configure("/opt/elp/bin/elp", ElpMode.ALL);
+    configure("/opt/elp/bin/elp", ElpMode.ELP);
     List<LspClientDescriptor> started = fileOpened(module);
     assertSize(1, started);
     ElpLspClientDescriptor descriptor = assertInstanceOf(started.get(0), ElpLspClientDescriptor.class);
-    assertEquals(new ElpConfiguration("/opt/elp/bin/elp", ElpMode.ALL), descriptor.getConfiguration());
+    assertEquals(new ElpConfiguration("/opt/elp/bin/elp", ElpMode.ELP), descriptor.getConfiguration());
     assertSize(1, descriptor.getRoots());
 
     assertSize(1, fileOpened(file("include/a.hrl")));

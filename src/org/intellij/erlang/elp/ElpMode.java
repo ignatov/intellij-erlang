@@ -23,22 +23,46 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Locale;
 
 /**
- * Which LSP features ELP supplies.
+ * Which engine answers in Erlang modules and headers once ELP is configured: the plugin's own resolve or ELP.
  */
 public enum ElpMode {
-  /** Diagnostics and the quick fixes attached to them; the plugin's PSI owns everything else. */
-  DIAGNOSTICS,
-  /** Everything the platform LSP client supports, side by side with the plugin's own features. */
-  ALL;
+  /** The plugin's PSI and resolve serve everything; ELP supplies only diagnostics and the quick fixes attached to them. */
+  PLUGIN("Plugin"),
+  /**
+   * ELP serves the features it supports through the platform LSP client, and the plugin's counterparts of those features are
+   * switched off while ELP is running for the file, see {@link ElpEngine}. Everything else stays with the plugin.
+   */
+  ELP("ELP");
 
+  private final String myPresentableName;
+
+  ElpMode(@NotNull String presentableName) {
+    myPresentableName = presentableName;
+  }
+
+  @NotNull
+  public String getPresentableName() {
+    return myPresentableName;
+  }
+
+  /**
+   * Also accepts the names of the prototype's modes: {@code DIAGNOSTICS} is {@link #PLUGIN} and {@code ALL} is {@link #ELP}.
+   */
   @Nullable
   public static ElpMode parse(@Nullable String value) {
     if (StringUtil.isEmptyOrSpaces(value)) return null;
-    try {
-      return valueOf(value.trim().toUpperCase(Locale.ROOT));
-    }
-    catch (IllegalArgumentException e) {
-      return null;
-    }
+    String name = value.trim().toUpperCase(Locale.ROOT);
+    return switch (name) {
+      case "DIAGNOSTICS" -> PLUGIN;
+      case "ALL" -> ELP;
+      default -> {
+        try {
+          yield valueOf(name);
+        }
+        catch (IllegalArgumentException e) {
+          yield null;
+        }
+      }
+    };
   }
 }

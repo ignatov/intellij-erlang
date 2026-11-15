@@ -24,6 +24,7 @@ import com.intellij.platform.lsp.api.LspClientManager;
 import com.intellij.platform.lsp.api.LspIntegrationProvider;
 import com.intellij.platform.lsp.api.lsWidget.LspClientWidgetItem;
 import org.intellij.erlang.elp.ElpConfiguration;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.icons.ErlangIcons;
@@ -53,7 +54,9 @@ public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
 
   /**
    * Restarts ELP with the new path and mode when the settings change: stops the running servers and starts the ones that the
-   * Erlang files open in the editor need.
+   * Erlang files open in the editor need. The open editors are refreshed at once, because the plugin's features come back as
+   * soon as the position is no longer {@code ELP}; they are refreshed again when the new server runs, see
+   * {@link ElpLspClientDescriptor#getLspServerListener()}.
    */
   public static final class SettingsListener implements ElpSettings.Listener {
     @Override
@@ -61,6 +64,7 @@ public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         if (project.isDisposed() || project.isDefault()) continue;
         LspClientManager.getInstance(project).stopAndRestartClientsIfNeeded(ElpLspIntegrationProvider.class);
+        ElpEngine.refreshProject(project);
       }
     }
   }

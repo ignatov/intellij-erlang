@@ -67,7 +67,7 @@ public record ElpConfiguration(@NotNull String path, @NotNull ElpMode mode, bool
     ElpMode mode = ElpMode.parse(propertyMode);
     if (mode == null) mode = ElpMode.parse(storedMode);
     Boolean eqwalizer = parseBoolean(propertyEqwalizer);
-    return new ElpConfiguration(path, mode != null ? mode : ElpMode.DIAGNOSTICS, eqwalizer != null ? eqwalizer : storedEqwalizer);
+    return new ElpConfiguration(path, mode != null ? mode : ElpMode.PLUGIN, eqwalizer != null ? eqwalizer : storedEqwalizer);
   }
 
   @NotNull

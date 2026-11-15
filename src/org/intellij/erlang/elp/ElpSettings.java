@@ -41,7 +41,7 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
 
   public static final class ElpSettingsState {
     public String path = "";
-    public String mode = ElpMode.DIAGNOSTICS.name();
+    public String mode = ElpMode.PLUGIN.name();
     public boolean eqwalizer;
   }
 
@@ -58,8 +58,14 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     return myState;
   }
 
+  /**
+   * Rewrites a stored mode of the prototype ({@code DIAGNOSTICS}, {@code ALL}) to its engine position, so the next save stores
+   * {@code PLUGIN} or {@code ELP}. An unknown mode is kept: it reads as {@link ElpMode#PLUGIN}.
+   */
   @Override
   public void loadState(@NotNull ElpSettingsState state) {
+    ElpMode mode = ElpMode.parse(state.mode);
+    if (mode != null) state.mode = mode.name();
     myState = state;
   }
 
@@ -72,7 +78,7 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
   /** The stored mode, without the system property override. */
   @NotNull
   public ElpMode getStoredMode() {
-    return Objects.requireNonNullElse(ElpMode.parse(myState.mode), ElpMode.DIAGNOSTICS);
+    return Objects.requireNonNullElse(ElpMode.parse(myState.mode), ElpMode.PLUGIN);
   }
 
   /** The stored eqWAlizer switch, without the system property override. */
