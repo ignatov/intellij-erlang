@@ -47,9 +47,10 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
       int startOffset = context.getStartOffset();
       insertQuotesIfAbsent(context, startOffset, startOffset + moduleName.length());
     }
-    if (ErlangPsiImplUtil.needQuotation(name)) {
-      int tailOffset = context.getTailOffset();
-      int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
+    int tailOffset = context.getTailOffset();
+    int startOffset = moduleName == null ? context.getStartOffset() : tailOffset - name.length();
+    CharSequence text = context.getDocument().getCharsSequence();
+    if (ErlangPsiImplUtil.needQuotation(name) || isQuoteAt(text, startOffset - 1) || isQuoteAt(text, tailOffset)) {
       tailOffset = insertQuotesIfAbsent(context, startOffset, tailOffset);
       context.getEditor().getCaretModel().moveToOffset(tailOffset);
       context.setTailOffset(tailOffset);

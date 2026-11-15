@@ -651,9 +651,22 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResultWithItem("foo() -> quo<caret>'", "quoted-behaviour", "foo() -> 'quoted-behaviour':<caret>");
   }
 
+  public void testRemoteFunctionExpressionPlainNameWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'ba<caret>'.", "bar", "foo() -> fun mymodule:'bar'/1<caret>.");
+  }
+
+  public void testRemoteFunctionCallPlainNameWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:ba<caret>'.", "bar", "foo() -> mymodule:'bar'(<caret>).");
+  }
+
+  public void testModuleCompletionPlainNameWithEndQuote() {
+    myFixture.configureByText("plain_module.erl", "-module(plain_module).");
+    doCheckResultWithItem("foo() -> plain_mod<caret>'.", "plain_module", "foo() -> 'plain_module':<caret>.");
+  }
+
   private void doCheckQuotedRemoteFunction(@NotNull String before, @NotNull String item, @NotNull String after) {
     myFixture.configureByText("mymodule.erl",
-                              "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok.");
+                              "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2, bar/1]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok. bar(A) -> ok.");
     doCheckResultWithItem(before, item, after);
   }
 
