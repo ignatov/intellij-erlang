@@ -149,6 +149,18 @@ debug_remote_node(Node, Cookie, Modules) ->
   end,
   send_debug_remote_node_response(Node, Status).
 
+% When this node goes down without running int:stop() (the IDE kills it when the debug session stops), the remote
+% node would keep sending calls of the interpreted modules to the dead interpreter. A process on the remote node clears
+% those traps, as int:stop() does, once this node is down. It is evaluated by erl_eval because this module is not
+% loaded on the remote node.
+watch_debugger_node(Node, Modules) ->
+  Expression = io_lib:format("erlang:monitor_node(~w, true),"
+                             "receive {nodedown, ~w} -> [erts_debug:breakpoint({M, '_', '_'}, false) || M <- ~w] end.",
+                             [node(), node(), Modules]),
+  {ok, Tokens, _} = erl_scan:string(lists:flatten(Expression)),
+  {ok, Exprs} = erl_parse:parse_exprs(Tokens),
+  spawn(Node, erl_eval, exprs, [Exprs, []]).
+
 send_debug_remote_node_response(Node, ok) ->
   ?RDEBUG_NOTIFIER ! #debug_remote_node_response{node = Node, status = ok};
 send_debug_remote_node_response(Node, Error) ->
@@ -162,6 +174,7 @@ connect_to_remote_node(Node, Cookie) ->
 
 interpret_modules(Modules, Node) ->
   IntNiResults = [{Module, int:ni(Module)} || Module <- Modules],
+  Node =:= node() orelse watch_debugger_node(Node, [Name || {_, {module, Name}} <- IntNiResults]),
   send_interpret_modules_response(Node, IntNiResults),
   ok.
 
