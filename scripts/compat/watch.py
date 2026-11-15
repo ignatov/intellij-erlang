@@ -814,8 +814,10 @@ class Watcher:
 
     def read_state(self):
         """The state issue is the issue by BOT whose body has a state marker, open or closed; its title and labels
-        are not part of the lookup, so renaming it or removing its label does not make the watcher seed again."""
-        issues = sorted((i for i in self.github.bot_issues() if is_ours(i)), key=lambda i: i['number'])
+        are not part of the lookup, so renaming it or removing its label does not make the watcher seed again.
+        The issues with the state label are looked through as well: a first cycle needs both listings to have none."""
+        found = self.github.bot_issues() + self.github.issues(STATE_LABEL)
+        issues = sorted({i['number']: i for i in found if is_ours(i)}.values(), key=lambda i: i['number'])
         states = [i for i in issues if STATE_BEGIN in (i.get('body') or '') or STATE_END in (i.get('body') or '')]
         if len(states) > 1:
             raise WatchError('%d issues by %s have the state markers (%s); there must be one, so the watcher stops'

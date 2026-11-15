@@ -583,6 +583,16 @@ class SecondCycleTest(Seeded):
         self.assertIn({'creator': 'github-actions[bot]', 'state': 'all', 'per_page': '100', 'page': '1'},
                       world.issue_queries)
 
+    def test_the_state_issue_is_also_found_in_the_listing_of_its_label(self):
+        handle = self.world.handle
+        self.world.handle = lambda method, path, query, body: (
+            self.world.json([]) if 'creator' in (query or {}) else handle(method, path, query, body))
+        started = len(self.world.dispatched)
+        code, out = cycle(self.world, T0 + 2 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertIn('State: issue #1', out)
+        self.assertEqual((len(self.world.issues), len(self.world.dispatched)), (1, started))
+
     def test_two_state_issues_stop_the_cycle(self):
         world = self.world
         world.add_issue('Another title', world.state_issue()['body'], 'other')
