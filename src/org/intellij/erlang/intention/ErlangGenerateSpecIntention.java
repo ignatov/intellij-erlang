@@ -20,6 +20,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
@@ -35,6 +36,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
   @Override
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!(file instanceof ErlangFile)) return false;
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.INTENTIONS)) return false;
 
     var function = findFunction(file, editor.getCaretModel().getOffset());
 

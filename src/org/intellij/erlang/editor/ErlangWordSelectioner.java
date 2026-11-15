@@ -21,6 +21,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
@@ -31,7 +32,7 @@ import java.util.List;
 public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
   @Override
   public boolean canSelect(PsiElement e) {
-    return e.getContainingFile() instanceof ErlangFile;
+    return e.getContainingFile() instanceof ErlangFile && !ElpEngine.ownsFeature(e, ElpEngine.Feature.SELECTION);
   }
 
   @Override
