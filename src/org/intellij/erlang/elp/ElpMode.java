@@ -26,11 +26,11 @@ import java.util.Locale;
  * Which engine answers in Erlang modules and headers once ELP is configured: the plugin's own resolve or ELP.
  */
 public enum ElpMode {
-  /** The plugin's PSI and resolve serve everything; ELP supplies only diagnostics and the quick fixes attached to them. */
+  /** ELP is not started: the plugin's PSI and resolve serve everything, as without the integration. */
   PLUGIN("Plugin"),
   /**
-   * ELP serves the features it supports through the platform LSP client, and the plugin's counterparts of those features are
-   * switched off while ELP is running for the file, see {@link ElpEngine}. Everything else stays with the plugin.
+   * ELP answers everything it can, and the plugin's counterparts of those features are switched off while ELP is running for the
+   * file, see {@link ElpEngine}. The plugin fills the gaps.
    */
   ELP("ELP");
 

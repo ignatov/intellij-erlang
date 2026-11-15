@@ -121,21 +121,6 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEquals("erlang", descriptor.getLanguageId(file("src/b.erl")));
   }
 
-  public void testPluginModeKeepsOnlyDiagnosticsAndQuickFixes() throws Exception {
-    LspCustomization customization = descriptor(ElpMode.PLUGIN).getLspCustomization();
-    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer", "getSymbolKindCustomizer"),
-                 notDisabledCustomizers(customization));
-
-    assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
-    LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
-    assertTrue(codeActions.getQuickFixesSupport());
-    assertFalse(codeActions.getIntentionActionsSupport());
-    assertFalse(codeActions.getInlineRefactoringSupport());
-    assertFalse(codeActions.getExtractRefactoringSupport());
-    assertNull(new ElpLspClientDescriptor(getProject(), file("src/listener.erl").getParent(),
-                                          new ElpConfiguration("/opt/elp/bin/elp", ElpMode.PLUGIN)).getLspServerListener());
-  }
-
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
@@ -168,10 +153,10 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     return notDisabled;
   }
 
-  public void testPluginModeClientCapabilities() {
+  public void testClientCapabilities() {
     // The platform derives only the semantic tokens capability from the customization; it still advertises the other
     // features, but sends no requests for the switched off ones.
-    var textDocument = descriptor(ElpMode.PLUGIN).getClientCapabilities().getTextDocument();
+    var textDocument = descriptor(ElpMode.ELP).getClientCapabilities().getTextDocument();
     assertNotNull(textDocument.getPublishDiagnostics());
     assertNotNull(textDocument.getCodeAction());
     assertNull(textDocument.getSemanticTokens());
@@ -196,6 +181,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     try {
       ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
       state.path = "/opt/elp/bin/elp";
+      state.mode = ElpMode.ELP.name();
       state.eqwalizer = true;
       ElpSettings.getInstance().loadState(state);
       List<LspClientDescriptor> started = fileOpened(file("src/a.erl"));
@@ -210,6 +196,9 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     VirtualFile module = file("src/a.erl");
     configure("", ElpMode.PLUGIN);
     assertEmpty(fileOpened(module));
+
+    configure("/opt/elp/bin/elp", ElpMode.PLUGIN);
+    assertEmpty("the Plugin position starts no ELP", fileOpened(module));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP);
     List<LspClientDescriptor> started = fileOpened(module);

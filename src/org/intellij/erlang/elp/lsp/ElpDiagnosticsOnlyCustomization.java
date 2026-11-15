@@ -20,9 +20,8 @@ import com.intellij.platform.lsp.api.customization.*;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * The {@code PLUGIN} position: ELP supplies diagnostics and the quick fixes attached to them, and the commands those quick
- * fixes may run. Every other feature is switched off explicitly, because the plugin's own PSI owns it. The client
- * capabilities are derived from this customization, so the server is not even told about the switched off features.
+ * The baseline of {@link ElpEngineCustomization}: diagnostics, the quick fixes attached to them and the commands those quick
+ * fixes may run; every other feature is switched off explicitly, and {@link ElpEngineCustomization} switches on what ELP owns.
  */
 class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   private final LspDiagnosticsCustomizer myDiagnostics;
