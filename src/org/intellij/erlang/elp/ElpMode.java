@@ -45,6 +45,12 @@ public enum ElpMode {
     return myPresentableName;
   }
 
+  /** The presentable name, which the engine combo box on the settings page shows. */
+  @Override
+  public String toString() {
+    return myPresentableName;
+  }
+
   /**
    * Also accepts the names of the prototype's modes: {@code DIAGNOSTICS} is {@link #PLUGIN} and {@code ALL} is {@link #ELP}.
    */

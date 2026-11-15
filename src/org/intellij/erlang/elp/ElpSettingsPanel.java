@@ -19,7 +19,6 @@ package org.intellij.erlang.elp;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
@@ -45,7 +44,6 @@ public final class ElpSettingsPanel {
 
   public ElpSettingsPanel() {
     addBrowseFolderListener(myPathField, "Select ELP Executable", "", null, FileChooserDescriptorFactory.singleFile());
-    myModeBox.setRenderer(SimpleListCellRenderer.create("", ElpMode::getPresentableName));
     myOverrideLabel.setComponentStyle(UIUtil.ComponentStyle.SMALL);
     myOverrideLabel.setFontColor(UIUtil.FontColor.BRIGHTER);
     myPanel = FormBuilder.createFormBuilder()
