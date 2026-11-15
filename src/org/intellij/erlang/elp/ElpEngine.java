@@ -18,7 +18,9 @@
 package org.intellij.erlang.elp;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
+import com.intellij.codeInsight.daemon.impl.InlayHintsPassFactoryInternal;
 import com.intellij.codeInsight.folding.CodeFoldingManager;
+import com.intellij.codeInsight.hints.HintUtilsKt;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.editor.Editor;
@@ -87,11 +89,14 @@ public final class ElpEngine {
 
   /**
    * Makes the open editors of the project ask {@link #ownsFeature} again after the answer may have changed: the position was
-   * switched, or an ELP server started or stopped. Restarts the highlighting, which also recomputes the inspections and the inlay
-   * hints, and the folding.
+   * switched, or an ELP server started or stopped. Restarts the highlighting, which recomputes the inspections, and the folding.
+   * The inlay hint passes skip a document that has not changed since they last ran, so they are told to run again: the plugin's
+   * parameter hints are declarative, ELP's come through the LSP client's older inlay provider.
    */
   public static void refreshProject(@NotNull Project project) {
     ApplicationManager.getApplication().invokeLater(() -> {
+      HintUtilsKt.refreshParameterHintsOnNextPass();
+      InlayHintsPassFactoryInternal.Companion.forceHintsUpdateOnNextPass();
       DaemonCodeAnalyzer.getInstance(project).restart("ELP engine switch");
       CodeFoldingManager foldingManager = CodeFoldingManager.getInstance(project);
       for (FileEditor fileEditor : FileEditorManager.getInstance(project).getAllEditors()) {
