@@ -226,27 +226,37 @@ jobs:
         probe() {
           label="$1"
           shift
-          "$@" "$py" -I .github/elp-probe/lsp_probe.py "$ERLANG_ELP_PATH" "$(nat "$out/project")" "$style" 60 "$label" 2>&1 | tee "$out/$label.txt"
-          echo "| lsp $label | $(grep -h 'unused_function diagnostic' "$out/$label.txt" | cut -d: -f2- | cut -c1-160); panics: $(grep -c 'panicked' "$out/lsp-$label-stderr.txt") |" >> "$rows"
+          "$@" "$py" -I .github/elp-probe/lsp_probe.py "$ERLANG_ELP_PATH" "$(nat "${project:-$out/project}")" "$style" 60 "$label" 2>&1 | tee "$out/$label.txt"
+          echo "| lsp $label | $(grep -h 'unused_function diagnostic' "$out/$label.txt" | cut -d: -f2- | cut -c1-160) |" >> "$rows"
         }
         style=vscode probe vscode env
-        style=vscode probe vscode-no-eqwalizer env ELP_EQWALIZER_PATH="$noeqw"
         if [ "$RUNNER_OS" = Windows ]; then
-          style=plain probe plain env
-          style=plain probe plain-no-eqwalizer env ELP_EQWALIZER_PATH="$noeqw"
+          # The same project under directories with upper-case letters, as the IDE run had it, on D: and on C:.
+          mkdir -p "$out/MixedCase"
+          cp -R testData/elp/project "$out/MixedCase/Project"
+          project="$out/MixedCase/Project" style=vscode probe mixed-case-d env
+          ctemp="$(cygpath -u "$LOCALAPPDATA")/Temp/ElpProbe"
+          mkdir -p "$ctemp"
+          cp -R testData/elp/project "$ctemp/Project"
+          project="$ctemp/Project" style=vscode probe mixed-case-c-temp env
+          project="$ctemp/Project" style=plain probe mixed-case-c-temp-plain env
         fi
 
     - name: Plugin tests with the real ELP
       id: live
       continue-on-error: true
       env:
-        ERLANG_ELP_DOWNLOAD_TEST: '1'
-        ERLANG_ELP_DOWNLOAD_OTP: '27'
+        TESTS: org.intellij.erlang.elp.lsp.ElpPlatformProbeTest
       run: |
         echo "ERLANG_ELP_PATH=$ERLANG_ELP_PATH"
+        if [ "$RUNNER_OS" = Windows ]; then
+          mkdir -p "$PROBE_DIR/ide"
+          export PROBE_LOWER_CASE_DIR="$(cygpath -w "$PROBE_DIR/ide")"
+        fi
         start=$(date +%s)
         gradle() {
-          PROBE_REBAR3="$REBAR3_PATH" ./gradlew --no-daemon --no-build-cache clean test --tests 'org.intellij.erlang.elp.*'
+          # The whole ELP package ran in the first two runs; this run needs only the probe.
+          PROBE_REBAR3="$REBAR3_PATH" ./gradlew --no-daemon --no-build-cache clean test --tests "$TESTS"
         }
         gradle && code=0 || code=$?
         if [ "$code" != 0 ] && ! ls build/test-results/test/*.xml > /dev/null 2>&1; then

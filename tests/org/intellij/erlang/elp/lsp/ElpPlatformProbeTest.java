@@ -152,7 +152,7 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
 
   /** The real server on a copy of testData/elp/project: load, definition, diagnostics, two renames, TMPDIR, the processes. */
   public void testProbeLiveServer() throws Exception {
-    probeLive("default", null, null);
+    probeLive("default", null, null, null);
   }
 
   /**
@@ -161,22 +161,33 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
    */
   public void testProbeLiveServerWithoutEqwalizerBinary() throws Exception {
     Path none = FileUtil.createTempDirectory("elp-no-eqwalizer", null, true).toPath().resolve("no-eqwalizer");
-    probeLive("no-eqwalizer", Map.of("ELP_EQWALIZER_PATH", none.toString()), null);
+    probeLive("no-eqwalizer", Map.of("ELP_EQWALIZER_PATH", none.toString()), null, null);
   }
 
   /** Started as the IDE starts it, after the preflight, with the rebar3.cmd wrapper next to the escript as the rebar path. */
   public void testProbeIdeStartWithRebar3Wrapper() throws Exception {
     String escript = System.getenv("PROBE_REBAR3");
     Assume.assumeTrue("Set PROBE_REBAR3 to the rebar3 escript", escript != null && new File(escript + ".cmd").isFile());
-    probeLive("ide-start-rebar3.cmd", null, escript + ".cmd");
+    probeLive("ide-start-rebar3.cmd", null, escript + ".cmd", null);
   }
 
-  private void probeLive(@NotNull String label, @Nullable Map<String, String> environment, @Nullable String rebarPath) throws Exception {
+  /**
+   * The same in a directory whose path is all lower case: ELP on Windows answers with lower-cased file URIs, and in the IDE all of
+   * its diagnostics for the project under the mixed-case temporary directory were empty.
+   */
+  public void testProbeLiveServerInLowerCasePath() throws Exception {
+    String parent = System.getenv("PROBE_LOWER_CASE_DIR");
+    Assume.assumeTrue("Set PROBE_LOWER_CASE_DIR to a directory whose path is all lower case", parent != null && !parent.isBlank());
+    probeLive("lower-case-path", null, null, Path.of(parent).resolve("run" + System.currentTimeMillis()));
+  }
+
+  private void probeLive(@NotNull String label, @Nullable Map<String, String> environment, @Nullable String rebarPath,
+                         @Nullable Path parent) throws Exception {
     String elp = System.getenv("ERLANG_ELP_PATH");
     Assume.assumeTrue("Set ERLANG_ELP_PATH to the elp binary to run this probe", elp != null && !elp.isBlank());
     label = "[" + label + "] ";
     List<String> failed = new ArrayList<>();
-    Path created = FileUtil.createTempDirectory("elp-probe", null, true).toPath();
+    Path created = parent != null ? Files.createDirectories(parent) : FileUtil.createTempDirectory("elp-probe", null, true).toPath();
     Path project = created.toRealPath().resolve("project");
     probe(label + "project " + project + " (created as " + created + ")");
     FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
