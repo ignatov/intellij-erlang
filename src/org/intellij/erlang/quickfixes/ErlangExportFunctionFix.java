@@ -43,7 +43,6 @@ import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
-import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -221,8 +220,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     if (exportFunctions == null) return;
 
     var replace = exportFunctions.getText().replace("[", "").replace("]", "");
-    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-            ErlangPsiImplUtil.createFunctionPresentation(function);
+    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") + getExportText(function);
     var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
 
     if (attribute == null) return;
@@ -241,8 +239,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       return;
     }
 
-    var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
+    insertNewExport(project, file, function, ErlangQuickFixBase.getAnchorElement(file));
+  }
 
+  private static void insertNewExport(@NotNull Project project,
+                                      @NotNull ErlangFile file,
+                                      @NotNull ErlangFunction function,
+                                      @Nullable PsiElement elementBefore) {
     if (elementBefore != null) {
       file.addBefore(createExport(project, getExportText(function)),
                      elementBefore);
@@ -251,16 +254,18 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   /**
-   * Adds the function to the given export, or to a new export attribute when the given export is null.
+   * Adds the function to the given export, or, when the given export is null, to a new export attribute inserted
+   * before the given element.
    */
   public static void exportFunction(@NotNull Project project,
                                     @NotNull ErlangFunction function,
-                                    @Nullable ErlangExport export) {
+                                    @Nullable ErlangExport export,
+                                    @Nullable PsiElement newExportBefore) {
     if (export != null) {
       updateExport(project, function, export);
     }
     else if (function.getContainingFile() instanceof ErlangFile file) {
-      createNewExport(project, file, function, null);
+      insertNewExport(project, file, function, newExportBefore);
     }
   }
 

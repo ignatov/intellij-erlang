@@ -25,7 +25,6 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.commons.lang3.ObjectUtils;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
@@ -59,7 +58,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         String name = call.getName();
         int arity = call.getArgumentList().getExpressionList().size();
         String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
-        String fixMessage = "Create Function " + (moduleRef != null ? moduleRef.getText() + ":" : "") + presentation;
+        String fixMessage = "Create Function " + (moduleRef != null ? moduleRef.getText() + ":" : "") +
+                            ErlangCreateRemoteFunctionQuickFix.toFunctionName(name) + "/" + arity;
 
         LocalQuickFix fix = parent instanceof ErlangGenericFunctionCallExpression ? null :
                             moduleRef != null ? ErlangCreateRemoteFunctionQuickFix.create(
@@ -95,8 +95,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
                                     PsiTreeUtil.getPrevSiblingOfType(what, ErlangModuleRef.class) : null;
         LocalQuickFix fix;
         if (moduleRef != null && moduleRef.getQAtom().getMacros() == null) {
-          String fixMessage = "Create Function " + moduleRef.getText() + ":" + functionPresentation;
-          String atomName = ObjectUtils.defaultIfNull(ErlangPsiImplUtil.toAtomName(name), name);
+          String atomName = ErlangCreateRemoteFunctionQuickFix.toFunctionName(name);
+          String fixMessage = "Create Function " + moduleRef.getText() + ":" + atomName + "/" + arity;
           fix = ErlangCreateRemoteFunctionQuickFix.create(fixMessage, ErlangPsiImplUtil.resolveToFile(moduleRef),
                                                           new DefaultFunctionTextProvider(atomName, arity));
         }
@@ -122,8 +122,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
       public String getName() {
         ErlangFunctionCallExpression call = myPointer.getElement();
         assert call != null;
-        String name = call.getName();
-        return ObjectUtils.defaultIfNull(ErlangPsiImplUtil.toAtomName(name), name);
+        return ErlangCreateRemoteFunctionQuickFix.toFunctionName(call.getName());
       }
 
       @NotNull
