@@ -16,7 +16,14 @@
 
 package org.intellij.erlang.resolve;
 
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ContentEntry;
+import com.intellij.openapi.roots.ModuleRootModificationUtil;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -29,6 +36,8 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 
 public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -55,6 +64,40 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
   public void testKernelModulesAppearFirst() { doModuleRefTest("kernel-2.15.2/src/file.erl", "test.erl", "file.erl"); }
   public void testStdlibModulesAppearFirst() { doModuleRefTest("stdlib-1.18.2/src/io.erl", "test.erl", "io.erl"); }
   public void testUserModulesAppearFirst()   { doModuleRefTest("eunit.erl", "test.erl", "eunit.erl"); }
+
+  // #1039: a directory opened as a project gives a module with a content root but no source root
+  public void testModuleInContentRootWithoutSourceRoot() throws Exception {
+    VirtualFile sourceRoot = myFixture.getTempDirFixture().getFile("");
+    assertNotNull(sourceRoot);
+    VirtualFile dir = WriteAction.compute(() -> {
+      VirtualFile d = sourceRoot.getParent().createChildDirectory(this, "plainContentRoot");
+      for (String name : new String[]{"callee.erl", "caller.erl"}) {
+        VirtualFile f = d.createChildData(this, name);
+        VfsUtil.saveText(f, FileUtil.loadFile(new File(getTestDataPath(), name)));
+      }
+      return d;
+    });
+    VirtualFile callee = dir.findChild("callee.erl");
+    VirtualFile caller = dir.findChild("caller.erl");
+    ModuleRootModificationUtil.updateModel(getModule(), model -> model.addContentEntry(dir));
+    try {
+      assertEquals(getModule(), ModuleUtilCore.findModuleForFile(caller, getProject()));
+      assertFalse(ProjectRootManager.getInstance(getProject()).getFileIndex().isInSourceContent(callee));
+      myFixture.configureFromExistingVirtualFile(caller);
+      PsiReference reference = getElementAtCaret(ErlangModuleRef.class).getReference();
+      PsiElement module = reference != null ? reference.resolve() : null;
+      assertNotNull("callee is not resolved", module);
+      assertEquals(callee, module.getContainingFile().getVirtualFile());
+    }
+    finally {
+      ModuleRootModificationUtil.updateModel(getModule(), model -> {
+        for (ContentEntry entry : model.getContentEntries()) {
+          if (dir.equals(entry.getFile())) model.removeContentEntry(entry);
+        }
+      });
+      WriteAction.run(() -> dir.delete(this));
+    }
+  }
 
   public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }
   public void testModuleTypeInSpec()     { doParameterTest("typeInArguments.erl", "typeInArguments.erl"); }
