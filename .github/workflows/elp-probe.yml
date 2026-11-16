@@ -240,10 +240,14 @@ jobs:
           cp -R testData/elp/project "$ctemp/Project"
           project="$ctemp/Project" style=vscode probe mixed-case-c-temp env
           project="$ctemp/Project" style=plain probe mixed-case-c-temp-plain env
+          project="$ctemp/Project" style=lower probe mixed-case-c-temp-lower-uri env
+          project="$out/MixedCase/Project" style=lower probe mixed-case-d-lower-uri env
         fi
 
     - name: Plugin tests with the real ELP
       id: live
+      # The fourth run asks ELP alone one more question; the plugin tests ran in the first three.
+      if: false
       continue-on-error: true
       env:
         TESTS: org.intellij.erlang.elp.lsp.ElpPlatformProbeTest

@@ -2,7 +2,8 @@
 
 Usage: lsp_probe.py ELP PROJECT_DIR STYLE SECONDS [LABEL]
 STYLE is the form of the file URIs the client sends: `vscode` (file:///c%3A/..., what the IntelliJ client and VS Code send on
-Windows) or `plain` (file:///C:/..., what Path.as_uri gives).
+Windows) or `plain` (file:///C:/..., what Path.as_uri gives) or `lower` (the
+whole URI in lower case, as ELP itself names the files on Windows).
 """
 import json
 import os
@@ -17,6 +18,8 @@ def uri(path, style):
     plain = pathlib.Path(path).resolve().as_uri()
     if style == "vscode" and len(plain) > 10 and plain[9] == ":":
         return "file:///" + plain[8].lower() + "%3A" + plain[10:]
+    if style == "lower" and len(plain) > 10 and plain[9] == ":":
+        return "file:///" + plain[8].lower() + "%3a" + plain[10:].lower()
     return plain
 
 
