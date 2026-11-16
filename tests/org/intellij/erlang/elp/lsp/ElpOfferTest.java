@@ -24,6 +24,7 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -287,17 +288,23 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     ElpOffer.enableInTests(getTestRootDisposable());
     VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
     System.setProperty(ElpOffer.PROPERTY, "false");
-    ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, descriptor -> fail("ELP is started")));
+    fileOpened(file);
     assertNull(getProject().getUserData(ElpOffer.LAST_CHECK));
 
     System.clearProperty(ElpOffer.PROPERTY);
     ElpSettings.getInstance().setOfferShownForVersion(ElpFeedback.pluginVersion());
-    ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, descriptor -> fail("ELP is started")));
+    fileOpened(file);
     assertNull("already shown for this version", getProject().getUserData(ElpOffer.LAST_CHECK));
 
     ElpSettings.getInstance().setOfferShownForVersion("");
-    ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, descriptor -> fail("ELP is started")));
+    fileOpened(file);
     assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
+  /** The provider in the Plugin position; the starter is typed, because 2026.2 and later also have a client starter overload. */
+  private void fileOpened(VirtualFile file) {
+    LspServerSupportProvider.LspServerStarter starter = descriptor -> fail("ELP is started");
+    ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, starter));
   }
 
   /** Offers on a project that ELP fits, with the server not downloaded yet. */
