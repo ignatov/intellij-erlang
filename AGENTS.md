@@ -53,6 +53,7 @@ The first build downloads IntelliJ IDEA 2026.1 (several GB) from JetBrains hosts
 ### Parser and lexer fixes
 You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer bug: valid Erlang that the plugin marks as a syntax error, or a wrong PSI tree. `erlc` decides what is valid Erlang.
 - Start from a minimal module that `erlc` compiles and the plugin's parser gets wrong. Add it as a parser test (`testData/parser/X.erl` with its PSI dump `X.txt`) and see the test fail before you change the grammar or the lexer.
+- For a bug in a file that is not a module (`.app`, `.app.src`, `.config`, `rebar.config`), start from a minimal file of that type instead. `file:consult/1` decides what is valid there; give its result in place of the `erlc` one. Add the fixture to the parser test of that file type, for example `ErlangAppParserTest`.
 - Regenerate with `./gradlew generateLexerAndParser` and commit `gen/` together with the grammar. `./gradlew verifyGeneratedSources` must pass.
 - An existing `testData/parser/*.txt` dump may change only where the new tree is the intended one. List every changed dump in the PR description and say why its new tree is right.
 - Syntax that exists only from some OTP release stays gated on `ErlangSdkRelease` (see Platform rules). Test it with the matching mock SDK.
