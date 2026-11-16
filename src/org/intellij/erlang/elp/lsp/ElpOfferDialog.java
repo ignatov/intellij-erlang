@@ -105,10 +105,10 @@ final class ElpOfferDialog extends DialogWrapper {
                          "It reads the project the way rebar3 builds it, so it knows the dependencies, the include paths and the macros."));
     blocks.add(new Block(Kind.HEADING, "Why try it"));
     blocks.add(new Block(Kind.BULLET, "Errors and warnings follow macros, -ifdef and includes of the real build."));
-    blocks.add(new Block(Kind.BULLET, "Go to definition, find usages and rename come from the same engine."));
+    blocks.add(new Block(Kind.BULLET, "Completion, go to definition, find usages and rename come from the same engine."));
     blocks.add(new Block(Kind.BULLET, "It stays fast on large projects."));
     blocks.add(new Block(Kind.HEADING, "What stays with the plugin"));
-    blocks.add(new Block(Kind.BULLET, "Completion, formatting, refactorings, run and debug."));
+    blocks.add(new Block(Kind.BULLET, "Formatting, run, debug and tests."));
     blocks.add(new Block(Kind.HEADING, "What Try ELP does"));
     ElpRelease.Asset asset = availability.choice().asset();
     if (availability.kind() == ElpAvailability.Kind.DOWNLOADABLE && asset != null) {
