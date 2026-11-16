@@ -295,7 +295,7 @@ private map_entry_type_list ::= map_entry_type (',' map_entry_type)* {pin(".*")=
 map_entry_type ::= (top_type ('=>' | ':=') top_type) | '...' {pin(".*")=2 extends=type}
 
 type ::=
-  '(' top_type ')'
+  parenthesized_type
   | int_type ['..' int_type]
   | fun '(' fun_type_100_t? ')'
   | type_ref_with_module ['(' top_type_list? ')']
@@ -306,8 +306,12 @@ type ::=
   | record_hash record_ref '{' field_type_list? '}'
   | map_type {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}'
+private parenthesized_type ::= !('(' int_type ')' ('..' | int_type_op)) '(' top_type ')' {pin=2}
 
-int_type ::= '-'? (integer | macros argument_list? | char)
+int_type ::= int_type_operand (int_type_op int_type_operand)*
+private int_type_operand ::= int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+private int_type_prefix_op ::= '+' | '-' | bnot
+private int_type_op ::= '+' | '-' | '*' | div | rem | band | bor | bxor | bsl | bsr
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
 fun_type ::= fun_type_arguments top_type_clause {extends=type pin=1}
 top_type_clause ::= '->' top_type {pin=1}
@@ -315,12 +319,10 @@ fun_type_arguments ::= '(' top_type_list? ')' {pin=1}
 private field_type_list ::= field_type (',' field_type)*
 field_type ::= q_atom '::' top_type {extends=type pin=1 methods=[getReference]}
 
-binary_type ::= '<<' [bin_base_type [',' bin_unit_type] | bin_unit_type] '>>' {extends=type pin=1}
-bin_base_type ::= q_var ':' bin_size_type
-bin_unit_type ::= q_var ':' q_var '*' bin_size_type
-private bin_size_type ::= bin_size_term (bin_size_op bin_size_term)*
-private bin_size_term ::= int_type | '(' bin_size_type ')'
-private bin_size_op ::= '*' | div | rem | band | '+' | '-' | bor | bxor | bsl | bsr
+binary_type ::= '<<' [bin_base_type_list | bin_unit_type] '>>' {extends=type pin=1}
+private bin_base_type_list ::= bin_base_type [',' bin_unit_type]
+bin_base_type ::= q_var ':' int_type
+bin_unit_type ::= q_var ':' q_var '*' int_type
 
 attr_val ::= '(' exprs ')' | exprs {name="attribute value"}
 

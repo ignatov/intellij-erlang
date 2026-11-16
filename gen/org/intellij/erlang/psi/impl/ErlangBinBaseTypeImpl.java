@@ -29,8 +29,8 @@ public class ErlangBinBaseTypeImpl extends ErlangTypeImpl implements ErlangBinBa
 
   @Override
   @NotNull
-  public List<ErlangIntType> getIntTypeList() {
-    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangIntType.class);
+  public ErlangIntType getIntType() {
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangIntType.class));
   }
 
   @Override

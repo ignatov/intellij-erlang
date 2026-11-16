@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.completion;
 
+import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -49,9 +50,71 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     setUpProjectSdk();
   }
 
+  public void testNoUnqualifiedNotAutoImportedBifs() {
+    doTestVariants("foo() -> md<caret>. md_local() -> ok.", CompletionType.BASIC, 1, CheckType.EXCLUDES,
+                   "md5", "md5_init", "md5_update", "md5_final");
+  }
+
+  public void testAutoImportedBifsNotMarkedInBifTable() {
+    doCheckResult("foo(P) -> port_to_l<caret>", "foo(P) -> port_to_list(<caret>)");
+    doCheckResult("foo(R) -> ref_to_l<caret>", "foo(R) -> ref_to_list(<caret>)");
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
+
+  public void testVariableFromLowercasePrefixCaseInsensitive() {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      doCheckResult(
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            my<caret>""",
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            MyName<caret>""");
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
+
+  public void testVariablesFromLowercasePrefixCaseInsensitive() {
+    doCaseInsensitiveTest(() -> doTestInclude(
+      """
+        foo(MyArg) ->
+          MyName = 1,
+          my<caret>""", "MyArg", "MyName"));
+  }
+
+  public void testNoVariablesFromLowercasePrefixInRemoteCall() {
+    doCaseInsensitiveTest(() -> doTestVariants(
+      """
+        -module(a).
+        my_one() -> ok.
+        my_two() -> ok.
+        foo(MyArg) ->
+          MyName = 1,
+          a:my<caret>""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "MyArg", "MyName"));
+  }
+
+  private static void doCaseInsensitiveTest(@NotNull Runnable test) {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      test.run();
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
+
   public void testFunctions() {
     doTestInclude(
       """
@@ -239,7 +302,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testBif() {
-    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "tuple_size");
   }
 
   public void testBifFromModules() {
@@ -435,7 +498,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testModuleFunctionCompletionForEmptyText() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "finish_after_on_load");
+    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "group_leader");
   }
   
   public void testModuleFunctionCompletionQuoted() {
@@ -523,8 +586,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-  public void _testIncludeCompletion() throws Exception {
-    localFileSystemSetUp();
+  public void testIncludeCompletion() {
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "include/");
   }

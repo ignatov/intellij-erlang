@@ -1,6 +1,6 @@
 <warning>set_master_nodes</warning>(Nodes) when is_list(Nodes) ->
-    UseDir = system_info(use_dir),
-    IsRunning = system_info(is_running),
+    UseDir = <warning>system_info</warning>(use_dir),
+    IsRunning = <warning>system_info</warning>(is_running),
     case IsRunning of
 	yes ->
 	    CsPat = {{'_', cstruct}, '_'},
@@ -37,8 +37,8 @@ log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
     mnesia_recover:<warning>log_master_nodes</warning>(Args, UseDir, IsRunning).
 
 <warning>set_master_nodes</warning>(Tab, Nodes) when is_list(Nodes) ->
-    UseDir = system_info(use_dir),
-    IsRunning = system_info(is_running),
+    UseDir = <warning>system_info</warning>(use_dir),
+    IsRunning = <warning>system_info</warning>(is_running),
     case IsRunning of
 	yes ->
 	    case ?catch_val({Tab, cstruct}) of

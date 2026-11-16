@@ -28,33 +28,21 @@ public class ErlangIntTypeImpl extends ErlangTypeImpl implements ErlangIntType {
   }
 
   @Override
-  @Nullable
-  public ErlangArgumentList getArgumentList() {
-    return PsiTreeUtil.getChildOfType(this, ErlangArgumentList.class);
+  @NotNull
+  public List<ErlangArgumentList> getArgumentListList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangArgumentList.class);
   }
 
   @Override
-  @Nullable
-  public ErlangMacros getMacros() {
-    return PsiTreeUtil.getChildOfType(this, ErlangMacros.class);
+  @NotNull
+  public List<ErlangIntType> getIntTypeList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangIntType.class);
   }
 
   @Override
-  @Nullable
-  public PsiElement getOpMinus() {
-    return findChildByType(ERL_OP_MINUS);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getChar() {
-    return findChildByType(ERL_CHAR);
-  }
-
-  @Override
-  @Nullable
-  public PsiElement getInteger() {
-    return findChildByType(ERL_INTEGER);
+  @NotNull
+  public List<ErlangMacros> getMacrosList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, ErlangMacros.class);
   }
 
 }

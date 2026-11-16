@@ -19,6 +19,8 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.patterns.PatternCondition;
+import com.intellij.patterns.PsiElementPattern;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
@@ -27,6 +29,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.intellij.erlang.psi.impl.ResolveUtil;
@@ -37,11 +40,24 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 import static com.intellij.patterns.PlatformPatterns.psiElement;
+import static com.intellij.patterns.StandardPatterns.or;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVariableCompletionContributor extends CompletionContributor implements DumbAware {
+  private static final PsiElementPattern.Capture<PsiElement> ATOM_IN_EXPRESSION =
+    psiElement(ErlangTypes.ERL_ATOM_NAME)
+      .withSuperParent(2, ErlangQAtom.class)
+      .withSuperParent(3, ErlangMaxExpression.class)
+      .with(new PatternCondition<>("inFunctionOrMacroOrConsole") {
+        @Override
+        public boolean accepts(@NotNull PsiElement element, ProcessingContext context) {
+          return PsiTreeUtil.getParentOfType(element, ErlangFunctionClause.class, ErlangMacrosDefinition.class) != null ||
+                 ErlangParserUtil.isConsole(element.getContainingFile());
+        }
+      });
+
   public ErlangVariableCompletionContributor() {
-    extend(CompletionType.BASIC, psiElement(ErlangTypes.ERL_VAR), new CompletionProvider<>() {
+    extend(CompletionType.BASIC, or(psiElement(ErlangTypes.ERL_VAR), ATOM_IN_EXPRESSION), new CompletionProvider<>() {
       @Override
       protected void addCompletions(@NotNull CompletionParameters parameters,
                                     @NotNull ProcessingContext context,

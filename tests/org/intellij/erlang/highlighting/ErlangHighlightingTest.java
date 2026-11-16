@@ -66,6 +66,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testMultiTarget()       { doTest(); }
   public void testInFunClause()       { doTest(); }
   public void testMapKeyInFunHead()   { doTest(); }
+  public void testNamedFunVariables() { doTest(); }
+  public void testAnonymousFunLaterClauseVariables() { doTest(); }
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testDefineImported1()   { doTest(); }
@@ -74,6 +76,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAutoimportCall1()   { doTest(); }
   public void testAutoimportCall2()   { doTest(); }
   public void testAutoimportCall3()   { doTest(); }
+  public void testNotAutoImportedCall() { doTest(); }
+  public void testImportedNotAutoImportedBif() { doTest("ImportedNotAutoImportedBif.erl", "ImportedNotAutoImportedBif.hrl"); }
 
   public void testNoAutoImport1()     { doTest(); }
   public void testNoAutoImport2()     { doTest(); }
@@ -83,6 +87,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
   public void test605()               { doTest(); }
+  public void test821()               { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
 

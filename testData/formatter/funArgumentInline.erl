@@ -1,0 +1,2 @@
+test() ->
+  spawn(fun() -><caret>

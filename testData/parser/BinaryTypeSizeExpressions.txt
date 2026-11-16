@@ -156,16 +156,16 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(:)(':')
-        PsiElement(()('(')
         ERL_INT_TYPE
-          ERL_MACROS
-            PsiElement(?)('?')
-            ERL_MACROS_NAME
-              PsiElement(var)('TXS_HASH_BYTES')
-        PsiElement(*)('*')
-        ERL_INT_TYPE
-          PsiElement(integer)('8')
-        PsiElement())(')')
+          PsiElement(()('(')
+          ERL_INT_TYPE
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('TXS_HASH_BYTES')
+            PsiElement(*)('*')
+            PsiElement(integer)('8')
+          PsiElement())(')')
       PsiElement(>>)('>>')
     PsiElement())(')')
     PsiElement(.)('.')
@@ -280,13 +280,13 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(:)(':')
-        PsiElement(()('(')
         ERL_INT_TYPE
-          PsiElement(integer)('4')
-        PsiElement(*)('*')
-        ERL_INT_TYPE
-          PsiElement(integer)('8')
-        PsiElement())(')')
+          PsiElement(()('(')
+          ERL_INT_TYPE
+            PsiElement(integer)('4')
+            PsiElement(*)('*')
+            PsiElement(integer)('8')
+          PsiElement())(')')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -307,8 +307,7 @@ ERL_FILE
         PsiElement(:)(':')
         ERL_INT_TYPE
           PsiElement(integer)('4')
-        PsiElement(*)('*')
-        ERL_INT_TYPE
+          PsiElement(*)('*')
           PsiElement(integer)('8')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
@@ -331,13 +330,13 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(*)('*')
-        PsiElement(()('(')
         ERL_INT_TYPE
-          PsiElement(integer)('1')
-        PsiElement(bsl)('bsl')
-        ERL_INT_TYPE
-          PsiElement(integer)('3')
-        PsiElement())(')')
+          PsiElement(()('(')
+          ERL_INT_TYPE
+            PsiElement(integer)('1')
+            PsiElement(bsl)('bsl')
+            PsiElement(integer)('3')
+          PsiElement())(')')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -356,24 +355,21 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(:)(':')
-        PsiElement(()('(')
         ERL_INT_TYPE
-          ERL_MACROS
-            PsiElement(?)('?')
-            ERL_MACROS_NAME
-              PsiElement(var)('FR_SIZE')
-        PsiElement(-)('-')
-        ERL_INT_TYPE
-          PsiElement(integer)('8')
-        PsiElement())(')')
-        PsiElement(div)('div')
-        ERL_INT_TYPE
+          PsiElement(()('(')
+          ERL_INT_TYPE
+            ERL_MACROS
+              PsiElement(?)('?')
+              ERL_MACROS_NAME
+                PsiElement(var)('FR_SIZE')
+            PsiElement(-)('-')
+            PsiElement(integer)('8')
+          PsiElement())(')')
+          PsiElement(div)('div')
           PsiElement(integer)('2')
-        PsiElement(+)('+')
-        ERL_INT_TYPE
+          PsiElement(+)('+')
           PsiElement(integer)('1')
-        PsiElement(band)('band')
-        ERL_INT_TYPE
+          PsiElement(band)('band')
           PsiElement(integer)('7')
       PsiElement(>>)('>>')
     PsiElement(.)('.')

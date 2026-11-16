@@ -1,0 +1,35 @@
+// Gradle init script of the compatibility check (.github/workflows/compat.yml), applied by gradle.sh.
+// It adds the task compatIdeInfo, which writes the IDE the build resolved to build/compat/ide.json, and with
+// -PcompatPluginArchive=<plugin ZIP> it makes verifyPlugin check that archive instead of building the plugin, with the
+// same IDE and failure levels, and write its reports to build/compat/released-verifier. Otherwise it changes nothing.
+rootProject { Project project ->
+  project.tasks.register('compatIdeInfo') {
+    group = 'verification'
+    description = 'Writes the product info of the IDE the build resolved to build/compat/ide.json.'
+    def output = project.layout.buildDirectory.file('compat/ide.json')
+    outputs.upToDateWhen { false }
+    doLast {
+      def platform = project.extensions.getByName('intellijPlatform')
+      def info = platform.productInfo
+      def file = output.get().asFile
+      file.parentFile.mkdirs()
+      file.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+        name         : info.name,
+        productCode  : info.productCode,
+        version      : info.version,
+        versionSuffix: info.versionSuffix,
+        buildNumber  : info.buildNumber,
+        platformPath : platform.platformPath.toString(),
+      ])) + '\n'
+      logger.lifecycle("IDE: ${info.name} ${info.version} ${info.versionSuffix ?: ''} build ${info.productCode}-${info.buildNumber}")
+    }
+  }
+
+  def archive = project.findProperty('compatPluginArchive')
+  if (archive) {
+    project.tasks.matching { it.name == 'verifyPlugin' }.configureEach { task ->
+      task.archiveFile.set(project.file(archive))
+      task.verificationReportsDirectory.set(project.layout.buildDirectory.dir('compat/released-verifier'))
+    }
+  }
+}

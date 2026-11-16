@@ -57,18 +57,57 @@ jobs:
           exit 1
         fi
 
-    - name: Set up JDK 25
+    - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
         distribution: temurin
-        java-version: '25'
+        java-version: '21'
         cache: gradle
 
-    - name: Test, build, verify and publish plugin
+    - name: Test, build and verify plugin
+      env:
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
+
+    - name: Verify the archive against the newer supported IDEs
+      # The archive is built against IntelliJ IDEA 2026.1 and serves every IDE up to its until-build. The same IDEs as
+      # in the other-ides job of gradle.yml, which also runs the tests against them on every push to master.
+      env:
+        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: |
+        zip="$PWD/build/distributions/intellij-erlang-$PLUGIN_VERSION.zip"
+        if [[ ! -f "$zip" ]]; then
+          echo "::error::Expected plugin archive $zip was not built"
+          ls -l build/distributions || true
+          exit 1
+        fi
+        # The range that the IDEs below cover; gradle.yml makes the same check on every push.
+        unzip -q "$zip" -d "$RUNNER_TEMP/archive"
+        range=""
+        for jar in "$RUNNER_TEMP"/archive/*/lib/*.jar; do
+          if unzip -l "$jar" META-INF/plugin.xml > /dev/null 2>&1; then
+            range="$(unzip -p "$jar" META-INF/plugin.xml | grep -o '<idea-version[^>]*>')"
+          fi
+        done
+        echo "$range"
+        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+          echo "::error::Unexpected compatibility range in $zip: '$range'"
+          exit 1
+        fi
+        cp "$zip" "$RUNNER_TEMP/"
+        for ide in 2026.2 2026.3; do
+          echo "::group::Plugin Verifier against IntelliJ IDEA $ide"
+          COMPAT_IDE="$ide" scripts/compat/gradle.sh verifyPlugin -PbuildNumber="$BUILD_NUMBER" \
+            -PcompatPluginArchive="$RUNNER_TEMP/intellij-erlang-$PLUGIN_VERSION.zip"
+          echo "::endgroup::"
+        done
+
+    - name: Publish plugin
       env:
         PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
-      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
+      run: ./gradlew --no-daemon buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
 
     - name: Create GitHub release
       env:

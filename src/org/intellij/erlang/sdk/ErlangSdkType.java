@@ -217,6 +217,13 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   public static ErlangSdkRelease getRelease(@NotNull PsiElement element) {
+    ErlangSdkRelease release = getSdkRelease(element);
+    return release != null || ErlangSystemUtil.isSmallIde() ? release : ErlangSdkRelease.DefaultRelease;
+  }
+
+  // the release of the Erlang SDK of the element's module or project; null when there is none, unlike getRelease
+  @Nullable
+  public static ErlangSdkRelease getSdkRelease(@NotNull PsiElement element) {
     if (ErlangSystemUtil.isSmallIde()) {
       return getReleaseForSmallIde(element.getProject());
     }
@@ -224,7 +231,7 @@ public class ErlangSdkType extends SdkType {
     Module module = ModuleUtilCore.findModuleForPsiElement(element);
     ErlangSdkRelease byModuleSdk = getRelease(module != null ? ModuleRootManager.getInstance(module).getSdk() : null);
 
-    return byModuleSdk != null ? byModuleSdk : getRelease(element.getProject());
+    return byModuleSdk != null ? byModuleSdk : getRelease(ProjectRootManager.getInstance(element.getProject()).getProjectSdk());
   }
 
   @NotNull
