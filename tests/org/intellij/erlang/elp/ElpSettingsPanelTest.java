@@ -241,6 +241,23 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     assertFalse(myPanel.getDownloadButton().isVisible());
   }
 
+  /** The click starts the download; here nothing listens on the port, and the failure is shown with the button back. */
+  public void testFailedDownloadIsShown() throws Exception {
+    myPanel.reset();
+    waitForDownloadState();
+    myPanel.getDownloadButton().doClick();
+    long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60);
+    while (!downloadStateText().startsWith("Download failed.")) {
+      if (System.nanoTime() > deadline) fail(downloadStateText());
+      PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+      Thread.sleep(10);
+    }
+    assertTrue(downloadStateText(), downloadStateText().startsWith(
+      "Download failed. Cannot download ELP from http://127.0.0.1:1/elp-macos-aarch64-apple-darwin-otp-28.5.tar.gz: "));
+    assertTrue(myPanel.getDownloadButton().isVisible());
+    assertTrue(myPanel.getDownloadButton().isEnabled());
+  }
+
   public void testDownloadStateWithoutSdk() throws Exception {
     ApplicationManager.getApplication().runWriteAction(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
     myPanel.reset();
