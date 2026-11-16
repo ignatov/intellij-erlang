@@ -2,9 +2,10 @@ name: Java CI
 
 on:
   push:
-    # Branch pushes only: tag pushes (v* releases, the rolling nightly tag) never run this workflow.
+    # Pushes to master only: a branch is tested by the pull_request run of its pull request, so one push does not
+    # run the workflow twice. Tag pushes (v* releases, the rolling nightly tag) never run this workflow.
     branches:
-      - '**'
+      - master
   pull_request:
     branches:
       - master
