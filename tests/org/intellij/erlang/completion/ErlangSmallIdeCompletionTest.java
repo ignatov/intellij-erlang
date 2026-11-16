@@ -44,6 +44,14 @@ public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
       "otp-include-directory-nested/src/test.app.src");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
   }
+
+  public void testIncludeOtpIncludeDirectoryWithBuildCopy() {
+    myFixture.configureByFiles("otp-include-directory-with-build-copy/testapp/src/includeuser.erl",
+      "otp-include-directory-with-build-copy/testapp/include/include.hrl",
+      "otp-include-directory-with-build-copy/testapp/_build/default/lib/testapp/ebin/testapp.app",
+      "otp-include-directory-with-build-copy/testapp/src/testapp.app.src");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.INCLUDES, "include.hrl");
+  }
   
   public void testIncludeOtpIncludeDirectoryNotInRoot() {
     myFixture.configureByFiles("otp-include-not-in-root/src/directory/src/includeuser.erl",
