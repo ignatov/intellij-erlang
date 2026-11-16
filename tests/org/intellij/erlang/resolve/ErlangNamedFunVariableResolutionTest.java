@@ -49,6 +49,13 @@ public class ErlangNamedFunVariableResolutionTest extends ErlangLightPlatformCod
     f() -> fun F(0) -> case ok of ok -> fun F() -> F() end end; F(1) -> F(0) end.
     """;
 
+  private static final String NAME_AFTER_NAMED_FUN = """
+    -module(named_fun).
+    -export([f/1]).
+
+    f(F) -> G = fun F() -> ok end, {G, F}.
+    """;
+
   public void testFirstClauseNameIsDeclaration()          { doTest(1, 0); }
   public void testCallInFirstClause()                     { doTest(2, 1); }
   public void testSecondClauseName()                      { doTest(3, 1); }
@@ -57,9 +64,12 @@ public class ErlangNamedFunVariableResolutionTest extends ErlangLightPlatformCod
   public void testThirdClauseName()                       { doTest(6, 1); }
   public void testCallInThirdClause()                     { doTest(7, 1); }
 
-  // Expected to fail: the call resolves to the name of the inner named fun of the first clause (#1209)
   public void testCallInSecondClauseSkipsInnerNamedFun() {
     doTest(INNER_NAMED_FUN_IN_FIRST_CLAUSE, "F", 5, 5, 1);
+  }
+
+  public void testVariableAfterNamedFunSkipsFunName() {
+    doTest(NAME_AFTER_NAMED_FUN, "F", 3, 3, 1);
   }
 
   /**
