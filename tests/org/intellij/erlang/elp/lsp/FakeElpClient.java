@@ -49,6 +49,8 @@ final class FakeElpClient implements LspServer {
     myDescriptor = descriptor;
     myServer = server;
     myInitializeResult = initializeResult;
+    // As ELP once it has loaded the project: elp/status Running.
+    descriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
   }
 
   void setState(@NotNull LspServerState state) {

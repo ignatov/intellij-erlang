@@ -21,30 +21,36 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
+import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.platform.lsp.api.Lsp4jClient;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerListener;
+import com.intellij.platform.lsp.api.LspServerNotificationsHandler;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.io.URLUtil;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InitializeResult;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
-import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpServerEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -65,9 +71,57 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   private record RealRoot(@NotNull String link, @NotNull String real, @NotNull String linkUri, @NotNull String realUri) {
   }
 
+  private final ElpLoadState myLoadState = new ElpLoadState(this::loadStateChanged);
+  private volatile Map<String, String> myEnvironmentForTests;
+
   ElpLspClientDescriptor(@NotNull Project project, @NotNull VirtualFile root, @NotNull ElpConfiguration configuration) {
     super(project, "ELP", root);
     myConfiguration = configuration;
+  }
+
+  /** Whether ELP has loaded the project of this server, see {@link ElpLoadState}. */
+  @NotNull
+  ElpLoadState getLoadState() {
+    return myLoadState;
+  }
+
+  /**
+   * ELP serves a file only once it has loaded the project; until then the plugin answers. At that moment, and when ELP stops
+   * serving, the open editors are refreshed, so that ELP's diagnostics, folding and parameter hints replace the plugin's at once.
+   */
+  private void loadStateChanged(@NotNull ElpLoadState loadState, @NotNull ElpLoadState.State oldState, @NotNull ElpLoadState.State newState) {
+    Project project = getProject();
+    LOG.info("ELP " + getRoots()[0].getPath() + ": " + oldState + " -> " + newState);
+    if (project.isDisposed()) return;
+    if (newState == ElpLoadState.State.RUNNING || oldState == ElpLoadState.State.RUNNING) ElpEngine.refreshProject(project);
+    if (newState == ElpLoadState.State.FAILED) {
+      ElpNotifications.couldNotLoad(project, loadState, getRoots()[0].getPresentableUrl());
+    }
+    if (newState == ElpLoadState.State.RUNNING) {
+      String error = loadState.takeErrorToReport();
+      if (error != null) ElpNotifications.elpError(project, error);
+    }
+  }
+
+  @NotNull
+  @Override
+  public ClientCapabilities getClientCapabilities() {
+    ClientCapabilities capabilities = super.getClientCapabilities();
+    // ELP sends elp/status (Loading, Running, ShuttingDown) only to a client that asks for it.
+    capabilities.setExperimental(Map.of("serverStatusNotification", true));
+    return capabilities;
+  }
+
+  @NotNull
+  @Override
+  public Lsp4jClient createLsp4jClient(@NotNull LspServerNotificationsHandler handler) {
+    return new ElpLsp4jClient(handler, myLoadState);
+  }
+
+  /** Variables that a test puts over the server's environment, for example a PATH without {@code erl}. */
+  @TestOnly
+  void setEnvironmentForTests(@Nullable Map<String, String> environment) {
+    myEnvironmentForTests = environment;
   }
 
   @NotNull
@@ -95,7 +149,9 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     resolveRealRoot();
     Path tmpDir = ElpServerEnvironment.createSessionDirectory();
     myTmpDir = tmpDir;
-    Map<String, String> environment = ElpServerEnvironment.forProject(getProject(), tmpDir);
+    Map<String, String> environment = new LinkedHashMap<>(ElpServerEnvironment.forProject(getProject(), tmpDir));
+    Map<String, String> forTests = myEnvironmentForTests;
+    if (forTests != null) environment.putAll(forTests);
     commandLine.withEnvironment(environment);
     LOG.info("ELP (" + myConfiguration.mode() + "): " + commandLine.getCommandLineString() +
              " in " + commandLine.getWorkDirectory() + " with " + environment);
@@ -106,17 +162,25 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   @Override
   @RequiresBackgroundThread
   public OSProcessHandler startServerProcess() throws ExecutionException {
+    myLoadState.started(System.currentTimeMillis());
     OSProcessHandler handler;
     try {
       handler = super.startServerProcess();
     }
     catch (ExecutionException | RuntimeException e) {
+      myLoadState.stopped();
       deleteTmpDir();
       throw e;
     }
     handler.addProcessListener(new ProcessListener() {
       @Override
+      public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+        if (outputType == ProcessOutputTypes.STDERR) myLoadState.log(event.getText());
+      }
+
+      @Override
       public void processTerminated(@NotNull ProcessEvent event) {
+        myLoadState.stopped();
         deleteTmpDir();
       }
     });
@@ -207,22 +271,20 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   }
 
   /**
-   * In the {@code ELP} position the plugin's features switch off once this server runs and back on once it stops, see
-   * {@link ElpEngine}; the open editors are refreshed at both moments.
+   * Feeds {@link ElpLoadState}, which decides when the plugin's features switch off and back on, see {@link #loadStateChanged}.
    */
-  @Nullable
+  @NotNull
   @Override
   public LspServerListener getLspServerListener() {
-    if (myConfiguration.mode() != ElpMode.ELP) return null;
     return new LspServerListener() {
       @Override
       public void serverInitialized(@NotNull InitializeResult params) {
-        ElpEngine.refreshProject(getProject());
+        myLoadState.initialized();
       }
 
       @Override
       public void serverStopped(boolean shutdownNormally) {
-        ElpEngine.refreshProject(getProject());
+        myLoadState.stopped();
       }
     };
   }

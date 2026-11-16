@@ -19,13 +19,20 @@ package org.intellij.erlang.elp.lsp;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -33,6 +40,7 @@ import java.util.List;
  */
 final class ElpNotifications {
   static final String GROUP = "Erlang ELP";
+  private static final int LAST_LINES = 8;
 
   private ElpNotifications() {
   }
@@ -47,6 +55,52 @@ final class ElpNotifications {
     appendList(content, result.blocking().stream().map(ElpPreflight.Problem::text).toList());
     notify(project, new Notification(GROUP, "ELP is not started", content.toString(), NotificationType.WARNING)
       .addAction(openSettings(project)));
+  }
+
+  /**
+   * ELP did not load the project, see {@link ElpLoadState}; the plugin answers there.
+   */
+  static void couldNotLoad(@NotNull Project project, @NotNull ElpLoadState loadState, @NotNull String root) {
+    StringBuilder content = new StringBuilder();
+    if (loadState.isOtpNotFound()) {
+      content.append("ELP cannot find Erlang/OTP: it runs erl from the bin directory of the project's Erlang SDK. ")
+        .append("Check the SDK of the project.");
+    }
+    else {
+      String error = loadState.firstError();
+      content.append(error != null ? "ELP said: " + StringUtil.escapeXmlEntities(error)
+                                   : "ELP did not finish loading " + StringUtil.escapeXmlEntities(root) + ".");
+    }
+    content.append(" The plugin answers in ").append(StringUtil.escapeXmlEntities(project.getName())).append(" instead.");
+    List<String> lines = loadState.lastLogLines();
+    if (!lines.isEmpty()) {
+      content.append("<br>Last messages:");
+      appendList(content, lines.subList(Math.max(0, lines.size() - LAST_LINES), lines.size()));
+    }
+    notify(project, new Notification(GROUP, "ELP could not load the project", content.toString(), NotificationType.ERROR)
+      .addAction(openSettings(project))
+      .addAction(showLog(project)));
+  }
+
+  /**
+   * The first Error message of a running ELP in a session; the platform logs ELP's messages but shows none of its log messages.
+   */
+  static void elpError(@NotNull Project project, @NotNull String message) {
+    notify(project, new Notification(GROUP, "ELP reported an error",
+                                     StringUtil.escapeXmlEntities(StringUtil.shortenTextWithEllipsis(message, 500, 0)),
+                                     NotificationType.WARNING)
+      .addAction(showLog(project)));
+  }
+
+  /** Opens the IDE log, where the platform writes ELP's standard error and messages. */
+  @NotNull
+  static NotificationAction showLog(@NotNull Project project) {
+    return NotificationAction.createSimple("Show IDE log", () -> ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      VirtualFile log = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(Path.of(PathManager.getLogPath(), "idea.log"));
+      if (log == null) return;
+      ApplicationManager.getApplication().invokeLater(() -> FileEditorManager.getInstance(project).openFile(log, true),
+                                                      ModalityState.nonModal(), project.getDisposed());
+    }));
   }
 
   static void appendList(@NotNull StringBuilder content, @NotNull List<String> items) {

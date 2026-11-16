@@ -62,7 +62,8 @@ public final class ElpLspServerStatus implements ElpServerStatus {
 
   /**
    * @return a running ELP client of the {@link ElpMode#ELP} position that gets {@code file} (any file when it is {@code null}) and
-   * announced the capability that {@code feature} needs. A client still initializing, or stopped, does not count. The platform sends a client every file its
+   * announced the capability that {@code feature} needs. A client still initializing, or stopped, does not count, nor does a running
+   * client whose ELP has not loaded the project yet, see {@link ElpLoadState}; the plugin's entry points then do not ask ELP at all. The platform sends a client every file its
    * descriptor supports, also files outside its root such as the OTP sources, so the root is not checked.
    */
   @Nullable
@@ -72,6 +73,8 @@ public final class ElpLspServerStatus implements ElpServerStatus {
       if (client.getState() != LspServerState.Running) continue;
       if (!(client.getDescriptor() instanceof ElpLspClientDescriptor descriptor)) continue;
       if (descriptor.getConfiguration().mode() != ElpMode.ELP || file != null && !descriptor.isSupportedFile(file)) continue;
+      // The client runs long before ELP has loaded the project and answers anything but "elp is still loading".
+      if (!descriptor.getLoadState().isRunning()) continue;
       InitializeResult result = client.getInitializeResult();
       if (result != null && supports(result.getCapabilities(), feature)) return client;
     }

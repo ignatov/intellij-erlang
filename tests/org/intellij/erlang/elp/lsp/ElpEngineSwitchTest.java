@@ -140,6 +140,40 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     }
   }
 
+  /**
+   * The client is Running about 0.01 s after the start, but ELP answers only "elp is still loading" until it has loaded the
+   * project, and never when it cannot: the plugin answers until ELP says Running.
+   */
+  public void testPluginAnswersUntilElpHasLoadedTheProject() {
+    PsiFile shop = psiFile("src/shop.erl");
+    for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED,
+                                            ElpLoadState.State.STOPPED)) {
+      myDescriptor.getLoadState().setStateForTests(state);
+      for (Feature feature : Feature.values()) {
+        assertFalse(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
+        assertFalse(state + " " + feature, ElpEngine.ownsProjectFeature(getProject(), feature));
+      }
+    }
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    assertTrue(ElpEngine.ownsFeature(shop, Feature.NAVIGATION));
+  }
+
+  /** The platform's language services widget says whether ELP has loaded the project. */
+  public void testWidgetShowsTheLoadState() {
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.LOADING);
+    ElpLspIntegrationProvider.ElpWidgetItem loading = new ElpLspIntegrationProvider.ElpWidgetItem(myClient, null);
+    assertTrue(loading.getServerLabel(), loading.getServerLabel().endsWith(" (loading the project)"));
+    assertFalse(loading.isError());
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.FAILED);
+    ElpLspIntegrationProvider.ElpWidgetItem failed = new ElpLspIntegrationProvider.ElpWidgetItem(myClient, null);
+    assertTrue(failed.getServerLabel(), failed.getServerLabel().endsWith(" (could not load the project)"));
+    assertTrue(failed.isError());
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    ElpLspIntegrationProvider.ElpWidgetItem running = new ElpLspIntegrationProvider.ElpWidgetItem(myClient, null);
+    assertFalse(running.getServerLabel(), running.getServerLabel().contains("("));
+    assertFalse(running.isError());
+  }
+
   /** A server that did not announce the capability of a feature leaves that feature, and only that one, with the plugin. */
   public void testPluginAnswersWithoutTheCapability() {
     PsiFile shop = psiFile("src/shop.erl");
