@@ -22,8 +22,8 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClientDescriptor;
-import com.intellij.platform.lsp.api.LspIntegrationProvider;
+import com.intellij.platform.lsp.api.LspServerDescriptor;
+import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.platform.lsp.api.customization.*;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -187,7 +187,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
       state.mode = ElpMode.ELP.name();
       state.eqwalizer = true;
       ElpSettings.getInstance().loadState(state);
-      List<LspClientDescriptor> started = fileOpened(file("src/a.erl"));
+      List<LspServerDescriptor> started = fileOpened(file("src/a.erl"));
       assertTrue(assertInstanceOf(started.get(0), ElpLspClientDescriptor.class).getConfiguration().eqwalizer());
     }
     finally {
@@ -204,7 +204,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEmpty("the Plugin position starts no ELP", fileOpened(module));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP);
-    List<LspClientDescriptor> started = fileOpened(module);
+    List<LspServerDescriptor> started = fileOpened(module);
     assertSize(1, started);
     ElpLspClientDescriptor descriptor = assertInstanceOf(started.get(0), ElpLspClientDescriptor.class);
     assertEquals(new ElpConfiguration("/opt/elp/bin/elp", ElpMode.ELP), descriptor.getConfiguration());
@@ -223,9 +223,9 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     ElpSettings.getInstance().loadState(state);
   }
 
-  private List<LspClientDescriptor> fileOpened(VirtualFile file) {
-    List<LspClientDescriptor> started = new ArrayList<>();
-    LspIntegrationProvider.LspClientStarter starter = started::add;
+  private List<LspServerDescriptor> fileOpened(VirtualFile file) {
+    List<LspServerDescriptor> started = new ArrayList<>();
+    LspServerSupportProvider.LspServerStarter starter = started::add;
     ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, starter));
     return started;
   }

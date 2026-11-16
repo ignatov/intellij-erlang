@@ -19,10 +19,10 @@ package org.intellij.erlang.elp.lsp;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClient;
-import com.intellij.platform.lsp.api.LspClientManager;
-import com.intellij.platform.lsp.api.LspIntegrationProvider;
-import com.intellij.platform.lsp.api.lsWidget.LspClientWidgetItem;
+import com.intellij.platform.lsp.api.LspServer;
+import com.intellij.platform.lsp.api.LspServerManager;
+import com.intellij.platform.lsp.api.LspServerSupportProvider;
+import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
@@ -37,21 +37,21 @@ import org.jetbrains.annotations.Nullable;
  * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set. Registered in
  * {@code erlang-elp-lsp.xml}, which is loaded only when the platform has the LSP module.
  */
-public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
+public final class ElpLspIntegrationProvider implements LspServerSupportProvider {
   @Override
-  public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspClientStarter clientStarter) {
+  public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspServerStarter serverStarter) {
     if (!ElpFiles.isElpFile(file)) return;
     ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
     // In the Plugin position ELP is not started at all; the plugin works as without the integration.
     if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return;
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
     if (root == null) return;
-    clientStarter.ensureClientStarted(new ElpLspClientDescriptor(project, root, configuration));
+    serverStarter.ensureServerStarted(new ElpLspClientDescriptor(project, root, configuration));
   }
 
   @Override
-  public @Nullable LspClientWidgetItem createWidgetItem(@NotNull LspClient lspClient, @Nullable VirtualFile currentFile) {
-    return new LspClientWidgetItem(lspClient, currentFile, ErlangIcons.FILE, ErlangExternalToolsConfigurable.class);
+  public @Nullable LspServerWidgetItem createLspServerWidgetItem(@NotNull LspServer lspServer, @Nullable VirtualFile currentFile) {
+    return new LspServerWidgetItem(lspServer, currentFile, ErlangIcons.FILE, ErlangExternalToolsConfigurable.class);
   }
 
   /**
@@ -65,7 +65,7 @@ public final class ElpLspIntegrationProvider implements LspIntegrationProvider {
     public void elpSettingsChanged() {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         if (project.isDisposed() || project.isDefault()) continue;
-        LspClientManager.getInstance(project).stopAndRestartClientsIfNeeded(ElpLspIntegrationProvider.class);
+        LspServerManager.getInstance(project).stopAndRestartIfNeeded(ElpLspIntegrationProvider.class);
         ElpEngine.refreshProject(project);
       }
     }

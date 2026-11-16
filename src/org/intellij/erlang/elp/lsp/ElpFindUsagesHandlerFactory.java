@@ -27,7 +27,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClient;
+import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.util.Lsp4jUtilKt;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -133,7 +133,7 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
     VirtualFile file = psiFile != null ? psiFile.getOriginalFile().getVirtualFile() : null;
     Document document = file != null ? FileDocumentManager.getInstance().getDocument(file) : null;
     if (document == null) return null;
-    LspClient client = ElpLspServerStatus.findClient(element.getProject(), file, ElpEngine.Feature.FIND_USAGES);
+    LspServer client = ElpLspServerStatus.findClient(element.getProject(), file, ElpEngine.Feature.FIND_USAGES);
     if (client == null) return null;
     PsiElement name = element instanceof PsiNameIdentifierOwner owner ? owner.getNameIdentifier() : null;
     int offset = name != null ? name.getTextRange().getStartOffset() : element.getTextOffset();
@@ -143,7 +143,7 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
   }
 
   @Nullable
-  private static UsageInfo usage(@NotNull Project project, @NotNull LspClient client, @NotNull Location location) {
+  private static UsageInfo usage(@NotNull Project project, @NotNull LspServer client, @NotNull Location location) {
     VirtualFile file = client.getDescriptor().findFileByUri(location.getUri());
     PsiFile psiFile = file != null ? PsiManager.getInstance(project).findFile(file) : null;
     Document document = file != null ? FileDocumentManager.getInstance().getDocument(file) : null;
@@ -152,6 +152,6 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
     return range != null ? new UsageInfo(psiFile, range.getStartOffset(), range.getEndOffset()) : null;
   }
 
-  private record Request(@NotNull LspClient client, @NotNull ReferenceParams params) {
+  private record Request(@NotNull LspServer client, @NotNull ReferenceParams params) {
   }
 }
