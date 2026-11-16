@@ -17,6 +17,7 @@
 package org.intellij.erlang.elp;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.impl.LaterInvocator;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.ComboBox;
@@ -229,6 +230,21 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals("nothing is downloaded without the click", List.of(), NioFiles.list(myBaseDir));
   }
 
+  /** The Settings dialog is modal: the state must still leave "Checking..." while it is open. */
+  public void testDownloadStateIsShownInAModalDialog() throws Exception {
+    Object dialog = new Object();
+    LaterInvocator.enterModal(dialog);
+    try {
+      myPanel.reset();
+      waitForDownloadState();
+      assertEquals("ELP 1.1.0 for macOS arm64, OTP 28.5 build: not downloaded.", downloadStateText());
+      assertTrue(myPanel.getDownloadButton().isVisible());
+    }
+    finally {
+      LaterInvocator.leaveModal(dialog);
+    }
+  }
+
   public void testDownloadStateInstalled() throws Exception {
     ElpRelease.Asset asset = ElpRelease.pinned().assets().stream()
       .filter(a -> a.file().equals("elp-macos-aarch64-apple-darwin-otp-28.5.tar.gz")).findFirst().orElseThrow();
@@ -271,9 +287,21 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     assertContainsElements(texts, "From https://github.com/WhatsApp/erlang-language-platform/releases, MIT or Apache-2.0 license; runs locally.");
   }
 
+  /**
+   * Waits for the background part of the refresh while the EDT keeps dispatching events, as it does in the IDE. Blocking the EDT
+   * here would hang on 2026.3: a write action is pending there while the test runs, and the refresh's read action waits for it.
+   */
   private void waitForDownloadState() throws Exception {
     Future<?> refresh = myPanel.getDownloadStateRefresh();
-    if (refresh != null) refresh.get(30, TimeUnit.SECONDS);
+    if (refresh != null) {
+      long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
+      while (!refresh.isDone()) {
+        if (System.nanoTime() > deadline) fail("the download state was not refreshed: " + downloadStateText());
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+        Thread.sleep(5);
+      }
+      refresh.get();
+    }
     PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
   }
 
