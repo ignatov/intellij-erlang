@@ -29,6 +29,12 @@ public class ErlangBinBaseTypeImpl extends ErlangTypeImpl implements ErlangBinBa
 
   @Override
   @NotNull
+  public ErlangIntType getIntType() {
+    return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangIntType.class));
+  }
+
+  @Override
+  @NotNull
   public ErlangQVar getQVar() {
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQVar.class));
   }
@@ -37,12 +43,6 @@ public class ErlangBinBaseTypeImpl extends ErlangTypeImpl implements ErlangBinBa
   @NotNull
   public PsiElement getColon() {
     return notNullChild(findChildByType(ERL_COLON));
-  }
-
-  @Override
-  @NotNull
-  public PsiElement getInteger() {
-    return notNullChild(findChildByType(ERL_INTEGER));
   }
 
 }

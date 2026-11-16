@@ -18,10 +18,12 @@ package org.intellij.erlang.index;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.CompilerModuleExtension;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
@@ -33,8 +35,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
   private static final ID<String, Void> ERLANG_APPLICATION_INDEX = ID.create("ErlangApplicationIndex");
@@ -110,6 +114,37 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     }, project);
 
     return result;
+  }
+
+  /**
+   * Unlike {@link #getAllApplicationDirectories}, which keeps one directory per application name,
+   * returns every application directory that is an ancestor of the file, e.g. both an application
+   * and its copy in rebar3's _build/default/lib.
+   */
+  public static List<VirtualFile> getApplicationDirectoriesContaining(@NotNull Project project,
+                                                                      @NotNull VirtualFile file,
+                                                                      @NotNull GlobalSearchScope searchScope) {
+    final Set<VirtualFile> result = new LinkedHashSet<>();
+    final FileBasedIndex index = FileBasedIndex.getInstance();
+    final List<VirtualFile> appFilesFromEbinDirectories = getAppFilesFromEbinDirectories(project, null);
+    FileBasedIndex.ValueProcessor<Void> processor = (appFile, value) -> {
+      VirtualFile libDir = getLibraryDirectory(appFile);
+      if (libDir != null && VfsUtilCore.isAncestor(libDir, file, true)) {
+        result.add(libDir);
+      }
+      return true;
+    };
+
+    index.processAllKeys(ERLANG_APPLICATION_INDEX, appName -> {
+      ProgressManager.checkCanceled();
+      index.processValues(ERLANG_APPLICATION_INDEX, appName, null, processor, searchScope);
+      return true;
+    }, project);
+    for (VirtualFile appFile : appFilesFromEbinDirectories) {
+      processor.process(appFile, null);
+    }
+
+    return new ArrayList<>(result);
   }
 
   private static void processAppFiles(List<VirtualFile> appFiles, String appName, FileBasedIndex.ValueProcessor<Void> processor) {

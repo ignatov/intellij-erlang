@@ -123,4 +123,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testIntTypeExpressionsErrors()            { doTest(true);  }
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
+  public void testBinaryTypeSizeExpressions()           { doTest(false); }
 }

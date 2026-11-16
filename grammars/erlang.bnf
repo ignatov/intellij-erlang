@@ -321,8 +321,8 @@ field_type ::= q_atom '::' top_type {extends=type pin=1 methods=[getReference]}
 
 binary_type ::= '<<' [bin_base_type_list | bin_unit_type] '>>' {extends=type pin=1}
 private bin_base_type_list ::= bin_base_type [',' bin_unit_type]
-bin_base_type ::= q_var ':' integer
-bin_unit_type ::= q_var ':' q_var '*' integer
+bin_base_type ::= q_var ':' int_type
+bin_unit_type ::= q_var ':' q_var '*' int_type
 
 attr_val ::= '(' exprs ')' | exprs {name="attribute value"}
 
