@@ -28,7 +28,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.intellij.erlang.elp.ElpFeedback;
+import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpPreflight;
+import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,7 +82,21 @@ final class ElpNotifications {
     }
     notify(project, new Notification(GROUP, "ELP could not load the project", content.toString(), NotificationType.ERROR)
       .addAction(openSettings(project))
-      .addAction(showLog(project)));
+      .addAction(showLog(project))
+      .addAction(switchBack())
+      .addAction(feedback(project)));
+  }
+
+  /** Sets the engine to the plugin at once: the way back from ELP is one click. */
+  @NotNull
+  static NotificationAction switchBack() {
+    return NotificationAction.createSimpleExpiring("Switch back to the plugin", () -> ElpSettings.getInstance().setMode(ElpMode.PLUGIN));
+  }
+
+  /** Opens a prefilled new issue in the browser, see {@link ElpFeedback}; the plugin sends nothing. */
+  @NotNull
+  static NotificationAction feedback(@NotNull Project project) {
+    return NotificationAction.createSimple("Tell us how it went", () -> ElpFeedback.open(project));
   }
 
   /**
