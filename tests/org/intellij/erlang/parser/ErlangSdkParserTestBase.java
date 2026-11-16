@@ -8,16 +8,18 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Parser tests for syntax that depends on the project SDK, which {@link ErlangParserTestBase} does not set up.
  * Compares the PSI dump with testData/parser/X.txt, like ErlangParserTest.
  */
 public abstract class ErlangSdkParserTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  private final String mySdkHome;
-  private final ErlangSdkRelease myRelease;
+  private final @Nullable String mySdkHome;
+  private final @Nullable ErlangSdkRelease myRelease;
 
-  protected ErlangSdkParserTestBase(@NotNull String sdkHome, @NotNull ErlangSdkRelease release) {
+  // a null sdkHome leaves the project without an SDK
+  protected ErlangSdkParserTestBase(@Nullable String sdkHome, @Nullable ErlangSdkRelease release) {
     mySdkHome = sdkHome;
     myRelease = release;
   }
@@ -27,7 +29,7 @@ public abstract class ErlangSdkParserTestBase extends ErlangLightPlatformCodeIns
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk(mySdkHome, myRelease);
+        return mySdkHome != null && myRelease != null ? ErlangSdkType.createMockSdk(mySdkHome, myRelease) : null;
       }
     };
   }

@@ -20,14 +20,15 @@ import static org.intellij.erlang.ErlangTypes.*;
       this.project = project_;
     }
 
-    // OTP 26 and later end a string or sigil after a \^ that is not followed by a control name; ErlangAnnotator reports it
+    // OTP 26 and later end a string after a \^ that is not followed by a control name; ErlangAnnotator reports it.
+    // Sigils exist only from OTP 27 on, so a sigil always ends there, whatever the SDK.
     private IElementType endAtBadControlEscape(IElementType type) {
       CharSequence text = yytext();
       if (text.length() < 2 || text.charAt(0) == '"' && text.charAt(1) == '"' || text.charAt(0) == '~' && (text.charAt(1) == 'B' || text.charAt(1) == 'S')) return type;
       for (int i = 0; i < text.length() - 1; i++) {
         if (text.charAt(i) != '\\') continue;
         if (text.charAt(i + 1) == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2)))) {
-          if (ErlangSdkType.getRelease(project).erlangControlEscapeNeedsControlName()) yypushback(text.length() - i - 2);
+          if (type == ERL_SIGIL_STRING || ErlangSdkType.getRelease(project).erlangControlEscapeNeedsControlName()) yypushback(text.length() - i - 2);
           return type;
         }
         i += text.charAt(i + 1) == '^' ? 2 : 1;

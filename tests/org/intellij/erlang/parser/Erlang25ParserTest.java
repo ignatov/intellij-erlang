@@ -8,4 +8,5 @@ public class Erlang25ParserTest extends ErlangSdkParserTestBase {
   }
 
   public void testControlEscapeAnyCharOtp25() { doTest("ControlEscapeAnyCharOtp25", false); }
+  public void testSigilControlEscapeBadName() { doTest("SigilControlEscapeBadName", true); }
 }

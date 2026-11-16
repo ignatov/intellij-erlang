@@ -41,4 +41,8 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
   public void testControlEscapeAnyCharOtp25() {
     doTest();
   }
+
+  public void testSigilControlEscapeBadNameOtp25() {
+    doTest();
+  }
 }
