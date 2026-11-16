@@ -21,6 +21,7 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.JDOMUtil;
@@ -152,6 +153,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
         else System.setProperty(properties.get(i), myOldProperties.get(i));
       }
       getProject().putUserData(ElpOffer.LAST_CHECK, null);
+      getProject().putUserData(ElpOffer.PENDING, null);
       UiInterceptors.clear();
     }
     catch (Throwable e) {
@@ -282,35 +284,88 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertEquals(ElpOffer.Choice.NEVER, ElpOfferDialog.choice(DialogWrapper.CANCEL_EXIT_CODE, true));
   }
 
-  /** Not while the project is indexed: the dialog would come up during startup. The version stays unmarked for later. */
+  /**
+   * Not while the project is indexed: the dialog would come up during startup. The version stays unmarked, and the offer comes
+   * by itself once the project is smart.
+   */
   public void testNotInDumbModeAndTheVersionIsNotMarked() throws Throwable {
     ElpOffer.enableInTests(getTestRootDisposable());
     VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
     DumbModeTestUtils.runInDumbModeSynchronously(getProject(), () -> {
       assertFalse(offer(V1));
       fileOpened(file);
+      assertNull("a file opened while indexing does not use up the check", getProject().getUserData(ElpOffer.LAST_CHECK));
+      assertEmpty(myDialogs);
+      assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
     });
-    assertEmpty(myDialogs);
-    assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
-    assertNull("a file opened while indexing does not use up the check", getProject().getUserData(ElpOffer.LAST_CHECK));
-
-    assertTrue(offer(V1));
+    waitFor(() -> !myDialogs.isEmpty(), "no offer after indexing");
     assertOneElement(myDialogs);
+    assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
   }
 
-  /** Not over another application or a window of another project; the next opened file checks again. */
-  public void testWaitsUntilTheFrameIsActive() {
+  /**
+   * The platform opens the restored editors while the project is indexed and nothing opens a file afterwards: the check of a
+   * file opened then runs once the project is smart, once however many files were opened.
+   */
+  public void testAFileOpenedWhileIndexingIsCheckedWhenSmart() throws Throwable {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    ElpOffer.preflightInTests(eligible(), getTestRootDisposable());
+    VirtualFile a = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+    VirtualFile b = myFixture.addFileToProject("src/b.erl", "").getVirtualFile();
+    DumbModeTestUtils.runInDumbModeSynchronously(getProject(), () -> {
+      fileOpened(a);
+      fileOpened(b);
+      fileOpened(a);
+    });
+    waitFor(() -> !myDialogs.isEmpty(), "no offer after indexing");
+    dispatchFor(500);
+    assertOneElement(myDialogs);
+    assertEquals(ElpFeedback.pluginVersion(), ElpSettings.getInstance().getOfferShownForVersion());
+  }
+
+  /** A check that waits for the end of indexing does nothing once the project is closed. */
+  public void testNoCheckAfterTheProjectIsClosed() throws Throwable {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    ElpOffer.preflightInTests(eligible(), getTestRootDisposable());
+    Path dir = FileUtil.createTempDirectory("elp-offer-closed", null, true).toPath();
+    Files.writeString(dir.resolve("a.erl"), "-module(a).\n");
+    Project other = PlatformTestUtil.loadAndOpenProject(dir, getTestRootDisposable());
+    VirtualFile file = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(dir.resolve("a.erl"));
+    assertNotNull(file);
+    DumbModeTestUtils.EternalTaskShutdownToken dumb = DumbModeTestUtils.startEternalDumbModeTask(other);
+    try {
+      ReadAction.run(() -> ElpOffer.fileOpened(other, file));
+      assertNotNull("the check waits for the end of indexing", other.getUserData(ElpOffer.PENDING));
+    }
+    finally {
+      PlatformTestUtil.forceCloseProjectWithoutSaving(other);
+    }
+    try {
+      DumbModeTestUtils.endEternalDumbModeTask(dumb);
+    }
+    catch (Throwable ignored) {
+      // The dumb mode ended with the project.
+    }
+    dispatchFor(500);
+    assertEmpty(myDialogs);
+    assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
+  }
+
+  /** Not over another application or a window of another project; the offer comes once the frame is active again. */
+  public void testWaitsUntilTheFrameIsActive() throws Exception {
     myFrameActive = false;
     getProject().putUserData(ElpOffer.LAST_CHECK, System.currentTimeMillis());
     assertFalse(offer(V1));
     assertEmpty(myDialogs);
     assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
-    assertNull("the next opened file checks again", getProject().getUserData(ElpOffer.LAST_CHECK));
+    assertNull("an opened file checks again", getProject().getUserData(ElpOffer.LAST_CHECK));
     assertNotNull(ElpOffer.whyNotNow(getProject()));
+    dispatchFor(200);
+    assertEmpty("the frame is still not active", myDialogs);
 
     myFrameActive = true;
     assertNull(ElpOffer.whyNotNow(getProject()));
-    assertTrue(offer(V1));
+    waitFor(() -> !myDialogs.isEmpty(), "no offer after the frame became active");
     assertOneElement(myDialogs);
     assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
   }
@@ -452,7 +507,12 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
 
   /** Offers on a project that ELP fits, with the server not downloaded yet. */
   private boolean offer(String version) {
-    return ElpOffer.offerIfEligible(getProject(), version, ElpPreflight.evaluate(facts(true, null), layout(true)), downloadable());
+    return ElpOffer.offerIfEligible(getProject(), version, eligible(), downloadable());
+  }
+
+  /** The preflight of a project that ELP fits, with the server not downloaded yet. */
+  private static ElpPreflight.Result eligible() {
+    return ElpPreflight.evaluate(facts(true, null), layout(true));
   }
 
   private ElpAvailability downloadable() {
@@ -488,6 +548,15 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   private Notification await(String title) throws InterruptedException {
     waitFor(() -> !titled(title).isEmpty(), "no notification '" + title + "' in " + myNotifications.stream().map(Notification::getTitle).toList());
     return assertOneElement(titled(title));
+  }
+
+  /** Lets the scheduled checks and the events of {@code ms} milliseconds run. */
+  private static void dispatchFor(long ms) throws InterruptedException {
+    long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(ms);
+    while (System.nanoTime() < deadline) {
+      PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+      Thread.sleep(10);
+    }
   }
 
   private static void waitFor(BooleanSupplier condition, String message) throws InterruptedException {

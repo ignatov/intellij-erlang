@@ -32,6 +32,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresEdt;
 import com.intellij.util.concurrency.annotations.RequiresReadLock;
@@ -52,6 +53,7 @@ import javax.swing.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -75,7 +77,14 @@ final class ElpOffer {
   /** A project that ELP does not fit is checked again after this time at the earliest, when another file is opened. */
   private static final long RECHECK_MS = 60_000;
   static final Key<Long> LAST_CHECK = Key.create("erlang.elp.offer.lastCheck");
+  /** Set while a check of the project waits for the end of indexing or for its frame; at most one waits per project. */
+  static final Key<Boolean> PENDING = Key.create("erlang.elp.offer.pending");
   private static volatile boolean ourEnabledInTests;
+  /** A dialog that cannot be shown now is looked at again this often, and this many times: ten minutes. */
+  private static final long RETRY_MS = 5_000;
+  private static final int RETRIES = 120;
+  private static volatile long ourRetryMs = RETRY_MS;
+  private static volatile ElpPreflight.Result ourPreflightInTests;
 
   /** The answers of the dialog; each does what the action of the same name on the balloon did before. */
   enum Choice {TRY, NOT_NOW, NEVER}
@@ -106,10 +115,75 @@ final class ElpOffer {
   static void setUpForTests(@NotNull Asker asker, @NotNull BooleanSupplier frameActive, @NotNull Disposable parent) {
     ourAsker = asker;
     ourFrameActiveInTests = frameActive;
+    ourRetryMs = 10;
     Disposer.register(parent, () -> {
       ourAsker = DIALOG;
       ourFrameActiveInTests = null;
+      ourRetryMs = RETRY_MS;
     });
+  }
+
+  /** A test has ended, and a check that it started must not open the real dialog. */
+  private static boolean testsAreOver() {
+    return ApplicationManager.getApplication().isUnitTestMode() && ourAsker == DIALOG;
+  }
+
+  /** @return {@code false} when a check of the project already waits */
+  private static boolean markPending(@NotNull Project project) {
+    synchronized (LAST_CHECK) {
+      if (project.getUserData(PENDING) != null) return false;
+      project.putUserData(PENDING, Boolean.TRUE);
+      return true;
+    }
+  }
+
+  private static void clearPending(@NotNull Project project) {
+    synchronized (LAST_CHECK) {
+      project.putUserData(PENDING, null);
+    }
+  }
+
+  /**
+   * Runs {@code offer} again when the user can read the dialog: at the end of indexing, or, for an inactive frame or another
+   * dialog, at the first of {@value #RETRIES} looks every {@value #RETRY_MS} ms that finds the frame active. A wait that gives
+   * up leaves the check to the next opened file.
+   */
+  @RequiresEdt
+  private static void retryLater(@NotNull Project project, @NotNull Runnable offer) {
+    if (!markPending(project)) return;
+    if (DumbService.isDumb(project)) {
+      DumbService.getInstance(project).runWhenSmart(() -> {
+        clearPending(project);
+        if (!project.isDisposed()) offer.run();
+      });
+    }
+    else {
+      lookAgain(project, offer, RETRIES);
+    }
+  }
+
+  private static void lookAgain(@NotNull Project project, @NotNull Runnable offer, int looksLeft) {
+    AppExecutorUtil.getAppScheduledExecutorService().schedule(() -> ApplicationManager.getApplication().invokeLater(() -> {
+      if (testsAreOver()) return;
+      if (whyNotNow(project) == null) {
+        clearPending(project);
+        offer.run();
+      }
+      else if (looksLeft > 1) {
+        lookAgain(project, offer, looksLeft - 1);
+      }
+      else {
+        clearPending(project);
+        LOG.info("The ELP offer waits for the next opened file");
+      }
+    }, ModalityState.nonModal(), project.getDisposed()), ourRetryMs, TimeUnit.MILLISECONDS);
+  }
+
+  /** Makes the check of a project in tests find {@code result} instead of running the preflight, until {@code parent} is disposed. */
+  @TestOnly
+  static void preflightInTests(@NotNull ElpPreflight.Result result, @NotNull Disposable parent) {
+    ourPreflightInTests = result;
+    Disposer.register(parent, () -> ourPreflightInTests = null);
   }
 
   /** Lets {@link #fileOpened} check the project in tests until {@code parent} is disposed. */
@@ -173,7 +247,18 @@ final class ElpOffer {
     }
     // The dialog would wait for the end of indexing anyway; the check is not used up on a file opened while the project loads.
     if (DumbService.isDumb(project)) {
-      LOG.debug("No ELP offer check: the project is being indexed");
+      // The restored editors open while the project is indexed, and nothing opens a file afterwards: check this one later.
+      if (markPending(project)) {
+        LOG.debug("The ELP offer check of " + file.getName() + " waits for the end of indexing");
+        DumbService.getInstance(project).runWhenSmart(() -> {
+          clearPending(project);
+          if (project.isDisposed() || !file.isValid() || testsAreOver()) return;
+          ReadAction.runBlocking(() -> fileOpened(project, file));
+        });
+      }
+      else {
+        LOG.debug("No ELP offer check: the project is being indexed, and a check already waits");
+      }
       return;
     }
     // Before the once-a-minute limit: the files of the last session open in a burst, and the first one may be outside the
@@ -208,17 +293,21 @@ final class ElpOffer {
   @RequiresBackgroundThread
   private static void check(@NotNull Project project, @NotNull VirtualFile root, @NotNull String version) {
     if (project.isDisposed()) return;
-    ElpPreflight.Facts facts = ElpPreflight.getInstance(project).gatherFacts();
-    ElpPreflight.Layout layout = ReadAction.computeBlocking(() -> root.isValid() ? ElpPreflight.Layout.of(root) : null);
-    ElpPreflight.Result result = ElpPreflight.evaluate(facts, layout);
+    ElpPreflight.Result result = ourPreflightInTests;
+    if (result == null) {
+      ElpPreflight.Facts facts = ElpPreflight.getInstance(project).gatherFacts();
+      ElpPreflight.Layout layout = ReadAction.computeBlocking(() -> root.isValid() ? ElpPreflight.Layout.of(root) : null);
+      result = ElpPreflight.evaluate(facts, layout);
+      LOG.debug("ELP offer check: OTP " + facts.otpRelease() + ", rebar3 " + facts.rebar3Version() + ", layout " + layout);
+    }
     ElpAvailability availability = ElpDistribution.getInstance().availability(project);
-    LOG.debug("ELP offer check: OTP " + facts.otpRelease() + ", rebar3 " + facts.rebar3Version() + ", layout " + layout +
-              ", problems " + result.reasons() + ", availability " + availability.kind() +
+    LOG.debug("ELP offer check: problems " + result.reasons() + ", availability " + availability.kind() +
               (availability.choice().reason() != null ? " (" + availability.choice().message() + ")" : ""));
+    ElpPreflight.Result checked = result;
     ApplicationManager.getApplication().invokeLater(() -> {
       // A check that a test started may end after the test, whose answers to the dialog are gone by then.
       if (ApplicationManager.getApplication().isUnitTestMode() && !ourEnabledInTests) return;
-      offerIfEligible(project, version, result, availability);
+      offerIfEligible(project, version, checked, availability);
     }, ModalityState.nonModal(), project.getDisposed());
   }
 
@@ -232,7 +321,7 @@ final class ElpOffer {
   @RequiresEdt
   static boolean offerIfEligible(@NotNull Project project, @NotNull String pluginVersion, @NotNull ElpPreflight.Result result,
                                  @NotNull ElpAvailability availability) {
-    if (project.isDisposed()) return false;
+    if (project.isDisposed() || testsAreOver()) return false;
     String whyNot = whyNotAsk(pluginVersion);
     if (whyNot != null) {
       LOG.debug("No ELP offer: " + whyNot);
@@ -246,10 +335,12 @@ final class ElpOffer {
     }
     String notNow = whyNotNow(project);
     if (notNow != null) {
-      LOG.info("The ELP offer waits for the next opened file: " + notNow);
+      LOG.info("The ELP offer waits: " + notNow);
+      // Also an opened file checks again, should the wait below give up.
       synchronized (LAST_CHECK) {
         project.putUserData(LAST_CHECK, null);
       }
+      retryLater(project, () -> offerIfEligible(project, pluginVersion, result, availability));
       return false;
     }
     LOG.info("ELP offer shown for plugin version " + pluginVersion + ", ELP server: " + availability.kind());
