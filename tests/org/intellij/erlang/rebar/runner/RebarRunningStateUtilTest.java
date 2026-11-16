@@ -115,6 +115,32 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  // #1233: rebar3 local install writes ~/.cache/rebar3/bin/rebar3, a sh script, not an escript.
+  public void testCommandLineDoesNotRunLocalInstallShScriptWithEscript() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File script = new File(directory, "rebar3");
+    FileUtil.copy(new File("testData/rebar/localInstall/rebar3"), script);
+    FileUtil.setExecutable(script);
+    RebarSettings settings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = settings.getRebarPath();
+    try {
+      settings.setRebarPath(script.getPath());
+      RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+      configuration.setCommand("compile");
+      GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(configuration);
+      String sdkPath = ErlangSdkType.getSdkPath(getProject());
+      assertNotNull(sdkPath);
+      String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath();
+      List<String> parameters = commandLine.getParametersList().getList();
+      // escript parses its first argument as Erlang: "rebar3:2:1: syntax error before: '#'".
+      assertFalse("the sh script is run with escript: " + commandLine.getCommandLineString(),
+                  escriptPath.equals(commandLine.getExePath()) && script.getPath().equals(parameters.get(0)));
+    }
+    finally {
+      settings.setRebarPath(oldRebarPath);
+    }
+  }
+
   public void testFindInPathWithWindowsExtension() throws IOException {
     File directory = FileUtil.createTempDirectory("otp_bin", null);
     File escript = createExecutable(directory, "escript.exe");
