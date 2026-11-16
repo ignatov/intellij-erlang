@@ -39,6 +39,11 @@ import org.intellij.erlang.elp.ElpEnvironment;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.elp.ElpServerEnvironment;
+import org.intellij.erlang.elp.ElpServerSource;
+import org.intellij.erlang.elp.distribution.ElpDistribution;
+import org.intellij.erlang.elp.distribution.ElpInstaller;
+import org.intellij.erlang.elp.distribution.ElpPlatform;
+import org.intellij.erlang.elp.distribution.ElpRelease;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -74,6 +79,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldElpState = new ElpSettings.ElpSettingsState();
     myOldElpState.path = old.path;
+    myOldElpState.source = old.source;
     myOldElpState.mode = old.mode;
     myOldElpState.eqwalizer = old.eqwalizer;
     myOldRebarPath = RebarSettings.getInstance(getProject()).getRebarPath();
@@ -319,11 +325,61 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   }
 
   /**
+   * The downloaded server: the provider starts the build installed for the project's OTP release, and while it is not installed
+   * starts nothing and says that ELP can be downloaded.
+   */
+  public void testProviderStartsTheDownloadedServerOnlyWhenItIsInstalled() throws Exception {
+    setUpProjectSdk();
+    List<Notification> notifications = new ArrayList<>();
+    getProject().getMessageBus().connect(getTestRootDisposable()).subscribe(Notifications.TOPIC, new Notifications() {
+      @Override
+      public void notify(@NotNull Notification notification) {
+        notifications.add(notification);
+      }
+    });
+    ElpRelease.Asset asset = new ElpRelease.Asset("elp-macos-aarch64-apple-darwin-otp-27.3.tar.gz", "macos", "aarch64",
+                                                  "aarch64-apple-darwin", "27.3", 1, "0".repeat(64), "elp");
+    ElpRelease release = new ElpRelease("test-tag", "1.1.0", "https://example.invalid/repo", "https://example.invalid/dl/",
+                                        "MIT OR Apache-2.0", List.of(asset));
+    ElpInstaller installer = new ElpInstaller(FileUtil.createTempDirectory("elp-installed", null, true).toPath(), release,
+                                              "http://127.0.0.1:1/dl/", (executable, r, indicator) -> {});
+    ElpDistribution.getInstance().setUpForTests(installer, new ElpPlatform("macos", "aarch64"), getTestRootDisposable());
+    String oldProperty = System.getProperty(ElpConfiguration.PATH_PROPERTY);
+    System.clearProperty(ElpConfiguration.PATH_PROPERTY);
+    try {
+      ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+      state.source = ElpServerSource.DOWNLOADED.name();
+      state.mode = ElpMode.ELP.name();
+      ElpSettings.getInstance().loadState(state);
+      ElpPreflight.getInstance(getProject()).invalidate();
+      VirtualFile module = file("src/a.erl");
+
+      assertEmpty("nothing is installed", fileOpened(module));
+      PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+      Notification notification = assertOneElement(notifications);
+      assertTrue(notification.getContent(), notification.getContent().contains("ELP is not downloaded yet: download it on the Erlang " +
+                                                                               "External Tools settings page."));
+
+      Path elp = installer.executable(asset);
+      Files.createDirectories(elp.getParent());
+      Files.writeString(elp, "#!/bin/sh\nexit 0\n");
+      assertTrue(elp.toFile().setExecutable(true));
+      ElpPreflight.getInstance(getProject()).invalidate();
+      ElpLspClientDescriptor descriptor = assertInstanceOf(assertOneElement(fileOpened(module)), ElpLspClientDescriptor.class);
+      assertEquals(elp.toString(), descriptor.getConfiguration().path());
+      assertEquals(ElpMode.ELP, descriptor.getConfiguration().mode());
+    }
+    finally {
+      if (oldProperty != null) System.setProperty(ElpConfiguration.PATH_PROPERTY, oldProperty);
+    }
+  }
+
+  /**
    * As the platform: the facts of the check are gathered off the EDT first, then the provider is asked.
    */
   private List<LspServerDescriptor> fileOpened(VirtualFile file) {
     ElpPreflight.Facts facts = ElpPreflight.getInstance(getProject()).cachedFacts();
-    if (facts == null || !facts.serverPath().equals(ElpSettings.getInstance().getEffectiveConfiguration().path())) {
+    if (facts == null || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
       PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
         () -> ElpPreflight.getInstance(getProject()).gatherFacts()), 30_000);
     }

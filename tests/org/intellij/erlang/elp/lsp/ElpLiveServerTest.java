@@ -93,6 +93,7 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldState = new ElpSettings.ElpSettingsState();
     myOldState.path = old.path;
+    myOldState.source = old.source;
     myOldState.mode = old.mode;
     myOldState.eqwalizer = old.eqwalizer;
   }

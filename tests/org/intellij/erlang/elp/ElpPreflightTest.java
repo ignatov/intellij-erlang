@@ -40,7 +40,7 @@ import java.util.Set;
 
 public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String SDK_HOME = new File("testData/mockSdk-R27").getAbsolutePath();
-  private static final Facts GOOD = new Facts("27", "/tools/rebar3", "3.28.0", null, "/opt/elp/bin/elp", true, true);
+  private static final Facts GOOD = facts("27", "/tools/rebar3", "3.28.0", "/opt/elp/bin/elp", true);
   private static final Layout REBAR = new Layout("/p", true, true, false, false);
 
   private ElpSettings.ElpSettingsState myOldElpState;
@@ -52,6 +52,7 @@ public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestC
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldElpState = new ElpSettings.ElpSettingsState();
     myOldElpState.path = old.path;
+    myOldElpState.source = old.source;
     myOldElpState.mode = old.mode;
     myOldElpState.eqwalizer = old.eqwalizer;
     myOldRebarPath = RebarSettings.getInstance(getProject()).getRebarPath();
@@ -123,7 +124,8 @@ public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestC
   }
 
   public void testOfferedOnMacOsOnly() {
-    ElpPreflight.Result result = ElpPreflight.evaluate(new Facts("27", "/tools/rebar3", "3.28.0", null, "/opt/elp/bin/elp", true, false), REBAR);
+    ElpPreflight.Result result = ElpPreflight.evaluate(new Facts(true, "27", "/tools/rebar3", "3.28.0", null, configuration("/opt/elp/bin/elp"),
+                                                                 null, false, ""), REBAR);
     assertTrue(result.canStart());
     assertFalse(result.offerEligible());
     assertEquals(EnumSet.of(Reason.NOT_MACOS), result.reasons());
@@ -203,7 +205,13 @@ public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestC
   }
 
   private static Facts facts(String otp, String rebar3, String rebar3Version, String server, boolean runnable) {
-    return new Facts(otp, rebar3, rebar3Version, null, server, runnable, true);
+    ElpPreflight.Problem serverProblem = runnable ? null : new ElpPreflight.Problem(Reason.NO_SERVER_BINARY, "The ELP binary " + server +
+                                                                                                        " is not an executable file.");
+    return new Facts(otp != null, otp, rebar3, rebar3Version, null, configuration(server), serverProblem, true, "");
+  }
+
+  private static ElpConfiguration configuration(String server) {
+    return new ElpConfiguration(server, ElpMode.ELP);
   }
 
   /** An executable shell script named {@code name} in a new directory. */
