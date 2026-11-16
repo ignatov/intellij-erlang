@@ -109,8 +109,9 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   }
 
   /**
-   * ELP serves a file only once it has loaded the project; until then the plugin answers. At that moment, and when ELP stops
-   * serving, the open editors are refreshed, so that ELP's diagnostics, folding and parameter hints replace the plugin's at once.
+   * ELP is asked only once it has loaded the project. The first time, the root enters {@link ElpServedRoots} and the plugin, which
+   * answered until then, goes silent there for good. At that moment, and when ELP stops serving, the open editors are refreshed, so
+   * that ELP's diagnostics, folding and parameter hints replace the plugin's at once.
    */
   private void loadStateChanged(@NotNull ElpLoadState loadState, @NotNull ElpLoadState.State oldState, @NotNull ElpLoadState.State newState) {
     Project project = getProject();

@@ -53,12 +53,14 @@ public class ElpLspServerStatusTest extends ErlangLightPlatformCodeInsightFixtur
     capabilities.setSignatureHelpProvider(new SignatureHelpOptions(List.of("(", ",")));
     capabilities.setDocumentHighlightProvider(true);
     capabilities.setWorkspaceSymbolProvider(true);
+    capabilities.setCallHierarchyProvider(true);
     for (ElpEngine.Feature feature : ElpEngine.Feature.values()) {
       assertTrue(feature.name(), ElpLspServerStatus.supports(capabilities, feature));
     }
   }
 
-  public void testMissingCapabilitiesKeepThePluginFeatures() {
+  /** ELP is asked only for what it announced; under a served root the plugin stays silent all the same (ElpEngine). */
+  public void testMissingCapabilitiesAreNotAskedFor() {
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setHoverProvider(false);
     capabilities.setFoldingRangeProvider(Either.forLeft(false));

@@ -28,6 +28,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileSystemItem;
 import com.intellij.psi.PsiNamedElement;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,11 +45,13 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
   private static final String DEFINITION = "textDocument/definition";
 
   /**
-   * Where ELP's answer takes the user, by recorded kind: the file, the line and column, and the name there; {@code null} where the
-   * handler gives nothing and the plugin's references answer. A module and an include go to the start of the file, which ELP
-   * answers with the whole {@code -module} line or the whole header.
+   * Where ELP's answer takes the user, by recorded kind: the file, the line and column, and the name there; {@link #NOWHERE} where
+   * ELP gives no target and the handler answers with the element at the caret, so that the plugin's references do not answer;
+   * {@code null} on a declaration, where the handler gives nothing and the platform shows the usages. A module and an include go to
+   * the start of the file, which ELP answers with the whole {@code -module} line or the whole header.
    */
   private static final Map<String, String> ELP_TARGETS = new LinkedHashMap<>();
+  private static final String NOWHERE = "the element at the caret";
 
   static {
     ELP_TARGETS.put("remote_function", "src/shop_backend.erl:12:1 lookup");
@@ -68,9 +71,9 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
     ELP_TARGETS.put("behaviour", "src/shop_backend.erl:1:1 -");
     ELP_TARGETS.put("include", "src/shop.hrl:1:1 -");
     // In OTP's lists.erl, which the test project does not have.
-    ELP_TARGETS.put("otp_function", null);
+    ELP_TARGETS.put("otp_function", NOWHERE);
     // ELP answers an empty list.
-    ELP_TARGETS.put("dynamic_call", null);
+    ELP_TARGETS.put("dynamic_call", NOWHERE);
     // ELP answers the declaration under the caret; the platform shows its usages then.
     ELP_TARGETS.put("function_declaration", null);
     ELP_TARGETS.put("callback_implementation", null);
@@ -95,6 +98,9 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
       if (expected == null) {
         assertNull(recorded.toString(), targets);
       }
+      else if (expected.equals(NOWHERE)) {
+        assertAtCaret(recorded.toString(), targets, offset);
+      }
       else {
         assertNotNull(recorded.toString(), targets);
         assertEquals(recorded.toString(), List.of(expected), describe(targets));
@@ -103,11 +109,12 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
   }
 
   /**
-   * What go to declaration does in the {@code ELP} position: the platform takes the first handler with targets, so the user gets
-   * ELP's single target, or the plugin's targets where ELP gives none; never both. Where both answer, they agree on the file and
-   * the line.
+   * What go to declaration does under a served root: the platform takes the first handler with targets, so the user gets ELP's
+   * single target, or the element at the caret where ELP gives none; never the plugin's targets. Where both engines have a target,
+   * they agree on the file and the line. On a declaration the platform does what it does in the Plugin position: it shows the
+   * usages.
    */
-  public void testOneTargetPerCallSite() {
+  public void testNeverThePluginsTargetsUnderAServedRoot() {
     for (ElpRecordedAnswers.Case recorded : myAnswers.cases(DEFINITION)) {
       Editor editor = openAt(recorded);
       int offset = editor.getCaretModel().getOffset();
@@ -119,7 +126,12 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
 
       String expected = ELP_TARGETS.get(recorded.kind());
       if (expected == null) {
-        assertEquals(recorded + ": the plugin answers", plugin, elp);
+        assertEquals(recorded + ": a declaration", plugin, elp);
+        continue;
+      }
+      if (expected.equals(NOWHERE)) {
+        assertEquals(recorded.toString(), describe(new PsiElement[]{ReadAction.compute(() -> myFixture.getFile().findElementAt(offset))}), elp);
+        assertFalse(recorded + ": not the plugin's target", !plugin.isEmpty() && plugin.equals(elp));
         continue;
       }
       assertEquals(recorded.toString(), List.of(expected), elp);
@@ -142,16 +154,18 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
   public void testNothingFromElpOnTheEdt() {
     Editor editor = openAt(myAnswers.get(DEFINITION, "remote_function"));
     int offset = editor.getCaretModel().getOffset();
-    assertNull(new ElpGotoDeclarationHandler().getGotoDeclarationTargets(myFixture.getFile().findElementAt(offset), offset, editor));
+    assertAtCaret("on the EDT", new ElpGotoDeclarationHandler().getGotoDeclarationTargets(myFixture.getFile().findElementAt(offset), offset, editor),
+                  offset);
     assertEmpty("the request would block the EDT", myServer.requests());
   }
 
-  public void testPluginAnswersWhileTheServerIsNotRunning() {
+  /** While the server is not running the user gets no target, not the plugin's; in the Plugin position the plugin answers. */
+  public void testNoTargetWhileTheServerIsNotRunning() {
     Editor editor = openAt(myAnswers.get(DEFINITION, "remote_function"));
     int offset = editor.getCaretModel().getOffset();
     for (LspServerState state : List.of(LspServerState.Initializing, LspServerState.ShutdownUnexpectedly)) {
       myClient.setState(state);
-      assertNull(state.name(), elpTargets(editor, offset));
+      assertAtCaret(state.name(), elpTargets(editor, offset), offset);
     }
     myClient.setState(LspServerState.Running);
     position(ElpMode.PLUGIN);
@@ -159,19 +173,46 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
     assertEmpty(myServer.requests());
   }
 
-  /** Measured: while ELP loads, a request waits up to its timeout; the plugin answers at once, without asking ELP. */
+  /** Measured: while ELP loads, a request waits up to its timeout; ELP is not asked then, and the user gets no target at once. */
   public void testElpIsNotAskedBeforeItHasLoadedTheProject() {
     Editor editor = openAt(myAnswers.get(DEFINITION, "remote_function"));
     int offset = editor.getCaretModel().getOffset();
     myServer.clearRequests();
     for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED)) {
       myDescriptor.getLoadState().setStateForTests(state);
-      assertNull(state.name(), elpTargets(editor, offset));
+      assertAtCaret(state.name(), elpTargets(editor, offset), offset);
     }
     assertEmpty(myServer.requests());
     myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
     assertNotNull(elpTargets(editor, offset));
     assertSize(1, myServer.requests(DEFINITION));
+  }
+
+  /**
+   * The guard of the roots that ELP does not serve: in the ELP position, with the root out of the registry as after a refused
+   * preflight, go to declaration gives the plugin's targets, exactly as in the Plugin position, and ELP is not asked.
+   */
+  public void testARootThatElpDoesNotServeKeepsThePluginsTargets() {
+    ElpServedRoots.getInstance().setRootsForTests(List.of(), getTestRootDisposable());
+    myServer.clearRequests();
+    for (ElpRecordedAnswers.Case recorded : myAnswers.cases(DEFINITION)) {
+      Editor editor = openAt(recorded);
+      int offset = editor.getCaretModel().getOffset();
+      position(ElpMode.PLUGIN);
+      List<String> plugin = describe(GotoDeclarationAction.findAllTargetElements(getProject(), editor, offset));
+      position(ElpMode.ELP);
+      List<String> elpPosition = describe(onPooledThread(
+        () -> ReadAction.compute(() -> GotoDeclarationAction.findAllTargetElements(getProject(), editor, offset))));
+      assertEquals(recorded.toString(), plugin, elpPosition);
+    }
+    assertEmpty(myServer.requests());
+  }
+
+  private void assertAtCaret(@NotNull String message, @Nullable PsiElement[] targets, int offset) {
+    assertNotNull(message, targets);
+    PsiElement target = assertOneElement(targets);
+    assertEquals(message, myFixture.getFile(), target.getContainingFile());
+    assertTrue(message, ReadAction.compute(() -> target.getTextRange().containsOffset(offset)));
   }
 
   @Nullable

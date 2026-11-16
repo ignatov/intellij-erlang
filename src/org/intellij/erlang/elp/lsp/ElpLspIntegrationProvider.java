@@ -16,11 +16,13 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerManager;
@@ -35,6 +37,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 /**
  * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set and
@@ -44,9 +47,21 @@ import org.jetbrains.annotations.Nullable;
 public final class ElpLspIntegrationProvider implements LspServerSupportProvider {
   private static final Logger LOG = Logger.getInstance(ElpLspIntegrationProvider.class);
 
+  private static volatile boolean ourIgnoringOpenedFilesInTests;
+
+  /**
+   * Makes the platform's calls of {@link #fileOpened} do nothing until {@code parent} is disposed: for the tests that stand a fake
+   * client in for ELP, where the real preflight would refuse the test project and take its root out of {@link ElpServedRoots}.
+   */
+  @TestOnly
+  public static void ignoreOpenedFilesInTests(@NotNull Disposable parent) {
+    ourIgnoringOpenedFilesInTests = true;
+    Disposer.register(parent, () -> ourIgnoringOpenedFilesInTests = false);
+  }
+
   @Override
   public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspServerStarter serverStarter) {
-    if (!ElpFiles.isElpFile(file)) return;
+    if (ourIgnoringOpenedFilesInTests || !ElpFiles.isElpFile(file)) return;
     // In the Plugin position ELP is not started at all; the plugin works as without the integration. ELP may be offered there.
     if (!ElpSettings.getInstance().isElpPositionWithServer()) {
       ElpOffer.fileOpened(project, file);

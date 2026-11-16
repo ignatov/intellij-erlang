@@ -16,7 +16,10 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementPresentation;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.execution.process.CapturingProcessHandler;
@@ -55,6 +58,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -99,6 +103,8 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     myOldState.source = old.source;
     myOldState.mode = old.mode;
     myOldState.eqwalizer = old.eqwalizer;
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    ElpServedRoots.getInstance().setRootsForTests(List.of(), getTestRootDisposable());
   }
 
   @Override
@@ -137,7 +143,7 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     AtomicReference<PsiElement[]> targets = new AtomicReference<>();
     PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> {
       targets.set(definition(shopPsi, editor, call));
-      return targets.get() != null;
+      return isFunction(targets.get());
     }, TIMEOUT_SECONDS);
     assertSize(1, targets.get());
     ErlangFunction lookup = assertInstanceOf(targets.get()[0], ErlangFunction.class);
@@ -180,7 +186,7 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     Editor shopEditor = myFixture.getEditor();
     PsiFile shopPsi = myFixture.getFile();
     int call = shopEditor.getDocument().getText().indexOf("lookup(shop_memory") + 2;
-    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> definition(shopPsi, shopEditor, call) != null,
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> isFunction(definition(shopPsi, shopEditor, call)),
                                                TIMEOUT_SECONDS);
     VirtualFile shop = file("src/shop.erl");
     VirtualFile backend = file("src/shop_backend.erl");
@@ -270,6 +276,7 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
                                                TIMEOUT_SECONDS);
     long failedAfter = System.currentTimeMillis() - start;
     assertFalse(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), ElpEngine.Feature.NAVIGATION));
+    assertFalse("ELP never ran, the root is not served", ElpServedRoots.getInstance().isUnderServedRoot(myRoot));
     assertTrue(descriptor.getLoadState().isOtpNotFound());
     assertFalse(descriptor.getLoadState().history().contains(ElpLoadState.State.RUNNING));
     PlatformTestUtil.waitWithEventsDispatching("no notification", () -> ContainerUtil.exists(
@@ -284,8 +291,9 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
 
   /**
    * Measured in the IDE: after {@code kill -9} of ELP the plugin's features came back, but nothing told the user and ELP was not
-   * started again in 100 s. Now: a balloon and one automatic restart; a second crash within five minutes leaves the plugin
-   * answering, says so, and offers Restart. No process of the servers is left after the stop.
+   * started again in 100 s. Now: a balloon and one automatic restart; a second crash within five minutes leaves the served root
+   * without code insight, says so, and offers Restart and the way back to the plugin. No process of the servers is left after the
+   * stop.
    */
   public void testCrashIsToldAndRestartedOnce() throws Exception {
     String elp = elpPath();
@@ -327,10 +335,28 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     myFixture.openFileInEditor(shop);
     ElpLspIntegrationProvider.startServersIfNeeded(getProject());
     Set<Long> pids = new HashSet<>();
+    // The served-root registry: the root enters when ELP first says Running, not before.
+    List<Boolean> servedBeforeRunning = new CopyOnWriteArrayList<>();
+    PlatformTestUtil.waitWithEventsDispatching("ELP does not run", () -> {
+      if (ElpLspServerStatus.findClient(getProject(), shop, ElpEngine.Feature.NAVIGATION) != null) return true;
+      servedBeforeRunning.add(ElpServedRoots.getInstance().isUnderServedRoot(myRoot));
+      return false;
+    }, TIMEOUT_SECONDS);
+    assertFalse("asked " + servedBeforeRunning.size() + " times before Running", servedBeforeRunning.contains(true));
     ElpLspClientDescriptor first = waitForServing(shop, null, pids);
+    assertEquals(List.of(myRoot.getPath()), ElpServedRoots.getInstance().getRoots());
 
     long killed = System.currentTimeMillis();
     assertTrue(ProcessHandle.of(first.getProcessPid()).orElseThrow().destroyForcibly());
+    // A crash and the restart do not give the root back to the plugin.
+    List<Boolean> servedWhileDown = new CopyOnWriteArrayList<>();
+    PlatformTestUtil.waitWithEventsDispatching("ELP was not restarted", () -> {
+      LspServer client = ElpLspServerStatus.findClient(getProject(), shop, ElpEngine.Feature.NAVIGATION);
+      if (client != null && client.getDescriptor() != first) return true;
+      servedWhileDown.add(ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.COMPLETION));
+      return false;
+    }, TIMEOUT_SECONDS);
+    assertFalse("asked " + servedWhileDown.size() + " times while ELP was down", servedWhileDown.contains(false));
     ElpLspClientDescriptor second = waitForServing(shop, first, pids);
     long restartedAfter = System.currentTimeMillis() - killed;
     Notification restarted = waitForNotification(notifications, "ELP stopped unexpectedly", 1);
@@ -339,12 +365,14 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
 
     assertTrue(ProcessHandle.of(second.getProcessPid()).orElseThrow().destroyForcibly());
     Notification stays = waitForNotification(notifications, "ELP stopped unexpectedly", 2);
-    assertTrue(stays.getContent(), stays.getContent().contains("again within 5 minutes; the plugin answers in"));
+    assertTrue(stays.getContent(), stays.getContent().contains("again within 5 minutes." + ElpNotifications.STAYS_OFF));
     AnAction restart = ContainerUtil.find(stays.getActions(), a -> "Restart ELP".equals(a.getTemplateText()));
     assertNotNull(restart);
+    assertNotNull(ContainerUtil.find(stays.getActions(), a -> "Switch back to the plugin".equals(a.getTemplateText())));
     long quietUntil = System.currentTimeMillis() + 5_000;
     PlatformTestUtil.waitWithEventsDispatching("", () -> System.currentTimeMillis() > quietUntil, 10);
-    assertFalse("not restarted a second time", ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION));
+    assertNull("not restarted a second time", ElpLspServerStatus.findClient(getProject(), shop, ElpEngine.Feature.NAVIGATION));
+    assertTrue("the root stays ELP's, the plugin does not answer", ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION));
 
     ElpRestarts.restart(getProject());
     waitForServing(shop, second, pids);
@@ -352,6 +380,75 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     PlatformTestUtil.waitWithEventsDispatching("a process of ELP is left: " + pids, () -> !ContainerUtil.exists(
       pids, pid -> ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false)), TIMEOUT_SECONDS);
     System.out.println("ELP crash: restarted and serving again " + restartedAfter + " ms after kill -9; processes seen " + pids.size());
+  }
+
+  /**
+   * Completion comes from ELP with a typed prefix, and the plugin's contributors add nothing: the items are ELP's
+   * ({@code lookup/2}), none is the plugin's function element.
+   */
+  public void testCompletionFromElpWithAPrefix() throws Exception {
+    String elp = elpPath();
+    Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
+    FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
+    startElp(elp, project);
+    Editor editor = myFixture.getEditor();
+    PsiFile shopPsi = myFixture.getFile();
+    int call = editor.getDocument().getText().indexOf("lookup(shop_memory") + 2;
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> isFunction(definition(shopPsi, editor, call)),
+                                               TIMEOUT_SECONDS);
+    // "shop_backend:look|up(": the prefix "look" typed.
+    editor.getCaretModel().moveToOffset(editor.getDocument().getText().indexOf("lookup(shop_memory") + "look".length());
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    boolean autocomplete = settings.AUTOCOMPLETE_ON_CODE_COMPLETION;
+    settings.AUTOCOMPLETE_ON_CODE_COMPLETION = false;
+    try {
+      LookupElement[] items = myFixture.completeBasic();
+      assertNotNull(items);
+      List<String> texts = ContainerUtil.map(items, item -> {
+        LookupElementPresentation presentation = new LookupElementPresentation();
+        item.renderElement(presentation);
+        return presentation.getItemText();
+      });
+      System.out.println("ELP completion of shop_backend:look: " + texts);
+      assertContainsElements(texts, "lookup/2");
+      assertFalse("an item of the plugin's contributors: " + texts,
+                  ContainerUtil.exists(items, item -> item.getPsiElement() instanceof ErlangFunction));
+    }
+    finally {
+      settings.AUTOCOMPLETE_ON_CODE_COMPLETION = autocomplete;
+    }
+  }
+
+  /**
+   * A module is renamed by ELP: the file, {@code -module} and the qualified calls. ELP 1.1.0 leaves {@code -behaviour} and
+   * {@code -import} alone.
+   */
+  public void testModuleRenameThroughElp() throws Exception {
+    String elp = elpPath();
+    Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
+    FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
+    startElp(elp, project);
+    Editor shopEditor = myFixture.getEditor();
+    PsiFile shopPsi = myFixture.getFile();
+    int call = shopEditor.getDocument().getText().indexOf("lookup(shop_memory") + 2;
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> isFunction(definition(shopPsi, shopEditor, call)),
+                                               TIMEOUT_SECONDS);
+    VirtualFile backend = file("src/shop_backend.erl");
+    myFixture.openFileInEditor(backend);
+    Editor editor = myFixture.getEditor();
+    editor.getCaretModel().moveToOffset(editor.getDocument().getText().indexOf("-module(shop_back") + "-module(shop_back".length());
+    assertNull(ElpRenameHandler.renameAtCaret(getProject(), editor, myFixture.getFile(), "shop_store"));
+    assertEquals("shop_store.erl", backend.getName());
+    assertTrue(editor.getDocument().getText(), editor.getDocument().getText().startsWith("-module(shop_store)."));
+    String shopText = shopEditor.getDocument().getText();
+    assertTrue(shopText, shopText.contains("shop_store:lookup(shop_memory, Name)"));
+    Document memory = FileDocumentManager.getInstance().getDocument(file("src/shop_memory.erl"));
+    assertNotNull(memory);
+    System.out.println("ELP module rename, shop_memory.erl starts with: " + memory.getText().lines().limit(3).toList());
+  }
+
+  private static boolean isFunction(@Nullable PsiElement[] targets) {
+    return targets != null && targets.length == 1 && targets[0] instanceof ErlangFunction;
   }
 
   /** Waits until a server other than {@code previous} serves {@code file}, and collects the ids of its process and children. */

@@ -120,7 +120,8 @@ public class ElpRecordedDiagnosticCounterpartsTest extends ElpRecordedProjectTes
   }
 
   /** While ELP serves the file, the inspections of the pairs are silent on the fly, and batch inspection still runs them. */
-  public void testSilentOnTheFlyWhileElpServesButStillInBatch() throws Exception {
+  /** Under a served root ELP's diagnostics replace the plugin's inspections on the fly and in batch. */
+  public void testSilentOnTheFlyAndInBatchUnderAServedRoot() throws Exception {
     for (var entry : DEFECTS.entrySet()) {
       String file = fileOf(entry.getValue().getFirst());
       position(ElpMode.PLUGIN);
@@ -129,14 +130,14 @@ public class ElpRecordedDiagnosticCounterpartsTest extends ElpRecordedProjectTes
 
       position(ElpMode.ELP);
       assertEmpty(entry.getKey().getSimpleName() + " on the fly", problems(entry.getKey(), file, true));
-      assertEquals(entry.getKey().getSimpleName() + " in batch", pluginOnTheFly, problems(entry.getKey(), file, false));
+      assertEmpty(entry.getKey().getSimpleName() + " in batch", problems(entry.getKey(), file, false));
     }
   }
 
   /** Without a running server the plugin keeps reporting on the fly in the ELP position. */
-  public void testOnTheFlyWhileTheServerIsNotRunning() throws Exception {
+  public void testSilentWhileTheServerIsNotRunning() throws Exception {
     myClient.setState(com.intellij.platform.lsp.api.LspServerState.ShutdownUnexpectedly);
-    assertFalse(problems(ErlangUnusedFunctionInspection.class, "src/shop_defects.erl", true).isEmpty());
+    assertEmpty(problems(ErlangUnusedFunctionInspection.class, "src/shop_defects.erl", true));
   }
 
   @NotNull

@@ -38,6 +38,8 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpPreflight;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -96,6 +98,8 @@ public abstract class ElpRecordedProjectTestBase extends ErlangLightPlatformCode
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    // The fake client stands in for ELP; the real provider would run the preflight on the opened files and refuse the project.
+    ElpLspIntegrationProvider.ignoreOpenedFilesInTests(getTestRootDisposable());
     setUpProjectSdk();
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldState = new ElpSettings.ElpSettingsState();
@@ -125,6 +129,9 @@ public abstract class ElpRecordedProjectTestBase extends ErlangLightPlatformCode
       return project == getProject() ? List.of(myClient) : List.of();
     }, getTestRootDisposable());
     position(ElpMode.ELP);
+    // ELP has served the root: it reached Running once.
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    ElpServedRoots.getInstance().setRootsForTests(List.of(myRoot.getPath()), getTestRootDisposable());
   }
 
   @Override

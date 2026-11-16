@@ -34,6 +34,7 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.ui.UiInterceptors;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpFeedback;
@@ -539,10 +540,19 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   }
 
   public void testCouldNotLoadOffersTheWayBackAndFeedback() {
-    ElpNotifications.couldNotLoad(getProject(), new ElpLoadState((state, from, to) -> {}), "/p");
+    ElpNotifications.couldNotLoad(getProject(), new ElpLoadState((state, from, to) -> {}), "/p", false);
     Notification notification = assertOneElement(titled("ELP could not load the project"));
     List<String> actions = notification.getActions().stream().map(a -> a.getTemplateText()).toList();
     assertTrue(actions.toString(), actions.containsAll(List.of("Switch back to the plugin", "Tell us how it went")));
+  }
+
+  /** Under a root that ELP serves the plugin does not answer, and the notification says so instead of promising it. */
+  public void testCouldNotLoadUnderAServedRootDoesNotPromiseThePlugin() {
+    ElpNotifications.couldNotLoad(getProject(), new ElpLoadState((state, from, to) -> {}), "/p", true);
+    Notification notification = assertOneElement(titled("ELP could not load the project"));
+    assertFalse(notification.getContent(), notification.getContent().contains("The plugin answers"));
+    assertTrue(notification.getContent(), notification.getContent().contains(ElpNotifications.STAYS_OFF.trim()));
+    assertTrue(ContainerUtil.exists(notification.getActions(), a -> "Switch back to the plugin".equals(a.getTemplateText())));
   }
 
   public void testOpeningAFileChecksTheProjectUnlessSwitchedOff() {

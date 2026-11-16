@@ -22,6 +22,8 @@ import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInspection.InspectionEngine;
 import com.intellij.codeInspection.ex.LocalInspectionToolWrapper;
 import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -49,11 +51,15 @@ import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEngine.Feature;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpSettings;
+import org.intellij.erlang.go.ErlangSymbolContributor;
+import org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.intention.ErlangExportFunctionIntention;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,18 +71,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The engine switch for every {@link Feature}, with the real status of the LSP part and a client that announced the capabilities
- * the real ELP announced. A new feature fails {@link #testEveryFeatureHasAnOwner} until it gets an owner here, and does not compile
- * until it gets a probe of the plugin's counterpart.
+ * The engine switch for every {@link Feature}, with the real status of the LSP part, the root of the test project in the served-root
+ * registry and a client that announced the capabilities the real ELP announced. A new feature fails
+ * {@link #testEveryFeatureHasAnOwner} until it gets an owner here, and does not compile until it gets a probe of the plugin's
+ * counterpart.
  */
 public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
   private enum Owner {PLUGIN, ELP}
 
-  /** Who answers a feature in the {@code ELP} position while ELP serves the file; the documented decision of {@link ElpEngine}. */
+  /** Who answers a feature in the {@code ELP} position under a served root; the documented decision of {@link ElpEngine}. */
   private static final Map<Feature, Owner> OWNER = new EnumMap<>(Feature.class);
 
   static {
-    OWNER.put(Feature.COMPLETION, Owner.PLUGIN);
+    OWNER.put(Feature.COMPLETION, Owner.ELP);
     OWNER.put(Feature.PARAMETER_HINTS, Owner.ELP);
     OWNER.put(Feature.DOCUMENTATION, Owner.ELP);
     OWNER.put(Feature.FOLDING, Owner.ELP);
@@ -89,6 +96,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     OWNER.put(Feature.SIGNATURE_HELP, Owner.ELP);
     OWNER.put(Feature.DOCUMENT_HIGHLIGHTS, Owner.ELP);
     OWNER.put(Feature.WORKSPACE_SYMBOLS, Owner.ELP);
+    OWNER.put(Feature.CALL_HIERARCHY, Owner.ELP);
   }
 
   private static final String PROBE = """
@@ -106,9 +114,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   public void testEveryFeatureHasAnOwner() {
     assertEquals(EnumSet.allOf(Feature.class), OWNER.keySet());
-    for (Feature feature : Feature.values()) {
-      assertEquals(feature.name(), OWNER.get(feature) == Owner.ELP, ElpEngine.elpMayOwn(feature));
-    }
+    for (Feature feature : Feature.values()) assertEquals("ELP or nothing: " + feature, Owner.ELP, OWNER.get(feature));
   }
 
   /** The Plugin position: the plugin owns every feature, and the switch does not even look for a server, although one runs. */
@@ -118,8 +124,8 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     myClientLookups.set(0);
     for (Feature feature : Feature.values()) {
       assertFalse(feature.name(), ElpEngine.ownsFeature(shop, feature));
-      assertFalse(feature.name(), ElpEngine.ownsProjectFeature(getProject(), feature));
     }
+    assertFalse(ElpEngine.servesWholeProject(getProject()));
     assertEquals(0, myClientLookups.get());
     assertEmpty(myServer.requests());
   }
@@ -131,39 +137,66 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       for (Feature feature : Feature.values()) {
         boolean elp = OWNER.get(feature) == Owner.ELP;
         assertEquals(file + " " + feature, elp, ElpEngine.ownsFeature(psiFile, feature));
-        assertEquals(feature.name(), elp, ElpEngine.ownsProjectFeature(getProject(), feature));
       }
     }
   }
 
-  public void testPluginAnswersWhileTheServerIsNotRunning() {
+  /** A served root stays ELP's while its server starts, stops or crashed: the plugin does not answer in between. */
+  public void testServedRootStaysElpsWhileTheServerIsNotRunning() {
     PsiFile shop = psiFile("src/shop.erl");
+    myClientLookups.set(0);
     for (LspServerState state : List.of(LspServerState.Initializing, LspServerState.ShutdownNormally,
                                         LspServerState.ShutdownUnexpectedly)) {
       myClient.setState(state);
-      for (Feature feature : Feature.values()) {
-        assertFalse(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
-        assertFalse(state + " " + feature, ElpEngine.ownsProjectFeature(getProject(), feature));
-      }
+      for (Feature feature : Feature.values()) assertTrue(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
+    }
+    assertEquals("the switch does not look at the server", 0, myClientLookups.get());
+  }
+
+  /** A served root stays ELP's while ELP reloads the project, or after a reload failed. */
+  public void testServedRootStaysElpsWhileElpLoads() {
+    PsiFile shop = psiFile("src/shop.erl");
+    for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED,
+                                            ElpLoadState.State.STOPPED)) {
+      myDescriptor.getLoadState().setStateForTests(state);
+      for (Feature feature : Feature.values()) assertTrue(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
     }
   }
 
   /**
    * The client is Running about 0.01 s after the start, but ELP answers only "elp is still loading" until it has loaded the
-   * project, and never when it cannot: the plugin answers until ELP says Running.
+   * project, and never when it cannot: a root enters the registry when ELP first says Running, and the plugin answers until then.
+   * From then on a crash does not give it back; switching back to the Plugin position does.
    */
-  public void testPluginAnswersUntilElpHasLoadedTheProject() {
+  public void testRootEntersTheRegistryOnTheFirstRunningAndSurvivesACrash() {
+    ElpServedRoots.getInstance().setRootsForTests(List.of(), getTestRootDisposable());
     PsiFile shop = psiFile("src/shop.erl");
-    for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED,
-                                            ElpLoadState.State.STOPPED)) {
-      myDescriptor.getLoadState().setStateForTests(state);
-      for (Feature feature : Feature.values()) {
-        assertFalse(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
-        assertFalse(state + " " + feature, ElpEngine.ownsProjectFeature(getProject(), feature));
-      }
-    }
-    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    ElpLoadState loadState = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(ELP_PATH, ElpMode.ELP)).getLoadState();
+    loadState.started(System.currentTimeMillis());
+    loadState.initialized();
+    assertEquals(ElpLoadState.State.LOADING, loadState.state());
+    assertFalse("the plugin answers while ELP loads for the first time", ElpEngine.ownsFeature(shop, Feature.NAVIGATION));
+    loadState.status("Running", System.currentTimeMillis());
+    assertEquals(List.of(myRoot.getPath()), ElpServedRoots.getInstance().getRoots());
     assertTrue(ElpEngine.ownsFeature(shop, Feature.NAVIGATION));
+    loadState.stopped();
+    assertTrue("a crash does not give the root back", ElpEngine.ownsFeature(shop, Feature.COMPLETION));
+
+    ElpSettings.getInstance().setMode(ElpMode.PLUGIN);
+    assertTrue(ElpServedRoots.getInstance().isEmpty());
+    ElpSettings.getInstance().setMode(ElpMode.ELP);
+    assertFalse("the root enters again only when ELP runs again", ElpEngine.ownsFeature(shop, Feature.NAVIGATION));
+  }
+
+  /** A client of the Plugin position never enters the registry. */
+  public void testClientOfThePluginPositionDoesNotEnterTheRegistry() {
+    ElpServedRoots.getInstance().setRootsForTests(List.of(), getTestRootDisposable());
+    ElpLoadState loadState = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(ELP_PATH, ElpMode.PLUGIN)).getLoadState();
+    loadState.started(System.currentTimeMillis());
+    loadState.initialized();
+    loadState.status("Running", System.currentTimeMillis());
+    loadState.stopped();
+    assertTrue(ElpServedRoots.getInstance().isEmpty());
   }
 
   /** The platform's language services widget says whether ELP has loaded the project. */
@@ -182,16 +215,20 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     assertFalse(running.isError());
   }
 
-  /** A server that did not announce the capability of a feature leaves that feature, and only that one, with the plugin. */
-  public void testPluginAnswersWithoutTheCapability() {
+  /**
+   * A server that did not announce the capability of a feature is not asked for it, but the feature does not go back to the plugin
+   * under a served root.
+   */
+  public void testServedRootStaysElpsWithoutTheCapability() {
     PsiFile shop = psiFile("src/shop.erl");
     for (Feature withdrawn : Feature.values()) {
       InitializeResult result = myAnswers.initializeResult();
       boolean announced = withdraw(result.getCapabilities(), withdrawn);
       myClient.setInitializeResult(result);
       for (Feature feature : Feature.values()) {
-        boolean elp = OWNER.get(feature) == Owner.ELP && (feature != withdrawn || !announced);
-        assertEquals("without " + withdrawn + ": " + feature, elp, ElpEngine.ownsFeature(shop, feature));
+        assertTrue("without " + withdrawn + ": " + feature, ElpEngine.ownsFeature(shop, feature));
+        assertEquals("without " + withdrawn + ": is ELP asked for " + feature, feature != withdrawn || !announced,
+                     ElpLspServerStatus.findClient(getProject(), shop.getVirtualFile(), feature) != null);
       }
     }
   }
@@ -207,7 +244,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * A file under another content root, which this server does not load, stays with the plugin, so its inspections are not
-   * silenced; a file outside the project's content, such as an OTP source, still goes to ELP.
+   * silenced; so does a file outside the project's content, such as an OTP source, which the client gets but no served root holds.
    */
   public void testAFileUnderAnotherContentRootStaysWithThePlugin() throws Exception {
     Path otherDir = FileUtil.createTempDirectory("elp-other-root", null, true).toPath();
@@ -228,7 +265,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.DIAGNOSTICS));
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.NAVIGATION));
       assertTrue(myDescriptor.isSupportedFile(outside));
-      assertTrue(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
+      assertFalse(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
       assertTrue(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), Feature.DIAGNOSTICS));
     }
     finally {
@@ -236,14 +273,14 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     }
   }
 
-  /** A client started for the Plugin position, as before a switch of the position, serves nothing. */
-  public void testClientOfThePluginPositionServesNothing() {
+  /** A client started for the Plugin position, as before a switch of the position, is never asked. */
+  public void testClientOfThePluginPositionIsNeverAsked() {
     FakeElpClient pluginClient = new FakeElpClient(
       new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(ELP_PATH, ElpMode.PLUGIN)), myServer,
       myAnswers.initializeResult());
     ElpLspServerStatus.setClientsForTests(project -> List.of(pluginClient), getTestRootDisposable());
-    PsiFile shop = psiFile("src/shop.erl");
-    for (Feature feature : Feature.values()) assertFalse(feature.name(), ElpEngine.ownsFeature(shop, feature));
+    VirtualFile shop = file("src/shop.erl");
+    for (Feature feature : Feature.values()) assertNull(feature.name(), ElpLspServerStatus.findClient(getProject(), shop, feature));
   }
 
   /** The stored modes of the prototype: {@code ALL} is the ELP position, {@code DIAGNOSTICS} the Plugin position. */
@@ -259,7 +296,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * The plugin's counterpart of every feature at its entry point, in the three states: the Plugin position, the ELP position with
-   * the server serving, and the ELP position with the server stopped. The plugin answers unless ELP serves and owns the feature.
+   * the server serving, and the ELP position with the server stopped. The plugin answers only in the Plugin position.
    */
   public void testThePluginsCounterpartAtItsEntryPoint() {
     for (Feature feature : Feature.values()) {
@@ -268,7 +305,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
         myClient.setState(state == 2 ? LspServerState.ShutdownUnexpectedly : LspServerState.Running);
         Boolean plugin = pluginAnswers(feature);
         if (plugin == null) continue;
-        boolean expected = !(state == 1 && OWNER.get(feature) == Owner.ELP);
+        boolean expected = state == 0 || OWNER.get(feature) != Owner.ELP;
         assertEquals(feature + " in state " + state, expected, plugin.booleanValue());
       }
     }
@@ -276,8 +313,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * Whether the plugin's counterpart of {@code feature} answers, or {@code null} when the plugin has no switch for it: the platform
-   * prefers ELP's document highlights over the plugin's references while a server runs, and ELP's workspace symbols stay switched
-   * off in the LSP customization, so Go to Symbol keeps the plugin's contributors.
+   * prefers ELP's document highlights over the plugin's references while a server runs.
    */
   @Nullable
   private Boolean pluginAnswers(@NotNull Feature feature) {
@@ -335,7 +371,17 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
         yield new ErlangParameterInfoHandler().findElementForParameterInfo(
           new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile())) != null;
       }
-      case DOCUMENT_HIGHLIGHTS, WORKSPACE_SYMBOLS -> null;
+      case WORKSPACE_SYMBOLS -> {
+        probe("f() -> hel<caret>lo(1).");
+        yield new ErlangSymbolContributor().getItemsByName("hello", "hello", getProject(), false).length > 0;
+      }
+      case CALL_HIERARCHY -> {
+        probe("f() -> hel<caret>lo(1).");
+        ErlangFunction hello = ((ErlangFile)myFixture.getFile()).getFunction("hello", 1);
+        yield new ErlangCallHierarchyProvider().getTarget(SimpleDataContext.builder().add(CommonDataKeys.PSI_ELEMENT, hello)
+                                                            .add(CommonDataKeys.PSI_FILE, myFixture.getFile()).build()) != null;
+      }
+      case DOCUMENT_HIGHLIGHTS -> null;
     };
   }
 
@@ -407,6 +453,10 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       }
       case WORKSPACE_SYMBOLS -> {
         capabilities.setWorkspaceSymbolProvider((Boolean)null);
+        yield true;
+      }
+      case CALL_HIERARCHY -> {
+        capabilities.setCallHierarchyProvider((Boolean)null);
         yield true;
       }
       case DIAGNOSTICS -> false;

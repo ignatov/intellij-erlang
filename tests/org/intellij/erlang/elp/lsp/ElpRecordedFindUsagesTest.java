@@ -37,7 +37,7 @@ import java.util.TreeSet;
 
 /**
  * Find usages with the answers of the real ELP to {@code textDocument/references}: what the user gets in the {@code ELP} position
- * for each kind of name, the fallback to the plugin when ELP serves nothing, and never both engines' usages at once.
+ * for each kind of name, and no usages from the plugin under a served root, also when ELP gives none.
  */
 public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
   private static final String REFERENCES = "textDocument/references";
@@ -83,10 +83,11 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
   }
 
   /**
-   * ELP answers no usages of an exported function that nothing calls, because it leaves out the {@code -export} entry; then the
-   * plugin searches, as in the Plugin position, and the user gets the {@code -export} and {@code -spec} entries.
+   * ELP answers no usages of an exported function that nothing calls, because it leaves out the {@code -export} entry; the plugin
+   * does not search in its place, so the user gets no usages, where the Plugin position lists the {@code -export} and
+   * {@code -spec} entries.
    */
-  public void testPluginSearchesWhenElpFindsNothing() {
+  public void testNoUsagesWhenElpFindsNothing() {
     ElpRecordedAnswers.Case label = myAnswers.get(REFERENCES, "exported_function_without_callers");
     assertEquals("[]", String.valueOf(label.result()));
     PsiElement target = targetAt(label);
@@ -97,7 +98,7 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
     assertEmpty("the Plugin position asks no server", myServer.requests());
 
     position(ElpMode.ELP);
-    assertEquals(plugin, usages(target));
+    assertEmpty(usages(target));
     assertSize(1, myServer.requests(REFERENCES));
     assertEmpty(myServer.unanswered());
   }
@@ -128,29 +129,29 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
     assertEquals(List.of("src/shop.erl:12:21 lookup"), sorted(usages(lookup)));
   }
 
-  public void testPluginAnswersWhileTheServerStartsOrAfterItStopped() {
+  public void testNoUsagesWhileTheServerStartsOrAfterItStopped() {
     PsiElement lookup = targetAt(myAnswers.get(REFERENCES, "exported_function"));
     position(ElpMode.PLUGIN);
-    List<String> plugin = usages(lookup);
+    assertNotEmpty(usages(lookup));
     position(ElpMode.ELP);
     for (LspServerState state : List.of(LspServerState.Initializing, LspServerState.ShutdownNormally,
                                         LspServerState.ShutdownUnexpectedly)) {
       myClient.setState(state);
-      assertEquals(state.name(), plugin, usages(lookup));
+      assertEmpty(state.name(), usages(lookup));
       assertEmpty(state.name(), myServer.requests());
     }
   }
 
-  public void testPluginAnswersWhenTheServerDoesNotOfferReferences() {
+  public void testNoUsagesWhenTheServerDoesNotOfferReferences() {
     PsiElement lookup = targetAt(myAnswers.get(REFERENCES, "exported_function"));
     position(ElpMode.PLUGIN);
-    List<String> plugin = usages(lookup);
+    assertNotEmpty(usages(lookup));
     position(ElpMode.ELP);
     InitializeResult withoutReferences = myAnswers.initializeResult();
     withoutReferences.getCapabilities().setReferencesProvider(false);
     myClient.setInitializeResult(withoutReferences);
-    assertFalse(new ElpFindUsagesHandlerFactory().canFindUsages(lookup));
-    assertEquals(plugin, usages(lookup));
+    assertTrue(new ElpFindUsagesHandlerFactory().canFindUsages(lookup));
+    assertEmpty(usages(lookup));
     assertEmpty(myServer.requests());
   }
 

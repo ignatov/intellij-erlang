@@ -34,10 +34,11 @@ import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.EnvironmentUtil;
 import org.intellij.erlang.elp.ElpConfiguration;
-import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEnvironment;
+import org.intellij.erlang.elp.ElpFiles;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpPreflight;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpServerEnvironment;
 import org.intellij.erlang.elp.ElpServerSource;
 import org.intellij.erlang.elp.distribution.ElpDistribution;
@@ -185,11 +186,12 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
-    List<String> expected = new ArrayList<>(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer",
+    List<String> expected = new ArrayList<>(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer",
+                                                    "getDiagnosticsCustomizer",
                                                     "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer",
                                                     "getGoToDefinitionCustomizer", "getGoToTypeDefinitionCustomizer", "getHoverCustomizer",
                                                     "getInlayHintCustomizer", "getSelectionRangeCustomizer", "getSignatureHelpCustomizer",
-                                                    "getSymbolKindCustomizer"));
+                                                    "getSymbolKindCustomizer", "getWorkspaceSymbolCustomizer"));
     for (Method method : LspCustomization.class.getMethods()) {
       if (NOT_SETTABLE_IN_A_2026_1_BUILD.contains(method.getName())) expected.add(method.getName());
     }
@@ -204,13 +206,28 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertInstanceOf(customization.getSemanticTokensCustomizer(), LspSemanticTokensDisabled.class);
     assertTrue(assertInstanceOf(customization.getDocumentHighlightsCustomizer(), LspDocumentHighlightsSupport.class)
                  .shouldAskServerForDocumentHighlights(myFixture.addFileToProject("src/highlights.erl", "").getContainingFile()));
-    assertInstanceOf(customization.getWorkspaceSymbolCustomizer(), LspWorkspaceSymbolDisabled.class);
+    assertInstanceOf(customization.getWorkspaceSymbolCustomizer(), LspWorkspaceSymbolSupport.class);
     assertNotNull(descriptor.getLspServerListener());
   }
 
-  public void testCompletionStaysWithThePluginInTheElpPosition() {
-    assertFalse(ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION));
-    assertInstanceOf(descriptor(ElpMode.ELP).getLspCustomization().getCompletionCustomizer(), LspCompletionDisabled.class);
+  /** Completion comes from ELP in the ELP position, only where the plugin is silent; see ElpLiveServerTest for the files. */
+  public void testCompletionGoesToElpInTheElpPosition() {
+    LspCompletionCustomizer completion = descriptor(ElpMode.ELP).getLspCustomization().getCompletionCustomizer();
+    assertInstanceOf(completion, LspCompletionSupport.class);
+    assertNotSame(LspCompletionSupport.class, completion.getClass());
+  }
+
+  /** A root that ELP served and that a later preflight refuses, here because the project is not trusted, goes back to the plugin. */
+  public void testARefusedPreflightTakesTheRootOutOfTheRegistry() throws Exception {
+    setUpProjectSdk();
+    VirtualFile module = file("src/a.erl");
+    configure(executable(), ElpMode.ELP);
+    VirtualFile root = ReadAction.compute(() -> ElpFiles.findWorkspaceRoot(getProject(), module));
+    assertNotNull(root);
+    ElpServedRoots.getInstance().setRootsForTests(List.of(root.getPath(), "/elsewhere"), getTestRootDisposable());
+    ElpPreflight.trustInTests(false, getTestRootDisposable());
+    assertEmpty(fileOpened(module));
+    assertEquals(List.of("/elsewhere"), ElpServedRoots.getInstance().getRoots());
   }
 
   private static List<String> notDisabledCustomizers(LspCustomization customization) throws Exception {

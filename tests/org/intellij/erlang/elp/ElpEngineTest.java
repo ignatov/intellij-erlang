@@ -18,16 +18,24 @@
 package org.intellij.erlang.elp;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
+import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupManager;
+import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction;
 import com.intellij.codeInspection.LocalInspectionEP;
+import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.SyntaxTraverser;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.refactoring.rename.RenameHandler;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
 import com.intellij.testFramework.PlatformTestUtil;
@@ -39,29 +47,37 @@ import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.editor.ErlangFoldingBuilder;
 import org.intellij.erlang.editor.ErlangWordSelectioner;
 import org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory;
+import org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider;
 import org.intellij.erlang.elp.lsp.ElpRenameHandler;
+import org.intellij.erlang.go.ErlangModuleContributor;
+import org.intellij.erlang.go.ErlangSymbolContributor;
+import org.intellij.erlang.hierarchy.ErlangCallHierarchyProvider;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.inspection.ErlangHeadMismatchInspection;
 import org.intellij.erlang.inspection.ErlangUndefinedBehaviourInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.intention.ErlangExportFunctionIntention;
+import org.intellij.erlang.marker.ErlangRecursiveCallLineMarkerProvider;
+import org.intellij.erlang.navigation.ErlangGotoSuperHandler;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 /**
- * The engine switch with a stand-in for the running ELP server: {@link ElpEngine#ownsFeature} and the plugin features it gates.
+ * The engine switch with the served-root registry and a stand-in for the LSP part: {@link ElpEngine#ownsFeature} and the plugin
+ * features it gates. No ELP server runs here, as while ELP loads or after it crashed: under a served root the plugin is silent all
+ * the same.
  */
 public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ElpSettings.ElpSettingsState myOldState;
   private String myOldPathProperty;
   private String myOldModeProperty;
-  private boolean myServing;
 
   @Override
   protected void setUp() throws Exception {
@@ -75,17 +91,22 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     myOldModeProperty = System.getProperty(ElpConfiguration.MODE_PROPERTY);
     System.clearProperty(ElpConfiguration.PATH_PROPERTY);
     System.clearProperty(ElpConfiguration.MODE_PROPERTY);
+    // The LSP part is there, but no server runs.
     ServiceContainerUtil.registerOrReplaceServiceInstance(getProject(), ElpServerStatus.class, new ElpServerStatus() {
       @Override
       public boolean isServing(@NotNull VirtualFile file, @NotNull ElpEngine.Feature feature) {
-        return myServing;
+        return false;
       }
 
       @Override
       public boolean isServingProject(@NotNull ElpEngine.Feature feature) {
-        return myServing;
+        return false;
       }
     }, getTestRootDisposable());
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    ElpServedRoots.getInstance().setRootsForTests(List.of(), getTestRootDisposable());
+    // No server is started here: the real provider would run the preflight on the opened files and change the registry.
+    ElpLspIntegrationProvider.ignoreOpenedFilesInTests(getTestRootDisposable());
   }
 
   @Override
@@ -103,7 +124,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     }
   }
 
-  public void testOwnsFeaturesOnlyInTheElpPositionWhileTheServerServesTheFile() {
+  public void testOwnsFeaturesOnlyInTheElpPositionUnderAServedRoot() {
     PsiFile module = myFixture.addFileToProject("src/a.erl", "-module(a).");
     PsiFile header = myFixture.addFileToProject("include/a.hrl", "");
     PsiFile appSrc = myFixture.addFileToProject("src/a.app.src", "{application, a, []}.");
@@ -116,7 +137,12 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertFalse(ElpEngine.ownsFeature(getProject(), null, ElpEngine.Feature.DOCUMENTATION));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
-    assertFalse("no running server, the plugin answers", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+    assertFalse("a root that ELP does not serve, the plugin answers", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    ElpPreflight.trustInTests(false, getTestRootDisposable());
+    assertFalse("an untrusted project, the plugin answers", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
 
     configure("/opt/elp/bin/elp", ElpMode.PLUGIN, true);
     assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
@@ -135,13 +161,11 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
   }
 
-  public void testCompletionStaysWithThePlugin() {
+  public void testEveryFeatureIsElpsUnderAServedRoot() {
     PsiFile module = myFixture.addFileToProject("src/a.erl", "-module(a).");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertFalse(ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION));
-    assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.COMPLETION));
     for (ElpEngine.Feature feature : ElpEngine.Feature.values()) {
-      if (feature != ElpEngine.Feature.COMPLETION) assertTrue(feature.name(), ElpEngine.elpMayOwn(feature));
+      assertTrue(feature.name(), ElpEngine.ownsFeature(module, feature));
     }
   }
 
@@ -151,7 +175,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
+    assertDoesntContain(variants(), "bar1", "bar2");
   }
 
   public void testCompletionOfReferenceVariants() {
@@ -162,7 +186,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertContainsElements(lookupStrings(myFixture.completeBasic()), "bar1", "bar2");
+    assertDoesntContain(variants(), "bar1", "bar2");
   }
 
   public void testCompletionOfMacroAndRecordVariants() {
@@ -171,13 +195,13 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "MACRO1", "MACRO2");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertContainsElements(lookupStrings(myFixture.completeBasic()), "MACRO1", "MACRO2");
+    assertDoesntContain(variants(), "MACRO1", "MACRO2");
 
     myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getFile().getText().indexOf("#rec") + 4);
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "rec1", "rec2");
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertContainsElements(lookupStrings(myFixture.completeBasic()), "rec1", "rec2");
+    assertDoesntContain(variants(), "rec1", "rec2");
   }
 
   public void testVariableCompletion() {
@@ -186,7 +210,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "Alpha1", "Alpha2");
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertContainsElements(lookupStrings(myFixture.completeBasic()), "Alpha1", "Alpha2");
+    assertDoesntContain(variants(), "Alpha1", "Alpha2");
   }
 
   public void testParameterHints() {
@@ -215,7 +239,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     ElpEngine.refreshProject(getProject());
     PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
     myFixture.doHighlighting();
-    assertEquals("the server stopped, the plugin's hints are back", 1, inlineInlays());
+    assertEquals("the root is not served any more, the plugin's hints are back", 1, inlineInlays());
   }
 
   private int inlineInlays() {
@@ -253,21 +277,22 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     assertNull(provider.generateDoc(function, original));
-    assertNotNull("without the element in the editor the plugin answers", provider.generateDoc(function, null));
+    assertNull("without the element in the editor the target's file decides", provider.generateDoc(function, null));
   }
 
-  public void testDocumentationOfACompletionItemComesFromThePlugin() {
+  public void testThePluginDocumentsNoCompletionItemUnderAServedRoot() {
     myFixture.configureByText("a.erl", "-module(a).\n%% @doc Says hello.\nhello1() -> ok.\nhello2() -> ok.\nf() -> hel<caret>");
     ErlangFunction function = ((ErlangFile)myFixture.getFile()).getFunction("hello1", 0);
     ErlangDocumentationProvider provider = new ErlangDocumentationProvider();
-    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertContainsElements(lookupStrings(myFixture.completeBasic()), "hello1", "hello2");
     // The platform passes the element at the caret as the original element of a lookup item too.
     PsiElement original = myFixture.getFile().findElementAt(myFixture.getCaretOffset() - 1);
-    assertNotNull("the plugin completes, so it documents its items", provider.generateDoc(function, original));
+    assertNotNull(provider.generateDoc(function, original));
 
-    LookupManager.getInstance(getProject()).hideActiveLookup();
-    assertNull("without a lookup ELP's hover documents the caret", provider.generateDoc(function, original));
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertNotNull(LookupManager.getInstance(getProject()).getActiveLookup());
+    assertNull("ELP's items carry their own documentation", provider.generateDoc(function, original));
   }
 
   public void testExtendSelection() {
@@ -280,7 +305,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertFalse(new ErlangWordSelectioner().canSelect(element));
   }
 
-  public void testInspectionsWithAnElpCounterpartAreSilentButOthersStay() {
+  public void testEveryInspectionIsSilentUnderAServedRoot() {
     myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class, ErlangUnusedFunctionInspection.class,
                                 ErlangHeadMismatchInspection.class, ErlangUndefinedBehaviourInspection.class);
     myFixture.configureByText("a.erl", "-module(a).\n-behaviour(no_such_behaviour).\n-export([f/0]).\nf() -> undefined_fun().\n" +
@@ -292,8 +317,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     DaemonCodeAnalyzer.getInstance(getProject()).restart(myFixture.getFile(), "ELP serves the file now");
-    assertEquals("ELP reports nothing for behaviours, so the plugin keeps that class",
-                 Set.of("Unresolved behaviour no_such_behaviour"), descriptions(myFixture.doHighlighting()));
+    assertEquals("also the behaviour inspection, which has no ELP counterpart", Set.of(), descriptions(myFixture.doHighlighting()));
   }
 
   public void testCounterpartTableCoversOnlyRegisteredInspections() {
@@ -335,15 +359,111 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
       ContainerUtil.map(RenameHandlerRegistry.getInstance().getRenameHandlers(dataContext()), Object::getClass)));
   }
 
-  public void testFindUsagesFallsBackToThePluginWhenElpDoesNotAnswer() {
+  public void testFindUsagesDoesNotFallBackToThePluginWhenElpDoesNotAnswer() {
     myFixture.configureByText("a.erl", "-module(a).\nf<caret>oo() -> ok.\nbar() -> foo(), foo().");
     PsiElement target = ((ErlangFile)myFixture.getFile()).getFunction("foo", 0);
     configure("/opt/elp/bin/elp", ElpMode.ELP, false);
     assertSize(2, myFixture.findUsages(target));
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertTrue(new ElpFindUsagesHandlerFactory().canFindUsages(target));
-    assertSize(2, myFixture.findUsages(target));
+    ElpFindUsagesHandlerFactory factory = new ElpFindUsagesHandlerFactory();
+    assertTrue(factory.canFindUsages(target));
+    assertEmpty("no server answers, and the plugin does not search", myFixture.findUsages(target));
+    FindUsagesHandler highlighting = factory.createFindUsagesHandler(target, true);
+    assertNotNull(highlighting);
+    assertEmpty("ELP's document highlights, not the plugin's references",
+                highlighting.findReferencesToHighlight(target, GlobalSearchScope.fileScope(myFixture.getFile())));
+  }
+
+  /** Go to declaration never falls back to the plugin's references: with no answer from ELP it goes nowhere. */
+  public void testNavigationDoesNotFallBackToThePluginsReferences() {
+    myFixture.configureByText("a.erl", "-module(a).\nfoo() -> ok.\nbar() -> f<caret>oo().");
+    int offset = myFixture.getCaretOffset();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    PsiElement[] plugin = GotoDeclarationAction.findAllTargetElements(getProject(), myFixture.getEditor(), offset);
+    assertInstanceOf(assertOneElement(plugin), ErlangFunction.class);
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    PsiElement[] elp = GotoDeclarationAction.findAllTargetElements(getProject(), myFixture.getEditor(), offset);
+    assertEquals("the element at the caret", myFixture.getFile().findElementAt(offset), assertOneElement(elp));
+  }
+
+  /** Call hierarchy, Go to Super and the gutter markers are computed from the plugin's resolve: off under a served root. */
+  public void testResolveBasedNavigationIsOffUnderAServedRoot() {
+    myFixture.configureByText("a.erl", "-module(a).\nf<caret>oo() -> foo().");
+    ErlangFunction function = ((ErlangFile)myFixture.getFile()).getFunction("foo", 0);
+    DataContext context = SimpleDataContext.builder().add(CommonDataKeys.PSI_ELEMENT, function)
+      .add(CommonDataKeys.PSI_FILE, myFixture.getFile()).build();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertNotNull(new ErlangCallHierarchyProvider().getTarget(context));
+    assertTrue(new ErlangGotoSuperHandler().isValidFor(myFixture.getEditor(), myFixture.getFile()));
+    assertNotEmpty(recursionMarkers());
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertNull(new ErlangCallHierarchyProvider().getTarget(context));
+    assertFalse(new ErlangGotoSuperHandler().isValidFor(myFixture.getEditor(), myFixture.getFile()));
+    assertEmpty(recursionMarkers());
+  }
+
+  private List<LineMarkerInfo<?>> recursionMarkers() {
+    List<PsiElement> elements = SyntaxTraverser.psiTraverser(myFixture.getFile()).toList();
+    List<LineMarkerInfo<?>> markers = new ArrayList<>();
+    new ErlangRecursiveCallLineMarkerProvider().collectSlowLineMarkers(elements, markers);
+    return markers;
+  }
+
+  /**
+   * Go to Symbol and Go to Class: the plugin's contributors are silent in a project whose roots ELP serves all, and in a project
+   * with roots that ELP does not serve they leave out only the files under served roots.
+   */
+  public void testSymbolContributorsLeaveServedFilesToElp() {
+    myFixture.addFileToProject("served/served_mod.erl", "-module(served_mod).\nserved_fun() -> ok.");
+    myFixture.addFileToProject("other/other_mod.erl", "-module(other_mod).\nother_fun() -> ok.");
+    String root = contentRoot();
+    ErlangSymbolContributor symbols = new ErlangSymbolContributor();
+    ErlangModuleContributor modules = new ErlangModuleContributor();
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    assertContainsElements(List.of(symbols.getNames(getProject(), false)), "served_fun", "other_fun");
+    assertSize(1, modules.getItemsByName("served_mod", "served_mod", getProject(), false));
+
+    ElpServedRoots.getInstance().setRootsForTests(List.of(root + "/served"), getTestRootDisposable());
+    assertFalse(ElpEngine.servesWholeProject(getProject()));
+    assertEmpty(modules.getItemsByName("served_mod", "served_mod", getProject(), false));
+    assertSize(1, modules.getItemsByName("other_mod", "other_mod", getProject(), false));
+    assertEmpty(symbols.getItemsByName("served_fun", "served_fun", getProject(), false));
+    assertSize(1, symbols.getItemsByName("other_fun", "other_fun", getProject(), false));
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertTrue(ElpEngine.servesWholeProject(getProject()));
+    assertEmpty(symbols.getNames(getProject(), true));
+    assertEmpty(modules.getNames(getProject(), true));
+    assertEmpty(modules.getItemsByName("other_mod", "other_mod", getProject(), true));
+  }
+
+  /**
+   * The guard of the roots that ELP does not serve: in the ELP position, with the root left out of the registry as after a refused
+   * preflight, completion, go to declaration and the inspections answer exactly as in the Plugin position.
+   */
+  public void testARootThatElpDoesNotServeBehavesAsThePluginPosition() {
+    myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class, ErlangUnusedFunctionInspection.class,
+                                ErlangUndefinedBehaviourInspection.class);
+    String text = "-module(a).\n-behaviour(no_such_behaviour).\nbar1() -> ok.\nbar2() -> undefined_fun().\nfoo() -> bar1(), bar<caret>";
+    myFixture.configureByText("a.erl", text);
+    int call = text.indexOf("bar1(), ") + 1;
+    configure("/opt/elp/bin/elp", ElpMode.PLUGIN, false);
+    List<String> pluginCompletion = variants();
+    Set<String> pluginProblems = descriptions(myFixture.doHighlighting());
+    PsiElement[] pluginTargets = GotoDeclarationAction.findAllTargetElements(getProject(), myFixture.getEditor(), call);
+    assertContainsElements(pluginCompletion, "bar1", "bar2");
+    assertNotEmpty(pluginProblems);
+    assertInstanceOf(assertOneElement(pluginTargets), ErlangFunction.class);
+
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    LookupManager.getInstance(getProject()).hideActiveLookup();
+    DaemonCodeAnalyzer.getInstance(getProject()).restart(myFixture.getFile(), "the ELP position");
+    assertEquals(pluginCompletion, variants());
+    assertEquals(pluginProblems, descriptions(myFixture.doHighlighting()));
+    assertEquals(List.of(pluginTargets), List.of(GotoDeclarationAction.findAllTargetElements(getProject(), myFixture.getEditor(), call)));
   }
 
   public void testParameterInfo() {
@@ -370,6 +490,19 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     return new ErlangFoldingBuilder().buildFoldRegions(myFixture.getFile(), myFixture.getEditor().getDocument(), false);
   }
 
+  /** The completion variants at the caret; a single variant is inserted, which shows as a marker. */
+  private List<String> variants() {
+    LookupElement[] elements = myFixture.completeBasic();
+    if (elements == null) return List.of("<a single variant was inserted>");
+    List<String> strings = ContainerUtil.map(elements, LookupElement::getLookupString);
+    LookupManager.getInstance(getProject()).hideActiveLookup();
+    return strings;
+  }
+
+  private String contentRoot() {
+    return ModuleRootManager.getInstance(getModule()).getContentRoots()[0].getPath();
+  }
+
   private static List<String> lookupStrings(LookupElement[] elements) {
     assertNotNull("one variant was inserted", elements);
     return ContainerUtil.map(elements, LookupElement::getLookupString);
@@ -379,12 +512,13 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     return ContainerUtil.map2Set(ContainerUtil.filter(infos, info -> info.getDescription() != null), HighlightInfo::getDescription);
   }
 
-  private void configure(String path, ElpMode mode, boolean serving) {
+  /** Chooses the position; {@code served} puts the project's content root into the served-root registry, or takes it out. */
+  private void configure(String path, ElpMode mode, boolean served) {
     ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
     state.path = path;
     state.mode = mode.name();
     ElpSettings.getInstance().loadState(state);
-    myServing = serving;
+    ElpServedRoots.getInstance().setRootsForTests(served ? List.of(contentRoot()) : List.of(), getTestRootDisposable());
   }
 
   private static void restore(String key, String value) {
