@@ -94,7 +94,7 @@ public final class ElpServerEnvironment {
   @NotNull
   @RequiresBackgroundThread
   public static Map<String, String> forProject(@NotNull Project project, @Nullable Path tmpDir) {
-    String[] sdkAndRebar = ReadAction.compute(() -> project.isDisposed() ? new String[2] : new String[]{
+    String[] sdkAndRebar = ReadAction.computeBlocking(() -> project.isDisposed() ? new String[2] : new String[]{
       ErlangSdkType.getSdkPath(project),
       RebarSettings.getInstance(project).getRebarPath()
     });
