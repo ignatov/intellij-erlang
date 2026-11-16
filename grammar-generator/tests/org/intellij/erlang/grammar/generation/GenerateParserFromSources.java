@@ -87,6 +87,15 @@ public class GenerateParserFromSources extends LightJavaCodeInsightFixtureTestCa
     };
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    // Without it the IDE uses the caches of the IntelliJ IDEA installed on this machine. Their VFS and indices outlive
+    // the run, so a later run can read a gen/ that no longer exists and generate other PSI.
+    assertNotNull("idea.system.path is not set: the generator must run on its own empty system directory",
+                  System.getProperty("idea.system.path"));
+    super.setUp();
+  }
+
   public void testGenerateParser() throws Throwable {
     assertFalse("grammarKit.projectDir is not set", PROJECT_DIR.isEmpty());
     assertFalse("grammarKit.outputDir is not set", OUTPUT_DIR.isEmpty());
