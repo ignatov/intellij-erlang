@@ -781,8 +781,9 @@ public class ErlangPsiImplUtil {
         }
       };
 
-      Set<String> typeNames = ContainerUtil.map2Set(types, ErlangTypeDefinition::getName);
-      List<String> builtInTypeNames = ContainerUtil.filter(BUILT_IN_TYPES, s -> !typeNames.contains(s));
+      Set<String> typeNames = ContainerUtil.map2Set(types, t -> t.getName() + "/" + getArity(t));
+      List<String> builtInTypeNames = ContainerUtil.filter(BUILT_IN_TYPES, s ->
+        !typeNames.contains(s + "/" + (BUILT_IN_TYPES_WITHOUT_ZERO_ARITY.contains(s) ? 2 : 0)));
       List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(builtInTypeNames, s -> PrioritizedLookupElement.withPriority(
         LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
         ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.emptyList();

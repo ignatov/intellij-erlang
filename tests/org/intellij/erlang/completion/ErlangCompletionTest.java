@@ -30,6 +30,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -314,14 +315,22 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -type foo() :: dynamic()<caret>.""");
   }
 
-  public void testLocalTypeWithArgumentsHidesBuiltInTypeOfSameName() {
-    doCheckResult(
+  public void testNoBuiltInTypesInExportType() {
+    doTestEquals(
       """
-        -type identifier(T) :: {id, T}.
-        -type foo() :: identif<caret>.""",
-      """
-        -type identifier(T) :: {id, T}.
-        -type foo() :: identifier(<caret>).""");
+        -type tuple_a() :: a.
+        -type tuple_b() :: b.
+        -export_type([tupl<caret>]).""",
+      "tuple_a", "tuple_b");
+  }
+
+  public void testLocalTypeOfOtherArityKeepsBuiltInType() {
+    myFixture.configureByText("a.erl", """
+      -type list(A, B) :: {A, B}.
+      -type t() :: lis<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
   }
 
   public void testNoUndefinedOrDeprecatedBuiltInTypes() {
