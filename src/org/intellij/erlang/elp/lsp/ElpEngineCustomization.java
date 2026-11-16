@@ -26,11 +26,11 @@ import org.jetbrains.annotations.NotNull;
 /**
  * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent under a root
  * that ELP serves ({@link ElpEngine}): diagnostics, completion, hover documentation, parameter name inlay hints, folding,
- * selection ranges, go to definition and type definition, signature help, highlighting of usages in the file, and code actions
- * as intentions.
+ * selection ranges, go to definition and type definition, signature help, highlighting of usages in the file, code actions as
+ * intentions, and workspace symbols for Go to Symbol and Go to Class.
  * <p>
- * Switched off here: workspace symbols, which the plugin's contributors answer; find references, which the plugin's own ELP
- * entry point asks for instead ({@code ElpFindUsagesHandlerFactory}), so that there is one target; call hierarchy, which the client does not deliver for an
+ * Switched off here: find references, which the plugin's own ELP entry point asks for instead
+ * ({@code ElpFindUsagesHandlerFactory}), so that there is one target; call hierarchy, which the client does not deliver for an
  * Erlang element; semantic tokens, document symbols and code lenses, because the plugin's lexer, structure view and breadcrumbs
  * work on the open file without its engine; and the features ELP does not offer.
  * <p>
@@ -51,6 +51,7 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
       return ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
     }
   };
+  private final LspWorkspaceSymbolCustomizer myWorkspaceSymbols = new LspWorkspaceSymbolSupport();
   private final LspHoverCustomizer myHover = new LspHoverSupport();
   private final LspInlayHintCustomizer myInlayHints = new LspInlayHintSupport();
   private final LspFoldingRangeCustomizer myFolding = new LspFoldingRangeSupport();
@@ -81,6 +82,12 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @Override
   public LspCompletionCustomizer getCompletionCustomizer() {
     return myCompletion;
+  }
+
+  @NotNull
+  @Override
+  public LspWorkspaceSymbolCustomizer getWorkspaceSymbolCustomizer() {
+    return myWorkspaceSymbols;
   }
 
   @NotNull
