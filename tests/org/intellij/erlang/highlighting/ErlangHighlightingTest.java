@@ -72,6 +72,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDuplicateExport2()  { doTest(); }
   public void testDefineImported1()   { doTest(); }
   public void testDefineImported2()   { doTest(); }
+  public void testRecordVariableInMacroBody() { doTest(); } // issue 446
 
   public void testAutoimportCall1()   { doTest(); }
   public void testAutoimportCall2()   { doTest(); }
