@@ -28,6 +28,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.TextEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -39,14 +40,16 @@ import java.util.Set;
 
 /**
  * The engine switch: decides, per file and feature, whether ELP owns a feature so that the plugin's counterpart stays silent.
- * Every plugin feature that ELP can replace asks {@link #ownsFeature} at its entry point; search for the callers to find them all.
+ * Every plugin feature that ELP replaces asks {@link #ownsFeature} at its entry point; search for the callers to find them all.
  * <p>
- * ELP owns a feature only when all of these hold: the {@link ElpMode#ELP} position is chosen with a path to {@code elp} or the
- * downloaded server ({@link ElpSettings#isElpPositionWithServer});
- * the file is an Erlang module or header ({@link ElpFiles#isElpFile}); and an ELP server started for that position is running
- * in the project and announced the capability ({@link ElpServerStatus}). Otherwise, for example while the server starts, after it
- * crashed, or in an IDE without the LSP module, the plugin answers as it does in the {@link ElpMode#PLUGIN} position.
- * References and resolve are never switched off, so inspections, the annotator and the refactorings keep working on them.
+ * ELP owns every feature of an Erlang module or header ({@link ElpFiles#isElpFile}) under a root that ELP serves
+ * ({@link ElpServedRoots}), in the {@link ElpMode#ELP} position with a path to {@code elp} or the downloaded server
+ * ({@link ElpSettings#isElpPositionWithServer}), in a trusted project of an IDE with the LSP module ({@link ElpServerStatus}).
+ * There the plugin does not answer in parallel, whatever the server is doing: while it loads, after a crash or while it restarts
+ * the user gets nothing from the plugin's engine. Everywhere else, for example in the {@link ElpMode#PLUGIN} position, under a root
+ * that the preflight refused, under another content root or in the OTP sources, the plugin answers exactly as without ELP.
+ * References and resolve are never switched off, because the lexer, the parser, the formatter and the run configurations of the
+ * plugin keep working on the PSI.
  */
 public final class ElpEngine {
   private ElpEngine() {
@@ -54,7 +57,7 @@ public final class ElpEngine {
 
   /** The plugin features that ELP replaces in the {@link ElpMode#ELP} position. */
   public enum Feature {
-    /** Basic and smart completion: ELP's {@code textDocument/completion}. Stays with the plugin, see {@link #elpMayOwn}. */
+    /** Basic and smart completion: ELP's {@code textDocument/completion}, with the documentation of its items. */
     COMPLETION,
     /** Parameter name inlay hints: ELP's {@code textDocument/inlayHint}. */
     PARAMETER_HINTS,
@@ -62,16 +65,13 @@ public final class ElpEngine {
     DOCUMENTATION,
     /** Folding of functions: ELP's {@code textDocument/foldingRange}. ELP folds no comments, so the plugin keeps those. */
     FOLDING,
-    /** The intentions that ELP's code actions duplicate: export a function, add a spec, add documentation. */
+    /** The plugin's intentions: ELP's code actions replace them. */
     INTENTIONS,
     /** Extend selection: ELP's {@code textDocument/selectionRange}. */
     SELECTION,
-    /** Go to declaration: ELP's {@code textDocument/definition}, asked before the plugin's references. */
+    /** Go to declaration: ELP's {@code textDocument/definition}, never the plugin's references. */
     NAVIGATION,
-    /**
-     * The plugin inspections whose problems ELP's diagnostics report too, see {@link ElpDiagnosticCounterparts}. Batch inspection
-     * still runs them, because ELP diagnoses only the files open in the editor.
-     */
+    /** All the plugin's inspections and their quick fixes, on the fly and in batch: ELP's diagnostics replace them. */
     DIAGNOSTICS,
     /** Find usages and Show Usages: ELP's {@code textDocument/references} supplies the usages of the plugin's target. */
     FIND_USAGES,
@@ -81,20 +81,13 @@ public final class ElpEngine {
     SIGNATURE_HELP,
     /** Highlight usages in the file: ELP's {@code textDocument/documentHighlight}. */
     DOCUMENT_HIGHLIGHTS,
-    /** Go to Symbol and Go to Class: ELP's {@code workspace/symbol}. A project feature, see {@link #ownsProjectFeature}. */
+    /** Call hierarchy: the plugin's is computed from its resolve; the LSP client does not deliver ELP's for an Erlang element. */
+    CALL_HIERARCHY,
+    /** Go to Symbol and Go to Class: ELP's {@code workspace/symbol}, see {@link #servesWholeProject}. */
     WORKSPACE_SYMBOLS
   }
 
   private static final ThreadLocal<Set<Feature>> PLUGIN_FALLBACK = ThreadLocal.withInitial(() -> EnumSet.noneOf(Feature.class));
-
-  /**
-   * Whether ELP may own {@code feature} in the {@link ElpMode#ELP} position. Completion stays with the plugin: on the plugin's
-   * completion tests ELP agreed in 6 of 36, and with an empty prefix it offers only keywords. The LSP client asks ELP for
-   * completion only when this allows it, so that the list is filled by exactly one of them.
-   */
-  public static boolean elpMayOwn(@NotNull Feature feature) {
-    return feature != Feature.COMPLETION;
-  }
 
   /**
    * @param context an element of the file the feature works in; for completion and documentation pass an element of the file in the
@@ -108,23 +101,45 @@ public final class ElpEngine {
   }
 
   public static boolean ownsFeature(@NotNull Project project, @Nullable VirtualFile file, @NotNull Feature feature) {
-    if (file == null || !ElpFiles.isElpFile(file)) return false;
-    ElpServerStatus status = statusIfElpPosition(project, feature);
-    return status != null && status.isServing(file, feature);
+    if (file == null || !ElpFiles.isElpFile(file) || PLUGIN_FALLBACK.get().contains(feature)) return false;
+    return isServed(project, file);
   }
 
   /**
-   * For the features that work on the whole project rather than on a file, such as {@link Feature#WORKSPACE_SYMBOLS}: whether a
-   * running ELP server of the project announced the capability.
+   * Whether {@code file}, of any type, lies under a root that ELP serves in {@code project}; see the class comment for the conditions.
+   * Cheap: in the {@link ElpMode#PLUGIN} position it looks at an empty list only.
    */
-  public static boolean ownsProjectFeature(@NotNull Project project, @NotNull Feature feature) {
-    ElpServerStatus status = statusIfElpPosition(project, feature);
-    return status != null && status.isServingProject(feature);
+  public static boolean isServed(@NotNull Project project, @NotNull VirtualFile file) {
+    ElpServedRoots roots = ElpServedRoots.getInstance();
+    if (roots.isEmpty() || !roots.isUnderServedRoot(file)) return false;
+    return isElpProject(project);
+  }
+
+  /**
+   * For Go to Symbol and Go to Class: whether every content root of {@code project} lies under a root that ELP serves, so that ELP's
+   * {@code workspace/symbol} answers for the whole project and the plugin's contributors stay silent, also for the libraries and the
+   * SDK. In a project with roots that ELP does not serve the plugin's contributors answer for the files outside the served roots.
+   */
+  public static boolean servesWholeProject(@NotNull Project project) {
+    ElpServedRoots roots = ElpServedRoots.getInstance();
+    if (roots.isEmpty() || !isElpProject(project)) return false;
+    VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
+    if (contentRoots.length == 0) return false;
+    for (VirtualFile contentRoot : contentRoots) {
+      if (!roots.isUnderServedRoot(contentRoot)) return false;
+    }
+    return true;
+  }
+
+  private static boolean isElpProject(@NotNull Project project) {
+    if (project.isDefault() || project.isDisposed()) return false;
+    if (!ElpSettings.getInstance().isElpPositionWithServer() || !ElpPreflight.isTrusted(project)) return false;
+    return project.getService(ElpServerStatus.class) != null;
   }
 
   /**
    * Runs {@code action} with {@code feature} answered by the plugin on this thread, whatever the position: for an ELP entry point
-   * that falls back to the plugin, for example when ELP refuses to rename the element at the caret.
+   * that needs the plugin's own implementation, for example the plugin's rename handlers looked up by {@code ElpRenameHandler}.
    */
   public static void runWithPlugin(@NotNull Feature feature, @NotNull Runnable action) {
     Set<Feature> fallback = PLUGIN_FALLBACK.get();
@@ -135,13 +150,6 @@ public final class ElpEngine {
     finally {
       if (added) fallback.remove(feature);
     }
-  }
-
-  @Nullable
-  private static ElpServerStatus statusIfElpPosition(@NotNull Project project, @NotNull Feature feature) {
-    if (!elpMayOwn(feature) || project.isDefault() || project.isDisposed() || PLUGIN_FALLBACK.get().contains(feature)) return null;
-    if (!ElpSettings.getInstance().isElpPositionWithServer()) return null;
-    return project.getService(ElpServerStatus.class);
   }
 
   /**

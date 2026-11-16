@@ -26,6 +26,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangCallbackSpec;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -39,7 +40,8 @@ public class ErlangGotoSuperHandler implements LanguageCodeInsightActionHandler 
 
   @Override
   public boolean isValidFor(Editor editor, PsiFile file) {
-    return file instanceof ErlangFile;
+    // Under a root that ELP serves the plugin does not navigate by its resolve.
+    return file instanceof ErlangFile && !ElpEngine.ownsFeature(file, ElpEngine.Feature.NAVIGATION);
   }
 
   @Override

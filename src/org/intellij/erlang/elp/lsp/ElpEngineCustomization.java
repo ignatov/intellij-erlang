@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
  * serves the file ({@link ElpEngine}): diagnostics, hover documentation, parameter name inlay hints, folding, selection ranges,
  * go to definition and type definition, signature help, highlighting of usages in the file, and code actions as intentions.
  * <p>
- * Switched off here: completion, which stays with the plugin as long as {@link ElpEngine#elpMayOwn} says so; find references,
+ * Switched off here: completion; find references,
  * which the plugin's own ELP entry point asks for instead ({@code ElpFindUsagesHandlerFactory}), so that there is one target;
  * workspace symbols, because ELP answers them with module names only; call hierarchy, which the client does not deliver for an
  * Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which stay with the plugin; and the
@@ -70,7 +70,7 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @NotNull
   @Override
   public LspCompletionCustomizer getCompletionCustomizer() {
-    return ElpEngine.elpMayOwn(ElpEngine.Feature.COMPLETION) ? myCompletion : super.getCompletionCustomizer();
+    return super.getCompletionCustomizer();
   }
 
   @NotNull

@@ -27,7 +27,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangLanguage;
-import org.intellij.erlang.elp.ElpDiagnosticCounterparts;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -45,9 +44,8 @@ abstract public class ErlangInspectionBase extends LocalInspectionTool implement
   @Override
   public final PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly, @NotNull LocalInspectionToolSession session) {
     ErlangFile file = ObjectUtils.tryCast(session.getFile(), ErlangFile.class);
-    if (isOnTheFly && ElpDiagnosticCounterparts.hasElpCounterpart(getClass()) && ElpEngine.ownsFeature(file, ElpEngine.Feature.DIAGNOSTICS)) {
-      return DUMMY_VISITOR;
-    }
+    // Under a root that ELP serves its diagnostics replace every inspection of the plugin, on the fly and in batch.
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.DIAGNOSTICS)) return DUMMY_VISITOR;
     return file != null && canRunOn(file) ? buildErlangVisitor(holder, session) : DUMMY_VISITOR;
   }
 

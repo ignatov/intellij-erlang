@@ -26,6 +26,7 @@ import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.navigation.ErlangNavigationUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -44,6 +45,8 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
 
   @Override
   public void collectSlowLineMarkers(@NotNull List<? extends PsiElement> elements, @NotNull Collection<? super LineMarkerInfo<?>> result) {
+    // Under a root that ELP serves the plugin computes no markers from its resolve.
+    if (!elements.isEmpty() && ElpEngine.ownsFeature(elements.getFirst(), ElpEngine.Feature.NAVIGATION)) return;
     for (PsiElement element : elements) {
       ErlangFunction function = findFunctionFromNameLeaf(element);
       if (function != null) {

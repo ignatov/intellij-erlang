@@ -33,6 +33,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.Processor;
 import org.eclipse.lsp4j.Location;
@@ -43,14 +45,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * Find usages in the {@code ELP} position: the target is still the plugin's element, so there is one target and no choice
- * popup, but its usages are ELP's {@code textDocument/references} at the element's name. Find Usages, Show Usages and the usages
- * shown on a declaration all go through this handler. When ELP has no answer (an error, a timeout, an empty list) the plugin's
- * own handler searches, as in the {@code Plugin} position. Highlighting usages in the file keeps the default search of the
- * handler, which is the plugin's references. Registered in {@code erlang-elp-lsp.xml} before the plugin's factory.
+ * Find usages of an element under a root that ELP serves: the target is still the plugin's element, so there is one target and no
+ * choice popup, but its usages are ELP's {@code textDocument/references} at the element's name. Find Usages, Show Usages and the
+ * usages shown on a declaration all go through this handler. When ELP has no answer (an error, a timeout, an empty list, the server
+ * loads or crashed) there are no usages: the plugin does not search in parallel. Highlighting usages in the file is ELP's
+ * {@code textDocument/documentHighlight}, which the platform's LSP client asks for; this handler highlights nothing of its own.
+ * Registered in {@code erlang-elp-lsp.xml} before the plugin's factory.
  */
 public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   private static final int TIMEOUT_MS = 10_000;
@@ -65,7 +69,7 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
   public FindUsagesHandler createFindUsagesHandler(@NotNull PsiElement element, boolean forHighlightUsages) {
     FindUsagesHandler plugin = pluginHandler(element, forHighlightUsages);
     if (plugin == null) return null;
-    return forHighlightUsages ? plugin : new ElpFindUsagesHandler(element, plugin);
+    return new ElpFindUsagesHandler(element, plugin);
   }
 
   /** The handler the platform would use without this factory: the plugin's factory, or the default one. */
@@ -98,11 +102,17 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
                                         @NotNull Processor<? super UsageInfo> processor,
                                         @NotNull FindUsagesOptions options) {
       List<UsageInfo> usages = elpUsages(element);
-      if (usages == null || usages.isEmpty()) return myPlugin.processElementUsages(element, processor, options);
+      if (usages == null) return true;
       for (UsageInfo usage : usages) {
         if (!processor.process(usage)) return false;
       }
       return true;
+    }
+
+    @NotNull
+    @Override
+    public Collection<PsiReference> findReferencesToHighlight(@NotNull PsiElement target, @NotNull SearchScope searchScope) {
+      return List.of();
     }
   }
 

@@ -42,10 +42,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Go to declaration in the {@code ELP} position: asks ELP's {@code textDocument/definition} before the platform looks at the
- * plugin's references. The platform asks the declaration handlers first and uses the first non-empty answer, so the references
- * stay as they are and still serve inspections, find usages, rename and the rest. When ELP has no answer (nothing there, the
- * caret is on the declaration itself, a timeout), the handler returns nothing and the plugin's references answer as before.
+ * Go to declaration under a root that ELP serves: asks ELP's {@code textDocument/definition} before the platform looks at the
+ * plugin's references. The platform asks the declaration handlers first and uses the first non-empty answer, so the plugin's
+ * references never answer there: when ELP has no target (nothing there, a timeout, the server loads or crashed) the handler answers
+ * with the element at the caret, which goes nowhere. Only on a declaration itself, which ELP answers with the declaration, the
+ * handler answers nothing, so that the platform shows its usages, which ELP finds ({@code ElpFindUsagesHandlerFactory}).
  * Registered in {@code erlang-elp-lsp.xml}.
  */
 public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
@@ -54,19 +55,20 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
   @Override
   public PsiElement @Nullable [] getGotoDeclarationTargets(@Nullable PsiElement sourceElement, int offset, Editor editor) {
     if (!ElpEngine.ownsFeature(sourceElement, ElpEngine.Feature.NAVIGATION)) return null;
-    // The request blocks; the platform computes the targets in the background, and the plugin answers on the EDT.
-    if (ApplicationManager.getApplication().isDispatchThread()) return null;
+    PsiElement[] nowhere = {sourceElement};
+    // The request blocks; the platform computes the targets in the background.
+    if (ApplicationManager.getApplication().isDispatchThread()) return nowhere;
     PsiFile psiFile = sourceElement.getContainingFile();
     VirtualFile file = psiFile.getOriginalFile().getVirtualFile();
     Project project = psiFile.getProject();
     LspServer client = ElpLspServerStatus.findClient(project, file, ElpEngine.Feature.NAVIGATION);
-    if (client == null) return null;
+    if (client == null) return nowhere;
 
     Document document = editor.getDocument();
     DefinitionParams params = new DefinitionParams(client.getDocumentIdentifier(file), Lsp4jUtilKt.getLsp4jPosition(document, offset));
     Either<List<? extends Location>, List<? extends LocationLink>> result =
       client.sendRequestSync(TIMEOUT_MS, server -> server.getTextDocumentService().definition(params));
-    if (result == null) return null;
+    if (result == null) return nowhere;
 
     List<Target> targets = new ArrayList<>();
     if (result.isLeft()) {
@@ -82,11 +84,11 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
       PsiElement element = findElement(project, client, target);
       if (element != null) elements.add(element);
     }
-    return elements.isEmpty() ? null : elements.toArray(PsiElement.EMPTY_ARRAY);
+    return elements.isEmpty() ? nowhere : elements.toArray(PsiElement.EMPTY_ARRAY);
   }
 
   /**
-   * On a declaration ELP answers with the declaration itself; the platform then shows its usages, through the plugin.
+   * On a declaration ELP answers with the declaration itself; the platform then shows its usages, which ELP finds.
    */
   private static boolean isAtCaret(@NotNull Target target, @NotNull LspServer client, @NotNull VirtualFile file,
                                    @NotNull Document document, int offset) {

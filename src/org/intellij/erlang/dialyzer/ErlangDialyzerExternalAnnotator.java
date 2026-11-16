@@ -45,6 +45,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,6 +69,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   public State collectInformation(@NotNull PsiFile file) {
     VirtualFile vFile = file.getVirtualFile();
     if (vFile == null || vFile.getFileType() != ErlangFileType.MODULE) return null;
+    // Under a root that ELP serves its diagnostics replace the plugin's inspections, this one too.
+    if (ElpEngine.ownsFeature(file, ElpEngine.Feature.DIAGNOSTICS)) return null;
     String canonicalPath = vFile.getCanonicalPath();
     if (canonicalPath == null) return null;
     Module module = ModuleUtilCore.findModuleForPsiElement(file);
