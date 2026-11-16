@@ -159,6 +159,21 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
     assertEmpty(myServer.requests());
   }
 
+  /** Measured: while ELP loads, a request waits up to its timeout; the plugin answers at once, without asking ELP. */
+  public void testElpIsNotAskedBeforeItHasLoadedTheProject() {
+    Editor editor = openAt(myAnswers.get(DEFINITION, "remote_function"));
+    int offset = editor.getCaretModel().getOffset();
+    myServer.clearRequests();
+    for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED)) {
+      myDescriptor.getLoadState().setStateForTests(state);
+      assertNull(state.name(), elpTargets(editor, offset));
+    }
+    assertEmpty(myServer.requests());
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    assertNotNull(elpTargets(editor, offset));
+    assertSize(1, myServer.requests(DEFINITION));
+  }
+
   @Nullable
   private PsiElement[] elpTargets(@NotNull Editor editor, int offset) {
     PsiFile file = myFixture.getFile();

@@ -80,7 +80,37 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
 
   @Override
   public @Nullable LspServerWidgetItem createLspServerWidgetItem(@NotNull LspServer lspServer, @Nullable VirtualFile currentFile) {
-    return new LspServerWidgetItem(lspServer, currentFile, ErlangIcons.FILE, ErlangExternalToolsConfigurable.class);
+    return new ElpWidgetItem(lspServer, currentFile);
+  }
+
+  /**
+   * The ELP item of the platform's language services widget, which shows the client's state: it says, too, whether ELP has loaded
+   * the project, because the client is Running long before ELP answers. A failed load shows as an error.
+   */
+  static final class ElpWidgetItem extends LspServerWidgetItem {
+    ElpWidgetItem(@NotNull LspServer lspServer, @Nullable VirtualFile currentFile) {
+      super(lspServer, currentFile, ErlangIcons.FILE, ErlangExternalToolsConfigurable.class);
+    }
+
+    @NotNull
+    @Override
+    protected String getServerLabel() {
+      ElpLoadState.State state = loadState();
+      String label = super.getServerLabel();
+      if (state == ElpLoadState.State.STARTING || state == ElpLoadState.State.LOADING) return label + " (loading the project)";
+      if (state == ElpLoadState.State.FAILED) return label + " (could not load the project)";
+      return label;
+    }
+
+    @Override
+    public boolean isError() {
+      return super.isError() || loadState() == ElpLoadState.State.FAILED;
+    }
+
+    @Nullable
+    private ElpLoadState.State loadState() {
+      return getLspServer().getDescriptor() instanceof ElpLspClientDescriptor descriptor ? descriptor.getLoadState().state() : null;
+    }
   }
 
   /**

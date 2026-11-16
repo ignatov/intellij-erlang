@@ -17,6 +17,8 @@
 package org.intellij.erlang.elp.lsp;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.notification.Notification;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
@@ -48,6 +50,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -96,6 +100,9 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
     ElpLspClientDescriptor descriptor = startElp(elp, project);
     VirtualFile shop = file("src/shop.erl");
+    // ELP serves only once it has said Running in elp/status, which it sends because the client asks for it.
+    assertEquals(List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.RUNNING),
+                 descriptor.getLoadState().history());
 
     // Definition: the remote call in price/1 goes to lookup/2 in shop_backend.erl; ELP answers once it has loaded the project.
     Editor editor = myFixture.getEditor();
@@ -177,6 +184,39 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     assertEquals(initialize.getRootUri(), assertOneElement(initialize.getWorkspaceFolders()).getUri());
   }
 
+  /**
+   * Without {@code erl} on its PATH ELP never loads: it shows "Could not find OTP" and errors, ends its progress and sends no
+   * {@code elp/status}. The plugin keeps answering, and the user is told that ELP cannot find Erlang/OTP.
+   */
+  public void testLoadWithoutErlFailsAndThePluginAnswers() throws Exception {
+    String elp = elpPath();
+    List<Notification> notifications = new CopyOnWriteArrayList<>();
+    getProject().getMessageBus().connect(getTestRootDisposable()).subscribe(Notifications.TOPIC, new Notifications() {
+      @Override
+      public void notify(@NotNull Notification notification) {
+        notifications.add(notification);
+      }
+    });
+    Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
+    FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
+    long start = System.currentTimeMillis();
+    ElpLspClientDescriptor descriptor = startElp(elp, project, Map.of("PATH", "/usr/bin:/bin:/usr/sbin:/sbin"));
+    PlatformTestUtil.waitWithEventsDispatching("ELP's load did not fail", () -> descriptor.getLoadState().state() == ElpLoadState.State.FAILED,
+                                               TIMEOUT_SECONDS);
+    long failedAfter = System.currentTimeMillis() - start;
+    assertFalse(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), ElpEngine.Feature.NAVIGATION));
+    assertTrue(descriptor.getLoadState().isOtpNotFound());
+    assertFalse(descriptor.getLoadState().history().contains(ElpLoadState.State.RUNNING));
+    PlatformTestUtil.waitWithEventsDispatching("no notification", () -> ContainerUtil.exists(
+      notifications, n -> "ELP could not load the project".equals(n.getTitle())), TIMEOUT_SECONDS);
+    Notification failure = ContainerUtil.find(notifications, n -> "ELP could not load the project".equals(n.getTitle()));
+    assertTrue(failure.getContent(), failure.getContent().contains("ELP cannot find Erlang/OTP"));
+    assertFalse("the Info balloon of every start goes to the log",
+                ContainerUtil.exists(notifications, n -> !ElpNotifications.GROUP.equals(n.getGroupId()) && n.getContent().contains("ELP version")));
+    System.out.println("ELP without erl: FAILED after " + failedAfter + " ms; history " + descriptor.getLoadState().history() +
+                       "; last lines " + descriptor.getLoadState().lastLogLines());
+  }
+
   @NotNull
   private static String elpPath() {
     String elp = System.getenv("ERLANG_ELP_PATH");
@@ -190,6 +230,15 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
    */
   @NotNull
   private ElpLspClientDescriptor startElp(@NotNull String elp, @NotNull Path project) {
+    ElpLspClientDescriptor descriptor = startElp(elp, project, null);
+    VirtualFile shop = file("src/shop.erl");
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not start", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION),
+                                               TIMEOUT_SECONDS);
+    return descriptor;
+  }
+
+  @NotNull
+  private ElpLspClientDescriptor startElp(@NotNull String elp, @NotNull Path project, @Nullable Map<String, String> environment) {
     VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
     myRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(project);
     assertNotNull(myRoot);
@@ -204,9 +253,8 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     VirtualFile shop = file("src/shop.erl");
     myFixture.openFileInEditor(shop);
     ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
+    descriptor.setEnvironmentForTests(environment);
     LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
-    PlatformTestUtil.waitWithEventsDispatching("ELP did not start", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION),
-                                               TIMEOUT_SECONDS);
     return descriptor;
   }
 
