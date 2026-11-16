@@ -39,16 +39,12 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameHandler;
-import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.refactoring.rename.RenameHandlerRegistry;
-import com.intellij.util.concurrency.annotations.RequiresReadLock;
+import com.intellij.refactoring.util.CommonRefactoringUtil;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.intellij.erlang.elp.ElpEngine;
-import org.intellij.erlang.psi.ErlangModule;
-import org.intellij.erlang.psi.ErlangModuleRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -66,9 +62,11 @@ import java.util.regex.Pattern;
  * to a scratch name, to learn whether ELP can rename the name at the caret. If it can, the handler asks for the new name, sends
  * {@code textDocument/rename} and applies the returned edit to all files as one global undoable command, without saving. The
  * documents are saved before ELP is asked, see {@link #saveForElp}.
- * A module is renamed by the plugin, see {@link #isModuleName}; ELP's other file operations are refused.
- * If ELP cannot or does not answer, the plugin's rename runs exactly as in the {@code Plugin} position. While this handler is
- * available the plugin's in-place rename handlers are not ({@code ErlangRefactoringSupportProvider}), so only one rename runs.
+ * A module is renamed by ELP too, with its file; ELP's other file operations are refused. ELP 1.1.0 leaves {@code -behaviour(...)},
+ * {@code -import(...)} and the module list of the {@code .app.src} file alone (see {@code ElpRecordedRenameTest.testModule}).
+ * The handler is available for every Erlang module and header under a root that ELP serves. If ELP cannot rename the name at the
+ * caret, or is not running, the user is told so and nothing is renamed: the plugin's rename does not run there. While this
+ * handler is available the plugin's in-place rename handlers are not ({@code ErlangRefactoringSupportProvider}).
  * Registered in {@code erlang-elp-lsp.xml}.
  */
 public final class ElpRenameHandler implements RenameHandler, TitledHandler {
@@ -76,6 +74,8 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   /** The LSP error {@code ContentModified}. */
   private static final int CONTENT_MODIFIED = -32801;
   private static final int ATTEMPTS = 3;
+  static final String CANNOT_RENAME = "ELP cannot rename the name at the caret";
+  static final String NOT_RUNNING = "ELP is not running for this file yet: it is loading the project or has stopped.";
   private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_@]*");
 
   @Override
@@ -105,13 +105,14 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   @Override
   public void invoke(@NotNull Project project, @Nullable Editor editor, @Nullable PsiFile file, @Nullable DataContext dataContext) {
     if (editor == null || file == null || dataContext == null) return;
-    if (isModuleName(file, editor.getCaretModel().getOffset())) {
-      renameWithPlugin(project, editor, file, dataContext);
+    VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
+    if (virtualFile == null || ElpLspServerStatus.findClient(project, virtualFile, ElpEngine.Feature.RENAME) == null) {
+      CommonRefactoringUtil.showErrorHint(project, editor, NOT_RUNNING, getActionTitle(), null);
       return;
     }
     Target target = target(project, editor, file);
     if (target == null) {
-      renameWithPlugin(project, editor, file, dataContext);
+      CommonRefactoringUtil.showErrorHint(project, editor, CANNOT_RENAME, getActionTitle(), null);
       return;
     }
     String newName = Messages.showInputDialog(project, "Rename '" + target.oldName() + "' to:", getActionTitle(), null,
@@ -128,29 +129,8 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
    */
   @Nullable
   public static String renameAtCaret(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file, @NotNull String newName) {
-    if (isModuleName(file, editor.getCaretModel().getOffset())) return "A module is renamed by the plugin";
     Target target = target(project, editor, file);
-    return target == null ? "ELP cannot rename the name at the caret" : rename(project, target, newName);
-  }
-
-  /**
-   * A module stays with the plugin's rename: ELP 1.1.0 renames the file and the qualified calls and types, but leaves
-   * {@code -behaviour(...)}, {@code -import(...)} and the module list of the {@code .app.src} file alone (see
-   * {@code ElpRecordedRenameTest.testModule}); the plugin's rename renames the file and all of those.
-   *
-   * @return whether the caret is on the name of a module: in {@code -module(...)}, or a reference to a module
-   */
-  @RequiresReadLock
-  static boolean isModuleName(@NotNull PsiFile file, int offset) {
-    return isModuleNameAt(file, offset) || offset > 0 && isModuleNameAt(file, offset - 1);
-  }
-
-  private static boolean isModuleNameAt(@NotNull PsiFile file, int offset) {
-    PsiElement element = file.findElementAt(offset);
-    if (element == null) return false;
-    if (PsiTreeUtil.getParentOfType(element, ErlangModuleRef.class) != null) return true;
-    ErlangModule module = PsiTreeUtil.getParentOfType(element, ErlangModule.class);
-    return module != null && PsiTreeUtil.isAncestor(module.getQAtom(), element, false);
+    return target == null ? CANNOT_RENAME : rename(project, target, newName);
   }
 
   /**
@@ -207,15 +187,6 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
                         @NotNull String oldName) {
   }
 
-
-  /** The plugin's rename, chosen by the platform as in the {@code Plugin} position. */
-  private static void renameWithPlugin(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file,
-                                       @NotNull DataContext dataContext) {
-    ElpEngine.runWithPlugin(ElpEngine.Feature.RENAME, () -> {
-      RenameHandler handler = RenameHandlerRegistry.getInstance().getRenameHandler(dataContext);
-      if (handler != null && !(handler instanceof ElpRenameHandler)) handler.invoke(project, editor, file, dataContext);
-    });
-  }
 
   /**
    * @return the name at the caret when ELP can rename it, otherwise {@code null}
