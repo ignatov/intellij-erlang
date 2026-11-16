@@ -63,6 +63,8 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
      * existed, is long ago.
      */
     public long offerAnsweredTime;
+    /** How many times the offer to try ELP was shown, at most 2; 0 in settings stored before it existed, see {@link #getOfferShownCount}. */
+    public int offerShownCount;
   }
 
   @NotNull private ElpSettingsState myState = new ElpSettingsState();
@@ -150,6 +152,18 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
 
   public void setOfferAnsweredTime(long time) {
     myState.offerAnsweredTime = time;
+  }
+
+  /**
+   * How many times the offer to try ELP was shown. Settings stored before the count existed have only the version: once, when it
+   * is set.
+   */
+  public int getOfferShownCount() {
+    return Math.max(myState.offerShownCount, getOfferShownForVersion().isEmpty() ? 0 : 1);
+  }
+
+  public void setOfferShownCount(int count) {
+    myState.offerShownCount = count;
   }
 
   public boolean isOfferNeverAsk() {

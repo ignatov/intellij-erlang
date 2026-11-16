@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 final class ElpOfferDialog extends DialogWrapper {
   static final String TITLE = "Try ELP for Erlang";
   static final String ABOUT = "About ELP";
+  /** The first paragraph of the second and last offer. */
+  static final String REMINDER = "Sorry to ask again. You chose \"Not now\" earlier, so this is a reminder, and it is the last one.";
   static final String DOCS_URL = "https://whatsapp.github.io/erlang-language-platform/";
   private static final int WIDTH = 520;
   private static final int BULLET_INDENT = 22;
@@ -57,7 +59,8 @@ final class ElpOfferDialog extends DialogWrapper {
   private final List<Block> myContent;
   private boolean myDontAsk;
 
-  ElpOfferDialog(@NotNull Project project, @NotNull List<Block> content) {
+  /** @param reminder the offer is shown for the second and last time: "Don't ask again" is not needed */
+  ElpOfferDialog(@NotNull Project project, @NotNull List<Block> content, boolean reminder) {
     super(project);
     myContent = content;
     setTitle(TITLE);
@@ -66,7 +69,7 @@ final class ElpOfferDialog extends DialogWrapper {
     // The dialog opens by itself, maybe while the user types: Enter must not download and start ELP, so no button is the default.
     getOKAction().putValue(DEFAULT_ACTION, null);
     // Qualified: inside a DialogWrapper the simple name is the deprecated DialogWrapper.DoNotAskOption.
-    setDoNotAskOption(new com.intellij.openapi.ui.DoNotAskOption.Adapter() {
+    if (!reminder) setDoNotAskOption(new com.intellij.openapi.ui.DoNotAskOption.Adapter() {
       @Override
       public void rememberChoice(boolean isSelected, int exitCode) {
         myDontAsk = isSelected;
@@ -86,10 +89,17 @@ final class ElpOfferDialog extends DialogWrapper {
     init();
   }
 
-  /** The text of the dialog; the download line only when "Try ELP" downloads the server. */
+  /** The text of the first offer; the download line only when "Try ELP" downloads the server. */
   @NotNull
   static List<Block> content(@NotNull ElpAvailability availability) {
+    return content(availability, false);
+  }
+
+  /** @param reminder the offer is shown for the second and last time, and says so first */
+  @NotNull
+  static List<Block> content(@NotNull ElpAvailability availability, boolean reminder) {
     List<Block> blocks = new ArrayList<>();
+    if (reminder) blocks.add(new Block(Kind.PARAGRAPH, REMINDER));
     blocks.add(new Block(Kind.PARAGRAPH,
                          "ELP (Erlang Language Platform) is the open-source Erlang language server that WhatsApp develops. " +
                          "It reads the project the way rebar3 builds it, so it knows the dependencies, the include paths and the macros."));
@@ -189,8 +199,9 @@ final class ElpOfferDialog extends DialogWrapper {
     return List.of(getOKAction(), getCancelAction());
   }
 
+  /** "Don't ask again", {@code null} on the second and last offer. */
   @TestOnly
-  @NotNull
+  @Nullable
   JCheckBox dontAskCheckBox() {
     return myCheckBoxDoNotShowDialog;
   }

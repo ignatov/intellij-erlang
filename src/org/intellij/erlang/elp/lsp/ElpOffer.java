@@ -64,9 +64,10 @@ import java.util.function.LongSupplier;
  * and ELP would work for the project: {@link ElpPreflight} finds nothing against it, and a server is set or can be downloaded.
  * It waits for a moment when the user can read it: the project is indexed, its frame is active and no other dialog is open;
  * otherwise the next opened file tries again. Nothing switches by itself: "Try ELP" downloads the server when needed and only
- * then sets the ELP position; "Switch back to the plugin" undoes it. After "Not now" the offer comes again in a newer plugin
- * version, and not sooner than 30 days after the answer; after "Don't ask again", or a switch from ELP back to the plugin, it
- * never comes again. The {@value #PROPERTY} system property set to {@code false} turns the offer off.
+ * then sets the ELP position; "Switch back to the plugin" undoes it. The offer is shown twice at most: after "Not now" it comes
+ * once more, as a reminder, in a newer plugin version and not sooner than 30 days after the answer; after "Don't ask again", or
+ * a switch from ELP back to the plugin, it never comes again. The {@value #PROPERTY} system property set to {@code false} turns
+ * the offer off.
  */
 final class ElpOffer {
   private static final Logger LOG = Logger.getInstance(ElpOffer.class);
@@ -95,6 +96,8 @@ final class ElpOffer {
   /** After "Not now" the offer comes again in a newer plugin version, and not sooner than this after the answer. */
   static final int ASK_AGAIN_DAYS = 30;
   static final long ASK_AGAIN_MS = TimeUnit.DAYS.toMillis(ASK_AGAIN_DAYS);
+  /** The second offer is the last, whatever the answer. */
+  static final int MAX_OFFERS = 2;
   private static volatile LongSupplier ourClock = System::currentTimeMillis;
 
   /**
@@ -105,13 +108,14 @@ final class ElpOffer {
 
   /** Shows the offer and returns the answer; tests replace it, so that no window opens. */
   interface Asker {
+    /** @param reminder the offer is shown for the second and last time */
     @NotNull
     @RequiresEdt
-    Choice ask(@NotNull Project project, @NotNull List<ElpOfferDialog.Block> content);
+    Choice ask(@NotNull Project project, @NotNull List<ElpOfferDialog.Block> content, boolean reminder);
   }
 
-  static final Asker DIALOG = (project, content) -> {
-    ElpOfferDialog dialog = new ElpOfferDialog(project, content);
+  static final Asker DIALOG = (project, content, reminder) -> {
+    ElpOfferDialog dialog = new ElpOfferDialog(project, content, reminder);
     dialog.show();
     return dialog.choice();
   };
@@ -224,7 +228,7 @@ final class ElpOffer {
   /**
    * Whether the offer may be shown for {@code pluginVersion}: the IDE runs on macOS, the offer is not switched off, the engine is
    * the plugin and not forced by a system property, the user did not choose "Don't ask again", and the offer was not shown yet or
-   * was last shown for an older version {@value #ASK_AGAIN_DAYS} days ago or earlier. Touches neither the file system nor the
+   * was shown once, for an older version, {@value #ASK_AGAIN_DAYS} days ago or earlier. Touches neither the file system nor the
    * project model.
    */
   static boolean shouldAsk(@NotNull String pluginVersion) {
@@ -242,7 +246,8 @@ final class ElpOffer {
     if (settings.getStoredMode() != ElpMode.PLUGIN) return "the engine is " + settings.getStoredMode();
     if (settings.isOfferNeverAsk()) return "the user chose \"" + NEVER + "\"";
     String shownForVersion = settings.getOfferShownForVersion();
-    if (!shownForVersion.isEmpty()) {
+    if (settings.getOfferShownCount() >= MAX_OFFERS) return "the last offer was shown, for version " + shownForVersion;
+    if (settings.getOfferShownCount() > 0) {
       if (VersionComparatorUtil.compare(pluginVersion, shownForVersion) <= 0) {
         return "already shown for version " + shownForVersion + " (plugin version " + pluginVersion + ")";
       }
@@ -397,9 +402,11 @@ final class ElpOffer {
     }
     LOG.info("ELP offer shown for plugin version " + pluginVersion + ", ELP server: " + availability.kind());
     ElpSettings settings = ElpSettings.getInstance();
+    boolean reminder = settings.getOfferShownCount() > 0;
+    settings.setOfferShownCount(settings.getOfferShownCount() + 1);
     settings.setOfferShownForVersion(pluginVersion);
     settings.setOfferAnsweredTime(ourClock.getAsLong());
-    Choice choice = ourAsker.ask(project, ElpOfferDialog.content(availability));
+    Choice choice = ourAsker.ask(project, ElpOfferDialog.content(availability, reminder), reminder);
     LOG.info("ELP offer answered: " + choice);
     switch (choice) {
       case TRY -> tryElp(project);

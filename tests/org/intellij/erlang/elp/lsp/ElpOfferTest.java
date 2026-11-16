@@ -74,6 +74,7 @@ import java.util.function.Consumer;
 public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String V1 = "0.11.1";
   private static final String V2 = "0.11.2";
+  private static final String V3 = "0.11.3";
 
   private ElpSettings.ElpSettingsState myOldState;
   private final List<String> myOldProperties = new ArrayList<>();
@@ -113,6 +114,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     myOldState.offerShownForVersion = old.offerShownForVersion;
     myOldState.offerNeverAsk = old.offerNeverAsk;
     myOldState.offerAnsweredTime = old.offerAnsweredTime;
+    myOldState.offerShownCount = old.offerShownCount;
     for (String property : List.of(ElpConfiguration.PATH_PROPERTY, ElpConfiguration.MODE_PROPERTY, ElpOffer.PROPERTY)) {
       myOldProperties.add(System.getProperty(property));
       System.clearProperty(property);
@@ -135,7 +137,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
         myNotifications.add(notification);
       }
     });
-    ElpOffer.setUpForTests((project, content) -> {
+    ElpOffer.setUpForTests((project, content, reminder) -> {
       UiInterceptors.register(new UiInterceptors.UiInterceptor<>(ElpOfferDialog.class) {
         @Override
         protected void doIntercept(@NotNull ElpOfferDialog dialog) {
@@ -143,7 +145,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
           myUser.accept(dialog);
         }
       });
-      return ElpOffer.DIALOG.ask(project, content);
+      return ElpOffer.DIALOG.ask(project, content, reminder);
     }, () -> myFrameActive, getTestRootDisposable());
     // The offer is shown on macOS only; the tests decide it on every system.
     ElpOffer.macOsInTests(true, getTestRootDisposable());
@@ -181,8 +183,10 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertEquals(ElpOffer.NEVER, offer.dontAskCheckBox().getText());
     assertFalse(offer.dontAskCheckBox().isSelected());
     assertEquals(ElpOfferDialog.content(downloadable()), offer.content());
+    assertFalse(ElpOfferDialog.text(offer.content()), ElpOfferDialog.text(offer.content()).contains(ElpOfferDialog.REMINDER));
     assertTrue(offer.isDisposed());
     assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
+    assertEquals(1, ElpSettings.getInstance().getOfferShownCount());
 
     assertFalse(offer(V1));
     assertOneElement(myDialogs);
@@ -267,6 +271,46 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertFalse("30 days later, but an older version", offer("0.11.0"));
     assertTrue(offer(V2));
     assertEquals(2, myDialogs.size());
+  }
+
+  /** The second offer says sorry, reminds of the earlier "Not now", is the last one, and needs no "Don't ask again". */
+  public void testTheSecondOfferRemindsAndIsTheLast() {
+    myUser = d -> press(d, ElpOffer.NOT_NOW);
+    assertTrue(offer(V1));
+    myNow += ElpOffer.ASK_AGAIN_MS;
+    assertTrue(offer(V2));
+    ElpOfferDialog second = myDialogs.get(1);
+    assertEquals(ElpOfferDialog.content(downloadable(), true), second.content());
+    assertEquals(new ElpOfferDialog.Block(ElpOfferDialog.Kind.PARAGRAPH, "Sorry to ask again. You chose \"Not now\" earlier, so this " +
+                                                                          "is a reminder, and it is the last one."),
+                 second.content().get(0));
+    assertEquals(ElpOfferDialog.content(downloadable()), second.content().subList(1, second.content().size()));
+    assertNull("no Don't ask again", second.dontAskCheckBox());
+    assertEquals(List.of(ElpOffer.TRY, ElpOffer.NOT_NOW), second.buttons().stream().map(a -> a.getValue(Action.NAME)).toList());
+    assertEquals(2, ElpSettings.getInstance().getOfferShownCount());
+
+    myNow += ElpOffer.ASK_AGAIN_MS;
+    assertFalse("no third offer", offer(V3));
+    assertEquals(2, myDialogs.size());
+  }
+
+  /** Whatever the answer to the second offer, there is no third. */
+  public void testNoThirdOfferAfterAnyAnswer() {
+    List<Consumer<ElpOfferDialog>> answers = List.of(d -> press(d, ElpOffer.NOT_NOW), DialogWrapper::doCancelAction,
+                                                     d -> press(d, ElpOffer.TRY));
+    for (Consumer<ElpOfferDialog> answer : answers) {
+      ElpSettings.getInstance().loadState(new ElpSettings.ElpSettingsState());
+      myDialogs.clear();
+      myUser = d -> press(d, ElpOffer.NOT_NOW);
+      assertTrue(offer(V1));
+      myNow += ElpOffer.ASK_AGAIN_MS;
+      myUser = answer;
+      assertTrue(offer(V2));
+      ElpSettings.getInstance().setMode(ElpMode.PLUGIN);
+      myNow += ElpOffer.ASK_AGAIN_MS;
+      assertFalse(myDialogs.get(1).choice().toString(), offer(V3));
+      assertEquals(2, myDialogs.size());
+    }
   }
 
   /** Esc and the close button of the window end where "Not now" does: in {@code doCancelAction}. */
@@ -567,10 +611,12 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     ElpSettings.getInstance().setOfferShownForVersion(V1);
     ElpSettings.getInstance().setOfferNeverAsk(true);
     ElpSettings.getInstance().setOfferAnsweredTime(1_700_000_000_000L);
+    ElpSettings.getInstance().setOfferShownCount(1);
     String xml = JDOMUtil.write(XmlSerializer.serialize(ElpSettings.getInstance().getState()));
     assertTrue(xml, xml.contains("<option name=\"offerShownForVersion\" value=\"" + V1 + "\" />"));
     assertTrue(xml, xml.contains("<option name=\"offerNeverAsk\" value=\"true\" />"));
     assertTrue(xml, xml.contains("<option name=\"offerAnsweredTime\" value=\"1700000000000\" />"));
+    assertTrue(xml, xml.contains("<option name=\"offerShownCount\" value=\"1\" />"));
 
     ElpSettings.ElpSettingsState old = XmlSerializer.deserialize(
       JDOMUtil.load("<state><option name=\"mode\" value=\"PLUGIN\" /></state>"), ElpSettings.ElpSettingsState.class);
@@ -580,15 +626,19 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertTrue(offer(V1));
   }
 
-  /** An answer stored before its time was: long ago, so a newer version asks again. */
-  public void testAnAnswerStoredWithoutItsTimeIsLongAgo() throws Exception {
+  /** An offer stored before its time and count were: shown once, long ago, so a newer version shows the second and last offer. */
+  public void testAnOfferStoredWithoutItsTimeAndCountWasShownOnceLongAgo() throws Exception {
     ElpSettings.ElpSettingsState old = XmlSerializer.deserialize(
       JDOMUtil.load("<state><option name=\"mode\" value=\"PLUGIN\" /><option name=\"offerShownForVersion\" value=\"" + V1 +
                     "\" /></state>"), ElpSettings.ElpSettingsState.class);
     ElpSettings.getInstance().loadState(old);
     assertEquals(0, ElpSettings.getInstance().getOfferAnsweredTime());
+    assertEquals(1, ElpSettings.getInstance().getOfferShownCount());
     assertFalse(offer(V1));
     assertTrue(offer(V2));
+    assertNull("the second offer", assertOneElement(myDialogs).dontAskCheckBox());
+    myNow += ElpOffer.ASK_AGAIN_MS;
+    assertFalse(offer(V3));
   }
 
   /**
