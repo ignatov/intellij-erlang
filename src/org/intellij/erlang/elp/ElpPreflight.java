@@ -259,7 +259,7 @@ public final class ElpPreflight implements Disposable {
   @RequiresBackgroundThread
   public Facts gatherFacts() {
     String settingsKey = settingsKey();
-    Object[] sdk = ReadAction.compute(() -> {
+    Object[] sdk = ReadAction.computeBlocking(() -> {
       if (myProject.isDisposed()) return new Object[3];
       String home = ErlangSdkType.getSdkPath(myProject);
       ErlangSdkRelease release = StringUtil.isNotEmpty(home) ? ErlangSdkType.getProjectSdkRelease(myProject) : null;
@@ -326,7 +326,7 @@ public final class ElpPreflight implements Disposable {
   @RequiresBackgroundThread
   public static Result check(@NotNull Project project) {
     Facts facts = getInstance(project).gatherFacts();
-    Layout layout = ReadAction.compute(() -> {
+    Layout layout = ReadAction.computeBlocking(() -> {
       if (project.isDisposed()) return null;
       VirtualFile root = ProjectUtil.guessProjectDir(project);
       if (root == null) {
