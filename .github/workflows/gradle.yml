@@ -193,6 +193,176 @@ jobs:
           jps-plugin/build/reports/tests/testCompilation
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
+  # The tests and the compilation tests on macOS and Windows. Informational for now: the jobs may fail
+  # (continue-on-error) and nightly does not wait for them, until the tests that fail there are fixed.
+  # buildPlugin, verifyPlugin and verifyGeneratedSources do not depend on the OS and run only in build.
+  test-os:
+    name: test-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Keep LF line endings and allow long paths
+      # The golden files of testData are compared with LF line endings.
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+    - name: Test
+      run: ./gradlew --no-daemon test
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-reports-${{ runner.os }}
+        path: |
+          build/reports/tests/test
+          build/test-results/test
+        if-no-files-found: ignore
+
+  compilation-tests-os:
+    name: compilation-tests-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Keep LF line endings and allow long paths
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+    - name: Install Erlang/OTP on macOS
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
+      # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
+      if: runner.os == 'macOS'
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        case "$(uname -m)" in
+          arm64) target=aarch64-apple-darwin ;;
+          x86_64) target=x86_64-apple-darwin ;;
+          *) echo "::error::No erlef/otp_builds build for $(uname -m)"; exit 1 ;;
+        esac
+        sha256=$(curl -fsSL --retry 3 "https://raw.githubusercontent.com/erlef/otp_builds/main/builds/$target.csv" \
+          | awk -F, -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::erlef/otp_builds has no OTP-$OTP_VERSION for $target"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/erlef/otp_builds/releases/download/OTP-$OTP_VERSION/otp-$target.tar.gz"
+        echo "$sha256  $archive" | shasum -a 256 -c -
+        root="$RUNNER_TEMP/otp"
+        mkdir -p "$root"
+        tar -xzf "$archive" -C "$root"
+        echo "$root/bin" >> "$GITHUB_PATH"
+    - name: Install Erlang/OTP on Windows
+      # The official archive of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change the pins
+      # together in all three. The sha256 is the one GitHub publishes for the release asset; SHA256.txt of the release
+      # does not list the Windows builds.
+      if: runner.os == 'Windows'
+      env:
+        OTP_VERSION: '27.3.4.9'
+        OTP_SHA256: 749e6db4459499e60b6b433da7accca05a9227a844fd1a5e8734308342c5cae4
+      run: |
+        temp="$(cygpath -u "$RUNNER_TEMP")"
+        archive="$temp/otp.zip"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_win64_$OTP_VERSION.zip"
+        echo "$OTP_SHA256  $archive" | sha256sum -c -
+        root="$temp/otp"
+        mkdir -p "$root"
+        unzip -q "$archive" -d "$root"
+        cygpath -w "$root/bin" >> "$GITHUB_PATH"
+    - name: Check Erlang/OTP
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
+    - name: Install rebar3
+      # The same pinned escript as the compilation-tests job. The build runs it as `escript <path> compile`, so on
+      # Windows too rebar.path is the escript itself.
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -u "$rebar3")"
+        fi
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        if command -v sha256sum > /dev/null; then
+          echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        else
+          echo "$REBAR3_SHA256  $rebar3" | shasum -a 256 -c -
+        fi
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -w "$rebar3")"
+        fi
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
+    - name: Run compilation tests
+      run: |
+        erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        echo "Erlang/OTP $(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().') at $erlang_root"
+        echo "rebar3 at $REBAR3_PATH"
+        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root" -Drebar.path="$REBAR3_PATH"
+        # The rebar tests skip themselves without rebar; here every test has to run.
+        skipped="$(grep -L 'skipped="0"' build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml || true)"
+        if [[ -n "$skipped" ]]; then
+          echo "::error::Compilation tests were skipped in: $skipped"
+          exit 1
+        fi
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compilation-test-reports-${{ runner.os }}
+        path: |
+          build/reports/tests/testCompilation
+          build/test-results/testCompilation
+          jps-plugin/build/reports/tests/testCompilation
+          jps-plugin/build/test-results/testCompilation
+          .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
+        if-no-files-found: ignore
+
   nightly:
     needs: [build, other-ides, compilation-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
