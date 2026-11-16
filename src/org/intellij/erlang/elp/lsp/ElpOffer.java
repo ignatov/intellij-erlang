@@ -161,7 +161,7 @@ final class ElpOffer {
         .append(") from GitHub. ");
     }
     text.append("When a project is opened, ELP runs rebar3 to fetch and build its dependencies and writes to _build.<br>")
-      .append("You can switch back in Settings | Erlang External Tools.");
+      .append("You can switch back in Settings | Other Settings | Erlang External Tools.");
     return text.toString();
   }
 
