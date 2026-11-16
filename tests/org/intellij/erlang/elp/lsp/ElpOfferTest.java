@@ -465,6 +465,19 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
   }
 
+  /** A project the IDE does not trust is not checked for the offer: the check would run the project's rebar3. */
+  public void testNoCheckInAProjectThatIsNotTrusted() {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+    ElpPreflight.trustInTests(false, getTestRootDisposable());
+    fileOpened(file);
+    assertNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    fileOpened(file);
+    assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
   /** The offer's memory is written with the settings, and settings stored before it existed read as "never shown". */
   public void testOfferStateIsStoredAndOldSettingsRead() throws Exception {
     ElpSettings.getInstance().setOfferShownForVersion(V1);

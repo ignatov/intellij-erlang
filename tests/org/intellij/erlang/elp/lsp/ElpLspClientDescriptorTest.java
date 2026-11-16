@@ -324,6 +324,29 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertSize(1, fileOpened(module));
   }
 
+  /** ELP runs rebar3 and the project's build: it is not started in a project the IDE does not trust, and the user is told why. */
+  public void testProviderDoesNotStartElpInAProjectThatIsNotTrusted() throws Exception {
+    List<Notification> notifications = new ArrayList<>();
+    getProject().getMessageBus().connect(getTestRootDisposable()).subscribe(Notifications.TOPIC, new Notifications() {
+      @Override
+      public void notify(@NotNull Notification notification) {
+        notifications.add(notification);
+      }
+    });
+    setUpProjectSdk();
+    VirtualFile module = file("src/a.erl");
+    configure(executable(), ElpMode.ELP);
+    ElpPreflight.trustInTests(false, getTestRootDisposable());
+    assertEmpty(fileOpened(module));
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    Notification notification = assertOneElement(notifications);
+    assertEquals("ELP is not started", notification.getTitle());
+    assertTrue(notification.getContent(), notification.getContent().contains("not trusted"));
+
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    assertSize(1, fileOpened(module));
+  }
+
   /**
    * The downloaded server: the provider starts the build installed for the project's OTP release, and while it is not installed
    * starts nothing and says that ELP can be downloaded.
@@ -379,7 +402,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
    */
   private List<LspServerDescriptor> fileOpened(VirtualFile file) {
     ElpPreflight.Facts facts = ElpPreflight.getInstance(getProject()).cachedFacts();
-    if (facts == null || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
+    if (facts == null || !facts.trusted() || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
       PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
         () -> ElpPreflight.getInstance(getProject()).gatherFacts()), 30_000);
     }

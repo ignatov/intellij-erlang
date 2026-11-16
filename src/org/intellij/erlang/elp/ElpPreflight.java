@@ -19,6 +19,7 @@ package org.intellij.erlang.elp;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.CapturingProcessHandler;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.ide.trustedProjects.TrustedProjects;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
@@ -29,6 +30,7 @@ import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootEvent;
 import com.intellij.openapi.roots.ModuleRootListener;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -43,6 +45,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,6 +83,8 @@ public final class ElpPreflight implements Disposable {
 
   /** Why ELP is not started, or not offered, for a project. */
   public enum Reason {
+    /** The IDE does not trust the project: nothing that the project can supply, such as its rebar3 path, is started. */
+    NOT_TRUSTED(true),
     NO_SDK(true),
     OTP_TOO_OLD(true),
     UNSUPPORTED_LAYOUT(true),
@@ -171,6 +176,7 @@ public final class ElpPreflight implements Disposable {
    *                       {@code null} when it can
    * @param macOs          whether the IDE runs on macOS
    * @param settingsKey    the ELP settings the facts were gathered for, see {@link #settingsKey()}
+   * @param trusted        whether the IDE trusted the project; when not, rebar3 was neither looked for nor run
    */
   public record Facts(boolean hasSdk,
                       @Nullable String otpRelease,
@@ -180,7 +186,15 @@ public final class ElpPreflight implements Disposable {
                       @NotNull ElpConfiguration configuration,
                       @Nullable Problem serverProblem,
                       boolean macOs,
-                      @NotNull String settingsKey) {
+                      @NotNull String settingsKey,
+                      boolean trusted) {
+    /** The facts of a trusted project. */
+    public Facts(boolean hasSdk, @Nullable String otpRelease, @Nullable String rebar3, @Nullable String rebar3Version,
+                 @Nullable String rebar3Error, @NotNull ElpConfiguration configuration, @Nullable Problem serverProblem, boolean macOs,
+                 @NotNull String settingsKey) {
+      this(hasSdk, otpRelease, rebar3, rebar3Version, rebar3Error, configuration, serverProblem, macOs, settingsKey, true);
+    }
+
     @NotNull
     public String serverPath() {
       return configuration.path();
@@ -189,6 +203,8 @@ public final class ElpPreflight implements Disposable {
 
   /** The facts are gathered again after this time even when nothing told the check that they changed, such as the rebar path. */
   private static final long FACTS_TTL_MS = 60_000;
+
+  private static volatile Boolean ourTrustedInTests;
 
   private final Project myProject;
   private final AtomicBoolean myGathering = new AtomicBoolean();
@@ -209,6 +225,22 @@ public final class ElpPreflight implements Disposable {
   @NotNull
   public static ElpPreflight getInstance(@NotNull Project project) {
     return project.getService(ElpPreflight.class);
+  }
+
+  /**
+   * Whether the IDE trusts {@code project}. In a project that is not trusted ELP is neither offered nor started, and rebar3 is not
+   * run: its path is a project setting ({@code .idea/rebar.xml}) that a cloned repository can ship, and ELP runs the project's build.
+   */
+  public static boolean isTrusted(@NotNull Project project) {
+    Boolean inTests = ourTrustedInTests;
+    return inTests != null ? inTests : TrustedProjects.isProjectTrusted(project);
+  }
+
+  /** Makes {@link #isTrusted} answer {@code trusted} for every project until {@code parent} is disposed. */
+  @TestOnly
+  public static void trustInTests(boolean trusted, @NotNull Disposable parent) {
+    ourTrustedInTests = trusted;
+    Disposer.register(parent, () -> ourTrustedInTests = null);
   }
 
   /**
@@ -259,6 +291,7 @@ public final class ElpPreflight implements Disposable {
   @RequiresBackgroundThread
   public Facts gatherFacts() {
     String settingsKey = settingsKey();
+    boolean trusted = isTrusted(myProject);
     Object[] sdk = ReadAction.computeBlocking(() -> {
       if (myProject.isDisposed()) return new Object[3];
       String home = ErlangSdkType.getSdkPath(myProject);
@@ -270,7 +303,7 @@ public final class ElpPreflight implements Disposable {
     String configuredRebar = (String)sdk[2];
     ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration(myProject);
     String path = ElpEnvironment.buildPath(EnvironmentUtil.getValue("PATH"), sdkHome, configuredRebar);
-    String rebar3 = findRebar3(configuredRebar, path);
+    String rebar3 = trusted ? findRebar3(configuredRebar, path) : null;
     String rebar3Version = null;
     String rebar3Error = null;
     if (rebar3 != null) {
@@ -279,7 +312,7 @@ public final class ElpPreflight implements Disposable {
       rebar3Error = versionOrError[1];
     }
     Facts facts = new Facts(StringUtil.isNotEmpty(sdkHome), otpRelease, rebar3, rebar3Version, rebar3Error, configuration,
-                            serverProblem(configuration.path()), SystemInfo.isMac, settingsKey);
+                            serverProblem(configuration.path()), SystemInfo.isMac, settingsKey, trusted);
     myFacts = facts;
     myFactsTime = System.currentTimeMillis();
     return facts;
@@ -343,6 +376,7 @@ public final class ElpPreflight implements Disposable {
    */
   @NotNull
   public static Result evaluate(@NotNull Facts facts, @Nullable Layout layout) {
+    if (!facts.trusted()) return notTrusted();
     List<Problem> problems = new ArrayList<>();
     if (!facts.hasSdk()) {
       problems.add(new Problem(Reason.NO_SDK, "No Erlang SDK is configured for the project; ELP needs OTP " + MIN_OTP + " or newer."));
@@ -387,6 +421,13 @@ public final class ElpPreflight implements Disposable {
       }
     }
     return new Result(problems);
+  }
+
+  /** The result for a project that the IDE does not trust: nothing else was checked. */
+  @NotNull
+  public static Result notTrusted() {
+    return new Result(List.of(new Problem(Reason.NOT_TRUSTED, "The project is not trusted, so neither ELP nor rebar3 is started " +
+                                                              "in it. Trust the project to use ELP.")));
   }
 
   static boolean isAtLeastOtp(@NotNull String otpRelease, @NotNull String minimum) {

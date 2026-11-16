@@ -169,6 +169,38 @@ public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestC
     assertTrue(notRunnable.blocking().get(0).text(), notRunnable.blocking().get(0).text().contains("exit code 127, escript: not found"));
   }
 
+  /**
+   * The rebar3 path is a project setting that a cloned repository can ship: in a project the IDE does not trust, the check runs
+   * nothing and says why; once the project is trusted, it runs rebar3 as before.
+   */
+  public void testNothingIsRunInAProjectThatIsNotTrusted() throws Exception {
+    setUpProjectSdk();
+    ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+    state.path = script("elp", "exit 0");
+    state.mode = ElpMode.ELP.name();
+    ElpSettings.getInstance().loadState(state);
+    myFixture.addFileToProject("src/a.erl", "-module(a).");
+    myFixture.addFileToProject("rebar.config", "{erl_opts, []}.");
+    Path ran = FileUtil.createTempDirectory("elp-preflight-ran", null, true).toPath().resolve("ran");
+    RebarSettings.getInstance(getProject()).setRebarPath(
+      script("rebar3", "touch '" + ran + "'\necho 'rebar 3.28.0 on Erlang/OTP 29 Erts 17.1'"));
+
+    ElpPreflight.trustInTests(false, getTestRootDisposable());
+    ElpPreflight.Result untrusted = check();
+    assertFalse("rebar3 was started", Files.exists(ran));
+    assertEquals(EnumSet.of(Reason.NOT_TRUSTED), untrusted.reasons());
+    assertFalse(untrusted.canStart());
+    assertFalse(untrusted.offerEligible());
+    String text = assertOneElement(untrusted.blocking()).text();
+    assertTrue(text, text.contains("not trusted"));
+    assertFalse(ElpPreflight.getInstance(getProject()).cachedFacts().trusted());
+
+    ElpPreflight.trustInTests(true, getTestRootDisposable());
+    ElpPreflight.Result trusted = check();
+    assertTrue("rebar3 was not started", Files.exists(ran));
+    assertTrue(trusted.problems().toString(), trusted.canStart());
+  }
+
   public void testFactsAreForgottenWhenTheRootsChange() throws Exception {
     PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
       () -> ElpPreflight.getInstance(getProject()).gatherFacts()), 30_000);

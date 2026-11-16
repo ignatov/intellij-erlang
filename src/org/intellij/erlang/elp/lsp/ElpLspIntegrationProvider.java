@@ -55,14 +55,22 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
     if (root == null) return;
     // The position is application-wide; whether ELP can load this project is checked here, before every start.
     ElpPreflight preflight = ElpPreflight.getInstance(project);
-    ElpPreflight.Facts facts = preflight.cachedFacts();
-    // The binary depends on the project (the downloaded build for its OTP release) and is resolved off the EDT with the facts.
-    if (facts == null || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
-      preflight.gatherFactsInBackground(() -> startServersIfNeeded(project));
-      return;
+    ElpPreflight.Facts facts = null;
+    ElpPreflight.Result result;
+    // ELP runs rebar3 and the project's build: nothing starts in a project that the IDE does not trust.
+    if (!ElpPreflight.isTrusted(project)) {
+      result = ElpPreflight.notTrusted();
     }
-    ElpPreflight.Result result = ElpPreflight.evaluate(facts, ElpPreflight.Layout.of(root));
-    if (!result.canStart()) {
+    else {
+      facts = preflight.cachedFacts();
+      // The binary depends on the project (the downloaded build for its OTP release) and is resolved off the EDT with the facts.
+      if (facts == null || !facts.trusted() || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
+        preflight.gatherFactsInBackground(() -> startServersIfNeeded(project));
+        return;
+      }
+      result = ElpPreflight.evaluate(facts, ElpPreflight.Layout.of(root));
+    }
+    if (facts == null || !result.canStart()) {
       LOG.info("ELP is not started for " + root.getPath() + ": " + result.blocking());
       if (preflight.shouldTell(result)) {
         ApplicationManager.getApplication().invokeLater(() -> ElpNotifications.notStarted(project, result), project.getDisposed());

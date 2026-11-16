@@ -245,6 +245,11 @@ final class ElpOffer {
       LOG.debug("No ELP offer: " + whyNot);
       return;
     }
+    // The check runs the project's rebar3, whose path is a project setting.
+    if (!ElpPreflight.isTrusted(project)) {
+      LOG.debug("No ELP offer check: the project is not trusted");
+      return;
+    }
     // The dialog would wait for the end of indexing anyway; the check is not used up on a file opened while the project loads.
     if (DumbService.isDumb(project)) {
       // The restored editors open while the project is indexed, and nothing opens a file afterwards: check this one later.
