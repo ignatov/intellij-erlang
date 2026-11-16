@@ -21,11 +21,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
   @NotNull
@@ -38,6 +40,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
     ErlangExportFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangExportFunction.class, false);
     if (function == null) return;
+    String signature = ErlangDuplicateFunctionExportInspection.getSignature(function);
     PsiFile file = function.getContainingFile();
     if (!(file instanceof ErlangFile)) return;
     List<ErlangAttribute> attributes = ((ErlangFile) file).getAttributes();
@@ -49,7 +52,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
       if (exportFunctions.getChildren().length == 0) continue;
       StringBuilder newExport = new StringBuilder();
       for (ErlangExportFunction ef : exportFunctions.getExportFunctionList()) {
-        if (ef == function || !ef.getText().equals(function.getText())) {
+        if (ef == function || !Objects.equals(ErlangDuplicateFunctionExportInspection.getSignature(ef), signature)) {
           if (!newExport.isEmpty()) {
             newExport.append(", ");
           }
