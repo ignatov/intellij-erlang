@@ -76,7 +76,7 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         List<ErlangQVar> vars = o.getQVarList();
         if (parent instanceof ErlangFunExpression && ((ErlangFunExpression) parent).getColon() == null && !vars.isEmpty() &&
             PsiTreeUtil.getParentOfType(o, ErlangMacrosDefinition.class) == null &&
-            !ErlangPsiImplUtil.inMacroCallArguments(o)) {
+            !ErlangPsiImplUtil.inParameterizedMacroCallArguments(o)) {
           annotationHolder.newAnnotation(HighlightSeverity.ERROR, "A fun with a variable function name needs a module: fun M:F/Arity")
             .range(vars.get(0))
             .create();
