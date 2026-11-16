@@ -222,7 +222,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        # No Gradle cache on Windows: in a restored cache Gradle finds the extracted IDE modified ("The contents of
+        # the immutable workspace ... have been modified") and fails before any test runs.
+        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
     - name: Test
       run: ./gradlew --no-daemon test
     - name: Summarize test results
@@ -270,7 +272,8 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        # No Gradle cache on Windows, as in test-os.
+        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
     - name: Install Erlang/OTP on macOS
       # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
       # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
