@@ -49,4 +49,9 @@ public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBa
   public void testIncludePathsInRebarConfigWithStringSigil() {
     doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
   }
+
+  // claim 5 (#1127), confirmed: the escape in a ~s include path in rebar.config is not decoded
+  public void _testIncludePathsInRebarConfigWithEscapedStringSigil() {
+    doTest("src/testmodule.erl", "include/forTestModule/testinclude.hrl", "rebar.config", "src/test.app.src");
+  }
 }

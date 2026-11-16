@@ -50,6 +50,22 @@ public class ErlangNamedFunVariableResolutionTest extends ErlangLightPlatformCod
   public void testThirdClauseName()                       { doTest(6, 1); }
   public void testCallInThirdClause()                     { doTest(7, 1); }
 
+  // claim 1 (#1165), confirmed: F(0) in the second clause resolves to the inner fun's F
+  public void _testCallInSecondClauseSkipsInnerNamedFun() {
+    myFixture.configureByText("inner_fun.erl", """
+      -module(inner_fun).
+      -export([t/0]).
+      t() -> fun F(0) -> case ok of ok -> fun F() -> F() end end; F(1) -> F(0) end.
+      """);
+    List<ErlangQVar> vars = new ArrayList<>();
+    for (ErlangQVar var : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
+      if ("F".equals(var.getText())) vars.add(var);
+    }
+    assertEquals(5, vars.size());
+    // F(0) in the second clause is the fifth F; it must resolve to the outer fun's name, the first F
+    assertEquals(1, vars.indexOf(vars.get(4).getReference().resolve()) + 1);
+  }
+
   /**
    * @param occurrence the 1-based index of the {@code NamedFun} variable in the text
    * @param expected   the 1-based index of the only resolve target, or 0 when the variable resolves to nothing

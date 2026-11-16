@@ -16,9 +16,15 @@
 
 package org.intellij.erlang.rename;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+import java.util.List;
 
 public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -76,6 +82,16 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     assertEquals(getTestName(true) + ".erl", myFixture.getFile().getName());
     assertInstanceOf(myFixture.getFile(), ErlangFile.class);
     myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  // claim 7 (#1110), confirmed: after renaming abc.erl to def.hrl the module name is reported as incorrect
+  public void _testFileRenameToHrlHasNoIncorrectModuleName() {
+    myFixture.configureByText("abc.erl", "-module(abc).\n\nf() -> ok.\n");
+    myFixture.renameElement(myFixture.getFile(), "def.hrl");
+    assertEquals("def.hrl", myFixture.getFile().getName());
+    myFixture.enableInspections(ErlangIncorrectModuleNameInspection.class);
+    List<HighlightInfo> infos = myFixture.doHighlighting(HighlightSeverity.WARNING);
+    assertEmpty(ContainerUtil.filter(infos, info -> info.getDescription() != null && info.getDescription().startsWith("Module with name")));
   }
 
   private void doFileRenameTest(String newFileName) {

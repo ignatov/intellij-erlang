@@ -25,7 +25,11 @@ import com.intellij.codeInsight.hints.declarative.impl.DeclarativeHintsPreviewPr
 import com.intellij.codeInsight.hints.declarative.impl.DeclarativeInlayHintsPassFactory;
 import com.intellij.testFramework.utils.inlays.declarative.DeclarativeInlayHintsProviderTestCase;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangFunctionClause;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -260,6 +264,45 @@ public class ErlangParameterHintsProviderTest extends DeclarativeInlayHintsProvi
     finally {
       settings.setProviderEnabled(PROVIDER_ID, before == null || before);
     }
+  }
+
+  // claim 8 (#1098), confirmed: a 12-character first variant is shown without an ellipsis
+  public void _testCutVariantOfExactlyMaxLengthGetsEllipsis() {
+    String summary = summarizeFirstParameter("""
+      -module(test).
+      f(abcdefghijkl) -> ok;
+      f(other) -> ok.
+      """);
+    assertTrue(summary, summary.endsWith("…"));
+  }
+
+  // claim 9 (#1098), confirmed: #r.a and #r.b are summarised as #r{}
+  public void _testRecordIndexPatternIsNotRecordPattern() {
+    String summary = summarizeFirstParameter("""
+      -module(test).
+      -record(r, {a, b}).
+      f(#r.a) -> ok;
+      f(#r.b) -> ok.
+      """);
+    assertFalse(summary, "#r{}".equals(summary));
+  }
+
+  // claim 10 (#1098), confirmed: whitespace inside a string is collapsed in the hint
+  public void _testWhitespaceInStringIsKept() {
+    doTest("""
+             -module(test).
+             f("a  b") -> ok.
+             test() -> f(/*<# "a  b": #>*/"a b").
+             """);
+  }
+
+  private String summarizeFirstParameter(String text) {
+    myFixture.configureByText("test.erl", text);
+    ErlangFunction function = ((ErlangFile) myFixture.getFile()).getFunction("f", 1);
+    assertNotNull(function);
+    List<ErlangFunctionClause> clauses = function.getFunctionClauseList();
+    return ErlangParameterHintsProvider.summarize(
+      clauses.stream().map(c -> c.getArgumentDefinitionList().getArgumentDefinitionList().getFirst().getExpression()).toList());
   }
 
   private void rehighlight() {

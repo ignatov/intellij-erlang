@@ -88,6 +88,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport7()     { doTest(); }
   public void test605()               { doTest(); }
   public void test821()               { doTest(); }
+  // claim 2 (#1162), confirmed: fun F/1 in macro call arguments gets the module-less fun error
+  public void _testFunVarArityInMacroArguments() { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
 
