@@ -47,6 +47,14 @@ import java.util.List;
 public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String SDK_HOME = new File("testData/mockSdk-R15B02").getAbsolutePath();
   private static final String REBAR = new File("/opt/rebar-tools/rebar3").getPath();
+  /**
+   * The client switches that a build against IDEA 2026.1 cannot set: the 2026.1 client has no such customizer, and later clients
+   * add it enabled. Their overrides went in 3b2b951d ("Leave out the LSP client switches that IDEA 2026.1 does not have"). ELP
+   * announces renameProvider and implementationProvider, so from 2026.2 on the client offers its own rename next to
+   * ElpRenameHandler, and from 2026.3 on it asks ELP for implementations. They are expected enabled exactly where the running IDE
+   * has them; any other enabled customizer still fails the test.
+   */
+  private static final List<String> NOT_SETTABLE_IN_A_2026_1_BUILD = List.of("getRenameCustomizer", "getGoToImplementationCustomizer");
 
   private ElpSettings.ElpSettingsState myOldElpState;
   private String myOldRebarPath;
@@ -125,11 +133,16 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
     LspCustomization customization = descriptor.getLspCustomization();
-    assertEquals(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer",
-                         "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer", "getGoToDefinitionCustomizer",
-                         "getGoToTypeDefinitionCustomizer", "getHoverCustomizer", "getInlayHintCustomizer", "getSelectionRangeCustomizer",
-                         "getSignatureHelpCustomizer", "getSymbolKindCustomizer"),
-                 notDisabledCustomizers(customization));
+    List<String> expected = new ArrayList<>(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getDiagnosticsCustomizer",
+                                                    "getDocumentHighlightsCustomizer", "getFoldingRangeCustomizer",
+                                                    "getGoToDefinitionCustomizer", "getGoToTypeDefinitionCustomizer", "getHoverCustomizer",
+                                                    "getInlayHintCustomizer", "getSelectionRangeCustomizer", "getSignatureHelpCustomizer",
+                                                    "getSymbolKindCustomizer"));
+    for (Method method : LspCustomization.class.getMethods()) {
+      if (NOT_SETTABLE_IN_A_2026_1_BUILD.contains(method.getName())) expected.add(method.getName());
+    }
+    expected.sort(null);
+    assertEquals(expected, notDisabledCustomizers(customization));
 
     assertFalse(assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class).isShowEqwalizer());
     LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
