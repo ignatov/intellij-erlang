@@ -170,6 +170,22 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting();
   }
 
+  /** A module qualifier from a macro, such as {@code ?MODULE}, is not resolved: such a spec is not reported. */
+  public void testSpecificationWithAMacroModuleQualifier() {
+    myFixture.enableInspections(ErlangSpecificationForUndefinedFunctionInspection.class);
+    myFixture.configureByText("spec.erl", """
+      -module(spec).
+      -export([defined/0]).
+      -define(M, spec).
+
+      -spec ?MODULE:defined() -> ok.
+      -spec ?M:defined() -> ok.
+
+      defined() -> ok.
+      """);
+    myFixture.checkHighlighting();
+  }
+
   public void testAlreadyImported1()      { doTestWithInclude(); }
   public void testAlreadyImported2()      { doTestWithInclude(); }
   public void test176() {                    
