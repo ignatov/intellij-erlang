@@ -38,11 +38,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameHandler;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
+import com.intellij.util.concurrency.annotations.RequiresReadLock;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.intellij.erlang.elp.ElpEngine;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangModuleRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,7 +61,7 @@ import java.util.regex.Pattern;
  * asks ELP itself: {@code textDocument/prepareRename} when the server offers it, otherwise a trial {@code textDocument/rename}
  * to a scratch name, to learn whether ELP can rename the name at the caret. If it can, the handler asks for the new name, sends
  * {@code textDocument/rename} and applies the returned edit to all files as one global undoable command, without saving.
- * A module rename comes with a file rename in the same directory, which is applied too; ELP's other file operations are refused.
+ * A module is renamed by the plugin, see {@link #isModuleName}; ELP's other file operations are refused.
  * If ELP cannot or does not answer, the plugin's rename runs exactly as in the {@code Plugin} position. While this handler is
  * available the plugin's in-place rename handlers are not ({@code ErlangRefactoringSupportProvider}), so only one rename runs.
  * Registered in {@code erlang-elp-lsp.xml}.
@@ -93,6 +97,10 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   @Override
   public void invoke(@NotNull Project project, @Nullable Editor editor, @Nullable PsiFile file, @Nullable DataContext dataContext) {
     if (editor == null || file == null || dataContext == null) return;
+    if (isModuleName(file, editor.getCaretModel().getOffset())) {
+      renameWithPlugin(project, editor, file, dataContext);
+      return;
+    }
     Target target = target(project, editor, file);
     if (target == null) {
       renameWithPlugin(project, editor, file, dataContext);
@@ -112,8 +120,29 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
    */
   @Nullable
   public static String renameAtCaret(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file, @NotNull String newName) {
+    if (isModuleName(file, editor.getCaretModel().getOffset())) return "A module is renamed by the plugin";
     Target target = target(project, editor, file);
     return target == null ? "ELP cannot rename the name at the caret" : rename(project, target, newName);
+  }
+
+  /**
+   * A module stays with the plugin's rename: ELP 1.1.0 renames the file and the qualified calls and types, but leaves
+   * {@code -behaviour(...)}, {@code -import(...)} and the module list of the {@code .app.src} file alone (see
+   * {@code ElpRecordedRenameTest.testModule}); the plugin's rename renames the file and all of those.
+   *
+   * @return whether the caret is on the name of a module: in {@code -module(...)}, or a reference to a module
+   */
+  @RequiresReadLock
+  static boolean isModuleName(@NotNull PsiFile file, int offset) {
+    return isModuleNameAt(file, offset) || offset > 0 && isModuleNameAt(file, offset - 1);
+  }
+
+  private static boolean isModuleNameAt(@NotNull PsiFile file, int offset) {
+    PsiElement element = file.findElementAt(offset);
+    if (element == null) return false;
+    if (PsiTreeUtil.getParentOfType(element, ErlangModuleRef.class) != null) return true;
+    ErlangModule module = PsiTreeUtil.getParentOfType(element, ErlangModule.class);
+    return module != null && PsiTreeUtil.isAncestor(module.getQAtom(), element, false);
   }
 
   /**

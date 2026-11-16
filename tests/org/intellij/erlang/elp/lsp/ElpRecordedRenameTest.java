@@ -20,11 +20,16 @@ import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator;
 import com.intellij.codeInspection.InspectionEngine;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ex.LocalInspectionToolWrapper;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.command.undo.UndoManager;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import org.eclipse.lsp4j.WorkspaceEdit;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.inspection.*;
 import org.jetbrains.annotations.NotNull;
@@ -108,12 +113,15 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
   }
 
   /**
-   * A module: the file is renamed and the qualified calls and types follow. ELP 1.1.0 leaves {@code -behaviour(shop_backend)} and
-   * {@code -import(shop_backend, ...)} alone, although its references list both; the handler applies ELP's edit as it is.
+   * ELP's own module rename, as recorded: the file is renamed and the qualified calls and types follow, but ELP 1.1.0 leaves
+   * {@code -behaviour(shop_backend)} and {@code -import(shop_backend, ...)} alone, although its references list both. That is why a
+   * module stays with the plugin's rename, see {@link #testModuleStaysWithThePluginsRename}.
    */
   public void testModule() {
     VirtualFile backend = file("src/shop_backend.erl");
-    rename("module");
+    ElpRecordedAnswers.Case recorded = myAnswers.get(RENAME, "module");
+    WorkspaceEdit edit = ElpRecordedAnswers.gson().fromJson(recorded.result(), WorkspaceEdit.class);
+    assertNull(ElpRenameHandler.apply(getProject(), myDescriptor::findFileByUri, edit));
     assertEquals("shop_store.erl", backend.getName());
     assertNull(myRoot.findFileByRelativePath("src/shop_backend.erl"));
     assertLines("src/shop_store.erl", 1, "-module(shop_store).");
@@ -122,6 +130,47 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
     assertLines("src/shop_memory.erl", 2, "-behaviour(shop_backend).", 8, "-spec fetch(shop_store:key()) -> {ok, #item{}} | error.");
     assertLines("src/shop_defects.erl", 10, "-import(shop_backend, [map/2]).");
     assertResolved(List.of("src/shop.erl", "src/shop_store.erl"));
+  }
+
+  /**
+   * In the ELP position a module is not renamed by ELP: the handler does not ask it, and the plugin's rename renames the file, the
+   * qualified calls, {@code -behaviour}, {@code -import} and the module list of the {@code .app.src} file.
+   */
+  public void testModuleStaysWithThePluginsRename() {
+    VirtualFile backend = file("src/shop_backend.erl");
+    VirtualFile appSrc = file("src/shop.app.src");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      Document document = document(appSrc);
+      document.replaceString(0, document.getTextLength(), document.getText().replace("{modules, []}", "{modules, [shop, shop_backend]}"));
+      PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+    });
+    for (ElpRecordedAnswers.Case recorded : myAnswers.cases(RENAME)) {
+      openAt(recorded);
+      assertEquals(recorded.kind(), "module".equals(recorded.kind()),
+                   ElpRenameHandler.isModuleName(myFixture.getFile(), myFixture.getEditor().getCaretModel().getOffset()));
+    }
+    for (String file : List.of("src/shop_memory.erl", "src/shop_defects.erl")) {
+      myFixture.openFileInEditor(file(file));
+      String text = myFixture.getEditor().getDocument().getText();
+      int behaviourOrImport = text.indexOf("shop_backend") + 2;
+      assertTrue(file, ElpRenameHandler.isModuleName(myFixture.getFile(), behaviourOrImport));
+    }
+
+    openAt(myAnswers.get(RENAME, "module"));
+    myServer.clearRequests();
+    assertEquals("A module is renamed by the plugin",
+                 ElpRenameHandler.renameAtCaret(getProject(), myFixture.getEditor(), myFixture.getFile(), "shop_store"));
+    assertEmpty("ELP is not asked", myServer.requests());
+    ElpEngine.runWithPlugin(ElpEngine.Feature.RENAME, () -> myFixture.renameElementAtCaret("shop_store"));
+
+    assertEquals("shop_store.erl", backend.getName());
+    assertLines("src/shop_store.erl", 1, "-module(shop_store).");
+    assertLines("src/shop.erl", 10, "-spec price(shop_store:key()) -> non_neg_integer().",
+                12, "  case shop_store:lookup(shop_memory, Name) of");
+    assertLines("src/shop_memory.erl", 2, "-behaviour(shop_store).", 8, "-spec fetch(shop_store:key()) -> {ok, #item{}} | error.");
+    assertLines("src/shop_defects.erl", 10, "-import(shop_store, [map/2]).");
+    assertTrue(document(appSrc).getText(), document(appSrc).getText().contains("{modules, [shop, shop_store]}"));
+    assertResolved(List.of("src/shop.erl", "src/shop_store.erl", "src/shop_memory.erl"));
   }
 
   /** The edit spans four files and is one undoable command; nothing is saved. */
