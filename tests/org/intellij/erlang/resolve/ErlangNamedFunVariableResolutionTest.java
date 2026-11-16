@@ -42,6 +42,13 @@ public class ErlangNamedFunVariableResolutionTest extends ErlangLightPlatformCod
       end.
     """;
 
+  private static final String INNER_NAMED_FUN_IN_FIRST_CLAUSE = """
+    -module(named_fun).
+    -export([f/0]).
+
+    f() -> fun F(0) -> case ok of ok -> fun F() -> F() end end; F(1) -> F(0) end.
+    """;
+
   public void testFirstClauseNameIsDeclaration()          { doTest(1, 0); }
   public void testCallInFirstClause()                     { doTest(2, 1); }
   public void testSecondClauseName()                      { doTest(3, 1); }
@@ -50,17 +57,26 @@ public class ErlangNamedFunVariableResolutionTest extends ErlangLightPlatformCod
   public void testThirdClauseName()                       { doTest(6, 1); }
   public void testCallInThirdClause()                     { doTest(7, 1); }
 
+  // Expected to fail: the call resolves to the name of the inner named fun of the first clause (#1209)
+  public void testCallInSecondClauseSkipsInnerNamedFun() {
+    doTest(INNER_NAMED_FUN_IN_FIRST_CLAUSE, "F", 5, 5, 1);
+  }
+
   /**
    * @param occurrence the 1-based index of the {@code NamedFun} variable in the text
    * @param expected   the 1-based index of the only resolve target, or 0 when the variable resolves to nothing
    */
   private void doTest(int occurrence, int expected) {
-    myFixture.configureByText("named_fun.erl", NAMED_FUN);
+    doTest(NAMED_FUN, "NamedFun", 7, occurrence, expected);
+  }
+
+  private void doTest(String text, String name, int count, int occurrence, int expected) {
+    myFixture.configureByText("named_fun.erl", text);
     List<ErlangQVar> vars = new ArrayList<>();
     for (ErlangQVar var : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
-      if ("NamedFun".equals(var.getText())) vars.add(var);
+      if (name.equals(var.getText())) vars.add(var);
     }
-    assertEquals(7, vars.size());
+    assertEquals(count, vars.size());
 
     PsiPolyVariantReference reference = (PsiPolyVariantReference) vars.get(occurrence - 1).getReference();
     List<Integer> targets = new ArrayList<>();
