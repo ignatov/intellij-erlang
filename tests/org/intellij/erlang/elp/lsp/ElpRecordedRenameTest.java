@@ -173,6 +173,26 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
     assertResolved(List.of("src/shop.erl", "src/shop_store.erl", "src/shop_memory.erl"));
   }
 
+  /**
+   * ELP answers "content modified" to a request that meets a change of the files, such as the save before the rename; the handler
+   * asks again, as the LSP specification allows, and gives up after a few answers like that.
+   */
+  public void testAskedAgainWhenElpSaysThatTheContentWasModified() {
+    ElpRecordedAnswers.Case recorded = myAnswers.get(RENAME, "local_function");
+    openAt(recorded);
+    myServer.clearRequests();
+    myServer.answerContentModified(RENAME, 1);
+    assertNull(ElpRenameHandler.renameAtCaret(getProject(), myFixture.getEditor(), myFixture.getFile(), "add_up"));
+    assertEquals("a trial rename twice, then the rename", 3, myServer.requests(RENAME).size());
+    assertLines("src/shop.erl", 29, "add_up([], Acc) -> Acc;");
+
+    myServer.clearRequests();
+    myServer.answerContentModified(RENAME, 100);
+    assertNotNull(ElpRenameHandler.renameAtCaret(getProject(), myFixture.getEditor(), myFixture.getFile(), "sum_up"));
+    assertEquals(3, myServer.requests(RENAME).size());
+    myServer.answerContentModified(RENAME, 0);
+  }
+
   /** The edit spans four files and is one undoable command; nothing is saved. */
   public void testRecordRenameIsOneUndoableCommandAndUnsaved() {
     List<String> files = List.of("src/shop.hrl", "src/shop.erl", "src/shop_memory.erl", "src/shop_defects.erl");

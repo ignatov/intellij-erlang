@@ -42,6 +42,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
 import com.intellij.util.concurrency.annotations.RequiresReadLock;
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
 import org.intellij.erlang.elp.ElpEngine;
@@ -70,6 +71,9 @@ import java.util.regex.Pattern;
  */
 public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   private static final int TIMEOUT_MS = 10_000;
+  /** The LSP error {@code ContentModified}. */
+  private static final int CONTENT_MODIFIED = -32801;
+  private static final int ATTEMPTS = 3;
   private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_@]*");
 
   @Override
@@ -234,21 +238,30 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     return Character.isLetterOrDigit(c) || c == '_' || c == '@';
   }
 
+  /**
+   * Sends {@code textDocument/rename}. ELP answers "content modified" to a request that meets a change of the files, such as the
+   * save before the rename; the LSP specification lets the client send the request again, and it is sent up to
+   * {@value #ATTEMPTS} times.
+   */
   @Nullable
   private static WorkspaceEdit rename(@NotNull LspServer client, @NotNull RenameParams params, @NotNull AtomicReference<String> error) {
-    AtomicReference<CompletableFuture<WorkspaceEdit>> future = new AtomicReference<>();
-    WorkspaceEdit edit = client.sendRequestSync(TIMEOUT_MS, server -> {
-      CompletableFuture<WorkspaceEdit> request = server.getTextDocumentService().rename(params);
-      future.set(request);
-      return request;
-    });
-    if (edit == null && future.get() != null) {
-      future.get().handle((result, throwable) -> {
-        if (throwable != null) error.set(StringUtil.notNullize(rootCause(throwable).getMessage(), throwable.toString()));
-        return null;
+    for (int attempt = 1; ; attempt++) {
+      AtomicReference<CompletableFuture<WorkspaceEdit>> future = new AtomicReference<>();
+      WorkspaceEdit edit = client.sendRequestSync(TIMEOUT_MS, server -> {
+        CompletableFuture<WorkspaceEdit> request = server.getTextDocumentService().rename(params);
+        future.set(request);
+        return request;
       });
+      if (edit != null || future.get() == null) return edit;
+      Throwable failure = future.get().handle((result, throwable) -> throwable).getNow(null);
+      if (failure == null) return null;
+      Throwable cause = rootCause(failure);
+      if (attempt < ATTEMPTS && cause instanceof ResponseErrorException e && e.getResponseError().getCode() == CONTENT_MODIFIED) {
+        continue;
+      }
+      error.set(StringUtil.notNullize(cause.getMessage(), failure.toString()));
+      return null;
     }
-    return edit;
   }
 
   @NotNull

@@ -18,7 +18,9 @@ package org.intellij.erlang.elp.lsp;
 
 import com.google.gson.reflect.TypeToken;
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -29,8 +31,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A language server that answers the requests the real ELP was asked when the answers were recorded, with those answers. A request
@@ -46,6 +50,8 @@ final class FakeElpServer implements LanguageServer {
   private final List<Request> myRequests = Collections.synchronizedList(new ArrayList<>());
   private final List<Request> myUnanswered = Collections.synchronizedList(new ArrayList<>());
   private final TextDocumentService myTextDocuments = new TextDocuments();
+  /** How many more requests of a method are answered with the error "content modified". */
+  private final Map<String, Integer> myContentModified = new ConcurrentHashMap<>();
 
   FakeElpServer(@NotNull ElpRecordedAnswers answers) {
     myAnswers = answers;
@@ -70,6 +76,14 @@ final class FakeElpServer implements LanguageServer {
     }
   }
 
+  /**
+   * Answers the next {@code times} requests of {@code method} as ELP answers a request that meets a change of the files: with the
+   * LSP error {@code ContentModified}.
+   */
+  void answerContentModified(@NotNull String method, int times) {
+    myContentModified.put(method, times);
+  }
+
   void clearRequests() {
     myRequests.clear();
     myUnanswered.clear();
@@ -80,6 +94,10 @@ final class FakeElpServer implements LanguageServer {
                                           @Nullable Object params, @NotNull Type type) {
     Request request = new Request(method, document.getUri(), position, params);
     myRequests.add(request);
+    if (myContentModified.getOrDefault(method, 0) > 0) {
+      myContentModified.merge(method, -1, Integer::sum);
+      return CompletableFuture.failedFuture(new ResponseErrorException(new ResponseError(-32801, "content modified", null)));
+    }
     for (ElpRecordedAnswers.Case recorded : myAnswers.cases(method)) {
       if (!recorded.uri().equals(document.getUri())) continue;
       if (position != null && !position.equals(recorded.position())) continue;
