@@ -47,7 +47,7 @@ The first build downloads IntelliJ IDEA 2026.1 (several GB) from JetBrains hosts
 - `./gradlew generateLexerAndParser` regenerates the lexer, parser, `ErlangTypes` and PSI in place from `Erlang.flex` and `grammars/erlang.bnf`. It reads `psiImplUtilClass`, the mixins and the stub classes from the sources, as "Generate Parser Code" does in the IDE, and does not need the plugin to compile.
 - `./gradlew verifyGeneratedSources` generates them into the build directories and fails if the committed `gen/` differs. CI runs it.
 - When a generated signature depends on a PSI type that does not exist yet, run `generateLexerAndParser` a second time and check that the second run changes nothing.
-- Never delete `gen/`. The generator reads the committed `gen/` as a source root: without the directory it fails, and from an empty one it settles on different files (for example, without `getReference(ErlangMacrosName)`), however often it runs. If `gen/` is damaged, restore it with `git checkout origin/master -- gen` and regenerate.
+- Never delete `gen/`. The generator reads it as a source root and fails when the directory is missing. If `gen/` is deleted or damaged, restore it with `git checkout HEAD -- gen` (or from `origin/master` when the branch's own copy is the damaged one) and regenerate.
 - Never hand-edit `gen/`. A grammar or lexer change ships in the same commit as the regenerated `gen/` and the updated `testData/parser/*.txt` golden files. If you cannot run the generator, do not change the grammar; stop and say so.
 - Handwritten PSI logic goes in `ErlangPsiImplUtil` (the bnf `psiImplUtilClass`) or in mixins under `src/`. Stubbed rules are wired through `stubClass` and `ErlangElementTypeFactory` in the bnf.
 
