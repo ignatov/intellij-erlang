@@ -44,6 +44,7 @@ import org.junit.Assume;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -108,8 +109,8 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
 
     VirtualFile shop = file("src/shop.erl");
     myFixture.openFileInEditor(shop);
-    LspServerManager.getInstance(getProject()).ensureServerStarted(
-      ElpLspIntegrationProvider.class, new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP)));
+    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
+    LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
     PlatformTestUtil.waitWithEventsDispatching("ELP did not start", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION),
                                                TIMEOUT_SECONDS);
 
@@ -142,6 +143,23 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     String text = shopEditor.getDocument().getText();
     assertTrue(text, text.contains("add_up([price(Name) || Name <- Names], 0)."));
     assertTrue(text, text.contains("add_up([Price | Rest], Acc) -> add_up(Rest, Acc + Price)."));
+
+    // ELP extracts its eqWAlizer binary into the plugin's temporary directory of the session, which goes when the server stops.
+    Path tmpDir = descriptor.getTmpDir();
+    assertNotNull(tmpDir);
+    PlatformTestUtil.waitWithEventsDispatching("ELP wrote nothing into " + tmpDir, () -> eqwalizerIn(tmpDir) != null, TIMEOUT_SECONDS);
+    LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
+    PlatformTestUtil.waitWithEventsDispatching(tmpDir + " is still there", () -> !Files.exists(tmpDir), TIMEOUT_SECONDS);
+  }
+
+  @Nullable
+  private static String eqwalizerIn(@NotNull Path dir) {
+    String[] names = dir.toFile().list();
+    if (names == null) return null;
+    for (String name : names) {
+      if (name.startsWith("eqwalizer")) return name;
+    }
+    return null;
   }
 
   @Nullable

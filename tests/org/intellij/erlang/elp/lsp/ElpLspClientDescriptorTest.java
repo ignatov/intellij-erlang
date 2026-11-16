@@ -21,6 +21,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
@@ -32,6 +33,7 @@ import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEnvironment;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServerEnvironment;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -41,6 +43,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,19 +104,25 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     setUpProjectSdk();
     RebarSettings.getInstance(getProject()).setRebarPath(REBAR);
     VirtualFile root = file("src/a.erl").getParent().getParent();
-    ElpLspClientDescriptor descriptor =
-      new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", ElpMode.PLUGIN));
+    String elp = executable();
+    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration(elp, ElpMode.PLUGIN));
 
     // On the EDT: waiting there for a pooled thread can deadlock with a scanning write action queued by the files just added.
     GeneralCommandLine commandLine = descriptor.createCommandLine();
 
-    assertEquals("/opt/elp/bin/elp", commandLine.getExePath());
+    assertEquals(elp, commandLine.getExePath());
     assertEquals(List.of("server"), commandLine.getParametersList().getList());
     assertEquals(root.getPath(), commandLine.getWorkDirectory().getPath());
     String expectedHead = new File(SDK_HOME, "bin").getPath() + File.pathSeparator + new File(REBAR).getParent();
     String inherited = EnvironmentUtil.getValue("PATH");
     assertEquals(inherited == null ? expectedHead : expectedHead + File.pathSeparator + inherited,
                  commandLine.getEnvironment().get("PATH"));
+    assertEquals(REBAR, commandLine.getEnvironment().get("ELP_REBAR3"));
+    Path tmpDir = descriptor.getTmpDir();
+    assertNotNull(tmpDir);
+    assertEquals(tmpDir.toString(), commandLine.getEnvironment().get("TMPDIR"));
+    assertTrue(Files.isDirectory(tmpDir));
+    ElpServerEnvironment.deleteSessionDirectory(tmpDir);
   }
 
   public void testPathIsInheritedWithoutSdkAndRebar() throws Exception {
@@ -230,6 +240,12 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEmpty(fileOpened(file("rebar.config")));
     assertEmpty(fileOpened(file("src/x.app.src")));
     assertEmpty(fileOpened(file("x.escript")));
+  }
+
+  private String executable() throws Exception {
+    File elp = FileUtil.createTempFile("elp", null, true);
+    assertTrue(elp.setExecutable(true));
+    return elp.getPath();
   }
 
   private void configure(String path, ElpMode mode) {
