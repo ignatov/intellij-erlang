@@ -39,7 +39,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.refactoring.rename.RenameHandler;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
-import com.intellij.util.containers.ContainerUtil;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
@@ -235,10 +234,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
       for (Either<TextDocumentEdit, ResourceOperation> change : edit.getDocumentChanges()) {
         if (!change.isLeft()) continue;
         TextDocumentEdit documentEdit = change.getLeft();
-        List<TextEdit> edits = result.computeIfAbsent(documentEdit.getTextDocument().getUri(), uri -> new ArrayList<>());
-        for (Either<TextEdit, SnippetTextEdit> textEdit : documentEdit.getEdits()) {
-          if (textEdit.isLeft()) edits.add(textEdit.getLeft());
-        }
+        result.computeIfAbsent(documentEdit.getTextDocument().getUri(), uri -> new ArrayList<>()).addAll(textEdits(documentEdit));
       }
     }
     else if (edit.getChanges() != null) {
@@ -247,14 +243,38 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     return result;
   }
 
-  /** The changes of a workspace edit in their order: {@code documentChanges}, or else the text edits of {@code changes}. */
+  /**
+   * The changes of a workspace edit in their order: {@code documentChanges}, or else the text edits of {@code changes}. The
+   * document edits made here hold the plain {@link TextEdit}s; the list is raw because its element type differs between the lsp4j
+   * versions, see {@link #textEdits}, which reads it.
+   */
   @NotNull
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static List<Either<TextDocumentEdit, ResourceOperation>> changes(@NotNull WorkspaceEdit edit) {
     if (edit.getDocumentChanges() != null) return edit.getDocumentChanges();
     List<Either<TextDocumentEdit, ResourceOperation>> result = new ArrayList<>();
     if (edit.getChanges() != null) {
       edit.getChanges().forEach((uri, edits) -> result.add(Either.forLeft(new TextDocumentEdit(
-        new VersionedTextDocumentIdentifier(uri, null), ContainerUtil.map(edits, Either::forLeft)))));
+        new VersionedTextDocumentIdentifier(uri, null), (List)edits))));
+    }
+    return result;
+  }
+
+  /**
+   * The text edits of a document edit, without its snippet edits. lsp4j 0.24 (IDEA 2026.1 and 2026.2) holds {@link TextEdit}s
+   * there, lsp4j 1.0 (2026.3) holds {@code Either<TextEdit, SnippetTextEdit>}; the erased list is the same, so each element is
+   * checked: the left of an {@link Either}, a right (a snippet edit) skipped, or else a {@link TextEdit}.
+   */
+  @NotNull
+  private static List<TextEdit> textEdits(@NotNull TextDocumentEdit edit) {
+    List<TextEdit> result = new ArrayList<>();
+    for (Object element : edit.getEdits()) {
+      if (element instanceof Either<?, ?> either) {
+        if (either.isLeft() && either.getLeft() instanceof TextEdit textEdit) result.add(textEdit);
+      }
+      else if (element instanceof TextEdit textEdit) {
+        result.add(textEdit);
+      }
     }
     return result;
   }
@@ -320,12 +340,11 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
       if (document == null) return "ELP's rename changes " + uri + ", which cannot be opened; nothing was changed.";
       List<TextEdit> edits = textEdits.computeIfAbsent(document, key -> new ArrayList<>());
       files.add(file);
-      for (Either<TextEdit, SnippetTextEdit> textEdit : change.getLeft().getEdits()) {
-        if (!textEdit.isLeft()) continue;
-        if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getLeft().getRange()) == null) {
+      for (TextEdit textEdit : textEdits(change.getLeft())) {
+        if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getRange()) == null) {
           return "ELP's rename does not match the text of " + file.getPresentableUrl() + "; nothing was changed.";
         }
-        if (!edits.contains(textEdit.getLeft())) edits.add(textEdit.getLeft());
+        if (!edits.contains(textEdit)) edits.add(textEdit);
       }
     }
     if (ReadonlyStatusHandler.getInstance(project).ensureFilesWritable(files).hasReadonlyFiles()) return null;
