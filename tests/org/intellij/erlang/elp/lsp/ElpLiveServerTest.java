@@ -17,6 +17,20 @@
 package org.intellij.erlang.elp.lsp;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+import com.intellij.execution.process.CapturingProcessHandler;
+import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.platform.lsp.api.LspServer;
+import org.intellij.erlang.elp.ElpPreflight;
+import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import com.intellij.notification.Notification;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
@@ -49,8 +63,10 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -67,6 +83,9 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
 
   private ElpSettings.ElpSettingsState myOldState;
   private VirtualFile myRoot;
+  private Sdk myOldSdk;
+  private boolean mySdkChanged;
+  private String myOldRebarPath;
 
   @Override
   protected void setUp() throws Exception {
@@ -83,6 +102,9 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     try {
       LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
       ElpSettings.getInstance().loadState(myOldState);
+      ElpRestarts.resetForTests(getProject());
+      if (mySdkChanged) WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(myOldSdk));
+      if (myOldRebarPath != null) RebarSettings.getInstance(getProject()).setRebarPath(myOldRebarPath);
       if (myRoot != null) PsiTestUtil.removeContentEntry(getModule(), myRoot);
     }
     catch (Throwable e) {
@@ -215,6 +237,109 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
                 ContainerUtil.exists(notifications, n -> !ElpNotifications.GROUP.equals(n.getGroupId()) && n.getContent().contains("ELP version")));
     System.out.println("ELP without erl: FAILED after " + failedAfter + " ms; history " + descriptor.getLoadState().history() +
                        "; last lines " + descriptor.getLoadState().lastLogLines());
+  }
+
+  /**
+   * Measured in the IDE: after {@code kill -9} of ELP the plugin's features came back, but nothing told the user and ELP was not
+   * started again in 100 s. Now: a balloon and one automatic restart; a second crash within five minutes leaves the plugin
+   * answering, says so, and offers Restart. No process of the servers is left after the stop.
+   */
+  public void testCrashIsToldAndRestartedOnce() throws Exception {
+    String elp = elpPath();
+    String otp = otpRoot();
+    File rebar3 = PathEnvironmentVariableUtil.findInPath("rebar3");
+    Assume.assumeTrue("rebar3 is not on the PATH", rebar3 != null);
+    Sdk sdk = ErlangSdkType.createMockSdk(otp, ErlangSdkRelease.V_29_0);
+    myOldSdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+    mySdkChanged = true;
+    WriteAction.run(() -> {
+      ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable());
+      ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk);
+    });
+    myOldRebarPath = RebarSettings.getInstance(getProject()).getRebarPath();
+    RebarSettings.getInstance(getProject()).setRebarPath(rebar3.getPath());
+    ElpRestarts.resetForTests(getProject());
+    List<Notification> notifications = new CopyOnWriteArrayList<>();
+    getProject().getMessageBus().connect(getTestRootDisposable()).subscribe(Notifications.TOPIC, new Notifications() {
+      @Override
+      public void notify(@NotNull Notification notification) {
+        notifications.add(notification);
+      }
+    });
+
+    // Started as the IDE starts it: the support provider, after the preflight.
+    Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
+    FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
+    myRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(project);
+    assertNotNull(myRoot);
+    PsiTestUtil.addSourceContentToRoots(getModule(), myRoot);
+    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+    ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+    state.path = elp;
+    state.mode = ElpMode.ELP.name();
+    ElpSettings.getInstance().loadState(state);
+    ElpPreflight.getInstance(getProject()).invalidate();
+    VirtualFile shop = file("src/shop.erl");
+    myFixture.openFileInEditor(shop);
+    ElpLspIntegrationProvider.startServersIfNeeded(getProject());
+    Set<Long> pids = new HashSet<>();
+    ElpLspClientDescriptor first = waitForServing(shop, null, pids);
+
+    long killed = System.currentTimeMillis();
+    assertTrue(ProcessHandle.of(first.getProcessPid()).orElseThrow().destroyForcibly());
+    ElpLspClientDescriptor second = waitForServing(shop, first, pids);
+    long restartedAfter = System.currentTimeMillis() - killed;
+    Notification restarted = waitForNotification(notifications, "ELP stopped unexpectedly", 1);
+    assertTrue(restarted.getContent(), restarted.getContent().contains("with exit code 137; the plugin started it again."));
+    assertEmpty(restarted.getActions().stream().filter(a -> "Restart ELP".equals(a.getTemplateText())).toList());
+
+    assertTrue(ProcessHandle.of(second.getProcessPid()).orElseThrow().destroyForcibly());
+    Notification stays = waitForNotification(notifications, "ELP stopped unexpectedly", 2);
+    assertTrue(stays.getContent(), stays.getContent().contains("again within 5 minutes; the plugin answers in"));
+    AnAction restart = ContainerUtil.find(stays.getActions(), a -> "Restart ELP".equals(a.getTemplateText()));
+    assertNotNull(restart);
+    long quietUntil = System.currentTimeMillis() + 5_000;
+    PlatformTestUtil.waitWithEventsDispatching("", () -> System.currentTimeMillis() > quietUntil, 10);
+    assertFalse("not restarted a second time", ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION));
+
+    ElpRestarts.restart(getProject());
+    waitForServing(shop, second, pids);
+    LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
+    PlatformTestUtil.waitWithEventsDispatching("a process of ELP is left: " + pids, () -> !ContainerUtil.exists(
+      pids, pid -> ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false)), TIMEOUT_SECONDS);
+    System.out.println("ELP crash: restarted and serving again " + restartedAfter + " ms after kill -9; processes seen " + pids.size());
+  }
+
+  /** Waits until a server other than {@code previous} serves {@code file}, and collects the ids of its process and children. */
+  @NotNull
+  private ElpLspClientDescriptor waitForServing(@NotNull VirtualFile file, @Nullable ElpLspClientDescriptor previous, @NotNull Set<Long> pids) {
+    AtomicReference<ElpLspClientDescriptor> current = new AtomicReference<>();
+    PlatformTestUtil.waitWithEventsDispatching("ELP does not serve " + file, () -> {
+      LspServer client = ElpLspServerStatus.findClient(getProject(), file, ElpEngine.Feature.NAVIGATION);
+      if (client == null || client.getDescriptor() == previous) return false;
+      current.set((ElpLspClientDescriptor)client.getDescriptor());
+      return true;
+    }, TIMEOUT_SECONDS);
+    long pid = current.get().getProcessPid();
+    pids.add(pid);
+    ProcessHandle.of(pid).ifPresent(process -> process.descendants().forEach(child -> pids.add(child.pid())));
+    return current.get();
+  }
+
+  @NotNull
+  private static Notification waitForNotification(@NotNull List<Notification> notifications, @NotNull String title, int count) {
+    PlatformTestUtil.waitWithEventsDispatching("no notification " + title + " #" + count, () -> ContainerUtil.filter(
+      notifications, n -> title.equals(n.getTitle())).size() >= count, TIMEOUT_SECONDS);
+    return ContainerUtil.filter(notifications, n -> title.equals(n.getTitle())).get(count - 1);
+  }
+
+  @NotNull
+  private static String otpRoot() throws Exception {
+    ProcessOutput output = new CapturingProcessHandler(
+      new GeneralCommandLine("erl", "-noshell", "-eval", "io:put_chars(code:root_dir()), halt().")).runProcess(60_000);
+    Assume.assumeTrue("erl is not on the PATH", output.getExitCode() == 0 && !output.getStdout().isBlank());
+    return output.getStdout().trim();
   }
 
   @NotNull
