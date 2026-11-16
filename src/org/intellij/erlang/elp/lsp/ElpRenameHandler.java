@@ -24,6 +24,7 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -51,6 +52,8 @@ import org.intellij.erlang.psi.ErlangModuleRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import kotlin.Unit;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,8 +65,7 @@ import java.util.regex.Pattern;
  * asks ELP itself: {@code textDocument/prepareRename} when the server offers it, otherwise a trial {@code textDocument/rename}
  * to a scratch name, to learn whether ELP can rename the name at the caret. If it can, the handler asks for the new name, sends
  * {@code textDocument/rename} and applies the returned edit to all files as one global undoable command, without saving. The
- * documents are saved before ELP is asked: ELP reads a file that is not open in an editor from the disk, where an earlier rename
- * may not have reached.
+ * documents are saved before ELP is asked, see {@link #saveForElp}.
  * A module is renamed by the plugin, see {@link #isModuleName}; ELP's other file operations are refused.
  * If ELP cannot or does not answer, the plugin's rename runs exactly as in the {@code Plugin} position. While this handler is
  * available the plugin's in-place rename handlers are not ({@code ErlangRefactoringSupportProvider}), so only one rename runs.
@@ -159,7 +161,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
     LspServer client = virtualFile != null ? ElpLspServerStatus.findClient(project, virtualFile, ElpEngine.Feature.RENAME) : null;
     if (client == null) return null;
-    FileDocumentManager.getInstance().saveAllDocuments();
+    saveForElp(project, client);
     PsiDocumentManager.getInstance(project).commitAllDocuments();
     Document document = editor.getDocument();
     int offset = editor.getCaretModel().getOffset();
@@ -168,6 +170,27 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     String oldName = ProgressManager.getInstance().runProcessWithProgressSynchronously(
       () -> renamableName(client, id, position, document, offset), "Asking ELP", true, project);
     return oldName != null ? new Target(client, id, position, oldName) : null;
+  }
+
+  /**
+   * Saves the documents: ELP reads a file that is not open in an editor from the disk, where an earlier rename may not have reached.
+   * ELP is told at once which of its files changed, before the next request: the platform tells it too, but later, and a request
+   * sent before that would get an answer computed from the old files.
+   */
+  private static void saveForElp(@NotNull Project project, @NotNull LspServer client) {
+    FileDocumentManager documents = FileDocumentManager.getInstance();
+    List<FileEvent> changed = new ArrayList<>();
+    for (Document document : documents.getUnsavedDocuments()) {
+      VirtualFile file = documents.getFile(document);
+      if (file == null || FileEditorManager.getInstance(project).isFileOpen(file) || !client.getDescriptor().isSupportedFile(file)) continue;
+      changed.add(new FileEvent(client.getDescriptor().getFileUri(file), FileChangeType.Changed));
+    }
+    documents.saveAllDocuments();
+    if (changed.isEmpty()) return;
+    client.sendNotification(server -> {
+      server.getWorkspaceService().didChangeWatchedFiles(new DidChangeWatchedFilesParams(changed));
+      return Unit.INSTANCE;
+    });
   }
 
   @Nullable

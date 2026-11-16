@@ -214,6 +214,9 @@ final class FakeElpServer implements LanguageServer {
 
       @Override
       public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
+        for (FileEvent event : params.getChanges()) {
+          myRequests.add(new Request("workspace/didChangeWatchedFiles", event.getUri(), null, event.getType()));
+        }
       }
     };
   }

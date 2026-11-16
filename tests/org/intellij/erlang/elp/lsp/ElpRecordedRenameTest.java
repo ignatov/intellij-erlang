@@ -193,6 +193,21 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
     myServer.answerContentModified(RENAME, 0);
   }
 
+  /**
+   * ELP reads a file that is not open in an editor from the disk: a change there that is not saved, such as the edit of an earlier
+   * rename, is saved before ELP is asked, and ELP is told about it before the request.
+   */
+  public void testAChangeOfAFileThatIsNotOpenIsSavedAndToldBeforeTheRename() {
+    VirtualFile memory = file("src/shop_memory.erl");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> document(memory).insertString(0, "%% changed\n"));
+    assertTrue(FileDocumentManager.getInstance().isFileModified(memory));
+    rename("local_function");
+    assertFalse(FileDocumentManager.getInstance().isFileModified(memory));
+    List<String> methods = myServer.requests().stream().map(FakeElpServer.Request::method).toList();
+    assertEquals(List.of("workspace/didChangeWatchedFiles", RENAME, RENAME), methods);
+    assertEquals(myDescriptor.getFileUri(memory), myServer.requests().get(0).uri());
+  }
+
   /** The edit spans four files and is one undoable command; nothing is saved. */
   public void testRecordRenameIsOneUndoableCommandAndUnsaved() {
     List<String> files = List.of("src/shop.hrl", "src/shop.erl", "src/shop_memory.erl", "src/shop_defects.erl");
