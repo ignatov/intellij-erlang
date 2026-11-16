@@ -26,11 +26,17 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.platform.lsp.api.LspServerState;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
+import com.intellij.testFramework.IndexingTestUtil;
+import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.testFramework.utils.parameterInfo.MockCreateParameterInfoContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.eclipse.lsp4j.InitializeResult;
@@ -51,6 +57,8 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -195,6 +203,37 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       for (Feature feature : Feature.values()) assertFalse(file + " " + feature, ElpEngine.ownsFeature(psiFile, feature));
     }
     assertTrue(ElpEngine.ownsFeature(psiFile("src/shop_backend.erl"), Feature.NAVIGATION));
+  }
+
+  /**
+   * A file under another content root, which this server does not load, stays with the plugin, so its inspections are not
+   * silenced; a file outside the project's content, such as an OTP source, still goes to ELP.
+   */
+  public void testAFileUnderAnotherContentRootStaysWithThePlugin() throws Exception {
+    Path otherDir = FileUtil.createTempDirectory("elp-other-root", null, true).toPath();
+    Files.writeString(otherDir.resolve("other.erl"), "-module(other).\n");
+    Path outsideDir = FileUtil.createTempDirectory("elp-outside", null, true).toPath();
+    Files.writeString(outsideDir.resolve("lists.erl"), "-module(lists).\n");
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), otherDir.toString(), outsideDir.toString());
+    VirtualFile otherRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(otherDir);
+    VirtualFile outside = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(outsideDir.resolve("lists.erl"));
+    assertNotNull(otherRoot);
+    assertNotNull(outside);
+    PsiTestUtil.addSourceContentToRoots(getModule(), otherRoot);
+    try {
+      IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+      VirtualFile other = otherRoot.findChild("other.erl");
+      assertNotNull(other);
+      assertFalse(myDescriptor.isSupportedFile(other));
+      assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.DIAGNOSTICS));
+      assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.NAVIGATION));
+      assertTrue(myDescriptor.isSupportedFile(outside));
+      assertTrue(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
+      assertTrue(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), Feature.DIAGNOSTICS));
+    }
+    finally {
+      PsiTestUtil.removeContentEntry(getModule(), otherRoot);
+    }
   }
 
   /** A client started for the Plugin position, as before a switch of the position, serves nothing. */

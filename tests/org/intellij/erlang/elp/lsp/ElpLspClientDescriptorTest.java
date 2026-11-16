@@ -412,8 +412,9 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     return started;
   }
 
+  /** A descriptor for the content root, as the provider starts it for the files of the project. */
   private ElpLspClientDescriptor descriptor(ElpMode mode) {
-    VirtualFile root = file("src/" + mode + ".erl").getParent();
+    VirtualFile root = file("src/" + mode + ".erl").getParent().getParent();
     return new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", mode));
   }
 
