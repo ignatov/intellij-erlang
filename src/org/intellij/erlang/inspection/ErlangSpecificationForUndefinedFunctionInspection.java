@@ -22,6 +22,7 @@ import com.intellij.psi.PsiReference;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunTypeSigs;
+import org.intellij.erlang.psi.ErlangSpecFun;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,9 +38,11 @@ public class ErlangSpecificationForUndefinedFunctionInspection extends ErlangIns
       //supported functions without modules only for now
       ErlangFunTypeSigs signature = spec.getSignature();
       if (signature != null) {
-        PsiReference reference = signature.getReference();
+        // The function reference is on the name; a name from a macro is not resolved.
+        ErlangSpecFun specFun = signature.getSpecFun();
+        PsiReference reference = specFun.getQAtom().getMacros() == null ? specFun.getReference() : null;
         if (reference != null && reference.resolve() == null) {
-          problemsHolder.registerProblem(spec, "Specification for undefined function '" + signature.getSpecFun().getText() + "'");
+          problemsHolder.registerProblem(spec, "Specification for undefined function '" + specFun.getText() + "'");
         }
       }
     }
