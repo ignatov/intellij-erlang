@@ -26,10 +26,8 @@ import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerManager;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem;
-import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
-import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.icons.ErlangIcons;
@@ -48,15 +46,15 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
   @Override
   public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspServerStarter serverStarter) {
     if (!ElpFiles.isElpFile(file)) return;
-    ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
     // In the Plugin position ELP is not started at all; the plugin works as without the integration.
-    if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return;
+    if (!ElpSettings.getInstance().isElpPositionWithServer()) return;
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
     if (root == null) return;
     // The position is application-wide; whether ELP can load this project is checked here, before every start.
     ElpPreflight preflight = ElpPreflight.getInstance(project);
     ElpPreflight.Facts facts = preflight.cachedFacts();
-    if (facts == null || !facts.serverPath().equals(configuration.path())) {
+    // The binary depends on the project (the downloaded build for its OTP release) and is resolved off the EDT with the facts.
+    if (facts == null || !facts.settingsKey().equals(ElpPreflight.settingsKey())) {
       preflight.gatherFactsInBackground(() -> startServersIfNeeded(project));
       return;
     }
@@ -68,7 +66,7 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
       }
       return;
     }
-    serverStarter.ensureServerStarted(new ElpLspClientDescriptor(project, root, configuration));
+    serverStarter.ensureServerStarted(new ElpLspClientDescriptor(project, root, facts.configuration()));
   }
 
   /** Asks the platform to call {@link #fileOpened} again for the Erlang files open in the project. */

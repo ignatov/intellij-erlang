@@ -36,6 +36,8 @@ import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresReadLock;
 import com.intellij.util.text.VersionComparatorUtil;
+import org.intellij.erlang.elp.distribution.ElpAvailability;
+import org.intellij.erlang.elp.distribution.ElpDistribution;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -85,6 +87,8 @@ public final class ElpPreflight implements Disposable {
     REBAR3_NOT_RUNNABLE(true),
     REBAR3_TOO_OLD(true),
     NO_SERVER_BINARY(true),
+    /** The downloaded server is chosen and its build for the project can be downloaded, but is not installed yet. */
+    SERVER_NOT_DOWNLOADED(true),
     /** Offered on macOS only for now: it is the only system the offer was measured on. */
     NOT_MACOS(false),
     NO_REBAR_CONFIG(false),
@@ -156,21 +160,31 @@ public final class ElpPreflight implements Disposable {
   /**
    * The facts about the project's tools.
    *
-   * @param otpRelease     the OTP release of the project's Erlang SDK, {@code null} without an SDK
+   * @param hasSdk         whether the project has an Erlang SDK
+   * @param otpRelease     the OTP release of the project's Erlang SDK, {@code null} without an SDK or when it is unknown
    * @param rebar3         the rebar3 the server gets, configured or found on its PATH; {@code null} when there is none
    * @param rebar3Version  the version {@code rebar3} reports, {@code null} when it could not be run
    * @param rebar3Error    why {@code rebar3 version} failed
-   * @param serverPath     the ELP binary
-   * @param serverRunnable whether {@code serverPath} is an executable file
+   * @param configuration  the ELP settings in effect for the project, with the binary resolved from the custom path or the
+   *                       downloaded build, see {@link ElpSettings#getEffectiveConfiguration(Project)}
+   * @param serverProblem  why that binary cannot be started ({@link Reason#NO_SERVER_BINARY} or {@link Reason#SERVER_NOT_DOWNLOADED}),
+   *                       {@code null} when it can
    * @param macOs          whether the IDE runs on macOS
+   * @param settingsKey    the ELP settings the facts were gathered for, see {@link #settingsKey()}
    */
-  public record Facts(@Nullable String otpRelease,
+  public record Facts(boolean hasSdk,
+                      @Nullable String otpRelease,
                       @Nullable String rebar3,
                       @Nullable String rebar3Version,
                       @Nullable String rebar3Error,
-                      @NotNull String serverPath,
-                      boolean serverRunnable,
-                      boolean macOs) {
+                      @NotNull ElpConfiguration configuration,
+                      @Nullable Problem serverProblem,
+                      boolean macOs,
+                      @NotNull String settingsKey) {
+    @NotNull
+    public String serverPath() {
+      return configuration.path();
+    }
   }
 
   /** The facts are gathered again after this time even when nothing told the check that they changed, such as the rebar path. */
@@ -244,17 +258,17 @@ public final class ElpPreflight implements Disposable {
   @NotNull
   @RequiresBackgroundThread
   public Facts gatherFacts() {
-    String[] sdk = ReadAction.compute(() -> {
-      if (myProject.isDisposed()) return new String[3];
+    String settingsKey = settingsKey();
+    Object[] sdk = ReadAction.compute(() -> {
+      if (myProject.isDisposed()) return new Object[3];
       String home = ErlangSdkType.getSdkPath(myProject);
-      String otp = StringUtil.isNotEmpty(home) ? ErlangSdkType.getRelease(myProject).getOtpRelease() : null;
-      return new String[]{home, otp, RebarSettings.getInstance(myProject).getRebarPath()};
+      ErlangSdkRelease release = StringUtil.isNotEmpty(home) ? ErlangSdkType.getProjectSdkRelease(myProject) : null;
+      return new Object[]{home, release, RebarSettings.getInstance(myProject).getRebarPath()};
     });
-    String sdkHome = sdk[0];
-    String otpRelease = sdk[1];
-    String configuredRebar = sdk[2];
-    String serverPath = ElpSettings.getInstance().getEffectiveConfiguration().path();
-    File server = new File(serverPath);
+    String sdkHome = (String)sdk[0];
+    String otpRelease = sdk[1] instanceof ErlangSdkRelease release ? release.getOtpRelease() : null;
+    String configuredRebar = (String)sdk[2];
+    ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration(myProject);
     String path = ElpEnvironment.buildPath(EnvironmentUtil.getValue("PATH"), sdkHome, configuredRebar);
     String rebar3 = findRebar3(configuredRebar, path);
     String rebar3Version = null;
@@ -264,11 +278,45 @@ public final class ElpPreflight implements Disposable {
       rebar3Version = versionOrError[0];
       rebar3Error = versionOrError[1];
     }
-    Facts facts = new Facts(otpRelease, rebar3, rebar3Version, rebar3Error, serverPath,
-                            !serverPath.isEmpty() && server.isFile() && server.canExecute(), SystemInfo.isMac);
+    Facts facts = new Facts(StringUtil.isNotEmpty(sdkHome), otpRelease, rebar3, rebar3Version, rebar3Error, configuration,
+                            serverProblem(configuration.path()), SystemInfo.isMac, settingsKey);
     myFacts = facts;
     myFactsTime = System.currentTimeMillis();
     return facts;
+  }
+
+  /**
+   * @return why the binary at {@code serverPath} cannot be started; for an empty path, whether the downloaded build can be
+   * downloaded or why no build fits
+   */
+  @Nullable
+  @RequiresBackgroundThread
+  private Problem serverProblem(@NotNull String serverPath) {
+    if (!serverPath.isEmpty()) {
+      File server = new File(serverPath);
+      if (server.isFile() && server.canExecute()) return null;
+      return new Problem(Reason.NO_SERVER_BINARY, "The ELP binary " + serverPath + " is not an executable file.");
+    }
+    ElpAvailability availability = ElpDistribution.getInstance().availability(myProject);
+    return switch (availability.kind()) {
+      case DOWNLOADABLE -> new Problem(Reason.SERVER_NOT_DOWNLOADED, "ELP is not downloaded yet: download it on the Erlang External " +
+                                                                     "Tools settings page.");
+      case UNAVAILABLE -> new Problem(Reason.NO_SERVER_BINARY, "No ELP build can be downloaded for this project: " +
+                                                               availability.choice().message());
+      case CONFIGURED, INSTALLED -> new Problem(Reason.NO_SERVER_BINARY, "The path to the ELP binary is empty.");
+    };
+  }
+
+  /**
+   * The ELP settings that decide which binary is started, without touching the file system: when they change, the facts are
+   * gathered again.
+   */
+  @NotNull
+  public static String settingsKey() {
+    ElpSettings settings = ElpSettings.getInstance();
+    ElpConfiguration configuration = settings.getEffectiveConfiguration();
+    return settings.getStoredSource() + "|" + settings.getStoredPath() + "|" + System.getProperty(ElpConfiguration.PATH_PROPERTY) +
+           "|" + configuration.mode() + "|" + configuration.eqwalizer();
   }
 
   /**
@@ -296,8 +344,12 @@ public final class ElpPreflight implements Disposable {
   @NotNull
   public static Result evaluate(@NotNull Facts facts, @Nullable Layout layout) {
     List<Problem> problems = new ArrayList<>();
-    if (facts.otpRelease() == null) {
+    if (!facts.hasSdk()) {
       problems.add(new Problem(Reason.NO_SDK, "No Erlang SDK is configured for the project; ELP needs OTP " + MIN_OTP + " or newer."));
+    }
+    else if (facts.otpRelease() == null) {
+      problems.add(new Problem(Reason.OTP_TOO_OLD, "The OTP release of the project's Erlang SDK is unknown; ELP needs OTP " + MIN_OTP +
+                                                   " or newer."));
     }
     else if (!isAtLeastOtp(facts.otpRelease(), MIN_OTP)) {
       problems.add(new Problem(Reason.OTP_TOO_OLD, "The project's Erlang SDK is OTP " + facts.otpRelease() + "; ELP needs OTP " +
@@ -322,10 +374,7 @@ public final class ElpPreflight implements Disposable {
                                                         MIN_REBAR3 + " or newer."));
       }
     }
-    if (!facts.serverRunnable()) {
-      problems.add(new Problem(Reason.NO_SERVER_BINARY, "The ELP binary " + (facts.serverPath().isEmpty() ? "is not set" :
-                                                                             facts.serverPath() + " is not an executable file") + "."));
-    }
+    if (facts.serverProblem() != null) problems.add(facts.serverProblem());
     if (!facts.macOs()) {
       problems.add(new Problem(Reason.NOT_MACOS, "ELP is offered on macOS only for now."));
     }
