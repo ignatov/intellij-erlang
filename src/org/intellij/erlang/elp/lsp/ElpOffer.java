@@ -22,6 +22,8 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
@@ -54,6 +56,7 @@ import java.util.List;
  * plugin" undoes it. The {@value #PROPERTY} system property set to {@code false} turns the offer off.
  */
 final class ElpOffer {
+  private static final Logger LOG = Logger.getInstance(ElpOffer.class);
   static final String PROPERTY = "erlang.elp.offer";
   /** Registered as a sticky balloon in {@code erlang-elp-lsp.xml}: the offer stays until the user answers it. */
   static final String GROUP = "Erlang ELP offer";
@@ -86,11 +89,22 @@ final class ElpOffer {
    * neither the file system nor the project model.
    */
   static boolean shouldAsk(@NotNull String pluginVersion) {
-    if (Boolean.FALSE.equals(ElpConfiguration.parseBoolean(System.getProperty(PROPERTY)))) return false;
-    if (ElpMode.parse(System.getProperty(ElpConfiguration.MODE_PROPERTY)) != null) return false;
+    return whyNotAsk(pluginVersion) == null;
+  }
+
+  /** @return why {@link #shouldAsk} says no, for the log; {@code null} when the offer may be shown */
+  @Nullable
+  static String whyNotAsk(@NotNull String pluginVersion) {
+    if (Boolean.FALSE.equals(ElpConfiguration.parseBoolean(System.getProperty(PROPERTY)))) return "-D" + PROPERTY + "=false";
+    String forcedMode = System.getProperty(ElpConfiguration.MODE_PROPERTY);
+    if (ElpMode.parse(forcedMode) != null) return "the engine is forced by -D" + ElpConfiguration.MODE_PROPERTY + "=" + forcedMode;
     ElpSettings settings = ElpSettings.getInstance();
-    return settings.getStoredMode() == ElpMode.PLUGIN && !settings.isOfferNeverAsk() &&
-           !pluginVersion.equals(settings.getOfferShownForVersion());
+    if (settings.getStoredMode() != ElpMode.PLUGIN) return "the engine is " + settings.getStoredMode();
+    if (settings.isOfferNeverAsk()) return "the user chose \"" + NEVER + "\"";
+    if (pluginVersion.equals(settings.getOfferShownForVersion())) {
+      return "already shown for version " + settings.getOfferShownForVersion() + " (plugin version " + pluginVersion + ")";
+    }
+    return null;
   }
 
   /**
@@ -111,24 +125,51 @@ final class ElpOffer {
     // Tests that open files for other reasons must not get the offer: it would land among their notifications and settings.
     if (ApplicationManager.getApplication().isUnitTestMode() && !ourEnabledInTests) return;
     String version = ElpFeedback.pluginVersion();
-    if (!shouldAsk(version)) return;
+    LOG.debug("fileOpened " + file.getName() + ", engine " + ElpSettings.getInstance().getStoredMode() + ", plugin version " + version);
+    String whyNot = whyNotAsk(version);
+    if (whyNot != null) {
+      LOG.debug("No ELP offer: " + whyNot);
+      return;
+    }
     synchronized (LAST_CHECK) {
       Long last = project.getUserData(LAST_CHECK);
       long now = System.currentTimeMillis();
-      if (last != null && now - last < RECHECK_MS) return;
+      if (last != null && now - last < RECHECK_MS) {
+        LOG.debug("No ELP offer check: the project was checked less than a minute ago");
+        return;
+      }
       project.putUserData(LAST_CHECK, now);
     }
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
-      VirtualFile root = ReadAction.computeBlocking(
-        () -> project.isDisposed() || !file.isValid() ? null : ElpFiles.findWorkspaceRoot(project, file));
-      if (root == null) return;
-      ElpPreflight.Facts facts = ElpPreflight.getInstance(project).gatherFacts();
-      ElpPreflight.Layout layout = ReadAction.computeBlocking(() -> root.isValid() ? ElpPreflight.Layout.of(root) : null);
-      ElpPreflight.Result result = ElpPreflight.evaluate(facts, layout);
-      ElpAvailability availability = ElpDistribution.getInstance().availability(project);
-      ApplicationManager.getApplication().invokeLater(() -> offerIfEligible(project, version, result, availability),
-                                                      ModalityState.nonModal(), project.getDisposed());
+      try {
+        check(project, file, version);
+      }
+      catch (ProcessCanceledException e) {
+        LOG.debug("The ELP offer check was cancelled");
+      }
+      catch (Throwable e) {
+        LOG.warn("The ELP offer check failed", e);
+      }
     });
+  }
+
+  @RequiresBackgroundThread
+  private static void check(@NotNull Project project, @NotNull VirtualFile file, @NotNull String version) {
+    VirtualFile root = ReadAction.computeBlocking(
+      () -> project.isDisposed() || !file.isValid() ? null : ElpFiles.findWorkspaceRoot(project, file));
+    if (root == null) {
+      LOG.debug("No ELP offer: no workspace root for " + file.getName());
+      return;
+    }
+    ElpPreflight.Facts facts = ElpPreflight.getInstance(project).gatherFacts();
+    ElpPreflight.Layout layout = ReadAction.computeBlocking(() -> root.isValid() ? ElpPreflight.Layout.of(root) : null);
+    ElpPreflight.Result result = ElpPreflight.evaluate(facts, layout);
+    ElpAvailability availability = ElpDistribution.getInstance().availability(project);
+    LOG.debug("ELP offer check: OTP " + facts.otpRelease() + ", rebar3 " + facts.rebar3Version() + ", layout " + layout +
+              ", problems " + result.reasons() + ", availability " + availability.kind() +
+              (availability.choice().reason() != null ? " (" + availability.choice().message() + ")" : ""));
+    ApplicationManager.getApplication().invokeLater(() -> offerIfEligible(project, version, result, availability),
+                                                    ModalityState.nonModal(), project.getDisposed());
   }
 
   /**
@@ -140,7 +181,19 @@ final class ElpOffer {
   @RequiresEdt
   static boolean offerIfEligible(@NotNull Project project, @NotNull String pluginVersion, @NotNull ElpPreflight.Result result,
                                  @NotNull ElpAvailability availability) {
-    if (project.isDisposed() || !shouldAsk(pluginVersion) || !isEligible(result, availability)) return false;
+    if (project.isDisposed()) return false;
+    String whyNot = whyNotAsk(pluginVersion);
+    if (whyNot != null) {
+      LOG.debug("No ELP offer: " + whyNot);
+      return false;
+    }
+    if (!isEligible(result, availability)) {
+      LOG.info("No ELP offer for " + project.getName() + ": " + StringUtil.join(result.problems(), ElpPreflight.Problem::text, " ") +
+               " ELP server: " + availability.kind() +
+               (availability.choice().reason() != null ? ", " + availability.choice().message() : "") + ".");
+      return false;
+    }
+    LOG.info("ELP offer shown for plugin version " + pluginVersion + ", ELP server: " + availability.kind());
     ElpSettings.getInstance().setOfferShownForVersion(pluginVersion);
     ElpNotifications.notify(project, new Notification(GROUP, TITLE, content(availability), NotificationType.INFORMATION)
       .addAction(NotificationAction.createSimpleExpiring(TRY, () -> tryElp(project)))
