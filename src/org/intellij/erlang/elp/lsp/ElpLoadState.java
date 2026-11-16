@@ -81,6 +81,7 @@ final class ElpLoadState {
   private long myLastProgressTime;
   private final Set<String> myActiveProgress = new HashSet<>();
   private boolean myEverRunning;
+  private boolean myInitialized;
   private String myFirstError;
   private boolean myOtpNotFound;
   private String myErrorToReport;
@@ -100,6 +101,7 @@ final class ElpLoadState {
       myLastProgressTime = now;
       myActiveProgress.clear();
       myEverRunning = false;
+      myInitialized = false;
       myFirstError = null;
       myOtpNotFound = false;
       myErrorToReport = null;
@@ -112,6 +114,9 @@ final class ElpLoadState {
   }
 
   void initialized() {
+    synchronized (this) {
+      myInitialized = true;
+    }
     State state = state();
     if (state == State.STARTING) moveTo(State.LOADING);
   }
@@ -195,6 +200,11 @@ final class ElpLoadState {
       if (failed) cancelWatchdog();
     }
     if (failed) moveTo(State.FAILED);
+  }
+
+  /** Whether the client initialized the server of the current session. */
+  synchronized boolean wasInitialized() {
+    return myInitialized;
   }
 
   synchronized boolean isRunning() {

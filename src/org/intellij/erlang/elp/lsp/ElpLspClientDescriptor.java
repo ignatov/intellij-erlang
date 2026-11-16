@@ -30,10 +30,14 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.platform.lsp.api.Lsp4jClient;
+import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerListener;
+import com.intellij.platform.lsp.api.LspServerManager;
 import com.intellij.platform.lsp.api.LspServerNotificationsHandler;
+import com.intellij.platform.lsp.api.LspServerState;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.io.URLUtil;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -52,6 +56,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Starts {@code elp server} over stdio for one workspace root. The initialization options are left empty, as ELP's own
@@ -73,6 +79,19 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
 
   private final ElpLoadState myLoadState = new ElpLoadState(this::loadStateChanged);
   private volatile Map<String, String> myEnvironmentForTests;
+  private volatile Integer myExitCode;
+  private volatile long myPid = -1;
+  private volatile OSProcessHandler myHandler;
+  private volatile ScheduledFuture<?> myProcessWatch;
+  private volatile long myOrphanSince;
+  private volatile boolean myKilledAsOrphan;
+
+  /**
+   * How long a server process may outlive its client before the plugin kills it with its children. The platform's client waits 10 s
+   * for the answer to {@code shutdown} and then destroys the process tree; it does not stop a process whose client is stopped
+   * while it initializes.
+   */
+  static final long ORPHAN_GRACE_MS = 12_000;
 
   ElpLspClientDescriptor(@NotNull Project project, @NotNull VirtualFile root, @NotNull ElpConfiguration configuration) {
     super(project, "ELP", root);
@@ -163,6 +182,10 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   @RequiresBackgroundThread
   public OSProcessHandler startServerProcess() throws ExecutionException {
     myLoadState.started(System.currentTimeMillis());
+    myExitCode = null;
+    myPid = -1;
+    myOrphanSince = 0;
+    myKilledAsOrphan = false;
     OSProcessHandler handler;
     try {
       handler = super.startServerProcess();
@@ -170,8 +193,11 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     catch (ExecutionException | RuntimeException e) {
       myLoadState.stopped();
       deleteTmpDir();
+      ElpRestarts.didNotStart(getProject(), myConfiguration.path(), String.valueOf(e.getMessage()), myLoadState.lastLogLines());
       throw e;
     }
+    myPid = handler.getProcess().pid();
+    myHandler = handler;
     handler.addProcessListener(new ProcessListener() {
       @Override
       public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
@@ -180,11 +206,76 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
 
       @Override
       public void processTerminated(@NotNull ProcessEvent event) {
+        myExitCode = event.getExitCode();
+        boolean initialized = myLoadState.wasInitialized();
         myLoadState.stopped();
+        cancelProcessWatch();
         deleteTmpDir();
+        // Once the client has seen the end of the process too.
+        AppExecutorUtil.getAppScheduledExecutorService().schedule(() -> processEnded(initialized, event.getExitCode()), 1, TimeUnit.SECONDS);
       }
     });
+    myProcessWatch = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(this::watchProcess, 2, 2, TimeUnit.SECONDS);
     return handler;
+  }
+
+  /**
+   * Kills the process with its children when the platform's client no longer has it, see {@link #ORPHAN_GRACE_MS}.
+   */
+  private void watchProcess() {
+    OSProcessHandler handler = myHandler;
+    if (handler == null || handler.isProcessTerminated()) {
+      cancelProcessWatch();
+      return;
+    }
+    LspServer server = getProject().isDisposed() ? null : findClient();
+    if (server != null && server.getState() != LspServerState.ShutdownNormally && server.getState() != LspServerState.ShutdownUnexpectedly) {
+      myOrphanSince = 0;
+      return;
+    }
+    long now = System.currentTimeMillis();
+    if (myOrphanSince == 0) {
+      myOrphanSince = now;
+    }
+    else if (now - myOrphanSince >= ORPHAN_GRACE_MS) {
+      LOG.info("ELP " + getRoots()[0].getPath() + ": the client is " + (server == null ? "gone" : server.getState()) +
+               ", killing the server process " + myPid + " and its children");
+      myKilledAsOrphan = true;
+      cancelProcessWatch();
+      handler.destroyProcess();
+    }
+  }
+
+  /**
+   * The process ended. When the client did not ask for that, ELP either did not start (it ended before it was initialized) or
+   * crashed, see {@link ElpRestarts}.
+   */
+  private void processEnded(boolean initialized, int exitCode) {
+    if (myKilledAsOrphan || getProject().isDisposed()) return;
+    LspServer server = findClient();
+    if (server == null || server.getState() != LspServerState.ShutdownUnexpectedly) return;
+    if (initialized) {
+      ElpRestarts.crashed(getProject(), exitCode, myLoadState.lastLogLines());
+    }
+    else {
+      ElpRestarts.didNotStart(getProject(), myConfiguration.path(), "it exited with code " + exitCode + " before it was initialized",
+                              myLoadState.lastLogLines());
+    }
+  }
+
+  /** The platform's client of this descriptor, if it still has one. */
+  @Nullable
+  private LspServer findClient() {
+    for (LspServer server : LspServerManager.getInstance(getProject()).getServersForProvider(ElpLspIntegrationProvider.class)) {
+      if (server.getDescriptor() == this) return server;
+    }
+    return null;
+  }
+
+  private void cancelProcessWatch() {
+    ScheduledFuture<?> watch = myProcessWatch;
+    myProcessWatch = null;
+    if (watch != null) watch.cancel(false);
   }
 
   private void deleteTmpDir() {
@@ -287,5 +378,10 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
         myLoadState.stopped();
       }
     };
+  }
+
+  /** The process id of the server started last, or -1. */
+  long getProcessPid() {
+    return myPid;
   }
 }
