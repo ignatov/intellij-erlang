@@ -1,0 +1,1 @@
+-module(<error descr="Module with name 'abc' should be declared in a file named 'abc.erl'.">abc</error>).
