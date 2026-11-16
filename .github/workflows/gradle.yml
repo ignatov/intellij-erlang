@@ -13,6 +13,13 @@ on:
 permissions:
   contents: read
 
+# A newer commit of a pull request cancels the run of its older commit: that result no longer matters, and every
+# pull request and agent session shares the runners of the account. A push has a group of its own, so no push run
+# is cancelled: every commit of master is built and the nightly job is not interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-24.04
