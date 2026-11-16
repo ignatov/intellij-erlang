@@ -7,6 +7,8 @@
         <platform.lsp.serverSupportProvider implementation="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider"/>
         <!-- Why ELP is not started, could not load a project or stopped: see ElpNotifications. -->
         <notificationGroup id="Erlang ELP" displayType="BALLOON"/>
+        <!-- The offer to try ELP stays until the user answers it: see ElpOffer. -->
+        <notificationGroup id="Erlang ELP offer" displayType="STICKY_BALLOON"/>
         <!-- The engine switch: ElpEngine asks this service whether ELP serves a file; without the LSP module there is none. -->
         <projectService serviceInterface="org.intellij.erlang.elp.ElpServerStatus"
                         serviceImplementation="org.intellij.erlang.elp.lsp.ElpLspServerStatus"/>
