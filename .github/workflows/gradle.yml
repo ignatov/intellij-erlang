@@ -50,7 +50,7 @@ jobs:
           fi
         done
         echo "$range"
-        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+        if [[ "$range" != *'since-build="262"'* || "$range" != *'until-build="263.*"'* ]]; then
           echo "::error::Unexpected compatibility range in ${zips[0]}: '$range'"
           exit 1
         fi
@@ -72,22 +72,17 @@ jobs:
         save: true
 
   other-ides:
-    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.1.
+    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.2.
     # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
     # archive against it. The list ends at the IDE of until-build (supportedUntilBuild in build.gradle).
-    #
-    # A push to master runs every IDE of the list. A pull request, and a push to any other branch, runs only the
-    # newest one: the two jobs were most of the runner time of a pull request, and the runners of the account are
-    # shared by every pull request and agent session. So a difference with an IDE in between shows on master, after
-    # the merge, and is fixed before the next release, which checks the archive against every IDE again.
     needs: build
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
-          && '[{"ide":"2026.2","java":"21"},{"ide":"2026.3","java":"25"}]'
-          || '[{"ide":"2026.3","java":"25"}]') }}
+        include:
+          - ide: '2026.3'
+            java: '25'
     name: ide-${{ matrix.ide }}
 
     steps:
