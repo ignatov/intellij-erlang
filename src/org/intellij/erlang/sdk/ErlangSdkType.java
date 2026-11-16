@@ -241,6 +241,12 @@ public class ErlangSdkType extends SdkType {
     return release != null ? release : ErlangSdkRelease.DefaultRelease;
   }
 
+  // the release of the project's Erlang SDK; null when there is none or it is unknown, unlike getRelease
+  @Nullable
+  public static ErlangSdkRelease getProjectSdkRelease(@NotNull Project project) {
+    return ErlangSystemUtil.isSmallIde() ? getReleaseForSmallIde(project) : getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
+  }
+
   @NotNull
   public static ErlangSdkRelease getRelease(@Nullable Module module) {
     if (module == null) return ErlangSdkRelease.DefaultRelease;

@@ -66,11 +66,12 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private TextFieldWithBrowseButton mySdkPathSelector;
   private TitledSeparator mySdkTitledSeparator;
   private JLabel mySdkPathLabel;
-  private final ElpSettingsPanel myElpSettingsPanel = new ElpSettingsPanel();
+  private final ElpSettingsPanel myElpSettingsPanel;
   private JPanel myComponent;
 
   public ErlangExternalToolsConfigurable(@NotNull Project project) {
     myProject = project;
+    myElpSettingsPanel = new ElpSettingsPanel(project);
     myRebarSettings = RebarSettings.getInstance(project);
     myEmacsSettings = EmacsSettings.getInstance(project);
     myDialyzerSettings = DialyzerSettings.getInstance(project);
