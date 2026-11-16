@@ -3,4 +3,4 @@
 foo() ->
   lists:foldl(fun(_FirstParameter,
                   _SecondParameter) ->
-    ok end,   [], []).
+                ok end, [], []).
