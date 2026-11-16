@@ -73,6 +73,201 @@
  {
   "diagnostics": [
    {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 9
+     },
+     "start": {
+      "character": 8,
+      "line": 9
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 9
+     },
+     "start": {
+      "character": 12,
+      "line": 9
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 10
+     },
+     "start": {
+      "character": 8,
+      "line": 10
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 10
+     },
+     "start": {
+      "character": 12,
+      "line": 10
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 11
+     },
+     "start": {
+      "character": 8,
+      "line": 11
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 11
+     },
+     "start": {
+      "character": 12,
+      "line": 11
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 12
+     },
+     "start": {
+      "character": 8,
+      "line": 12
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 12
+     },
+     "start": {
+      "character": 12,
+      "line": 12
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 13
+     },
+     "start": {
+      "character": 8,
+      "line": 13
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 13
+     },
+     "start": {
+      "character": 12,
+      "line": 13
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_chars.erl"
+ },
+ {
+  "diagnostics": [
+   {
     "code": "E1516",
     "codeDescription": {
      "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/e/E1516"
@@ -673,6 +868,49 @@
   "file": "src/shop_defects.erl"
  },
  {
+  "diagnostics": [
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 78,
+      "line": 7
+     },
+     "start": {
+      "character": 76,
+      "line": 7
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 48,
+      "line": 13
+     },
+     "start": {
+      "character": 8,
+      "line": 12
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_macros.erl"
+ },
+ {
   "diagnostics": [],
   "file": "src/shop_memory.erl"
  },
@@ -699,6 +937,104 @@
    }
   ],
   "file": "src/shop_misnamed.erl"
+ },
+ {
+  "diagnostics": [
+   {
+    "code": "W0004",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0004"
+    },
+    "message": "Missing '.'",
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 7
+     },
+     "start": {
+      "character": 19,
+      "line": 7
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "Syntax Error",
+    "range": {
+     "end": {
+      "character": 27,
+      "line": 7
+     },
+     "start": {
+      "character": 21,
+      "line": 7
+     }
+    },
+    "relatedInformation": [
+     {
+      "location": {
+       "range": {
+        "end": {
+         "character": 16,
+         "line": 4
+        },
+        "start": {
+         "character": 9,
+         "line": 4
+        }
+       },
+       "uri": "${PROJECT_URI}/src/shop_syntax.erl"
+      },
+      "message": "function total/1 undefined"
+     }
+    ],
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "P1711",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1711"
+    },
+    "message": "syntax error before: 'end'",
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 10
+     },
+     "start": {
+      "character": 17,
+      "line": 10
+     }
+    },
+    "relatedInformation": [
+     {
+      "location": {
+       "range": {
+        "end": {
+         "character": 24,
+         "line": 4
+        },
+        "start": {
+         "character": 18,
+         "line": 4
+        }
+       },
+       "uri": "${PROJECT_URI}/src/shop_syntax.erl"
+      },
+      "message": "function kind/1 undefined"
+     }
+    ],
+    "severity": 1,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_syntax.erl"
  },
  {
   "diagnostics": [
