@@ -25,25 +25,41 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.impl.LaterInvocator;
+import com.intellij.openapi.application.impl.NonBlockingReadActionImpl;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.JavaModuleTestCase;
 import com.intellij.testFramework.MapDataContext;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.PsiTestUtil;
+import com.intellij.ui.CollectionListModel;
+import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBList;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ui.UIUtil;
+import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer;
+import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
 import org.intellij.erlang.eunit.ErlangUnitRunConfigurationProducer;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class ErlangDebuggableRunConfigurationProducerTest extends JavaModuleTestCase {
   @Override
@@ -208,8 +224,149 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
     doTestDebugOptions(ErlangUnitRunConfigurationProducer.class, module, true, expectedModulesNotToInterpret);
   }
 
+  public void testEditorFindsNifsOffUiThread() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    waitForModulesNotToInterpret();
+    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+  }
+
+  public void testEditorShowsNifsInDialogOpenedAfterReset() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    Object dialog = new Object();
+    LaterInvocator.enterModal(dialog);
+    try {
+      // other platform tasks cannot finish in the modal state, so wait for the list itself
+      PlatformTestUtil.waitWithEventsDispatching("The modules with load_nif calls are not shown in a modal dialog",
+                                                 () -> !getShownModulesNotToInterpret(editor).isEmpty(), 10);
+      assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+    }
+    finally {
+      LaterInvocator.leaveModal(dialog);
+    }
+  }
+
+  public void testEditorKeepsNifsWhenAutoUpdateTurnedOffBeforeTheyAreFound() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    JBCheckBox autoUpdateCheckBox = getAutoUpdateCheckBox(editor);
+    autoUpdateCheckBox.doClick();
+    ErlangRunConfigurationBase.ErlangDebugOptions applied = applyDebugOptions(editor);
+    assertTrue("auto-update was turned off before the modules were found", applied.isAutoUpdateModulesNotToInterpret());
+
+    waitForModulesNotToInterpret();
+    assertTrue(autoUpdateCheckBox.isSelected());
+    autoUpdateCheckBox.doClick();
+    assertFalse(autoUpdateCheckBox.isSelected());
+    assertSameElements(getShownModulesNotToInterpret(editor), "nifs_in_source");
+    applied = applyDebugOptions(editor);
+    assertFalse(applied.isAutoUpdateModulesNotToInterpret());
+    assertSameElements(applied.getModulesNotToInterpret(), "nifs_in_source");
+  }
+
+  public void testEditorDoesNotBringBackRemovedNif() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    JBCheckBox autoUpdateCheckBox = getAutoUpdateCheckBox(editor);
+    assertFalse("auto-update can be turned off before the modules are found", autoUpdateCheckBox.isEnabled());
+
+    waitForModulesNotToInterpret();
+    assertTrue(autoUpdateCheckBox.isEnabled());
+    autoUpdateCheckBox.doClick();
+    assertFalse(autoUpdateCheckBox.isSelected());
+    getModulesNotToInterpretModel(editor).remove("nifs_in_source");
+    waitForModulesNotToInterpret();
+    assertEmpty(getShownModulesNotToInterpret(editor));
+    assertEmpty(applyDebugOptions(editor).getModulesNotToInterpret());
+  }
+
+  public void testEditorIgnoresSearchOfEarlierReset() throws Exception {
+    ErlangRunConfigurationEditorForm editor = createEditorForNifsInSource();
+    ErlangApplicationConfiguration withoutAutoUpdate = (ErlangApplicationConfiguration) createConfiguration(
+      ErlangApplicationRunConfigurationProducer.class, ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
+    withoutAutoUpdate.getDebugOptions().setAutoUpdateModulesNotToInterpret(false);
+    withoutAutoUpdate.getDebugOptions().setModulesNotToInterpret(new HashSet<>(List.of("mine")));
+    editor.resetFrom(withoutAutoUpdate);
+    assertTrue(getAutoUpdateCheckBox(editor).isEnabled());
+
+    waitForModulesNotToInterpret();
+    assertSameElements(getShownModulesNotToInterpret(editor), "mine");
+    ErlangRunConfigurationBase.ErlangDebugOptions applied = applyDebugOptions(editor);
+    assertFalse(applied.isAutoUpdateModulesNotToInterpret());
+    assertSameElements(applied.getModulesNotToInterpret(), "mine");
+  }
+
+  @NotNull
+  private ErlangRunConfigurationBase.ErlangDebugOptions applyDebugOptions(@NotNull ErlangRunConfigurationEditorForm editor) throws Exception {
+    ErlangApplicationConfiguration applied = (ErlangApplicationConfiguration) createConfiguration(
+      ErlangApplicationRunConfigurationProducer.class, ModuleManager.getInstance(myProject).findModuleByName("nifs_in_source"), false);
+    editor.applyTo(applied);
+    return applied.getDebugOptions();
+  }
+
+  @NotNull
+  private static JBCheckBox getAutoUpdateCheckBox(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBCheckBox autoUpdateCheckBox = UIUtil.findComponentOfType(editor.getComponent(), JBCheckBox.class);
+    assertNotNull(autoUpdateCheckBox);
+    return autoUpdateCheckBox;
+  }
+
+  @NotNull
+  @SuppressWarnings("unchecked")
+  private static CollectionListModel<String> getModulesNotToInterpretModel(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBList<?> modulesNotToInterpretList = UIUtil.findComponentOfType(editor.getComponent(), JBList.class);
+    assertNotNull(modulesNotToInterpretList);
+    return (CollectionListModel<String>) modulesNotToInterpretList.getModel();
+  }
+
+  @NotNull
+  private ErlangRunConfigurationEditorForm createEditorForNifsInSource() throws Exception {
+    Module nifsInSource = createErlangModule("nifs_in_source");
+    ErlangRunConfigurationBase<?> configuration = createConfiguration(ErlangApplicationRunConfigurationProducer.class, nifsInSource, false);
+    configuration.getDebugOptions().setModulesNotToInterpret(new HashSet<>());
+
+    ErlangRunConfigurationEditorForm editor = new ErlangRunConfigurationEditorForm();
+    Disposer.register(getTestRootDisposable(), editor);
+    editor.getComponent();
+
+    String forbidSlowOperations = "intellij.idea.forbid.slow.ops";
+    String oldValue = System.setProperty(forbidSlowOperations, "true");
+    try {
+      editor.resetFrom((ErlangApplicationConfiguration) configuration);
+    }
+    finally {
+      if (oldValue == null) System.clearProperty(forbidSlowOperations);
+      else System.setProperty(forbidSlowOperations, oldValue);
+    }
+    assertEmpty(getShownModulesNotToInterpret(editor));
+    return editor;
+  }
+
+  private static void waitForModulesNotToInterpret() {
+    NonBlockingReadActionImpl.waitForAsyncTaskCompletion();
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+  }
+
+  @NotNull
+  private static List<Object> getShownModulesNotToInterpret(@NotNull ErlangRunConfigurationEditorForm editor) {
+    JBList<?> modulesNotToInterpretList = UIUtil.findComponentOfType(editor.getComponent(), JBList.class);
+    assertNotNull(modulesNotToInterpretList);
+    ListModel<?> model = modulesNotToInterpretList.getModel();
+    List<Object> shownModules = new ArrayList<>();
+    for (int i = 0; i < model.getSize(); i++) {
+      shownModules.add(model.getElementAt(i));
+    }
+    return shownModules;
+  }
+
   private void doTestDebugOptions(Class<? extends ErlangDebuggableRunConfigurationProducer<?>> producerClass,
                                   Module module, boolean useTestSource, String... expectedModulesNotToInterpret) {
+    ErlangRunConfigurationBase<?> c = createConfiguration(producerClass, module, useTestSource);
+    ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = c.getDebugOptions();
+    assertTrue(debugOptions.isAutoUpdateModulesNotToInterpret());
+    assertSameElements(debugOptions.getModulesNotToInterpret(), expectedModulesNotToInterpret);
+  }
+
+  @NotNull
+  private ErlangRunConfigurationBase<?> createConfiguration(Class<? extends ErlangDebuggableRunConfigurationProducer<?>> producerClass,
+                                                            Module module, boolean useTestSource) {
     PsiElement elementToProduceFor = getElementToProduceFor(module, useTestSource);
     MapDataContext dataContext = new MapDataContext();
     dataContext.put(CommonDataKeys.PROJECT, myProject);
@@ -226,11 +383,7 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
     RunConfiguration configuration = confFromCtx.getConfiguration();
     assertNotNull(configuration);
     assertInstanceOf(configuration, ErlangRunConfigurationBase.class);
-
-    ErlangRunConfigurationBase<?> c = (ErlangRunConfigurationBase<?>) configuration;
-    ErlangRunConfigurationBase.ErlangDebugOptions debugOptions = c.getDebugOptions();
-    assertTrue(debugOptions.isAutoUpdateModulesNotToInterpret());
-    assertSameElements(debugOptions.getModulesNotToInterpret(), expectedModulesNotToInterpret);
+    return (ErlangRunConfigurationBase<?>) configuration;
   }
 
   // We're producing for function named the same as it's containing module.
