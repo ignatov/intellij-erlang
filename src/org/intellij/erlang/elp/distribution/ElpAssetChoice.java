@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
  */
 public record ElpAssetChoice(@Nullable ElpRelease.Asset asset, @Nullable Reason reason, @NotNull String message) {
   public enum Reason {
+    /** The release has no builds: the pinned manifest could not be read, see {@link ElpRelease#loadError()}. */
+    NO_RELEASE,
     /** The OS has no build (for example FreeBSD). */
     UNSUPPORTED_OS,
     /** The OS has no build for this CPU (for example Windows on ARM). */
@@ -70,6 +72,11 @@ public record ElpAssetChoice(@Nullable ElpRelease.Asset asset, @Nullable Reason 
   @NotNull
   public static ElpAssetChoice choose(@NotNull ElpRelease release, @NotNull ElpPlatform platform, boolean hasSdk,
                                       @Nullable Integer otpMajor) {
+    if (release.assets().isEmpty()) {
+      String why = release.loadError() != null ? "the plugin's ELP manifest cannot be read (" + release.loadError() + ")"
+                                               : "the ELP release lists no builds";
+      return none(Reason.NO_RELEASE, "No ELP build available: " + why + ".");
+    }
     List<ElpRelease.Asset> forOs = release.assets().stream().filter(a -> a.os().equals(platform.os())).toList();
     if (forOs.isEmpty()) return none(Reason.UNSUPPORTED_OS, "ELP has no build for " + platform.presentableName() + ".");
     List<ElpRelease.Asset> forPlatform = forOs.stream().filter(a -> a.arch().equals(platform.arch())).toList();

@@ -20,10 +20,18 @@ import junit.framework.TestCase;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +105,62 @@ public class ElpReleaseTest extends TestCase {
       catch (IOException expected) {
         // refused
       }
+    }
+  }
+
+  public void testPinnedManifestIsRead() {
+    assertNull(ElpRelease.pinned().loadError());
+  }
+
+  /** A manifest that cannot be read gives a release without builds that says why; nothing is thrown. */
+  public void testUnreadableManifestIsNotFatal() {
+    ElpRelease missing = ElpRelease.read(() -> null);
+    assertTrue(missing.assets().isEmpty());
+    assertEquals("the plugin has no /elp/elp-release.json", missing.loadError());
+
+    ElpRelease broken = ElpRelease.read(() -> new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)));
+    assertTrue(broken.assets().isEmpty());
+    assertTrue(broken.loadError(), broken.loadError().startsWith("IOException: The ELP manifest is not valid JSON"));
+
+    ElpRelease noLibrary = ElpRelease.read(() -> {
+      throw new NoClassDefFoundError("com/google/gson/JsonParser");
+    });
+    assertEquals("NoClassDefFoundError: com/google/gson/JsonParser", noLibrary.loadError());
+    ElpAssetChoice choice = ElpAssetChoice.choose(noLibrary, new ElpPlatform("macos", "aarch64"), true, 28);
+    assertNull(choice.asset());
+    assertEquals(ElpAssetChoice.Reason.NO_RELEASE, choice.reason());
+    assertEquals("No ELP build available: the plugin's ELP manifest cannot be read (NoClassDefFoundError: com/google/gson/JsonParser).",
+                 choice.message());
+  }
+
+  /**
+   * 2026.3 does not let plugins see Jackson 2, and the Plugin Verifier does not report a reference to it (it counts the IDE modules
+   * that depend on it), so the compiled ELP classes are checked here.
+   */
+  public void testElpClassesDoNotReferenceJackson() throws Exception {
+    URI uri = Objects.requireNonNull(ElpRelease.class.getResource("ElpRelease.class")).toURI();
+    try (FileSystem jar = "jar".equals(uri.getScheme()) ? FileSystems.newFileSystem(uri, Map.of()) : null) {
+      Path elp = Path.of(uri).getParent().getParent();
+      assertTrue(elp.toString(), elp.endsWith("elp"));
+      List<String> offenders;
+      try (Stream<Path> files = Files.walk(elp)) {
+        offenders = files.filter(f -> f.toString().endsWith(".class")).filter(f -> {
+          try {
+            return new String(Files.readAllBytes(f), StandardCharsets.ISO_8859_1).contains("com/fasterxml/jackson/");
+          }
+          catch (IOException e) {
+            throw new AssertionError(e);
+          }
+        }).map(f -> elp.relativize(f).toString()).toList();
+      }
+      assertEquals(List.of(), offenders);
+      assertTrue("the ELP classes are in " + elp, countClasses(elp) > 10);
+    }
+  }
+
+  private static long countClasses(Path dir) throws IOException {
+    try (Stream<Path> files = Files.walk(dir)) {
+      return files.filter(f -> f.toString().endsWith(".class")).count();
     }
   }
 
