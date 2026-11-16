@@ -94,6 +94,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testBasedIntegersErrors()   { doTest(); }
   public void testHexEscapeCodePoints()   { doTest(); }
   public void testHexEscapeCodePointsErrors() { doTest(); }
+  public void testIncorrectModuleName() { doTest(); }
+  public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";

@@ -545,7 +545,7 @@ class OtpResultTest(Fixture):
 
     def corpus(self, args, **report):
         content = {'corpusDir': '/erl', 'sdkRelease': '29', 'files': 3, 'filesWithErrors': 0, 'errorElements': 0,
-                   'slowFileMillis': 10000, 'errors': [], 'exceptions': [], 'slowFiles': []}
+                   'slowFileMillis': 10000, 'errors': [], 'exceptions': [], 'slowFiles': [], 'skippedFiles': []}
         content.update(report)
         write(args.corpus_report, json.dumps(content))
         self.check_ran('corpus', 0)
@@ -771,6 +771,37 @@ class OtpResultTest(Fixture):
         self.assertEqual(compat.LIST_LIMIT, len(check['errors']['items']))
         self.assertEqual(1, check['exceptions']['total'])
         self.assertEqual(1, check['slowFiles']['total'])
+
+    def test_corpus_skipped_files(self):
+        args = self.args()
+        self.compilation_passed()
+        skipped = [{'file': 'lib/parsetools-2.6/include/leexinc.hrl', 'reason': 'the template of the leex generator'}]
+        self.corpus(args, skippedFiles=skipped)
+        result = compat.otp_result(args)
+        check = result['checks']['corpus']
+        self.assertEqual('passed', check['status'])
+        self.assertEqual({'total': 1, 'trimmed': False, 'items': skipped}, check['skippedFiles'])
+        self.assertEqual('passed', result['status'])
+        summary = compat.summary(result)
+        self.assertIn('| corpus | passed | 3 files, 0 with errors, 0 error elements, 0 exceptions, 0 slow files; '
+                      '1 files skipped as not Erlang sources |', summary)
+        self.assertIn('<summary>corpus: skipped files</summary>', summary)
+        self.assertIn('lib/parsetools-2.6/include/leexinc.hrl: the template of the leex generator', summary)
+
+    def test_corpus_report_without_skipped_files(self):
+        # A commit before the list of skipped files writes a report without the key.
+        args = self.args()
+        self.compilation_passed()
+        self.corpus(args)
+        content = json.loads(compat.read_file(args.corpus_report))
+        del content['skippedFiles']
+        write(args.corpus_report, json.dumps(content))
+        result = compat.otp_result(args)
+        self.assertEqual('passed', result['checks']['corpus']['status'])
+        self.assertEqual({'total': 0, 'trimmed': False, 'items': []}, result['checks']['corpus']['skippedFiles'])
+        summary = compat.summary(result)
+        self.assertIn('| corpus | passed | 3 files, 0 with errors, 0 error elements, 0 exceptions, 0 slow files |', summary)
+        self.assertNotIn('skipped files', summary)
 
     def test_empty_corpus_is_incomplete(self):
         # Finding 6 and decision 2: an installation without sources, or a corpus root that was not walked, parsed

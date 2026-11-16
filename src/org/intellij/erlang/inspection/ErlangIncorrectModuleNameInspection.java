@@ -27,6 +27,7 @@ import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangVisitor;
@@ -43,6 +44,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitModule(@NotNull ErlangModule o) {
+        if (o.getContainingFile().getFileType() != ErlangFileType.MODULE) return;
         String ext = FileUtilRt.getExtension(o.getContainingFile().getName());
         String withoutExtension = FileUtil.getNameWithoutExtension(o.getContainingFile().getName());
         String moduleName = StringUtil.replace(o.getName(), "'", "");

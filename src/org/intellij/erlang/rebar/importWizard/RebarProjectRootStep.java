@@ -66,6 +66,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
     ErlangUiUtil.addBrowseFolderListener(myProjectRootComponent, "Select `rebar.config` of a Rebar Project to Import", "", null,
                                          FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
+    myRebarConfigurationForm.setProject(context.getProject());
 
     myGetDepsCheckbox.setVisible(ourEnabled);
     BackgroundTaskUtil.executeOnPooledThread(myProjectRootComponent, () -> {

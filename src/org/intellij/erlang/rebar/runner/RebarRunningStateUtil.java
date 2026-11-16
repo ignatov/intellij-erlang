@@ -18,13 +18,12 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.OSProcessHandler;
-import com.intellij.execution.process.ScriptRunnerUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -34,20 +33,21 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RebarRunningStateUtil {
   private static final String REBAR = "rebar3";
-  private static final Logger LOG = Logger.getInstance(RebarRunningStateUtil.class);
 
   private RebarRunningStateUtil() {
   }
@@ -64,9 +64,9 @@ public class RebarRunningStateUtil {
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
     commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarSettings.getRebarPath());
+    commandLine.addParameter(rebarSettings.getRebarEscriptPath());
 
-    List<String> split = Arrays.asList(configuration.getCommand().split("\\s+"));
+    List<String> split = ParametersListUtil.parse(configuration.getCommand());
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
       commandLine.addParameter("skip_deps=true");
     }
@@ -121,6 +121,13 @@ public class RebarRunningStateUtil {
 
   @NotNull
   @RequiresBackgroundThread
+  public static String findEscriptExecutable(@Nullable Project project) {
+    String sdkPath = project != null && !project.isDisposed() ? ErlangSdkType.getSdkPath(project) : null;
+    return sdkPath != null ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() : findEscriptExecutable();
+  }
+
+  @NotNull
+  @RequiresBackgroundThread
   public static String findEscriptExecutable() {
     String which = which(JpsErlangSdkType.SCRIPT_INTERPRETER);
     if (StringUtil.isNotEmpty(which)) return which;
@@ -132,17 +139,28 @@ public class RebarRunningStateUtil {
   private static String which(@NotNull String name) {
     ThreadingAssertions.assertBackgroundThread();
 
-    if (!(SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isUnix)) return "";
-
-    try {
-      GeneralCommandLine command = new GeneralCommandLine("which");
-      command.addParameter(name);
-      return ScriptRunnerUtil.getProcessOutput(command).trim();
-    }
-    catch (Exception e) {
-      LOG.warn(e);
-      return "";
-    }
+    List<String> extensions = SystemInfo.isWindows ? PathEnvironmentVariableUtil.getWindowsExecutableFileExtensions() : List.of();
+    File file = findInPath(name, PathEnvironmentVariableUtil.getPathVariableValue(), extensions);
+    return file != null ? file.getPath() : "";
   }
 
+  // The first executable in the directories of the path, in each directory the name itself (an escript such as rebar3
+  // has no extension, also on Windows) and then the name with each of the extensions (PATHEXT on Windows: escript.exe).
+  @VisibleForTesting
+  @Nullable
+  static File findInPath(@NotNull String name, @Nullable String path, @NotNull List<String> extensions) {
+    if (path == null) return null;
+    List<String> fileNames = new ArrayList<>();
+    fileNames.add(name);
+    for (String extension : extensions) {
+      fileNames.add(name + extension);
+    }
+    for (String directory : PathEnvironmentVariableUtil.getPathDirs(path)) {
+      for (String fileName : fileNames) {
+        File file = new File(directory, fileName);
+        if (file.isFile() && file.canExecute()) return file;
+      }
+    }
+    return null;
+  }
 }

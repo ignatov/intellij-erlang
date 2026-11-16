@@ -19,6 +19,7 @@ package org.intellij.erlang.rebar.settings;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.jps.rebar.JpsRebarSettingsSerializer;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.jps.rebar.RebarSettingsState;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +60,13 @@ public final class RebarSettings implements PersistentStateComponent<RebarSettin
     return "RebarSettings(state='" + myRebarSettingsState + "')";
   }
 
+  // The escript to run for the rebar path: the escript next to a wrapper such as rebar3.cmd instead of the wrapper.
+  @NotNull
+  public String getRebarEscriptPath() {
+    return RebarBuilder.getRebarEscriptPath(getRebarPath());
+  }
+
   public boolean isRebar3() {
-    return getRebarPath().endsWith("rebar3");
+    return getRebarEscriptPath().endsWith("rebar3");
   }
 }
