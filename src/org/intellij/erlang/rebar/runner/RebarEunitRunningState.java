@@ -31,16 +31,12 @@ import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
-import com.intellij.psi.impl.file.PsiDirectoryFactory;
 import com.intellij.util.PathUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
@@ -140,19 +136,11 @@ public class RebarEunitRunningState extends CommandLineState {
 
   @VisibleForTesting
   static void writeModifiedConfig(@NotNull Project project, @NotNull File oldConfig, @NotNull File newConfig) throws IOException {
-    final PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
-    VirtualFile outputDirectory = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(newConfig.getParentFile());
-    final PsiDirectory psiDirectory = outputDirectory != null ? PsiDirectoryFactory.getInstance(project).createDirectory(outputDirectory) : null;
-    if (psiDirectory == null) {
-      throw new IOException("Failed to save modified rebar.config");
-    }
-    ApplicationManager.getApplication().runWriteAction(() -> {
-      String name = newConfig.getName();
-      PsiFile prev = psiDirectory.findFile(name);
-      if (prev != null) prev.delete();
-      configPsi.setName(name);
-      psiDirectory.add(configPsi);
-    });
+    PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
+    // Write the text as is, with the \n line separators of PSI. Adding the file to a PsiDirectory would save it with
+    // the line separator of the code style, which is the one of the OS (\r\n on Windows) for a new file.
+    String text = ReadAction.compute(configPsi::getText);
+    FileUtil.writeToFile(newConfig, text);
   }
 
   private static PsiFile createModifiedConfigPsi(@NotNull Project project, @NotNull File oldConfig) throws IOException {
