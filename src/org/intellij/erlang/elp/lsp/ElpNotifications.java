@@ -87,10 +87,13 @@ final class ElpNotifications {
       .addAction(feedback(project)));
   }
 
-  /** Sets the engine to the plugin at once: the way back from ELP is one click. */
+  /** Sets the engine to the plugin at once: the way back from ELP is one click. Whoever goes back is not offered ELP again. */
   @NotNull
   static NotificationAction switchBack() {
-    return NotificationAction.createSimpleExpiring("Switch back to the plugin", () -> ElpSettings.getInstance().setMode(ElpMode.PLUGIN));
+    return NotificationAction.createSimpleExpiring("Switch back to the plugin", () -> {
+      ElpSettings.getInstance().setOfferNeverAsk(true);
+      ElpSettings.getInstance().setMode(ElpMode.PLUGIN);
+    });
   }
 
   /** Opens a prefilled new issue in the browser, see {@link ElpFeedback}; the plugin sends nothing. */

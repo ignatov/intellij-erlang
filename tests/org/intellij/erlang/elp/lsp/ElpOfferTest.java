@@ -82,6 +82,8 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   private final List<ElpOfferDialog> myDialogs = new ArrayList<>();
   private Consumer<ElpOfferDialog> myUser = d -> press(d, ElpOffer.NOT_NOW);
   private boolean myFrameActive = true;
+  /** The time the offer reads, in milliseconds since the epoch. */
+  private long myNow = System.currentTimeMillis();
   private ElpInstaller myInstaller;
   private ElpRelease myRelease;
   private ElpRelease.Asset myAsset;
@@ -110,6 +112,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     myOldState.eqwalizer = old.eqwalizer;
     myOldState.offerShownForVersion = old.offerShownForVersion;
     myOldState.offerNeverAsk = old.offerNeverAsk;
+    myOldState.offerAnsweredTime = old.offerAnsweredTime;
     for (String property : List.of(ElpConfiguration.PATH_PROPERTY, ElpConfiguration.MODE_PROPERTY, ElpOffer.PROPERTY)) {
       myOldProperties.add(System.getProperty(property));
       System.clearProperty(property);
@@ -144,6 +147,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     }, () -> myFrameActive, getTestRootDisposable());
     // The offer is shown on macOS only; the tests decide it on every system.
     ElpOffer.macOsInTests(true, getTestRootDisposable());
+    ElpOffer.clockInTests(() -> myNow, getTestRootDisposable());
   }
 
   @Override
@@ -242,17 +246,25 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertTrue("the missing download is not held against it", offer(V1));
   }
 
-  public void testNotNowAsksAgainAfterTheNextUpdate() {
+  /** "Not now" asks again in a newer plugin version, and not sooner than 30 days after the answer: releases come every few days. */
+  public void testNotNowAsksAgainInANewerVersionAfterThirtyDays() {
     myUser = d -> press(d, ElpOffer.NOT_NOW);
     assertTrue(offer(V1));
     ElpOfferDialog offer = assertOneElement(myDialogs);
     assertTrue(offer.isDisposed());
     assertEquals(ElpOffer.Choice.NOT_NOW, offer.choice());
     assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
+    assertEquals(myNow, ElpSettings.getInstance().getOfferAnsweredTime());
     assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
     assertFalse(offer(V1));
+    assertFalse("a newer version, but too soon", offer(V2));
 
+    myNow += ElpOffer.ASK_AGAIN_MS - 1;
+    assertFalse("a day short of 30 days", offer(V2));
+    myNow += 1;
+    assertFalse("30 days later, but the same version", offer(V1));
+    assertFalse("30 days later, but an older version", offer("0.11.0"));
     assertTrue(offer(V2));
     assertEquals(2, myDialogs.size());
   }
@@ -269,6 +281,8 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
     assertFalse(offer(V1));
+    assertFalse(offer(V2));
+    myNow += ElpOffer.ASK_AGAIN_MS;
     assertTrue(offer(V2));
   }
 
@@ -280,9 +294,26 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertTrue(offer(V1));
     assertEquals(ElpOffer.Choice.NEVER, assertOneElement(myDialogs).choice());
     assertTrue(ElpSettings.getInstance().isOfferNeverAsk());
+    myNow += ElpOffer.ASK_AGAIN_MS;
     assertFalse(offer(V2));
     assertOneElement(myDialogs);
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
+  }
+
+  /** "Don't ask again" holds also when "Try ELP" is pressed with it: back on the plugin, the offer does not come again. */
+  public void testTryElpWithDontAskAgainStopsItForGood() throws Exception {
+    myUser = d -> {
+      d.dontAskCheckBox().setSelected(true);
+      press(d, ElpOffer.TRY);
+    };
+    assertTrue(offer(V1));
+    assertEquals(ElpOffer.Choice.TRY_AND_NEVER, assertOneElement(myDialogs).choice());
+    assertTrue(ElpSettings.getInstance().isOfferNeverAsk());
+    await(ElpOffer.FAILED_TITLE);
+    assertEquals("the download failed: still the plugin", ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
+    myNow += ElpOffer.ASK_AGAIN_MS;
+    assertFalse(offer(V2));
+    assertOneElement(myDialogs);
   }
 
   public void testEscWithDontAskAgainStopsItForGood() {
@@ -298,7 +329,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
 
   public void testChoiceOfTheButtons() {
     assertEquals(ElpOffer.Choice.TRY, ElpOfferDialog.choice(DialogWrapper.OK_EXIT_CODE, false));
-    assertEquals(ElpOffer.Choice.TRY, ElpOfferDialog.choice(DialogWrapper.OK_EXIT_CODE, true));
+    assertEquals(ElpOffer.Choice.TRY_AND_NEVER, ElpOfferDialog.choice(DialogWrapper.OK_EXIT_CODE, true));
     assertEquals(ElpOffer.Choice.NOT_NOW, ElpOfferDialog.choice(DialogWrapper.CANCEL_EXIT_CODE, false));
     assertEquals(ElpOffer.Choice.NEVER, ElpOfferDialog.choice(DialogWrapper.CANCEL_EXIT_CODE, true));
   }
@@ -422,6 +453,9 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     fire(on, "Switch back to the plugin");
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
     assertTrue(on.isExpired());
+    assertTrue("who switched back is not asked again", ElpSettings.getInstance().isOfferNeverAsk());
+    myNow += ElpOffer.ASK_AGAIN_MS;
+    assertFalse(offer(V2));
   }
 
   public void testFailedDownloadKeepsThePluginAndOffersRetry() throws Exception {
@@ -532,9 +566,11 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   public void testOfferStateIsStoredAndOldSettingsRead() throws Exception {
     ElpSettings.getInstance().setOfferShownForVersion(V1);
     ElpSettings.getInstance().setOfferNeverAsk(true);
+    ElpSettings.getInstance().setOfferAnsweredTime(1_700_000_000_000L);
     String xml = JDOMUtil.write(XmlSerializer.serialize(ElpSettings.getInstance().getState()));
     assertTrue(xml, xml.contains("<option name=\"offerShownForVersion\" value=\"" + V1 + "\" />"));
     assertTrue(xml, xml.contains("<option name=\"offerNeverAsk\" value=\"true\" />"));
+    assertTrue(xml, xml.contains("<option name=\"offerAnsweredTime\" value=\"1700000000000\" />"));
 
     ElpSettings.ElpSettingsState old = XmlSerializer.deserialize(
       JDOMUtil.load("<state><option name=\"mode\" value=\"PLUGIN\" /></state>"), ElpSettings.ElpSettingsState.class);
@@ -542,6 +578,17 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
     assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
     assertTrue(offer(V1));
+  }
+
+  /** An answer stored before its time was: long ago, so a newer version asks again. */
+  public void testAnAnswerStoredWithoutItsTimeIsLongAgo() throws Exception {
+    ElpSettings.ElpSettingsState old = XmlSerializer.deserialize(
+      JDOMUtil.load("<state><option name=\"mode\" value=\"PLUGIN\" /><option name=\"offerShownForVersion\" value=\"" + V1 +
+                    "\" /></state>"), ElpSettings.ElpSettingsState.class);
+    ElpSettings.getInstance().loadState(old);
+    assertEquals(0, ElpSettings.getInstance().getOfferAnsweredTime());
+    assertFalse(offer(V1));
+    assertTrue(offer(V2));
   }
 
   /**

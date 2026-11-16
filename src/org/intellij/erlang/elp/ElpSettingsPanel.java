@@ -128,8 +128,10 @@ public final class ElpSettingsPanel {
 
   public void apply() {
     ElpMode mode = myModeBox.getItem();
-    ElpSettings.getInstance().update(selectedSource(), myPathField.getText().trim(), mode != null ? mode : ElpMode.PLUGIN,
-                                     myEqwalizerBox.isSelected());
+    ElpSettings settings = ElpSettings.getInstance();
+    // Whoever moves from ELP back to the plugin here is not offered ELP again.
+    if (settings.getStoredMode() == ElpMode.ELP && mode != ElpMode.ELP) settings.setOfferNeverAsk(true);
+    settings.update(selectedSource(), myPathField.getText().trim(), mode != null ? mode : ElpMode.PLUGIN, myEqwalizerBox.isSelected());
     updateOverrideLabel();
   }
 

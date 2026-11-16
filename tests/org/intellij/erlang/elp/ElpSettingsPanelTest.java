@@ -170,6 +170,27 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals("nothing changed, nothing is restarted", 1, myChanges.get());
   }
 
+  /** Whoever moves from ELP back to the plugin on this page is not offered ELP again. */
+  public void testSwitchingFromElpToThePluginEndsTheOffer() {
+    myPanel.reset();
+    myEqwalizer.setSelected(false);
+    myPanel.apply();
+    assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
+
+    myMode.setSelectedItem(ElpMode.PLUGIN);
+    myPanel.apply();
+    assertTrue(ElpSettings.getInstance().isOfferNeverAsk());
+  }
+
+  /** Applying the page in the Plugin position, as most users do, does not end the offer. */
+  public void testApplyingThePluginPositionKeepsTheOffer() {
+    store("", "PLUGIN", false);
+    myPanel.reset();
+    myEqwalizer.setSelected(true);
+    myPanel.apply();
+    assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
+  }
+
   public void testEachFieldIsAModification() {
     for (Runnable change : List.<Runnable>of(() -> myPath.setText("/other/elp"), () -> myMode.setSelectedItem(ElpMode.PLUGIN),
                                              () -> myEqwalizer.setSelected(false), () -> myDownloaded.setSelected(true))) {

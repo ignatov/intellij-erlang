@@ -37,6 +37,7 @@ import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresEdt;
 import com.intellij.util.concurrency.annotations.RequiresReadLock;
+import com.intellij.util.text.VersionComparatorUtil;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpFeedback;
 import org.intellij.erlang.elp.ElpFiles;
@@ -56,14 +57,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.LongSupplier;
 
 /**
- * The offer to move to ELP, a dialog shown at most once per plugin version when an Erlang file is opened in the Plugin position
+ * The offer to move to ELP, a dialog shown when an Erlang file is opened in the Plugin position
  * and ELP would work for the project: {@link ElpPreflight} finds nothing against it, and a server is set or can be downloaded.
  * It waits for a moment when the user can read it: the project is indexed, its frame is active and no other dialog is open;
  * otherwise the next opened file tries again. Nothing switches by itself: "Try ELP" downloads the server when needed and only
- * then sets the ELP position; "Switch back to the plugin" undoes it. The {@value #PROPERTY} system property set to
- * {@code false} turns the offer off.
+ * then sets the ELP position; "Switch back to the plugin" undoes it. After "Not now" the offer comes again in a newer plugin
+ * version, and not sooner than 30 days after the answer; after "Don't ask again", or a switch from ELP back to the plugin, it
+ * never comes again. The {@value #PROPERTY} system property set to {@code false} turns the offer off.
  */
 final class ElpOffer {
   private static final Logger LOG = Logger.getInstance(ElpOffer.class);
@@ -89,9 +92,16 @@ final class ElpOffer {
   private static volatile long ourRetryMs = RETRY_MS;
   private static volatile ElpPreflight.Result ourPreflightInTests;
   private static volatile BooleanSupplier ourMacOs = () -> SystemInfo.isMac;
+  /** After "Not now" the offer comes again in a newer plugin version, and not sooner than this after the answer. */
+  static final int ASK_AGAIN_DAYS = 30;
+  static final long ASK_AGAIN_MS = TimeUnit.DAYS.toMillis(ASK_AGAIN_DAYS);
+  private static volatile LongSupplier ourClock = System::currentTimeMillis;
 
-  /** The answers of the dialog; each does what the action of the same name on the balloon did before. */
-  enum Choice {TRY, NOT_NOW, NEVER}
+  /**
+   * The answers of the dialog; each does what the action of the same name on the balloon did before. {@link #TRY_AND_NEVER} is
+   * "Try ELP" with "Don't ask again" selected.
+   */
+  enum Choice {TRY, NOT_NOW, NEVER, TRY_AND_NEVER}
 
   /** Shows the offer and returns the answer; tests replace it, so that no window opens. */
   interface Asker {
@@ -190,6 +200,13 @@ final class ElpOffer {
     Disposer.register(parent, () -> ourPreflightInTests = null);
   }
 
+  /** Makes the offer read the time from {@code clock}, in milliseconds since the epoch, until {@code parent} is disposed. */
+  @TestOnly
+  static void clockInTests(@NotNull LongSupplier clock, @NotNull Disposable parent) {
+    ourClock = clock;
+    Disposer.register(parent, () -> ourClock = System::currentTimeMillis);
+  }
+
   /** Makes the offer think that the IDE runs on macOS, or not, until {@code parent} is disposed. */
   @TestOnly
   static void macOsInTests(boolean macOs, @NotNull Disposable parent) {
@@ -206,8 +223,9 @@ final class ElpOffer {
 
   /**
    * Whether the offer may be shown for {@code pluginVersion}: the IDE runs on macOS, the offer is not switched off, the engine is
-   * the plugin and not forced by a system property, the user did not choose "Don't ask again" and the offer was not shown for
-   * this version yet. Touches neither the file system nor the project model.
+   * the plugin and not forced by a system property, the user did not choose "Don't ask again", and the offer was not shown yet or
+   * was last shown for an older version {@value #ASK_AGAIN_DAYS} days ago or earlier. Touches neither the file system nor the
+   * project model.
    */
   static boolean shouldAsk(@NotNull String pluginVersion) {
     return whyNotAsk(pluginVersion) == null;
@@ -223,8 +241,15 @@ final class ElpOffer {
     ElpSettings settings = ElpSettings.getInstance();
     if (settings.getStoredMode() != ElpMode.PLUGIN) return "the engine is " + settings.getStoredMode();
     if (settings.isOfferNeverAsk()) return "the user chose \"" + NEVER + "\"";
-    if (pluginVersion.equals(settings.getOfferShownForVersion())) {
-      return "already shown for version " + settings.getOfferShownForVersion() + " (plugin version " + pluginVersion + ")";
+    String shownForVersion = settings.getOfferShownForVersion();
+    if (!shownForVersion.isEmpty()) {
+      if (VersionComparatorUtil.compare(pluginVersion, shownForVersion) <= 0) {
+        return "already shown for version " + shownForVersion + " (plugin version " + pluginVersion + ")";
+      }
+      long since = ourClock.getAsLong() - settings.getOfferAnsweredTime();
+      if (since < ASK_AGAIN_MS) {
+        return "answered " + TimeUnit.MILLISECONDS.toDays(since) + " days ago; asked again after " + ASK_AGAIN_DAYS + " days";
+      }
     }
     return null;
   }
@@ -339,7 +364,7 @@ final class ElpOffer {
   }
 
   /**
-   * Shows the offer and remembers that it was shown for {@code pluginVersion}, when it may be shown, ELP would work and the user
+   * Shows the offer and remembers that it was shown for {@code pluginVersion}, and when, if it may be shown, ELP would work and the user
    * can read it now, see {@link #whyNotNow}. A project that ELP does not fit leaves the version unmarked, so that another
    * project can get the offer; an offer that has to wait leaves it unmarked too, and the next opened file checks again.
    *
@@ -371,13 +396,22 @@ final class ElpOffer {
       return false;
     }
     LOG.info("ELP offer shown for plugin version " + pluginVersion + ", ELP server: " + availability.kind());
-    ElpSettings.getInstance().setOfferShownForVersion(pluginVersion);
+    ElpSettings settings = ElpSettings.getInstance();
+    settings.setOfferShownForVersion(pluginVersion);
+    settings.setOfferAnsweredTime(ourClock.getAsLong());
     Choice choice = ourAsker.ask(project, ElpOfferDialog.content(availability));
     LOG.info("ELP offer answered: " + choice);
     switch (choice) {
       case TRY -> tryElp(project);
-      case NOT_NOW -> ElpSettings.getInstance().setOfferShownForVersion(pluginVersion);
-      case NEVER -> ElpSettings.getInstance().setOfferNeverAsk(true);
+      case NOT_NOW -> {
+        settings.setOfferShownForVersion(pluginVersion);
+        settings.setOfferAnsweredTime(ourClock.getAsLong());
+      }
+      case NEVER -> settings.setOfferNeverAsk(true);
+      case TRY_AND_NEVER -> {
+        settings.setOfferNeverAsk(true);
+        tryElp(project);
+      }
     }
     return true;
   }

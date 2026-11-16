@@ -58,6 +58,11 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     public String offerShownForVersion = "";
     /** The user chose "Don't ask again" on the offer to try ELP. */
     public boolean offerNeverAsk;
+    /**
+     * When the offer to try ELP was last shown or answered, in milliseconds since the epoch; 0, as in settings stored before it
+     * existed, is long ago.
+     */
+    public long offerAnsweredTime;
   }
 
   @NotNull private ElpSettingsState myState = new ElpSettingsState();
@@ -136,6 +141,15 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
 
   public void setOfferShownForVersion(@NotNull String version) {
     myState.offerShownForVersion = version;
+  }
+
+  /** When the offer to try ELP was last shown or answered, in milliseconds since the epoch; 0 when it never was. */
+  public long getOfferAnsweredTime() {
+    return myState.offerAnsweredTime;
+  }
+
+  public void setOfferAnsweredTime(long time) {
+    myState.offerAnsweredTime = time;
   }
 
   public boolean isOfferNeverAsk() {

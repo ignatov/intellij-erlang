@@ -125,7 +125,7 @@ final class ElpOfferDialog extends DialogWrapper {
 
   @NotNull
   static ElpOffer.Choice choice(int exitCode, boolean dontAsk) {
-    if (exitCode == OK_EXIT_CODE) return ElpOffer.Choice.TRY;
+    if (exitCode == OK_EXIT_CODE) return dontAsk ? ElpOffer.Choice.TRY_AND_NEVER : ElpOffer.Choice.TRY;
     return dontAsk ? ElpOffer.Choice.NEVER : ElpOffer.Choice.NOT_NOW;
   }
 
