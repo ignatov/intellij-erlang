@@ -29,5 +29,9 @@
 -define(PLAIN_EXT, ?PLAIN, pextra).
 -record(plain_ext, {?PLAIN_EXT, pz}).
 
+-define(PLAIN_DEFAULT, ?PLAIN = 1, q).
+-record(plain_default, {?PLAIN_DEFAULT}).
+
 test() -> {#button{id=button, text = "submit"}, #link{id=link, postback=click, style="", url = "/"}, #link{<error descr="Unresolved record field 'missing'">missing</error>=1},
-  #typed_ext{tid = a, textra = 1, tz = 2}, #plain_ext{pid = a, pextra = 1, pz = 2}}.
+  #typed_ext{tid = a, textra = 1, tz = 2}, #plain_ext{pid = a, pextra = 1, pz = 2},
+  #plain_default{pid = a, q = 1}}.

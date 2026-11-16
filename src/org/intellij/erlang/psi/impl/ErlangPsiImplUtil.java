@@ -133,7 +133,9 @@ public class ErlangPsiImplUtil {
 
       @Override
       public boolean isReferenceTo(@NotNull PsiElement element) {
-        return element instanceof ErlangQAtom && standaloneAtom(o) && Objects.equals(element.getText(), getElement().getText());
+        // the name of a record field in a macro body (#933) is a record field, not a plain atom
+        return element instanceof ErlangQAtom && !(element.getParent() instanceof ErlangTypedExpr) &&
+               standaloneAtom(o) && Objects.equals(element.getText(), getElement().getText());
       }
 
       @Override
@@ -236,8 +238,7 @@ public class ErlangPsiImplUtil {
         else if (ee instanceof ErlangAssignmentExpression) {
           ErlangExpression left = ((ErlangAssignmentExpression) ee).getLeft();
           if (left instanceof ErlangMaxExpression) {
-            ErlangQAtom qAtom = ((ErlangMaxExpression) left).getQAtom();
-            ContainerUtil.addIfNotNull(atoms, qAtom);
+            processRecordField(((ErlangMaxExpression) left).getQAtom(), atoms, visited);
           }
         }
         else if (ee instanceof ErlangFunctionCallExpression) {
