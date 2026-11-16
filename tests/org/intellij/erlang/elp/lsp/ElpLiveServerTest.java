@@ -35,7 +35,10 @@ import com.intellij.notification.Notification;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -163,6 +166,45 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     PlatformTestUtil.waitWithEventsDispatching("ELP wrote nothing into " + tmpDir, () -> eqwalizerIn(tmpDir) != null, TIMEOUT_SECONDS);
     LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
     PlatformTestUtil.waitWithEventsDispatching(tmpDir + " is still there", () -> !Files.exists(tmpDir), TIMEOUT_SECONDS);
+  }
+
+  /**
+   * Two renames in a row of an exported function, with the module that calls it not open in an editor. ELP reads that module from
+   * the disk: without a save before the second rename, it saw the old call there and left it with the name of the first rename.
+   */
+  public void testSecondRenameSeesTheFirstInAFileThatIsNotOpen() throws Exception {
+    String elp = elpPath();
+    Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
+    FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
+    startElp(elp, project);
+    Editor shopEditor = myFixture.getEditor();
+    PsiFile shopPsi = myFixture.getFile();
+    int call = shopEditor.getDocument().getText().indexOf("lookup(shop_memory") + 2;
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> definition(shopPsi, shopEditor, call) != null,
+                                               TIMEOUT_SECONDS);
+    VirtualFile shop = file("src/shop.erl");
+    VirtualFile backend = file("src/shop_backend.erl");
+    myFixture.openFileInEditor(backend);
+    FileEditorManager editors = FileEditorManager.getInstance(getProject());
+    editors.closeFile(shop);
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    assertFalse(editors.isFileOpen(shop));
+    Document shopDocument = FileDocumentManager.getInstance().getDocument(shop);
+    assertNotNull(shopDocument);
+    Editor editor = myFixture.getEditor();
+    PsiFile backendPsi = myFixture.getFile();
+    assertEquals(backend, backendPsi.getVirtualFile());
+
+    editor.getCaretModel().moveToOffset(editor.getDocument().getText().indexOf("\nlookup(Backend, Key)") + 3);
+    assertNull(ElpRenameHandler.renameAtCaret(getProject(), editor, backendPsi, "find"));
+    assertTrue(editor.getDocument().getText(), editor.getDocument().getText().contains("\nfind(Backend, Key) ->"));
+    assertTrue(shopDocument.getText(), shopDocument.getText().contains("shop_backend:find(shop_memory"));
+    assertFalse("the edit is not saved", Files.readString(project.resolve("src/shop.erl")).contains("shop_backend:find("));
+
+    editor.getCaretModel().moveToOffset(editor.getDocument().getText().indexOf("\nfind(Backend, Key)") + 3);
+    assertNull(ElpRenameHandler.renameAtCaret(getProject(), editor, backendPsi, "fetch_item"));
+    assertTrue(editor.getDocument().getText(), editor.getDocument().getText().contains("\nfetch_item(Backend, Key) ->"));
+    assertTrue(shopDocument.getText(), shopDocument.getText().contains("shop_backend:fetch_item(shop_memory"));
   }
 
   /**

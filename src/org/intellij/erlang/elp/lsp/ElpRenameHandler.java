@@ -60,7 +60,9 @@ import java.util.regex.Pattern;
  * Rename in the {@code ELP} position. The 263 LSP client renames only files without a language of their own, so this handler
  * asks ELP itself: {@code textDocument/prepareRename} when the server offers it, otherwise a trial {@code textDocument/rename}
  * to a scratch name, to learn whether ELP can rename the name at the caret. If it can, the handler asks for the new name, sends
- * {@code textDocument/rename} and applies the returned edit to all files as one global undoable command, without saving.
+ * {@code textDocument/rename} and applies the returned edit to all files as one global undoable command, without saving. The
+ * documents are saved before ELP is asked: ELP reads a file that is not open in an editor from the disk, where an earlier rename
+ * may not have reached.
  * A module is renamed by the plugin, see {@link #isModuleName}; ELP's other file operations are refused.
  * If ELP cannot or does not answer, the plugin's rename runs exactly as in the {@code Plugin} position. While this handler is
  * available the plugin's in-place rename handlers are not ({@code ErlangRefactoringSupportProvider}), so only one rename runs.
@@ -153,6 +155,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
     LspServer client = virtualFile != null ? ElpLspServerStatus.findClient(project, virtualFile, ElpEngine.Feature.RENAME) : null;
     if (client == null) return null;
+    FileDocumentManager.getInstance().saveAllDocuments();
     PsiDocumentManager.getInstance(project).commitAllDocuments();
     Document document = editor.getDocument();
     int offset = editor.getCaretModel().getOffset();
