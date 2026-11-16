@@ -24,7 +24,7 @@ import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +56,7 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
 
   @Override
   protected List<String> getErlFlags() {
-    return StringUtil.split(myConfiguration.getErlFlags(), " ");
+    return ParametersListUtil.parse(myConfiguration.getErlFlags());
   }
 
   @Nullable

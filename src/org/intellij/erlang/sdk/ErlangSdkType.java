@@ -50,6 +50,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.swing.*;
 import java.io.File;
@@ -152,9 +153,35 @@ public class ErlangSdkType extends SdkType {
     return searchForErlangRecursivelyIn(searchRoots);
   }
 
-  @NotNull
-  private static String suggestWindowsErlangPath() {
-    return "C:\\cygwin\\bin";
+  private static @Nullable String suggestWindowsErlangPath() {
+    Set<String> roots = new LinkedHashSet<>();
+    for (String variable : new String[]{"ProgramW6432", "ProgramFiles", "ProgramFiles(x86)"}) {
+      String programFiles = System.getenv(variable);
+      if (StringUtil.isNotEmpty(programFiles)) roots.add(programFiles);
+    }
+    String scoop = StringUtil.notNullize(System.getenv("SCOOP"), System.getProperty("user.home") + "\\scoop");
+    roots.add(scoop + "\\apps\\erlang\\current");
+    return findWindowsErlangHome(new ArrayList<>(roots));
+  }
+
+  // A root is an Erlang home itself (Scoop's apps\erlang\current) or holds one: the Erlang/OTP installer puts it into
+  // <Program Files>\Erlang OTP from OTP 25 on, erl-<OTP version> in OTP 23 and 24, erl<ERTS version> before.
+  // Names are tried in descending natural order, so "Erlang OTP" comes first.
+  @VisibleForTesting
+  static @Nullable String findWindowsErlangHome(@NotNull List<String> roots) {
+    for (String root : roots) {
+      File rootDir = new File(root);
+      if (isWindowsErlangHome(rootDir)) return rootDir.getAbsolutePath();
+      File[] homes = rootDir.listFiles(file -> StringUtil.startsWithIgnoreCase(file.getName(), "erl") && isWindowsErlangHome(file));
+      if (homes == null || homes.length == 0) continue;
+      Arrays.sort(homes, (a, b) -> StringUtil.naturalCompare(b.getName(), a.getName()));
+      return homes[0].getAbsolutePath();
+    }
+    return null;
+  }
+
+  private static boolean isWindowsErlangHome(@NotNull File home) {
+    return new File(home, "bin/erl.exe").isFile() && new File(home, "bin/erlc.exe").isFile();
   }
 
   @Override

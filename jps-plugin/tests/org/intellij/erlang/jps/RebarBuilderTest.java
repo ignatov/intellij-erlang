@@ -85,6 +85,20 @@ public class RebarBuilderTest extends ErlangJpsBuildTestCase {
     assertFalse(new File(appPath("_build/default/lib/app1/ebin/bad.beam")).exists());
   }
 
+  // The rebar3 docs tell Windows users to create rebar3.cmd next to the rebar3 escript. The build runs the escript next to
+  // the wrapper, so this works on every OS: the wrapper itself is never run.
+  public void testRebar3CmdWrapperRunsEscriptNextToIt() throws IOException {
+    File binDirectory = new File(getAbsolutePath("rebar_bin"));
+    FileUtil.copy(new File(requireRebarPath()), new File(binDirectory, "rebar3"));
+    File wrapper = new File(binDirectory, "rebar3.cmd");
+    FileUtil.writeToFile(wrapper, "@echo off\r\nsetlocal\r\nset rebarscript=%~f0\r\nescript.exe \"%rebarscript:.cmd=%\" %*\r\n");
+    useRebar(wrapper.getPath());
+    createRebarApp("{erl_opts, []}.");
+    rebuildAll();
+
+    assertSameElements(listFiles(appPath("_build/default/lib/app1/ebin")), "app1.app", "app1_mod.beam");
+  }
+
   public void testRebarPathNotSetFailsBuild() {
     useRebar("");
     createRebarApp("{erl_opts, []}.");

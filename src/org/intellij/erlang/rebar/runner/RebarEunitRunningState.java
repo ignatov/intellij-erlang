@@ -31,16 +31,12 @@ import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
 import com.intellij.execution.testframework.ui.BaseTestsOutputConsoleView;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
-import com.intellij.psi.impl.file.PsiDirectoryFactory;
 import com.intellij.util.PathUtil;
 import com.intellij.util.Processor;
 import com.intellij.util.containers.ContainerUtil;
@@ -65,6 +61,7 @@ import java.util.List;
 
 public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
+  private static final String ERL_FLAGS = "ERL_FLAGS";
   private static final String EUNIT_NO_TTY_OPTION = "{no_tty, true}";
   private static final String EUNIT_TEAMCITY_REPORTER = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
   private static final String EUNIT_OPTS = "{eunit_opts,[" + EUNIT_TEAMCITY_REPORTER + "," + EUNIT_NO_TTY_OPTION + "]}.";
@@ -107,20 +104,35 @@ public class RebarEunitRunningState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(myConfiguration);
-    File reportsRoot = createEunitReportsEnvironment();
+    GeneralCommandLine commandLine = getCommandLine(myConfiguration, createEunitReportsEnvironment());
+    return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
+  }
 
-    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + PathUtil.toSystemIndependentName(reportsRoot.getPath()));
-    
-    boolean rebar3 = RebarSettings.getInstance(myConfiguration.getProject()).isRebar3();
+  @VisibleForTesting
+  @NotNull
+  static GeneralCommandLine getCommandLine(@NotNull RebarEunitRunConfiguration configuration, @NotNull File reportsRoot) {
+    GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(configuration);
+
+    // Put the reporter on the code path before the user's ERL_FLAGS, so that a -extra there does not make it a plain argument.
+    String reportsPath = quoteErlFlagsArgument(PathUtil.toSystemIndependentName(reportsRoot.getPath()));
+    String userErlFlags = commandLine.getEffectiveEnvironment().get(ERL_FLAGS);
+    commandLine.getEnvironment().put(ERL_FLAGS, "-pa " + reportsPath + (StringUtil.isEmptyOrSpaces(userErlFlags) ? "" : " " + userErlFlags));
+
+    boolean rebar3 = RebarSettings.getInstance(configuration.getProject()).isRebar3();
     if (rebar3) {
       commandLine.getEnvironment().put("REBAR_CONFIG", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
     }
     else {
       commandLine.addParameters("-C", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
     }
+    return commandLine;
+  }
 
-    return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
+  // erlexec splits ERL_FLAGS on whitespace and takes the text between double quotes literally (build_args_from_string
+  // in erts/etc/common/erlexec.c). A double quote is written as \" outside the quotes.
+  @NotNull
+  private static String quoteErlFlagsArgument(@NotNull String argument) {
+    return "\"" + argument.replace("\"", "\"\\\"\"") + "\"";
   }
 
   private File createEunitReportsEnvironment() throws ExecutionException {
@@ -140,19 +152,11 @@ public class RebarEunitRunningState extends CommandLineState {
 
   @VisibleForTesting
   static void writeModifiedConfig(@NotNull Project project, @NotNull File oldConfig, @NotNull File newConfig) throws IOException {
-    final PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
-    VirtualFile outputDirectory = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(newConfig.getParentFile());
-    final PsiDirectory psiDirectory = outputDirectory != null ? PsiDirectoryFactory.getInstance(project).createDirectory(outputDirectory) : null;
-    if (psiDirectory == null) {
-      throw new IOException("Failed to save modified rebar.config");
-    }
-    ApplicationManager.getApplication().runWriteAction(() -> {
-      String name = newConfig.getName();
-      PsiFile prev = psiDirectory.findFile(name);
-      if (prev != null) prev.delete();
-      configPsi.setName(name);
-      psiDirectory.add(configPsi);
-    });
+    PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
+    // Write the text as is, with the \n line separators of PSI. Adding the file to a PsiDirectory would save it with
+    // the line separator of the code style, which is the one of the OS (\r\n on Windows) for a new file.
+    String text = ReadAction.compute(configPsi::getText);
+    FileUtil.writeToFile(newConfig, text);
   }
 
   private static PsiFile createModifiedConfigPsi(@NotNull Project project, @NotNull File oldConfig) throws IOException {

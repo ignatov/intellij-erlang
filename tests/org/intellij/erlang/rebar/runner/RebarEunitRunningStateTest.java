@@ -16,19 +16,59 @@
 
 package org.intellij.erlang.rebar.runner;
 
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String REPORT_OPTION = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
   private static final String NO_TTY_OPTION = "{no_tty, true}";
   private static final String MODIFIED_CONFIG =
     "{erl_opts, [debug_info]}.\n{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",verbose]}.\n";
+
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+      }
+    };
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setUpProjectSdk();
+  }
+
+  public void testErlFlagsQuoteReportsDirectoryWithSpace() {
+    File reportsRoot = new File(FileUtil.getTempDirectory(), "John Smith/eunit reports");
+    String erlFlags = getErlFlags(null, reportsRoot);
+    assertTrue(erlFlags, erlFlags.startsWith("-pa \"" + FileUtil.toSystemIndependentName(reportsRoot.getPath()) + "\""));
+  }
+
+  public void testErlFlagsKeepUserErlFlags() {
+    File reportsRoot = new File(FileUtil.getTempDirectory(), "eunit");
+    String erlFlags = getErlFlags("+P 1000 -extra foo", reportsRoot);
+    assertEquals("-pa \"" + FileUtil.toSystemIndependentName(reportsRoot.getPath()) + "\" +P 1000 -extra foo", erlFlags);
+  }
+
+  public void testErlFlagsEscapeDoubleQuote() {
+    File reportsRoot = new File("/tmp/a\"b");
+    assertEquals("-pa \"/tmp/a\"\\\"\"b\" +P 1000", getErlFlags("+P 1000", reportsRoot));
+  }
 
   public void testWriteModifiedConfigWithCrlfLineSeparators() throws Exception {
     String config = doWriteModifiedConfig("{erl_opts, [debug_info]}.\r\n{eunit_opts, [verbose]}.\r\n");
@@ -52,6 +92,14 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     String config = doWriteModifiedConfig(null);
     assertTrue(config, config.contains(REPORT_OPTION));
     assertTrue(config, config.contains(NO_TTY_OPTION));
+  }
+
+  private String getErlFlags(String userErlFlags, File reportsRoot) {
+    RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(getProject(), "eunit");
+    if (userErlFlags != null) {
+      configuration.setEnvData(EnvironmentVariablesData.create(Map.of("ERL_FLAGS", userErlFlags), true));
+    }
+    return RebarEunitRunningState.getCommandLine(configuration, reportsRoot).getEnvironment().get("ERL_FLAGS");
   }
 
   private String doWriteModifiedConfig(String oldConfigText) throws IOException {

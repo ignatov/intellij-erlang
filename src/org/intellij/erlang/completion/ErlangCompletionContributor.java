@@ -161,7 +161,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
-        if (grandPa instanceof ErlangType) {
+        if (grandPa instanceof ErlangType && PsiTreeUtil.getParentOfType(position, ErlangExportTypeAttribute.class) == null) {
           result.addAllElements(getTypeLookupElements(file, true, false));
         }
 

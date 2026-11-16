@@ -410,6 +410,7 @@ def corpus_check(logs, report_path):
         'errors': trimmed(errors),
         'exceptions': trimmed(exceptions),
         'slowFiles': trimmed(slow_files),
+        'skippedFiles': trimmed(report.get('skippedFiles', [])),
     }
     if errors or exceptions or slow_files:
         check['status'] = FAILED
@@ -782,6 +783,8 @@ def check_facts(name, check):
         facts.append('%s files, %s with errors, %s error elements, %d exceptions, %d slow files' % (
             check['files'], check.get('filesWithErrors'), check.get('errorElements'),
             (check.get('exceptions') or {}).get('total', 0), (check.get('slowFiles') or {}).get('total', 0)))
+        if items(check, 'skippedFiles'):
+            facts.append('%d files skipped as not Erlang sources' % check['skippedFiles']['total'])
     if name == 'knownRelease':
         facts.append('OTP %s: ErlangSdkRelease %s, %s' % (check['release'], check['sdkReleaseConstant'] or 'missing',
                                                          check['mockSdk'] or 'no mock SDK'))
@@ -809,6 +812,11 @@ def summary(result):
     for name, check in result['checks'].items():
         lines.append('| %s | %s | %s |' % (name, check['status'], markdown_cell(check_facts(name, check))))
     details = []
+    skipped = items(result['checks'].get('corpus', {}), 'skippedFiles')
+    if skipped:
+        details += ['', '<details><summary>corpus: skipped files</summary>', '', '```']
+        details += [text('%s: %s' % (f['file'], f['reason']), 500) for f in skipped]
+        details += ['```', '</details>']
     for name, check in result['checks'].items():
         if check['status'] == PASSED:
             continue

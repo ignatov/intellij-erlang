@@ -39,11 +39,10 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.*;
+import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
 import static org.intellij.erlang.jps.builder.ErlangBuilderUtil.LOG;
@@ -322,15 +321,13 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     File outputDirectory = getBuildOutputDirectory(module, forTests, context);
     command.add("-pa");
     command.add(outputDirectory.getPath());
+    addContentRootsToCodePath(command, module);
+  }
+
+  static void addContentRootsToCodePath(@NotNull List<String> command, @NotNull JpsModule module) {
     for (String rootUrl : module.getContentRootsList().getUrls()) {
-      try {
-        String path = new URL(rootUrl).getPath();
-        command.add("-pa");
-        command.add(path);
-      }
-      catch (MalformedURLException e) {
-        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "Failed to find content root for module: " + module.getName()));
-      }
+      command.add("-pa");
+      command.add(JpsPathUtil.urlToPath(rootUrl));
     }
   }
 
