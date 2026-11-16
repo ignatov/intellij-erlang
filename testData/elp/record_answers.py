@@ -48,19 +48,20 @@ DEFINITION = [
     ("callback_implementation", "src/shop_memory.erl", "\nfe|tch(Key) ->"),
 ]
 
+# At the start of the declaration's name: where ElpFindUsagesHandlerFactory asks for the usages of the plugin's target.
 REFERENCES = [
-    ("module", "src/shop_backend.erl", "-module(shop_back|end)"),
-    ("exported_function", "src/shop_backend.erl", "\nlo|okup(Backend, Key)"),
-    ("exported_function_at_call_site", "src/shop.erl", "shop_backend:look|up(shop_memory"),
-    ("function_used_in_macro_argument", "src/shop.erl", "\npr|ice(Name) ->"),
-    ("local_function", "src/shop.erl", "\ns|um([], Acc)"),
-    ("variable", "src/shop.erl", "price(Na|me) ->"),
-    ("record", "src/shop.hrl", "-record(it|em"),
-    ("record_field", "src/shop.hrl", "pr|ice = ?DEFAULT_PRICE"),
-    ("macro", "src/shop.hrl", "-define(DEFAULT_|PRICE"),
-    ("macro_with_arguments", "src/shop.hrl", "-define(PR|ICE("),
-    ("type", "src/shop_backend.erl", "-type k|ey()"),
-    ("callback", "src/shop_backend.erl", "-callback fe|tch("),
+    ("module", "src/shop_backend.erl", "-module(|shop_backend)"),
+    ("exported_function", "src/shop_backend.erl", "\n|lookup(Backend, Key)"),
+    ("function_used_in_macro_argument", "src/shop.erl", "\n|price(Name) ->"),
+    ("local_function", "src/shop.erl", "\n|sum([], Acc)"),
+    ("variable", "src/shop.erl", "price(|Name) ->"),
+    ("record", "src/shop.hrl", "-record(|item"),
+    ("record_field", "src/shop.hrl", "|price = ?DEFAULT_PRICE"),
+    ("macro", "src/shop.hrl", "-define(|DEFAULT_PRICE"),
+    ("macro_with_arguments", "src/shop.hrl", "-define(|PRICE("),
+    ("type", "src/shop_backend.erl", "-type |key()"),
+    ("callback", "src/shop_backend.erl", "-callback |fetch("),
+    ("exported_function_without_callers", "src/shop_typed.erl", "\n|label(Name) ->"),
 ]
 
 RENAME = [
