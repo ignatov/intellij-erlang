@@ -20,6 +20,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
@@ -105,7 +106,7 @@ public class RebarConfigurationForm {
         }
 
         GeneralCommandLine rebarCommandLine = new GeneralCommandLine(rebarPath, "--version");
-        String sdkPath = project != null && !project.isDisposed() ? ErlangSdkType.getSdkPath(project) : null;
+        String sdkPath = project != null ? ReadAction.compute(() -> project.isDisposed() ? null : ErlangSdkType.getSdkPath(project)) : null;
         if (sdkPath != null && !RebarBuilder.isEscript(rebarPath)) {
           // As in the run configurations, a script that runs erl, such as the one of `rebar3 local install`, runs the SDK's.
           String path = rebarCommandLine.getEffectiveEnvironment().get("PATH");
