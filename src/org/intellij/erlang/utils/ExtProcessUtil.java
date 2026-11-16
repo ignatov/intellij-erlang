@@ -36,8 +36,13 @@ public final class ExtProcessUtil {
 
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
+    return execAndGetFirstLine(timeout, new GeneralCommandLine(command));
+  }
+
+  @NotNull
+  public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull GeneralCommandLine commandLine) {
     try {
-      Process cmdRunner = new GeneralCommandLine(command).createProcess();
+      Process cmdRunner = commandLine.createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
       try {
         Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(() -> {

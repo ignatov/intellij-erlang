@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.rebar.settings;
 
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -32,7 +33,9 @@ import com.intellij.ui.components.AnActionLink;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
@@ -101,7 +104,14 @@ public class RebarConfigurationForm {
           return;
         }
 
-        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
+        GeneralCommandLine rebarCommandLine = new GeneralCommandLine(rebarPath, "--version");
+        String sdkPath = project != null && !project.isDisposed() ? ErlangSdkType.getSdkPath(project) : null;
+        if (sdkPath != null && !RebarBuilder.isEscript(rebarPath)) {
+          // As in the run configurations, a script that runs erl, such as the one of `rebar3 local install`, runs the SDK's.
+          String path = rebarCommandLine.getEffectiveEnvironment().get("PATH");
+          rebarCommandLine.withEnvironment("PATH", RebarBuilder.getPathWithSdkFirst(sdkPath, path));
+        }
+        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarCommandLine);
         String version = rebar.getStdOut();
 
         if (version.startsWith("rebar")) {

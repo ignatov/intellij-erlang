@@ -35,6 +35,7 @@ import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
@@ -60,11 +61,18 @@ public class RebarRunningStateUtil {
     String escriptPath = sdkPath != null ?
                          JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
                          findEscriptExecutable();
+    String rebarPath = rebarSettings.getRebarEscriptPath();
+    boolean escript = RebarBuilder.isEscript(rebarPath);
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
-    commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarSettings.getRebarEscriptPath());
+    if (escript) {
+      commandLine.setExePath(escriptPath);
+      commandLine.addParameter(rebarPath);
+    }
+    else {
+      commandLine.setExePath(rebarPath);
+    }
 
     List<String> split = ParametersListUtil.parse(configuration.getCommand());
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
@@ -72,6 +80,11 @@ public class RebarRunningStateUtil {
     }
     commandLine.addParameters(split);
     configuration.getEnvData().configureCommandLine(commandLine, true);
+    if (!escript && sdkPath != null) {
+      // A script that runs erl, such as the one of `rebar3 local install`, runs the erl of the SDK.
+      String path = commandLine.getEffectiveEnvironment().get("PATH");
+      commandLine.withEnvironment("PATH", RebarBuilder.getPathWithSdkFirst(sdkPath, path));
+    }
 
     return commandLine;
   }
