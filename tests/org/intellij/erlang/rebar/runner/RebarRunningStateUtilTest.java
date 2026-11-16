@@ -17,16 +17,22 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final List<String> WINDOWS_EXTENSIONS = List.of(".com", ".exe", ".bat", ".cmd");
+
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
     return new DefaultLightProjectDescriptor() {
@@ -59,5 +65,47 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     // The rebar escript is the first parameter, the rebar command follows it.
     assertEquals(RebarSettings.getInstance(getProject()).getRebarPath(), parameters.get(0));
     assertEquals(List.of(expected), parameters.subList(1, parameters.size()));
+  }
+
+  public void testEscriptOfProjectSdk() {
+    String sdkPath = ErlangSdkType.getSdkPath(getProject());
+    assertNotNull(sdkPath);
+    assertEquals(JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath(),
+                 RebarRunningStateUtil.findEscriptExecutable(getProject()));
+  }
+
+  public void testFindInPathWithWindowsExtension() throws IOException {
+    File directory = FileUtil.createTempDirectory("otp_bin", null);
+    File escript = createExecutable(directory, "escript.exe");
+    assertEquals(escript, RebarRunningStateUtil.findInPath("escript", directory.getPath(), WINDOWS_EXTENSIONS));
+  }
+
+  public void testFindInPathPrefersNameWithoutExtension() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    createExecutable(directory, "rebar3.cmd");
+    File rebar3 = createExecutable(directory, "rebar3");
+    assertEquals(rebar3, RebarRunningStateUtil.findInPath("rebar3", directory.getPath(), WINDOWS_EXTENSIONS));
+  }
+
+  public void testFindInPathSearchesEveryDirectory() throws IOException {
+    File empty = FileUtil.createTempDirectory("empty_bin", null);
+    File directory = FileUtil.createTempDirectory("otp_bin", null);
+    File escript = createExecutable(directory, "escript");
+    String path = empty.getPath() + File.pathSeparator + directory.getPath();
+    assertEquals(escript, RebarRunningStateUtil.findInPath("escript", path, List.of()));
+  }
+
+  public void testFindInPathNotFound() throws IOException {
+    File directory = FileUtil.createTempDirectory("otp_bin", null);
+    createExecutable(directory, "escript.exe");
+    assertNull(RebarRunningStateUtil.findInPath("escript", directory.getPath(), List.of()));
+    assertNull(RebarRunningStateUtil.findInPath("escript", null, WINDOWS_EXTENSIONS));
+  }
+
+  private static File createExecutable(File directory, String name) throws IOException {
+    File file = new File(directory, name);
+    FileUtil.writeToFile(file, "");
+    FileUtil.setExecutable(file);
+    return file;
   }
 }
