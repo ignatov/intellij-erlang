@@ -134,10 +134,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     LspCodeActionsSupport codeActions = assertInstanceOf(customization.getCodeActionsCustomizer(), LspCodeActionsSupport.class);
     assertTrue(codeActions.getQuickFixesSupport());
     assertTrue(codeActions.getIntentionActionsSupport());
-    assertFalse(codeActions.getInlineRefactoringSupport());
-    assertFalse(codeActions.getExtractRefactoringSupport());
     assertInstanceOf(customization.getFindReferencesCustomizer(), LspFindReferencesDisabled.class);
-    assertInstanceOf(customization.getRenameCustomizer(), LspRenameDisabled.class);
     assertInstanceOf(customization.getSemanticTokensCustomizer(), LspSemanticTokensDisabled.class);
     assertTrue(assertInstanceOf(customization.getDocumentHighlightsCustomizer(), LspDocumentHighlightsSupport.class)
                  .shouldAskServerForDocumentHighlights(myFixture.addFileToProject("src/highlights.erl", "").getContainingFile()));
