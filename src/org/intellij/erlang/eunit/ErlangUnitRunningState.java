@@ -20,6 +20,7 @@ import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
@@ -93,6 +94,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
     return getEntryPointInternal(true);
+  }
+
+  @NotNull
+  @Override
+  protected EnvironmentVariablesData getEnvData() {
+    return myConfiguration.getEnvData();
   }
 
   @Override

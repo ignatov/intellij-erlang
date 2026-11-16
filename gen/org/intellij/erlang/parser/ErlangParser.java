@@ -1031,14 +1031,15 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' integer
+  // q_var ':' int_type
   public static boolean bin_base_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_BIN_BASE_TYPE, "<type>");
     r = q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_COLON, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_COLON);
+    r = r && int_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1183,7 +1184,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' q_var '*' integer
+  // q_var ':' q_var '*' int_type
   public static boolean bin_unit_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_unit_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
@@ -1192,7 +1193,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_OP_AR_MUL, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_OP_AR_MUL);
+    r = r && int_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }

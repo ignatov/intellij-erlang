@@ -33,6 +33,11 @@ public class ErlangSmallIdeIncludeResolveTest extends ErlangIncludeResolveTestBa
     doTest("test/testmodule.erl", "src/dummy.erl", "include/testinclude.hrl", "src/test.app.src");
   }
 
+  public void testRelativeToIncludeDirectoryWithBuildCopy() {
+    doTest("testapp/src/testmodule.erl", "testapp/include/testinclude.hrl",
+           "testapp/_build/default/lib/testapp/ebin/testapp.app", "testapp/src/testapp.app.src");
+  }
+
   // 'include' folders, which are not in otp app root are not considered as include paths by rebar, we should do the same
   public void testRelativeToIncludeDirectoryNotInOtpAppRoot() {
     doTestWithExpectedResolveFailure("src/directory/testmodule.erl", "src/include/testinclude.hrl", "src/test.app.src");

@@ -85,7 +85,8 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(:)(':')
-        PsiElement(integer)('8')
+        ERL_INT_TYPE
+          PsiElement(integer)('8')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -107,7 +108,8 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(*)('*')
-        PsiElement(integer)('8')
+        ERL_INT_TYPE
+          PsiElement(integer)('8')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -126,7 +128,8 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(:)(':')
-        PsiElement(integer)('8')
+        ERL_INT_TYPE
+          PsiElement(integer)('8')
       PsiElement(,)(',')
       ERL_BIN_UNIT_TYPE
         ERL_Q_VAR
@@ -135,7 +138,8 @@ ERL_FILE
         ERL_Q_VAR
           PsiElement(var)('_')
         PsiElement(*)('*')
-        PsiElement(integer)('8')
+        ERL_INT_TYPE
+          PsiElement(integer)('8')
       PsiElement(>>)('>>')
     PsiElement(.)('.')
   ERL_TYPE_DEFINITION
@@ -155,7 +159,8 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('_')
           PsiElement(:)(':')
-          PsiElement(integer)('0')
+          ERL_INT_TYPE
+            PsiElement(integer)('0')
         PsiElement(,)(',')
         ERL_BIN_UNIT_TYPE
           ERL_Q_VAR
@@ -164,7 +169,8 @@ ERL_FILE
           ERL_Q_VAR
             PsiElement(var)('_')
           PsiElement(*)('*')
-          PsiElement(integer)('1')
+          ERL_INT_TYPE
+            PsiElement(integer)('1')
         PsiElement(>>)('>>')
       PsiElement(|)('|')
       ERL_TYPE
