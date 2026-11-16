@@ -31,9 +31,17 @@ import com.intellij.openapi.roots.*;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.testFramework.IndexingTestUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
+import org.intellij.erlang.psi.ErlangBehaviour;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -117,6 +125,29 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  // rebar3 compiles every app of an umbrella with all of them on the code path,
+  // so a behaviour from a sibling app resolves even when it is not in the applications list (#762)
+  public void testBehaviourFromOtherUmbrellaApp() throws Exception { doTestBehaviourResolves(); }
+  public void testBehaviourFromUmbrellaAppInApplications() throws Exception { doTestBehaviourResolves(); }
+
+  private void doTestBehaviourResolves() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module firstModule = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    Project createdProject = firstModule.getProject();
+    IndexingTestUtil.waitUntilIndexesAreReady(createdProject);
+
+    VirtualFile implFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectPath + "/test/apps/app2/src/my_impl.erl");
+    assertNotNull(implFile);
+    ErlangFile implPsi = (ErlangFile) PsiManager.getInstance(createdProject).findFile(implFile);
+    assertNotNull(implPsi);
+    ErlangBehaviour behaviour = ContainerUtil.getOnlyItem(implPsi.getBehaviours());
+    assertNotNull(behaviour);
+    ErlangFile behaviourFile = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
+    assertNotNull("Unresolved behaviour " + behaviour.getName(), behaviourFile);
+    assertEquals("gen_my_behaviour.erl", behaviourFile.getName());
+    assertTrue(behaviourFile.isBehaviour());
   }
 
   private static void createMockSdk() {
