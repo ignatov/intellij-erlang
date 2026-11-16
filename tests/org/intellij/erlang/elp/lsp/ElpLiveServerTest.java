@@ -89,30 +89,12 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
   }
 
   public void testDiagnosticDefinitionAndRename() throws Exception {
-    String elp = System.getenv("ERLANG_ELP_PATH");
-    Assume.assumeTrue("Set ERLANG_ELP_PATH to the elp binary to run this test", elp != null && !elp.isBlank());
-    assertTrue("ERLANG_ELP_PATH is " + elp + ", which is not a file", new File(elp).isFile());
-
+    String elp = elpPath();
     // ELP breaks under a symlinked path, such as the temporary directory of macOS, so it gets the real path.
     Path project = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath().resolve("project");
     FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
-    VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
-    myRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(project);
-    assertNotNull(myRoot);
-    PsiTestUtil.addSourceContentToRoots(getModule(), myRoot);
-    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
-
-    ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
-    state.path = elp;
-    state.mode = ElpMode.ELP.name();
-    ElpSettings.getInstance().loadState(state);
-
+    ElpLspClientDescriptor descriptor = startElp(elp, project);
     VirtualFile shop = file("src/shop.erl");
-    myFixture.openFileInEditor(shop);
-    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
-    LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
-    PlatformTestUtil.waitWithEventsDispatching("ELP did not start", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION),
-                                               TIMEOUT_SECONDS);
 
     // Definition: the remote call in price/1 goes to lookup/2 in shop_backend.erl; ELP answers once it has loaded the project.
     Editor editor = myFixture.getEditor();
@@ -150,6 +132,77 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     PlatformTestUtil.waitWithEventsDispatching("ELP wrote nothing into " + tmpDir, () -> eqwalizerIn(tmpDir) != null, TIMEOUT_SECONDS);
     LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
     PlatformTestUtil.waitWithEventsDispatching(tmpDir + " is still there", () -> !Files.exists(tmpDir), TIMEOUT_SECONDS);
+  }
+
+  /**
+   * ELP reports {@code L0003 Unknown application} on every file whose URI goes through a symlink, and resolves nothing there; the
+   * plugin sends it the real path and maps its answers back to the path the project was opened by.
+   */
+  public void testProjectOpenedThroughASymlink() throws Exception {
+    String elp = elpPath();
+    Path temp = FileUtil.createTempDirectory("elp-live", null, true).toPath().toRealPath();
+    Path real = temp.resolve("real");
+    FileUtil.copyDir(new File("testData/elp/project"), real.resolve("project").toFile());
+    Path link = Files.createSymbolicLink(temp.resolve("link"), real);
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), real.toString());
+    ElpLspClientDescriptor descriptor = startElp(elp, link.resolve("project"));
+    assertEquals(link.resolve("project").toString(), myRoot.getPath());
+    VirtualFile shop = file("src/shop.erl");
+
+    Editor editor = myFixture.getEditor();
+    int call = editor.getDocument().getText().indexOf("lookup(shop_memory") + 2;
+    PsiFile shopPsi = myFixture.getFile();
+    AtomicReference<PsiElement[]> targets = new AtomicReference<>();
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not answer the definition", () -> {
+      targets.set(definition(shopPsi, editor, call));
+      return targets.get() != null;
+    }, TIMEOUT_SECONDS);
+    assertSize(1, targets.get());
+    VirtualFile target = assertInstanceOf(targets.get()[0], ErlangFunction.class).getContainingFile().getVirtualFile();
+    assertEquals(file("src/shop_backend.erl"), target);
+
+    myFixture.openFileInEditor(file("src/shop_defects.erl"));
+    AtomicReference<List<HighlightInfo>> infos = new AtomicReference<>();
+    PlatformTestUtil.waitWithEventsDispatching("ELP published no diagnostics", () -> {
+      infos.set(myFixture.doHighlighting());
+      return ContainerUtil.exists(infos.get(), info -> "function unused_function/0 is unused".equals(info.getDescription()));
+    }, TIMEOUT_SECONDS);
+    assertFalse(ContainerUtil.exists(infos.get(), info -> "Unknown application".equals(info.getDescription())));
+    // The URI that ELP gets is the real path.
+    assertEquals(real.resolve("project/src/shop.erl").toUri().getPath(), java.net.URI.create(descriptor.getFileUri(shop)).getPath());
+  }
+
+  @NotNull
+  private static String elpPath() {
+    String elp = System.getenv("ERLANG_ELP_PATH");
+    Assume.assumeTrue("Set ERLANG_ELP_PATH to the elp binary to run this test", elp != null && !elp.isBlank());
+    assertTrue("ERLANG_ELP_PATH is " + elp + ", which is not a file", new File(elp).isFile());
+    return elp;
+  }
+
+  /**
+   * Makes {@code project} a content root, opens {@code src/shop.erl} and starts ELP in the ELP position for it.
+   */
+  @NotNull
+  private ElpLspClientDescriptor startElp(@NotNull String elp, @NotNull Path project) {
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
+    myRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(project);
+    assertNotNull(myRoot);
+    PsiTestUtil.addSourceContentToRoots(getModule(), myRoot);
+    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+
+    ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
+    state.path = elp;
+    state.mode = ElpMode.ELP.name();
+    ElpSettings.getInstance().loadState(state);
+
+    VirtualFile shop = file("src/shop.erl");
+    myFixture.openFileInEditor(shop);
+    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
+    LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
+    PlatformTestUtil.waitWithEventsDispatching("ELP did not start", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION),
+                                               TIMEOUT_SECONDS);
+    return descriptor;
   }
 
   @Nullable
