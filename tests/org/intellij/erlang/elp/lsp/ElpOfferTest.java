@@ -141,6 +141,8 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
       });
       return ElpOffer.DIALOG.ask(project, content);
     }, () -> myFrameActive, getTestRootDisposable());
+    // The offer is shown on macOS only; the tests decide it on every system.
+    ElpOffer.macOsInTests(true, getTestRootDisposable());
   }
 
   @Override
@@ -154,6 +156,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
       }
       getProject().putUserData(ElpOffer.LAST_CHECK, null);
       getProject().putUserData(ElpOffer.PENDING, null);
+      getProject().putUserData(ElpOffer.NOT_ELIGIBLE, null);
       UiInterceptors.clear();
     }
     catch (Throwable e) {
@@ -463,6 +466,37 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     ElpSettings.getInstance().setOfferShownForVersion("");
     fileOpened(file);
     assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
+  /** Where the offer can never be shown, no file starts the check, which may run rebar3 for up to 30 seconds. */
+  public void testNoCheckWhereTheOfferCannotBeShown() {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+    ElpOffer.macOsInTests(false, getTestRootDisposable());
+    assertNotNull(ElpOffer.whyNotAsk(V1));
+    assertFalse(offer(V1));
+    fileOpened(file);
+    assertNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+    assertEmpty(myDialogs);
+
+    ElpOffer.macOsInTests(true, getTestRootDisposable());
+    fileOpened(file);
+    assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
+  /** A project that ELP does not fit is checked once per IDE session, not again every minute. */
+  public void testAProjectElpDoesNotFitIsNotCheckedAgain() throws Exception {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    ElpOffer.preflightInTests(ElpPreflight.evaluate(facts(true, null), layout(false)), getTestRootDisposable());
+    VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+    fileOpened(file);
+    assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+    waitFor(() -> getProject().getUserData(ElpOffer.NOT_ELIGIBLE) != null, "the project is not remembered as not eligible");
+    assertEmpty(myDialogs);
+
+    getProject().putUserData(ElpOffer.LAST_CHECK, null);
+    fileOpened(file);
+    assertNull("checked again", getProject().getUserData(ElpOffer.LAST_CHECK));
   }
 
   /** A project the IDE does not trust is not checked for the offer: the check would run the project's rebar3. */

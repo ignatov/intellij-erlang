@@ -29,6 +29,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.WindowManager;
@@ -77,6 +78,8 @@ final class ElpOffer {
   /** A project that ELP does not fit is checked again after this time at the earliest, when another file is opened. */
   private static final long RECHECK_MS = 60_000;
   static final Key<Long> LAST_CHECK = Key.create("erlang.elp.offer.lastCheck");
+  /** Set on a project that the check found ELP does not fit; it is not checked again in this IDE session. */
+  static final Key<Boolean> NOT_ELIGIBLE = Key.create("erlang.elp.offer.notEligible");
   /** Set while a check of the project waits for the end of indexing or for its frame; at most one waits per project. */
   static final Key<Boolean> PENDING = Key.create("erlang.elp.offer.pending");
   private static volatile boolean ourEnabledInTests;
@@ -85,6 +88,7 @@ final class ElpOffer {
   private static final int RETRIES = 120;
   private static volatile long ourRetryMs = RETRY_MS;
   private static volatile ElpPreflight.Result ourPreflightInTests;
+  private static volatile BooleanSupplier ourMacOs = () -> SystemInfo.isMac;
 
   /** The answers of the dialog; each does what the action of the same name on the balloon did before. */
   enum Choice {TRY, NOT_NOW, NEVER}
@@ -186,6 +190,13 @@ final class ElpOffer {
     Disposer.register(parent, () -> ourPreflightInTests = null);
   }
 
+  /** Makes the offer think that the IDE runs on macOS, or not, until {@code parent} is disposed. */
+  @TestOnly
+  static void macOsInTests(boolean macOs, @NotNull Disposable parent) {
+    ourMacOs = () -> macOs;
+    Disposer.register(parent, () -> ourMacOs = () -> SystemInfo.isMac);
+  }
+
   /** Lets {@link #fileOpened} check the project in tests until {@code parent} is disposed. */
   @TestOnly
   static void enableInTests(@NotNull Disposable parent) {
@@ -194,9 +205,9 @@ final class ElpOffer {
   }
 
   /**
-   * Whether the offer may be shown for {@code pluginVersion}: it is not switched off, the engine is the plugin and not forced by
-   * a system property, the user did not choose "Don't ask again" and the offer was not shown for this version yet. Touches
-   * neither the file system nor the project model.
+   * Whether the offer may be shown for {@code pluginVersion}: the IDE runs on macOS, the offer is not switched off, the engine is
+   * the plugin and not forced by a system property, the user did not choose "Don't ask again" and the offer was not shown for
+   * this version yet. Touches neither the file system nor the project model.
    */
   static boolean shouldAsk(@NotNull String pluginVersion) {
     return whyNotAsk(pluginVersion) == null;
@@ -205,6 +216,7 @@ final class ElpOffer {
   /** @return why {@link #shouldAsk} says no, for the log; {@code null} when the offer may be shown */
   @Nullable
   static String whyNotAsk(@NotNull String pluginVersion) {
+    if (!ourMacOs.getAsBoolean()) return "the IDE does not run on macOS";
     if (Boolean.FALSE.equals(ElpConfiguration.parseBoolean(System.getProperty(PROPERTY)))) return "-D" + PROPERTY + "=false";
     String forcedMode = System.getProperty(ElpConfiguration.MODE_PROPERTY);
     if (ElpMode.parse(forcedMode) != null) return "the engine is forced by -D" + ElpConfiguration.MODE_PROPERTY + "=" + forcedMode;
@@ -232,7 +244,7 @@ final class ElpOffer {
 
   /**
    * Called, with read access, for every Erlang file the user opens; checks the project off the EDT, at most once a minute per
-   * project.
+   * project, and not again in this IDE session once ELP did not fit it.
    */
   @RequiresReadLock
   static void fileOpened(@NotNull Project project, @NotNull VirtualFile file) {
@@ -248,6 +260,10 @@ final class ElpOffer {
     // The check runs the project's rebar3, whose path is a project setting.
     if (!ElpPreflight.isTrusted(project)) {
       LOG.debug("No ELP offer check: the project is not trusted");
+      return;
+    }
+    if (project.getUserData(NOT_ELIGIBLE) != null) {
+      LOG.debug("No ELP offer check: ELP did not fit the project at the last check");
       return;
     }
     // The dialog would wait for the end of indexing anyway; the check is not used up on a file opened while the project loads.
@@ -273,9 +289,9 @@ final class ElpOffer {
       LOG.debug("No ELP offer check: no workspace root for " + file.getName());
       return;
     }
+    long now = System.currentTimeMillis();
     synchronized (LAST_CHECK) {
       Long last = project.getUserData(LAST_CHECK);
-      long now = System.currentTimeMillis();
       if (last != null && now - last < RECHECK_MS) {
         LOG.debug("No ELP offer check: the project was checked less than a minute ago");
         return;
@@ -284,7 +300,7 @@ final class ElpOffer {
     }
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       try {
-        check(project, root, version);
+        check(project, root, version, now);
       }
       catch (ProcessCanceledException e) {
         LOG.debug("The ELP offer check was cancelled");
@@ -296,7 +312,7 @@ final class ElpOffer {
   }
 
   @RequiresBackgroundThread
-  private static void check(@NotNull Project project, @NotNull VirtualFile root, @NotNull String version) {
+  private static void check(@NotNull Project project, @NotNull VirtualFile root, @NotNull String version, long started) {
     if (project.isDisposed()) return;
     ElpPreflight.Result result = ourPreflightInTests;
     if (result == null) {
@@ -308,6 +324,12 @@ final class ElpOffer {
     ElpAvailability availability = ElpDistribution.getInstance().availability(project);
     LOG.debug("ELP offer check: problems " + result.reasons() + ", availability " + availability.kind() +
               (availability.choice().reason() != null ? " (" + availability.choice().message() + ")" : ""));
+    if (!isEligible(result, availability)) {
+      synchronized (LAST_CHECK) {
+        // Unless the check was started over in the meantime, as the tests do on a project that they share.
+        if (Long.valueOf(started).equals(project.getUserData(LAST_CHECK))) project.putUserData(NOT_ELIGIBLE, Boolean.TRUE);
+      }
+    }
     ElpPreflight.Result checked = result;
     ApplicationManager.getApplication().invokeLater(() -> {
       // A check that a test started may end after the test, whose answers to the dialog are gone by then.
