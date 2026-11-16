@@ -127,7 +127,9 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     myState.path = path;
     myState.mode = mode.name();
     myState.eqwalizer = eqwalizer;
-    if (changed) ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
+    // Back in the Plugin position no root is ELP's any more, see ElpServedRoots.
+    if (mode == ElpMode.PLUGIN) ElpServedRoots.getInstance().clear();
+    if (changed)ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
   }
 
   /** Sets the engine position and keeps the rest; tells the running servers when it changed. */

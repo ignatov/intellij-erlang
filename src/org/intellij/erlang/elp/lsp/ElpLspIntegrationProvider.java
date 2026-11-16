@@ -29,6 +29,7 @@ import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
 import org.intellij.erlang.elp.ElpPreflight;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
@@ -72,6 +73,8 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
     }
     if (facts == null || !result.canStart()) {
       LOG.info("ELP is not started for " + root.getPath() + ": " + result.blocking());
+      // A root that ELP served and the preflight now refuses goes back to the plugin.
+      if (ElpServedRoots.getInstance().remove(root.getPath())) ElpEngine.refreshProject(project);
       if (preflight.shouldTell(result)) {
         ApplicationManager.getApplication().invokeLater(() -> ElpNotifications.notStarted(project, result), project.getDisposed());
       }

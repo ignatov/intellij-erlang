@@ -48,6 +48,8 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
+import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServedRoots;
 import org.intellij.erlang.elp.ElpServerEnvironment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -114,6 +116,10 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     Project project = getProject();
     LOG.info("ELP " + getRoots()[0].getPath() + ": " + oldState + " -> " + newState);
     if (project.isDisposed()) return;
+    // From the first Running on, the root is ELP's for good: a crash or a restart does not give it back to the plugin.
+    if (newState == ElpLoadState.State.RUNNING && myConfiguration.mode() == ElpMode.ELP) {
+      ElpServedRoots.getInstance().add(getRoots()[0].getPath());
+    }
     if (newState == ElpLoadState.State.RUNNING || oldState == ElpLoadState.State.RUNNING) ElpEngine.refreshProject(project);
     if (newState == ElpLoadState.State.FAILED) {
       ElpNotifications.couldNotLoad(project, loadState, getRoots()[0].getPresentableUrl());
