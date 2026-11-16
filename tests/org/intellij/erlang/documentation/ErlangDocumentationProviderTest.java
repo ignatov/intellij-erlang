@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -28,6 +29,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -39,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("ConstantConditions")
@@ -797,6 +800,128 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                         %-define(A, 2).
                         -define(A, 1).
                         test() -> ?<caret>A.
+                        """);
+  }
+
+  public void testMacroDocPicksArityAcrossIncludes() {
+    myFixture.addFileToProject("a.hrl", """
+      %% a one
+      -define(M(X), X).
+      """);
+    myFixture.addFileToProject("b.hrl", """
+      -define(M(X, Y), X + Y).
+      """);
+    doTestGenerateDoc("<pre>-define(M(X, Y), X + Y).<br/><br/><b>Defined in:</b> b.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("a.hrl").
+                        -include("b.hrl").
+                        test() -> ?<caret>M(1, 2).
+                        """);
+    doTestGenerateDoc("<pre>-define(M(X), X).<br/><br/><b>Comment:</b><br/> a one<br/><br/><b>Defined in:</b> a.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("a.hrl").
+                        -include("b.hrl").
+                        test() -> ?<caret>M(1).
+                        """);
+  }
+
+  public void testMacroDocIgnoresRedefinitionAfterUse() {
+    myFixture.addFileToProject("a.hrl", """
+      -define(Z, 1).
+      """);
+    doTestGenerateDoc("<pre>-define(Z, 1).<br/><br/><b>Defined in:</b> a.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("a.hrl").
+                        test() -> ?<caret>Z.
+                        -undef(Z).
+                        -define(Z, 2).
+                        """);
+  }
+
+  public void testMacroDocSkipsGuardedDefaultAfterInclude() {
+    myFixture.addFileToProject("a.hrl", """
+      -define(T, 5000).
+      """);
+    doTestGenerateDoc("<pre>-define(T, 5000).<br/><br/><b>Defined in:</b> a.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("a.hrl").
+                        -ifndef(T).
+                        -define(T, 1000).
+                        -endif.
+                        test() -> ?<caret>T.
+                        """);
+  }
+
+  public void testMacroDocPicksIncludeAfterLocalUndef() {
+    myFixture.addFileToProject("a.hrl", """
+      -define(W, 1).
+      """);
+    doTestGenerateDoc("<pre>-define(W, 1).<br/><br/><b>Defined in:</b> a.hrl</pre>",
+                      """
+                        -module(test).
+                        -define(W, 0).
+                        -undef(W).
+                        -include("a.hrl").
+                        test() -> ?<caret>W.
+                        """);
+  }
+
+  public void testMacroDocFollowsUndefInInclude() {
+    myFixture.addFileToProject("a.hrl", """
+      -define(U, 1).
+      -undef(U).
+      -define(U, 2).
+      """);
+    doTestGenerateDoc("<pre>-define(U, 2).<br/><br/><b>Defined in:</b> a.hrl</pre>",
+                      """
+                        -module(test).
+                        -include("a.hrl").
+                        test() -> ?<caret>U.
+                        """);
+  }
+
+  public void testMacroDocInCompletionOfOtherName() {
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -define(ABC(X), X).
+      -define(ABD, 1).
+      f() -> ?A<caret>B(1, 2).
+      """);
+    PsiElement originalElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
+    LookupElement[] items = myFixture.completeBasic();
+    assertNotNull(items);
+    List<String> docs = new ArrayList<>();
+    for (LookupElement item : items) {
+      if (item.getPsiElement() instanceof ErlangMacrosDefinition) {
+        docs.add(myErlangDocProvider.generateDoc(item.getPsiElement(), originalElement));
+      }
+    }
+    assertSameElements(docs,
+                       "<pre>-define(ABC(X), X).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                       "<pre>-define(ABD, 1).<br/><br/><b>Defined in:</b> test.erl</pre>");
+  }
+
+  public void testMacroDocCountsArgumentsWithGuard() {
+    doTestGenerateDoc("<pre>-define(G(X, Y), case 1 of X -&gt; Y end).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(G(X), X).
+                        -define(G(X, Y), case 1 of X -> Y end).
+                        test() -> ?<caret>G(A when A > 0, ok).
+                        """);
+  }
+
+  public void testMacroDocCountsArgumentsAfterString() {
+    doTestGenerateDoc("<pre>-define(S(X, Y), X Y).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -define(S(X), X).
+                        -define(S(X, Y), X Y).
+                        test() -> "a" ?<caret>S("b", "c").
                         """);
   }
 
