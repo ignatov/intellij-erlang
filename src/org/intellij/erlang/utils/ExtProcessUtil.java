@@ -18,6 +18,7 @@ package org.intellij.erlang.utils;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,10 +35,12 @@ public final class ExtProcessUtil {
   private ExtProcessUtil() {
   }
 
+  // The command runs in the temp directory, not in the directory of the IDE: rebar3 writes rebar3.crashdump into its
+  // working directory when its output is closed before it prints the version, for example when the IDE exits.
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     try {
-      Process cmdRunner = new GeneralCommandLine(command).createProcess();
+      Process cmdRunner = new GeneralCommandLine(command).withWorkDirectory(FileUtil.getTempDirectory()).createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
       try {
         Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(() -> {
