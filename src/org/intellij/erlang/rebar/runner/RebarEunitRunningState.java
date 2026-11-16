@@ -61,6 +61,7 @@ import java.util.List;
 
 public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
+  private static final String ERL_FLAGS = "ERL_FLAGS";
   private static final String EUNIT_NO_TTY_OPTION = "{no_tty, true}";
   private static final String EUNIT_TEAMCITY_REPORTER = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
   private static final String EUNIT_OPTS = "{eunit_opts,[" + EUNIT_TEAMCITY_REPORTER + "," + EUNIT_NO_TTY_OPTION + "]}.";
@@ -103,20 +104,35 @@ public class RebarEunitRunningState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(myConfiguration);
-    File reportsRoot = createEunitReportsEnvironment();
+    GeneralCommandLine commandLine = getCommandLine(myConfiguration, createEunitReportsEnvironment());
+    return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
+  }
 
-    commandLine.getEnvironment().put("ERL_FLAGS", "-pa " + PathUtil.toSystemIndependentName(reportsRoot.getPath()));
-    
-    boolean rebar3 = RebarSettings.getInstance(myConfiguration.getProject()).isRebar3();
+  @VisibleForTesting
+  @NotNull
+  static GeneralCommandLine getCommandLine(@NotNull RebarEunitRunConfiguration configuration, @NotNull File reportsRoot) {
+    GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(configuration);
+
+    // Put the reporter on the code path before the user's ERL_FLAGS, so that a -extra there does not make it a plain argument.
+    String reportsPath = quoteErlFlagsArgument(PathUtil.toSystemIndependentName(reportsRoot.getPath()));
+    String userErlFlags = commandLine.getEffectiveEnvironment().get(ERL_FLAGS);
+    commandLine.getEnvironment().put(ERL_FLAGS, "-pa " + reportsPath + (StringUtil.isEmptyOrSpaces(userErlFlags) ? "" : " " + userErlFlags));
+
+    boolean rebar3 = RebarSettings.getInstance(configuration.getProject()).isRebar3();
     if (rebar3) {
       commandLine.getEnvironment().put("REBAR_CONFIG", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
     }
     else {
       commandLine.addParameters("-C", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
     }
+    return commandLine;
+  }
 
-    return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
+  // erlexec splits ERL_FLAGS on whitespace and takes the text between double quotes literally (build_args_from_string
+  // in erts/etc/common/erlexec.c). A double quote is written as \" outside the quotes.
+  @NotNull
+  private static String quoteErlFlagsArgument(@NotNull String argument) {
+    return "\"" + argument.replace("\"", "\"\\\"\"") + "\"";
   }
 
   private File createEunitReportsEnvironment() throws ExecutionException {
