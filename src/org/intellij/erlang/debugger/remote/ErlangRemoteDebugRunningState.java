@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger.remote;
 
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -67,6 +68,12 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   @Override
   public String getWorkDirectory() {
     return null;
+  }
+
+  @NotNull
+  @Override
+  protected EnvironmentVariablesData getEnvData() {
+    return myConfiguration.getEnvData();
   }
 
   @NotNull

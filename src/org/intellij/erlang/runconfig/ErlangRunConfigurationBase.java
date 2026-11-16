@@ -17,6 +17,7 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ModuleBasedConfiguration;
 import com.intellij.execution.configurations.RuntimeConfigurationError;
@@ -29,6 +30,7 @@ import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import com.intellij.util.xmlb.annotations.Transient;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +47,8 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   private ErlangDebugOptions myDebugOptions = new ErlangDebugOptions();
   @Nullable
   private String myWorkDirectory;
+  @NotNull
+  private EnvironmentVariablesData myEnvData = EnvironmentVariablesData.DEFAULT;
 
   public ErlangRunConfigurationBase(String name,
                                     ErlangModuleBasedConfiguration configurationModule,
@@ -70,6 +74,16 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
     myWorkDirectory = workDirectory;
   }
 
+  @Transient
+  @NotNull
+  public EnvironmentVariablesData getEnvData() {
+    return myEnvData;
+  }
+
+  public void setEnvData(@NotNull EnvironmentVariablesData envData) {
+    myEnvData = envData;
+  }
+
   @Override
   public Collection<Module> getValidModules() {
     Module[] modules = ModuleManager.getInstance(getProject()).getModules();
@@ -80,6 +94,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
     XmlSerializer.serializeInto(this, element);
+    myEnvData.writeExternalNoDefault(element);
   }
 
   @Override
@@ -112,6 +127,7 @@ public abstract class ErlangRunConfigurationBase<RunningState extends ErlangRunn
   public void readExternal(@NotNull Element element) throws InvalidDataException {
     super.readExternal(element);
     XmlSerializer.deserializeInto(this, element);
+    myEnvData = EnvironmentVariablesData.readExternal(element);
   }
 
   @Nullable
