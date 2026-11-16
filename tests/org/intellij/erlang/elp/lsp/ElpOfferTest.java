@@ -59,6 +59,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
@@ -172,7 +173,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     ElpOfferDialog offer = assertOneElement(myDialogs);
     assertEquals(ElpOfferDialog.TITLE, offer.getTitle());
     assertEquals(List.of(ElpOffer.TRY, ElpOffer.NOT_NOW), offer.buttons().stream().map(a -> a.getValue(Action.NAME)).toList());
-    assertEquals("Try ELP is the default button", Boolean.TRUE, offer.buttons().get(0).getValue(DialogWrapper.DEFAULT_ACTION));
+    assertNull("Try ELP is not the default button", offer.buttons().get(0).getValue(DialogWrapper.DEFAULT_ACTION));
     assertEquals(ElpOffer.NEVER, offer.dontAskCheckBox().getText());
     assertFalse(offer.dontAskCheckBox().isSelected());
     assertEquals(ElpOfferDialog.content(downloadable()), offer.content());
@@ -181,6 +182,21 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
 
     assertFalse(offer(V1));
     assertOneElement(myDialogs);
+  }
+
+  /**
+   * The dialog opens by itself, maybe while the user types: no button is pressed by Enter, and the focus starts on "Not now", so
+   * that a key typed for the editor does not download and start ELP.
+   */
+  public void testAKeyTypedForTheEditorDoesNotTryElp() {
+    List<Object> seen = new ArrayList<>();
+    myUser = d -> {
+      for (Action button : d.buttons()) seen.add(button.getValue(DialogWrapper.DEFAULT_ACTION));
+      seen.add(d.getPreferredFocusedComponent() instanceof JButton button ? button.getText() : d.getPreferredFocusedComponent());
+      press(d, ElpOffer.NOT_NOW);
+    };
+    assertTrue(offer(V1));
+    assertEquals(Arrays.asList(null, null, ElpOffer.NOT_NOW), seen);
   }
 
   public void testNotInTheElpPosition() {

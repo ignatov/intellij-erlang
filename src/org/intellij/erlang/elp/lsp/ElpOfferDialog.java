@@ -27,6 +27,7 @@ import com.intellij.util.ui.JBUI;
 import org.intellij.erlang.elp.distribution.ElpAvailability;
 import org.intellij.erlang.elp.distribution.ElpRelease;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
@@ -37,7 +38,8 @@ import java.util.stream.Collectors;
 /**
  * The offer to try ELP: what ELP is, what stays with the plugin and what "Try ELP" does, because the click is the user's
  * consent. "Not now", Esc and the close button of the window all end in {@link #doCancelAction()}; with "Don't ask again"
- * selected they mean {@link ElpOffer.Choice#NEVER}.
+ * selected they mean {@link ElpOffer.Choice#NEVER}. No button is the default and the focus starts on "Not now", because the
+ * dialog may open while the user types.
  */
 final class ElpOfferDialog extends DialogWrapper {
   static final String TITLE = "Try ELP for Erlang";
@@ -61,6 +63,8 @@ final class ElpOfferDialog extends DialogWrapper {
     setTitle(TITLE);
     setOKButtonText(ElpOffer.TRY);
     setCancelButtonText(ElpOffer.NOT_NOW);
+    // The dialog opens by itself, maybe while the user types: Enter must not download and start ELP, so no button is the default.
+    getOKAction().putValue(DEFAULT_ACTION, null);
     // Qualified: inside a DialogWrapper the simple name is the deprecated DialogWrapper.DoNotAskOption.
     setDoNotAskOption(new com.intellij.openapi.ui.DoNotAskOption.Adapter() {
       @Override
@@ -123,6 +127,13 @@ final class ElpOfferDialog extends DialogWrapper {
   static ElpOffer.Choice choice(int exitCode, boolean dontAsk) {
     if (exitCode == OK_EXIT_CODE) return ElpOffer.Choice.TRY;
     return dontAsk ? ElpOffer.Choice.NEVER : ElpOffer.Choice.NOT_NOW;
+  }
+
+  /** "Not now", so that a key typed for the editor ends in the answer that changes nothing. */
+  @Nullable
+  @Override
+  public JComponent getPreferredFocusedComponent() {
+    return getButton(getCancelAction());
   }
 
   @NotNull
