@@ -20,6 +20,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -27,8 +28,10 @@ import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.testFramework.IndexingTestUtil;
+import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.PsiTestUtil;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.TempDirTestFixture;
 import com.intellij.testFramework.fixtures.impl.TempDirTestFixtureImpl;
 import org.eclipse.lsp4j.Position;
@@ -36,6 +39,8 @@ import org.eclipse.lsp4j.Range;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpSettings;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,9 +82,21 @@ public abstract class ElpRecordedProjectTestBase extends ErlangLightPlatformCode
     return "testData/elp";
   }
 
+  /** An Erlang SDK, as a user's project has: the plugin resolves {@code io:format} and the other OTP calls into it. */
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_R15B02);
+      }
+    };
+  }
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setUpProjectSdk();
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldState = new ElpSettings.ElpSettingsState();
     myOldState.path = old.path;
