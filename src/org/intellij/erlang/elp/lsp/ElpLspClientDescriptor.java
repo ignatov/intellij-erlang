@@ -122,12 +122,17 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     }
     if (newState == ElpLoadState.State.RUNNING || oldState == ElpLoadState.State.RUNNING) ElpEngine.refreshProject(project);
     if (newState == ElpLoadState.State.FAILED) {
-      ElpNotifications.couldNotLoad(project, loadState, getRoots()[0].getPresentableUrl());
+      ElpNotifications.couldNotLoad(project, loadState, getRoots()[0].getPresentableUrl(), isServedRoot());
     }
     if (newState == ElpLoadState.State.RUNNING) {
       String error = loadState.takeErrorToReport();
       if (error != null) ElpNotifications.elpError(project, error);
     }
+  }
+
+  /** Whether the root of this server is ELP's, so that the plugin stays silent there whatever this server does. */
+  private boolean isServedRoot() {
+    return ElpServedRoots.getInstance().isUnderServedRoot(getRoots()[0]);
   }
 
   @NotNull
@@ -270,7 +275,7 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     LspServer server = findClient();
     if (server == null || server.getState() != LspServerState.ShutdownUnexpectedly) return;
     if (initialized) {
-      ElpRestarts.crashed(getProject(), exitCode, myLoadState.lastLogLines());
+      ElpRestarts.crashed(getProject(), exitCode, myLoadState.lastLogLines(), isServedRoot());
     }
     else {
       ElpRestarts.didNotStart(getProject(), myConfiguration.path(), "it exited with code " + exitCode + " before it was initialized",

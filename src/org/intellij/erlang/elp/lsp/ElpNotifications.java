@@ -61,9 +61,10 @@ final class ElpNotifications {
   }
 
   /**
-   * ELP did not load the project, see {@link ElpLoadState}; the plugin answers there.
+   * ELP did not load the project, see {@link ElpLoadState}. The plugin answers there unless the root is already ELP's
+   * ({@code served}, see {@link org.intellij.erlang.elp.ElpServedRoots}); then the way back is "Switch back to the plugin".
    */
-  static void couldNotLoad(@NotNull Project project, @NotNull ElpLoadState loadState, @NotNull String root) {
+  static void couldNotLoad(@NotNull Project project, @NotNull ElpLoadState loadState, @NotNull String root, boolean served) {
     StringBuilder content = new StringBuilder();
     if (loadState.isOtpNotFound()) {
       content.append("ELP cannot find Erlang/OTP: it runs erl from the bin directory of the project's Erlang SDK. ")
@@ -74,7 +75,7 @@ final class ElpNotifications {
       content.append(error != null ? "ELP said: " + StringUtil.escapeXmlEntities(error)
                                    : "ELP did not finish loading " + StringUtil.escapeXmlEntities(root) + ".");
     }
-    content.append(" The plugin answers in ").append(StringUtil.escapeXmlEntities(project.getName())).append(" instead.");
+    content.append(served ? STAYS_OFF : " The plugin answers in " + StringUtil.escapeXmlEntities(project.getName()) + " instead.");
     List<String> lines = loadState.lastLogLines();
     if (!lines.isEmpty()) {
       content.append("<br>Last messages:");
@@ -86,6 +87,9 @@ final class ElpNotifications {
       .addAction(switchBack())
       .addAction(feedback(project)));
   }
+
+  /** What a failure says under a root that ELP serves, where the plugin does not answer. */
+  static final String STAYS_OFF = " Code insight stays off until ELP runs again, or until you switch back to the plugin.";
 
   /** Sets the engine to the plugin at once: the way back from ELP is one click. Whoever goes back is not offered ELP again. */
   @NotNull

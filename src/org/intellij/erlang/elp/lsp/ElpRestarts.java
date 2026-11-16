@@ -75,16 +75,20 @@ final class ElpRestarts {
     return true;
   }
 
-  /** The server of {@code project} stopped without being asked to, after it had been initialized. */
-  static void crashed(@NotNull Project project, @Nullable Integer exitCode, @NotNull List<String> lastLines) {
+  /**
+   * The server of {@code project} stopped without being asked to, after it had been initialized. Under a root that ELP serves
+   * ({@code served}) the plugin does not answer while ELP is down, so the user is offered the way back to the plugin.
+   */
+  static void crashed(@NotNull Project project, @Nullable Integer exitCode, @NotNull List<String> lastLines, boolean served) {
     if (project.isDisposed()) return;
     boolean restart = getInstance(project).claimAutomaticRestart(System.currentTimeMillis());
     LOG.info("ELP stopped unexpectedly (exit code " + exitCode + "); " + (restart ? "restarting it" : "not restarting it again"));
     StringBuilder content = new StringBuilder("ELP stopped");
     if (exitCode != null) content.append(" with exit code ").append(exitCode);
     content.append(restart ? "; the plugin started it again." :
-                   " again within " + WINDOW_MS / 60_000 + " minutes; the plugin answers in " +
-                   StringUtil.escapeXmlEntities(project.getName()) + " until ELP is restarted.");
+                   " again within " + WINDOW_MS / 60_000 + " minutes" +
+                   (served ? "." + ElpNotifications.STAYS_OFF
+                           : "; the plugin answers in " + StringUtil.escapeXmlEntities(project.getName()) + " until ELP is restarted."));
     if (!lastLines.isEmpty()) {
       content.append("<br>Last messages:");
       ElpNotifications.appendList(content, lastLines.subList(Math.max(0, lastLines.size() - 5), lastLines.size()));
@@ -92,6 +96,7 @@ final class ElpRestarts {
     Notification notification = new Notification(ElpNotifications.GROUP, "ELP stopped unexpectedly", content.toString(),
                                                  restart ? NotificationType.WARNING : NotificationType.ERROR);
     if (!restart) notification.addAction(NotificationAction.createSimpleExpiring("Restart ELP", () -> restart(project)));
+    if (!restart && served) notification.addAction(ElpNotifications.switchBack());
     notification.addAction(ElpNotifications.showLog(project));
     ElpNotifications.notify(project, notification);
     if (restart) restart(project);
