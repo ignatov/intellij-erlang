@@ -64,7 +64,7 @@ public class RebarRunningStateUtil {
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
     commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarSettings.getRebarPath());
+    commandLine.addParameter(rebarSettings.getRebarEscriptPath());
 
     List<String> split = ParametersListUtil.parse(configuration.getCommand());
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {

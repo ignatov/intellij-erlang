@@ -45,6 +45,7 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   public static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
   private static final String ERL_COMPILER_OPTIONS = "ERL_COMPILER_OPTIONS";
   private static final String TESTS_REBAR_PATH_PROPERTY = "rebar.path";
+  private static final List<String> REBAR_WRAPPER_EXTENSIONS = Arrays.asList(".cmd", ".bat", ".exe", ".ps1");
 
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
@@ -144,6 +145,23 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
   private static String getRebarExecutablePath(@Nullable JpsProject project) {
     JpsRebarConfigurationExtension rebarConfigurationExtension = JpsRebarConfigurationExtension.getExtension(project);
     String rebarPath = rebarConfigurationExtension != null ? rebarConfigurationExtension.getRebarPath() : null;
-    return StringUtil.isEmptyOrSpaces(rebarPath) ? null : rebarPath;
+    return StringUtil.isEmptyOrSpaces(rebarPath) ? null : getRebarEscriptPath(rebarPath);
+  }
+
+  /**
+   * The rebar escript to run with escript for the rebar path of the settings. A wrapper such as rebar3.cmd, which the
+   * rebar3 docs tell Windows users to create next to the escript, is not an escript, so the escript next to it (the path
+   * without the extension) is used instead. Any other path, and a wrapper without such an escript, is returned as is.
+   */
+  @NotNull
+  public static String getRebarEscriptPath(@NotNull String rebarPath) {
+    String lowerCasePath = rebarPath.toLowerCase(Locale.ROOT);
+    for (String extension : REBAR_WRAPPER_EXTENSIONS) {
+      if (lowerCasePath.endsWith(extension)) {
+        File escript = new File(rebarPath.substring(0, rebarPath.length() - extension.length()));
+        return escript.isFile() ? escript.getPath() : rebarPath;
+      }
+    }
+    return rebarPath;
   }
 }
