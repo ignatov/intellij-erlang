@@ -17,7 +17,9 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerManager;
@@ -30,12 +32,18 @@ import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpServerStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
+
+import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Answers {@link ElpServerStatus} from the platform LSP client manager. Registered as a project service in
  * {@code erlang-elp-lsp.xml}.
  */
 public final class ElpLspServerStatus implements ElpServerStatus {
+  private static volatile Function<Project, Collection<LspServer>> ourClientsForTests;
+
   private final Project myProject;
 
   public ElpLspServerStatus(@NotNull Project project) {
@@ -60,7 +68,7 @@ public final class ElpLspServerStatus implements ElpServerStatus {
   @Nullable
   static LspServer findClient(@NotNull Project project, @Nullable VirtualFile file, @NotNull ElpEngine.Feature feature) {
     if (project.isDisposed()) return null;
-    for (LspServer client : LspServerManager.getInstance(project).getServersForProvider(ElpLspIntegrationProvider.class)) {
+    for (LspServer client : clients(project)) {
       if (client.getState() != LspServerState.Running) continue;
       if (!(client.getDescriptor() instanceof ElpLspClientDescriptor descriptor)) continue;
       if (descriptor.getConfiguration().mode() != ElpMode.ELP || file != null && !descriptor.isSupportedFile(file)) continue;
@@ -68,6 +76,22 @@ public final class ElpLspServerStatus implements ElpServerStatus {
       if (result != null && supports(result.getCapabilities(), feature)) return client;
     }
     return null;
+  }
+
+  @NotNull
+  private static Collection<LspServer> clients(@NotNull Project project) {
+    Function<Project, Collection<LspServer>> clients = ourClientsForTests;
+    return clients != null ? clients.apply(project) : LspServerManager.getInstance(project).getServersForProvider(ElpLspIntegrationProvider.class);
+  }
+
+  /**
+   * Makes {@link #findClient} look at {@code clients} instead of the platform's LSP client manager until {@code parentDisposable} is
+   * disposed, so that a test can stand a client with a fake server in for a running ELP; the platform's manager cannot be replaced.
+   */
+  @TestOnly
+  static void setClientsForTests(@NotNull Function<Project, Collection<LspServer>> clients, @NotNull Disposable parentDisposable) {
+    ourClientsForTests = clients;
+    Disposer.register(parentDisposable, () -> ourClientsForTests = null);
   }
 
   static boolean supports(@Nullable ServerCapabilities capabilities, @NotNull ElpEngine.Feature feature) {
