@@ -25,7 +25,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClient;
+import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.util.Lsp4jUtilKt;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -59,7 +59,7 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
     PsiFile psiFile = sourceElement.getContainingFile();
     VirtualFile file = psiFile.getOriginalFile().getVirtualFile();
     Project project = psiFile.getProject();
-    LspClient client = ElpLspServerStatus.findClient(project, file, ElpEngine.Feature.NAVIGATION);
+    LspServer client = ElpLspServerStatus.findClient(project, file, ElpEngine.Feature.NAVIGATION);
     if (client == null) return null;
 
     Document document = editor.getDocument();
@@ -88,7 +88,7 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
   /**
    * On a declaration ELP answers with the declaration itself; the platform then shows its usages, through the plugin.
    */
-  private static boolean isAtCaret(@NotNull Target target, @NotNull LspClient client, @NotNull VirtualFile file,
+  private static boolean isAtCaret(@NotNull Target target, @NotNull LspServer client, @NotNull VirtualFile file,
                                    @NotNull Document document, int offset) {
     if (!file.equals(client.getDescriptor().findFileByUri(target.uri()))) return false;
     TextRange range = Lsp4jUtilKt.getRangeInDocument(document, target.range());
@@ -99,7 +99,7 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
    * @return the named element whose name is at the target, or the leaf there; the platform navigates to its text offset
    */
   @Nullable
-  private static PsiElement findElement(@NotNull Project project, @NotNull LspClient client, @NotNull Target target) {
+  private static PsiElement findElement(@NotNull Project project, @NotNull LspServer client, @NotNull Target target) {
     VirtualFile file = client.getDescriptor().findFileByUri(target.uri());
     if (file == null) return null;
     PsiFile psiFile = PsiManager.getInstance(project).findFile(file);

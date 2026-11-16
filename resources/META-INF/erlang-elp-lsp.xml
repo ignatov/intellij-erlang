@@ -4,7 +4,7 @@
   -->
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
-        <platform.lsp.integrationProvider implementation="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider"/>
+        <platform.lsp.serverSupportProvider implementation="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider"/>
         <!-- The engine switch: ElpEngine asks this service whether ELP serves a file; without the LSP module there is none. -->
         <projectService serviceInterface="org.intellij.erlang.elp.ElpServerStatus"
                         serviceImplementation="org.intellij.erlang.elp.lsp.ElpLspServerStatus"/>

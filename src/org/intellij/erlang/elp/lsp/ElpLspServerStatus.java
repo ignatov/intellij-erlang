@@ -19,8 +19,8 @@ package org.intellij.erlang.elp.lsp;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClient;
-import com.intellij.platform.lsp.api.LspClientManager;
+import com.intellij.platform.lsp.api.LspServer;
+import com.intellij.platform.lsp.api.LspServerManager;
 import com.intellij.platform.lsp.api.LspServerState;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -58,9 +58,9 @@ public final class ElpLspServerStatus implements ElpServerStatus {
    * descriptor supports, also files outside its root such as the OTP sources, so the root is not checked.
    */
   @Nullable
-  static LspClient findClient(@NotNull Project project, @Nullable VirtualFile file, @NotNull ElpEngine.Feature feature) {
+  static LspServer findClient(@NotNull Project project, @Nullable VirtualFile file, @NotNull ElpEngine.Feature feature) {
     if (project.isDisposed()) return null;
-    for (LspClient client : LspClientManager.getInstance(project).getClients(ElpLspIntegrationProvider.class)) {
+    for (LspServer client : LspServerManager.getInstance(project).getServersForProvider(ElpLspIntegrationProvider.class)) {
       if (client.getState() != LspServerState.Running) continue;
       if (!(client.getDescriptor() instanceof ElpLspClientDescriptor descriptor)) continue;
       if (descriptor.getConfiguration().mode() != ElpMode.ELP || file != null && !descriptor.isSupportedFile(file)) continue;

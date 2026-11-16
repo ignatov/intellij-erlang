@@ -31,7 +31,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.ReadonlyStatusHandler;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClient;
+import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.util.Lsp4jUtilKt;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -123,7 +123,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   @Nullable
   private static Target target(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
     VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
-    LspClient client = virtualFile != null ? ElpLspServerStatus.findClient(project, virtualFile, ElpEngine.Feature.RENAME) : null;
+    LspServer client = virtualFile != null ? ElpLspServerStatus.findClient(project, virtualFile, ElpEngine.Feature.RENAME) : null;
     if (client == null) return null;
     PsiDocumentManager.getInstance(project).commitAllDocuments();
     Document document = editor.getDocument();
@@ -145,7 +145,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     return apply(project, target.client().getDescriptor()::findFileByUri, edit);
   }
 
-  private record Target(@NotNull LspClient client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
+  private record Target(@NotNull LspServer client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
                         @NotNull String oldName) {
   }
 
@@ -163,7 +163,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
    * @return the name at the caret when ELP can rename it, otherwise {@code null}
    */
   @Nullable
-  private static String renamableName(@NotNull LspClient client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
+  private static String renamableName(@NotNull LspServer client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
                                       @NotNull Document document, int offset) {
     if (offersPrepareRename(client)) {
       Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior> prepared = client.sendRequestSync(
@@ -181,7 +181,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     return trial != null && !edits(trial).isEmpty() ? name : null;
   }
 
-  private static boolean offersPrepareRename(@NotNull LspClient client) {
+  private static boolean offersPrepareRename(@NotNull LspServer client) {
     InitializeResult result = client.getInitializeResult();
     Either<Boolean, RenameOptions> provider = result != null ? result.getCapabilities().getRenameProvider() : null;
     return provider != null && provider.isRight() && Boolean.TRUE.equals(provider.getRight().getPrepareProvider());
@@ -204,7 +204,7 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   }
 
   @Nullable
-  private static WorkspaceEdit rename(@NotNull LspClient client, @NotNull RenameParams params, @NotNull AtomicReference<String> error) {
+  private static WorkspaceEdit rename(@NotNull LspServer client, @NotNull RenameParams params, @NotNull AtomicReference<String> error) {
     AtomicReference<CompletableFuture<WorkspaceEdit>> future = new AtomicReference<>();
     WorkspaceEdit edit = client.sendRequestSync(TIMEOUT_MS, server -> {
       CompletableFuture<WorkspaceEdit> request = server.getTextDocumentService().rename(params);

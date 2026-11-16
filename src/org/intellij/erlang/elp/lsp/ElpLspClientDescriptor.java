@@ -20,7 +20,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.lsp.api.LspClientDescriptor;
+import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerListener;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
@@ -37,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
  * Starts {@code elp server} over stdio for one workspace root. The initialization options are left empty, as ELP's own
  * VS Code client does; ELP reads the project from {@code rebar.config} in the root.
  */
-final class ElpLspClientDescriptor extends LspClientDescriptor {
+final class ElpLspClientDescriptor extends LspServerDescriptor {
   private static final Logger LOG = Logger.getInstance(ElpLspClientDescriptor.class);
 
   private final ElpConfiguration myConfiguration;
