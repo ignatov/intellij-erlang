@@ -79,7 +79,6 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
 
   private final ElpLoadState myLoadState = new ElpLoadState(this::loadStateChanged);
   private volatile Map<String, String> myEnvironmentForTests;
-  private volatile Integer myExitCode;
   private volatile long myPid = -1;
   private volatile OSProcessHandler myHandler;
   private volatile ScheduledFuture<?> myProcessWatch;
@@ -182,7 +181,6 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   @RequiresBackgroundThread
   public OSProcessHandler startServerProcess() throws ExecutionException {
     myLoadState.started(System.currentTimeMillis());
-    myExitCode = null;
     myPid = -1;
     myOrphanSince = 0;
     myKilledAsOrphan = false;
@@ -206,7 +204,6 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
 
       @Override
       public void processTerminated(@NotNull ProcessEvent event) {
-        myExitCode = event.getExitCode();
         boolean initialized = myLoadState.wasInitialized();
         myLoadState.stopped();
         cancelProcessWatch();
