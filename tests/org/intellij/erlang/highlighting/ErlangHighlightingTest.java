@@ -45,6 +45,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIoFormat()          { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
+  public void testVariableBoundInAllCaseClauses() { doTest(); } // issue 819
+  public void testVariableUnsafeInCase() { doTest(); } // issue 819
+  public void testVariableUnboundInOwnMatch() { doTest(); } // issue 819
+  public void testVariableBoundInCaseHead() { doTest(); } // issue 819
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void test200()               { doTest(); }
