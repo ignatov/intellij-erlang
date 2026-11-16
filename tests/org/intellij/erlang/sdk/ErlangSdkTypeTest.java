@@ -22,7 +22,7 @@ import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import java.lang.reflect.Method;
 
 public class ErlangSdkTypeTest extends TestCase {
-  // The Windows suggestion must be an Erlang/OTP home (bin/erl and bin/erlc are executable) or null.
+  // #1216: the Windows suggestion must be an Erlang/OTP home (bin/erl and bin/erlc are executable) or null.
   public void testWindowsSuggestionIsValidSdkHomeOrNull() throws Exception {
     Method method = ErlangSdkType.class.getDeclaredMethod("suggestWindowsErlangPath");
     method.setAccessible(true);
