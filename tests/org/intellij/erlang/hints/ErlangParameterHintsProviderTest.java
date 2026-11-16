@@ -119,6 +119,33 @@ public class ErlangParameterHintsProviderTest extends DeclarativeInlayHintsProvi
              """);
   }
 
+  public void testCutVariantOfExactlyMaxLengthGetsEllipsis() {
+    doTest("""
+             -module(test).
+             f(abcdefghijkl) -> one;
+             f(other) -> two.
+             test() -> f(/*<# abcdefghijk…: #>*/x).
+             """);
+  }
+
+  public void testRecordIndexPatternIsNotRecordPattern() {
+    doTest("""
+             -module(test).
+             -record(r, {a, b}).
+             f(#r.a) -> ok;
+             f(#r.b) -> ok.
+             test() -> f(/*<# #r.a|#r.b: #>*/2).
+             """);
+  }
+
+  public void testWhitespaceInStringIsKept() {
+    doTest("""
+             -module(test).
+             f("a  b") -> ok.
+             test() -> f(/*<# "a  b": #>*/"a b").
+             """);
+  }
+
   public void testRecordPattern() {
     doTest("""
              -module(test).
