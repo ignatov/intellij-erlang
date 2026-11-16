@@ -22,6 +22,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -29,6 +30,7 @@ import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpFeedback;
 import org.intellij.erlang.elp.ElpMode;
@@ -300,6 +302,22 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     ElpSettings.getInstance().setOfferShownForVersion("");
     fileOpened(file);
     assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
+  /** The offer's memory is written with the settings, and settings stored before it existed read as "never shown". */
+  public void testOfferStateIsStoredAndOldSettingsRead() throws Exception {
+    ElpSettings.getInstance().setOfferShownForVersion(V1);
+    ElpSettings.getInstance().setOfferNeverAsk(true);
+    String xml = JDOMUtil.write(XmlSerializer.serialize(ElpSettings.getInstance().getState()));
+    assertTrue(xml, xml.contains("<option name=\"offerShownForVersion\" value=\"" + V1 + "\" />"));
+    assertTrue(xml, xml.contains("<option name=\"offerNeverAsk\" value=\"true\" />"));
+
+    ElpSettings.ElpSettingsState old = XmlSerializer.deserialize(
+      JDOMUtil.load("<state><option name=\"mode\" value=\"PLUGIN\" /></state>"), ElpSettings.ElpSettingsState.class);
+    ElpSettings.getInstance().loadState(old);
+    assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
+    assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
+    assertTrue(offer(V1));
   }
 
   /**
