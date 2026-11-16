@@ -23,6 +23,8 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
+import java.util.List;
+
 public class ElpDiagnosticsSupportTest extends TestCase {
   public void testEqwalizerDiagnosticsAreHiddenByDefault() {
     ElpDiagnosticsSupport support = new ElpDiagnosticsSupport(false);
@@ -50,6 +52,18 @@ public class ElpDiagnosticsSupportTest extends TestCase {
     ElpDiagnosticsSupport support = new ElpDiagnosticsSupport(true);
     assertEquals(HighlightSeverity.ERROR, support.getHighlightSeverity(diagnostic("elp", "L1262", DiagnosticSeverity.Error)));
     assertEquals(HighlightSeverity.WARNING, support.getHighlightSeverity(diagnostic("elp", "W0017", DiagnosticSeverity.Warning)));
+  }
+
+  /** Errors of ELP on code that erlc compiles are warnings; ELP's parse error P1711 and the compiler's errors stay errors. */
+  public void testLintErrorsOnCompilingCodeAreWarnings() {
+    ElpDiagnosticsSupport support = new ElpDiagnosticsSupport(false);
+    for (String code : List.of("W0008", "W0053", "W0014")) {
+      assertEquals(code, HighlightSeverity.WARNING, support.getHighlightSeverity(diagnostic("elp", code, DiagnosticSeverity.Error)));
+      assertEquals(code, HighlightSeverity.WEAK_WARNING,
+                   support.getHighlightSeverity(diagnostic("elp", code, DiagnosticSeverity.Information)));
+    }
+    assertEquals(HighlightSeverity.ERROR, support.getHighlightSeverity(diagnostic("elp", "P1711", DiagnosticSeverity.Error)));
+    assertEquals(HighlightSeverity.ERROR, support.getHighlightSeverity(diagnostic("elp", "L1227", DiagnosticSeverity.Error)));
   }
 
   public void testEqwalizerIsRecognizedBySourceOnly() {
