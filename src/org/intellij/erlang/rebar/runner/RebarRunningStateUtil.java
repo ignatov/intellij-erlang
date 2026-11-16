@@ -30,6 +30,7 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
@@ -81,8 +82,9 @@ public class RebarRunningStateUtil {
     commandLine.addParameters(split);
     configuration.getEnvData().configureCommandLine(commandLine, true);
     if (!escript && sdkPath != null) {
-      // A script that runs erl, such as the one of `rebar3 local install`, runs the erl of the SDK.
-      String path = commandLine.getEffectiveEnvironment().get("PATH");
+      // A script that runs erl, such as the one of `rebar3 local install`, runs the erl of the SDK. Without the system
+      // environment it still gets the IDE's PATH, unless the user set one: its `#!/usr/bin/env sh` looks sh up on PATH.
+      String path = ObjectUtils.coalesce(commandLine.getEffectiveEnvironment().get("PATH"), EnvironmentUtil.getValue("PATH"));
       commandLine.withEnvironment("PATH", RebarBuilder.getPathWithSdkFirst(sdkPath, path));
     }
 

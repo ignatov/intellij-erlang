@@ -22,6 +22,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.util.EnvironmentUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -127,6 +128,28 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     String sdkBin = JpsErlangSdkType.getByteCodeInterpreterExecutable(ErlangSdkType.getSdkPath(getProject())).getParent();
     String path = commandLine.getEffectiveEnvironment().get("PATH");
     assertTrue(path, path.startsWith(sdkBin + File.pathSeparator));
+  }
+
+  // Without the system environment the script still needs the IDE's PATH: `#!/usr/bin/env sh` looks sh up on it.
+  public void testCommandLineRunsLocalInstallScriptWithIdePathWithoutSystemEnvironment() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File script = createExecutable(directory, "rebar3", "#!/usr/bin/env sh\nerl -s rebar3 main -extra \"$@\"\n");
+    RebarSettings settings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = settings.getRebarPath();
+    try {
+      settings.setRebarPath(script.getPath());
+      RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+      configuration.setCommand("compile");
+      configuration.setEnvData(EnvironmentVariablesData.create(Map.of("FOO", "bar"), false));
+      GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(configuration);
+      String sdkBin = JpsErlangSdkType.getByteCodeInterpreterExecutable(ErlangSdkType.getSdkPath(getProject())).getParent();
+      String idePath = EnvironmentUtil.getValue("PATH");
+      assertNotNull(idePath);
+      assertEquals(sdkBin + File.pathSeparator + idePath, commandLine.getEffectiveEnvironment().get("PATH"));
+    }
+    finally {
+      settings.setRebarPath(oldRebarPath);
+    }
   }
 
   public void testCommandLineRunsEscriptWithSdkEscript() throws IOException {
