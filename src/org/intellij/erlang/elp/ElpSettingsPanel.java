@@ -173,6 +173,7 @@ public final class ElpSettingsPanel {
     }
     else if (distribution.isDownloading(asset)) {
       setDownloadState("Downloading ELP " + version + "...", null);
+      follow(asset);
     }
     else {
       setDownloadState(buildName(version, platform, asset) + ": not downloaded.", asset);
@@ -197,6 +198,11 @@ public final class ElpSettingsPanel {
     if (asset == null) return;
     myDownloadButton.setEnabled(false);
     myDownloadStateLabel.setText("Downloading ELP " + ElpDistribution.getInstance().getRelease().version() + "...");
+    follow(asset);
+  }
+
+  /** Starts the download of {@code asset}, or joins the one that runs, and shows how it ends. */
+  private void follow(@NotNull ElpRelease.Asset asset) {
     ElpDistribution.getInstance().download(myProject, asset, new ElpDistribution.DownloadCallback() {
       @Override
       public void installed(@NotNull Path elp) {
