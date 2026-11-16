@@ -119,6 +119,15 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
   }
 
+  public void testParseTransformInRebarConfigScript() throws Exception {
+    Project project = doTest(null);
+    Module[] modules = ModuleManager.getInstance(project).getModules();
+    assertEquals(1, modules.length);
+    ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
+    assertNotNull(facet);
+    assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
   private static void createMockSdk() {
     final Sdk mockSdk = ErlangSdkType.createMockSdk(MOCK_SDK_DIR, ErlangSdkRelease.V_R15B02);
     ApplicationManager.getApplication().runWriteAction(() -> ProjectJdkTable.getInstance().addJdk(mockSdk));

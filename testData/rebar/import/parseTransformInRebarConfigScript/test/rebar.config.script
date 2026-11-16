@@ -1,0 +1,2 @@
+%% rebar evaluates this file with file:script/2 and uses its value as the configuration.
+[{erl_opts, [{parse_transform, lager_transform}]}].
