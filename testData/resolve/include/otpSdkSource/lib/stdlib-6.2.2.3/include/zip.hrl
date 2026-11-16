@@ -1,0 +1,1 @@
+-record(zip_file, {name}).
