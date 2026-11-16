@@ -91,6 +91,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testFunVarArityInMacroArguments() { doTest(); }
   public void testFunVarArityInConstantMacroArguments() { doTest(); }
   public void testFunVarArityInMacroArgumentsInTypes() { doTest(); }
+  public void testFunVarArityInPredefinedMacroArguments() { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
   public void testIncorrectModuleName() { doTest(); }

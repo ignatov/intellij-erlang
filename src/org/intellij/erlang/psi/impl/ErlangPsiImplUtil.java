@@ -85,6 +85,8 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
+    "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
     "any", "arity", "atom", "binary", "bitstring", "boolean", "byte", "char", "dynamic", "float", "function",
     "identifier", "integer", "iodata", "iolist", "list", "map", "maybe_improper_list", "mfa", "module", "neg_integer",
@@ -512,8 +514,10 @@ public class ErlangPsiImplUtil {
   private static boolean isMacroWithoutParameters(@NotNull ErlangMacros macros) {
     ErlangMacrosName macrosName = macros.getMacrosName();
     PsiFile file = macros.getContainingFile();
-    if (macrosName == null || !(file instanceof ErlangFile erlangFile) || DumbService.isDumb(file.getProject())) return false;
+    if (macrosName == null) return false;
     String name = getNameIdentifier(macrosName).getText();
+    if (PREDEFINED_MACROS_WITHOUT_PARAMETERS.contains(name)) return true;
+    if (!(file instanceof ErlangFile erlangFile) || DumbService.isDumb(file.getProject())) return false;
     List<ErlangMacrosDefinition> definitions = ContainerUtil.filter(
       ContainerUtil.concat(erlangFile.getMacroses(), getErlangMacrosFromIncludes(erlangFile, true, "")),
       definition -> name.equals(definition.getName()));
