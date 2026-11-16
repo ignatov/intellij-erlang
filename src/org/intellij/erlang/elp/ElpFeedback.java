@@ -17,12 +17,11 @@
 package org.intellij.erlang.elp;
 
 import com.intellij.ide.BrowserUtil;
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManagerCore;
+import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.extensions.PluginId;
+import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.intellij.erlang.elp.distribution.ElpAvailability;
@@ -93,10 +92,13 @@ public final class ElpFeedback {
                     otpRelease, distribution.getRelease().version(), build);
   }
 
-  /** The version of this plugin, {@code unknown} when the IDE does not know it. */
+  /**
+   * The version of this plugin, {@code unknown} when the IDE does not know it, such as in tests, where the plugin's classes are not
+   * loaded by a plugin class loader. Read from the class loader: the lookups by plugin id or class are internal API from 2026.2 on.
+   */
   @NotNull
   public static String pluginVersion() {
-    IdeaPluginDescriptor plugin = PluginManagerCore.getPlugin(PluginId.getId(PLUGIN_ID));
+    PluginDescriptor plugin = ElpFeedback.class.getClassLoader() instanceof PluginAwareClassLoader loader ? loader.getPluginDescriptor() : null;
     String version = plugin != null ? plugin.getVersion() : null;
     return version != null ? version : "unknown";
   }
