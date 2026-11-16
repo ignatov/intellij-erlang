@@ -24,12 +24,14 @@ import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.WindowManager;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresEdt;
 import com.intellij.util.concurrency.annotations.RequiresReadLock;
@@ -46,22 +48,23 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import javax.swing.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
- * The offer to move to ELP, shown at most once per plugin version when an Erlang file is opened in the Plugin position and ELP
- * would work for the project: {@link ElpPreflight} finds nothing against it, and a server is set or can be downloaded. Nothing
- * switches by itself: "Try ELP" downloads the server when needed and only then sets the ELP position; "Switch back to the
- * plugin" undoes it. The {@value #PROPERTY} system property set to {@code false} turns the offer off.
+ * The offer to move to ELP, a dialog shown at most once per plugin version when an Erlang file is opened in the Plugin position
+ * and ELP would work for the project: {@link ElpPreflight} finds nothing against it, and a server is set or can be downloaded.
+ * It waits for a moment when the user can read it: the project is indexed, its frame is active and no other dialog is open;
+ * otherwise the next opened file tries again. Nothing switches by itself: "Try ELP" downloads the server when needed and only
+ * then sets the ELP position; "Switch back to the plugin" undoes it. The {@value #PROPERTY} system property set to
+ * {@code false} turns the offer off.
  */
 final class ElpOffer {
   private static final Logger LOG = Logger.getInstance(ElpOffer.class);
   static final String PROPERTY = "erlang.elp.offer";
-  /** Registered as a sticky balloon in {@code erlang-elp-lsp.xml}: the offer stays until the user answers it. */
-  static final String GROUP = "Erlang ELP offer";
-  static final String TITLE = "Try ELP, the Erlang language server";
   static final String TRY = "Try ELP";
   static final String NOT_NOW = "Not now";
   static final String NEVER = "Don't ask again";
@@ -74,7 +77,39 @@ final class ElpOffer {
   static final Key<Long> LAST_CHECK = Key.create("erlang.elp.offer.lastCheck");
   private static volatile boolean ourEnabledInTests;
 
+  /** The answers of the dialog; each does what the action of the same name on the balloon did before. */
+  enum Choice {TRY, NOT_NOW, NEVER}
+
+  /** Shows the offer and returns the answer; tests replace it, so that no window opens. */
+  interface Asker {
+    @NotNull
+    @RequiresEdt
+    Choice ask(@NotNull Project project, @NotNull List<ElpOfferDialog.Block> content);
+  }
+
+  static final Asker DIALOG = (project, content) -> {
+    ElpOfferDialog dialog = new ElpOfferDialog(project, content);
+    dialog.show();
+    return dialog.choice();
+  };
+  private static volatile Asker ourAsker = DIALOG;
+  private static volatile BooleanSupplier ourFrameActiveInTests;
+
   private ElpOffer() {
+  }
+
+  /**
+   * Lets tests answer the offer with {@code asker} and decide with {@code frameActive} whether the frame of the project is
+   * active (tests have no frame), until {@code parent} is disposed.
+   */
+  @TestOnly
+  static void setUpForTests(@NotNull Asker asker, @NotNull BooleanSupplier frameActive, @NotNull Disposable parent) {
+    ourAsker = asker;
+    ourFrameActiveInTests = frameActive;
+    Disposer.register(parent, () -> {
+      ourAsker = DIALOG;
+      ourFrameActiveInTests = null;
+    });
   }
 
   /** Lets {@link #fileOpened} check the project in tests until {@code parent} is disposed. */
@@ -136,6 +171,11 @@ final class ElpOffer {
       LOG.debug("No ELP offer: " + whyNot);
       return;
     }
+    // The dialog would wait for the end of indexing anyway; the check is not used up on a file opened while the project loads.
+    if (DumbService.isDumb(project)) {
+      LOG.debug("No ELP offer check: the project is being indexed");
+      return;
+    }
     // Before the once-a-minute limit: the files of the last session open in a burst, and the first one may be outside the
     // project, such as a module of the SDK; it must not use up the check for the project files that follow.
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
@@ -175,13 +215,17 @@ final class ElpOffer {
     LOG.debug("ELP offer check: OTP " + facts.otpRelease() + ", rebar3 " + facts.rebar3Version() + ", layout " + layout +
               ", problems " + result.reasons() + ", availability " + availability.kind() +
               (availability.choice().reason() != null ? " (" + availability.choice().message() + ")" : ""));
-    ApplicationManager.getApplication().invokeLater(() -> offerIfEligible(project, version, result, availability),
-                                                    ModalityState.nonModal(), project.getDisposed());
+    ApplicationManager.getApplication().invokeLater(() -> {
+      // A check that a test started may end after the test, whose answers to the dialog are gone by then.
+      if (ApplicationManager.getApplication().isUnitTestMode() && !ourEnabledInTests) return;
+      offerIfEligible(project, version, result, availability);
+    }, ModalityState.nonModal(), project.getDisposed());
   }
 
   /**
-   * Shows the offer and remembers that it was shown for {@code pluginVersion}, when it may be shown and ELP would work. A
-   * project that ELP does not fit leaves the version unmarked, so that another project can get the offer.
+   * Shows the offer and remembers that it was shown for {@code pluginVersion}, when it may be shown, ELP would work and the user
+   * can read it now, see {@link #whyNotNow}. A project that ELP does not fit leaves the version unmarked, so that another
+   * project can get the offer; an offer that has to wait leaves it unmarked too, and the next opened file checks again.
    *
    * @return whether the offer was shown
    */
@@ -200,29 +244,45 @@ final class ElpOffer {
                (availability.choice().reason() != null ? ", " + availability.choice().message() : "") + ".");
       return false;
     }
+    String notNow = whyNotNow(project);
+    if (notNow != null) {
+      LOG.info("The ELP offer waits for the next opened file: " + notNow);
+      synchronized (LAST_CHECK) {
+        project.putUserData(LAST_CHECK, null);
+      }
+      return false;
+    }
     LOG.info("ELP offer shown for plugin version " + pluginVersion + ", ELP server: " + availability.kind());
     ElpSettings.getInstance().setOfferShownForVersion(pluginVersion);
-    ElpNotifications.notify(project, new Notification(GROUP, TITLE, content(availability), NotificationType.INFORMATION)
-      .addAction(NotificationAction.createSimpleExpiring(TRY, () -> tryElp(project)))
-      .addAction(NotificationAction.createSimpleExpiring(NOT_NOW, () -> ElpSettings.getInstance().setOfferShownForVersion(pluginVersion)))
-      .addAction(NotificationAction.createSimpleExpiring(NEVER, () -> ElpSettings.getInstance().setOfferNeverAsk(true))));
+    Choice choice = ourAsker.ask(project, ElpOfferDialog.content(availability));
+    LOG.info("ELP offer answered: " + choice);
+    switch (choice) {
+      case TRY -> tryElp(project);
+      case NOT_NOW -> ElpSettings.getInstance().setOfferShownForVersion(pluginVersion);
+      case NEVER -> ElpSettings.getInstance().setOfferNeverAsk(true);
+    }
     return true;
   }
 
-  /** The text of the offer; it says what "Try ELP" does, because the click is the user's consent. */
-  @NotNull
-  static String content(@NotNull ElpAvailability availability) {
-    StringBuilder text = new StringBuilder(
-      "ELP, the Erlang language server from WhatsApp, will answer diagnostics, navigation, find usages and rename. " +
-      "The plugin keeps completion, formatting, refactorings, run and debug.<br>");
-    ElpRelease.Asset asset = availability.choice().asset();
-    if (availability.kind() == ElpAvailability.Kind.DOWNLOADABLE && asset != null) {
-      text.append("Try ELP downloads ELP ").append(availability.release().version()).append(" (").append(asset.sizeInMegabytes())
-        .append(") from GitHub. ");
+  /**
+   * @return why the user cannot read the offer now, {@code null} when the dialog may open: the project is indexed, no other
+   * dialog is open and the frame of the project is the active window
+   */
+  @Nullable
+  @RequiresEdt
+  static String whyNotNow(@NotNull Project project) {
+    if (DumbService.isDumb(project)) return "the project is being indexed";
+    if (!ModalityState.nonModal().equals(ModalityState.current())) return "another dialog is open";
+    BooleanSupplier frameActiveInTests = ourFrameActiveInTests;
+    boolean frameActive;
+    if (frameActiveInTests != null) {
+      frameActive = frameActiveInTests.getAsBoolean();
     }
-    text.append("When a project is opened, ELP runs rebar3 to fetch and build its dependencies and writes to _build.<br>")
-      .append("You can switch back in Settings | Other Settings | Erlang External Tools.");
-    return text.toString();
+    else {
+      JFrame frame = WindowManager.getInstance().getFrame(project);
+      frameActive = frame != null && frame.isActive();
+    }
+    return frameActive ? null : "the frame of the project is not the active window";
   }
 
   /** "Try ELP" and "Retry": looks for the server off the EDT again, because the offer may have waited for hours. */

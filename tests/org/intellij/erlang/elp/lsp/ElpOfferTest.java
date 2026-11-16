@@ -22,14 +22,17 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
+import com.intellij.testFramework.DumbModeTestUtils;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.ui.UiInterceptors;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpFeedback;
@@ -48,6 +51,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,11 +61,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 /**
  * The offer to move to ELP: when it is shown, what its answers do, and the feedback link. The preflight facts and the
  * availability are made up where only the decision is tested; "Try ELP" runs against a fake installer on a project with OTP 28,
- * which pretends to run on macOS arm64 and downloads from a closed port.
+ * which pretends to run on macOS arm64 and downloads from a closed port. The dialog is the real one, intercepted before it
+ * opens a window; {@link #myUser} answers it.
  */
 public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String V1 = "0.11.1";
@@ -69,6 +76,10 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   private ElpSettings.ElpSettingsState myOldState;
   private final List<String> myOldProperties = new ArrayList<>();
   private final List<Notification> myNotifications = new ArrayList<>();
+  /** The offer dialogs that were requested, closed by {@link #myUser}. */
+  private final List<ElpOfferDialog> myDialogs = new ArrayList<>();
+  private Consumer<ElpOfferDialog> myUser = d -> press(d, ElpOffer.NOT_NOW);
+  private boolean myFrameActive = true;
   private ElpInstaller myInstaller;
   private ElpRelease myRelease;
   private ElpRelease.Asset myAsset;
@@ -119,6 +130,16 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
         myNotifications.add(notification);
       }
     });
+    ElpOffer.setUpForTests((project, content) -> {
+      UiInterceptors.register(new UiInterceptors.UiInterceptor<>(ElpOfferDialog.class) {
+        @Override
+        protected void doIntercept(@NotNull ElpOfferDialog dialog) {
+          myDialogs.add(dialog);
+          myUser.accept(dialog);
+        }
+      });
+      return ElpOffer.DIALOG.ask(project, content);
+    }, () -> myFrameActive, getTestRootDisposable());
   }
 
   @Override
@@ -131,6 +152,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
         else System.setProperty(properties.get(i), myOldProperties.get(i));
       }
       getProject().putUserData(ElpOffer.LAST_CHECK, null);
+      UiInterceptors.clear();
     }
     catch (Throwable e) {
       addSuppressedException(e);
@@ -142,19 +164,24 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
 
   public void testShownOncePerVersion() {
     assertTrue(offer(V1));
-    Notification offer = assertOneElement(offers());
-    assertEquals(ElpOffer.TITLE, offer.getTitle());
-    assertEquals(List.of(ElpOffer.TRY, ElpOffer.NOT_NOW, ElpOffer.NEVER), offer.getActions().stream().map(a -> a.getTemplateText()).toList());
+    ElpOfferDialog offer = assertOneElement(myDialogs);
+    assertEquals(ElpOfferDialog.TITLE, offer.getTitle());
+    assertEquals(List.of(ElpOffer.TRY, ElpOffer.NOT_NOW), offer.buttons().stream().map(a -> a.getValue(Action.NAME)).toList());
+    assertEquals("Try ELP is the default button", Boolean.TRUE, offer.buttons().get(0).getValue(DialogWrapper.DEFAULT_ACTION));
+    assertEquals(ElpOffer.NEVER, offer.dontAskCheckBox().getText());
+    assertFalse(offer.dontAskCheckBox().isSelected());
+    assertEquals(ElpOfferDialog.content(downloadable()), offer.content());
+    assertTrue(offer.isDisposed());
     assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
 
     assertFalse(offer(V1));
-    assertOneElement(offers());
+    assertOneElement(myDialogs);
   }
 
   public void testNotInTheElpPosition() {
     ElpSettings.getInstance().setMode(ElpMode.ELP);
     assertFalse(offer(V1));
-    assertEmpty(offers());
+    assertEmpty(myDialogs);
     assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
   }
 
@@ -166,13 +193,13 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   public void testNotAfterDontAskAgainWasStored() {
     ElpSettings.getInstance().setOfferNeverAsk(true);
     assertFalse(offer(V1));
-    assertEmpty(offers());
+    assertEmpty(myDialogs);
   }
 
   public void testNotWhenSwitchedOffByTheProperty() {
     System.setProperty(ElpOffer.PROPERTY, "false");
     assertFalse(offer(V1));
-    assertEmpty(offers());
+    assertEmpty(myDialogs);
     System.setProperty(ElpOffer.PROPERTY, "true");
     assertTrue(offer(V1));
   }
@@ -188,42 +215,119 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertFalse(ElpOffer.offerIfEligible(getProject(), V1, eligible, unavailable));
     ElpAvailability emptyCustomPath = new ElpAvailability(ElpAvailability.Kind.CONFIGURED, null, ElpAssetChoice.found(myAsset), myRelease);
     assertFalse(ElpOffer.offerIfEligible(getProject(), V1, eligible, emptyCustomPath));
-    assertEmpty(offers());
+    assertEmpty(myDialogs);
     assertEquals("another project may get the offer", "", ElpSettings.getInstance().getOfferShownForVersion());
 
     assertTrue("the missing download is not held against it", offer(V1));
   }
 
   public void testNotNowAsksAgainAfterTheNextUpdate() {
+    myUser = d -> press(d, ElpOffer.NOT_NOW);
     assertTrue(offer(V1));
-    Notification offer = assertOneElement(offers());
-    fire(offer, ElpOffer.NOT_NOW);
-    assertTrue(offer.isExpired());
+    ElpOfferDialog offer = assertOneElement(myDialogs);
+    assertTrue(offer.isDisposed());
+    assertEquals(ElpOffer.Choice.NOT_NOW, offer.choice());
     assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
+    assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
     assertFalse(offer(V1));
 
     assertTrue(offer(V2));
-    assertEquals(2, offers().size());
+    assertEquals(2, myDialogs.size());
+  }
+
+  /** Esc and the close button of the window end where "Not now" does: in {@code doCancelAction}. */
+  public void testEscIsNotNow() {
+    myUser = DialogWrapper::doCancelAction;
+    assertTrue(offer(V1));
+    ElpOfferDialog offer = assertOneElement(myDialogs);
+    assertTrue(offer.isDisposed());
+    assertEquals(DialogWrapper.CANCEL_EXIT_CODE, offer.getExitCode());
+    assertEquals(ElpOffer.Choice.NOT_NOW, offer.choice());
+    assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
+    assertFalse(ElpSettings.getInstance().isOfferNeverAsk());
+    assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
+    assertFalse(offer(V1));
+    assertTrue(offer(V2));
   }
 
   public void testDontAskAgainStopsItForGood() {
+    myUser = d -> {
+      d.dontAskCheckBox().setSelected(true);
+      press(d, ElpOffer.NOT_NOW);
+    };
     assertTrue(offer(V1));
-    fire(assertOneElement(offers()), ElpOffer.NEVER);
+    assertEquals(ElpOffer.Choice.NEVER, assertOneElement(myDialogs).choice());
     assertTrue(ElpSettings.getInstance().isOfferNeverAsk());
     assertFalse(offer(V2));
+    assertOneElement(myDialogs);
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
   }
 
+  public void testEscWithDontAskAgainStopsItForGood() {
+    myUser = d -> {
+      d.dontAskCheckBox().setSelected(true);
+      d.doCancelAction();
+    };
+    assertTrue(offer(V1));
+    assertEquals(ElpOffer.Choice.NEVER, assertOneElement(myDialogs).choice());
+    assertTrue(ElpSettings.getInstance().isOfferNeverAsk());
+    assertFalse(offer(V2));
+  }
+
+  public void testChoiceOfTheButtons() {
+    assertEquals(ElpOffer.Choice.TRY, ElpOfferDialog.choice(DialogWrapper.OK_EXIT_CODE, false));
+    assertEquals(ElpOffer.Choice.TRY, ElpOfferDialog.choice(DialogWrapper.OK_EXIT_CODE, true));
+    assertEquals(ElpOffer.Choice.NOT_NOW, ElpOfferDialog.choice(DialogWrapper.CANCEL_EXIT_CODE, false));
+    assertEquals(ElpOffer.Choice.NEVER, ElpOfferDialog.choice(DialogWrapper.CANCEL_EXIT_CODE, true));
+  }
+
+  /** Not while the project is indexed: the dialog would come up during startup. The version stays unmarked for later. */
+  public void testNotInDumbModeAndTheVersionIsNotMarked() throws Throwable {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    VirtualFile file = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+    DumbModeTestUtils.runInDumbModeSynchronously(getProject(), () -> {
+      assertFalse(offer(V1));
+      fileOpened(file);
+    });
+    assertEmpty(myDialogs);
+    assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
+    assertNull("a file opened while indexing does not use up the check", getProject().getUserData(ElpOffer.LAST_CHECK));
+
+    assertTrue(offer(V1));
+    assertOneElement(myDialogs);
+  }
+
+  /** Not over another application or a window of another project; the next opened file checks again. */
+  public void testWaitsUntilTheFrameIsActive() {
+    myFrameActive = false;
+    getProject().putUserData(ElpOffer.LAST_CHECK, System.currentTimeMillis());
+    assertFalse(offer(V1));
+    assertEmpty(myDialogs);
+    assertEquals("", ElpSettings.getInstance().getOfferShownForVersion());
+    assertNull("the next opened file checks again", getProject().getUserData(ElpOffer.LAST_CHECK));
+    assertNotNull(ElpOffer.whyNotNow(getProject()));
+
+    myFrameActive = true;
+    assertNull(ElpOffer.whyNotNow(getProject()));
+    assertTrue(offer(V1));
+    assertOneElement(myDialogs);
+    assertEquals(V1, ElpSettings.getInstance().getOfferShownForVersion());
+  }
+
   public void testContentSaysWhatTryElpDoes() {
-    String downloadable = ElpOffer.content(downloadable());
-    assertTrue(downloadable, downloadable.contains("from WhatsApp"));
-    assertTrue(downloadable, downloadable.contains("Try ELP downloads ELP 1.1.0 (17.8 MB) from GitHub."));
+    String downloadable = ElpOfferDialog.text(ElpOfferDialog.content(downloadable()));
+    assertTrue(downloadable, downloadable.contains("WhatsApp develops"));
+    assertTrue(downloadable, downloadable.contains("Downloads ELP 1.1.0 (17.8 MB) from GitHub and checks its checksum."));
     assertTrue(downloadable, downloadable.contains("runs rebar3 to fetch and build its dependencies and writes to _build"));
     assertTrue(downloadable, downloadable.contains("Settings | Other Settings | Erlang External Tools"));
-    String installed = ElpOffer.content(new ElpAvailability(ElpAvailability.Kind.INSTALLED, "/opt/elp", ElpAssetChoice.found(myAsset),
-                                                            myRelease));
+    for (String heading : List.of("Why try it", "What stays with the plugin", "What Try ELP does")) {
+      assertTrue(downloadable, downloadable.contains("\n" + heading + "\n"));
+    }
+    String installed = ElpOfferDialog.text(ElpOfferDialog.content(
+      new ElpAvailability(ElpAvailability.Kind.INSTALLED, "/opt/elp", ElpAssetChoice.found(myAsset), myRelease)));
     assertFalse(installed, installed.contains("downloads"));
+    assertFalse(installed, installed.contains("Downloads"));
     assertTrue(installed, installed.contains("runs rebar3"));
   }
 
@@ -232,9 +336,10 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     Files.createDirectories(elp.getParent());
     Files.writeString(elp, "#!/bin/sh\nexit 0\n");
     assertTrue(elp.toFile().setExecutable(true));
+    myUser = d -> press(d, ElpOffer.TRY);
     assertTrue(offer(V1));
+    assertEquals(ElpOffer.Choice.TRY, assertOneElement(myDialogs).choice());
 
-    fire(assertOneElement(offers()), ElpOffer.TRY);
     Notification on = await(ElpOffer.ON_TITLE);
     assertEquals(ElpMode.ELP, ElpSettings.getInstance().getStoredMode());
     assertEquals(ElpServerSource.DOWNLOADED, ElpSettings.getInstance().getStoredSource());
@@ -246,9 +351,10 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
   }
 
   public void testFailedDownloadKeepsThePluginAndOffersRetry() throws Exception {
+    myUser = d -> press(d, ElpOffer.TRY);
     assertTrue(offer(V1));
+    assertOneElement(myDialogs);
 
-    fire(assertOneElement(offers()), ElpOffer.TRY);
     Notification failed = await(ElpOffer.FAILED_TITLE);
     assertEquals(ElpMode.PLUGIN, ElpSettings.getInstance().getStoredMode());
     assertEquals(List.of(ElpOffer.RETRY), failed.getActions().stream().map(a -> a.getTemplateText()).toList());
@@ -364,8 +470,10 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     return new ElpPreflight.Layout("/p", rebarConfig, true, false, false);
   }
 
-  private List<Notification> offers() {
-    return myNotifications.stream().filter(n -> n.getGroupId().equals(ElpOffer.GROUP)).toList();
+  /** Clicks the button {@code text} of the dialog. */
+  private static void press(ElpOfferDialog dialog, String text) {
+    Action button = dialog.buttons().stream().filter(a -> text.equals(a.getValue(Action.NAME))).findFirst().orElseThrow();
+    button.actionPerformed(new ActionEvent(button, ActionEvent.ACTION_PERFORMED, text));
   }
 
   private List<Notification> titled(String title) {
