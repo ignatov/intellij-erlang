@@ -21,13 +21,22 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.project.Project;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.messages.Topic;
+import org.intellij.erlang.elp.distribution.ElpDistribution;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
- * Application-level settings of the experimental ELP language server integration. Off by default: no path, no server.
+ * Application-level settings of the experimental ELP language server integration. Off by default: the {@link ElpMode#PLUGIN}
+ * position starts no server. The binary is the one the plugin downloaded ({@link ElpServerSource#DOWNLOADED}) or a path the user
+ * typed ({@link ElpServerSource#CUSTOM}); settings stored before the source existed have no source, and a non-empty path among
+ * them means a custom path.
  */
 @State(name = "ErlangElpSettings", storages = @Storage("erlang-elp.xml"))
 @Service(Service.Level.APP)
@@ -41,6 +50,8 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
 
   public static final class ElpSettingsState {
     public String path = "";
+    /** An {@link ElpServerSource} name; empty in settings stored before it existed. */
+    public String source = "";
     public String mode = ElpMode.PLUGIN.name();
     public boolean eqwalizer;
   }
@@ -75,6 +86,17 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     return Objects.requireNonNullElse(myState.path, "");
   }
 
+  /**
+   * The stored source, without the system property override. Settings without a source (stored before it existed) mean a custom
+   * path when the path is not empty, and the downloaded server otherwise.
+   */
+  @NotNull
+  public ElpServerSource getStoredSource() {
+    ElpServerSource source = ElpServerSource.parse(myState.source);
+    if (source != null) return source;
+    return getStoredPath().isBlank() ? ElpServerSource.DOWNLOADED : ElpServerSource.CUSTOM;
+  }
+
   /** The stored mode, without the system property override. */
   @NotNull
   public ElpMode getStoredMode() {
@@ -86,16 +108,62 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     return myState.eqwalizer;
   }
 
-  public void update(@NotNull String path, @NotNull ElpMode mode, boolean eqwalizer) {
-    if (path.equals(getStoredPath()) && mode == getStoredMode() && eqwalizer == getStoredEqwalizer()) return;
+  /** Stores the settings and, when they changed, tells the running servers. The custom path is kept with the downloaded source. */
+  public void update(@NotNull ElpServerSource source, @NotNull String path, @NotNull ElpMode mode, boolean eqwalizer) {
+    boolean changed = source != getStoredSource() || !path.equals(getStoredPath()) || mode != getStoredMode() ||
+                      eqwalizer != getStoredEqwalizer();
+    myState.source = source.name();
     myState.path = path;
     myState.mode = mode.name();
     myState.eqwalizer = eqwalizer;
-    ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
+    if (changed) ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
   }
 
+  /**
+   * The settings in effect without a project: the system properties, then the custom path. With the downloaded server the path is
+   * empty here, because the build depends on the project's OTP release; see {@link #getEffectiveConfiguration(Project)}.
+   */
   @NotNull
   public ElpConfiguration getEffectiveConfiguration() {
-    return ElpConfiguration.resolve(myState.path, myState.mode, myState.eqwalizer);
+    return ElpConfiguration.resolve(getStoredSource() == ElpServerSource.CUSTOM ? myState.path : "", myState.mode, myState.eqwalizer);
+  }
+
+  /**
+   * The settings in effect for {@code project}. The path is, in this order: the {@code erlang.elp.path} system property when it is
+   * set (even to an empty string); the custom path when the user chose it; the build the plugin downloaded for the OTP release of
+   * the project's Erlang SDK when it is installed; otherwise empty, and no server is started. Never downloads anything.
+   */
+  @NotNull
+  @RequiresBackgroundThread
+  public ElpConfiguration getEffectiveConfiguration(@NotNull Project project) {
+    ElpConfiguration configuration = getEffectiveConfiguration();
+    String path = resolvePath(System.getProperty(ElpConfiguration.PATH_PROPERTY), getStoredSource(), getStoredPath(),
+                              () -> ElpDistribution.getInstance().findInstalled(project));
+    return path.equals(configuration.path()) ? configuration : new ElpConfiguration(path, configuration.mode(), configuration.eqwalizer());
+  }
+
+  /**
+   * The order of {@link #getEffectiveConfiguration(Project)}.
+   *
+   * @param downloaded the installed downloaded binary for the project, or {@code null}; asked only for the downloaded source
+   */
+  @NotNull
+  public static String resolvePath(@Nullable String propertyPath, @NotNull ElpServerSource source, @Nullable String storedPath,
+                                   @NotNull Supplier<@Nullable Path> downloaded) {
+    if (propertyPath != null) return propertyPath.trim();
+    if (source == ElpServerSource.CUSTOM) return Objects.requireNonNullElse(storedPath, "").trim();
+    Path installed = downloaded.get();
+    return installed != null ? installed.toString() : "";
+  }
+
+  /**
+   * Whether the {@link ElpMode#ELP} position is in effect and a server may be running for some project: a path is set, or the
+   * downloaded server is chosen. Touches neither the file system nor the project model, so it may be asked on any thread.
+   */
+  public boolean isElpPositionWithServer() {
+    ElpConfiguration configuration = getEffectiveConfiguration();
+    if (configuration.mode() != ElpMode.ELP) return false;
+    return configuration.isEnabled() ||
+           System.getProperty(ElpConfiguration.PATH_PROPERTY) == null && getStoredSource() == ElpServerSource.DOWNLOADED;
   }
 }

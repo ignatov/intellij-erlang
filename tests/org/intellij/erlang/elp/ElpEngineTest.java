@@ -122,7 +122,10 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     assertFalse(ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
 
     configure("", ElpMode.ELP, true);
-    assertFalse("no path, no ELP", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+    assertTrue("no path is the downloaded server, which serves here", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
+
+    ElpSettings.getInstance().getState().source = ElpServerSource.CUSTOM.name();
+    assertFalse("an empty custom path, no ELP", ElpEngine.ownsFeature(module, ElpEngine.Feature.DOCUMENTATION));
   }
 
   public void testModePropertyOverridesTheStoredPosition() {

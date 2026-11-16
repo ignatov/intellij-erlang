@@ -17,19 +17,39 @@
 package org.intellij.erlang.elp;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.io.NioFiles;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
+import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBRadioButton;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.UIUtil;
+import org.intellij.erlang.elp.distribution.ElpDistribution;
+import org.intellij.erlang.elp.distribution.ElpInstaller;
+import org.intellij.erlang.elp.distribution.ElpPlatform;
+import org.intellij.erlang.elp.distribution.ElpRelease;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The ELP section of the Erlang External Tools page: what it shows, what it stores, and that the running servers are told once.
+ * The project is on OTP 28 and the machine is taken for macOS arm64, with the downloads installed in a temporary directory.
  */
 public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private ElpSettings.ElpSettingsState myOldState;
@@ -42,10 +62,28 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
   private TextFieldWithBrowseButton myPath;
   private ComboBox<?> myMode;
   private JBCheckBox myEqwalizer;
+  private JBRadioButton myDownloaded;
+  private JBRadioButton myCustom;
+  private Path myBaseDir;
+  private ElpInstaller myInstaller;
+
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return new DefaultLightProjectDescriptor() {
+      @Override
+      public Sdk getSdk() {
+        return ErlangSdkType.createMockSdk("testData/mockSdk-R28/", ErlangSdkRelease.V_28_0);
+      }
+    };
+  }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setUpProjectSdk();
+    myBaseDir = Files.createTempDirectory("erlang-elp-panel-test");
+    myInstaller = new ElpInstaller(myBaseDir, ElpRelease.pinned(), "http://127.0.0.1:1/", (executable, release, indicator) -> {});
+    ElpDistribution.getInstance().setUpForTests(myInstaller, new ElpPlatform("macos", "aarch64"), getTestRootDisposable());
     ElpSettings.ElpSettingsState old = ElpSettings.getInstance().getState();
     myOldState = new ElpSettings.ElpSettingsState();
     myOldState.path = old.path;
@@ -61,18 +99,26 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     ApplicationManager.getApplication().getMessageBus().connect(getTestRootDisposable())
       .subscribe(ElpSettings.TOPIC, (ElpSettings.Listener)myChanges::incrementAndGet);
 
-    myPanel = new ElpSettingsPanel();
+    myPanel = new ElpSettingsPanel(getProject());
     myPath = UIUtil.findComponentOfType(myPanel.getComponent(), TextFieldWithBrowseButton.class);
     myMode = UIUtil.findComponentOfType(myPanel.getComponent(), ComboBox.class);
     myEqwalizer = UIUtil.findComponentOfType(myPanel.getComponent(), JBCheckBox.class);
+    List<JBRadioButton> sources = UIUtil.findComponentsOfType(myPanel.getComponent(), JBRadioButton.class);
     assertNotNull(myPath);
     assertNotNull(myMode);
     assertNotNull(myEqwalizer);
+    assertEquals(2, sources.size());
+    myDownloaded = sources.get(0);
+    myCustom = sources.get(1);
+    assertEquals("Downloaded by the plugin", myDownloaded.getText());
+    assertEquals("Custom path", myCustom.getText());
   }
 
   @Override
   protected void tearDown() throws Exception {
     try {
+      if (myPanel != null) waitForDownloadState();
+      if (myBaseDir != null) NioFiles.deleteRecursively(myBaseDir);
       ElpSettings.getInstance().loadState(myOldState);
       restore(ElpConfiguration.PATH_PROPERTY, myOldPathProperty);
       restore(ElpConfiguration.MODE_PROPERTY, myOldModeProperty);
@@ -88,6 +134,8 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testResetShowsTheStoredSettings() {
     myPanel.reset();
+    assertTrue("a stored path of an older version is a custom path", myCustom.isSelected());
+    assertTrue(myPath.isEnabled());
     assertEquals("/opt/elp/bin/elp", myPath.getText());
     assertEquals(ElpMode.ELP, myMode.getSelectedItem());
     assertTrue(myEqwalizer.isSelected());
@@ -123,7 +171,7 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testEachFieldIsAModification() {
     for (Runnable change : List.<Runnable>of(() -> myPath.setText("/other/elp"), () -> myMode.setSelectedItem(ElpMode.PLUGIN),
-                                             () -> myEqwalizer.setSelected(false))) {
+                                             () -> myEqwalizer.setSelected(false), () -> myDownloaded.setSelected(true))) {
       myPanel.reset();
       change.run();
       assertTrue(myPanel.isModified());
@@ -137,6 +185,84 @@ public class ElpSettingsPanelTest extends ErlangLightPlatformCodeInsightFixtureT
     System.setProperty(ElpConfiguration.MODE_PROPERTY, "plugin");
     myPanel.reset();
     assertEquals("Overridden by -Derlang.elp.mode: path '/opt/elp/bin/elp', engine Plugin, eqWAlizer on", overrideText());
+  }
+
+  /** Settings of an older version without a path: the downloaded server, and the path field is off. */
+  public void testEmptyStoredPathShowsTheDownloadedServer() {
+    store("", "PLUGIN", false);
+    myPanel.reset();
+    assertTrue(myDownloaded.isSelected());
+    assertFalse(myPath.isEnabled());
+    assertFalse(myPanel.isModified());
+    myCustom.doClick();
+    assertTrue(myPath.isEnabled());
+    assertTrue(myPanel.isModified());
+  }
+
+  /** Choosing the downloaded server keeps the custom path for later, but it is no longer in effect. */
+  public void testApplyStoresTheSource() {
+    myPanel.reset();
+    myDownloaded.doClick();
+    myPanel.apply();
+    ElpSettings settings = ElpSettings.getInstance();
+    assertEquals(ElpServerSource.DOWNLOADED, settings.getStoredSource());
+    assertEquals("/opt/elp/bin/elp", settings.getStoredPath());
+    assertEquals("", settings.getEffectiveConfiguration().path());
+    assertEquals(1, myChanges.get());
+    assertFalse(myPanel.isModified());
+
+    myCustom.doClick();
+    myPath.setText("");
+    myPanel.apply();
+    assertEquals("a custom empty path stays custom", ElpServerSource.CUSTOM, settings.getStoredSource());
+    assertEquals(2, myChanges.get());
+  }
+
+  public void testDownloadStateNotInstalled() throws Exception {
+    myPanel.reset();
+    assertEquals("Checking...", myPanel.getDownloadStateLabel().getText());
+    waitForDownloadState();
+    assertEquals("ELP 1.1.0 for macOS arm64, OTP 28.5 build: not downloaded.", downloadStateText());
+    assertTrue(myPanel.getDownloadButton().isVisible());
+    assertTrue(myPanel.getDownloadButton().isEnabled());
+    assertEquals("Download (17.8 MB)", myPanel.getDownloadButton().getText());
+    assertEquals("nothing is downloaded without the click", List.of(), NioFiles.list(myBaseDir));
+  }
+
+  public void testDownloadStateInstalled() throws Exception {
+    ElpRelease.Asset asset = ElpRelease.pinned().assets().stream()
+      .filter(a -> a.file().equals("elp-macos-aarch64-apple-darwin-otp-28.5.tar.gz")).findFirst().orElseThrow();
+    Path elp = myInstaller.executable(asset);
+    Files.createDirectories(elp.getParent());
+    Files.writeString(elp, "installed");
+    myPanel.reset();
+    waitForDownloadState();
+    assertEquals("ELP 1.1.0 for macOS arm64, OTP 28.5 build: installed.", downloadStateText());
+    assertFalse(myPanel.getDownloadButton().isVisible());
+  }
+
+  public void testDownloadStateWithoutSdk() throws Exception {
+    ApplicationManager.getApplication().runWriteAction(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
+    myPanel.reset();
+    waitForDownloadState();
+    assertEquals("ELP 1.1.0: no build fits. The project has no Erlang SDK.", downloadStateText());
+    assertFalse(myPanel.getDownloadButton().isVisible());
+  }
+
+  public void testWhereTheServerComesFrom() {
+    List<String> texts = ContainerUtil.map(UIUtil.findComponentsOfType(myPanel.getComponent(), JBLabel.class), JBLabel::getText);
+    assertContainsElements(texts, "From https://github.com/WhatsApp/erlang-language-platform/releases, MIT or Apache-2.0 license; runs locally.");
+  }
+
+  private void waitForDownloadState() throws Exception {
+    Future<?> refresh = myPanel.getDownloadStateRefresh();
+    if (refresh != null) refresh.get(30, TimeUnit.SECONDS);
+    PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+  }
+
+  @NotNull
+  private String downloadStateText() {
+    return StringUtil.removeHtmlTags(myPanel.getDownloadStateLabel().getText());
   }
 
   /** The text of the last label of the section, which reports the overrides. */

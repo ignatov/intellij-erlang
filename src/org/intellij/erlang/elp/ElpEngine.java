@@ -41,7 +41,8 @@ import java.util.Set;
  * The engine switch: decides, per file and feature, whether ELP owns a feature so that the plugin's counterpart stays silent.
  * Every plugin feature that ELP can replace asks {@link #ownsFeature} at its entry point; search for the callers to find them all.
  * <p>
- * ELP owns a feature only when all of these hold: the {@link ElpMode#ELP} position is chosen and a path to {@code elp} is set;
+ * ELP owns a feature only when all of these hold: the {@link ElpMode#ELP} position is chosen with a path to {@code elp} or the
+ * downloaded server ({@link ElpSettings#isElpPositionWithServer});
  * the file is an Erlang module or header ({@link ElpFiles#isElpFile}); and an ELP server started for that position is running
  * in the project and announced the capability ({@link ElpServerStatus}). Otherwise, for example while the server starts, after it
  * crashed, or in an IDE without the LSP module, the plugin answers as it does in the {@link ElpMode#PLUGIN} position.
@@ -139,8 +140,7 @@ public final class ElpEngine {
   @Nullable
   private static ElpServerStatus statusIfElpPosition(@NotNull Project project, @NotNull Feature feature) {
     if (!elpMayOwn(feature) || project.isDefault() || project.isDisposed() || PLUGIN_FALLBACK.get().contains(feature)) return null;
-    ElpConfiguration configuration = ElpSettings.getInstance().getEffectiveConfiguration();
-    if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return null;
+    if (!ElpSettings.getInstance().isElpPositionWithServer()) return null;
     return project.getService(ElpServerStatus.class);
   }
 
