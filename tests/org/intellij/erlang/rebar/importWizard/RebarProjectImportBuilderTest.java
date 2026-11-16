@@ -31,6 +31,7 @@ import com.intellij.openapi.roots.*;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
@@ -117,6 +118,15 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  // #859: rebar3 compiles to _build/default/lib/<app>/ebin, and run and debug configurations put the module output on the code path.
+  public void testRebar3OutputInBuildDir() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module module = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    CompilerModuleExtension compilerModuleExt = ModuleRootManager.getInstance(module).getModuleExtension(CompilerModuleExtension.class);
+    String moduleDirUrl = VfsUtilCore.pathToUrl(FileUtil.toSystemIndependentName(projectPath + "/test"));
+    assertEquals(moduleDirUrl + "/_build/default/lib/app1/ebin", compilerModuleExt.getCompilerOutputUrl());
   }
 
   private static void createMockSdk() {

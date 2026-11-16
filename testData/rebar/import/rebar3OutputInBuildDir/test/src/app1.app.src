@@ -1,0 +1,1 @@
+{application, app1, [{vsn, "1"}, {applications, [kernel, stdlib]}, {modules, []}]}.
