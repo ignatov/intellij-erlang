@@ -216,7 +216,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertTrue(downloadable, downloadable.contains("from WhatsApp"));
     assertTrue(downloadable, downloadable.contains("Try ELP downloads ELP 1.1.0 (17.8 MB) from GitHub."));
     assertTrue(downloadable, downloadable.contains("runs rebar3 to fetch and build its dependencies and writes to _build"));
-    assertTrue(downloadable, downloadable.contains("Settings | Erlang External Tools"));
+    assertTrue(downloadable, downloadable.contains("Settings | Other Settings | Erlang External Tools"));
     String installed = ElpOffer.content(new ElpAvailability(ElpAvailability.Kind.INSTALLED, "/opt/elp", ElpAssetChoice.found(myAsset),
                                                             myRelease));
     assertFalse(installed, installed.contains("downloads"));
