@@ -32,6 +32,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresEdt;
+import com.intellij.util.concurrency.annotations.RequiresReadLock;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpFeedback;
 import org.intellij.erlang.elp.ElpFiles;
@@ -120,7 +121,11 @@ final class ElpOffer {
     return new ElpPreflight.Result(problems).offerEligible();
   }
 
-  /** Called for every Erlang file the user opens; checks the project off the EDT, at most once a minute per project. */
+  /**
+   * Called, with read access, for every Erlang file the user opens; checks the project off the EDT, at most once a minute per
+   * project.
+   */
+  @RequiresReadLock
   static void fileOpened(@NotNull Project project, @NotNull VirtualFile file) {
     // Tests that open files for other reasons must not get the offer: it would land among their notifications and settings.
     if (ApplicationManager.getApplication().isUnitTestMode() && !ourEnabledInTests) return;
@@ -129,6 +134,13 @@ final class ElpOffer {
     String whyNot = whyNotAsk(version);
     if (whyNot != null) {
       LOG.debug("No ELP offer: " + whyNot);
+      return;
+    }
+    // Before the once-a-minute limit: the files of the last session open in a burst, and the first one may be outside the
+    // project, such as a module of the SDK; it must not use up the check for the project files that follow.
+    VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
+    if (root == null) {
+      LOG.debug("No ELP offer check: no workspace root for " + file.getName());
       return;
     }
     synchronized (LAST_CHECK) {
@@ -142,7 +154,7 @@ final class ElpOffer {
     }
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       try {
-        check(project, file, version);
+        check(project, root, version);
       }
       catch (ProcessCanceledException e) {
         LOG.debug("The ELP offer check was cancelled");
@@ -154,13 +166,8 @@ final class ElpOffer {
   }
 
   @RequiresBackgroundThread
-  private static void check(@NotNull Project project, @NotNull VirtualFile file, @NotNull String version) {
-    VirtualFile root = ReadAction.computeBlocking(
-      () -> project.isDisposed() || !file.isValid() ? null : ElpFiles.findWorkspaceRoot(project, file));
-    if (root == null) {
-      LOG.debug("No ELP offer: no workspace root for " + file.getName());
-      return;
-    }
+  private static void check(@NotNull Project project, @NotNull VirtualFile root, @NotNull String version) {
+    if (project.isDisposed()) return;
     ElpPreflight.Facts facts = ElpPreflight.getInstance(project).gatherFacts();
     ElpPreflight.Layout layout = ReadAction.computeBlocking(() -> root.isValid() ? ElpPreflight.Layout.of(root) : null);
     ElpPreflight.Result result = ElpPreflight.evaluate(facts, layout);

@@ -23,6 +23,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -298,6 +299,24 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
 
     ElpSettings.getInstance().setOfferShownForVersion("");
     fileOpened(file);
+    assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
+  }
+
+  /**
+   * The platform opens the files of the last session in a burst, and the first one may be outside the project, such as an SDK
+   * module; it must not use up the check, or the project files of the burst are never checked.
+   */
+  public void testAFileOutsideTheProjectDoesNotUseUpTheCheck() throws Exception {
+    ElpOffer.enableInTests(getTestRootDisposable());
+    Path outside = FileUtil.createTempDirectory("elp-offer-sdk", null, true).toPath().resolve("eunit_autoexport.erl");
+    Files.writeString(outside, "-module(eunit_autoexport).\n");
+    VirtualFile sdkFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(outside);
+    assertNotNull(sdkFile);
+    VirtualFile projectFile = myFixture.addFileToProject("src/a.erl", "").getVirtualFile();
+
+    fileOpened(sdkFile);
+    assertNull("no workspace root, no check", getProject().getUserData(ElpOffer.LAST_CHECK));
+    fileOpened(projectFile);
     assertNotNull(getProject().getUserData(ElpOffer.LAST_CHECK));
   }
 
