@@ -1,0 +1,7 @@
+{application, shop,
+ [{description, "The fixture application of the ELP integration tests"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env, []},
+  {modules, []}]}.

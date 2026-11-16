@@ -1,0 +1,891 @@
+[
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "module",
+  "needle": "-module(shop_back|end)",
+  "params": {
+   "newName": "shop_store",
+   "position": {
+    "character": 17,
+    "line": 0
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 17,
+   "line": 0
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "kind": "rename",
+     "newUri": "${PROJECT_URI}/src/shop_store.erl",
+     "oldUri": "${PROJECT_URI}/src/shop_backend.erl"
+    },
+    {
+     "edits": [
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 24,
+         "line": 9
+        },
+        "start": {
+         "character": 12,
+         "line": 9
+        }
+       }
+      },
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 19,
+         "line": 11
+        },
+        "start": {
+         "character": 7,
+         "line": 11
+        }
+       }
+      },
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 25,
+         "line": 16
+        },
+        "start": {
+         "character": 13,
+         "line": 16
+        }
+       }
+      },
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 28,
+         "line": 24
+        },
+        "start": {
+         "character": 16,
+         "line": 24
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 24,
+         "line": 7
+        },
+        "start": {
+         "character": 12,
+         "line": 7
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_memory.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_defects.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "shop_store",
+       "range": {
+        "end": {
+         "character": 20,
+         "line": 0
+        },
+        "start": {
+         "character": 8,
+         "line": 0
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_store.erl",
+      "version": null
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "exported_function",
+  "needle": "\nlo|okup(Backend, Key)",
+  "params": {
+   "newName": "find",
+   "position": {
+    "character": 2,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 2,
+   "line": 11
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "find",
+       "range": {
+        "end": {
+         "character": 26,
+         "line": 11
+        },
+        "start": {
+         "character": 20,
+         "line": 11
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "find",
+       "range": {
+        "end": {
+         "character": 15,
+         "line": 2
+        },
+        "start": {
+         "character": 9,
+         "line": 2
+        }
+       }
+      },
+      {
+       "newText": "find",
+       "range": {
+        "end": {
+         "character": 12,
+         "line": 10
+        },
+        "start": {
+         "character": 6,
+         "line": 10
+        }
+       }
+      },
+      {
+       "newText": "find",
+       "range": {
+        "end": {
+         "character": 6,
+         "line": 11
+        },
+        "start": {
+         "character": 0,
+         "line": 11
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_backend.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "\ns|um([], Acc)",
+  "params": {
+   "newName": "add_up",
+   "position": {
+    "character": 1,
+    "line": 28
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 1,
+   "line": 28
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "add_up",
+       "range": {
+        "end": {
+         "character": 5,
+         "line": 18
+        },
+        "start": {
+         "character": 2,
+         "line": 18
+        }
+       }
+      },
+      {
+       "newText": "add_up",
+       "range": {
+        "end": {
+         "character": 3,
+         "line": 28
+        },
+        "start": {
+         "character": 0,
+         "line": 28
+        }
+       }
+      },
+      {
+       "newText": "add_up",
+       "range": {
+        "end": {
+         "character": 3,
+         "line": 29
+        },
+        "start": {
+         "character": 0,
+         "line": 29
+        }
+       }
+      },
+      {
+       "newText": "add_up",
+       "range": {
+        "end": {
+         "character": 31,
+         "line": 29
+        },
+        "start": {
+         "character": 28,
+         "line": 29
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "price(Na|me) ->",
+  "params": {
+   "newName": "ItemName",
+   "position": {
+    "character": 8,
+    "line": 10
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 10
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "ItemName",
+       "range": {
+        "end": {
+         "character": 10,
+         "line": 10
+        },
+        "start": {
+         "character": 6,
+         "line": 10
+        }
+       }
+      },
+      {
+       "newText": "ItemName",
+       "range": {
+        "end": {
+         "character": 44,
+         "line": 11
+        },
+        "start": {
+         "character": 40,
+         "line": 11
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "record",
+  "needle": "-record(it|em",
+  "params": {
+   "newName": "product",
+   "position": {
+    "character": 10,
+    "line": 3
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 10,
+   "line": 3
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 20,
+         "line": 20
+        },
+        "start": {
+         "character": 16,
+         "line": 20
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 14,
+         "line": 21
+        },
+        "start": {
+         "character": 10,
+         "line": 21
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 45,
+         "line": 7
+        },
+        "start": {
+         "character": 41,
+         "line": 7
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 31,
+         "line": 9
+        },
+        "start": {
+         "character": 27,
+         "line": 9
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 23,
+         "line": 14
+        },
+        "start": {
+         "character": 19,
+         "line": 14
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 8,
+         "line": 16
+        },
+        "start": {
+         "character": 4,
+         "line": 16
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 40,
+         "line": 16
+        },
+        "start": {
+         "character": 36,
+         "line": 16
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_memory.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 30,
+         "line": 1
+        },
+        "start": {
+         "character": 26,
+         "line": 1
+        }
+       }
+      },
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 12,
+         "line": 3
+        },
+        "start": {
+         "character": 8,
+         "line": 3
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.hrl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "product",
+       "range": {
+        "end": {
+         "character": 24,
+         "line": 32
+        },
+        "start": {
+         "character": 20,
+         "line": 32
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_defects.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "record_field",
+  "needle": "pr|ice = ?DEFAULT_PRICE",
+  "params": {
+   "newName": "cost",
+   "position": {
+    "character": 33,
+    "line": 3
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 33,
+   "line": 3
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "cost",
+       "range": {
+        "end": {
+         "character": 33,
+         "line": 21
+        },
+        "start": {
+         "character": 28,
+         "line": 21
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "cost",
+       "range": {
+        "end": {
+         "character": 36,
+         "line": 1
+        },
+        "start": {
+         "character": 31,
+         "line": 1
+        }
+       }
+      },
+      {
+       "newText": "cost",
+       "range": {
+        "end": {
+         "character": 36,
+         "line": 3
+        },
+        "start": {
+         "character": 31,
+         "line": 3
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.hrl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "cost",
+       "range": {
+        "end": {
+         "character": 28,
+         "line": 16
+        },
+        "start": {
+         "character": 23,
+         "line": 16
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_memory.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "macro",
+  "needle": "-define(DEFAULT_|PRICE",
+  "params": {
+   "newName": "BASE_PRICE",
+   "position": {
+    "character": 16,
+    "line": 0
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 16,
+   "line": 0
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "BASE_PRICE",
+       "range": {
+        "end": {
+         "character": 27,
+         "line": 13
+        },
+        "start": {
+         "character": 14,
+         "line": 13
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "BASE_PRICE",
+       "range": {
+        "end": {
+         "character": 21,
+         "line": 0
+        },
+        "start": {
+         "character": 8,
+         "line": 0
+        }
+       }
+      },
+      {
+       "newText": "BASE_PRICE",
+       "range": {
+        "end": {
+         "character": 53,
+         "line": 3
+        },
+        "start": {
+         "character": 40,
+         "line": 3
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.hrl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "type",
+  "needle": "-type k|ey()",
+  "params": {
+   "newName": "item_key",
+   "position": {
+    "character": 7,
+    "line": 5
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 7,
+   "line": 5
+  },
+  "result": {
+   "documentChanges": [
+    {
+     "edits": [
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 28,
+         "line": 9
+        },
+        "start": {
+         "character": 25,
+         "line": 9
+        }
+       }
+      },
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 29,
+         "line": 16
+        },
+        "start": {
+         "character": 26,
+         "line": 16
+        }
+       }
+      },
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 32,
+         "line": 24
+        },
+        "start": {
+         "character": 29,
+         "line": 24
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 28,
+         "line": 7
+        },
+        "start": {
+         "character": 25,
+         "line": 7
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_memory.erl",
+      "version": 1
+     }
+    },
+    {
+     "edits": [
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 17,
+         "line": 3
+        },
+        "start": {
+         "character": 14,
+         "line": 3
+        }
+       }
+      },
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 9,
+         "line": 5
+        },
+        "start": {
+         "character": 6,
+         "line": 5
+        }
+       }
+      },
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 26,
+         "line": 7
+        },
+        "start": {
+         "character": 23,
+         "line": 7
+        }
+       }
+      },
+      {
+       "newText": "item_key",
+       "range": {
+        "end": {
+         "character": 26,
+         "line": 10
+        },
+        "start": {
+         "character": 23,
+         "line": 10
+        }
+       }
+      }
+     ],
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_backend.erl",
+      "version": 1
+     }
+    }
+   ]
+  }
+ }
+]

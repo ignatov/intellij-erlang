@@ -1,0 +1,15 @@
+{
+ "command": "python3 -I testData/elp/record_answers.py ELP_BINARY WORK_DIR",
+ "elp_version": "elp 1.1.0+build-2026-10-14",
+ "eqwalizer": "on: ELP's default configuration, no .elp.toml",
+ "placeholders": {
+  "${OTP_PATH}": "its path",
+  "${OTP_URI}": "the URI of the OTP root",
+  "${PROJECT_PATH}": "its path",
+  "${PROJECT_URI}": "the URI of the project root"
+ },
+ "recorded": "2026-11-16",
+ "server_messages": [
+  "ELP version: 1.1.0+build-2026-10-14, OTP version: Erlang/OTP 29 [erts-17.1] [source] [64-bit] [smp:1:1] [ds:1:1:10] [async-threads:1] [jit] [dtrace]\n"
+ ]
+}

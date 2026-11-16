@@ -1,0 +1,300 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "lookup(shop_memory, Na|me)",
+  "params": {
+   "positions": [
+    {
+     "character": 42,
+     "line": 11
+    }
+   ],
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 42,
+   "line": 11
+  },
+  "result": [
+   {
+    "parent": {
+     "parent": {
+      "parent": {
+       "parent": {
+        "parent": {
+         "parent": {
+          "parent": {
+           "parent": {
+            "parent": {
+             "parent": {
+              "range": {
+               "end": {
+                "character": 0,
+                "line": 30
+               },
+               "start": {
+                "character": 0,
+                "line": 0
+               }
+              }
+             },
+             "range": {
+              "end": {
+               "character": 6,
+               "line": 14
+              },
+              "start": {
+               "character": 0,
+               "line": 10
+              }
+             }
+            },
+            "range": {
+             "end": {
+              "character": 5,
+              "line": 14
+             },
+             "start": {
+              "character": 0,
+              "line": 10
+             }
+            }
+           },
+           "range": {
+            "end": {
+             "character": 5,
+             "line": 14
+            },
+            "start": {
+             "character": 12,
+             "line": 10
+            }
+           }
+          },
+          "range": {
+           "end": {
+            "character": 5,
+            "line": 14
+           },
+           "start": {
+            "character": 2,
+            "line": 11
+           }
+          }
+         },
+         "range": {
+          "end": {
+           "character": 45,
+           "line": 11
+          },
+          "start": {
+           "character": 7,
+           "line": 11
+          }
+         }
+        },
+        "range": {
+         "end": {
+          "character": 45,
+          "line": 11
+         },
+         "start": {
+          "character": 20,
+          "line": 11
+         }
+        }
+       },
+       "range": {
+        "end": {
+         "character": 45,
+         "line": 11
+        },
+        "start": {
+         "character": 26,
+         "line": 11
+        }
+       }
+      },
+      "range": {
+       "end": {
+        "character": 44,
+        "line": 11
+       },
+       "start": {
+        "character": 38,
+        "line": 11
+       }
+      }
+     },
+     "range": {
+      "end": {
+       "character": 44,
+       "line": 11
+      },
+      "start": {
+       "character": 40,
+       "line": 11
+      }
+     }
+    },
+    "range": {
+     "end": {
+      "character": 42,
+      "line": 11
+     },
+     "start": {
+      "character": 42,
+      "line": 11
+     }
+    }
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "expression",
+  "needle": "sum(Rest, Acc + Pr|ice)",
+  "params": {
+   "positions": [
+    {
+     "character": 46,
+     "line": 29
+    }
+   ],
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 46,
+   "line": 29
+  },
+  "result": [
+   {
+    "parent": {
+     "parent": {
+      "parent": {
+       "parent": {
+        "parent": {
+         "parent": {
+          "parent": {
+           "parent": {
+            "parent": {
+             "range": {
+              "end": {
+               "character": 0,
+               "line": 30
+              },
+              "start": {
+               "character": 0,
+               "line": 0
+              }
+             }
+            },
+            "range": {
+             "end": {
+              "character": 51,
+              "line": 29
+             },
+             "start": {
+              "character": 0,
+              "line": 29
+             }
+            }
+           },
+           "range": {
+            "end": {
+             "character": 50,
+             "line": 29
+            },
+            "start": {
+             "character": 0,
+             "line": 29
+            }
+           }
+          },
+          "range": {
+           "end": {
+            "character": 50,
+            "line": 29
+           },
+           "start": {
+            "character": 25,
+            "line": 29
+           }
+          }
+         },
+         "range": {
+          "end": {
+           "character": 50,
+           "line": 29
+          },
+          "start": {
+           "character": 28,
+           "line": 29
+          }
+         }
+        },
+        "range": {
+         "end": {
+          "character": 50,
+          "line": 29
+         },
+         "start": {
+          "character": 31,
+          "line": 29
+         }
+        }
+       },
+       "range": {
+        "end": {
+         "character": 49,
+         "line": 29
+        },
+        "start": {
+         "character": 36,
+         "line": 29
+        }
+       }
+      },
+      "range": {
+       "end": {
+        "character": 49,
+        "line": 29
+       },
+       "start": {
+        "character": 38,
+        "line": 29
+       }
+      }
+     },
+     "range": {
+      "end": {
+       "character": 49,
+       "line": 29
+      },
+      "start": {
+       "character": 44,
+       "line": 29
+      }
+     }
+    },
+    "range": {
+     "end": {
+      "character": 46,
+      "line": 29
+     },
+     "start": {
+      "character": 46,
+      "line": 29
+     }
+    }
+   }
+  ]
+ }
+]

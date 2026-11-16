@@ -1,0 +1,208 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "src/shop.erl",
+  "needle": "|",
+  "params": {
+   "range": {
+    "end": {
+     "character": 0,
+     "line": 30
+    },
+    "start": {
+     "character": 0,
+     "line": 0
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "kind": 2,
+    "label": "Acc:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 38,
+     "line": 18
+    }
+   },
+   {
+    "kind": 2,
+    "label": "List:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 16,
+     "line": 22
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Format:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 30,
+     "line": 22
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Args:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 45,
+     "line": 22
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Acc:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 38,
+     "line": 29
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Backend:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 27,
+     "line": 11
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Key:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 40,
+     "line": 11
+    }
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "src/shop.hrl",
+  "needle": "|",
+  "params": {
+   "range": {
+    "end": {
+     "character": 0,
+     "line": 4
+    },
+    "start": {
+     "character": 0,
+     "line": 0
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": []
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "src/shop_memory.erl",
+  "needle": "|",
+  "params": {
+   "range": {
+    "end": {
+     "character": 0,
+     "line": 17
+    },
+    "start": {
+     "character": 0,
+     "line": 0
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": []
+ },
+ {
+  "error": null,
+  "file": "src/shop_defects.erl",
+  "kind": "src/shop_defects.erl",
+  "needle": "|",
+  "params": {
+   "range": {
+    "end": {
+     "character": 0,
+     "line": 55
+    },
+    "start": {
+     "character": 0,
+     "line": 0
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "kind": 2,
+    "label": "_Item:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 24,
+     "line": 42
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Format:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 26,
+     "line": 48
+    }
+   },
+   {
+    "kind": 2,
+    "label": "Args:",
+    "paddingLeft": false,
+    "paddingRight": true,
+    "position": {
+     "character": 37,
+     "line": 48
+    }
+   }
+  ]
+ }
+]

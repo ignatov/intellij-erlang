@@ -1,0 +1,207 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "remote_function_with_doc",
+  "needle": "shop_backend:look|up(shop_memory",
+  "params": {
+   "position": {
+    "character": 24,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 24,
+   "line": 11
+  },
+  "result": {
+   "contents": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec lookup(module(), key()) -> {ok, term()} | error.\n```"
+   },
+   "range": {
+    "end": {
+     "character": 26,
+     "line": 11
+    },
+    "start": {
+     "character": 20,
+     "line": 11
+    }
+   }
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "sum([pr|ice(Name)",
+  "params": {
+   "position": {
+    "character": 9,
+    "line": 18
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 9,
+   "line": 18
+  },
+  "result": {
+   "contents": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec price(shop_backend:key()) -> non_neg_integer().\n```"
+   },
+   "range": {
+    "end": {
+     "character": 12,
+     "line": 18
+    },
+    "start": {
+     "character": 7,
+     "line": 18
+    }
+   }
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "otp_function",
+  "needle": "lists:keyfi|nd(",
+  "params": {
+   "position": {
+    "character": 18,
+    "line": 9
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 18,
+   "line": 9
+  },
+  "result": {
+   "contents": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec keyfind(Key, N, TupleList) -> Tuple | false when\n      Key :: term(),\n      N :: pos_integer(),\n      TupleList :: [Tuple],\n      Tuple :: tuple().\n```\n\n-----\n\nSearches the list of tuples `TupleList` for a tuple whose `N`th element compares\nequal to `Key`.\n\nReturns `Tuple` if such a tuple is found; otherwise, returns `false`.\n\n## Examples\n\n```erlang\n1> lists:keyfind(b, 1, [{a,10}, {b,20}, {c,30}]).\n{b,20}\n2> lists:keyfind(unknown, 1, [{a,10}, {b,20}, {c,30}]).\nfalse\n```"
+   },
+   "range": {
+    "end": {
+     "character": 20,
+     "line": 9
+    },
+    "start": {
+     "character": 13,
+     "line": 9
+    }
+   }
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "record",
+  "needle": "describe(#it|em{",
+  "params": {
+   "position": {
+    "character": 18,
+    "line": 20
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 18,
+   "line": 20
+  },
+  "result": null
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "macro",
+  "needle": "?DEFAULT_|PRICE",
+  "params": {
+   "position": {
+    "character": 22,
+    "line": 13
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 22,
+   "line": 13
+  },
+  "result": {
+   "contents": {
+    "kind": "markdown",
+    "value": "DEFAULT_PRICE\n\n```erlang\n\n10\n```\n"
+   }
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "remote_type",
+  "needle": "price(shop_backend:k|ey())",
+  "params": {
+   "position": {
+    "character": 26,
+    "line": 9
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 26,
+   "line": 9
+  },
+  "result": {
+   "contents": {
+    "kind": "markdown",
+    "value": "```erlang\n-type key() :: atom().\n```"
+   },
+   "range": {
+    "end": {
+     "character": 28,
+     "line": 9
+    },
+    "start": {
+     "character": 25,
+     "line": 9
+    }
+   }
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "lookup(shop_memory, Na|me)",
+  "params": {
+   "position": {
+    "character": 42,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 42,
+   "line": 11
+  },
+  "result": null
+ }
+]
