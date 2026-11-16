@@ -19,8 +19,11 @@ package org.intellij.erlang.elp.lsp;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.platform.lsp.api.customization.LspDiagnosticsSupport;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 /**
  * Hides the diagnostics of eqWAlizer unless they are switched on. ELP has no LSP setting for eqWAlizer: it type-checks a module
@@ -47,8 +50,25 @@ final class ElpDiagnosticsSupport extends LspDiagnosticsSupport {
   @Nullable
   @Override
   public HighlightSeverity getHighlightSeverity(@NotNull Diagnostic diagnostic) {
-    if (!isEqwalizer(diagnostic)) return super.getHighlightSeverity(diagnostic);
+    if (!isEqwalizer(diagnostic)) {
+      HighlightSeverity severity = super.getHighlightSeverity(diagnostic);
+      return severity == HighlightSeverity.ERROR && LOWERED_TO_WARNING.contains(code(diagnostic)) ? HighlightSeverity.WARNING : severity;
+    }
     return myShowEqwalizer ? HighlightSeverity.WARNING : null;
+  }
+
+  /**
+   * ELP's lints that it reports as errors on code that {@code erlc} compiles (measured on ten real projects): W0008 on the helper
+   * functions of Common Test suites with {@code export_all}, W0053 and W0014. They are shown as warnings. P1711, ELP's parse error,
+   * is not lowered: it is a real error in most files, and ELP's known false ones (a macro that expands to part of a clause, a char
+   * literal such as {@code $\x{4141}}) can be told apart only with the file, which this severity hook does not get.
+   */
+  static final Set<String> LOWERED_TO_WARNING = Set.of("W0008", "W0053", "W0014");
+
+  @Nullable
+  static String code(@NotNull Diagnostic diagnostic) {
+    Either<String, Integer> code = diagnostic.getCode();
+    return code == null ? null : String.valueOf(code.get());
   }
 
   static boolean isEqwalizer(@NotNull Diagnostic diagnostic) {
