@@ -34,6 +34,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -42,7 +43,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 
 public class RebarRunningStateUtil {
@@ -66,7 +66,7 @@ public class RebarRunningStateUtil {
     commandLine.setExePath(escriptPath);
     commandLine.addParameter(rebarSettings.getRebarPath());
 
-    List<String> split = Arrays.asList(configuration.getCommand().split("\\s+"));
+    List<String> split = ParametersListUtil.parse(configuration.getCommand());
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
       commandLine.addParameter("skip_deps=true");
     }
