@@ -5,6 +5,8 @@ on:
     # Branch pushes only: tag pushes (v* releases, the rolling nightly tag) never run this workflow.
     branches:
       - '**'
+      # The ELP probe branch runs only elp-probe.yml.
+      - '!elp-windows-probe'
   pull_request:
     branches:
       - master

@@ -1,0 +1,281 @@
+name: ELP probe
+
+# A one-off probe: does the real ELP work with the plugin on Windows and Linux? Runs only on pushes to its own branch.
+on:
+  push:
+    branches:
+      - elp-windows-probe
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elp-probe
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: elp-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Keep LF line endings and allow long paths
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
+    - name: Prepare the probe directory
+      run: |
+        temp="$RUNNER_TEMP"
+        if [ "$RUNNER_OS" = Windows ]; then temp="$(cygpath -u "$temp")"; fi
+        mkdir -p "$temp/probe"
+        echo "PROBE_DIR=$temp/probe" >> "$GITHUB_ENV"
+
+    # Erlang/OTP and rebar3: copied from gradle.yml (compilation-tests and compilation-tests-os), pins unchanged.
+    - name: Install Erlang/OTP on Linux
+      if: runner.os == 'Linux'
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        . /etc/os-release
+        base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
+        sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::$base/builds.txt has no OTP-$OTP_VERSION"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "$base/OTP-$OTP_VERSION.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+    - name: Install Erlang/OTP on Windows
+      if: runner.os == 'Windows'
+      env:
+        OTP_VERSION: '27.3.4.9'
+        OTP_SHA256: 749e6db4459499e60b6b433da7accca05a9227a844fd1a5e8734308342c5cae4
+      run: |
+        temp="$(cygpath -u "$RUNNER_TEMP")"
+        archive="$temp/otp.zip"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_win64_$OTP_VERSION.zip"
+        echo "$OTP_SHA256  $archive" | sha256sum -c -
+        root="$temp/otp"
+        mkdir -p "$root"
+        unzip -q "$archive" -d "$root"
+        cygpath -w "$root/bin" >> "$GITHUB_PATH"
+    - name: Check Erlang/OTP
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
+    - name: Install rebar3
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -u "$rebar3")"
+        fi
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -w "$rebar3")"
+        fi
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
+    - name: Put rebar3 on PATH as a user has it
+      # ELP runs rebar3 from its PATH. On Windows the rebar3 README installs the escript with a rebar3.cmd wrapper next to it.
+      run: |
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -u "$REBAR3_PATH")"
+          printf '@echo off\r\nsetlocal\r\nset rebarscript=%%~f0\r\nescript.exe "%%rebarscript:.cmd=%%" %%*\r\n' > "$rebar3.cmd"
+          cygpath -w "$(dirname "$rebar3")" >> "$GITHUB_PATH"
+        else
+          dirname "$REBAR3_PATH" >> "$GITHUB_PATH"
+        fi
+    - name: Check rebar3 on PATH
+      continue-on-error: true
+      run: |
+        command -v rebar3
+        rebar3 version
+        if [ "$RUNNER_OS" = Windows ]; then
+          cmd //d //c "where rebar3 & rebar3 version"
+        fi
+
+    - name: Download ELP
+      id: download
+      run: |
+        rows="$PROBE_DIR/rows.md"
+        case "$RUNNER_OS" in
+          Windows) os=windows ;;
+          Linux) os=linux ;;
+        esac
+        command -v jq
+        manifest=resources/elp/elp-release.json
+        query='.assets[] | select(.os == $os and .arch == "x86_64" and (.otp | startswith("27."))) | "\(.file) \(.sha256) \(.size) \(.executable)"'
+        read -r file sha size exe < <(jq -r --arg os "$os" "$query" "$manifest" | tr -d '\r')
+        url="$(jq -r .downloadUrl "$manifest" | tr -d '\r')$file"
+        echo "asset $file, $size bytes, $url"
+        dir="$PROBE_DIR/elp"
+        mkdir -p "$dir/unpacked"
+        stats=$(curl -fsSL --retry 3 -o "$dir/$file" -w '%{size_download} bytes in %{time_total} s' "$url")
+        echo "downloaded $stats"
+        echo "$sha  $dir/$file" | sha256sum -c -
+        tar -xzf "$dir/$file" -C "$dir/unpacked"
+        elp="$(find "$dir/unpacked" -name "$exe" -type f | head -n 1)"
+        chmod +x "$elp"
+        echo "binary $elp, $(wc -c < "$elp") bytes"
+        start=$(date +%s%N)
+        version="$("$elp" version 2>&1)" && code=0 || code=$?
+        ms=$(( ($(date +%s%N) - start) / 1000000 ))
+        echo "elp version: exit $code in $ms ms: $version"
+        native="$elp"
+        if [ "$RUNNER_OS" = Windows ]; then native="$(cygpath -w "$elp")"; fi
+        echo "ELP_BIN=$elp" >> "$GITHUB_ENV"
+        echo "ERLANG_ELP_PATH=$native" >> "$GITHUB_ENV"
+        echo "| download | $file: $stats, sha256 ok, binary $(wc -c < "$elp") bytes |" >> "$rows"
+        echo "| elp version | exit $code, $ms ms: \`$(echo "$version" | head -n 1)\` |" >> "$rows"
+        test "$code" = 0
+
+    - name: ELP alone on the fixture project
+      id: cli
+      continue-on-error: true
+      run: |
+        set +e
+        rows="$PROBE_DIR/rows.md"
+        out="$PROBE_DIR/cli"
+        mkdir -p "$out/logs" "$out/tmp"
+        cp -R testData/elp/project "$out/project"
+        nat() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else printf '%s\n' "$1"; fi; }
+        proj="$(nat "$out/project")"
+        run() {
+          name="$1"
+          shift
+          start=$(date +%s%N)
+          timeout 300 "$@" > "$out/logs/$name.txt" 2>&1
+          code=$?
+          ms=$(( ($(date +%s%N) - start) / 1000000 ))
+          lines=$(wc -l < "$out/logs/$name.txt")
+          unused=$(grep -c 'unused_function/0 is unused' "$out/logs/$name.txt")
+          echo "== $name: exit $code, $ms ms, $lines lines, 'unused_function' $unused"
+          head -n 8 "$out/logs/$name.txt" | cut -c1-200
+          echo "| cli $name | exit $code, $ms ms, $lines lines, unused_function/0 found $unused |" >> "$rows"
+          eval "code_$name=$code; unused_$name=$unused"
+        }
+        run project_info "$ELP_BIN" project-info --project "$proj" --to "$(nat "$out/project-info")"
+        ls -la "$out/project-info" 2>&1 | head -n 5
+        run parse_elp "$ELP_BIN" parse-elp --project "$proj" --rebar
+        run lint "$ELP_BIN" lint --project "$proj" --rebar --no-connect
+        run lint_escript env ELP_REBAR3="$REBAR3_PATH" "$ELP_BIN" lint --project "$proj" --rebar --no-connect
+        if [ "$RUNNER_OS" = Windows ]; then
+          run lint_cmd env ELP_REBAR3="$REBAR3_PATH.cmd" "$ELP_BIN" lint --project "$proj" --rebar --no-connect
+        fi
+        touch "$out/marker"
+        run eqwalize env TMPDIR="$(nat "$out/tmp")" "$ELP_BIN" eqwalize-all --project "$proj" --rebar
+        dirs=("$out/tmp" /tmp)
+        if [ "$RUNNER_OS" = Windows ]; then dirs+=("$(cygpath -u "$LOCALAPPDATA")/Temp" "$(cygpath -u "$RUNNER_TEMP")"); fi
+        for d in "${dirs[@]}"; do
+          found="$(find "$d" -maxdepth 1 -name 'eqwalizer*' -newer "$out/marker" 2>/dev/null | head -n 3 | tr '\n' ' ')"
+          echo "eqwalizer under $d since the run: ${found:-none}"
+          echo "| eqwalizer under $(basename "$d") | ${found:+found} ${found:-none} |" >> "$rows"
+        done
+        test "$code_lint" = 0 -o "$unused_lint" -gt 0
+
+    - name: Plugin tests with the real ELP
+      id: live
+      continue-on-error: true
+      env:
+        ERLANG_ELP_DOWNLOAD_TEST: '1'
+        ERLANG_ELP_DOWNLOAD_OTP: '27'
+      run: |
+        echo "ERLANG_ELP_PATH=$ERLANG_ELP_PATH"
+        start=$(date +%s)
+        PROBE_REBAR3="$REBAR3_PATH" ./gradlew --no-daemon --no-build-cache clean test --tests 'org.intellij.erlang.elp.*' && code=0 || code=$?
+        echo "| gradle test | exit $code in $(( $(date +%s) - start )) s |" >> "$PROBE_DIR/rows.md"
+        exit $code
+
+    - name: Summarize
+      if: ${{ !cancelled() }}
+      env:
+        DOWNLOAD: ${{ steps.download.outcome }}
+        CLI: ${{ steps.cli.outcome }}
+        LIVE: ${{ steps.live.outcome }}
+      run: |
+        shopt -s nullglob
+        files=(build/test-results/test/TEST-org.intellij.erlang.elp*.xml)
+        tests() {
+          { grep -ho '<testsuite [^>]*>' "$@" /dev/null || true; } | awk '
+            function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+            { t += attr("tests"); f += attr("failures") + attr("errors"); s += attr("skipped") }
+            END { printf "%d run, %d failed, %d skipped", t, f, s }'
+        }
+        live=(build/test-results/test/TEST-*ElpLiveServerTest.xml)
+        probe=(build/test-results/test/TEST-*Probe*.xml)
+        download=(build/test-results/test/TEST-*ElpRealDownloadTest.xml)
+        failed="$( { awk '
+          /<testcase / { match($0, /name="[^"]*"/); n = substr($0, RSTART + 6, RLENGTH - 7)
+                         match($0, /classname="[^"]*"/); c = substr($0, RSTART + 11, RLENGTH - 12); sub(/.*\./, "", c) }
+          /<failure|<error/ { m = ""; if (match($0, /message="[^"]*/)) m = substr($0, RSTART + 9, 220); print "- " c "." n ": " m }
+          /<skipped/ { print "- SKIPPED " c "." n }' "${files[@]}" /dev/null || true; } | sort -u)"
+        {
+          echo "### ELP probe on $RUNNER_OS"
+          echo "| step | result |"
+          echo "|---|---|"
+          echo "| outcomes | download $DOWNLOAD, cli $CLI, gradle $LIVE |"
+          cat "$PROBE_DIR/rows.md" 2>/dev/null
+          echo "| all elp tests | $(tests "${files[@]}") |"
+          echo "| ElpLiveServerTest | $(tests "${live[@]}") |"
+          echo "| probe tests | $(tests "${probe[@]}") |"
+          echo "| ElpRealDownloadTest | $(tests "${download[@]}") |"
+          echo
+          echo "Failed or skipped:"
+          echo "$failed"
+        } | tee -a "$GITHUB_STEP_SUMMARY"
+        echo "== PROBE lines"
+        { grep -ho 'PROBE .*' "${probe[@]}" /dev/null || true; } | cut -c1-400 | tee "$PROBE_DIR/probe-lines.txt"
+        { grep -ho 'ELP installed.*\|ELP without erl.*\|ELP crash.*' "${files[@]}" /dev/null || true; } | cut -c1-300 | head -n 20
+
+    - name: Upload probe results
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: elp-probe-${{ matrix.os }}
+        path: |
+          build/test-results/test/*.xml
+          build/reports/tests/test
+          ${{ runner.temp }}/probe/rows.md
+          ${{ runner.temp }}/probe/probe-lines.txt
+          ${{ runner.temp }}/probe/cli/logs
+          ${{ runner.temp }}/probe/cli/project-info
+          .intellijPlatform/sandbox/*/*/log_test
+          .intellijPlatform/sandbox/*/*/system_test/testlog
+        if-no-files-found: ignore
