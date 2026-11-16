@@ -64,6 +64,9 @@ jobs:
         java-version: '21'
         cache: gradle
 
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+
     - name: Test, build and verify plugin
       env:
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}

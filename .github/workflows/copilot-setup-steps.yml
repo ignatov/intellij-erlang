@@ -33,6 +33,10 @@ jobs:
         distribution: temurin
         java-version: '21'
         cache: gradle
+    # Stays in ~/.gradle for the agent's own Gradle runs too, so they find in the cache what the warm-up resolved
+    # through the mirror. The firewall allows jetbrains.com, so the mirror is reachable from the agent as well.
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     # The setup steps run outside the agent firewall, which does not allow the JetBrains hosts the IntelliJ
     # Platform, its test dependencies and the Plugin Verifier come from. Resolve all of them now by running
     # one small test class, buildPlugin and verifyPlugin. It runs before the Erlang steps because it does not
