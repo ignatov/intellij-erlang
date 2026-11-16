@@ -91,13 +91,23 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
   @NotNull
   private static List<Integer> getUndefOffsets(@NotNull ErlangFile file, @NotNull String macroName, int before) {
     List<Integer> offsets = new ArrayList<>();
+    int conditionalDepth = 0;
     for (ErlangAttribute attribute : file.getAttributes()) {
-      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
-      if (atomAttribute == null || !"undef".equals(atomAttribute.getName())) continue;
-      ErlangMacrosName undefName = PsiTreeUtil.getChildOfType(atomAttribute, ErlangMacrosName.class);
       int offset = attribute.getTextOffset();
-      if (undefName != null && offset < before && macroName.equals(ErlangPsiImplUtil.getNameIdentifier(undefName).getText())) {
-        offsets.add(offset);
+      if (offset >= before) break;
+      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+      String directive = atomAttribute != null ? atomAttribute.getName() :
+                         attribute.getNode().findChildByType(ErlangTypes.ERL_IF) != null ? "if" : "";
+      switch (directive) {
+        case "if", "ifdef", "ifndef" -> conditionalDepth++;
+        case "endif" -> conditionalDepth = Math.max(0, conditionalDepth - 1);
+        case "undef" -> {
+          ErlangMacrosName undefName = PsiTreeUtil.getChildOfType(atomAttribute, ErlangMacrosName.class);
+          if (conditionalDepth == 0 && undefName != null && macroName.equals(ErlangPsiImplUtil.getNameIdentifier(undefName).getText())) {
+            offsets.add(offset);
+          }
+        }
+        default -> {}
       }
     }
     return offsets;

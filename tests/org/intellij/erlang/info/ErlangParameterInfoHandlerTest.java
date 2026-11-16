@@ -72,6 +72,22 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     doMacroTest("-define(F(X), X).\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).", 1, "X, [Y]");
   }
 
+  public void testUndefInsideIfdefIsIgnored() {
+    doMacroTest("-define(F(X), X).\n-ifdef(NEVER).\n-undef(F).\n-endif.\nbar() -> ?F(<caret>).", 0, "[X]");
+  }
+
+  public void testUndefAndRedefinitionInsideIfdef() {
+    doMacroTest("-define(F(X), X).\n-ifdef(OVERRIDE).\n-undef(F).\n-define(F(X, Y), {X, Y}).\n-endif.\nbar() -> ?F(<caret>).", 0, "[X]", "[X], Y");
+  }
+
+  public void testUndefInsideIfIsIgnored() {
+    doMacroTest("-define(F(X), X).\n-if(?OTP_RELEASE > 20).\n-undef(F).\n-endif.\nbar() -> ?F(<caret>).", 0, "[X]");
+  }
+
+  public void testUndefAfterConditionalIsApplied() {
+    doMacroTest("-define(F(X), X).\n-ifdef(T).\n-endif.\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).", 1, "X, [Y]");
+  }
+
   public void testFunctionCallInsideMacro() {
     doTest(FOO + "-define(BAR(X), X).\nbar() -> ?BAR(foo(1, <caret>)).", 1);
     assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
