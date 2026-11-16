@@ -225,6 +225,16 @@ jobs:
         cache: gradle
     - name: Test
       run: ./gradlew --no-daemon test
+    - name: Summarize test results
+      if: ${{ !cancelled() }}
+      run: |
+        shopt -s nullglob
+        files=(build/test-results/test/*.xml)
+        { grep -ho '<testsuite [^>]*>' "${files[@]}" /dev/null || true; } | awk '
+          function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+          { tests += attr("tests"); failures += attr("failures"); errors += attr("errors"); skipped += attr("skipped") }
+          END { printf "%d tests, %d failures, %d errors, %d skipped in %d classes\n", tests, failures, errors, skipped, NR }' \
+          | tee -a "$GITHUB_STEP_SUMMARY"
     - name: Upload test reports
       if: failure()
       uses: actions/upload-artifact@v7
@@ -350,6 +360,16 @@ jobs:
           echo "::error::Compilation tests were skipped in: $skipped"
           exit 1
         fi
+    - name: Summarize test results
+      if: ${{ !cancelled() }}
+      run: |
+        shopt -s nullglob
+        files=(build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml)
+        { grep -ho '<testsuite [^>]*>' "${files[@]}" /dev/null || true; } | awk '
+          function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+          { tests += attr("tests"); failures += attr("failures"); errors += attr("errors"); skipped += attr("skipped") }
+          END { printf "%d tests, %d failures, %d errors, %d skipped in %d classes\n", tests, failures, errors, skipped, NR }' \
+          | tee -a "$GITHUB_STEP_SUMMARY"
     - name: Upload test reports
       if: failure()
       uses: actions/upload-artifact@v7
