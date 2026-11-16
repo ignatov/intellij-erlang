@@ -111,7 +111,7 @@ public final class ElpDistribution {
   @NotNull
   @RequiresBackgroundThread
   public ElpAssetChoice chooseAsset(@NotNull Project project) {
-    Object[] sdk = ReadAction.compute(() -> project.isDisposed() ? new Object[]{false, null} : new Object[]{
+    Object[] sdk = ReadAction.computeBlocking(() -> project.isDisposed() ? new Object[]{false, null} : new Object[]{
       ErlangSdkType.getSdkPath(project) != null, ErlangSdkType.getProjectSdkRelease(project)});
     return ElpAssetChoice.choose(getRelease(), getPlatform(), (Boolean)sdk[0], ElpAssetChoice.otpMajor((ErlangSdkRelease)sdk[1]));
   }
