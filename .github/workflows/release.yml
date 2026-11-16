@@ -64,8 +64,16 @@ jobs:
         java-version: '21'
         cache: gradle
 
+    - name: Check out the mirror action of this workflow
+      # From the commit of this workflow: on workflow_dispatch that is master, and the tag above may predate the action.
+      uses: actions/checkout@v7
+      with:
+        path: workflow-actions
+        sparse-checkout: .github/actions
+        persist-credentials: false
+
     - name: Route Maven Central through a mirror
-      uses: ./.github/actions/maven-central-mirror
+      uses: ./workflow-actions/.github/actions/maven-central-mirror
 
     - name: Test, build and verify plugin
       env:
