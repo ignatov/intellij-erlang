@@ -1,0 +1,284 @@
+[
+ {
+  "error": null,
+  "query": "shop_backend",
+  "result": [
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 22,
+       "line": 0
+      },
+      "start": {
+       "character": 0,
+       "line": 0
+      }
+     },
+     "uri": "${PROJECT_URI}/src/shop_backend.erl"
+    },
+    "name": "shop_backend"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "query": "lookup",
+  "result": []
+ },
+ {
+  "error": null,
+  "query": "item",
+  "result": []
+ },
+ {
+  "error": null,
+  "query": "DEFAULT_PRICE",
+  "result": []
+ },
+ {
+  "error": null,
+  "query": "key",
+  "result": [
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 19,
+       "line": 21
+      },
+      "start": {
+       "character": 0,
+       "line": 21
+      }
+     },
+     "uri": "${OTP_URI}/lib/stdlib-8.1/src/edlin_key.erl"
+    },
+    "name": "edlin_key"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 21,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_cert.erl"
+    },
+    "name": "pubkey_cert"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 29,
+       "line": 24
+      },
+      "start": {
+       "character": 0,
+       "line": 24
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_cert_records.erl"
+    },
+    "name": "pubkey_cert_records"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 20,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_crl.erl"
+    },
+    "name": "pubkey_crl"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 21,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_ocsp.erl"
+    },
+    "name": "pubkey_ocsp"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 27,
+       "line": 24
+      },
+      "start": {
+       "character": 0,
+       "line": 24
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_os_cacerts.erl"
+    },
+    "name": "pubkey_os_cacerts"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 20,
+       "line": 23
+      },
+      "start": {
+       "character": 0,
+       "line": 23
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_pbe.erl"
+    },
+    "name": "pubkey_pbe"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 20,
+       "line": 43
+      },
+      "start": {
+       "character": 0,
+       "line": 43
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_pem.erl"
+    },
+    "name": "pubkey_pem"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 28,
+       "line": 21
+      },
+      "start": {
+       "character": 0,
+       "line": 21
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_policy_tree.erl"
+    },
+    "name": "pubkey_policy_tree"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 20,
+       "line": 21
+      },
+      "start": {
+       "character": 0,
+       "line": 21
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_ssh.erl"
+    },
+    "name": "pubkey_ssh"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 28,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/pubkey_translation.erl"
+    },
+    "name": "pubkey_translation"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 20,
+       "line": 24
+      },
+      "start": {
+       "character": 0,
+       "line": 24
+      }
+     },
+     "uri": "${OTP_URI}/lib/public_key-1.21.6/src/public_key.erl"
+    },
+    "name": "public_key"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 28,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/ssh-6.0.5/src/ssh_client_key_api.erl"
+    },
+    "name": "ssh_client_key_api"
+   },
+   {
+    "kind": 2,
+    "location": {
+     "range": {
+      "end": {
+       "character": 28,
+       "line": 22
+      },
+      "start": {
+       "character": 0,
+       "line": 22
+      }
+     },
+     "uri": "${OTP_URI}/lib/ssh-6.0.5/src/ssh_server_key_api.erl"
+    },
+    "name": "ssh_server_key_api"
+   }
+  ]
+ }
+]

@@ -1,0 +1,1154 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "remote_function",
+  "needle": "shop_backend:look|up(shop_memory",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 24,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 24,
+   "line": 11
+  },
+  "result": [
+   {
+    "command": {
+     "command": "editor.action.triggerParameterHints",
+     "title": "triggerParameterHints"
+    },
+    "data": {
+     "position": {
+      "position": {
+       "character": 0,
+       "line": 11
+      },
+      "textDocument": {
+       "uri": "${PROJECT_URI}/src/shop_backend.erl"
+      }
+     }
+    },
+    "deprecated": false,
+    "insertText": "lookup(${1:Backend}, ${2:Key})",
+    "insertTextFormat": 2,
+    "kind": 3,
+    "label": "lookup/2"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "module",
+  "needle": "shop_back|end:lookup(",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 16,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 16,
+   "line": 11
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "after"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "and"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "andalso"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "band"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "begin"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bnot"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsl"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsr"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bxor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "case"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "catch"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "cond"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "div"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "else"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "end"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "false"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "fun"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "if"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "let"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "maybe"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "not"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "of"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "ok"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "or"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "orelse"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "receive"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "rem"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "true"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "try"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "undefined"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "when"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "xor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 9,
+    "label": "shop_backend",
+    "sortText": "2_shop_backend"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "sum([pr|ice(Name)",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 9,
+    "line": 18
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 9,
+   "line": 18
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "after"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "and"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "andalso"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "band"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "begin"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bnot"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsl"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsr"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bxor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "case"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "catch"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "cond"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "div"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "else"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "end"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "false"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "fun"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "if"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "let"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "maybe"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "not"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "of"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "ok"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "or"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "orelse"
+   },
+   {
+    "command": {
+     "command": "editor.action.triggerParameterHints",
+     "title": "triggerParameterHints"
+    },
+    "data": {
+     "position": {
+      "position": {
+       "character": 0,
+       "line": 10
+      },
+      "textDocument": {
+       "uri": "${PROJECT_URI}/src/shop.erl"
+      }
+     }
+    },
+    "deprecated": false,
+    "insertText": "price(${1:Name})",
+    "insertTextFormat": 2,
+    "kind": 3,
+    "label": "price/1"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "receive"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "rem"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "true"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "try"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "undefined"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "when"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "xor"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "lookup(shop_memory, Na|me)",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 42,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 42,
+   "line": 11
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "after"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "and"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "andalso"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "band"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "begin"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bnot"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsl"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsr"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bxor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "case"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "catch"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "cond"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "div"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "else"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "end"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "false"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "fun"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "if"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "let"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "maybe"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "not"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "of"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "ok"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "or"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "orelse"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "receive"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "rem"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "true"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "try"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "undefined"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "when"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "xor"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "record",
+  "needle": "describe(#it|em{",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 18,
+    "line": 20
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 18,
+   "line": 20
+  },
+  "result": []
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "record_field",
+  "needle": "#item{na|me = Name",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 17,
+    "line": 21
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 17,
+   "line": 21
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertText": "name = ",
+    "insertTextFormat": 1,
+    "kind": 5,
+    "label": "name"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "macro",
+  "needle": "?DEFAULT_|PRICE",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 22,
+    "line": 13
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 22,
+   "line": 13
+  },
+  "result": [
+   {
+    "additionalTextEdits": [
+     {
+      "newText": "-include_lib(\"shop/src/shop.hrl\").\n",
+      "range": {
+       "end": {
+        "character": 0,
+        "line": 3
+       },
+       "start": {
+        "character": 0,
+        "line": 3
+       }
+      }
+     }
+    ],
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 21,
+    "label": "DEFAULT_PRICE"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 21,
+    "label": "DEFAULT_PRICE"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "after"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "and"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "andalso"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "band"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "begin"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bnot"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsl"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bsr"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "bxor"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "case"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "catch"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "cond"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "div"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "else"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "end"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "false"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "fun"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "if"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "let"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "maybe"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "not"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "of"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "ok"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "or"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "orelse"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "receive"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "rem"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "true"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "try"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "undefined"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "when"
+   },
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 14,
+    "label": "xor"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "remote_type",
+  "needle": "price(shop_backend:k|ey())",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 26,
+    "line": 9
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 26,
+   "line": 9
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertText": "key()",
+    "insertTextFormat": 2,
+    "kind": 8,
+    "label": "key/0",
+    "sortText": "1_key/0"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "otp_function",
+  "needle": "lists:keyfi|nd(",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 18,
+    "line": 9
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 18,
+   "line": 9
+  },
+  "result": [
+   {
+    "command": {
+     "command": "editor.action.triggerParameterHints",
+     "title": "triggerParameterHints"
+    },
+    "data": {
+     "position": {
+      "position": {
+       "character": 0,
+       "line": 121
+      },
+      "textDocument": {
+       "uri": "${OTP_URI}/lib/stdlib-8.1/src/lists.erl"
+      }
+     }
+    },
+    "deprecated": false,
+    "insertText": "keyfind(${1:Key}, ${2:N}, ${3:TupleList})",
+    "insertTextFormat": 2,
+    "kind": 3,
+    "label": "keyfind/3"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "behaviour",
+  "needle": "-behaviour(shop_back|end)",
+  "params": {
+   "context": {
+    "triggerKind": 1
+   },
+   "position": {
+    "character": 20,
+    "line": 1
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 20,
+   "line": 1
+  },
+  "result": [
+   {
+    "deprecated": false,
+    "insertTextFormat": 1,
+    "kind": 8,
+    "label": "shop_backend"
+   }
+  ]
+ }
+]

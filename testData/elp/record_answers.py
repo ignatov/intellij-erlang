@@ -109,6 +109,30 @@ CODE_ACTION = [
     ("local_function", "src/shop.erl", "\ns|um([], Acc)"),
 ]
 
+# The caret after a typed prefix, as the IDE asks: completion is invoked on a typed character, with triggerKind 1.
+COMPLETION = [
+    ("remote_function", "src/shop.erl", "shop_backend:look|up(shop_memory"),
+    ("module", "src/shop.erl", "shop_back|end:lookup("),
+    ("local_function", "src/shop.erl", "sum([pr|ice(Name)"),
+    ("variable", "src/shop.erl", "lookup(shop_memory, Na|me)"),
+    ("record", "src/shop.erl", "describe(#it|em{"),
+    ("record_field", "src/shop.erl", "#item{na|me = Name"),
+    ("macro", "src/shop.erl", "?DEFAULT_|PRICE"),
+    ("remote_type", "src/shop.erl", "price(shop_backend:k|ey())"),
+    ("otp_function", "src/shop_memory.erl", "lists:keyfi|nd("),
+    ("behaviour", "src/shop_memory.erl", "-behaviour(shop_back|end)"),
+]
+
+# The completion items to resolve: (the kind of a COMPLETION case, the label of one of its items).
+COMPLETION_RESOLVE = [
+    ("remote_function", "lookup/2"),
+    ("otp_function", "keyfind/3"),
+    ("local_function", "price/1"),
+]
+
+# Queries of Go to Symbol and Go to Class: a module, a function, a record, a macro, a type.
+WORKSPACE_SYMBOL = ["shop_backend", "lookup", "item", "DEFAULT_PRICE", "key"]
+
 WHOLE_FILE = ["src/shop.erl", "src/shop.hrl", "src/shop_memory.erl", "src/shop_defects.erl"]
 
 
@@ -241,6 +265,8 @@ def main():
                     "publishDiagnostics": {"relatedInformation": True},
                     "hover": {"contentFormat": ["markdown", "plaintext"]},
                     "rename": {"prepareSupport": False},
+                    "completion": {"completionItem": {"snippetSupport": True, "documentationFormat": ["markdown", "plaintext"],
+                                                      "resolveSupport": {"properties": ["documentation", "detail"]}}},
                     "definition": {"linkSupport": False},
                     "signatureHelp": {"signatureInformation": {"parameterInformation": {"labelOffsetSupport": True}}},
                     "inlayHint": {},
@@ -284,6 +310,7 @@ def main():
                 answers.append({"kind": kind, "file": relative, "needle": needle, "position": at, "params": request,
                                 "result": answer.get("result"), "error": answer.get("error")})
             write(name, answers)
+            return answers
 
         def located(relative, at):
             return {"textDocument": document(relative), "position": at}
@@ -319,6 +346,26 @@ def main():
         record("inlayHint", "textDocument/inlayHint", whole_file,
                lambda relative, at: {"textDocument": document(relative), "range": whole(relative)})
         record("foldingRange", "textDocument/foldingRange", whole_file, lambda relative, at: {"textDocument": document(relative)})
+        completions = record("completion", "textDocument/completion", COMPLETION,
+                             lambda relative, at: dict(located(relative, at), context={"triggerKind": 1}))
+        completions = {answer["kind"]: answer["result"] for answer in completions}
+        resolved = []
+        for kind, label in COMPLETION_RESOLVE:
+            result = completions.get(kind) or []
+            items = result.get("items", []) if isinstance(result, dict) else result
+            item = next((i for i in items if i.get("label") == label), None)
+            answer = server.request("completionItem/resolve", item) if item is not None else {"error": "no item " + label}
+            print("completionItem/resolve %s %s -> %s" % (kind, label, json.dumps(answer.get("result", answer.get("error")))[:160]),
+                  flush=True)
+            resolved.append({"kind": kind, "label": label, "params": item, "result": answer.get("result"), "error": answer.get("error")})
+        write("completionResolve", resolved)
+
+        symbols = []
+        for query in WORKSPACE_SYMBOL:
+            answer = server.request("workspace/symbol", {"query": query})
+            print("workspace/symbol %s -> %s" % (query, json.dumps(answer.get("result", answer.get("error")))[:160]), flush=True)
+            symbols.append({"query": query, "result": answer.get("result"), "error": answer.get("error")})
+        write("workspaceSymbol", symbols)
 
         diagnostics = []
         for relative in texts:

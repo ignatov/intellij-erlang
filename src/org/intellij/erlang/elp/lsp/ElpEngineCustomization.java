@@ -17,21 +17,22 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.platform.lsp.api.customization.*;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.elp.ElpEngine;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent while ELP
- * serves the file ({@link ElpEngine}): diagnostics, hover documentation, parameter name inlay hints, folding, selection ranges,
- * go to definition and type definition, signature help, highlighting of usages in the file, and code actions as intentions.
+ * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent under a root
+ * that ELP serves ({@link ElpEngine}): diagnostics, completion, hover documentation, parameter name inlay hints, folding,
+ * selection ranges, go to definition and type definition, signature help, highlighting of usages in the file, and code actions
+ * as intentions.
  * <p>
- * Switched off here: completion; find references,
- * which the plugin's own ELP entry point asks for instead ({@code ElpFindUsagesHandlerFactory}), so that there is one target;
- * workspace symbols, because ELP answers them with module names only; call hierarchy, which the client does not deliver for an
- * Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which stay with the plugin; and the
- * features ELP does not offer.
+ * Switched off here: workspace symbols, which the plugin's contributors answer; find references, which the plugin's own ELP
+ * entry point asks for instead ({@code ElpFindUsagesHandlerFactory}), so that there is one target; call hierarchy, which the client does not deliver for an
+ * Erlang element; semantic tokens, document symbols and code lenses, because the plugin's lexer, structure view and breadcrumbs
+ * work on the open file without its engine; and the features ELP does not offer.
  * <p>
  * Built against IDEA 2026.1, which has no switch for them, this customization leaves on what later clients added: the client's
  * own rename (2026.2 and later) next to {@code ElpRenameHandler}, go to implementation (2026.3) and the inline and extract
@@ -40,7 +41,16 @@ import org.jetbrains.annotations.NotNull;
 final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport();
 
-  private final LspCompletionCustomizer myCompletion = new LspCompletionSupport();
+  /**
+   * The client also gets the files outside the project's content, such as the OTP sources, where the plugin completes: ELP completes
+   * only where the plugin is silent, so that the list is filled by exactly one of them.
+   */
+  private final LspCompletionCustomizer myCompletion = new LspCompletionSupport() {
+    @Override
+    public boolean shouldRunCodeCompletion(@NotNull CompletionParameters parameters) {
+      return ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
+    }
+  };
   private final LspHoverCustomizer myHover = new LspHoverSupport();
   private final LspInlayHintCustomizer myInlayHints = new LspInlayHintSupport();
   private final LspFoldingRangeCustomizer myFolding = new LspFoldingRangeSupport();
@@ -70,7 +80,7 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @NotNull
   @Override
   public LspCompletionCustomizer getCompletionCustomizer() {
-    return super.getCompletionCustomizer();
+    return myCompletion;
   }
 
   @NotNull

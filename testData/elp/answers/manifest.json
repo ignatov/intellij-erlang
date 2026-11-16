@@ -8,7 +8,7 @@
   "${PROJECT_PATH}": "its path",
   "${PROJECT_URI}": "the URI of the project root"
  },
- "recorded": "2026-11-16",
+ "recorded": "2026-11-17",
  "server_messages": [
   "ELP version: 1.1.0+build-2026-10-14, OTP version: Erlang/OTP 29 [erts-17.1] [source] [64-bit] [smp:1:1] [ds:1:1:10] [async-threads:1] [jit] [dtrace]\n"
  ]

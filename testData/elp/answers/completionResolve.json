@@ -1,0 +1,161 @@
+[
+ {
+  "error": null,
+  "kind": "remote_function",
+  "label": "lookup/2",
+  "params": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 11
+     },
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_backend.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "insertText": "lookup(${1:Backend}, ${2:Key})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "lookup/2"
+  },
+  "result": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 11
+     },
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop_backend.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "documentation": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec lookup(module(), key()) -> {ok, term()} | error.\n```"
+   },
+   "insertText": "lookup(${1:Backend}, ${2:Key})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "lookup/2"
+  }
+ },
+ {
+  "error": null,
+  "kind": "otp_function",
+  "label": "keyfind/3",
+  "params": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 121
+     },
+     "textDocument": {
+      "uri": "${OTP_URI}/lib/stdlib-8.1/src/lists.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "insertText": "keyfind(${1:Key}, ${2:N}, ${3:TupleList})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "keyfind/3"
+  },
+  "result": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 121
+     },
+     "textDocument": {
+      "uri": "${OTP_URI}/lib/stdlib-8.1/src/lists.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "documentation": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec keyfind(Key, N, TupleList) -> Tuple | false when\n      Key :: term(),\n      N :: pos_integer(),\n      TupleList :: [Tuple],\n      Tuple :: tuple().\n```\n\n-----\n\nSearches the list of tuples `TupleList` for a tuple whose `N`th element compares\nequal to `Key`.\n\nReturns `Tuple` if such a tuple is found; otherwise, returns `false`.\n\n## Examples\n\n```erlang\n1> lists:keyfind(b, 1, [{a,10}, {b,20}, {c,30}]).\n{b,20}\n2> lists:keyfind(unknown, 1, [{a,10}, {b,20}, {c,30}]).\nfalse\n```"
+   },
+   "insertText": "keyfind(${1:Key}, ${2:N}, ${3:TupleList})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "keyfind/3"
+  }
+ },
+ {
+  "error": null,
+  "kind": "local_function",
+  "label": "price/1",
+  "params": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 10
+     },
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "insertText": "price(${1:Name})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "price/1"
+  },
+  "result": {
+   "command": {
+    "command": "editor.action.triggerParameterHints",
+    "title": "triggerParameterHints"
+   },
+   "data": {
+    "position": {
+     "position": {
+      "character": 0,
+      "line": 10
+     },
+     "textDocument": {
+      "uri": "${PROJECT_URI}/src/shop.erl"
+     }
+    }
+   },
+   "deprecated": false,
+   "documentation": {
+    "kind": "markdown",
+    "value": "```erlang\n-spec price(shop_backend:key()) -> non_neg_integer().\n```"
+   },
+   "insertText": "price(${1:Name})",
+   "insertTextFormat": 2,
+   "kind": 3,
+   "label": "price/1"
+  }
+ }
+]
