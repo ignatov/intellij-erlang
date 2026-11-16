@@ -16,13 +16,25 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.platform.lsp.api.customization.LspDiagnosticsSupport;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -59,11 +71,57 @@ final class ElpDiagnosticsSupport extends LspDiagnosticsSupport {
 
   /**
    * ELP's lints that it reports as errors on code that {@code erlc} compiles (measured on ten real projects): W0008 on the helper
-   * functions of Common Test suites with {@code export_all}, W0053 and W0014. They are shown as warnings. P1711, ELP's parse error,
-   * is not lowered: it is a real error in most files, and ELP's known false ones (a macro that expands to part of a clause, a char
-   * literal such as {@code $\x{4141}}) can be told apart only with the file, which this severity hook does not get.
+   * functions of Common Test suites with {@code export_all}, W0053 and W0014. They are shown as warnings. ELP's syntax error P1711
+   * needs the file, see {@link #createAnnotation}.
    */
   static final Set<String> LOWERED_TO_WARNING = Set.of("W0008", "W0053", "W0014");
+
+  static final String SYNTAX_ERROR = "P1711";
+  /**
+   * The message of a P1711 of ELP's own parser. ELP also reports the syntax errors of erlc's parser as P1711, with erlc's message
+   * ("syntax error before: 'end'"), and those stay errors.
+   */
+  static final String ELP_PARSER_MESSAGE = "Syntax Error";
+
+  /**
+   * Shows a syntax error of ELP's own parser as a warning where the plugin's parser finds no error. ELP 1.1.0's parser reports
+   * code that erlc compiles: a char literal such as {@code $\x{4141}}, a macro that expands to part of a clause such as
+   * {@code -define(WITH_STACKTRACE(T, R, S), T:R:S ->)}. A real syntax error stays red: the plugin shows its own parse errors, and
+   * an ELP syntax error that overlaps one of them stays an error.
+   */
+  @Override
+  public void createAnnotation(@NotNull AnnotationHolder holder, @NotNull Diagnostic diagnostic, @NotNull TextRange textRange,
+                               @NotNull List<? extends IntentionAction> quickFixes) {
+    boolean lower = isElpParserSyntaxError(diagnostic) && !overlapsParseError(holder.getCurrentAnnotationSession().getFile(), textRange);
+    super.createAnnotation(holder, lower ? asWarning(diagnostic) : diagnostic, textRange, quickFixes);
+  }
+
+  private boolean isElpParserSyntaxError(@NotNull Diagnostic diagnostic) {
+    return SYNTAX_ERROR.equals(code(diagnostic)) && ELP_PARSER_MESSAGE.equals(getMessage(diagnostic)) &&
+           getHighlightSeverity(diagnostic) == HighlightSeverity.ERROR;
+  }
+
+  private static boolean overlapsParseError(@NotNull PsiFile file, @NotNull TextRange range) {
+    List<TextRange> errors = CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
+      ContainerUtil.map(PsiTreeUtil.collectElementsOfType(file, PsiErrorElement.class), PsiElement::getTextRange), file));
+    return ContainerUtil.exists(errors, error -> error.intersects(range));
+  }
+
+  /** The same diagnostic at warning severity. The message is a plain string: {@link #isElpParserSyntaxError} compared it. */
+  @NotNull
+  private Diagnostic asWarning(@NotNull Diagnostic diagnostic) {
+    Diagnostic warning = new Diagnostic();
+    warning.setRange(diagnostic.getRange());
+    warning.setSeverity(DiagnosticSeverity.Warning);
+    warning.setCode(diagnostic.getCode());
+    warning.setCodeDescription(diagnostic.getCodeDescription());
+    warning.setSource(diagnostic.getSource());
+    warning.setMessage(getMessage(diagnostic));
+    warning.setTags(diagnostic.getTags());
+    warning.setRelatedInformation(diagnostic.getRelatedInformation());
+    warning.setData(diagnostic.getData());
+    return warning;
+  }
 
   @Nullable
   static String code(@NotNull Diagnostic diagnostic) {
