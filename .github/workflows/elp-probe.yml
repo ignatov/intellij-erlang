@@ -210,6 +210,32 @@ jobs:
         done
         test "$code_lint" = 0 -o "$unused_lint" -gt 0
 
+    - name: ELP over LSP without the IDE
+      id: lsp
+      continue-on-error: true
+      run: |
+        set +e
+        rows="$PROBE_DIR/rows.md"
+        out="$PROBE_DIR/lsp"
+        mkdir -p "$out"
+        cp -R testData/elp/project "$out/project"
+        nat() { if [ "$RUNNER_OS" = Windows ]; then cygpath -w "$1"; else printf '%s\n' "$1"; fi; }
+        py="$(command -v python3 || command -v python)"
+        if [ "$RUNNER_OS" = Windows ]; then py="$(command -v python)"; fi
+        noeqw="$(nat "$out/no-eqwalizer")"
+        probe() {
+          label="$1"
+          shift
+          "$@" "$py" -I .github/elp-probe/lsp_probe.py "$ERLANG_ELP_PATH" "$(nat "$out/project")" "$style" 60 "$label" 2>&1 | tee "$out/$label.txt"
+          echo "| lsp $label | $(grep -h 'unused_function diagnostic' "$out/$label.txt" | cut -d: -f2- | cut -c1-160); panics: $(grep -c 'panicked' "$out/lsp-$label-stderr.txt") |" >> "$rows"
+        }
+        style=vscode probe vscode env
+        style=vscode probe vscode-no-eqwalizer env ELP_EQWALIZER_PATH="$noeqw"
+        if [ "$RUNNER_OS" = Windows ]; then
+          style=plain probe plain env
+          style=plain probe plain-no-eqwalizer env ELP_EQWALIZER_PATH="$noeqw"
+        fi
+
     - name: Plugin tests with the real ELP
       id: live
       continue-on-error: true
@@ -219,7 +245,16 @@ jobs:
       run: |
         echo "ERLANG_ELP_PATH=$ERLANG_ELP_PATH"
         start=$(date +%s)
-        PROBE_REBAR3="$REBAR3_PATH" ./gradlew --no-daemon --no-build-cache clean test --tests 'org.intellij.erlang.elp.*' && code=0 || code=$?
+        gradle() {
+          PROBE_REBAR3="$REBAR3_PATH" ./gradlew --no-daemon --no-build-cache clean test --tests 'org.intellij.erlang.elp.*'
+        }
+        gradle && code=0 || code=$?
+        if [ "$code" != 0 ] && ! ls build/test-results/test/*.xml > /dev/null 2>&1; then
+          # No test ran: a dependency download failed (Maven Central answered 429 once). Try once more.
+          echo "| gradle test | first attempt failed before the tests, retried |" >> "$PROBE_DIR/rows.md"
+          sleep 90
+          gradle && code=0 || code=$?
+        fi
         echo "| gradle test | exit $code in $(( $(date +%s) - start )) s |" >> "$PROBE_DIR/rows.md"
         exit $code
 
@@ -228,6 +263,7 @@ jobs:
       env:
         DOWNLOAD: ${{ steps.download.outcome }}
         CLI: ${{ steps.cli.outcome }}
+        LSP: ${{ steps.lsp.outcome }}
         LIVE: ${{ steps.live.outcome }}
       run: |
         shopt -s nullglob
@@ -250,7 +286,7 @@ jobs:
           echo "### ELP probe on $RUNNER_OS"
           echo "| step | result |"
           echo "|---|---|"
-          echo "| outcomes | download $DOWNLOAD, cli $CLI, gradle $LIVE |"
+          echo "| outcomes | download $DOWNLOAD, cli $CLI, lsp $LSP, gradle $LIVE |"
           cat "$PROBE_DIR/rows.md" 2>/dev/null
           echo "| all elp tests | $(tests "${files[@]}") |"
           echo "| ElpLiveServerTest | $(tests "${live[@]}") |"
@@ -276,6 +312,7 @@ jobs:
           ${{ runner.temp }}/probe/probe-lines.txt
           ${{ runner.temp }}/probe/cli/logs
           ${{ runner.temp }}/probe/cli/project-info
-          .intellijPlatform/sandbox/*/*/log_test
-          .intellijPlatform/sandbox/*/*/system_test/testlog
+          ${{ runner.temp }}/probe/lsp/*.txt
+          .intellijPlatform/sandbox/*/*/log-test
+          .intellijPlatform/sandbox/*/*/system-test/testlog
         if-no-files-found: ignore

@@ -17,7 +17,13 @@
 package org.intellij.erlang.elp.lsp;
 
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.io.FileUtil;
@@ -34,7 +40,11 @@ import com.intellij.testFramework.PsiTestUtil;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.elp.ElpSettings;
+import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,6 +70,9 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
 
   private ElpSettings.ElpSettingsState myOldState;
   private VirtualFile myRoot;
+  private Sdk myOldSdk;
+  private boolean mySdkChanged;
+  private String myOldRebarPath;
 
   @Override
   protected void setUp() throws Exception {
@@ -77,6 +90,8 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
     try {
       LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
       ElpSettings.getInstance().loadState(myOldState);
+      if (mySdkChanged) WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(myOldSdk));
+      if (myOldRebarPath != null) RebarSettings.getInstance(getProject()).setRebarPath(myOldRebarPath);
       if (myRoot != null) PsiTestUtil.removeContentEntry(getModule(), myRoot);
     }
     catch (Throwable e) {
@@ -135,14 +150,35 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
     if (!failed.isEmpty()) fail("PROBE failed: " + failed);
   }
 
-  /** The real server on a copy of testData/elp/project: load, definition, diagnostics, rename, TMPDIR, the processes after stop. */
+  /** The real server on a copy of testData/elp/project: load, definition, diagnostics, two renames, TMPDIR, the processes. */
   public void testProbeLiveServer() throws Exception {
+    probeLive("default", null, null);
+  }
+
+  /**
+   * The same with {@code ELP_EQWALIZER_PATH} set to a file without an extension that does not exist: the release build for Windows
+   * panics in {@code EqwalizerExe::ensure_exe} on its embedded eqWAlizer, and this runtime override takes another branch there.
+   */
+  public void testProbeLiveServerWithoutEqwalizerBinary() throws Exception {
+    Path none = FileUtil.createTempDirectory("elp-no-eqwalizer", null, true).toPath().resolve("no-eqwalizer");
+    probeLive("no-eqwalizer", Map.of("ELP_EQWALIZER_PATH", none.toString()), null);
+  }
+
+  /** Started as the IDE starts it, after the preflight, with the rebar3.cmd wrapper next to the escript as the rebar path. */
+  public void testProbeIdeStartWithRebar3Wrapper() throws Exception {
+    String escript = System.getenv("PROBE_REBAR3");
+    Assume.assumeTrue("Set PROBE_REBAR3 to the rebar3 escript", escript != null && new File(escript + ".cmd").isFile());
+    probeLive("ide-start-rebar3.cmd", null, escript + ".cmd");
+  }
+
+  private void probeLive(@NotNull String label, @Nullable Map<String, String> environment, @Nullable String rebarPath) throws Exception {
     String elp = System.getenv("ERLANG_ELP_PATH");
     Assume.assumeTrue("Set ERLANG_ELP_PATH to the elp binary to run this probe", elp != null && !elp.isBlank());
+    label = "[" + label + "] ";
     List<String> failed = new ArrayList<>();
     Path created = FileUtil.createTempDirectory("elp-probe", null, true).toPath();
     Path project = created.toRealPath().resolve("project");
-    probe("project " + project + " (created as " + created + ")");
+    probe(label + "project " + project + " (created as " + created + ")");
     FileUtil.copyDir(new File("testData/elp/project"), project.toFile());
     VfsRootAccess.allowRootAccess(getTestRootDisposable(), project.toString());
     myRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(project);
@@ -157,20 +193,55 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
     assertNotNull(shop);
     myFixture.openFileInEditor(shop);
 
-    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
     long start = System.currentTimeMillis();
-    LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
-    boolean serving = waitFor("serving", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION));
-    probe("serving " + serving + " after " + (System.currentTimeMillis() - start) + " ms; state " + descriptor.getLoadState().state() +
-          "; history " + descriptor.getLoadState().history() + "; otpNotFound " + descriptor.getLoadState().isOtpNotFound() +
-          "; firstError " + descriptor.getLoadState().firstError());
-    probe("last log lines " + descriptor.getLoadState().lastLogLines());
-    probe("uri of shop.erl " + descriptor.getFileUri(shop) + "; tmpDir " + descriptor.getTmpDir());
+    ElpLspClientDescriptor descriptor;
+    if (rebarPath != null) {
+      File erl = PathEnvironmentVariableUtil.findInPath(SystemInfo.isWindows ? "erl.exe" : "erl");
+      assertNotNull("erl is not on the PATH", erl);
+      String otp = new File(erl.getParentFile(), "..").getCanonicalPath();
+      Sdk sdk = ErlangSdkType.createMockSdk(otp, ErlangSdkRelease.V_27_0);
+      myOldSdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+      mySdkChanged = true;
+      WriteAction.run(() -> {
+        ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable());
+        ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk);
+      });
+      myOldRebarPath = RebarSettings.getInstance(getProject()).getRebarPath();
+      RebarSettings.getInstance(getProject()).setRebarPath(rebarPath);
+      ElpPreflight.getInstance(getProject()).invalidate();
+      ElpPreflight.Result preflight = PlatformTestUtil.waitForFuture(
+        ApplicationManager.getApplication().executeOnPooledThread(() -> ElpPreflight.check(getProject())), 120_000);
+      probe(label + "otp " + otp + "; preflight canStart " + preflight.canStart() + " problems " + preflight.problems());
+      ElpLspIntegrationProvider.startServersIfNeeded(getProject());
+      ElpLspClientDescriptor[] found = new ElpLspClientDescriptor[1];
+      boolean started = waitFor("a server", () -> {
+        for (var server : LspServerManager.getInstance(getProject()).getServersForProvider(ElpLspIntegrationProvider.class)) {
+          if (server.getDescriptor() instanceof ElpLspClientDescriptor d) found[0] = d;
+        }
+        return found[0] != null;
+      }, 60);
+      probe(label + "server created " + started);
+      if (!started) fail("PROBE failed: " + label + "no server");
+      descriptor = found[0];
+    }
+    else {
+      descriptor = new ElpLspClientDescriptor(getProject(), myRoot, new ElpConfiguration(elp, ElpMode.ELP));
+      descriptor.setEnvironmentForTests(environment);
+      LspServerManager.getInstance(getProject()).ensureServerStarted(ElpLspIntegrationProvider.class, descriptor);
+    }
+    ElpLspClientDescriptor server = descriptor;
+    boolean serving = waitFor("serving", () -> ElpEngine.ownsFeature(getProject(), shop, ElpEngine.Feature.NAVIGATION) ||
+                                               server.getLoadState().state() == ElpLoadState.State.FAILED);
+    serving = serving && server.getLoadState().state() != ElpLoadState.State.FAILED;
+    probe(label + "serving " + serving + " after " + (System.currentTimeMillis() - start) + " ms; state " + server.getLoadState().state() +
+          "; history " + server.getLoadState().history() + "; otpNotFound " + server.getLoadState().isOtpNotFound() +
+          "; firstError " + server.getLoadState().firstError());
+    probe(label + "uri of shop.erl " + server.getFileUri(shop) + "; tmpDir " + server.getTmpDir());
     List<Long> pids = new ArrayList<>();
-    long pid = descriptor.getProcessPid();
+    long pid = server.getProcessPid();
     pids.add(pid);
     ProcessHandle.of(pid).ifPresent(p -> p.descendants().forEach(child -> pids.add(child.pid())));
-    probe("processes " + describe(pids));
+    probe(label + "processes " + describe(pids));
 
     if (!serving) {
       failed.add("serving");
@@ -183,7 +254,7 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
       long definitionStart = System.currentTimeMillis();
       boolean answered = waitFor("definition", () -> (targets[0] = definition(shopPsi, editor, call)) != null);
       String target = answered && targets[0].length > 0 ? targets[0][0].getContainingFile().getName() : "none";
-      probe("definition answered " + answered + " in " + (System.currentTimeMillis() - definitionStart) + " ms, target " + target);
+      probe(label + "definition answered " + answered + " in " + (System.currentTimeMillis() - definitionStart) + " ms, target " + target);
       if (!"shop_backend.erl".equals(target)) failed.add("definition");
 
       VirtualFile defects = myRoot.findFileByRelativePath("src/shop_defects.erl");
@@ -194,8 +265,8 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
         infos.clear();
         infos.addAll(myFixture.doHighlighting());
         return infos.stream().anyMatch(info -> "function unused_function/0 is unused".equals(info.getDescription()));
-      });
-      probe("diagnostics " + diagnostics + "; " + infos.size() + " infos, first " +
+      }, 90);
+      probe(label + "diagnostics " + diagnostics + "; " + infos.size() + " infos, first " +
             infos.stream().map(HighlightInfo::getDescription).filter(d -> d != null).limit(6).toList());
       if (!diagnostics) failed.add("diagnostics");
 
@@ -204,29 +275,36 @@ public class ElpPlatformProbeTest extends ErlangLightPlatformCodeInsightFixtureT
       shopEditor.getCaretModel().moveToOffset(shopEditor.getDocument().getText().indexOf("\nsum([], Acc)") + 2);
       String renameError = ElpRenameHandler.renameAtCaret(getProject(), shopEditor, myFixture.getFile(), "add_up");
       boolean renamed = shopEditor.getDocument().getText().contains("add_up([Price | Rest], Acc) -> add_up(Rest, Acc + Price).");
-      probe("rename error " + renameError + "; renamed " + renamed);
+      probe(label + "rename error " + renameError + "; renamed " + renamed);
       if (!renamed) failed.add("rename");
+      shopEditor.getCaretModel().moveToOffset(shopEditor.getDocument().getText().indexOf("\nadd_up([], Acc)") + 2);
+      String secondError = ElpRenameHandler.renameAtCaret(getProject(), shopEditor, myFixture.getFile(), "total");
+      String text = shopEditor.getDocument().getText();
+      boolean second = text.contains("total([Price | Rest], Acc) -> total(Rest, Acc + Price).") && !text.contains("add_up");
+      probe(label + "second rename in the same open file error " + secondError + "; ok " + second +
+            (second ? "" : "; lines " + text.lines().filter(l -> l.contains("total") || l.contains("add_up")).limit(4).toList()));
+      if (!second) failed.add("second rename");
     }
 
-    Path tmpDir = descriptor.getTmpDir();
-    boolean inTmpDir = waitFor("eqwalizer in TMPDIR", () -> tmpDir != null && eqwalizerIn(tmpDir.toFile(), 0) != null, 60);
-    if (!inTmpDir) failed.add("eqwalizer in TMPDIR");
-    for (String variable : List.of("TEMP", "TMP", "TMPDIR")) {
+    Path tmpDir = server.getTmpDir();
+    boolean inTmpDir = waitFor("eqwalizer in TMPDIR", () -> tmpDir != null && eqwalizerIn(tmpDir.toFile(), 0) != null, 20);
+    for (String variable : List.of("TEMP", "TMP")) {
       String dir = System.getenv(variable);
-      probe("env " + variable + "=" + dir + (dir == null ? "" : " eqwalizer since start: " + eqwalizerIn(new File(dir), start)));
+      probe(label + "env " + variable + "=" + dir + (dir == null ? "" : " eqwalizer since start: " + eqwalizerIn(new File(dir), start)));
     }
-    probe("tmpDir " + tmpDir + " eqwalizer " + (tmpDir == null ? null : eqwalizerIn(tmpDir.toFile(), 0)));
+    probe(label + "eqwalizer in the plugin's TMPDIR " + inTmpDir);
+    probe(label + "last log lines " + server.getLoadState().lastLogLines());
 
     LspServerManager.getInstance(getProject()).stopServers(ElpLspIntegrationProvider.class);
     long stopStart = System.currentTimeMillis();
     boolean allGone = waitFor("processes gone", () -> pids.stream().noneMatch(p -> ProcessHandle.of(p).map(ProcessHandle::isAlive).orElse(false)), 60);
-    probe("after stop: all gone " + allGone + " in " + (System.currentTimeMillis() - stopStart) + " ms; alive " +
+    probe(label + "after stop: all gone " + allGone + " in " + (System.currentTimeMillis() - stopStart) + " ms; alive " +
           describe(pids.stream().filter(p -> ProcessHandle.of(p).map(ProcessHandle::isAlive).orElse(false)).toList()));
     if (!allGone) failed.add("processes left");
     boolean tmpGone = waitFor("tmpDir gone", () -> tmpDir == null || !Files.exists(tmpDir), 60);
-    probe("tmpDir deleted after stop " + tmpGone);
+    probe(label + "tmpDir deleted after stop " + tmpGone);
     if (!tmpGone) failed.add("tmpDir left");
-    if (!failed.isEmpty()) fail("PROBE failed: " + failed);
+    if (!failed.isEmpty()) fail("PROBE failed: " + label + failed);
   }
 
   private static void probe(@NotNull String line) {
