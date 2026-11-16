@@ -19,6 +19,7 @@ package org.intellij.erlang.completion;
 import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -29,6 +30,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -283,6 +285,56 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -record(rec, {id :: <caret>}).""",
       ArrayUtilRt.toStringArray(ErlangPsiImplUtil.BUILT_IN_TYPES)
     );
+  }
+
+  public void testErlInternalBuiltInTypes() {
+    doTestInclude(
+      "-type foo() :: <caret>.",
+      "arity", "binary", "bitstring", "dynamic", "function", "identifier", "iodata", "map", "nil",
+      "nonempty_binary", "nonempty_bitstring", "nonempty_improper_list", "nonempty_list",
+      "nonempty_maybe_improper_list", "tuple"
+    );
+  }
+
+  public void testBuiltInTypeWithoutZeroArityPutsCaretInsideParentheses() {
+    myFixture.configureByText("a.erl", "-type foo() :: nonempty_imp<caret>.");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    myFixture.getLookup().setCurrentItem(ContainerUtil.find(elements, e -> e.getLookupString().equals("nonempty_improper_list")));
+    myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    myFixture.checkResult("-type foo() :: nonempty_improper_list(<caret>).");
+  }
+
+  public void testLocalTypeHidesBuiltInTypeOfSameName() {
+    doCheckResult(
+      """
+        -type dynamic() :: term().
+        -type foo() :: dyna<caret>.""",
+      """
+        -type dynamic() :: term().
+        -type foo() :: dynamic()<caret>.""");
+  }
+
+  public void testNoBuiltInTypesInExportType() {
+    doTestEquals(
+      """
+        -type tuple_a() :: a.
+        -type tuple_b() :: b.
+        -export_type([tupl<caret>]).""",
+      "tuple_a", "tuple_b");
+  }
+
+  public void testLocalTypeOfOtherArityKeepsBuiltInType() {
+    myFixture.configureByText("a.erl", """
+      -type list(A, B) :: {A, B}.
+      -type t() :: lis<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
+  }
+
+  public void testNoUndefinedOrDeprecatedBuiltInTypes() {
+    doTestVariants("-type foo() :: <caret>.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "improper_list", "bool");
   }
 
   public void testTypesInSpec() {
