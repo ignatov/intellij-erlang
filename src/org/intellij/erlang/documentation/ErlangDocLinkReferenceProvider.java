@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.codeInsight.completion.CompletionUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
@@ -46,7 +47,7 @@ public class ErlangDocLinkReferenceProvider extends PsiReferenceProvider {
   private static final Pattern REFERENCE = Pattern.compile(
     "(?:^%+[ \\t]*@see|\\{@link)[ \\t]+" +
     "(//" + ATOM + "/)?(?:(" + ATOM + ")[ \\t]*:[ \\t]*)?(" + ATOM + ")(?:[ \\t]*/[ \\t]*(\\d+))?" +
-    "(?=[ \\t]*(?:\\.(?:[ \\t]|$)|}|$))");
+    "(?=[ \\t]*(?:\\.(?:[ \\t]|}|$)|}|$))");
 
   @Override
   public PsiReference @NotNull [] getReferencesByElement(@NotNull PsiElement element, @NotNull ProcessingContext context) {
@@ -54,6 +55,7 @@ public class ErlangDocLinkReferenceProvider extends PsiReferenceProvider {
     List<PsiReference> references = new ArrayList<>();
     Matcher reference = REFERENCE.matcher(comment.getText());
     while (reference.find()) {
+      if (reference.group().contains(CompletionUtil.DUMMY_IDENTIFIER_TRIMMED)) continue;
       String moduleName = reference.group(2);
       String arity = reference.group(4);
       if (arity != null) {

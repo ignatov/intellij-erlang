@@ -70,6 +70,22 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
     doFunctionTest("%% See {@link fo<caret>o/0. the other one}.", "test.erl", "foo", 0);
   }
 
+  public void testLinkEndingWithPeriod() {
+    doFunctionTest("%% See {@link fo<caret>o/0.}", "test.erl", "foo", 0);
+  }
+
+  public void testCompleteFunctionNameAfterSee() {
+    doCompletionTest("%% @see sys<caret>", "%% @see system_cmd<caret>");
+  }
+
+  public void testCompleteModuleNameAfterSee() {
+    doCompletionTest("%% @see han<caret>", "%% @see handler<caret>");
+  }
+
+  public void testCompleteInLink() {
+    doCompletionTest("%% See {@link sys<caret>}", "%% See {@link system_cmd<caret>}");
+  }
+
   public void testSeeFunctionFollowedByDescription() {
     doFunctionTest("%% @see fo<caret>o/1. More text", "test.erl", "foo", 1);
   }
@@ -135,6 +151,13 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
       <warning descr="Unused function 'bar/1'">bar</warning>(_) -> ok.
       """);
     myFixture.checkHighlighting(true, false, false);
+  }
+
+  private void doCompletionTest(@NotNull String comment, @NotNull String expectedComment) {
+    String code = "\nsystem_cmd(_) -> handler:system_cmd(1, 2, 3, 4, 5).\n";
+    myFixture.configureByText("test.erl", "-module(test).\n" + comment + code);
+    myFixture.completeBasic();
+    myFixture.checkResult("-module(test).\n" + expectedComment + code);
   }
 
   private void doFunctionTest(@NotNull String comment, @NotNull String expectedFile, @NotNull String name, int arity) {
