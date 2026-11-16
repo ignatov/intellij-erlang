@@ -46,8 +46,11 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
   @Override
   public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspServerStarter serverStarter) {
     if (!ElpFiles.isElpFile(file)) return;
-    // In the Plugin position ELP is not started at all; the plugin works as without the integration.
-    if (!ElpSettings.getInstance().isElpPositionWithServer()) return;
+    // In the Plugin position ELP is not started at all; the plugin works as without the integration. ELP may be offered there.
+    if (!ElpSettings.getInstance().isElpPositionWithServer()) {
+      ElpOffer.fileOpened(project, file);
+      return;
+    }
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
     if (root == null) return;
     // The position is application-wide; whether ELP can load this project is checked here, before every start.
