@@ -24,6 +24,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBRadioButton;
@@ -93,6 +94,7 @@ public final class ElpSettingsPanel {
                                       "directory are put first on its PATH."))
       .addLabeledComponent("Engine:", myModeBox)
       .addComponentToRightColumn(hint("<html>Plugin: ELP is not started.<br>ELP: ELP answers; the plugin fills the gaps.</html>"))
+      .addComponentToRightColumn(new ActionLink("Tell us how it went", (java.awt.event.ActionListener)e -> ElpFeedback.open(myProject)))
       .addComponentToRightColumn(myEqwalizerBox)
       .addComponentToRightColumn(hint("eqWAlizer is ELP's gradual type checker. Code not written for it gets many type " +
                                       "errors that erlc does not report; they are shown as warnings."))

@@ -54,6 +54,10 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     public String source = "";
     public String mode = ElpMode.PLUGIN.name();
     public boolean eqwalizer;
+    /** The plugin version for which the offer to try ELP was last shown; empty when it was never shown. */
+    public String offerShownForVersion = "";
+    /** The user chose "Don't ask again" on the offer to try ELP. */
+    public boolean offerNeverAsk;
   }
 
   @NotNull private ElpSettingsState myState = new ElpSettingsState();
@@ -117,6 +121,29 @@ public final class ElpSettings implements PersistentStateComponent<ElpSettings.E
     myState.mode = mode.name();
     myState.eqwalizer = eqwalizer;
     if (changed) ApplicationManager.getApplication().getMessageBus().syncPublisher(TOPIC).elpSettingsChanged();
+  }
+
+  /** Sets the engine position and keeps the rest; tells the running servers when it changed. */
+  public void setMode(@NotNull ElpMode mode) {
+    update(getStoredSource(), getStoredPath(), mode, getStoredEqwalizer());
+  }
+
+  /** The plugin version for which the offer to try ELP was last shown, empty when it was never shown. */
+  @NotNull
+  public String getOfferShownForVersion() {
+    return Objects.requireNonNullElse(myState.offerShownForVersion, "");
+  }
+
+  public void setOfferShownForVersion(@NotNull String version) {
+    myState.offerShownForVersion = version;
+  }
+
+  public boolean isOfferNeverAsk() {
+    return myState.offerNeverAsk;
+  }
+
+  public void setOfferNeverAsk(boolean neverAsk) {
+    myState.offerNeverAsk = neverAsk;
   }
 
   /**
