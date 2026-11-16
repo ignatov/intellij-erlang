@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.rebar.runner;
 
+import com.intellij.execution.configuration.EnvironmentVariablesData;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -29,6 +31,7 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final List<String> WINDOWS_EXTENSIONS = List.of(".com", ".exe", ".bat", ".cmd");
@@ -65,6 +68,25 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     // The rebar escript is the first parameter, the rebar command follows it.
     assertEquals(RebarSettings.getInstance(getProject()).getRebarEscriptPath(), parameters.get(0));
     assertEquals(List.of(expected), parameters.subList(1, parameters.size()));
+  }
+
+  public void testCommandLineWithoutParentEnvironment() {
+    GeneralCommandLine commandLine = getCommandLineWithEnvironment(false);
+    assertEquals(GeneralCommandLine.ParentEnvironmentType.NONE, commandLine.getParentEnvironmentType());
+    assertEquals("bar", commandLine.getEffectiveEnvironment().get("FOO"));
+  }
+
+  public void testCommandLineWithParentEnvironment() {
+    GeneralCommandLine commandLine = getCommandLineWithEnvironment(true);
+    assertEquals(GeneralCommandLine.ParentEnvironmentType.CONSOLE, commandLine.getParentEnvironmentType());
+    assertEquals("bar", commandLine.getEffectiveEnvironment().get("FOO"));
+  }
+
+  private GeneralCommandLine getCommandLineWithEnvironment(boolean passParentEnvs) {
+    RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+    configuration.setCommand("compile");
+    configuration.setEnvData(EnvironmentVariablesData.create(Map.of("FOO", "bar"), passParentEnvs));
+    return RebarRunningStateUtil.getRebarCommandLine(configuration);
   }
 
   public void testEscriptOfProjectSdk() {
