@@ -22,6 +22,7 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
@@ -123,6 +124,37 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertEquals(tmpDir.toString(), commandLine.getEnvironment().get("TMPDIR"));
     assertTrue(Files.isDirectory(tmpDir));
     ElpServerEnvironment.deleteSessionDirectory(tmpDir);
+  }
+
+  /**
+   * A project opened through a symlink: ELP gets the real path of the files under the root, and the real paths it answers with map
+   * back to the files the project knows. Files outside the root keep their path.
+   */
+  public void testFilesUnderASymlinkedRootGoToElpByTheirRealPath() throws Exception {
+    Path temp = FileUtil.createTempDirectory("elp-real-path", null, true).toPath().toRealPath();
+    Path real = Files.createDirectories(temp.resolve("real dir/project/src"));
+    Files.writeString(real.resolve("a.erl"), "-module(a).");
+    Path link = Files.createSymbolicLink(temp.resolve("link"), temp.resolve("real dir"));
+    Path outside = Files.writeString(temp.resolve("outside.erl"), "-module(outside).");
+    VirtualFile root = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(link.resolve("project"));
+    assertNotNull(root);
+    VirtualFile module = root.findFileByRelativePath("src/a.erl");
+    assertNotNull(module);
+    VirtualFile outsideFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(outside);
+    assertNotNull(outsideFile);
+    ElpLspClientDescriptor descriptor = new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration("/opt/elp/bin/elp", ElpMode.ELP));
+    String linkUri = descriptor.getFileUri(module);
+    assertEquals(link.resolve("project/src/a.erl").toString(), java.net.URI.create(linkUri).getPath());
+
+    descriptor.resolveRealRoot();
+    String realUri = descriptor.getFileUri(module);
+    assertEquals(real.resolve("a.erl").toString(), java.net.URI.create(realUri).getPath());
+    assertTrue(realUri, realUri.contains("real%20dir"));
+    assertEquals(module, descriptor.findFileByUri(realUri));
+    assertEquals("ELP's own encoding of the same path", module, descriptor.findFileByUri(real.resolve("a.erl").toUri().toString()));
+    assertEquals("the link still works", module, descriptor.findFileByUri(linkUri));
+    assertEquals(outsideFile, descriptor.findFileByUri(descriptor.getFileUri(outsideFile)));
+    assertEquals(outside.toString(), java.net.URI.create(descriptor.getFileUri(outsideFile)).getPath());
   }
 
   public void testPathIsInheritedWithoutSdkAndRebar() throws Exception {

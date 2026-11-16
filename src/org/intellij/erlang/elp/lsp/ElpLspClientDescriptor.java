@@ -23,11 +23,15 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerListener;
 import com.intellij.platform.lsp.api.customization.LspCustomization;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import com.intellij.util.io.URLUtil;
 import org.eclipse.lsp4j.InitializeResult;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
@@ -38,6 +42,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -51,6 +57,13 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   private final ElpConfiguration myConfiguration;
   private LspCustomization myCustomization;
   private volatile Path myTmpDir;
+  private volatile RealRoot myRealRoot;
+
+  /**
+   * The workspace root as the project knows it ({@code link}) and its real path when that differs ({@code real}), with their URIs.
+   */
+  private record RealRoot(@NotNull String link, @NotNull String real, @NotNull String linkUri, @NotNull String realUri) {
+  }
 
   ElpLspClientDescriptor(@NotNull Project project, @NotNull VirtualFile root, @NotNull ElpConfiguration configuration) {
     super(project, "ELP", root);
@@ -79,6 +92,7 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     commandLine.setWorkDirectory(getRoots()[0].getPath());
     // No temporary directory for a server that cannot start.
     if (!new File(myConfiguration.path()).canExecute()) throw new ExecutionException(myConfiguration.path() + " is not an executable file");
+    resolveRealRoot();
     Path tmpDir = ElpServerEnvironment.createSessionDirectory();
     myTmpDir = tmpDir;
     Map<String, String> environment = ElpServerEnvironment.forProject(getProject(), tmpDir);
@@ -113,6 +127,61 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     Path tmpDir = myTmpDir;
     myTmpDir = null;
     if (tmpDir != null) ElpServerEnvironment.deleteSessionDirectory(tmpDir);
+  }
+
+  /**
+   * Finds out whether the workspace root lies under a symlink. ELP reports {@code L0003 Unknown application} on every file whose
+   * URI goes through a symlink and resolves nothing there, so it gets the real paths of the files under the root, and the files it
+   * names under the real root are mapped back to the root the project knows; see {@link #getFileUri} and
+   * {@link #findLocalFileByPath}. Only the URIs of the documents and requests matter to ELP, not its working directory.
+   */
+  @RequiresBackgroundThread
+  void resolveRealRoot() {
+    VirtualFile root = getRoots()[0];
+    RealRoot realRoot = null;
+    if (root.isInLocalFileSystem()) {
+      try {
+        String link = root.getPath();
+        String real = FileUtil.toSystemIndependentName(root.toNioPath().toRealPath().toString());
+        if (!real.equals(link)) realRoot = new RealRoot(link, real, super.getFileUri(root), uri(real));
+      }
+      catch (IOException | UnsupportedOperationException e) {
+        LOG.info("Cannot find the real path of " + root, e);
+      }
+    }
+    myRealRoot = realRoot;
+    if (realRoot != null) LOG.info("ELP gets the files under " + realRoot.link() + " by their real path " + realRoot.real());
+  }
+
+  @NotNull
+  @Override
+  public String getFileUri(@NotNull VirtualFile file) {
+    String uri = super.getFileUri(file);
+    RealRoot realRoot = myRealRoot;
+    if (realRoot == null || !isUnder(uri, realRoot.linkUri())) return uri;
+    return realRoot.realUri() + uri.substring(realRoot.linkUri().length());
+  }
+
+  /**
+   * Every file that ELP names, in diagnostics, locations and edits, is found through this method, see {@code findFileByUri}.
+   */
+  @Nullable
+  @Override
+  protected VirtualFile findLocalFileByPath(@NotNull String path) {
+    RealRoot realRoot = myRealRoot;
+    if (realRoot != null && isUnder(path, realRoot.real())) path = realRoot.link() + path.substring(realRoot.real().length());
+    return super.findLocalFileByPath(path);
+  }
+
+  private static boolean isUnder(@NotNull String path, @NotNull String root) {
+    return path.equals(root) || path.startsWith(root) && path.charAt(root.length()) == '/';
+  }
+
+  /** As the platform builds the URI of a local file. */
+  @NotNull
+  private static String uri(@NotNull String path) {
+    URI uri = VfsUtil.toUri(VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, URLUtil.encodePath(path)));
+    return uri != null ? uri.toString() : VirtualFileManager.constructUrl(URLUtil.FILE_PROTOCOL, path);
   }
 
   /** The temporary directory of the server process started last, until it ends. */
