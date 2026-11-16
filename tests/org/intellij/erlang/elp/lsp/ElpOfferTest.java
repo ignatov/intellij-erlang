@@ -273,7 +273,7 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertEquals(2, myDialogs.size());
   }
 
-  /** The second offer says sorry, reminds of the earlier "Not now", is the last one, and needs no "Don't ask again". */
+  /** The second offer says that it is the last one, before the text of the first, and needs no "Don't ask again". */
   public void testTheSecondOfferRemindsAndIsTheLast() {
     myUser = d -> press(d, ElpOffer.NOT_NOW);
     assertTrue(offer(V1));
@@ -281,8 +281,8 @@ public class ElpOfferTest extends ErlangLightPlatformCodeInsightFixtureTestCase 
     assertTrue(offer(V2));
     ElpOfferDialog second = myDialogs.get(1);
     assertEquals(ElpOfferDialog.content(downloadable(), true), second.content());
-    assertEquals(new ElpOfferDialog.Block(ElpOfferDialog.Kind.PARAGRAPH, "Sorry to ask again. You chose \"Not now\" earlier, so this " +
-                                                                          "is a reminder, and it is the last one."),
+    assertEquals(new ElpOfferDialog.Block(ElpOfferDialog.Kind.PARAGRAPH, "Last time may not have been a good moment, so here is the " +
+                                                                          "offer once more. We will not ask again."),
                  second.content().get(0));
     assertEquals(ElpOfferDialog.content(downloadable()), second.content().subList(1, second.content().size()));
     assertNull("no Don't ask again", second.dontAskCheckBox());

@@ -45,7 +45,7 @@ final class ElpOfferDialog extends DialogWrapper {
   static final String TITLE = "Try ELP for Erlang";
   static final String ABOUT = "About ELP";
   /** The first paragraph of the second and last offer. */
-  static final String REMINDER = "Sorry to ask again. You chose \"Not now\" earlier, so this is a reminder, and it is the last one.";
+  static final String REMINDER = "Last time may not have been a good moment, so here is the offer once more. We will not ask again.";
   static final String DOCS_URL = "https://whatsapp.github.io/erlang-language-platform/";
   private static final int WIDTH = 520;
   private static final int BULLET_INDENT = 22;
