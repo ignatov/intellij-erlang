@@ -193,13 +193,12 @@ jobs:
           jps-plugin/build/reports/tests/testCompilation
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
-  # The tests and the compilation tests on macOS and Windows. Informational for now: the jobs may fail
-  # (continue-on-error) and nightly does not wait for them, until the tests that fail there are fixed.
+  # The tests and the compilation tests on macOS and Windows. Required: a failure turns the run red, and nightly
+  # waits for them.
   # buildPlugin, verifyPlugin and verifyGeneratedSources do not depend on the OS and run only in build.
   test-os:
     name: test-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -250,7 +249,6 @@ jobs:
   compilation-tests-os:
     name: compilation-tests-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -387,7 +385,7 @@ jobs:
         if-no-files-found: ignore
 
   nightly:
-    needs: [build, other-ides, compilation-tests]
+    needs: [build, other-ides, compilation-tests, test-os, compilation-tests-os]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     permissions:
