@@ -1,0 +1,727 @@
+[
+ {
+  "diagnostics": [
+   {
+    "code": "W0038",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0038"
+    },
+    "message": "EDoc style comments are deprecated. Please use Markdown instead.",
+    "range": {
+     "end": {
+      "character": 7,
+      "line": 8
+     },
+     "start": {
+      "character": 3,
+      "line": 8
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "incompatible_types",
+    "codeDescription": {
+     "href": "https://fb.me/eqwalizer_errors#incompatible_types"
+    },
+    "message": "`Item`.\nExpression has type:   term()\nContext expected type: #item{}\n        See https://fb.me/eqwalizer_errors#incompatible_types",
+    "range": {
+     "end": {
+      "character": 29,
+      "line": 12
+     },
+     "start": {
+      "character": 25,
+      "line": 12
+     }
+    },
+    "severity": 1,
+    "source": "eqWAlizer"
+   }
+  ],
+  "file": "src/shop.erl"
+ },
+ {
+  "diagnostics": [],
+  "file": "src/shop.hrl"
+ },
+ {
+  "diagnostics": [
+   {
+    "code": "W0038",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0038"
+    },
+    "message": "EDoc style comments are deprecated. Please use Markdown instead.",
+    "range": {
+     "end": {
+      "character": 7,
+      "line": 9
+     },
+     "start": {
+      "character": 3,
+      "line": 9
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_backend.erl"
+ },
+ {
+  "diagnostics": [
+   {
+    "code": "E1516",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/e/E1516"
+    },
+    "message": "can't find include file \"no_such_header.hrl\"",
+    "range": {
+     "end": {
+      "character": 29,
+      "line": 5
+     },
+     "start": {
+      "character": 9,
+      "line": 5
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "E1516",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/e/E1516"
+    },
+    "message": "can't find include lib \"no_such_app/include/no_such_header.hrl\"",
+    "range": {
+     "end": {
+      "character": 53,
+      "line": 6
+     },
+     "start": {
+      "character": 13,
+      "line": 6
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1209",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1209"
+    },
+    "message": "function map/2 already imported from lists",
+    "range": {
+     "end": {
+      "character": 30,
+      "line": 9
+     },
+     "start": {
+      "character": 0,
+      "line": 9
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1234",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1234"
+    },
+    "message": "import directive overrides auto-imported BIF length/1\n - use \"-compile({no_auto_import,[length/1]}).\" to resolve name clash",
+    "range": {
+     "end": {
+      "character": 32,
+      "line": 10
+     },
+     "start": {
+      "character": 0,
+      "line": 10
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "L1227",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1227"
+    },
+    "message": "function undefined_export/0 undefined",
+    "range": {
+     "end": {
+      "character": 79,
+      "line": 12
+     },
+     "start": {
+      "character": 61,
+      "line": 12
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1227",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1227"
+    },
+    "message": "function unknown_macro/0 undefined",
+    "range": {
+     "end": {
+      "character": 59,
+      "line": 13
+     },
+     "start": {
+      "character": 44,
+      "line": 13
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1227",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1227"
+    },
+    "message": "function unknown_macro_call/0 undefined",
+    "range": {
+     "end": {
+      "character": 81,
+      "line": 13
+     },
+     "start": {
+      "character": 61,
+      "line": 13
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1225",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1225"
+    },
+    "message": "function duplicate/0 already exported",
+    "range": {
+     "end": {
+      "character": 98,
+      "line": 14
+     },
+     "start": {
+      "character": 0,
+      "line": 14
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "L1296",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1296"
+    },
+    "message": "type unused_type() is unused",
+    "range": {
+     "end": {
+      "character": 17,
+      "line": 16
+     },
+     "start": {
+      "character": 6,
+      "line": 16
+     }
+    },
+    "severity": 2,
+    "source": "elp",
+    "tags": [
+     1
+    ]
+   },
+   {
+    "code": "L1308",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1308"
+    },
+    "message": "spec for undefined function no_such_function/0",
+    "range": {
+     "end": {
+      "character": 22,
+      "line": 18
+     },
+     "start": {
+      "character": 6,
+      "line": 18
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1262",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1262"
+    },
+    "message": "variable 'Unbound' is unbound",
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 20
+     },
+     "start": {
+      "character": 13,
+      "line": 20
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1227",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1227"
+    },
+    "message": "function missing_local/1 undefined",
+    "range": {
+     "end": {
+      "character": 35,
+      "line": 22
+     },
+     "start": {
+      "character": 19,
+      "line": 22
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "W0017",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0017"
+    },
+    "message": "Function 'shop_memory:no_such_function/1' is undefined.",
+    "range": {
+     "end": {
+      "character": 54,
+      "line": 24
+     },
+     "start": {
+      "character": 26,
+      "line": 24
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "L1230",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1230"
+    },
+    "message": "function unused_function/0 is unused",
+    "range": {
+     "end": {
+      "character": 15,
+      "line": 26
+     },
+     "start": {
+      "character": 0,
+      "line": 26
+     }
+    },
+    "severity": 2,
+    "source": "elp",
+    "tags": [
+     1
+    ]
+   },
+   {
+    "code": "L1268",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1268"
+    },
+    "message": "variable 'Unused' is unused",
+    "range": {
+     "end": {
+      "character": 22,
+      "line": 28
+     },
+     "start": {
+      "character": 16,
+      "line": 28
+     }
+    },
+    "severity": 2,
+    "source": "elp",
+    "tags": [
+     1
+    ]
+   },
+   {
+    "code": "L1252",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1252"
+    },
+    "message": "record no_such_record undefined",
+    "range": {
+     "end": {
+      "character": 37,
+      "line": 30
+     },
+     "start": {
+      "character": 20,
+      "line": 30
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1256",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1256"
+    },
+    "message": "field no_such_field undefined in record item",
+    "range": {
+     "end": {
+      "character": 38,
+      "line": 32
+     },
+     "start": {
+      "character": 25,
+      "line": 32
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "E1507",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/e/E1507"
+    },
+    "message": "undefined macro 'NO_SUCH_MACRO'",
+    "range": {
+     "end": {
+      "character": 33,
+      "line": 34
+     },
+     "start": {
+      "character": 19,
+      "line": 34
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "E1508",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/e/E1508"
+    },
+    "message": "undefined macro 'NO_SUCH_MACRO_CALL/1'",
+    "range": {
+     "end": {
+      "character": 43,
+      "line": 36
+     },
+     "start": {
+      "character": 24,
+      "line": 36
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1229",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1229"
+    },
+    "message": "defining imported function reverse/1",
+    "range": {
+     "end": {
+      "character": 21,
+      "line": 38
+     },
+     "start": {
+      "character": 0,
+      "line": 38
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1231",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1231"
+    },
+    "message": "ambiguous call of overridden auto-imported BIF size/1\n - use erlang:size/1 or \"-compile({no_auto_import,[size/1]}).\" to resolve name clash",
+    "range": {
+     "end": {
+      "character": 29,
+      "line": 42
+     },
+     "start": {
+      "character": 19,
+      "line": 42
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "W0050",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0050"
+    },
+    "message": "Avoid using the `size/1` BIF.",
+    "range": {
+     "end": {
+      "character": 23,
+      "line": 42
+     },
+     "start": {
+      "character": 19,
+      "line": 42
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "L1245",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1245"
+    },
+    "message": "illegal pattern",
+    "range": {
+     "end": {
+      "character": 21,
+      "line": 44
+     },
+     "start": {
+      "character": 16,
+      "line": 44
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1262",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1262"
+    },
+    "message": "variable 'X' is unbound",
+    "range": {
+     "end": {
+      "character": 27,
+      "line": 44
+     },
+     "start": {
+      "character": 26,
+      "line": 44
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1250",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1250"
+    },
+    "message": "illegal guard expression",
+    "range": {
+     "end": {
+      "character": 45,
+      "line": 46
+     },
+     "start": {
+      "character": 22,
+      "line": 46
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "L1317",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1317"
+    },
+    "message": "the format string requires an argument list with 2 arguments, but the argument list contains only 1 argument",
+    "range": {
+     "end": {
+      "character": 42,
+      "line": 48
+     },
+     "start": {
+      "character": 37,
+      "line": 48
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "W0018",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0018"
+    },
+    "message": "Unexpected '.'",
+    "range": {
+     "end": {
+      "character": 17,
+      "line": 50
+     },
+     "start": {
+      "character": 16,
+      "line": 50
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "L1228",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1228"
+    },
+    "message": "function duplicate/0 already defined",
+    "range": {
+     "end": {
+      "character": 16,
+      "line": 51
+     },
+     "start": {
+      "character": 0,
+      "line": 51
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   },
+   {
+    "code": "W0018",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0018"
+    },
+    "message": "Unexpected ';'",
+    "range": {
+     "end": {
+      "character": 19,
+      "line": 53
+     },
+     "start": {
+      "character": 18,
+      "line": 53
+     }
+    },
+    "severity": 2,
+    "source": "elp"
+   },
+   {
+    "code": "P1700",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/p/P1700"
+    },
+    "message": "head mismatch 'mismatched' vs 'mismatch'",
+    "range": {
+     "end": {
+      "character": 10,
+      "line": 54
+     },
+     "start": {
+      "character": 0,
+      "line": 54
+     }
+    },
+    "relatedInformation": [
+     {
+      "location": {
+       "range": {
+        "end": {
+         "character": 8,
+         "line": 53
+        },
+        "start": {
+         "character": 0,
+         "line": 53
+        }
+       },
+       "uri": "${PROJECT_URI}/src/shop_defects.erl"
+      },
+      "message": "Mismatched clause name"
+     }
+    ],
+    "severity": 1,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_defects.erl"
+ },
+ {
+  "diagnostics": [],
+  "file": "src/shop_memory.erl"
+ },
+ {
+  "diagnostics": [
+   {
+    "code": "W0001",
+    "codeDescription": {
+     "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/w/W0001"
+    },
+    "message": "Module name (shop_misnamed_module) does not match file name (shop_misnamed)",
+    "range": {
+     "end": {
+      "character": 28,
+      "line": 0
+     },
+     "start": {
+      "character": 8,
+      "line": 0
+     }
+    },
+    "severity": 1,
+    "source": "elp"
+   }
+  ],
+  "file": "src/shop_misnamed.erl"
+ },
+ {
+  "diagnostics": [
+   {
+    "code": "incompatible_types",
+    "codeDescription": {
+     "href": "https://fb.me/eqwalizer_errors#incompatible_types"
+    },
+    "message": "`erlang:atom_to_list(Name)`.\nExpression has type:   string()\nContext expected type: binary()\n        See https://fb.me/eqwalizer_errors#incompatible_types",
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 7
+     },
+     "start": {
+      "character": 2,
+      "line": 7
+     }
+    },
+    "severity": 1,
+    "source": "eqWAlizer"
+   }
+  ],
+  "file": "src/shop_typed.erl"
+ }
+]
