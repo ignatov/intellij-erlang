@@ -33,8 +33,9 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
       @Override
       public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
         String text = o.getText();
+        int start = openingQuotesStart(text);
         String quotes = "\"".repeat(Math.max(3, countOpeningQuotes(text)));
-        if (text.startsWith(quotes) && !text.startsWith(quotes + "\n")) {
+        if (text.startsWith(quotes, start) && !text.startsWith(quotes + "\n", start)) {
           holder.registerProblem(o, "Not white space after start of triple-quoted string");
         }
         if (text.endsWith(quotes) && !endsWithPattern(text, quotes)) {
@@ -46,10 +47,14 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
 
   // A triple-quoted string or sigil may open with more than three quotes and then ends at the same number (EEP 64)
   private static int countOpeningQuotes(String text) {
-    int start = text.startsWith("~") ? (text.length() > 1 && text.charAt(1) != '"' ? 2 : 1) : 0;
+    int start = openingQuotesStart(text);
     int end = start;
     while (end < text.length() && text.charAt(end) == '"') end++;
     return end - start;
+  }
+
+  private static int openingQuotesStart(String text) {
+    return text.startsWith("~") ? (text.length() > 1 && text.charAt(1) != '"' ? 2 : 1) : 0;
   }
 
   private static boolean endsWithPattern(String tripleQuotedString, String quotes) {

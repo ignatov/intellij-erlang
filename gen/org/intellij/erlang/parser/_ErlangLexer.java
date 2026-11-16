@@ -120,13 +120,14 @@ public class _ErlangLexer implements FlexLexer {
     "\1\32\1\103\1\104\1\32\1\105\2\32\1\106\1\107"+
     "\1\32\1\110\1\0\1\111\1\0\1\111\12\0\1\112"+
     "\1\5\3\0\2\32\1\113\1\32\1\114\1\115\1\116"+
-    "\1\32\1\117\3\32\1\120\2\0\1\112\1\71\2\0"+
-    "\1\71\1\121\1\32\1\122\1\123\1\124\2\32\1\0"+
-    "\1\125\1\0\1\37\1\0\1\32\1\126\1\32\1\0"+
-    "\1\125\1\112\1\127\1\130\1\0\1\111\1\125";
+    "\1\32\1\117\3\32\1\120\2\0\1\121\1\112\1\71"+
+    "\2\0\1\71\1\122\1\32\1\123\1\124\1\125\2\32"+
+    "\1\0\1\126\1\0\1\37\1\0\1\32\1\127\1\32"+
+    "\1\0\1\130\1\126\1\112\1\131\1\132\1\0\1\111"+
+    "\1\126";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[219];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -174,14 +175,14 @@ public class _ErlangLexer implements FlexLexer {
     "\0\275\0\u1b51\0\u1b90\0\u1bcf\0\u1c0e\0\u1c4d\0\u1c8c\0\u1ccb"+
     "\0\u1d0a\0\u1d49\0\u1d88\0\u1dc7\0\u1e06\0\u1e45\0\u1e84\0\u1ec3"+
     "\0\u1f02\0\u1f41\0\u06a5\0\u1f80\0\u06a5\0\u06a5\0\u06a5\0\u1fbf"+
-    "\0\u06a5\0\u1ffe\0\u203d\0\u207c\0\u06a5\0\u20bb\0\u20fa\0\u2139"+
-    "\0\u2178\0\u21b7\0\u21f6\0\u2235\0\u06a5\0\u2274\0\u06a5\0\u06a5"+
-    "\0\u06a5\0\u22b3\0\u22f2\0\u2331\0\u2370\0\u23af\0\u23ee\0\u242d"+
-    "\0\u246c\0\u06a5\0\u24ab\0\u24ea\0\u2529\0\u23ee\0\u06a5\0\u06a5"+
-    "\0\u2568\0\u25a7\0\u25a7";
+    "\0\u06a5\0\u1ffe\0\u203d\0\u207c\0\u06a5\0\u20bb\0\u20fa\0\275"+
+    "\0\u2139\0\u2178\0\u21b7\0\u21f6\0\u2235\0\u06a5\0\u2274\0\u06a5"+
+    "\0\u06a5\0\u06a5\0\u22b3\0\u22f2\0\u2331\0\u2370\0\u23af\0\u23ee"+
+    "\0\u242d\0\u246c\0\u06a5\0\u24ab\0\u24ea\0\275\0\u2529\0\u23ee"+
+    "\0\u06a5\0\u06a5\0\u2568\0\u25a7\0\u25a7";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[219];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -317,33 +318,34 @@ public class _ErlangLexer implements FlexLexer {
     "\4\44\4\0\1\44\1\0\14\44\1\275\11\44\4\0"+
     "\5\236\1\241\32\236\1\240\36\236\5\0\1\276\71\0"+
     "\77\236\77\155\77\156\77\157\77\160\77\161\77\163\77\164"+
-    "\77\165\77\166\5\253\1\277\71\253\5\0\1\300\114\0"+
-    "\1\70\76\0\2\301\7\0\3\301\6\0\26\301\27\0"+
-    "\2\302\7\0\3\302\6\0\26\302\22\0\1\303\1\0"+
-    "\1\303\2\0\2\304\75\0\2\44\6\0\4\44\4\0"+
-    "\1\44\1\0\16\44\1\305\7\44\27\0\2\44\6\0"+
-    "\4\44\4\0\1\44\1\0\12\44\1\306\13\44\27\0"+
-    "\2\44\6\0\4\44\4\0\1\44\1\0\14\44\1\307"+
-    "\11\44\27\0\2\44\6\0\4\44\4\0\1\44\1\0"+
-    "\7\44\1\310\16\44\27\0\2\44\6\0\4\44\4\0"+
-    "\1\44\1\0\4\44\1\311\21\44\27\0\2\44\6\0"+
-    "\4\44\4\0\1\44\1\0\17\44\1\312\6\44\27\0"+
-    "\2\44\6\0\4\44\4\0\1\44\1\0\10\44\1\313"+
-    "\15\44\4\0\5\314\1\315\71\314\5\253\1\316\71\253"+
-    "\5\0\1\317\77\0\1\320\14\0\2\301\7\0\3\301"+
-    "\4\0\1\256\1\0\26\301\25\0\1\256\1\0\2\302"+
-    "\7\0\3\302\4\0\1\257\1\0\26\302\27\0\2\304"+
-    "\75\0\2\304\16\0\1\303\56\0\2\44\6\0\4\44"+
-    "\4\0\1\44\1\0\17\44\1\321\6\44\27\0\2\44"+
-    "\6\0\4\44\4\0\1\44\1\0\4\44\1\322\21\44"+
-    "\27\0\2\44\6\0\4\44\4\0\1\44\1\0\22\44"+
-    "\1\323\3\44\4\0\5\314\1\324\71\314\5\0\1\325"+
-    "\71\0\5\253\1\171\71\253\5\0\1\326\127\0\1\260"+
+    "\77\165\77\166\5\253\1\277\71\253\2\0\1\300\2\0"+
+    "\1\301\114\0\1\70\76\0\2\302\7\0\3\302\6\0"+
+    "\26\302\27\0\2\303\7\0\3\303\6\0\26\303\22\0"+
+    "\1\304\1\0\1\304\2\0\2\305\75\0\2\44\6\0"+
+    "\4\44\4\0\1\44\1\0\16\44\1\306\7\44\27\0"+
+    "\2\44\6\0\4\44\4\0\1\44\1\0\12\44\1\307"+
+    "\13\44\27\0\2\44\6\0\4\44\4\0\1\44\1\0"+
+    "\14\44\1\310\11\44\27\0\2\44\6\0\4\44\4\0"+
+    "\1\44\1\0\7\44\1\311\16\44\27\0\2\44\6\0"+
+    "\4\44\4\0\1\44\1\0\4\44\1\312\21\44\27\0"+
+    "\2\44\6\0\4\44\4\0\1\44\1\0\17\44\1\313"+
+    "\6\44\27\0\2\44\6\0\4\44\4\0\1\44\1\0"+
+    "\10\44\1\314\15\44\4\0\5\315\1\316\71\315\5\253"+
+    "\1\317\71\253\2\0\1\300\2\0\1\320\77\0\1\321"+
+    "\14\0\2\302\7\0\3\302\4\0\1\256\1\0\26\302"+
+    "\25\0\1\256\1\0\2\303\7\0\3\303\4\0\1\257"+
+    "\1\0\26\303\27\0\2\305\75\0\2\305\16\0\1\304"+
+    "\56\0\2\44\6\0\4\44\4\0\1\44\1\0\17\44"+
+    "\1\322\6\44\27\0\2\44\6\0\4\44\4\0\1\44"+
+    "\1\0\4\44\1\323\21\44\27\0\2\44\6\0\4\44"+
+    "\4\0\1\44\1\0\22\44\1\324\3\44\4\0\5\315"+
+    "\1\325\71\315\2\0\1\326\2\0\1\327\71\0\5\253"+
+    "\1\171\71\253\2\0\1\300\2\0\1\330\127\0\1\260"+
     "\12\0\1\260\50\0\2\44\6\0\4\44\4\0\1\44"+
-    "\1\0\15\44\1\327\10\44\27\0\2\44\6\0\4\44"+
-    "\4\0\1\44\1\0\4\44\1\330\21\44\4\0\5\314"+
-    "\1\331\71\314\5\0\1\332\71\0\5\314\1\241\71\314"+
-    "\5\0\1\333\71\0";
+    "\1\0\15\44\1\331\10\44\27\0\2\44\6\0\4\44"+
+    "\4\0\1\44\1\0\4\44\1\332\21\44\4\0\5\315"+
+    "\1\333\71\315\2\0\1\326\2\0\1\334\71\0\5\315"+
+    "\1\241\71\315\2\0\1\326\2\0\1\335\71\0";
 
   private static int [] zzUnpacktrans() {
     int [] result = new int[9702];
@@ -391,11 +393,11 @@ public class _ErlangLexer implements FlexLexer {
     "\2\11\2\0\6\11\26\1\1\11\15\0\1\11\1\0"+
     "\1\1\1\0\2\1\1\11\3\1\4\11\27\1\1\0"+
     "\1\1\1\0\1\11\12\0\2\1\3\0\15\1\2\0"+
-    "\2\1\2\0\10\1\1\0\1\1\1\0\1\1\1\0"+
-    "\3\1\1\0\4\1\1\0\2\1";
+    "\1\11\2\1\2\0\10\1\1\0\1\1\1\0\1\1"+
+    "\1\0\3\1\1\0\1\11\4\1\1\0\2\1";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[219];
+    int [] result = new int[221];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -484,12 +486,7 @@ public class _ErlangLexer implements FlexLexer {
 
     private IElementType multiQuotedString(int prefixLength, IElementType type) {
       int end = findClosingQuotesEnd(yylength() - prefixLength);
-      if (end < 0) {
-        yypushback(yylength() - prefixLength - 2);
-      }
-      else {
-        zzMarkedPos = end;
-      }
+      if (end >= 0) zzMarkedPos = end;
       return type;
     }
 
@@ -739,442 +736,458 @@ public class _ErlangLexer implements FlexLexer {
             { return com.intellij.psi.TokenType.WHITE_SPACE;
             }
           // fall through
-          case 89: break;
+          case 91: break;
           case 2:
             { yybegin(YYINITIAL); return com.intellij.psi.TokenType.BAD_CHARACTER;
             }
           // fall through
-          case 90: break;
+          case 92: break;
           case 3:
             { return ERL_OP_EXL;
             }
           // fall through
-          case 91: break;
+          case 93: break;
           case 4:
             { return ERL_RADIX;
             }
           // fall through
-          case 92: break;
+          case 94: break;
           case 5:
             { return ERL_CHAR;
             }
           // fall through
-          case 93: break;
+          case 95: break;
           case 6:
             { return ERL_COMMENT;
             }
           // fall through
-          case 94: break;
+          case 96: break;
           case 7:
             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE;
             }
           // fall through
-          case 95: break;
+          case 97: break;
           case 8:
             { return ERL_PAR_LEFT;
             }
           // fall through
-          case 96: break;
+          case 98: break;
           case 9:
             { return ERL_PAR_RIGHT;
             }
           // fall through
-          case 97: break;
+          case 99: break;
           case 10:
             { return ERL_OP_AR_MUL;
             }
           // fall through
-          case 98: break;
+          case 100: break;
           case 11:
             { return ERL_OP_PLUS;
             }
           // fall through
-          case 99: break;
+          case 101: break;
           case 12:
             { return ERL_COMMA;
             }
           // fall through
-          case 100: break;
+          case 102: break;
           case 13:
             { return ERL_OP_MINUS;
             }
           // fall through
-          case 101: break;
+          case 103: break;
           case 14:
             { return ERL_DOT;
             }
           // fall through
-          case 102: break;
+          case 104: break;
           case 15:
             { return ERL_OP_AR_DIV;
             }
           // fall through
-          case 103: break;
+          case 105: break;
           case 16:
             { return ERL_INTEGER;
             }
           // fall through
-          case 104: break;
+          case 106: break;
           case 17:
             { return ERL_COLON;
             }
           // fall through
-          case 105: break;
+          case 107: break;
           case 18:
             { return ERL_SEMI;
             }
           // fall through
-          case 106: break;
+          case 108: break;
           case 19:
             { return ERL_OP_LT;
             }
           // fall through
-          case 107: break;
+          case 109: break;
           case 20:
             { return ERL_OP_EQ;
             }
           // fall through
-          case 108: break;
+          case 110: break;
           case 21:
             { return ERL_OP_GT;
             }
           // fall through
-          case 109: break;
+          case 111: break;
           case 22:
             { return ERL_QMARK;
             }
           // fall through
-          case 110: break;
+          case 112: break;
           case 23:
             { return ERL_VAR;
             }
           // fall through
-          case 111: break;
+          case 113: break;
           case 24:
             { return ERL_BRACKET_LEFT;
             }
           // fall through
-          case 112: break;
+          case 114: break;
           case 25:
             { return ERL_BRACKET_RIGHT;
             }
           // fall through
-          case 113: break;
+          case 115: break;
           case 26:
             { return ERL_ATOM_NAME;
             }
           // fall through
-          case 114: break;
+          case 116: break;
           case 27:
             { return ERL_CURLY_LEFT;
             }
           // fall through
-          case 115: break;
+          case 117: break;
           case 28:
             { return ERL_OP_OR;
             }
           // fall through
-          case 116: break;
+          case 118: break;
           case 29:
             { return ERL_CURLY_RIGHT;
             }
           // fall through
-          case 117: break;
+          case 119: break;
           case 30:
             { yybegin(YYINITIAL); return ERL_SINGLE_QUOTE;
             }
           // fall through
-          case 118: break;
+          case 120: break;
           case 31:
             { return ERL_STRING;
             }
           // fall through
-          case 119: break;
+          case 121: break;
           case 32:
             { return getTokenStart() == 0 ? ERL_SHEBANG : com.intellij.psi.TokenType.ERROR_ELEMENT;
             }
           // fall through
-          case 120: break;
+          case 122: break;
           case 33:
             { return ERL_FUNCTION_DOC_COMMENT;
             }
           // fall through
-          case 121: break;
+          case 123: break;
           case 34:
             { return ERL_OP_AND_AND;
             }
           // fall through
-          case 122: break;
+          case 124: break;
           case 35:
             { return ERL_OP_PLUS_PLUS;
             }
           // fall through
-          case 123: break;
+          case 125: break;
           case 36:
             { return ERL_OP_MINUS_MINUS;
             }
           // fall through
-          case 124: break;
+          case 126: break;
           case 37:
             { return ERL_ARROW;
             }
           // fall through
-          case 125: break;
+          case 127: break;
           case 38:
             { return ERL_DOT_DOT;
             }
           // fall through
-          case 126: break;
+          case 128: break;
           case 39:
             { return ERL_OP_DIV_EQ;
             }
           // fall through
-          case 127: break;
+          case 129: break;
           case 40:
             { return ERL_COLON_COLON;
             }
           // fall through
-          case 128: break;
+          case 130: break;
           case 41:
             { return ERL_MATCH;
             }
           // fall through
-          case 129: break;
+          case 131: break;
           case 42:
             { return ERL_OP_LT_MINUS;
             }
           // fall through
-          case 130: break;
+          case 132: break;
           case 43:
             { return ERL_BIN_START;
             }
           // fall through
-          case 131: break;
+          case 133: break;
           case 44:
             { return ERL_OP_LT_EQ;
             }
           // fall through
-          case 132: break;
+          case 134: break;
           case 45:
             { return ERL_OP_EQ_LT;
             }
           // fall through
-          case 133: break;
+          case 135: break;
           case 46:
             { return ERL_OP_EQ_EQ;
             }
           // fall through
-          case 134: break;
+          case 136: break;
           case 47:
             { return ERL_ASSOC;
             }
           // fall through
-          case 135: break;
+          case 137: break;
           case 48:
             { return ERL_OP_GT_EQ;
             }
           // fall through
-          case 136: break;
+          case 138: break;
           case 49:
             { return ERL_BIN_END;
             }
           // fall through
-          case 137: break;
+          case 139: break;
           case 50:
             { return ERL_OP_MAYBE_EQ;
             }
           // fall through
-          case 138: break;
+          case 140: break;
           case 51:
             { return ERL_IF;
             }
           // fall through
-          case 139: break;
+          case 141: break;
           case 52:
             { return ERL_OF;
             }
           // fall through
-          case 140: break;
+          case 142: break;
           case 53:
             { return ERL_OR;
             }
           // fall through
-          case 141: break;
+          case 143: break;
           case 54:
             { return ERL_OR_OR;
             }
           // fall through
-          case 142: break;
+          case 144: break;
           case 55:
             { return ERL_MODULE_DOC_COMMENT;
             }
           // fall through
-          case 143: break;
+          case 145: break;
           case 56:
             { return ERL_DOT_DOT_DOT;
             }
           // fall through
-          case 144: break;
+          case 146: break;
           case 57:
             { return ERL_FLOAT;
             }
           // fall through
-          case 145: break;
+          case 147: break;
           case 58:
             { return ERL_OP_LT_COLON_MINUS;
             }
           // fall through
-          case 146: break;
+          case 148: break;
           case 59:
             { return ERL_OP_LT_COLON_EQ;
             }
           // fall through
-          case 147: break;
+          case 149: break;
           case 60:
             { return ERL_OP_EQ_DIV_EQ;
             }
           // fall through
-          case 148: break;
+          case 150: break;
           case 61:
             { return ERL_OP_EQ_COL_EQ;
             }
           // fall through
-          case 149: break;
+          case 151: break;
           case 62:
             { return ERL_AND;
             }
           // fall through
-          case 150: break;
+          case 152: break;
           case 63:
             { return ERL_BOR;
             }
           // fall through
-          case 151: break;
+          case 153: break;
           case 64:
             { return ERL_BSL;
             }
           // fall through
-          case 152: break;
+          case 154: break;
           case 65:
             { return ERL_BSR;
             }
           // fall through
-          case 153: break;
+          case 155: break;
           case 66:
             { return ERL_DIV;
             }
           // fall through
-          case 154: break;
+          case 156: break;
           case 67:
             { return ERL_END;
             }
           // fall through
-          case 155: break;
+          case 157: break;
           case 68:
             { return ERL_FUN;
             }
           // fall through
-          case 156: break;
+          case 158: break;
           case 69:
             { return ERL_NOT;
             }
           // fall through
-          case 157: break;
+          case 159: break;
           case 70:
             { return ERL_REM;
             }
           // fall through
-          case 158: break;
+          case 160: break;
           case 71:
             { return ERL_TRY;
             }
           // fall through
-          case 159: break;
+          case 161: break;
           case 72:
             { return ERL_XOR;
             }
           // fall through
-          case 160: break;
+          case 162: break;
           case 73:
             { return ERL_SIGIL_STRING;
             }
           // fall through
-          case 161: break;
+          case 163: break;
           case 74:
             { return multiQuotedString(0, ERL_STRING);
             }
           // fall through
-          case 162: break;
+          case 164: break;
           case 75:
             { return ERL_BAND;
             }
           // fall through
-          case 163: break;
+          case 165: break;
           case 76:
             { return ERL_BNOT;
             }
           // fall through
-          case 164: break;
+          case 166: break;
           case 77:
             { return ERL_BXOR;
             }
           // fall through
-          case 165: break;
+          case 167: break;
           case 78:
             { return ERL_CASE;
             }
           // fall through
-          case 166: break;
+          case 168: break;
           case 79:
             { return ERL_ELSE;
             }
           // fall through
-          case 167: break;
+          case 169: break;
           case 80:
             { return ERL_WHEN;
             }
           // fall through
-          case 168: break;
-          case 81:
-            { return ERL_AFTER;
-            }
-          // fall through
-          case 169: break;
-          case 82:
-            { return ERL_BEGIN;
-            }
-          // fall through
           case 170: break;
-          case 83:
-            { return ERL_CATCH;
+          case 81:
+            // lookahead expression with fixed lookahead length
+            zzMarkedPos = Character.offsetByCodePoints
+                (zzBufferL, zzMarkedPos, -1);
+            { return multiQuotedString(0, ERL_STRING);
             }
           // fall through
           case 171: break;
-          case 84:
-            { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe(); return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
+          case 82:
+            { return ERL_AFTER;
             }
           // fall through
           case 172: break;
-          case 85:
-            { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING);
+          case 83:
+            { return ERL_BEGIN;
             }
           // fall through
           case 173: break;
-          case 86:
-            { return ERL_ORELSE;
+          case 84:
+            { return ERL_CATCH;
             }
           // fall through
           case 174: break;
-          case 87:
-            { return ERL_ANDALSO;
+          case 85:
+            { boolean isSupported = ErlangSdkType.getRelease(this.project).erlangFeatureMaybe(); return isSupported ? ERL_MAYBE : ERL_ATOM_NAME;
             }
           // fall through
           case 175: break;
-          case 88:
-            { return ERL_RECEIVE;
+          case 86:
+            { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING);
             }
           // fall through
           case 176: break;
+          case 87:
+            { return ERL_ORELSE;
+            }
+          // fall through
+          case 177: break;
+          case 88:
+            // lookahead expression with fixed lookahead length
+            zzMarkedPos = Character.offsetByCodePoints
+                (zzBufferL, zzMarkedPos, -1);
+            { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING);
+            }
+          // fall through
+          case 178: break;
+          case 89:
+            { return ERL_ANDALSO;
+            }
+          // fall through
+          case 179: break;
+          case 90:
+            { return ERL_RECEIVE;
+            }
+          // fall through
+          case 180: break;
           default:
             zzScanError(ZZ_NO_MATCH);
           }

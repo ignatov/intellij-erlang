@@ -1,4 +1,4 @@
--export([f/0, g/0, h/0, sigils/0, single_line/0, bad_indent/0]).
+-export([f/0, g/0, h/0, sigils/0, single_line/0, bad_indent/0, bad_sigil_opening/0]).
 
 -moduledoc """"
   Example:
@@ -38,3 +38,8 @@ single_line() ->
 bad_indent() ->
   <error>""""
   main""""</error>.
+
+bad_sigil_opening() ->
+  <error descr="Not white space after start of triple-quoted string">~s""""main
+  """"</error>,
+  ok.

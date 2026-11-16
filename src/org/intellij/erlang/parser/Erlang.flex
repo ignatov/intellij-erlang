@@ -33,12 +33,7 @@ import static org.intellij.erlang.ErlangTypes.*;
 
     private IElementType multiQuotedString(int prefixLength, IElementType type) {
       int end = findClosingQuotesEnd(yylength() - prefixLength);
-      if (end < 0) {
-        yypushback(yylength() - prefixLength - 2);
-      }
-      else {
-        zzMarkedPos = end;
-      }
+      if (end >= 0) zzMarkedPos = end;
       return type;
     }
 %}
@@ -202,6 +197,9 @@ SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
 <YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
+
+<YYINITIAL> {MultiQuotedStringStart} /\n     { return multiQuotedString(0, ERL_STRING); }
+<YYINITIAL> {SigilMultiQuoteStringStart} /\n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }

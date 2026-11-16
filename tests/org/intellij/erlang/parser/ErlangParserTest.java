@@ -16,7 +16,16 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangStringLiteral;
+import org.intellij.erlang.stubs.types.ErlangFileElementType;
+
+import java.io.IOException;
+import java.util.Collection;
 
 public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
@@ -112,4 +121,50 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
+
+  public void testSixQuoteMultilineStringAndSigil() {
+    PsiFile file = parseText("-module(six_quotes).\n" +
+                             "plain() -> \"\"\"\"\"\"\n  hello\n  \"\"\"\"\"\".\n" +
+                             "sigil() -> ~\"\"\"\"\"\"\n  world\n  \"\"\"\"\"\".\n");
+    assertFalse(PsiTreeUtil.hasErrorElements(file));
+    assertEquals(2, PsiTreeUtil.findChildrenOfType(file, ErlangStringLiteral.class).size());
+  }
+
+  public void testTripleQuotedDocStringDoesNotExposeFunctionAsStub() {
+    PsiFile file = parseText("-module(triple_quoted_doc_string_stub).\n" +
+                             "-moduledoc \"\"\"\"\n" +
+                             "  -doc \"\"\".\n" +
+                             "  example() -> ok.\n" +
+                             "  \"\"\"\".\n" +
+                             "-export([visible/0]).\n" +
+                             "visible() -> ok.\n");
+    assertFalse(PsiTreeUtil.hasErrorElements(file));
+    Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
+    assertEquals(1, functions.size());
+    assertEquals("visible", functions.iterator().next().getName());
+    assertEquals(8, ErlangFileElementType.INSTANCE.getStubVersion());
+  }
+
+  private PsiFile parseText(String text) {
+    return createPsiFile("test.erl", text);
+  }
+
+  public void testUnterminatedLongQuoteRunScalesLinearly() throws IOException {
+    tokenizeUnterminatedQuoteRun(2_000);
+    long smallRunNanos = tokenizeUnterminatedQuoteRun(10_000);
+    long largeRunNanos = tokenizeUnterminatedQuoteRun(40_000);
+    assertTrue("Long quote run took " + largeRunNanos + " ns after " + smallRunNanos + " ns for one quarter the input",
+               largeRunNanos < smallRunNanos * 8);
+  }
+
+  private static long tokenizeUnterminatedQuoteRun(int quoteCount) throws IOException {
+    String input = "\"".repeat(quoteCount);
+    _ErlangLexer lexer = new _ErlangLexer((Project) null);
+    lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
+    long start = System.nanoTime();
+    int tokens = 0;
+    while (lexer.advance() != null) tokens++;
+    assertTrue("Expected tokens for unterminated quote run", tokens > 0);
+    return System.nanoTime() - start;
+  }
 }
