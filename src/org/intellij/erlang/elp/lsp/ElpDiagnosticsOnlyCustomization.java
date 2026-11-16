@@ -21,7 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * The baseline of {@link ElpEngineCustomization}: diagnostics, the quick fixes attached to them and the commands those quick
- * fixes may run; every other feature is switched off explicitly, and {@link ElpEngineCustomization} switches on what ELP owns.
+ * fixes may run; every other feature that the IDEA 2026.1 client has a switch for is switched off explicitly, and
+ * {@link ElpEngineCustomization} switches on what ELP owns. The switches that later clients added keep their defaults.
  */
 class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   private final LspDiagnosticsCustomizer myDiagnostics;
@@ -29,16 +30,6 @@ class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport() {
     @Override
     public boolean getIntentionActionsSupport() {
-      return false;
-    }
-
-    @Override
-    public boolean getInlineRefactoringSupport() {
-      return false;
-    }
-
-    @Override
-    public boolean getExtractRefactoringSupport() {
       return false;
     }
   };
@@ -73,12 +64,6 @@ class ElpDiagnosticsOnlyCustomization extends LspCustomization {
 
   @NotNull
   @Override
-  public LspGoToImplementationCustomizer getGoToImplementationCustomizer() {
-    return LspGoToImplementationDisabled.INSTANCE;
-  }
-
-  @NotNull
-  @Override
   public LspHoverCustomizer getHoverCustomizer() {
     return LspHoverDisabled.INSTANCE;
   }
@@ -99,12 +84,6 @@ class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   @Override
   public LspFormattingCustomizer getFormattingCustomizer() {
     return LspFormattingDisabled.INSTANCE;
-  }
-
-  @NotNull
-  @Override
-  public LspOnTypeFormattingCustomizer getOnTypeFormattingCustomizer() {
-    return LspOnTypeFormattingDisabled.INSTANCE;
   }
 
   @NotNull
@@ -189,17 +168,5 @@ class ElpDiagnosticsOnlyCustomization extends LspCustomization {
   @Override
   public LspCodeLensCustomizer getCodeLensCustomizer() {
     return LspCodeLensDisabled.INSTANCE;
-  }
-
-  @NotNull
-  @Override
-  public LspInheritanceMarkersCustomizer getInheritanceMarkersCustomizer() {
-    return LspInheritanceMarkersDisabled.INSTANCE;
-  }
-
-  @NotNull
-  @Override
-  public LspRenameCustomizer getRenameCustomizer() {
-    return LspRenameDisabled.INSTANCE;
   }
 }

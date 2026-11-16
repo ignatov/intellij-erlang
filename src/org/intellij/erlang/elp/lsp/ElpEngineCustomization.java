@@ -27,25 +27,17 @@ import org.jetbrains.annotations.NotNull;
  * hints, folding, selection ranges, go to definition and type definition, signature help, highlighting of usages in the file,
  * and code actions as intentions.
  * <p>
- * Switched off here: find references and rename, which the plugin's own ELP entry points ask for instead
- * ({@code ElpFindUsagesHandlerFactory}, {@code ElpRenameHandler}), so that there is one target and one rename; workspace symbols,
- * because ELP answers them with module names only; call hierarchy and implementations, which the client does not deliver for an
- * Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which stay with the plugin; and
- * the features ELP does not offer. The inline and extract refactorings of the code actions stay off too, so ELP's
- * refactoring actions appear as intentions and the plugin's refactorings keep their shortcuts.
+ * Switched off here: find references, which the plugin's own ELP entry point asks for instead ({@code ElpFindUsagesHandlerFactory}),
+ * so that there is one target; workspace symbols, because ELP answers them with module names only; call hierarchy, which the
+ * client does not deliver for an Erlang element that the plugin resolves; semantic tokens, document symbols and code lenses, which
+ * stay with the plugin; and the features ELP does not offer.
+ * <p>
+ * Built against IDEA 2026.1, which has no switch for them, this customization leaves on what later clients added: the client's
+ * own rename (2026.2 and later) next to {@code ElpRenameHandler}, go to implementation (2026.3) and the inline and extract
+ * refactorings of the code actions (2026.3).
  */
 final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
-  private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport() {
-    @Override
-    public boolean getInlineRefactoringSupport() {
-      return false;
-    }
-
-    @Override
-    public boolean getExtractRefactoringSupport() {
-      return false;
-    }
-  };
+  private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport();
 
   private final LspCompletionCustomizer myCompletion = new LspCompletionSupport();
   private final LspHoverCustomizer myHover = new LspHoverSupport();
