@@ -17,6 +17,8 @@
 package org.intellij.erlang.elp.lsp;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.notification.Notification;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -28,12 +30,14 @@ import com.intellij.platform.lsp.api.LspServerDescriptor;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.platform.lsp.api.customization.*;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.EnvironmentUtil;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpEnvironment;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.elp.ElpServerEnvironment;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.rebar.settings.RebarSettings;
@@ -50,7 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  private static final String SDK_HOME = new File("testData/mockSdk-R15B02").getAbsolutePath();
+  private static final String SDK_HOME = new File("testData/mockSdk-R27").getAbsolutePath();
   private static final String REBAR = new File("/opt/rebar-tools/rebar3").getPath();
   /**
    * The client switches that a build against IDEA 2026.1 cannot set: the 2026.1 client has no such customizer, and later clients
@@ -96,7 +100,7 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
       @Override
       public Sdk getSdk() {
         return ApplicationManager.getApplication().runWriteAction(
-          (Computable<Sdk>)() -> ErlangSdkType.createMockSdk(SDK_HOME, ErlangSdkRelease.V_R15B02));
+          (Computable<Sdk>)() -> ErlangSdkType.createMockSdk(SDK_HOME, ErlangSdkRelease.V_27_0));
       }
     };
   }
@@ -236,12 +240,13 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     }
   }
 
-  public void testProviderPassesTheStoredEqwalizerSwitch() {
+  public void testProviderPassesTheStoredEqwalizerSwitch() throws Exception {
     String oldProperty = System.getProperty(ElpConfiguration.EQWALIZER_PROPERTY);
     System.clearProperty(ElpConfiguration.EQWALIZER_PROPERTY);
     try {
+      setUpProjectSdk();
       ElpSettings.ElpSettingsState state = new ElpSettings.ElpSettingsState();
-      state.path = "/opt/elp/bin/elp";
+      state.path = executable();
       state.mode = ElpMode.ELP.name();
       state.eqwalizer = true;
       ElpSettings.getInstance().loadState(state);
@@ -253,19 +258,21 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     }
   }
 
-  public void testProviderStartsElpOnlyForErlangFilesOnceAPathIsSet() {
+  public void testProviderStartsElpOnlyForErlangFilesOnceAPathIsSet() throws Exception {
+    setUpProjectSdk();
     VirtualFile module = file("src/a.erl");
+    String elp = executable();
     configure("", ElpMode.PLUGIN);
     assertEmpty(fileOpened(module));
 
-    configure("/opt/elp/bin/elp", ElpMode.PLUGIN);
+    configure(elp, ElpMode.PLUGIN);
     assertEmpty("the Plugin position starts no ELP", fileOpened(module));
 
-    configure("/opt/elp/bin/elp", ElpMode.ELP);
+    configure(elp, ElpMode.ELP);
     List<LspServerDescriptor> started = fileOpened(module);
     assertSize(1, started);
     ElpLspClientDescriptor descriptor = assertInstanceOf(started.get(0), ElpLspClientDescriptor.class);
-    assertEquals(new ElpConfiguration("/opt/elp/bin/elp", ElpMode.ELP), descriptor.getConfiguration());
+    assertEquals(new ElpConfiguration(elp, ElpMode.ELP), descriptor.getConfiguration());
     assertSize(1, descriptor.getRoots());
 
     assertSize(1, fileOpened(file("include/a.hrl")));
@@ -287,7 +294,39 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     ElpSettings.getInstance().loadState(state);
   }
 
+  /**
+   * Without an SDK ELP is not started: the plugin answers, and the user is told why, once.
+   */
+  public void testProviderDoesNotStartElpThatCannotLoadTheProject() throws Exception {
+    List<Notification> notifications = new ArrayList<>();
+    getProject().getMessageBus().connect(getTestRootDisposable()).subscribe(Notifications.TOPIC, new Notifications() {
+      @Override
+      public void notify(@NotNull Notification notification) {
+        notifications.add(notification);
+      }
+    });
+    VirtualFile module = file("src/a.erl");
+    configure(executable(), ElpMode.ELP);
+    assertEmpty(fileOpened(module));
+    assertEmpty(fileOpened(file("src/b.erl")));
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    Notification notification = assertOneElement(notifications);
+    assertEquals("ELP is not started", notification.getTitle());
+    assertTrue(notification.getContent(), notification.getContent().contains("No Erlang SDK is configured for the project"));
+
+    setUpProjectSdk();
+    assertSize(1, fileOpened(module));
+  }
+
+  /**
+   * As the platform: the facts of the check are gathered off the EDT first, then the provider is asked.
+   */
   private List<LspServerDescriptor> fileOpened(VirtualFile file) {
+    ElpPreflight.Facts facts = ElpPreflight.getInstance(getProject()).cachedFacts();
+    if (facts == null || !facts.serverPath().equals(ElpSettings.getInstance().getEffectiveConfiguration().path())) {
+      PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
+        () -> ElpPreflight.getInstance(getProject()).gatherFacts()), 30_000);
+    }
     List<LspServerDescriptor> started = new ArrayList<>();
     LspServerSupportProvider.LspServerStarter starter = started::add;
     ReadAction.run(() -> new ElpLspIntegrationProvider().fileOpened(getProject(), file, starter));

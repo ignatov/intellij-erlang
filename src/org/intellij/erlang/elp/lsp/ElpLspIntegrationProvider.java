@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -27,6 +30,7 @@ import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpFiles;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpPreflight;
 import org.intellij.erlang.elp.ElpSettings;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
@@ -34,10 +38,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set. Registered in
+ * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set and
+ * {@link ElpPreflight} says that ELP can load the project. Registered in
  * {@code erlang-elp-lsp.xml}, which is loaded only when the platform has the LSP module.
  */
 public final class ElpLspIntegrationProvider implements LspServerSupportProvider {
+  private static final Logger LOG = Logger.getInstance(ElpLspIntegrationProvider.class);
+
   @Override
   public void fileOpened(@NotNull Project project, @NotNull VirtualFile file, @NotNull LspServerStarter serverStarter) {
     if (!ElpFiles.isElpFile(file)) return;
@@ -46,7 +53,29 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
     if (!configuration.isEnabled() || configuration.mode() != ElpMode.ELP) return;
     VirtualFile root = ElpFiles.findWorkspaceRoot(project, file);
     if (root == null) return;
+    // The position is application-wide; whether ELP can load this project is checked here, before every start.
+    ElpPreflight preflight = ElpPreflight.getInstance(project);
+    ElpPreflight.Facts facts = preflight.cachedFacts();
+    if (facts == null || !facts.serverPath().equals(configuration.path())) {
+      preflight.gatherFactsInBackground(() -> startServersIfNeeded(project));
+      return;
+    }
+    ElpPreflight.Result result = ElpPreflight.evaluate(facts, ElpPreflight.Layout.of(root));
+    if (!result.canStart()) {
+      LOG.info("ELP is not started for " + root.getPath() + ": " + result.blocking());
+      if (preflight.shouldTell(result)) {
+        ApplicationManager.getApplication().invokeLater(() -> ElpNotifications.notStarted(project, result), project.getDisposed());
+      }
+      return;
+    }
     serverStarter.ensureServerStarted(new ElpLspClientDescriptor(project, root, configuration));
+  }
+
+  /** Asks the platform to call {@link #fileOpened} again for the Erlang files open in the project. */
+  static void startServersIfNeeded(@NotNull Project project) {
+    ApplicationManager.getApplication().invokeLater(
+      () -> LspServerManager.getInstance(project).startServersIfNeeded(ElpLspIntegrationProvider.class),
+      ModalityState.nonModal(), project.getDisposed());
   }
 
   @Override
@@ -65,6 +94,7 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
     public void elpSettingsChanged() {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         if (project.isDisposed() || project.isDefault()) continue;
+        ElpPreflight.getInstance(project).invalidate();
         LspServerManager.getInstance(project).stopAndRestartIfNeeded(ElpLspIntegrationProvider.class);
         ElpEngine.refreshProject(project);
       }

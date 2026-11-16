@@ -32,6 +32,7 @@ import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.eclipse.lsp4j.InitializeParams;
 import org.intellij.erlang.elp.ElpConfiguration;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpMode;
@@ -170,6 +171,10 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     assertFalse(ContainerUtil.exists(infos.get(), info -> "Unknown application".equals(info.getDescription())));
     // The URI that ELP gets is the real path.
     assertEquals(real.resolve("project/src/shop.erl").toUri().getPath(), java.net.URI.create(descriptor.getFileUri(shop)).getPath());
+    // So are rootUri and the workspace folders of initialize.
+    InitializeParams initialize = descriptor.createInitializeParams();
+    assertEquals(real.resolve("project").toString(), java.net.URI.create(initialize.getRootUri()).getPath());
+    assertEquals(initialize.getRootUri(), assertOneElement(initialize.getWorkspaceFolders()).getUri());
   }
 
   @NotNull
