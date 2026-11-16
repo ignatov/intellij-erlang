@@ -63,7 +63,7 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
 
     List<String> parameters = RebarRunningStateUtil.getRebarCommandLine(configuration).getParametersList().getList();
     // The rebar escript is the first parameter, the rebar command follows it.
-    assertEquals(RebarSettings.getInstance(getProject()).getRebarPath(), parameters.get(0));
+    assertEquals(RebarSettings.getInstance(getProject()).getRebarEscriptPath(), parameters.get(0));
     assertEquals(List.of(expected), parameters.subList(1, parameters.size()));
   }
 
@@ -72,6 +72,25 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     assertNotNull(sdkPath);
     assertEquals(JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath(),
                  RebarRunningStateUtil.findEscriptExecutable(getProject()));
+  }
+
+  public void testCommandLineRunsEscriptNextToWrapper() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File rebar3 = createExecutable(directory, "rebar3");
+    RebarSettings settings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = settings.getRebarPath();
+    try {
+      settings.setRebarPath(createExecutable(directory, "rebar3.cmd").getPath());
+      RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+      configuration.setCommand("compile");
+      configuration.setSkipDependencies(true);
+      // The escript next to the wrapper, and no skip_deps=true, which is for rebar 2 only.
+      assertEquals(List.of(rebar3.getPath(), "compile"),
+                   RebarRunningStateUtil.getRebarCommandLine(configuration).getParametersList().getList());
+    }
+    finally {
+      settings.setRebarPath(oldRebarPath);
+    }
   }
 
   public void testFindInPathWithWindowsExtension() throws IOException {
