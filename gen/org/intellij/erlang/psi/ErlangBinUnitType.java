@@ -8,6 +8,9 @@ import com.intellij.psi.PsiElement;
 public interface ErlangBinUnitType extends ErlangType {
 
   @NotNull
+  ErlangIntType getIntType();
+
+  @NotNull
   List<ErlangQVar> getQVarList();
 
   @NotNull
@@ -15,8 +18,5 @@ public interface ErlangBinUnitType extends ErlangType {
 
   @NotNull
   PsiElement getOpArMul();
-
-  @NotNull
-  PsiElement getInteger();
 
 }

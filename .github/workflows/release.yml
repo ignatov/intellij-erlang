@@ -71,7 +71,7 @@ jobs:
 
     - name: Verify the archive against the newer supported IDEs
       # The archive is built against IntelliJ IDEA 2026.1 and serves every IDE up to its until-build. The same IDEs as
-      # in the other-ides job of gradle.yml, which also runs the tests against them on every push.
+      # in the other-ides job of gradle.yml, which also runs the tests against them on every push to master.
       env:
         PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}

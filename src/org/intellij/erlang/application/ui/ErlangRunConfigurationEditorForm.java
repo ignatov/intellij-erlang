@@ -17,6 +17,7 @@
 package org.intellij.erlang.application.ui;
 
 import com.intellij.application.options.ModulesComboBox;
+import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
@@ -37,6 +38,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
+  private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
   private JCheckBox myUseTestsCodePathCheckBox;
 
   public ErlangRunConfigurationEditorForm(){
@@ -52,6 +54,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
     myWorkingDirectoryComponent.setText(configuration.getWorkDirectory());
+    myEnvironmentVariablesComponent.setEnvData(configuration.getEnvData());
     myUseTestsCodePathCheckBox.setSelected(configuration.isUseTestCodePath());
   }
 
@@ -63,6 +66,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     configuration.setErlFlags(myErlFlagsTextField.getText());
     configuration.setStopErlang(myStopErlangInterpreterCheckBox.isSelected());
     configuration.setWorkDirectory(myWorkingDirectoryComponent.getText());
+    configuration.setEnvData(myEnvironmentVariablesComponent.getEnvData());
     configuration.setUseTestCodePath(myUseTestsCodePathCheckBox.isSelected());
   }
 
