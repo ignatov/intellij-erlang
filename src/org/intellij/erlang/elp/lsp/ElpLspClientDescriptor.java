@@ -371,7 +371,7 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
   public synchronized LspCustomization getLspCustomization() {
     if (myCustomization == null) {
       ElpDiagnosticsSupport diagnostics = new ElpDiagnosticsSupport(myConfiguration.eqwalizer());
-      myCustomization = new ElpEngineCustomization(diagnostics);
+      myCustomization = new ElpEngineCustomization(diagnostics, myLoadState::isRunning);
     }
     return myCustomization;
   }

@@ -188,6 +188,8 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
 
   public void testElpModeServesExactlyTheFeaturesItOwns() throws Exception {
     ElpLspClientDescriptor descriptor = descriptor(ElpMode.ELP);
+    // Once ELP has loaded the project; until then ElpEngineSwitchTest.testElpIsAskedForNothingWhileItLoads.
+    descriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
     LspCustomization customization = descriptor.getLspCustomization();
     List<String> expected = new ArrayList<>(List.of("getCodeActionsCustomizer", "getCommandsCustomizer", "getCompletionCustomizer",
                                                     "getDiagnosticsCustomizer",

@@ -23,6 +23,8 @@ import com.intellij.psi.PsiFile;
 import org.intellij.erlang.elp.ElpEngine;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.BooleanSupplier;
+
 /**
  * What the platform LSP client asks ELP for in the {@code ELP} position, where the plugin's counterparts stay silent under a root
  * that ELP serves ({@link ElpEngine}): diagnostics, completion, hover documentation, parameter name inlay hints, folding,
@@ -37,15 +39,21 @@ import org.jetbrains.annotations.NotNull;
  * Built against IDEA 2026.1, which has no switch for them, this customization leaves on what later clients added: the client's
  * own rename (2026.2 and later) next to {@code ElpRenameHandler}, go to implementation (2026.3) and the inline and extract
  * refactorings of the code actions (2026.3).
+ * <p>
+ * Until ELP has loaded the project ({@link ElpLoadState#isRunning}) the client asks it for nothing of its own accord: ELP answers
+ * every request with the error "elp is still loading", which the client of IDEA 2026.2 logs as an IDE error for folding ranges,
+ * inlay hints and code actions. The client asks the customization each time, so these features are switched off until then; the
+ * plugin stays silent all the same, and the open editors are refreshed when ELP runs ({@code ElpEngine.refreshProject}).
  */
 final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
+  private final BooleanSupplier myRunning;
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport();
 
   /** ELP completes only where the plugin is silent, so that the list is filled by exactly one of them. */
   private final LspCompletionCustomizer myCompletion = new LspCompletionSupport() {
     @Override
     public boolean shouldRunCodeCompletion(@NotNull CompletionParameters parameters) {
-      return ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
+      return myRunning.getAsBoolean() && ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
     }
   };
   private final LspWorkspaceSymbolCustomizer myWorkspaceSymbols = new LspWorkspaceSymbolSupport();
@@ -65,14 +73,20 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
     }
   };
 
-  ElpEngineCustomization(@NotNull LspDiagnosticsCustomizer diagnostics) {
+  /** @param running whether ELP has loaded the project */
+  ElpEngineCustomization(@NotNull LspDiagnosticsCustomizer diagnostics, @NotNull BooleanSupplier running) {
     super(diagnostics);
+    myRunning = running;
+  }
+
+  private boolean isRunning() {
+    return myRunning.getAsBoolean();
   }
 
   @NotNull
   @Override
   public LspCodeActionsCustomizer getCodeActionsCustomizer() {
-    return myCodeActions;
+    return isRunning() ? myCodeActions : LspCodeActionsDisabled.INSTANCE;
   }
 
   @NotNull
@@ -84,54 +98,54 @@ final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   @NotNull
   @Override
   public LspWorkspaceSymbolCustomizer getWorkspaceSymbolCustomizer() {
-    return myWorkspaceSymbols;
+    return isRunning() ? myWorkspaceSymbols : LspWorkspaceSymbolDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspHoverCustomizer getHoverCustomizer() {
-    return myHover;
+    return isRunning() ? myHover : LspHoverDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspInlayHintCustomizer getInlayHintCustomizer() {
-    return myInlayHints;
+    return isRunning() ? myInlayHints : LspInlayHintDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspFoldingRangeCustomizer getFoldingRangeCustomizer() {
-    return myFolding;
+    return isRunning() ? myFolding : LspFoldingRangeDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspSelectionRangeCustomizer getSelectionRangeCustomizer() {
-    return mySelection;
+    return isRunning() ? mySelection : LspSelectionRangeDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspGoToDefinitionCustomizer getGoToDefinitionCustomizer() {
-    return myGoToDefinition;
+    return isRunning() ? myGoToDefinition : LspGoToDefinitionDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspGoToTypeDefinitionCustomizer getGoToTypeDefinitionCustomizer() {
-    return myGoToTypeDefinition;
+    return isRunning() ? myGoToTypeDefinition : LspGoToTypeDefinitionDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspSignatureHelpCustomizer getSignatureHelpCustomizer() {
-    return mySignatureHelp;
+    return isRunning() ? mySignatureHelp : LspSignatureHelpDisabled.INSTANCE;
   }
 
   @NotNull
   @Override
   public LspDocumentHighlightsCustomizer getDocumentHighlightsCustomizer() {
-    return myDocumentHighlights;
+    return isRunning() ? myDocumentHighlights : LspDocumentHighlightsDisabled.INSTANCE;
   }
 }

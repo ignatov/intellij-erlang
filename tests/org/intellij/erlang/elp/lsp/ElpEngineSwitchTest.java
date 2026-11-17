@@ -33,6 +33,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.platform.lsp.api.LspServerState;
+import com.intellij.platform.lsp.api.customization.LspCustomization;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -69,6 +70,7 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The engine switch for every {@link Feature}, with the real status of the LSP part, the root of the test project in the served-root
@@ -197,6 +199,35 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     loadState.status("Running", System.currentTimeMillis());
     loadState.stopped();
     assertTrue(ElpServedRoots.getInstance().isEmpty());
+  }
+
+  /**
+   * Until ELP has loaded the project the client asks it for nothing of its own accord, so that ELP does not answer "elp is still
+   * loading", which IDEA 2026.2 logs as an IDE error; the plugin stays silent meanwhile. Diagnostics, which ELP pushes, stay on.
+   */
+  public void testElpIsAskedForNothingWhileItLoads() {
+    PsiFile shop = psiFile("src/shop.erl");
+    LspCustomization customization = myDescriptor.getLspCustomization();
+    List<Supplier<Object>> asked = List.of(
+      customization::getFoldingRangeCustomizer, customization::getInlayHintCustomizer, customization::getCodeActionsCustomizer,
+      customization::getHoverCustomizer, customization::getSelectionRangeCustomizer, customization::getSignatureHelpCustomizer,
+      customization::getDocumentHighlightsCustomizer, customization::getGoToDefinitionCustomizer,
+      customization::getGoToTypeDefinitionCustomizer, customization::getWorkspaceSymbolCustomizer);
+    for (ElpLoadState.State state : List.of(ElpLoadState.State.STARTING, ElpLoadState.State.LOADING, ElpLoadState.State.FAILED,
+                                            ElpLoadState.State.STOPPED)) {
+      myDescriptor.getLoadState().setStateForTests(state);
+      for (Supplier<Object> customizer : asked) {
+        String name = customizer.get().getClass().getSimpleName();
+        assertTrue(state + ": " + name, name.endsWith("Disabled"));
+      }
+      assertInstanceOf(customization.getDiagnosticsCustomizer(), ElpDiagnosticsSupport.class);
+      for (Feature feature : Feature.values()) assertTrue(state + " " + feature, ElpEngine.ownsFeature(shop, feature));
+    }
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    for (Supplier<Object> customizer : asked) {
+      String name = customizer.get().getClass().getSimpleName();
+      assertFalse(name, name.endsWith("Disabled"));
+    }
   }
 
   /** The platform's language services widget says whether ELP has loaded the project. */
