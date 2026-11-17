@@ -20,6 +20,8 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +80,18 @@ public class ErlangBuilderTest extends ErlangJpsBuildTestCase {
     createFile("src/simple.erl", "-module(simple).");
     addModule("m", PathUtilRt.getParentPath(app));
     rebuildAll();
+    assertEquals(text, loadAppFile("m", "simple.app"));
+  }
+
+  public void testAppSrcIsCopiedWithoutSdk() throws IOException {
+    String text = "{application, simple, []}.";
+    String appSrc = createFile("src/simple.app.src", text);
+    addModule("m", PathUtilRt.getParentPath(appSrc));
+    JpsModule module = myModel.getProject().getModules().get(0);
+    module.getSdkReferencesTable().setSdkReference(JpsErlangSdkType.INSTANCE, null);
+    BuildResult result = rebuildAllWithoutAssertions();
+    result.assertSuccessful();
+    assertTrue(ContainerUtil.exists(result.getWarnMessages(), m -> m.getMessageText().contains("No Erlang SDK for module m")));
     assertEquals(text, loadAppFile("m", "simple.app"));
   }
 
