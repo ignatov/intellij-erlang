@@ -41,6 +41,7 @@ public final class ErlangStubChanges {
     "#1145 macros and integer expressions as binary type sizes",
     "#1114 EEP 64 triple-quoted string lexing changes file stubs",
     "#1063 quoted atoms as attribute names",
+    "#1119 a macro followed by a string literal parses as one string",
     "#1122 lexer escape and number fixes",
   };
 

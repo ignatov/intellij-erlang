@@ -551,6 +551,19 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testComprehensions() throws Exception { doTest(); }
 
+  public void testSpecArgumentTypeUnion()        throws Exception { doTest(); }
+  public void testSpecArgumentTypeUnionAligned() throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnion()                    throws Exception { doTest(); }
+  public void testSpecReturnTypeUnion()          throws Exception { doTest(); }
+  public void testTypeUnionStartingLine()        throws Exception { doTest(); }
+  public void testTypeUnionBodyOnNewLine()       throws Exception { doTest(); }
+  public void testTypeUnionNotFirstAligned()     throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNestedAligned()       throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNewLineAfterArrow()   throws Exception {
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE;
+    doTest();
+  }
+
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();
     settings.RIGHT_MARGIN = 40;

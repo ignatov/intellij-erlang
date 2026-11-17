@@ -796,34 +796,150 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom !'(' | integer | (string_literal | macros)+ | float | char
+  // &(('?' macros_name)+ string_literal) (string_literal | !('?' '?') macros)+ | q_atom !'(' | integer | (string_literal | macros)+ | float | char
   static boolean atomic(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = atomic_0(b, l + 1);
+    if (!r) r = atomic_1(b, l + 1);
     if (!r) r = consumeToken(b, ERL_INTEGER);
-    if (!r) r = atomic_2(b, l + 1);
+    if (!r) r = atomic_3(b, l + 1);
     if (!r) r = consumeToken(b, ERL_FLOAT);
     if (!r) r = consumeToken(b, ERL_CHAR);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // q_atom !'('
+  // &(('?' macros_name)+ string_literal) (string_literal | !('?' '?') macros)+
   private static boolean atomic_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = q_atom(b, l + 1);
+    r = atomic_0_0(b, l + 1);
     r = r && atomic_0_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // !'('
+  // &(('?' macros_name)+ string_literal)
+  private static boolean atomic_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = atomic_0_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // ('?' macros_name)+ string_literal
+  private static boolean atomic_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = atomic_0_0_0_0(b, l + 1);
+    r = r && string_literal(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ('?' macros_name)+
+  private static boolean atomic_0_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = atomic_0_0_0_0_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!atomic_0_0_0_0_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "atomic_0_0_0_0", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // '?' macros_name
+  private static boolean atomic_0_0_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_0_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_QMARK);
+    r = r && macros_name(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // (string_literal | !('?' '?') macros)+
   private static boolean atomic_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atomic_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = atomic_0_1_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!atomic_0_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "atomic_0_1", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal | !('?' '?') macros
+  private static boolean atomic_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = string_literal(b, l + 1);
+    if (!r) r = atomic_0_1_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !('?' '?') macros
+  private static boolean atomic_0_1_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = atomic_0_1_0_1_0(b, l + 1);
+    r = r && macros(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !('?' '?')
+  private static boolean atomic_0_1_0_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !atomic_0_1_0_1_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // '?' '?'
+  private static boolean atomic_0_1_0_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_0_1_0_1_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, ERL_QMARK, ERL_QMARK);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // q_atom !'('
+  private static boolean atomic_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = q_atom(b, l + 1);
+    r = r && atomic_1_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !'('
+  private static boolean atomic_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NOT_);
     r = !consumeToken(b, ERL_PAR_LEFT);
@@ -832,23 +948,23 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // (string_literal | macros)+
-  private static boolean atomic_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "atomic_2")) return false;
+  private static boolean atomic_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_3")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = atomic_2_0(b, l + 1);
+    r = atomic_3_0(b, l + 1);
     while (r) {
       int c = current_position_(b);
-      if (!atomic_2_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "atomic_2", c)) break;
+      if (!atomic_3_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "atomic_3", c)) break;
     }
     exit_section_(b, m, null, r);
     return r;
   }
 
   // string_literal | macros
-  private static boolean atomic_2_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "atomic_2_0")) return false;
+  private static boolean atomic_3_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atomic_3_0")) return false;
     boolean r;
     r = string_literal(b, l + 1);
     if (!r) r = macros(b, l + 1);
