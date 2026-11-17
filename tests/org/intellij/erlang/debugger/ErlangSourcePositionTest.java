@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger;
 
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.DumbModeTestUtils;
 import org.intellij.erlang.debugger.xdebug.ErlangDebugLocationResolver;
 import org.intellij.erlang.debugger.xdebug.ErlangSourcePosition;
 import org.intellij.erlang.psi.ErlangFile;
@@ -71,6 +72,15 @@ public class ErlangSourcePositionTest extends ErlangLightPlatformCodeInsightFixt
     assertEquals(0, sourcePosition.getFunctionArity());
     assertEquals(funExpressionClause.getArgumentDefinitionList().getArgumentDefinitionList().size(), sourcePosition.getFunExpressionArity());
     assertEquals(funExpression.getTextOffset(), sourcePosition.getSourcePosition().getOffset());
+  }
+
+  public void testCreateByModuleAndLineInDumbMode() {
+    // A breakpoint reached while indexing must give a position or null, not an IndexNotReadyException.
+    DumbModeTestUtils.runInDumbModeSynchronously(getProject(), () -> ErlangSourcePosition.create(createResolver(), MODULE_NAME, 3));
+  }
+
+  public void testCreateByFunctionInDumbMode() {
+    DumbModeTestUtils.runInDumbModeSynchronously(getProject(), () -> ErlangSourcePosition.create(createResolver(), MODULE_NAME, "function", 0));
   }
 
   private ErlangDebugLocationResolver createResolver() {
