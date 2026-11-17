@@ -22,6 +22,11 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ExtProcessUtilTest extends BasePlatformTestCase {
   // The rebar version check runs through execAndGetFirstLine; a rebar3 that loses its stdout
@@ -31,5 +36,30 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     String workingDirectory = ExtProcessUtil.execAndGetFirstLine(10000, printWorkingDirectory).getStdOut();
     assertFalse("no output from " + String.join(" ", printWorkingDirectory), workingDirectory.isEmpty());
     assertEquals(new File(FileUtil.getTempDirectory()).getCanonicalPath(), new File(workingDirectory).getCanonicalPath());
+  }
+
+  // A rebar behind a wrapper script runs as a child of the wrapper; the timeout must stop that child too.
+  public void testTimeoutStopsChildrenOfCommand() throws Exception {
+    if (SystemInfo.isWindows) return;
+    File directory = FileUtil.createTempDirectory("wrapper", null, true);
+    File pidFile = new File(directory, "pid");
+    File wrapper = new File(directory, "wrapper.sh");
+    Files.writeString(wrapper.toPath(), "#!/bin/sh\nsleep 60 &\necho $! > '" + pidFile.getPath() + "'\nwait\n",
+                      StandardCharsets.UTF_8);
+    assertTrue(wrapper.setExecutable(true));
+
+    ExtProcessUtil.execAndGetFirstLine(1000, wrapper.getPath());
+
+    long childPid = Long.parseLong(Files.readString(pidFile.toPath()).trim());
+    Optional<ProcessHandle> child = ProcessHandle.of(childPid);
+    try {
+      if (child.isPresent()) {
+        child.get().onExit().get(10, TimeUnit.SECONDS);
+      }
+    }
+    catch (TimeoutException e) {
+      child.get().destroyForcibly();
+      fail("the child of the command is still running after the timeout");
+    }
   }
 }

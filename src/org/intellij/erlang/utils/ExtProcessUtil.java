@@ -54,6 +54,7 @@ public final class ExtProcessUtil {
         catch (Exception ignored) {
         }
         cmdRunnerFuture.cancel(true);
+        cmdRunner.descendants().forEach(ProcessHandle::destroy);
         cmdRunner.destroy();
       }
       finally {
