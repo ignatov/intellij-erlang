@@ -24,7 +24,8 @@ name: Factory tick
 #
 # Secrets of factory-dispatch: FACTORY_TOKEN (the maintainer's token for this repository and the agent tasks API,
 # as in the private repository) and, optionally, FACTORY_DESK_TOKEN for the private repository (clone, push,
-# cards and the panel); when it is empty, FACTORY_TOKEN is used for the private repository too.
+# cards and the panel); when it is empty, FACTORY_TOKEN is used for the private repository too. FACTORY_LOG_TOKEN
+# (optional) goes only to the step "Tick"; see there.
 
 on:
   workflow_dispatch:
@@ -165,6 +166,9 @@ jobs:
         id: tick
         env:
           FACTORY_TOKEN: ${{ secrets.FACTORY_TOKEN }}
+          # Optional: an OAuth token of the GitHub CLI, only for reading session logs on the Copilot API host, which
+          # rejects personal access tokens. Without it the dispatcher cannot read what a review session concluded.
+          FACTORY_LOG_TOKEN: ${{ secrets.FACTORY_LOG_TOKEN }}
           CARD_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
           PYTHONUNBUFFERED: '1'
           MODE: ${{ steps.mode.outputs.mode }}
