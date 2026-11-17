@@ -131,7 +131,7 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
 
   /** Whether the root of this server is ELP's, so that the plugin stays silent there whatever this server does. */
   private boolean isServedRoot() {
-    return ElpServedRoots.getInstance().isUnderServedRoot(getRoots()[0]);
+    return ElpServedRoots.getInstance().contains(getRoots()[0].getPath());
   }
 
   @NotNull

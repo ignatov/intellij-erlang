@@ -26,6 +26,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerManager;
+import com.intellij.platform.lsp.api.LspServerState;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.platform.lsp.api.lsWidget.LspServerWidgetItem;
 import org.intellij.erlang.elp.ElpEngine;
@@ -39,6 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import java.util.function.Consumer;
+
 /**
  * Starts ELP for {@code .erl} and {@code .hrl} files in the {@code ELP} position once a path to {@code elp} is set and
  * {@link ElpPreflight} says that ELP can load the project. Registered in
@@ -48,6 +51,7 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
   private static final Logger LOG = Logger.getInstance(ElpLspIntegrationProvider.class);
 
   private static volatile boolean ourIgnoringOpenedFilesInTests;
+  private static volatile Consumer<Project> ourStopForTests;
 
   /**
    * Makes the platform's calls of {@link #fileOpened} do nothing until {@code parent} is disposed: for the tests that stand a fake
@@ -88,14 +92,40 @@ public final class ElpLspIntegrationProvider implements LspServerSupportProvider
     }
     if (facts == null || !result.canStart()) {
       LOG.info("ELP is not started for " + root.getPath() + ": " + result.blocking());
-      // A root that ELP served and the preflight now refuses goes back to the plugin.
+      // A root that ELP served and the preflight now refuses goes back to the plugin, and its server stops: the plugin answers there.
       if (ElpServedRoots.getInstance().remove(root.getPath())) ElpEngine.refreshProject(project);
+      stopServerOf(project, root);
       if (preflight.shouldTell(result)) {
         ApplicationManager.getApplication().invokeLater(() -> ElpNotifications.notStarted(project, result), project.getDisposed());
       }
       return;
     }
     serverStarter.ensureServerStarted(new ElpLspClientDescriptor(project, root, facts.configuration()));
+  }
+
+  /**
+   * Stops the running ELP server of {@code root}. The platform stops only all the servers of a provider and starts again those that
+   * the open files need, through {@link #fileOpened}, which refuses this root.
+   */
+  private static void stopServerOf(@NotNull Project project, @NotNull VirtualFile root) {
+    for (LspServer server : ElpLspServerStatus.clients(project)) {
+      if (!(server.getDescriptor() instanceof ElpLspClientDescriptor descriptor) || !root.equals(descriptor.getRoots()[0])) continue;
+      if (server.getState() == LspServerState.ShutdownNormally || server.getState() == LspServerState.ShutdownUnexpectedly) continue;
+      LOG.info("Stopping ELP for " + root.getPath() + ": the preflight refuses it");
+      ApplicationManager.getApplication().invokeLater(() -> {
+        Consumer<Project> stop = ourStopForTests;
+        if (stop != null) stop.accept(project);
+        else LspServerManager.getInstance(project).stopAndRestartIfNeeded(ElpLspIntegrationProvider.class);
+      }, ModalityState.nonModal(), project.getDisposed());
+      return;
+    }
+  }
+
+  /** Makes {@link #stopServerOf} call {@code stop} instead of the platform until {@code parent} is disposed. */
+  @TestOnly
+  static void onServerStopInTests(@NotNull Consumer<Project> stop, @NotNull Disposable parent) {
+    ourStopForTests = stop;
+    Disposer.register(parent, () -> ourStopForTests = null);
   }
 
   /** Asks the platform to call {@link #fileOpened} again for the Erlang files open in the project. */

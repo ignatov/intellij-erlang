@@ -120,26 +120,31 @@ public final class ElpEngine {
       if (project.isDisposed()) return false;
       for (VirtualFile root : ElpFiles.workspaceRoots(project)) {
         String path = root.getPath();
-        if (roots.isUnderServedRoot(path) && ElpFiles.serverGets(project, root, roots.getRealPath(path), file)) return true;
+        if (roots.contains(path) && ElpFiles.serverGets(project, root, roots.getRealPath(path), file)) return true;
       }
       return false;
     });
   }
 
   /**
-   * For Go to Symbol and Go to Class: whether every content root of {@code project} lies under a root that ELP serves, so that ELP's
+   * For Go to Symbol and Go to Class: whether the workspace root of every content root of {@code project} is a root that ELP serves,
+   * see {@link ElpFiles#findWorkspaceRoot}, so that ELP's
    * {@code workspace/symbol} answers for the whole project and the plugin's contributors stay silent, also for the libraries and the
    * SDK. In a project with roots that ELP does not serve the plugin's contributors answer for the files outside the served roots.
    */
   public static boolean servesWholeProject(@NotNull Project project) {
     ElpServedRoots roots = ElpServedRoots.getInstance();
     if (roots.isEmpty() || !isElpProject(project)) return false;
-    VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
-    if (contentRoots.length == 0) return false;
-    for (VirtualFile contentRoot : contentRoots) {
-      if (!roots.isUnderServedRoot(contentRoot)) return false;
-    }
-    return true;
+    return ReadAction.compute(() -> {
+      if (project.isDisposed()) return false;
+      VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
+      if (contentRoots.length == 0) return false;
+      for (VirtualFile contentRoot : contentRoots) {
+        VirtualFile root = ElpFiles.findWorkspaceRoot(project, contentRoot);
+        if (root == null || !roots.contains(root.getPath())) return false;
+      }
+      return true;
+    });
   }
 
   private static boolean isElpProject(@NotNull Project project) {

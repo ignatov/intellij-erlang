@@ -83,7 +83,7 @@ public final class ElpLspServerStatus implements ElpServerStatus {
   }
 
   @NotNull
-  private static Collection<LspServer> clients(@NotNull Project project) {
+  static Collection<LspServer> clients(@NotNull Project project) {
     Function<Project, Collection<LspServer>> clients = ourClientsForTests;
     return clients != null ? clients.apply(project) : LspServerManager.getInstance(project).getServersForProvider(ElpLspIntegrationProvider.class);
   }

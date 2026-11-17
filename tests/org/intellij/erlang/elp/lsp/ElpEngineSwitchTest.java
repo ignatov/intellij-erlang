@@ -322,6 +322,19 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
     }
   }
 
+  /**
+   * A project is served only through its own workspace root: opened on a directory under a root that another project's ELP serves,
+   * for example an application of a monorepo, it stays with the plugin until its own server runs.
+   */
+  public void testAProjectUnderAnotherProjectsServedRootIsNotServed() {
+    ElpServedRoots.getInstance().setRootsForTests(List.of(myRoot.getParent().getPath()), getTestRootDisposable());
+    assertTrue(ElpServedRoots.getInstance().isUnderServedRoot(myRoot));
+    for (Feature feature : Feature.values()) {
+      assertFalse(feature.name(), ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), feature));
+    }
+    assertFalse(ElpEngine.servesWholeProject(getProject()));
+  }
+
   /** A client started for the Plugin position, as before a switch of the position, is never asked. */
   public void testClientOfThePluginPositionIsNeverAsked() {
     FakeElpClient pluginClient = new FakeElpClient(

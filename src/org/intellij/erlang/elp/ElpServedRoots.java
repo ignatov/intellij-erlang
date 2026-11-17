@@ -103,6 +103,15 @@ public final class ElpServedRoots implements PersistentStateComponent<ElpServedR
   }
 
   /**
+   * Whether {@code root} itself is a served root. A project is served only through its own workspace roots ({@link ElpEngine}): a
+   * project opened on a directory under a served root of another project is not.
+   */
+  public boolean contains(@NotNull String root) {
+    List<String> roots = myRoots;
+    return !roots.isEmpty() && roots.contains(canonical(root));
+  }
+
+  /**
    * @return the real path of the workspace root {@code root}, when its server found that it lies under a symlink, see
    * {@link #setRealPath}; otherwise {@code null}
    */

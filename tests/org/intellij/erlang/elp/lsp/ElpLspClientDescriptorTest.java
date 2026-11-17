@@ -26,7 +26,9 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.platform.lsp.api.LspServer;
 import com.intellij.platform.lsp.api.LspServerDescriptor;
+import com.intellij.platform.lsp.api.LspServerState;
 import com.intellij.platform.lsp.api.LspServerSupportProvider;
 import com.intellij.platform.lsp.api.customization.*;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -57,6 +59,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.lang.reflect.Proxy;
 import java.util.List;
 
 public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -226,8 +229,28 @@ public class ElpLspClientDescriptorTest extends ErlangLightPlatformCodeInsightFi
     assertNotNull(root);
     ElpServedRoots.getInstance().setRootsForTests(List.of(root.getPath(), "/elsewhere"), getTestRootDisposable());
     ElpPreflight.trustInTests(false, getTestRootDisposable());
+    List<LspServerState> stops = new ArrayList<>();
+    LspServerState[] state = {LspServerState.Running};
+    ElpLspClientDescriptor running = new ElpLspClientDescriptor(getProject(), root, new ElpConfiguration(executable(), ElpMode.ELP));
+    LspServer client = (LspServer)Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{LspServer.class},
+                                                         (proxy, method, args) -> switch (method.getName()) {
+      case "getDescriptor" -> running;
+      case "getState" -> state[0];
+      case "hashCode" -> System.identityHashCode(proxy);
+      case "equals" -> proxy == args[0];
+      default -> null;
+    });
+    ElpLspServerStatus.setClientsForTests(project -> List.of(client), getTestRootDisposable());
+    ElpLspIntegrationProvider.onServerStopInTests(project -> stops.add(state[0]), getTestRootDisposable());
     assertEmpty(fileOpened(module));
     assertEquals(List.of("/elsewhere"), ElpServedRoots.getInstance().getRoots());
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    assertEquals("the running server of the refused root stops", List.of(LspServerState.Running), stops);
+
+    state[0] = LspServerState.ShutdownNormally;
+    assertEmpty(fileOpened(module));
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    assertEquals("nothing runs there now", 1, stops.size());
   }
 
   private static List<String> notDisabledCustomizers(LspCustomization customization) throws Exception {
