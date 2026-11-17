@@ -58,6 +58,18 @@ public class RebarBuilderTest extends ErlangJpsBuildTestCase {
     assertEmpty(listFiles(getAbsolutePath("out/production/m")));
   }
 
+  // rebar3 evaluates rebar.config.script when there is no rebar.config, so such a root is a rebar project too (#1260).
+  public void testRebar3CompilesApplicationWithOnlyRebarConfigScript() {
+    useRebar(requireRebarPath());
+    createRebarApp("rebar.config.script", "CONFIG ++ [{erl_opts, []}].");
+    BuildResult result = rebuildAllWithoutAssertions();
+
+    assertEmpty(ContainerUtil.filter(ContainerUtil.map(result.getWarnMessages(), m -> m.getMessageText()),
+                                     text -> text.contains("rebar.config is not found")));
+    assertSameElements(listFiles(appPath("_build/default/lib/app1/ebin")), "app1.app", "app1_mod.beam");
+    assertEmpty(listFiles(getAbsolutePath("out/production/m")));
+  }
+
   public void testDebugInfoOptionAddsDebugInfoToRebarBuild() throws IOException {
     String rebarPath = requireRebarPath();
     createRebarApp("{erl_opts, [no_debug_info]}.");
@@ -126,7 +138,11 @@ public class RebarBuilderTest extends ErlangJpsBuildTestCase {
   // An OTP application in app1/ with rebar.config, src/app1.app.src and src/app1_mod.erl. Module "m" has the content
   // root app1/ and the source root app1/src, as after the rebar import, and the output directory out/production/m.
   private void createRebarApp(@NotNull String rebarConfig) {
-    String rebarConfigPath = createFile("app1/rebar.config", rebarConfig);
+    createRebarApp("rebar.config", rebarConfig);
+  }
+
+  private void createRebarApp(@NotNull String rebarConfigFileName, @NotNull String rebarConfig) {
+    String rebarConfigPath = createFile("app1/" + rebarConfigFileName, rebarConfig);
     String appDir = new File(rebarConfigPath).getParent();
     createFile("app1/src/app1.app.src", APP_SRC);
     createFile("app1/src/app1_mod.erl", MODULE);
