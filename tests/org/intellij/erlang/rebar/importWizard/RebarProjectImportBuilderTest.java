@@ -20,6 +20,7 @@ import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.facet.FacetManager;
 import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
+import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
@@ -28,13 +29,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
+import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -117,6 +122,35 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  // File | Open of a directory with rebar.config: the platform's ProjectOpenProcessorBase calls doQuickImport,
+  // then getBuilder().validate(...) and getBuilder().commit(project, null, EMPTY_MODULES_PROVIDER), without the wizard.
+  public void testOpenProcessorQuickImport() throws Exception {
+    Project project = getProject();
+    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(project.getBasePath() + "/test");
+    assertNotNull(projectRoot);
+    VirtualFile rebarConfig = projectRoot.findChild("rebar.config");
+    assertNotNull(rebarConfig);
+
+    RebarProjectOpenProcessor processor = new RebarProjectOpenProcessor();
+    WizardContext wizardContext = new WizardContext(null, getTestRootDisposable());
+    assertTrue(processor.doQuickImport(rebarConfig, wizardContext));
+    assertTrue(processor.getBuilder().validate(null, project));
+    processor.getBuilder().commit(project, null, ModulesProvider.EMPTY_MODULES_PROVIDER);
+
+    String expectedRebarPath =
+      ApplicationManager.getApplication().executeOnPooledThread(() -> RebarRunningStateUtil.getRebarPath(projectRoot.getPath())).get();
+    assertFalse("rebar3 is not found in the project directory or on PATH", expectedRebarPath.isEmpty());
+
+    List<String> importedModules = new ArrayList<>();
+    for (Module module : ModuleManager.getInstance(project).getModules()) {
+      if (module != getModule()) importedModules.add(module.getName());
+    }
+    String state = "modules: " + importedModules +
+                   ", rebar path: '" + RebarSettings.getInstance(project).getRebarPath() + "'" +
+                   ", compile with rebar: " + ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled();
+    assertEquals("modules: [demo], rebar path: '" + expectedRebarPath + "', compile with rebar: true", state);
   }
 
   private static void createMockSdk() {
