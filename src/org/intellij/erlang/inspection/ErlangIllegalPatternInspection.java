@@ -123,12 +123,21 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
         @Override
         public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
           ErlangExpression left = o.getLeft();
+          boolean classAndMacroCall = false;
           if (left instanceof ErlangColonQualifiedExpression qualified && isCatchClausePattern(o)) {
             List<ErlangExpression> classAndPrefix = qualified.getExpressionList();
             checkExpressionAndReport(classAndPrefix.get(0), problemsHolder);
             left = classAndPrefix.size() > 1 ? classAndPrefix.get(1) : null;
           }
-          if (o.getOpPlusPlus() != null && isListPrefix(left) && o.getRight() != null && !isInGuardExpression(o)) {
+          // Class:?MACRO(Args) is parsed as a remote call
+          else if (left instanceof ErlangGlobalFunctionCallExpression call && isCatchClausePattern(o)) {
+            left = call.getFunctionCallExpression();
+          }
+          else if (left instanceof ErlangGenericFunctionCallExpression call && call.getColon() != null && isCatchClausePattern(o)) {
+            classAndMacroCall = isMacroCall(call);
+          }
+          if (o.getOpPlusPlus() != null && (classAndMacroCall || isListPrefix(left)) && o.getRight() != null &&
+              !isInGuardExpression(o, element)) {
             checkExpressionAndReport(o.getRight(), problemsHolder);
           }
           else {
@@ -215,9 +224,19 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           if (o.getFirstChild() != o.getRadix()) {
             registerProblem(problemsHolder, o, ERROR);
           }
-          else if (isInGuardExpression(o)) {
-            super.visitRecordExpression(o);
+          else if (isInGuardExpression(o, element)) {
+            reportListOps(o, problemsHolder);
           }
+        }
+      });
+    }
+
+    // Only ++ and -- are checked in the fields of a record in a guard expression; other guard expressions are allowed there
+    private static void reportListOps(@NotNull PsiElement element, @NotNull ProblemsHolder problemsHolder) {
+      element.accept(new ErlangRecursiveVisitor() {
+        @Override
+        public void visitListOpExpression(@NotNull ErlangListOpExpression o) {
+          registerProblem(problemsHolder, o, ERROR);
         }
       });
     }
@@ -240,11 +259,8 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   }
 
   // A binary segment and a map key in a pattern are guard expressions, where ++ and -- are not allowed
-  private static boolean isInGuardExpression(@NotNull PsiElement o) {
-    PsiElement child = o;
-    for (PsiElement parent = o.getParent(); parent != null; child = parent, parent = parent.getParent()) {
-      if (parent instanceof ErlangArgumentDefinition) return false;
-      if (parent instanceof ErlangAssignmentExpression assignment && assignment.getLeft() == child) return false;
+  private static boolean isInGuardExpression(@NotNull PsiElement o, @NotNull PsiElement pattern) {
+    for (PsiElement child = o, parent = o.getParent(); child != pattern && parent != null; child = parent, parent = parent.getParent()) {
       if (parent instanceof ErlangBinElement) return true;
       if (parent instanceof ErlangMapEntry entry) {
         List<ErlangExpression> keyAndValue = entry.getExpressionList();
