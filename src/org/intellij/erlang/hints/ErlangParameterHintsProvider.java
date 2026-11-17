@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Parameter name hints at Erlang call sites.
@@ -45,6 +46,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
   @VisibleForTesting
   public static final int MAX_SUMMARY_LENGTH = 12;
   private static final String ELLIPSIS = "…";
+  private static final Pattern LINE_BREAK = Pattern.compile("\\s*\\R\\s*");
 
   @Override
   public @Nullable InlayHintsCollector createCollector(@NotNull PsiFile file, @NotNull Editor editor) {
@@ -206,7 +208,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
     if (variants.size() == 1) {
       String single = variants.iterator().next();
       // keep the whole record name, it is what the reader looks for
-      return single.startsWith("#") && !single.startsWith("#{") ? single : truncate(single);
+      return single.startsWith("#") && !single.startsWith("#{") && single.endsWith("{}") ? single : truncate(single);
     }
     String joined = String.join("|", variants);
     if (joined.length() <= MAX_SUMMARY_LENGTH) return joined;
@@ -265,7 +267,8 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
 
   /**
    * The text with each run of whitespace between tokens turned into one space, and none after {@code (} or before
-   * {@code )}; the text of the tokens themselves, such as strings and quoted atoms, is kept as written.
+   * {@code )}; the text of the tokens themselves, such as strings and quoted atoms, is kept as written, except that a
+   * line break inside a token, with the whitespace around it, becomes one space, as a hint is a single line.
    */
   private static @NotNull String normalize(@NotNull PsiElement element) {
     StringBuilder result = new StringBuilder();
@@ -276,7 +279,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
         space = true;
         continue;
       }
-      String text = leaf.getText();
+      String text = LINE_BREAK.matcher(leaf.getText()).replaceAll(" ");
       if (text.isEmpty()) continue;
       if (space && previous != null && !"(".equals(previous) && !")".equals(text)) result.append(' ');
       space = false;

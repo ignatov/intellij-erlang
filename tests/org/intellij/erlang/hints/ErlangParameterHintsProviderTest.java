@@ -154,6 +154,38 @@ public class ErlangParameterHintsProviderTest extends DeclarativeInlayHintsProvi
              """);
   }
 
+  public void testLineBreakInStringBecomesSpace() {
+    doTest("""
+             -module(test).
+             f("a
+             b") -> ok.
+             g('a
+               b') -> ok.
+             test() -> f(/*<# "a b": #>*/x), g(/*<# 'a b': #>*/x).
+             """);
+  }
+
+  public void testTripleQuotedStringEqualToArgumentIsSkipped() {
+    doTest("""
+             -module(test).
+             k(\"""
+               ab
+               \""") -> ok.
+             test() -> k(\"""
+               ab
+               \"""), k(/*<# \""" ab \""": #>*/x).
+             """);
+  }
+
+  public void testSingleRecordIndexPatternIsTrimmed() {
+    doTest("""
+             -module(test).
+             -record(state, {connection_timeout}).
+             f(#state.connection_timeout) -> ok.
+             test() -> f(/*<# #state.conn…: #>*/2).
+             """);
+  }
+
   public void testWhitespaceBetweenTokensIsNormalized() {
     doTest("""
              -module(test).
