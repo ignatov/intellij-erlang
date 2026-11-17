@@ -1249,6 +1249,40 @@ public class ErlangPsiImplUtil {
     }
   }
 
+  private static final Set<String> MS_TRANSFORM_MODULES = Set.of("ets", "dbg");
+  private static final Set<String> MS_TRANSFORM_PSEUDO_FUNCTIONS = Set.of("object", "bindings");
+
+  // object() and bindings() in the literal fun passed to ets:fun2ms/1 or dbg:fun2ms/1 are rewritten by ms_transform
+  public static boolean isMsTransformPseudoFunctionCall(@NotNull PsiElement element, @NotNull String name, int arity) {
+    if (!(element instanceof ErlangFunctionCallExpression) || arity != 0 || !MS_TRANSFORM_PSEUDO_FUNCTIONS.contains(name)) return false;
+    ErlangFunExpression fun = PsiTreeUtil.getParentOfType(element, ErlangFunExpression.class);
+    ErlangFunClauses clauses = fun != null ? fun.getFunClauses() : null;
+    if (clauses == null || ContainerUtil.exists(clauses.getFunClauseList(), c -> c.getArgumentDefinition() != null)) return false;
+    PsiElement argument = fun;
+    while (argument.getParent() instanceof ErlangParenthesizedExpression) {
+      argument = argument.getParent();
+    }
+    ErlangArgumentList arguments = ObjectUtils.tryCast(argument.getParent(), ErlangArgumentList.class);
+    if (arguments == null || arguments.getExpressionList().size() != 1) return false;
+    ErlangFunctionCallExpression call = ObjectUtils.tryCast(arguments.getParent(), ErlangFunctionCallExpression.class);
+    ErlangGlobalFunctionCallExpression globalCall = call != null ? ObjectUtils.tryCast(call.getParent(), ErlangGlobalFunctionCallExpression.class) : null;
+    PsiFile file = element.getContainingFile();
+    return globalCall != null &&
+           "fun2ms".equals(call.getName()) &&
+           MS_TRANSFORM_MODULES.contains(getName(globalCall.getModuleRef().getQAtom())) &&
+           file instanceof ErlangFile erlangFile &&
+           isParseTransformDeclared(erlangFile, "ms_transform");
+  }
+
+  private static boolean isParseTransformDeclared(@NotNull ErlangFile file, @NotNull String parseTransform) {
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    for (ErlangFile includedFile : getIncludedFiles(file)) {
+      includedFile.addDeclaredParseTransforms(parseTransforms);
+    }
+    return parseTransforms.contains(parseTransform);
+  }
+
   public static void extractParseTransforms(@NotNull ErlangListExpression list, @NotNull Set<String> parseTransforms) {
     for (ErlangExpression expr : list.getExpressionList()) {
       if (expr instanceof ErlangTupleExpression) {
