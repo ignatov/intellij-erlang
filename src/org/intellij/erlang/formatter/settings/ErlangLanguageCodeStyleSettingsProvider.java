@@ -17,7 +17,6 @@
 package org.intellij.erlang.formatter.settings;
 
 import com.intellij.application.options.IndentOptionsEditor;
-import com.intellij.application.options.SmartIndentOptionsEditor;
 import com.intellij.lang.Language;
 import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizable;
 import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizableOptions;
@@ -50,7 +49,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
   @Override
   public IndentOptionsEditor getIndentOptionsEditor() {
-    return new SmartIndentOptionsEditor();
+    return new ErlangIndentOptionsEditor();
   }
 
   @NotNull
@@ -198,5 +197,9 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
           List = [
             1,
             2
-          ].""";
+          ].
+
+      bar(X)
+          when is_integer(X) ->
+          X.""";
 }
