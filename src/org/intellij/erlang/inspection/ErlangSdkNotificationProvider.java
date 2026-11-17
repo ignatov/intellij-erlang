@@ -82,7 +82,7 @@ public class ErlangSdkNotificationProvider implements EditorNotificationProvider
     PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
     if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
 
-    ErlangSdkRelease sdkRelease = ErlangSdkType.getRelease(psiFile);
+    ErlangSdkRelease sdkRelease = ErlangSdkType.getSdkRelease(psiFile);
     if (sdkRelease != null) return null;
 
     return fileEditor -> createPanel(project, psiFile);

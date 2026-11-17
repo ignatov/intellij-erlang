@@ -20,8 +20,15 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationEx;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.intellij.erlang.sdk.ErlangSdkForSmallIdes;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.lang.reflect.InvocationTargetException;
@@ -39,6 +46,32 @@ public class ErlangSdkNotificationProviderTest extends ErlangLightPlatformCodeIn
   public void testBannerShownWithoutSdk() {
     VirtualFile file = myFixture.configureByText("a.erl", "-module(a).\n").getVirtualFile();
     assertNotNull("no 'Project SDK is not defined' banner for an .erl file without an Erlang SDK", collectNotificationData(file));
+  }
+
+  public void testNoBannerWithSdk() {
+    String sdkHome = "testData/mockSdk-R15B02/";
+    Sdk sdk = ErlangSdkType.createMockSdk(sdkHome, ErlangSdkRelease.V_R15B02);
+    try {
+      if (ErlangSystemUtil.isSmallIde()) {
+        ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), sdkHome);
+      }
+      else {
+        ApplicationManager.getApplication().runWriteAction(() -> {
+          ProjectJdkTable.getInstance().addJdk(sdk);
+          ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk);
+        });
+      }
+      VirtualFile file = myFixture.configureByText("a.erl", "-module(a).\n").getVirtualFile();
+      assertNull("a 'Project SDK is not defined' banner for an .erl file with an Erlang SDK", collectNotificationData(file));
+    }
+    finally {
+      if (ErlangSystemUtil.isSmallIde()) {
+        ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), "");
+      }
+      else {
+        ApplicationManager.getApplication().runWriteAction(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
+      }
+    }
   }
 
   // the provider returns null in unit test mode, so it is called with an application that is not in unit test mode
