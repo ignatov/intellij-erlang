@@ -46,10 +46,10 @@ import java.util.Set;
  * ELP owns every feature of an Erlang module or header ({@link ElpFiles#isElpFile}) under a root that ELP serves
  * ({@link ElpServedRoots}), in the {@link ElpMode#ELP} position with a path to {@code elp} or the downloaded server
  * ({@link ElpSettings#isElpPositionWithServer}), in a trusted project of an IDE with the LSP module ({@link ElpServerStatus}).
- * There, and in every other file that the server of a served root gets ({@link #isServed}), such as the OTP sources, the plugin
- * does not answer in parallel, whatever the server is doing: while it loads, after a crash or while it restarts the user gets
+ * There, and in every other file that the server of a served root gets ({@link #isServed}), the plugin does not answer in parallel, whatever the server is doing: while it loads, after a crash or while it restarts the user gets
  * nothing from the plugin's engine. Everywhere else, for example in the {@link ElpMode#PLUGIN} position, under a root that the
- * preflight refused or under another content root, the plugin answers exactly as without ELP.
+ * preflight refused, under another content root or in an OTP source outside the project's content, the plugin answers exactly as
+ * without ELP.
  * References and resolve are never switched off, because the lexer, the parser, the formatter and the run configurations of the
  * plugin keep working on the PSI.
  */
@@ -123,7 +123,7 @@ public final class ElpEngine {
   /**
    * Whether {@code file} is an Erlang module or header that the ELP server of a served root of {@code project} gets, by the same
    * predicate as the server's supported files ({@link ElpFiles#serverGets}): a file under the served root, by the path the project
-   * knows or by its real path, and a file outside the project's content, such as an OTP source. Does not look at the server.
+   * knows or by its real path, in the project's content; not an OTP source outside it. Does not look at the server.
    * Cheap: in the {@link ElpMode#PLUGIN} position it looks at an empty list only.
    */
   public static boolean isServed(@NotNull Project project, @NotNull VirtualFile file) {

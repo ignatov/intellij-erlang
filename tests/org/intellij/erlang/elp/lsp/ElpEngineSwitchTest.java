@@ -275,7 +275,8 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * A file under another content root, which this server does not load, stays with the plugin, so its inspections are not
-   * silenced. A file outside the project's content, such as an OTP source, goes to the client, so it is ELP's.
+   * silenced. Nor does the platform's client open a file outside the project's content, such as an OTP source, on the server, so it
+   * stays with the plugin too.
    */
   public void testAFileUnderAnotherContentRootStaysWithThePlugin() throws Exception {
     Path otherDir = FileUtil.createTempDirectory("elp-other-root", null, true).toPath();
@@ -295,8 +296,8 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       assertFalse(myDescriptor.isSupportedFile(other));
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.DIAGNOSTICS));
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.NAVIGATION));
-      assertTrue(myDescriptor.isSupportedFile(outside));
-      assertTrue(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
+      assertFalse(myDescriptor.isSupportedFile(outside));
+      assertFalse(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
       assertTrue(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), Feature.DIAGNOSTICS));
     }
     finally {
@@ -306,8 +307,9 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * One engine per file: the files that the server of a served root gets are exactly those where the plugin is silent. An OTP
-   * source of the project's SDK goes to ELP, so hover, inlay hints, folding and the diagnostics there are ELP's alone; so are the
-   * files of a symlinked root by their real path.
+   * source of the project's SDK is not in the project's content, so the platform's client never opens it on the server and hover,
+   * inlay hints, folding and the diagnostics there are the plugin's alone; so are those of a file of a symlinked root opened by its
+   * real path, which is not in the content either.
    */
   public void testElpGetsExactlyTheFilesWhereThePluginIsSilent() throws Exception {
     VirtualFile lists = LocalFileSystem.getInstance().refreshAndFindFileByPath(
@@ -335,16 +337,16 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       expected.put(file("src/shop.erl"), true);
       expected.put(file("src/shop.hrl"), true);
       expected.put(file("rebar.config"), false);
-      expected.put(lists, true);
+      expected.put(lists, false);
       for (Map.Entry<VirtualFile, Boolean> entry : expected.entrySet()) {
         VirtualFile file = entry.getKey();
         assertEquals(file.getPath(), entry.getValue().booleanValue(), myDescriptor.isSupportedFile(file));
         assertEquals(file.getPath(), entry.getValue().booleanValue(), ElpEngine.ownsFeature(getProject(), file, Feature.DOCUMENTATION));
       }
-      for (VirtualFile file : List.of(byLink, byRealPath)) {
-        assertTrue(file.getPath(), linked.isSupportedFile(file));
-        assertTrue(file.getPath(), ElpEngine.ownsFeature(getProject(), file, Feature.FOLDING));
-      }
+      assertTrue(linked.isSupportedFile(byLink));
+      assertTrue(ElpEngine.ownsFeature(getProject(), byLink, Feature.FOLDING));
+      assertFalse("not in the content", linked.isSupportedFile(byRealPath));
+      assertFalse("not in the content", ElpEngine.ownsFeature(getProject(), byRealPath, Feature.FOLDING));
       assertFalse("the file of another root", myDescriptor.isSupportedFile(byLink));
     }
     finally {

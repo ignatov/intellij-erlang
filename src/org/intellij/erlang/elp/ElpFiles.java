@@ -78,9 +78,11 @@ public final class ElpFiles {
   }
 
   /**
-   * Whether the ELP server of the workspace root {@code root} gets {@code file}: an Erlang module or header under the root, by the
-   * path the project knows or by the real path of the root, or one outside the project's content, such as the OTP sources, which ELP
-   * loads too. A file under another content root is not this server's: ELP does not load it with this root.
+   * Whether the ELP server of the workspace root {@code root} gets {@code file}: an Erlang module or header of the project's content
+   * under the root, by the path the project knows or by the real path of the root. A file under another content root is not this
+   * server's: ELP does not load it with this root. Neither is a file outside the project's content, such as an OTP source of the SDK:
+   * the platform's LSP client of IDEA 2026.1 and 2026.2 ({@code LspClientImpl.isSupportedFile}) opens no such file on the server
+   * whatever the descriptor says, so ELP never gets its text and would answer nothing there.
    * <p>
    * The one predicate for both sides: the server's supported files ({@code ElpLspClientDescriptor.isSupportedFile}) and the files
    * where the plugin is silent ({@link ElpEngine#ownsFeature}), so that every file has exactly one engine.
@@ -89,9 +91,7 @@ public final class ElpFiles {
    */
   @RequiresReadLock
   public static boolean serverGets(@NotNull Project project, @NotNull VirtualFile root, @Nullable String realRoot, @NotNull VirtualFile file) {
-    if (!isElpFile(file)) return false;
-    if (VfsUtilCore.isAncestor(root, file, false)) return true;
-    if (realRoot != null && ElpServedRoots.isUnder(file.getPath(), realRoot)) return true;
-    return !project.isDisposed() && !ProjectFileIndex.getInstance(project).isInContent(file);
+    if (!isElpFile(file) || project.isDisposed() || !ProjectFileIndex.getInstance(project).isInContent(file)) return false;
+    return VfsUtilCore.isAncestor(root, file, false) || realRoot != null && ElpServedRoots.isUnder(file.getPath(), realRoot);
   }
 }

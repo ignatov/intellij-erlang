@@ -97,7 +97,7 @@ public final class ElpLspServerStatus implements ElpServerStatus {
    * @return a running ELP client of the {@link ElpMode#ELP} position that gets {@code file} (any file when it is {@code null}) and
    * announced the capability that {@code feature} needs. A client still initializing, or stopped, does not count, nor does a running
    * client whose ELP has not loaded the project yet, see {@link ElpLoadState}; the plugin's entry points then do not ask ELP at all. The platform sends a client every file its
-   * descriptor supports: the files under its root and those outside the project's content, such as the OTP sources, see
+   * descriptor supports: the files of the project's content under its root, see
    * {@link ElpLspClientDescriptor#isSupportedFile}.
    */
   @Nullable
