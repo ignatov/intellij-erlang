@@ -1,0 +1,276 @@
+name: Factory tick
+
+# One tick of the project's automation: the dispatcher (dispatcher/dispatch.py of the private repository
+# ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next. It ran in the private
+# repository until 2026-11-17; it runs here because the Actions minutes of a public repository are free.
+#
+# Started by factory-timer.yml (the clock), factory-wake.yml (a push to master, an owner's "/" command in a pull
+# request), a person (workflow_dispatch) and an hourly schedule, the backstop for a broken timer chain.
+# It acts (--live) only when the run is scheduled or was started with "live", the repository variable
+# FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is set. Otherwise it is a dry run that only reads.
+#
+# What keeps the secrets in:
+#   - They are secrets of the environment factory-dispatch, which only jobs of master can use. There is no
+#     pull_request or pull_request_target trigger, so a pull request or a fork never runs this workflow.
+#   - This job holds the maintainer's token, so it has no "uses:" step and never checks out this repository: it
+#     runs nothing from this repository's tree. It fetches the private repository with plain git, the token
+#     coming from an askpass script that reads it from the environment (never on a command line or in a URL),
+#     and runs the private dispatcher from that checkout.
+#   - The log of a public run is public. The tick's output goes to a file, and this log shows only the mode,
+#     the exit status, the number of lines, the last "requests: ..." line (counts and quota) and the pace. No
+#     artifact (an artifact of a public run is public) and no step summary. The full log is committed as
+#     last-tick.log to the branch tick-log of the private repository on every run, also a dry or failed one.
+#   - Values from the event and the inputs reach the scripts only through env, never inside a script.
+#
+# Secrets of factory-dispatch: FACTORY_TOKEN (the maintainer's token for this repository and the agent tasks API,
+# as in the private repository) and, optionally, FACTORY_DESK_TOKEN for the private repository (clone, push,
+# cards and the panel); when it is empty, FACTORY_TOKEN is used for the private repository too.
+
+on:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: Act instead of a dry run (also needs FACTORY_TICK_LIVE=true and the FACTORY_TOKEN secret)
+        type: boolean
+        default: false
+  schedule:
+    - cron: '41 * * * *'
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tick:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # Re-arming the timer: GITHUB_TOKEN starts factory-timer.yml with workflow_dispatch.
+    permissions:
+      actions: write
+    environment:
+      name: factory-dispatch
+      # The environment is used for its secrets and its branch policy only; this is not a deployment.
+      deployment: false
+    # One tick runs and at most one waits; two ticks at once would corrupt the state.
+    concurrency:
+      group: factory-tick
+      cancel-in-progress: false
+    env:
+      DESK_REPO: ignatov/intellij-erlang-triage
+      GIT_TERMINAL_PROMPT: '0'
+      # No credential helper of the runner stores or offers anything; the askpass script answers.
+      GIT_CONFIG_NOSYSTEM: '1'
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: credential.helper
+      GIT_CONFIG_VALUE_0: ''
+      GIT_AUTHOR_NAME: github-actions[bot]
+      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_COMMITTER_NAME: github-actions[bot]
+      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+    steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          HAS_TOKEN: ${{ secrets.FACTORY_TOKEN != '' }}
+          LIVE_VAR: ${{ vars.FACTORY_TICK_LIVE }}
+          EVENT: ${{ github.event_name }}
+          LIVE_INPUT: ${{ inputs.live }}
+        run: |
+          mode=dry-run
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "The secret FACTORY_TOKEN is not set: dry run."
+          elif [ "$LIVE_VAR" != "true" ]; then
+            echo "The repository variable FACTORY_TICK_LIVE is not true: dry run."
+          elif [ "$EVENT" = "schedule" ] || [ "$LIVE_INPUT" = "true" ]; then
+            mode=live
+          else
+            echo "Started without live: dry run."
+          fi
+          echo "Mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Check the token for the private repository
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          DESK_SECRET: ${{ secrets.FACTORY_DESK_TOKEN != '' && 'FACTORY_DESK_TOKEN' || 'FACTORY_TOKEN' }}
+        run: |
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::error::Neither FACTORY_DESK_TOKEN nor FACTORY_TOKEN is set in the environment factory-dispatch."
+            exit 1
+          fi
+          # The header comes from curl's config on stdin (printf is a shell builtin), not from the command line.
+          code=$(printf 'header = "Authorization: Bearer %s"\n' "$DESK_TOKEN" \
+            | curl -sS -K - -o "$RUNNER_TEMP/desk-repo.json" -w '%{http_code}' \
+                -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' \
+                "https://api.github.com/repos/$DESK_REPO") || code=000
+          push=$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1])).get("permissions", {}).get("push") is True)' \
+            "$RUNNER_TEMP/desk-repo.json" 2>/dev/null) || push=False
+          rm -f "$RUNNER_TEMP/desk-repo.json"
+          if [ "$code" != "200" ] || [ "$push" != "True" ]; then
+            echo "::error::The secret $DESK_SECRET cannot push to the private repository (HTTP $code)."
+            exit 1
+          fi
+          echo "The secret $DESK_SECRET can push to the private repository."
+
+      - name: Fetch the private repository
+        id: clone
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        run: |
+          # The askpass script holds no secret: it prints the token from the environment of the git process.
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          git clone --quiet --depth 1 --single-branch --branch main "https://github.com/$DESK_REPO.git" "$desk" \
+            > "$RUNNER_TEMP/clone.log" 2>&1 || {
+            grep '^fatal: ' "$RUNNER_TEMP/clone.log" || true
+            echo "::error::The private repository could not be fetched."
+            exit 1
+          }
+          { echo "run: $RUN_URL"; echo "mode: $MODE"; echo "main: $(git -C "$desk" rev-parse HEAD)"; echo; } \
+            > "$RUNNER_TEMP/tick.log"
+          echo "Fetched main of the private repository."
+
+      - name: Refuse to act on an older state
+        # A state that could not be pushed waits on a branch tick-state-failed/<run id>. A live tick on the older
+        # state of main would repeat what that tick did, so none runs until the maintainer merges the branch.
+        if: steps.mode.outputs.mode == 'live'
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          if ! waiting=$(git -C "$RUNNER_TEMP/desk" ls-remote --heads origin 'refs/heads/tick-state-failed/*' 2>/dev/null); then
+            echo "::error::The branches of the private repository could not be listed."
+            echo "The tick did not run: the branches of the private repository could not be listed." >> "$RUNNER_TEMP/tick.log"
+            exit 1
+          fi
+          if [ -n "$waiting" ]; then
+            echo "::error::A state commit waits on a branch tick-state-failed/* of the private repository. Merge it into main and delete the branch; until then no live tick runs."
+            { echo "The tick did not run: a state commit waits on these branches:"; echo "$waiting"; } >> "$RUNNER_TEMP/tick.log"
+            exit 1
+          fi
+
+      - name: Tick
+        id: tick
+        env:
+          FACTORY_TOKEN: ${{ secrets.FACTORY_TOKEN }}
+          CARD_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          PYTHONUNBUFFERED: '1'
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          cd "$RUNNER_TEMP/desk"
+          log="$RUNNER_TEMP/tick.log"
+          status=0
+          python3 dispatcher/dispatch.py "--$MODE" >> "$log" 2>&1 || status=$?
+          echo "Mode: $MODE"
+          echo "Exit status: $status"
+          count=$(wc -l < "$log")
+          echo "Log lines: $((count))"
+          # Only a line of exactly this form: it holds token names, counts and times, nothing of the items.
+          requests_re='^requests: [0-9]+ \(([A-Z_]+ [0-9]+(, )?)*\), rate limit remaining: (unknown|([A-Z_]+ [0-9]+ until ([0-9]{2}:[0-9]{2} UTC|\?)(, )?)+)$'
+          line=$(grep -E "$requests_re" "$log" | tail -n 1) || line=""
+          echo "${line:-requests: (no such line in the log)}"
+          pace=$(python3 dispatcher/pace.py dispatcher/state.json 2>> "$log") || pace=""
+          case "$pace" in
+            active|idle|settle) ;;
+            *) echo "pace.py printed no known pace; the timer would wait as idle." >> "$log"; pace=idle ;;
+          esac
+          echo "Pace: $pace"
+          echo "pace=$pace" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Commit the state
+        id: state
+        # Also after a failed tick: actions already taken must be recorded, or the next tick repeats them.
+        if: always() && steps.mode.outputs.mode == 'live' && steps.tick.outcome != 'skipped'
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          cd "$RUNNER_TEMP/desk"
+          out="$RUNNER_TEMP/state-push.log"
+          git add dispatcher/state.json dispatcher/journal.csv
+          if git diff --cached --quiet; then
+            echo "State: no change."
+            exit 0
+          fi
+          git commit --quiet -m "Record a dispatcher tick [skip ci]" >> "$out" 2>&1
+          for attempt in 1 2 3; do
+            if git pull --quiet --rebase origin main >> "$out" 2>&1 && git push --quiet origin HEAD:main >> "$out" 2>&1; then
+              echo "State: pushed to main."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying."
+            git rebase --abort >> "$out" 2>&1 || true
+            sleep $((attempt * 5))
+          done
+          if git push --quiet origin "HEAD:refs/heads/tick-state-failed/$RUN_ID" >> "$out" 2>&1; then
+            echo "::error::The state could not be pushed to main. It is on the branch tick-state-failed/$RUN_ID of the private repository: merge it into main and delete the branch."
+          else
+            echo "::error::The state could not be pushed to main or to a branch of the private repository; the log on the branch tick-log has what the tick did."
+          fi
+          exit 1
+
+      - name: Keep the log in the private repository
+        if: always() && steps.clone.outcome == 'success'
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          cd "$RUNNER_TEMP/desk"
+          file="$RUNNER_TEMP/last-tick.log"
+          cp "$RUNNER_TEMP/tick.log" "$file"
+          if [ -s "$RUNNER_TEMP/state-push.log" ]; then
+            { echo; echo "--- git, the state commit"; cat "$RUNNER_TEMP/state-push.log"; } >> "$file"
+          fi
+          # tick-log is a history of its own that holds only last-tick.log: no workflow file, so its pushes start
+          # no workflow there. A new commit on its tip, made without touching the checkout of main.
+          blob=$(git hash-object -w "$file")
+          tree=$(printf '100644 blob %s\tlast-tick.log\n' "$blob" | git mktree)
+          for _ in 1 2; do
+            parent=""
+            if git fetch --quiet --depth 1 origin refs/heads/tick-log > /dev/null 2>&1; then
+              parent=$(git rev-parse FETCH_HEAD)
+            fi
+            commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} -m "Record the log of a tick [skip ci]" \
+              -m "Run $RUN_ID, $MODE.")
+            if git push --quiet origin "$commit:refs/heads/tick-log" > /dev/null 2>&1; then
+              echo "The log is on the branch tick-log of the private repository."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::The log could not be pushed to the branch tick-log of the private repository."
+
+      - name: Arm the timer for the next tick
+        # GitHub drops most scheduled runs, so the next tick is asked for here: factory-timer.yml waits in the
+        # environment factory-timer-<pace> (its wait timer decides: active 10 minutes, idle 15, settle 25) and then
+        # starts this workflow again. A new timer replaces the one that is waiting. Not after a state that could
+        # not be pushed (the next tick refuses to act until the maintainer has merged it). Off unless the
+        # repository variable FACTORY_TIMER is "true".
+        if: >-
+          always() && steps.mode.outputs.mode == 'live' && vars.FACTORY_TIMER == 'true'
+          && steps.tick.outcome != 'skipped' && steps.state.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACE: ${{ steps.tick.outputs.pace }}
+          REPO: ${{ github.repository }}
+        run: |
+          case "$PACE" in active|idle|settle) ;; *) PACE=idle ;; esac
+          if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
+            echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
+          fi
