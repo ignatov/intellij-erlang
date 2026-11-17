@@ -925,6 +925,66 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                         """);
   }
 
+  public void testMacroDocCountsArgumentsWithRecordField() {
+    String twoArguments = "<pre>-define(M(X, Y), {two, X, Y}).<br/><br/><b>Defined in:</b> test.erl</pre>";
+    doTestGenerateDoc(twoArguments, macroOverloadsWithUse("?<caret>M(R#r.a, 2)"));
+    doTestGenerateDoc(twoArguments, macroOverloadsWithUse("?<caret>M(#r.a, 2)"));
+  }
+
+  public void testMacroDocCountsRecordFieldAsOneArgument() {
+    doTestGenerateDoc("<pre>-define(N(X), {one, X}).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      """
+                        -module(test).
+                        -record(r, {a}).
+                        -define(N, c).
+                        -define(N(X), {one, X}).
+                        test(R) -> ?<caret>N(R#r.a).
+                        """);
+  }
+
+  public void testMacroDocCountsArgumentsWithNamedFun() {
+    doTestGenerateDoc("<pre>-define(M(X, Y), {two, X, Y}).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      macroOverloadsWithUse("?<caret>M(fun F(0) -> 0; F(N) -> F(N - 1) end, 2)"));
+  }
+
+  public void testMacroDocCountsArgumentsWithQuotedKeyword() {
+    doTestGenerateDoc("<pre>-define(M(X, Y), {two, X, Y}).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                      macroOverloadsWithUse("?<caret>M('end', 1)"));
+  }
+
+  private static String macroOverloadsWithUse(@NotNull String use) {
+    return """
+      -module(test).
+      -record(r, {a}).
+      -define(M(X), {one, X}).
+      -define(M(X, Y), {two, X, Y}).
+      test(R) -> %s.
+      """.formatted(use);
+  }
+
+  public void testMacroDocInCompletionOfSameName() {
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -define(ABC(X), X).
+      -define(ABC(X, Y), Y).
+      -define(ABD, 1).
+      f() -> ?AB<caret>C(1, 2).
+      """);
+    PsiElement originalElement = myFixture.getFile().findElementAt(myFixture.getEditor().getCaretModel().getOffset());
+    LookupElement[] items = myFixture.completeBasic();
+    assertNotNull(items);
+    List<String> docs = new ArrayList<>();
+    for (LookupElement item : items) {
+      if (item.getPsiElement() instanceof ErlangMacrosDefinition) {
+        docs.add(myErlangDocProvider.generateDoc(item.getPsiElement(), originalElement));
+      }
+    }
+    assertSameElements(docs,
+                       "<pre>-define(ABC(X), X).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                       "<pre>-define(ABC(X, Y), Y).<br/><br/><b>Defined in:</b> test.erl</pre>",
+                       "<pre>-define(ABD, 1).<br/><br/><b>Defined in:</b> test.erl</pre>");
+  }
+
   public void testResolveLinkModule() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);

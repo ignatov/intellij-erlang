@@ -21,7 +21,10 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangParserDefinition;
@@ -87,7 +90,7 @@ final class ErlangMacroDocProvider implements ElementDocProvider {
     ErlangMacrosName useName = use != null ? use.getMacrosName() : null;
     String name = myMacrosDefinition.getName();
     if (useName == null || !name.equals(ErlangPsiImplUtil.getNameIdentifier(useName).getText()) ||
-        !(use.getContainingFile() instanceof ErlangFile useFile)) {
+        !(use.getContainingFile() instanceof ErlangFile useFile) || !resolvesTo(use, myMacrosDefinition)) {
       return List.of(myMacrosDefinition);
     }
     boolean inMacroBody = PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null;
@@ -103,6 +106,15 @@ final class ErlangMacroDocProvider implements ElementDocProvider {
   private static final int NO_ARGUMENTS = -1;
 
   /**
+   * Quick Documentation at a use documents the definition the use resolves to. Any other definition, for example
+   * a completion item at a use of the same name, is documented by itself.
+   */
+  private static boolean resolvesTo(@NotNull ErlangMacros use, @NotNull ErlangMacrosDefinition definition) {
+    PsiReference reference = use.getReference();
+    return reference != null && reference.resolve() == definition;
+  }
+
+  /**
    * The number of arguments after the use, counted on tokens as the preprocessor does.
    */
   private static int getUseArity(@NotNull ErlangMacros use) {
@@ -113,32 +125,51 @@ final class ErlangMacroDocProvider implements ElementDocProvider {
     int depth = 0;
     int arity = 1;
     for (; token != null; token = nextToken(token)) {
-      String text = token.getText();
-      switch (text) {
-        case "(", "[", "{", "<<", "begin", "case", "if", "receive", "try" -> depth++;
-        case "maybe" -> {
-          if (token.getNode().getElementType() == ErlangTypes.ERL_MAYBE) depth++;
-        }
-        case "fun" -> {
-          PsiElement next = nextToken(token);
-          if (next != null && "(".equals(next.getText())) depth++;
-        }
-        case "]", "}", ">>", "end" -> depth--;
-        case ")" -> {
-          if (depth == 0) return arity;
-          depth--;
-        }
-        case "," -> {
-          if (depth == 0) arity++;
-        }
-        case "." -> {
-          if (depth == 0) return NO_ARGUMENTS;
-        }
-        default -> {
-        }
+      IElementType type = token.getNode().getElementType();
+      if (OPENING.contains(type) || type == ErlangTypes.ERL_FUN && isFunWithClauses(token)) {
+        depth++;
+      }
+      else if (CLOSING.contains(type)) {
+        depth--;
+      }
+      else if (type == ErlangTypes.ERL_PAR_RIGHT) {
+        if (depth == 0) return arity;
+        depth--;
+      }
+      else if (type == ErlangTypes.ERL_COMMA) {
+        if (depth == 0) arity++;
+      }
+      else if (type == ErlangTypes.ERL_DOT && depth == 0 && isFormEnd(token)) {
+        return NO_ARGUMENTS;
       }
     }
     return NO_ARGUMENTS;
+  }
+
+  private static final TokenSet OPENING = TokenSet.create(
+    ErlangTypes.ERL_PAR_LEFT, ErlangTypes.ERL_BRACKET_LEFT, ErlangTypes.ERL_CURLY_LEFT, ErlangTypes.ERL_BIN_START,
+    ErlangTypes.ERL_BEGIN, ErlangTypes.ERL_CASE, ErlangTypes.ERL_IF, ErlangTypes.ERL_RECEIVE, ErlangTypes.ERL_TRY,
+    ErlangTypes.ERL_MAYBE);
+  private static final TokenSet CLOSING = TokenSet.create(
+    ErlangTypes.ERL_BRACKET_RIGHT, ErlangTypes.ERL_CURLY_RIGHT, ErlangTypes.ERL_BIN_END, ErlangTypes.ERL_END);
+
+  /**
+   * {@code fun (...) -> ... end} or {@code fun Name(...) -> ... end}, not {@code fun f/1} or {@code fun M:F/A}.
+   */
+  private static boolean isFunWithClauses(@NotNull PsiElement fun) {
+    PsiElement next = nextToken(fun);
+    if (next != null && next.getNode().getElementType() == ErlangTypes.ERL_VAR) next = nextToken(next);
+    return next != null && next.getNode().getElementType() == ErlangTypes.ERL_PAR_LEFT;
+  }
+
+  /**
+   * A dot ends a form only when whitespace, a comment or the end of the file follows it, as in {@code erl_scan}.
+   * The dot of a record field access ({@code R#r.a}) does not.
+   */
+  private static boolean isFormEnd(@NotNull PsiElement dot) {
+    PsiElement next = PsiTreeUtil.nextLeaf(dot);
+    while (next != null && next.getTextLength() == 0) next = PsiTreeUtil.nextLeaf(next);
+    return next == null || next instanceof PsiWhiteSpace || next instanceof PsiComment;
   }
 
   @Nullable
