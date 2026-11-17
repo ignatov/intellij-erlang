@@ -129,6 +129,9 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test444()    throws Exception { alignBlocks(); doTest(); }
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
+  public void test778()    throws Exception { setUpCommaFirst(); doTest(); }
+  public void test778CommaFirst()   throws Exception { setUpCommaFirst(); doTest(); }
+  public void test778RecordFields() throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
 
   public void test897() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
