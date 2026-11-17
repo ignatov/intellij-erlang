@@ -123,6 +123,10 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test222__IR_OFF()  throws Exception { doTest(); }
   public void test273()    throws Exception { getErlangSettings().ALIGN_GUARDS = true; doTest(); }
   public void test379()    throws Exception { setUpCommaFirst(); doTest(); }
+  public void testLineCommentAddSpace() throws Exception {
+    getCommonSettings().LINE_COMMENT_ADD_SPACE_ON_REFORMAT = true;
+    doTest();
+  }
   public void test433()    throws Exception { getErlangSettings().ALIGN_FUN_CLAUSES = true; doTest(); }
   public void test434()    throws Exception { alignBlocks(); doTest(); }
   public void test451()    throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
@@ -546,6 +550,19 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testNamedFunExpr()   throws Exception { doTest(); }
 
   public void testComprehensions() throws Exception { doTest(); }
+
+  public void testSpecArgumentTypeUnion()        throws Exception { doTest(); }
+  public void testSpecArgumentTypeUnionAligned() throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnion()                    throws Exception { doTest(); }
+  public void testSpecReturnTypeUnion()          throws Exception { doTest(); }
+  public void testTypeUnionStartingLine()        throws Exception { doTest(); }
+  public void testTypeUnionBodyOnNewLine()       throws Exception { doTest(); }
+  public void testTypeUnionNotFirstAligned()     throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNestedAligned()       throws Exception { alignBlocks(); doTest(); }
+  public void testTypeUnionNewLineAfterArrow()   throws Exception {
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE;
+    doTest();
+  }
 
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();
