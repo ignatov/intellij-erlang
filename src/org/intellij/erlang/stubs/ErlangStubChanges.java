@@ -39,6 +39,7 @@ public final class ErlangStubChanges {
     "b857bcb7 OTP 28 and 29 grammar changes",
     "#1123 integer constant expressions in integer types and size-and-unit binary types",
     "#1145 macros and integer expressions as binary type sizes",
+    "#1114 EEP 64 triple-quoted string lexing changes file stubs",
     "#1122 lexer escape and number fixes",
   };
 

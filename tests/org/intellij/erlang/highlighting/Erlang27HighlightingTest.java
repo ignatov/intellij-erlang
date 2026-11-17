@@ -40,6 +40,25 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testErlang27MoreThanThreeQuotes() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
+
+  public void testWhitespaceAfterTripleQuotedStringOpening() {
+    myFixture.configureByText("whitespace.erl",
+                              "-module(whitespace).\n" +
+                              "-export([three/0, four/0, five/0, seven/0, sigil/0]).\n" +
+                              "three() -> \"\"\"   \n  text\n  \"\"\".\n" +
+                              "four() -> \"\"\"\"   \n  text\n  \"\"\"\".\n" +
+                              "five() -> \"\"\"\"\"   \n  text\n  \"\"\"\"\".\n" +
+                              "seven() -> \"\"\"\"\"\"\"   \n  text\n  \"\"\"\"\"\"\".\n" +
+                              "sigil() -> ~b\"\"\"\"   \n  text\n  \"\"\"\".\n");
+    setUpInspections(myFixture);
+    enableErlang27SyntaxInspection();
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testErlang29SyntaxError() {
     enableErlang29SyntaxInspection();
     doTest();

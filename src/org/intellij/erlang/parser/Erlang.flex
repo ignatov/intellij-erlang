@@ -39,6 +39,23 @@ import static org.intellij.erlang.ErlangTypes.*;
     private static boolean isControlName(char c) {
       return c >= '@' && c <= '_' || c >= 'a' && c <= 'z' || c == '?';
     }
+
+    // A string opened by N > 3 double quotes ends at the next N double quotes (EEP 64).
+    // Returns the end offset of the closing quotes, or -1 if there are none.
+    private int findClosingQuotesEnd(int quotes) {
+      int count = 0;
+      for (int i = zzMarkedPos; i < zzEndRead; i++) {
+        if (zzBuffer.charAt(i) != '"') count = 0;
+        else if (++count == quotes) return i + 1;
+      }
+      return -1;
+    }
+
+    private IElementType multiQuotedString(int prefixLength, IElementType type) {
+      int end = findClosingQuotesEnd(yylength() - prefixLength);
+      if (end >= 0) zzMarkedPos = end;
+      return type;
+    }
 %}
 
 %class _ErlangLexer
@@ -104,7 +121,9 @@ STRING_BAD1 = \" ({CHAR} | \') *
 BadCaret = \\ \^
 NotControlName = [^@A-Z\[\\\]\^_a-z?]
 StringBadCaret = \" ({STRICT_ESC} | [^\'\"\\] | \')* {BadCaret}
-TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+TripleQuotedString = \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+/* The opening of a string with more than three double quotes, the rest is matched in multiQuotedString() */
+MultiQuotedStringStart = \"\"\"\"+
 StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
@@ -121,7 +140,8 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 /* Sigil with double-quoted string delimiter */
 SigilDoubleQuoteString = "~" [bs]? \" ([^\\\"] | {ESC})* \" | "~" [BS] \" ([^\\\"] | {VERBATIM_ESC})* \"
 /* Sigil with triple-quoted string delimiter */
-SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+SigilMultiQuoteStringStart = "~" [bBsS]? \"\"\"\"+
 /* Sigil with single-quote delimiter */
 SigilSingleQuoteString = "~" [bs]? \' ([^\\\'] | {ESC})* \' | "~" [BS] \' ([^\\\'] | {VERBATIM_ESC})* \'
 /* Sigil with parentheses delimiter */
@@ -221,9 +241,13 @@ SigilHashBadCaret = "~" [bs]? "#" ([^\\#] | {STRICT_ESC})* {BadCaret}
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
 <YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
 
+<YYINITIAL> {MultiQuotedStringStart} / [ \t\r]* \n     { return multiQuotedString(0, ERL_STRING); }
+<YYINITIAL> {SigilMultiQuoteStringStart} / [ \t\r]* \n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
+
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return endAtBadControlEscape(ERL_STRING); }
 <YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
+<YYINITIAL> {MultiQuotedStringStart}      { return multiQuotedString(0, ERL_STRING); }
 
 <YYINITIAL> {SigilTripleQuoteString}      { return ERL_SIGIL_STRING; }
 <YYINITIAL> {SigilDoubleQuoteString}      { return endAtBadControlEscape(ERL_SIGIL_STRING); }
@@ -238,6 +262,7 @@ SigilHashBadCaret = "~" [bs]? "#" ([^\\#] | {STRICT_ESC})* {BadCaret}
 <YYINITIAL> {SigilHashString}             { return endAtBadControlEscape(ERL_SIGIL_STRING); }
 <YYINITIAL> {StringBadCaret} / {NotControlName} { return ERL_STRING; }
 <YYINITIAL> ({SigilDoubleQuoteBadCaret} | {SigilSingleQuoteBadCaret} | {SigilParenBadCaret} | {SigilBracketBadCaret} | {SigilBraceBadCaret} | {SigilAngleBadCaret} | {SigilSlashBadCaret} | {SigilPipeBadCaret} | {SigilBacktickBadCaret} | {SigilHashBadCaret}) / {NotControlName} { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilMultiQuoteStringStart}  { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
 
 <YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }
