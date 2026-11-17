@@ -704,7 +704,6 @@ public class ErlangPsiImplUtil {
         PsiElement integer = callback.getInteger();
         int start = comma != null ? comma.getTextRange().getStartOffset() : context.getTailOffset();
         int end = integer != null ? integer.getTextRange().getEndOffset() : comma != null ? comma.getTextRange().getEndOffset() : start;
-        PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
         document.replaceString(start, end, ", " + arity);
         context.getEditor().getCaretModel().moveToOffset(start + 2 + String.valueOf(arity).length());
       }

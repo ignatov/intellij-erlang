@@ -467,6 +467,10 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\nfoobar(X) -> X.", "-optional_callbacks([{foobar, 1<caret>}]).\nfoobar(X) -> X.");
   }
 
+  public void testOptionalCallbackTupleQuotedFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\n'foo bar'(X) -> X.", "-optional_callbacks([{'foo bar', 1<caret>}]).\n'foo bar'(X) -> X.");
+  }
+
   public void testOptionalCallbackSlashFunction() {
     doCheckResult("-optional_callbacks([fo<caret>]).\nfoobar(X) -> X.", "-optional_callbacks([foobar/1<caret>]).\nfoobar(X) -> X.");
   }
