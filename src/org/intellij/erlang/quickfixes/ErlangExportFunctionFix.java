@@ -44,6 +44,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,6 +85,16 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   @Override
+  public boolean isAvailable(@NotNull Project project,
+                             @NotNull PsiFile file,
+                             @NotNull PsiElement startElement,
+                             @NotNull PsiElement endElement) {
+    return !(startElement instanceof ErlangFunction function) ||
+           !(file instanceof ErlangFile erlangFile) ||
+           canBeExported(erlangFile, function);
+  }
+
+  @Override
   public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project,
                                                        @NotNull Editor editor,
                                                        @NotNull PsiFile file) {
@@ -95,10 +106,13 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @Nullable Editor editor) {
     if (!(function.getContainingFile() instanceof ErlangFile file)) return;
 
-    var exports = getExportPsiElements(file);
+    if (!canBeExported(file, function)) return;
+
+    var macroAnchor = getMacroExportAnchor(file, function);
+    var exports = getExportsBelow(file, getExportPsiElements(file), macroAnchor);
 
     if (exports.isEmpty()) {
-      createNewExport(project, file, function, null);
+      createNewExport(project, file, function, macroAnchor);
       return;
     }
 
@@ -221,7 +235,8 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     if (exportFunctions == null) return;
 
     var replace = exportFunctions.getText().replace("[", "").replace("]", "");
-    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") + getExportText(function);
+    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
+            getExportText(function);
     var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
 
     if (attribute == null) return;
@@ -285,6 +300,77 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   private static PsiElement createExport(Project project, String text) {
     return ErlangElementFactory.createExportFromText(project, text);
+  }
+
+  /**
+   * For a function whose name is a macro whose {@code -define}s are all at the top level of this file, returns the last
+   * such {@code -define} above the function: the export entry must go below it. Returns {@code null} when the usual
+   * placement applies: the macro has no {@code -define} above the function, or the function or any {@code -define}
+   * of the macro is inside {@code -ifdef}/{@code -ifndef}/{@code -if}, whose active branch the plugin does not know.
+   */
+  @Nullable
+  static PsiElement getMacroExportAnchor(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var macros = function.getAtomName().getMacros();
+    var macrosName = macros != null ? macros.getMacrosName() : null;
+    if (macrosName == null) return null;
+
+    var name = ErlangPsiImplUtil.getNameIdentifier(macrosName).getText();
+    var definitions = ContainerUtil.filter(file.getMacroses(), d -> name.equals(d.getName()));
+    if (definitions.isEmpty()) return null;
+
+    var functionOffset = function.getTextRange().getStartOffset();
+    if (isInConditionalBlock(file, functionOffset)) return null;
+    for (var definition : definitions) {
+      if (isInConditionalBlock(file, definition.getTextRange().getStartOffset())) return null;
+    }
+
+    return ContainerUtil.findLast(definitions, d -> d.getTextRange().getEndOffset() <= functionOffset);
+  }
+
+  /**
+   * erlc rejects an {@code -export} below a function definition, so a macro-named function whose macro is defined
+   * below the first function of the file cannot be exported.
+   */
+  public static boolean canBeExported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var anchor = getMacroExportAnchor(file, function);
+    return anchor == null || anchor.getTextRange().getEndOffset() <= getFirstFunctionOffset(file);
+  }
+
+  @NotNull
+  static List<ErlangExport> getExportsBelow(@NotNull ErlangFile file,
+                                            @NotNull List<ErlangExport> exports,
+                                            @Nullable PsiElement anchor) {
+    if (anchor == null) return exports;
+    var anchorOffset = anchor.getTextRange().getEndOffset();
+    var firstFunctionOffset = getFirstFunctionOffset(file);
+    return ContainerUtil.filter(exports, export -> {
+      var offset = export.getTextRange().getStartOffset();
+      return offset >= anchorOffset && offset < firstFunctionOffset;
+    });
+  }
+
+  private static int getFirstFunctionOffset(@NotNull ErlangFile file) {
+    var first = ContainerUtil.getFirstItem(file.getFunctions());
+    return first != null ? first.getTextRange().getStartOffset() : Integer.MAX_VALUE;
+  }
+
+  private static boolean isInConditionalBlock(@NotNull ErlangFile file, int offset) {
+    var depth = 0;
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      if (attribute.getTextRange().getStartOffset() >= offset) break;
+      depth += getConditionalDepthChange(attribute);
+    }
+    return depth > 0;
+  }
+
+  private static int getConditionalDepthChange(@NotNull ErlangAttribute attribute) {
+    var directive = PsiTreeUtil.nextVisibleLeaf(attribute.getOpMinus());
+    var text = directive != null ? directive.getText() : "";
+    return switch (text) {
+      case "ifdef", "ifndef", "if" -> 1;
+      case "endif" -> -1;
+      default -> 0;
+    };
   }
 
   @NotNull

@@ -62,7 +62,21 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+
+    - name: Check out the actions of this workflow
+      # From the commit of this workflow: on workflow_dispatch that is master, and the tag above may predate the actions.
+      uses: actions/checkout@v7
+      with:
+        path: workflow-actions
+        sparse-checkout: .github/actions
+        persist-credentials: false
+
+    - name: Restore the Gradle dependency cache
+      uses: ./workflow-actions/.github/actions/gradle-cache
+
+    - name: Route Maven Central through a mirror
+      uses: ./workflow-actions/.github/actions/maven-central-mirror
 
     - name: Test, build and verify plugin
       env:

@@ -115,8 +115,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (narrowestParentScopeOwner instanceof ErlangFunClause) {
       ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
       if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
-        // the name of a named fun is declared by its first clause only
-        return funName != null && PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null;
+        // the name of a named fun is declared by its first clause only and is visible only inside that fun
+        if (funName == null) return false;
+        if (PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null) return true;
+        ErlangFunExpression funExpression = PsiTreeUtil.getParentOfType(narrowestParentScopeOwner, ErlangFunExpression.class);
+        return !PsiTreeUtil.isAncestor(funExpression, myOrigin, false);
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
