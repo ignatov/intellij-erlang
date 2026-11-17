@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -84,6 +85,8 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
+    "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
     "any", "arity", "atom", "binary", "bitstring", "boolean", "byte", "char", "dynamic", "float", "function",
     "identifier", "integer", "iodata", "iolist", "list", "map", "maybe_improper_list", "mfa", "module", "neg_integer",
@@ -491,6 +494,34 @@ public class ErlangPsiImplUtil {
       child = functionCall;
     }
     return false;
+  }
+
+  /**
+   * Whether the element is in the arguments of a macro call, in an expression or a type, where the macro is not known
+   * to take no parameters. The compiler sees such an argument only as the macro body uses it.
+   */
+  public static boolean inParameterizedMacroCallArguments(@NotNull PsiElement psiElement) {
+    for (ErlangArgumentList arguments = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class);
+         arguments != null;
+         arguments = PsiTreeUtil.getParentOfType(arguments, ErlangArgumentList.class)) {
+      PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(arguments);
+      ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
+      if (macros != null && !isMacroWithoutParameters(macros)) return true;
+    }
+    return false;
+  }
+
+  private static boolean isMacroWithoutParameters(@NotNull ErlangMacros macros) {
+    ErlangMacrosName macrosName = macros.getMacrosName();
+    PsiFile file = macros.getContainingFile();
+    if (macrosName == null) return false;
+    String name = getNameIdentifier(macrosName).getText();
+    if (PREDEFINED_MACROS_WITHOUT_PARAMETERS.contains(name)) return true;
+    if (!(file instanceof ErlangFile erlangFile) || DumbService.isDumb(file.getProject())) return false;
+    List<ErlangMacrosDefinition> definitions = ContainerUtil.filter(
+      ContainerUtil.concat(erlangFile.getMacroses(), getErlangMacrosFromIncludes(erlangFile, true, "")),
+      definition -> name.equals(definition.getName()));
+    return !definitions.isEmpty() && ContainerUtil.and(definitions, definition -> definition.getArgumentDefinitionList() == null);
   }
 
   public static boolean inCallback(PsiElement psiElement) {
