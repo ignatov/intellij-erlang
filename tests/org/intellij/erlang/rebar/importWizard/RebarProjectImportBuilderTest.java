@@ -161,6 +161,18 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
                  doQuickImport(new RebarProjectOpenProcessor()));
   }
 
+  // An app in _checkouts linked to a checkout outside the project, as rebar3 users set _checkouts up.
+  public void testOpenProcessorQuickImportSymlinkedCheckout() throws Exception {
+    if (SystemInfo.isWindows) return;
+    String rebarPath = createRebarInProjectRoot();
+    File checkout = FileUtil.createTempDirectory("mylib", null);
+    FileUtil.writeToFile(new File(checkout, "src/mylib.app.src"), "{application, mylib, [{vsn, \"1.0\"}, {applications, [kernel, stdlib]}]}.\n");
+    Files.createDirectories(Paths.get(getProject().getBasePath(), "test/_checkouts"));
+    Files.createSymbolicLink(Paths.get(getProject().getBasePath(), "test/_checkouts/mylib"), checkout.toPath());
+    assertEquals("modules: [demo at test, mylib at test/_checkouts/mylib], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
   public void testOpenProcessorQuickImportWithoutRebar() throws Exception {
     RebarProjectOpenProcessor processor = new RebarProjectOpenProcessor() {
       @NotNull
