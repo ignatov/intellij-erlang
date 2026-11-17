@@ -19,6 +19,23 @@ import static org.intellij.erlang.ErlangTypes.*;
       this((java.io.Reader)null);
       this.project = project_;
     }
+
+    // A string opened by N > 3 double quotes ends at the next N double quotes (EEP 64).
+    // Returns the end offset of the closing quotes, or -1 if there are none.
+    private int findClosingQuotesEnd(int quotes) {
+      int count = 0;
+      for (int i = zzMarkedPos; i < zzEndRead; i++) {
+        if (zzBuffer.charAt(i) != '"') count = 0;
+        else if (++count == quotes) return i + 1;
+      }
+      return -1;
+    }
+
+    private IElementType multiQuotedString(int prefixLength, IElementType type) {
+      int end = findClosingQuotesEnd(yylength() - prefixLength);
+      if (end >= 0) zzMarkedPos = end;
+      return type;
+    }
 %}
 
 %class _ErlangLexer
@@ -72,7 +89,9 @@ CharLiteral = \$ {CharLiteralChar} | \$
 ESC = "\\" ( [^] )
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
-TripleQuotedString = \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+TripleQuotedString = \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+/* The opening of a string with more than three double quotes, the rest is matched in multiQuotedString() */
+MultiQuotedStringStart = \"\"\"\"+
 StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
@@ -89,7 +108,8 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 /* Sigil with double-quoted string delimiter */
 SigilDoubleQuoteString = "~" [bBsS]? \" ([^\\\"] | {ESC})* \"
 /* Sigil with triple-quoted string delimiter */
-SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] | \"[^\"] | \"\"[^\"])* \"\"\"
+SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+SigilMultiQuoteStringStart = "~" [bBsS]? \"\"\"\"+
 /* Sigil with single-quote delimiter */
 SigilSingleQuoteString = "~" [bBsS]? \' ([^\\\'] | {ESC})* \'
 /* Sigil with parentheses delimiter */
@@ -178,11 +198,16 @@ SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
 <YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
 
+<YYINITIAL> {MultiQuotedStringStart} / [ \t\r]* \n     { return multiQuotedString(0, ERL_STRING); }
+<YYINITIAL> {SigilMultiQuoteStringStart} / [ \t\r]* \n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
+
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
 <YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
+<YYINITIAL> {MultiQuotedStringStart}      { return multiQuotedString(0, ERL_STRING); }
 
 <YYINITIAL> {SigilTripleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilMultiQuoteStringStart}  { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
 <YYINITIAL> {SigilDoubleQuoteString}      { return ERL_SIGIL_STRING; }
 <YYINITIAL> {SigilSingleQuoteString}      { return ERL_SIGIL_STRING; }
 <YYINITIAL> {SigilParenString}            { return ERL_SIGIL_STRING; }

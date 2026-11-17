@@ -58,6 +58,22 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
   public void testIllegalPattern()    { doTest(); }
+  public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
+  public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
+  public void testIllegalPatternListOpMinus() { doTest(); }
+  public void testIllegalPatternListOpRight() { doTest(); }
+  public void testIllegalPatternQualifiedMacroCall() { doTest(); }
+  public void testIllegalPatternListPrefix() { doTest(); }
+  public void testIllegalPatternCatchClass() { doTest(); }
+  public void testIllegalPatternMapKey() { doTest(); }
+  public void testIllegalPatternPredefinedMacro() { doTest(); }
+  public void testIllegalPatternBinarySegmentListOp() { doTest(); }
+  public void testIllegalPatternCatchClassMatch() { doTest(); }
+  public void testIllegalPatternQuotedPredefinedMacro() { doTest(); }
+  public void testIllegalPatternNestedMapKey() { doTest(); }
+  public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
+  public void testIllegalPatternGuardMatch() { doTest(); }
+  public void testIllegalPatternCatchClassMacroCall() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
@@ -114,6 +130,28 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testImportAutoimported()    { doTestWithInclude(); }
+
+  public void test940() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.addFileToProject("stdlib/include/ms_transform.hrl", "-compile({parse_transform, ms_transform}).");
+    doTest();
+  }
+
+  public void test940WithoutMsTransform() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
+  public void test940Review() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
+  public void test940Dbg() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.configureByText("dbg.erl", "-module(dbg).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
 
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
