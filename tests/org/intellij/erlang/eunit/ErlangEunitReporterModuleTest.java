@@ -32,9 +32,15 @@ public class ErlangEunitReporterModuleTest extends UsefulTestCase {
     assertReporterModule(ErlangSdkRelease.V_29_0, "otp_27_plus");
   }
 
+  public void testOtp27_0GetsOtp27Module() throws IOException {
+    assertReporterModule(new ErlangSdkRelease("27", "15.0"), "otp_27_plus");
+    assertReporterModule(new ErlangSdkRelease("27.0.1", "15.0.1"), "otp_27_plus");
+  }
+
   public void testOlderReleasesGetPreOtp27Module() throws IOException {
     assertReporterModule(ErlangSdkRelease.V_R16B, "otp_pre_27");
     assertReporterModule(ErlangSdkRelease.V_25_0, "otp_pre_27");
+    assertReporterModule(new ErlangSdkRelease("26.2.5.21", "14.2.5.13"), "otp_pre_27");
   }
 
   private void assertReporterModule(ErlangSdkRelease release, String beamDirectory) throws IOException {

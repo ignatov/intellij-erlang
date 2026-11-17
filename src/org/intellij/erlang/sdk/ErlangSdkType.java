@@ -40,6 +40,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.concurrency.annotations.RequiresWriteLock;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
@@ -288,6 +289,13 @@ public class ErlangSdkType extends SdkType {
       configureSdkPaths(sdk);
       return sdk;
     });
+  }
+
+  // the release of the Erlang installation in sdkHome, which need not be an SDK of the IDE; null when it is unknown
+  @Nullable
+  @RequiresBackgroundThread
+  public static ErlangSdkRelease detectRelease(@NotNull String sdkHome) {
+    return getInstance().mySdkHomeToReleaseCache.computeIfAbsent(getVersionCacheKey(sdkHome), ErlangSdkType::getRelease);
   }
 
   @Nullable
