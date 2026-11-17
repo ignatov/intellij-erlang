@@ -19,10 +19,17 @@ public class ErlangJoinLinesTest extends ErlangLightPlatformCodeInsightFixtureTe
   public void testCommentedOutDocComment() { doTest(); }
   public void testTriplePercentInCommentText() { doTest(); }
   public void testSeparatorLine() { doTest(); }
+  public void testEmptySingleCommentLine() { doTest(false); }
+  public void testEmptySingleCommentLineTrailingSpaces() { doTest(false); }
+  public void testEmptyDoubleCommentLine() { doTest(false); }
+  public void testEmptyTripleCommentLine() { doTest(false); }
+  public void testShebangLine() { doTest(); }
 
-  private void doTest() {
+  private void doTest() { doTest(true); }
+
+  private void doTest(boolean ignoreTrailingWhitespaces) {
     myFixture.configureByFile(getTestName(true) + ".erl");
     myFixture.performEditorAction(IdeActions.ACTION_EDITOR_JOIN_LINES);
-    myFixture.checkResultByFile(getTestName(true) + "-after.erl", true);
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl", ignoreTrailingWhitespaces);
   }
 }

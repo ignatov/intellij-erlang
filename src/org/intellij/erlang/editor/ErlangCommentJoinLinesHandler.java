@@ -23,13 +23,14 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.text.CharArrayUtil;
+import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Joins two adjacent Erlang line comments, removing the whole leading run of '%' of the second one
  * (and only that run, so '%' characters of the comment text are kept). Comments wrap at the right margin
- * the same way the platform's CommentJoinLinesHandler wraps them.
+ * the same way the platform's CommentJoinLinesHandler wraps them. Nothing is joined to the shebang line.
  */
 public class ErlangCommentJoinLinesHandler implements JoinRawLinesHandlerDelegate {
   @Override
@@ -40,11 +41,19 @@ public class ErlangCommentJoinLinesHandler implements JoinRawLinesHandlerDelegat
     PsiComment prevComment = PsiTreeUtil.getNonStrictParentOfType(file.findElementAt(start - 1), PsiComment.class);
     PsiComment nextComment = PsiTreeUtil.getNonStrictParentOfType(file.findElementAt(end), PsiComment.class);
     if (prevComment == null || nextComment == null || prevComment == nextComment) return CANNOT_JOIN;
+    // the shebang line is read by the OS, joining anything to it would change the interpreter command
+    if (prevComment.getTokenType() == ErlangParserDefinition.ERL_SHEBANG) return start;
 
     int lineNumber = document.getLineNumber(start);
     int nextEnd = document.getLineEndOffset(lineNumber + 1);
-    int textStart = CharArrayUtil.shiftForward(text, CharArrayUtil.shiftForward(text, end, nextEnd, "%"), nextEnd, " \t");
-    if (textStart == nextEnd) return CANNOT_JOIN;
+    int prefixEnd = CharArrayUtil.shiftForward(text, end, nextEnd, "%");
+    int textStart = CharArrayUtil.shiftForward(text, prefixEnd, nextEnd, " \t");
+    if (textStart == nextEnd) {
+      // an empty '%', '%%' or '%%%' comment line is dropped; longer '%' runs are separators, left to the platform
+      if (prefixEnd - end > 3) return CANNOT_JOIN;
+      document.deleteString(start, nextEnd);
+      return start;
+    }
 
     int lineStart = document.getLineStartOffset(lineNumber);
     int margin = CodeStyle.getSettings(file).getRightMargin(file.getLanguage());
