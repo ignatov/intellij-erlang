@@ -26,6 +26,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        # A pull request run checks out the merge commit; with its parents, the step below reads the base from HEAD^1.
+        fetch-depth: 2
+    - name: Test the stub changes check
+      run: python3 -m unittest discover -s scripts/stubs -p 'test_*.py'
+    - name: Check that the merge keeps the stub changes of master
+      # The stub version is the number of entries of ErlangStubChanges. Two pull requests that append one conflict on
+      # purpose; this fails when the resolution dropped, reordered or edited an entry of the base, or inserted one
+      # before them. If the base has no ErlangStubChanges.java, there is nothing to compare.
+      if: github.event_name == 'pull_request'
+      run: |
+        if ! git rev-parse --verify --quiet 'HEAD^2' > /dev/null; then
+          echo "::error::HEAD is not the merge commit of the pull request"
+          exit 1
+        fi
+        file=src/org/intellij/erlang/stubs/ErlangStubChanges.java
+        base="$RUNNER_TEMP/ErlangStubChanges.base.java"
+        if [[ -n "$(git ls-tree 'HEAD^1' -- "$file")" ]]; then
+          git show "HEAD^1:$file" > "$base"
+        fi
+        python3 scripts/stubs/stub_changes.py "$base" "$file"
     - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
