@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.SyntaxTraverser;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.JBIterable;
@@ -56,7 +57,12 @@ public class ErlangSingleClauseCaseInspection extends ErlangInspectionBase {
     boolean hasMacroCall = elements.filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_QMARK).isNotEmpty();
     if (!hasMacroCall) return false;
     if (elements.filter(PsiErrorElement.class).isNotEmpty()) return true;
-    return elements.filter(ErlangMacros.class).filter(ErlangSingleClauseCaseInspection::bodyHasTopLevelSemicolon).isNotEmpty();
+    // In a guard, `;` separates alternatives, not clauses.
+    ErlangClauseGuard guard = clause.getClauseGuard();
+    return elements.filter(ErlangMacros.class)
+      .filter(m -> !PsiTreeUtil.isAncestor(guard, m, false))
+      .filter(ErlangSingleClauseCaseInspection::bodyHasTopLevelSemicolon)
+      .isNotEmpty();
   }
 
   private static boolean bodyHasTopLevelSemicolon(@NotNull ErlangMacros macros) {
