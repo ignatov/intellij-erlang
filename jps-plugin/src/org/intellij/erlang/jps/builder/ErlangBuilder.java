@@ -260,7 +260,19 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
         output.append(text).append('\n');
       }
     };
-    int exitCode = ProcessRunner.runProcess(command, appDst.getParentFile(), null, adapter);
+    int exitCode;
+    try {
+      exitCode = ProcessRunner.runProcess(command, appDst.getParentFile(), null, adapter);
+    }
+    catch (ProjectBuildException e) {
+      if (Thread.currentThread().isInterrupted()) throw e;
+      Throwable cause = e.getCause() != null ? e.getCause() : e;
+      String message = "Failed to start erl of the SDK of module " + target.getModule().getName() + " (" + cause.getMessage() + "); " +
+                       path + " is copied without filling in the modules list.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, message, path));
+      FileUtil.copy(appSrc, appDst);
+      return;
+    }
     if (exitCode == 0) return;
 
     if (exitCode == 2) {
