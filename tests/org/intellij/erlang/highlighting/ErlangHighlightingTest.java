@@ -58,6 +58,22 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
   public void testIllegalPattern()    { doTest(); }
+  public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
+  public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
+  public void testIllegalPatternListOpMinus() { doTest(); }
+  public void testIllegalPatternListOpRight() { doTest(); }
+  public void testIllegalPatternQualifiedMacroCall() { doTest(); }
+  public void testIllegalPatternListPrefix() { doTest(); }
+  public void testIllegalPatternCatchClass() { doTest(); }
+  public void testIllegalPatternMapKey() { doTest(); }
+  public void testIllegalPatternPredefinedMacro() { doTest(); }
+  public void testIllegalPatternBinarySegmentListOp() { doTest(); }
+  public void testIllegalPatternCatchClassMatch() { doTest(); }
+  public void testIllegalPatternQuotedPredefinedMacro() { doTest(); }
+  public void testIllegalPatternNestedMapKey() { doTest(); }
+  public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
+  public void testIllegalPatternGuardMatch() { doTest(); }
+  public void testIllegalPatternCatchClassMacroCall() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
