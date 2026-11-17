@@ -23,6 +23,11 @@ import com.intellij.projectImport.ProjectOpenProcessorBase;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarProjectImportBuilder> {
   private final RebarProjectImportBuilder myBuilder = new RebarProjectImportBuilder();
 
@@ -35,12 +40,32 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
     VirtualFile projectRoot = configFile.getParent();
     wizardContext.setProjectName(projectRoot.getName());
     String rebarPath = ProgressManager.getInstance().runProcessWithProgressSynchronously(
-      () -> RebarRunningStateUtil.getRebarPath(projectRoot.getPath()), "Detecting Rebar", false, wizardContext.getProject());
+      () -> findRebarPath(projectRoot), "Detecting Rebar", false, wizardContext.getProject());
     RebarProjectImportBuilder builder = getBuilder();
     builder.setRebarPath(rebarPath);
-    builder.setIsImportingProject(wizardContext.isCreatingNewProject());
+    builder.setIsImportingProject(wizardContext.isCreatingNewProject() && !rebarPath.isEmpty());
     builder.setProjectRoot(projectRoot);
+    builder.setList(selectOneAppPerName(builder.getList()));
     return true;
+  }
+
+  @NotNull
+  protected String findRebarPath(@NotNull VirtualFile projectRoot) {
+    return RebarRunningStateUtil.getRebarPath(projectRoot.getPath());
+  }
+
+  // Without the wizard there is no SelectImportedOtpAppsStep to resolve name conflicts, for example an app and its copy
+  // in _build/default/lib after rebar3 compile. Keep the app whose root is nearest to the project root.
+  @NotNull
+  private static List<ImportedOtpApp> selectOneAppPerName(@NotNull List<ImportedOtpApp> apps) {
+    Map<String, ImportedOtpApp> appsByName = new LinkedHashMap<>();
+    for (ImportedOtpApp app : apps) {
+      ImportedOtpApp other = appsByName.get(app.getName());
+      if (other == null || app.getRoot().getPath().length() < other.getRoot().getPath().length()) {
+        appsByName.put(app.getName(), app);
+      }
+    }
+    return new ArrayList<>(appsByName.values());
   }
 
   @NotNull
