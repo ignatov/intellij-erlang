@@ -24,10 +24,12 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.command.undo.UndoManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.elp.ElpMode;
@@ -121,7 +123,7 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
     VirtualFile backend = file("src/shop_backend.erl");
     ElpRecordedAnswers.Case recorded = myAnswers.get(RENAME, "module");
     WorkspaceEdit edit = ElpRecordedAnswers.gson().fromJson(recorded.result(), WorkspaceEdit.class);
-    assertNull(ElpRenameHandler.apply(getProject(), myDescriptor::findFileByUri, edit));
+    assertNull(ElpRenameHandler.apply(getProject(), myDescriptor::findFileByUri, edit, "shop_backend"));
     assertEquals("shop_store.erl", backend.getName());
     assertNull(myRoot.findFileByRelativePath("src/shop_backend.erl"));
     assertLines("src/shop_store.erl", 1, "-module(shop_store).");
@@ -206,6 +208,48 @@ public class ElpRecordedRenameTest extends ElpRecordedProjectTestBase {
     List<String> methods = myServer.requests().stream().map(FakeElpServer.Request::method).toList();
     assertEquals(List.of("workspace/didChangeWatchedFiles", RENAME, RENAME), methods);
     assertEquals(myDescriptor.getFileUri(memory), myServer.requests().get(0).uri());
+  }
+
+  /**
+   * ELP reads a change of a file asynchronously and may answer from the older text, with ranges that no longer hold the old name,
+   * here in {@code shop.erl}, which is not open. Nothing of such an answer is applied, not even the edits of the other file; ELP is
+   * told again that the file changed and asked again, and its next answer is applied, once, as one undoable command.
+   */
+  public void testAStaleAnswerIsAskedForAgain() {
+    VirtualFile shop = file("src/shop.erl");
+    List<String> files = List.of("src/shop.erl", "src/shop_backend.erl");
+    openAt(myAnswers.get(RENAME, "exported_function"));
+    FileEditorManager.getInstance(getProject()).closeFile(shop);
+    assertFalse(FileEditorManager.getInstance(getProject()).isFileOpen(shop));
+    List<String> before = texts(files);
+    myServer.clearRequests();
+    myServer.answerStale(myDescriptor.getFileUri(shop), 2, 3);
+    assertNull(ElpRenameHandler.renameAtCaret(getProject(), myFixture.getEditor(), myFixture.getFile(), "find"));
+    assertEquals("a trial rename, a stale rename, the rename", 3, myServer.requests(RENAME).size());
+    assertTrue(myServer.requests().contains(new FakeElpServer.Request("workspace/didChangeWatchedFiles", myDescriptor.getFileUri(shop),
+                                                                      null, FileChangeType.Changed)));
+    assertLines("src/shop_backend.erl", 3, "-export([find/2]).", 11, "-spec find(module(), key()) -> {ok, term()} | error.",
+                12, "find(Backend, Key) ->");
+    assertLines("src/shop.erl", 12, "  case shop_backend:find(shop_memory, Name) of");
+    UndoManager.getInstance(getProject()).undo(null);
+    assertEquals(before, texts(files));
+  }
+
+  /** An answer that stays stale is refused: nothing changes in any file, and the user is told why. */
+  public void testAnAnswerThatStaysStaleChangesNothing() {
+    VirtualFile shop = file("src/shop.erl");
+    List<String> files = List.of("src/shop.erl", "src/shop_backend.erl");
+    openAt(myAnswers.get(RENAME, "exported_function"));
+    FileEditorManager.getInstance(getProject()).closeFile(shop);
+    List<String> before = texts(files);
+    myServer.clearRequests();
+    myServer.answerStale(myDescriptor.getFileUri(shop), 100, 3);
+    assertEquals("ELP answered for an older version of shop.erl. Nothing was renamed; try again.",
+                 ElpRenameHandler.renameAtCaret(getProject(), myFixture.getEditor(), myFixture.getFile(), "find"));
+    myServer.answerStale(myDescriptor.getFileUri(shop), 0, 0);
+    assertEquals("a trial rename, then five stale renames", 6, myServer.requests(RENAME).size());
+    assertEquals(before, texts(files));
+    for (String file : files) assertFalse(file, FileDocumentManager.getInstance().isFileModified(file(file)));
   }
 
   /** The edit spans four files and is one undoable command; nothing is saved. */
