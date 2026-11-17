@@ -488,6 +488,64 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
     }
   }
 
+  /** Go to Class lists a module of one file once, also under a served root. */
+  public void testGoToClassListsAModuleOnce() throws Exception {
+    myFixture.addFileToProject("src/vmq_reg.erl", "-module(vmq_reg).\nf() -> ok.");
+    myFixture.addFileToProject("src/vmq_reg_sup.erl", "-module(vmq_reg_sup).");
+    IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+    ElpServedRoots.getInstance().setRootsForTests(List.of(contentRoot()), getTestRootDisposable());
+    // Another Go to Class contributor that knows the name but has no class of it, as the platform's LSP one with ELP's modules.
+    ChooseByNameContributor.CLASS_EP_NAME.getPoint().registerExtension(new ChooseByNameContributor() {
+      @Override
+      public String @NotNull [] getNames(com.intellij.openapi.project.Project project, boolean includeNonProjectItems) {
+        return new String[]{"vmq_reg", "vmq_reg_sup"};
+      }
+
+      @Override
+      public com.intellij.navigation.NavigationItem @NotNull [] getItemsByName(String name, String pattern, com.intellij.openapi.project.Project project,
+                                                                               boolean includeNonProjectItems) {
+        return new com.intellij.navigation.NavigationItem[0];
+      }
+    }, getTestRootDisposable());
+    com.intellij.openapi.actionSystem.DataContext context =
+      com.intellij.openapi.actionSystem.impl.SimpleDataContext.getProjectContext(getProject());
+    com.intellij.openapi.actionSystem.AnActionEvent event = com.intellij.openapi.actionSystem.AnActionEvent.createEvent(
+      context, null, com.intellij.openapi.actionSystem.ActionPlaces.UNKNOWN, com.intellij.openapi.actionSystem.ActionUiKind.NONE, null);
+    com.intellij.ide.actions.searcheverywhere.SearchEverywhereContributor<Object> contributor =
+      new com.intellij.ide.actions.searcheverywhere.ClassSearchEverywhereContributor.Factory().createContributor(event);
+    try {
+      // The Search Everywhere popup merges the items that its equality providers find equal.
+      com.intellij.ide.actions.searcheverywhere.SEResultsEqualityProvider equality =
+        com.intellij.ide.actions.searcheverywhere.SEResultsEqualityProvider.composite(
+          com.intellij.ide.actions.searcheverywhere.SEResultsEqualityProvider.getProviders());
+      List<com.intellij.ide.actions.searcheverywhere.SearchEverywhereFoundElementInfo> shown = new ArrayList<>();
+      List<String> names = new ArrayList<>();
+      java.util.concurrent.Future<?> search = com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(
+        () -> contributor.fetchElements("vmq_reg", new com.intellij.openapi.progress.util.ProgressIndicatorBase(), item -> {
+          com.intellij.ide.actions.searcheverywhere.SearchEverywhereFoundElementInfo info =
+            new com.intellij.ide.actions.searcheverywhere.SearchEverywhereFoundElementInfo(item, 0, contributor);
+          synchronized (shown) {
+            if (!(equality.compareItems(info, List.copyOf(shown)) instanceof com.intellij.ide.actions.searcheverywhere.SEResultsEqualityProvider.SEEqualElementsActionType.DoNothing)) {
+              return true;
+            }
+            shown.add(info);
+            Object found = item instanceof com.intellij.ide.actions.searcheverywhere.PSIPresentationBgRendererWrapper.ItemWithPresentation<?> wrapper
+                           ? wrapper.getItem() : item;
+            names.add(com.intellij.openapi.application.ReadAction.compute(
+              () -> found instanceof com.intellij.navigation.NavigationItem navigationItem ? navigationItem.getName() : String.valueOf(found)));
+          }
+          return true;
+        }));
+      com.intellij.testFramework.PlatformTestUtil.waitForFuture(search, 60_000);
+      assertEquals(names.toString(), 1, java.util.Collections.frequency(names, "vmq_reg"));
+      assertEquals(names.toString(), 1, java.util.Collections.frequency(names, "vmq_reg_sup"));
+    }
+    finally {
+      com.intellij.openapi.util.Disposer.dispose(contributor);
+    }
+  }
+
   /**
    * The guard of the roots that ELP does not serve: in the ELP position, with the root left out of the registry as after a refused
    * preflight, completion, go to declaration and the inspections answer exactly as in the Plugin position.

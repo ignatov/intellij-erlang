@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Go to Class for Erlang modules from the plugin's module index, a file-name index that needs no parsing. It answers also under a
@@ -79,6 +80,21 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
     @Override
     public String getPresentableText() {
       return myPresentableName;
+    }
+
+    /**
+     * When another Go to Class contributor, such as the platform's LSP one with ELP's workspace symbols, knows a module's name too,
+     * the platform asks this contributor for the name more than once; equal items of the same module are listed once.
+     */
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof ErlangModuleNavigationItem item && getValue().equals(item.getValue()) &&
+             Objects.equals(myPresentableName, item.myPresentableName);
+    }
+
+    @Override
+    public int hashCode() {
+      return getValue().hashCode();
     }
   }
 }
