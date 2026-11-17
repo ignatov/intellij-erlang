@@ -741,15 +741,26 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val]
+  // (atom_name | single_quote atom_name single_quote) ['(' typed_attr_val ')' | typed_attr_val | attr_val]
   public static boolean atom_attribute(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "atom_attribute")) return false;
-    if (!nextTokenIs(b, "<attribute>", ERL_ATOM_NAME)) return false;
+    if (!nextTokenIs(b, "<attribute>", ERL_ATOM_NAME, ERL_SINGLE_QUOTE)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_ATOM_ATTRIBUTE, "<attribute>");
-    r = consumeToken(b, ERL_ATOM_NAME);
+    r = atom_attribute_0(b, l + 1);
     r = r && atom_attribute_1(b, l + 1);
     exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // atom_name | single_quote atom_name single_quote
+  private static boolean atom_attribute_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "atom_attribute_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_ATOM_NAME);
+    if (!r) r = parseTokens(b, 0, ERL_SINGLE_QUOTE, ERL_ATOM_NAME, ERL_SINGLE_QUOTE);
+    exit_section_(b, m, null, r);
     return r;
   }
 

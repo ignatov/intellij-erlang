@@ -40,6 +40,7 @@ public final class ErlangStubChanges {
     "#1123 integer constant expressions in integer types and size-and-unit binary types",
     "#1145 macros and integer expressions as binary type sizes",
     "#1114 EEP 64 triple-quoted string lexing changes file stubs",
+    "#1063 quoted atoms as attribute names",
     "#1122 lexer escape and number fixes",
   };
 
