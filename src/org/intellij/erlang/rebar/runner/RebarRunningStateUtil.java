@@ -37,7 +37,7 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
-import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.intellij.erlang.utils.ErlangExternalToolsConfigureAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -88,9 +88,8 @@ public class RebarRunningStateUtil {
       if (isEmpty || notCorrect) {
         Notifications.Bus.notify(
           new Notification("Rebar run configuration", "Rebar settings",
-                           "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly") +
-                           "<br/><a href='configure'>Configure</a>",
-                           NotificationType.ERROR, new ErlangExternalToolsNotificationListener(project)), project);
+                           "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly"),
+                           NotificationType.ERROR).addAction(new ErlangExternalToolsConfigureAction(project)), project);
       }
       throw e;
     }
