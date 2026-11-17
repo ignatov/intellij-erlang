@@ -1,6 +1,6 @@
 -import(incl, [
 %% comment
-crc32/2
+  crc32/2
 ]).
 -import(incl, [foo/0, bar/0]).
 -import(erlang, [asdfadf/1]).
