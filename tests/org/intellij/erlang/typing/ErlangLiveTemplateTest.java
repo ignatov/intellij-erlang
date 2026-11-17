@@ -74,6 +74,67 @@ public class ErlangLiveTemplateTest extends ErlangLightPlatformCodeInsightFixtur
     );
   }
 
+  public void testCaseFinishedWithAllStopsEmpty() {
+    doTabTest(
+      """
+        start_link() ->
+          case<caret>
+          gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).""",
+      """
+        start_link() ->
+          case Expr of
+            _ -><caret>;
+          end
+          gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).""",
+      "", ""
+    );
+  }
+
+  public void testCaseFinishedWithEmptyMatch() {
+    doTabTest(
+      """
+        foo(X) ->
+          case<caret>
+          ok.""",
+      """
+        foo(X) ->
+          case X of
+            _ -><caret>;
+          end
+          ok.""",
+      "X", ""
+    );
+  }
+
+  public void testCaseFinishedWithTab() {
+    doTabTest(
+      """
+        foo(X) ->
+          case<caret>
+          ok.""",
+      """
+        foo(X) ->
+          case X of
+            1 -><caret>;
+          end
+          ok.""",
+      "X", "1"
+    );
+  }
+
+  private void doTabTest(@NotNull String before, @NotNull String after, String @NotNull ... stops) {
+    myFixture.configureByText("a.erl", before);
+    myFixture.performEditorAction(IdeActions.ACTION_EXPAND_LIVE_TEMPLATE_BY_TAB);
+    TemplateState state = TemplateManagerImpl.getTemplateState(myFixture.getEditor());
+    assertNotNull("Template should be started", state);
+    for (String stop : stops) {
+      if (!stop.isEmpty()) myFixture.type(stop);
+      WriteCommandAction.runWriteCommandAction(getProject(), () -> state.nextTab());
+    }
+    assertTrue("Template should be finished", state.isFinished());
+    myFixture.checkResult(after);
+  }
+
   private void doTest(@NotNull String before, @NotNull String after) {
     doTest(before, after, "1");
   }
