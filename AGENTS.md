@@ -130,7 +130,7 @@ The PR description must state:
 ### Small and big pull requests
 Every pull request is small or big. The maintainer decides a small one with one click and reads a big one in full, so keep a fix small and about one thing.
 - Source lines are the added plus the deleted lines in files outside `gen/`, `testData/` and `tests/`.
-- The fix area is `src/`, `tests/`, `testData/`, `gen/` and `grammars/erlang.bnf`.
+- The fix area is `src/`, `tests/`, `testData/`, `gen/`, `grammars/erlang.bnf` and `resources/inspectionDescriptions/`.
 - A pull request is big when it changes more than 150 source lines, or more than 50 source lines outside the fix area (workflows, build files, descriptors, documentation, specs), or when the maintainer says so. Otherwise it is small. The maintainer can also call a big one small.
-- A small pull request is merged without the maintainer reading the diff only when the review of the head commit says it is ready, CI is green on that commit, and it changes no file outside the fix area. Everything else waits for the maintainer.
+- A small pull request is merged without the maintainer reading the diff only when the review of the head commit says it is ready, CI is green on that commit, and it changes no file outside the fix area. The one exception is `resources/META-INF/ErlangPlugin.xml` when the change only adds whole `<localInspection .../>` elements, which is how a new inspection is registered. Everything else waits for the maintainer.
 - Do not split one change into several pull requests, or move logic into tests or test data, to stay under the limits. If a fix cannot be small, say so at the top of the description and explain why.
