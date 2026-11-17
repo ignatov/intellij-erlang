@@ -30,12 +30,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Consumer;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangAttribute;
@@ -51,10 +49,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPsiElement {
   private static final int MAX_EXPORT_STRING_LENGTH = 80;
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div", "else",
+    "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
 
   public ErlangExportFunctionFix(ErlangFunction function) {
     super(function);
@@ -215,19 +217,85 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                    @NotNull ErlangFunction function,
                                    @Nullable ErlangExport oldExport) {
     if (oldExport == null) return;
+    addToExport(project, oldExport, List.of(createExportPresentation(function)));
+  }
 
-    var exportFunctions = oldExport.getExportFunctions();
+  /**
+   * Adds the entries at the end of the list, after any comment that follows the last entry, in the layout of the list.
+   */
+  public static void addToExport(@NotNull Project project,
+                                 @NotNull ErlangExport export,
+                                 @NotNull List<String> functionPresentations) {
+    var exportFunctions = export.getExportFunctions();
+    if (exportFunctions == null || functionPresentations.isEmpty()) return;
 
-    if (exportFunctions == null) return;
+    var documentManager = PsiDocumentManager.getInstance(project);
+    var document = documentManager.getDocument(export.getContainingFile());
+    if (document == null) return;
+    documentManager.doPostponedOperationsAndUnblockDocument(document);
+    CharSequence text = document.getCharsSequence();
 
-    var replace = exportFunctions.getText().replace("[", "").replace("]", "");
-    var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-            ErlangPsiImplUtil.createFunctionPresentation(function);
-    var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
+    var last = ContainerUtil.getLastItem(exportFunctions.getExportFunctionList());
+    int tailStart = last != null ? last.getTextRange().getEndOffset() : exportFunctions.getTextRange().getStartOffset() + 1;
 
-    if (attribute == null) return;
+    // Between the last entry and ']' there can be only whitespace, commas and comments. The commas are dropped
+    // and written again; the comments stay where they are, and the new entries go after the last of them.
+    StringBuilder tail = new StringBuilder();
+    int lastCommentEnd = -1;
+    int tailEnd = tailStart;
+    while (tailEnd < text.length()) {
+      char c = text.charAt(tailEnd);
+      if (c == '%') {
+        while (tailEnd < text.length() && text.charAt(tailEnd) != '\n') tail.append(text.charAt(tailEnd++));
+        lastCommentEnd = tail.length();
+      }
+      else if (c == ',' || Character.isWhitespace(c)) {
+        if (c != ',') tail.append(c);
+        tailEnd++;
+      }
+      else {
+        break;
+      }
+    }
+    if (tailEnd >= text.length() || text.charAt(tailEnd) != ']') {
+      document.insertString(tailStart, (last != null ? ", " : "") + String.join(", ", functionPresentations));
+      documentManager.commitDocument(document);
+      return;
+    }
 
-    attribute.replace(ErlangElementFactory.createExportFromText(project, s));
+    String kept = lastCommentEnd >= 0 ? tail.substring(0, lastCommentEnd) : "";
+    String rest = tail.substring(Math.max(lastCommentEnd, 0));
+    String closing = rest.contains("\n") ? rest.substring(rest.lastIndexOf('\n')) : "";
+
+    StringBuilder result = new StringBuilder();
+    if (last == null) {
+      result.append(String.join(", ", functionPresentations)).append(kept);
+    }
+    else {
+      // The text before the last entry on its line tells the layout: one entry per line, comma first, or several per line
+      int lastStart = last.getTextRange().getStartOffset();
+      int lineStart = lastStart;
+      while (lineStart > 0 && text.charAt(lineStart - 1) != '\n') lineStart--;
+      String before = text.subSequence(lineStart, lastStart).toString();
+      boolean commaFirst = before.strip().equals(",");
+      String prefix = before.isBlank() || commaFirst ? "\n" + before : lastCommentEnd >= 0 ? "\n" + " ".repeat(before.length()) : " ";
+      String comma = commaFirst ? "" : ",";
+
+      result.append(comma).append(kept);
+      for (int i = 0; i < functionPresentations.size(); i++) {
+        if (i > 0) result.append(comma);
+        result.append(prefix).append(functionPresentations.get(i));
+      }
+    }
+    document.replaceString(tailStart, tailEnd, result.append(closing));
+    documentManager.commitDocument(document);
+  }
+
+  @NotNull
+  public static String createExportPresentation(@NotNull ErlangFunction function) {
+    String name = function.getName();
+    String atom = RESERVED_WORDS.contains(name) ? "'" + name + "'" : ErlangPsiImplUtil.toAtomName(name);
+    return (atom != null ? atom : name) + "/" + function.getArity();
   }
 
   private static void createNewExport(@NotNull Project project,
@@ -235,7 +303,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @NotNull ErlangFunction function,
                                       @Nullable PsiElement elementAfter) {
     if (elementAfter != null) {
-      file.addAfter(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addAfter(createExport(project, createExportPresentation(function)),
                     elementAfter);
       file.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), elementAfter);
       return;
@@ -244,7 +312,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
 
     if (elementBefore != null) {
-      file.addBefore(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addBefore(createExport(project, createExportPresentation(function)),
                      elementBefore);
       file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
     }

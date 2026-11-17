@@ -59,6 +59,29 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testFewNonEmpties1()      { doTest("Export function"); }
   public void testFewNonEmpties2()      { doTest("Export function"); }
 
+  public void testExportFromAttributeSingle()    { doTest("Export function bar/1"); }
+  public void testExportFromAttributeEmptyList() { doTest("Export function foo/0"); }
+  public void testExportFromAttributeSeveral()   { doTest("Export functions..."); }
+  public void testExportFromAttributeTrailingComma()          { doTest("Export function bar/1"); }
+  public void testExportFromAttributeTrailingCommaMultiline() { doTest("Export function bar/1"); }
+  public void testExportFromAttributeReservedWord()           { doTest("Export function 'end'/0"); }
+  public void testExportReservedWordNew()                     { doTest("Export function"); }
+  public void testExportFromAttributeMultiline()              { doTest("Export function bar/1"); }
+  public void testExportFromAttributeMacro()                  { doTest("Export function bar/1"); }
+  public void testExportFromAttributeLastComment()            { doTest("Export function bar/1"); }
+  public void testExportLastComment()                         { doTest("Export function"); }
+  public void testExportFromAttributeTrailingCommaComment()   { doTest("Export function bar/1"); }
+  public void testExportFromAttributeCommaFirst()             { doTest("Export function bar/1"); }
+
+  public void testExportFromAttributeAllExported() { doTestNoExportFromAttribute(); }
+  public void testExportFromAttributeExportAll()   { doTestNoExportFromAttribute(); }
+  public void testExportFromAttributeOutside()     { doTestNoExportFromAttribute(); }
+
+  private void doTestNoExportFromAttribute() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    assertNoIntentionsAvailable("Export function");
+  }
+
   public void testExportsToShowInPopupAllEmpty() {
     myFixture.configureByFile("without.erl");
     assertEquals(0, getExportsToShow(myFixture.getFile()).size());
