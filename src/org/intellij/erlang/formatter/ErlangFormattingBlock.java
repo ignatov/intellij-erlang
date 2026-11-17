@@ -80,6 +80,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private final ErlangCodeStyleSettings myErlangSettings;
   private final SpacingBuilder mySpacingBuilder;
   private List<Block> mySubBlocks;
+  @Nullable private Alignment myItemAlignment;
 
   public ErlangFormattingBlock(@NotNull ASTNode node,
                                @Nullable Alignment alignment,
@@ -270,7 +271,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
     else {
       wrap = Wrap.createWrap(wrapType, true);
     }
-    return new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder, binaryExpressionIndex);
+    ErlangFormattingBlock block =
+      new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder, binaryExpressionIndex);
+    block.myItemAlignment = ErlangIndentProcessor.isTopTypeContainer(parent.getElementType()) ? alignment : myItemAlignment;
+    return block;
   }
 
   @Nullable
@@ -347,6 +351,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
       }
     }
     if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD && childType != ERL_COMMA) return baseAlignment;
+    if (myErlangSettings.ALIGN_MULTILINE_BLOCK && parentType == ERL_TOP_TYPE && child != parent.getFirstChildNode() &&
+        ErlangIndentProcessor.startsLine(child)) {
+      // the lines of a type union are aligned with the aligned element that holds the union
+      return myItemAlignment;
+    }
     return null;
   }
 
