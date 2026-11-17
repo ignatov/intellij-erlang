@@ -25,7 +25,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangStructureViewFactory;
-import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangNamedElement;
@@ -36,20 +35,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Go to Class for Erlang modules from the plugin's module index. In a project whose roots ELP serves all, ELP's
- * {@code workspace/symbol} answers through the platform's LSP client and this contributor is silent; otherwise it leaves out the
- * modules under a root that ELP serves.
+ * Go to Class for Erlang modules from the plugin's module index, a file-name index that needs no parsing. It answers also under a
+ * root that ELP serves, with or without a running server: the platform's Go to Class takes from ELP's {@code workspace/symbol} only
+ * classes, interfaces, enums and structs, and ELP reports modules as modules. Go to Symbol does not ask this contributor, so it
+ * lists a module once there, from ELP.
  */
 public class ErlangModuleContributor implements ChooseByNameContributor {
   @NotNull
   @Override
   public NavigationItem @NotNull [] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
-    if (ElpEngine.servesWholeProject(project)) return NavigationItem.EMPTY_NAVIGATION_ITEM_ARRAY;
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     List<ErlangModule> result = ErlangModuleIndex.getModulesByName(project, name, scope);
     ArrayList<NavigationItem> items = new ArrayList<>(result.size());
     for (ErlangNamedElement element : result) {
-      if (ElpEngine.ownsFeature(element, ElpEngine.Feature.WORKSPACE_SYMBOLS)) continue;
       PsiFile containingFile = element.getContainingFile();
       VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;
       String moduleName = virtualFile != null ? virtualFile.getNameWithoutExtension() : null;
@@ -61,7 +59,6 @@ public class ErlangModuleContributor implements ChooseByNameContributor {
   @NotNull
   @Override
   public String @NotNull [] getNames(Project project, boolean includeNonProjectItems) {
-    if (ElpEngine.servesWholeProject(project)) return ArrayUtil.EMPTY_STRING_ARRAY;
     return ArrayUtil.toStringArray(ErlangModuleIndex.getNames(project));
   }
 

@@ -26,6 +26,7 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction;
 import com.intellij.codeInspection.LocalInspectionEP;
 import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.lang.folding.FoldingDescriptor;
+import com.intellij.navigation.ChooseByNameContributor;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
@@ -420,9 +421,10 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
   }
 
   /**
-   * Go to Symbol and Go to Class: the plugin's contributors are silent in a project whose roots ELP serves all, and in a project
-   * with roots that ELP does not serve they leave out only the files under served roots. A served root is a workspace root: here
-   * the content root of the test project and another content root.
+   * Go to Symbol: the plugin's contributor is silent in a project whose roots ELP serves all, and in a project with roots that ELP
+   * does not serve it leaves out only the files under served roots. A served root is a workspace root: here the content root of the
+   * test project and another content root. Go to Class: the plugin's modules everywhere, because the platform does not take ELP's
+   * modules for Go to Class; Go to Symbol does not ask for them, so ELP's module is not listed twice there.
    */
   public void testSymbolContributorsLeaveServedFilesToElp() throws Exception {
     myFixture.addFileToProject("served/served_mod.erl", "-module(served_mod).\nserved_fun() -> ok.");
@@ -443,7 +445,7 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
       ElpServedRoots.getInstance().setRootsForTests(List.of(root), getTestRootDisposable());
       assertFalse(ElpEngine.servesWholeProject(getProject()));
-      assertEmpty(modules.getItemsByName("served_mod", "served_mod", getProject(), false));
+      assertSize(1, modules.getItemsByName("served_mod", "served_mod", getProject(), false));
       assertSize(1, modules.getItemsByName("other_mod", "other_mod", getProject(), false));
       assertEmpty(symbols.getItemsByName("served_fun", "served_fun", getProject(), false));
       assertSize(1, symbols.getItemsByName("other_fun", "other_fun", getProject(), false));
@@ -451,8 +453,13 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
       ElpServedRoots.getInstance().setRootsForTests(List.of(root, otherRoot.getPath()), getTestRootDisposable());
       assertTrue(ElpEngine.servesWholeProject(getProject()));
       assertEmpty(symbols.getNames(getProject(), true));
-      assertEmpty(modules.getNames(getProject(), true));
-      assertEmpty(modules.getItemsByName("other_mod", "other_mod", getProject(), true));
+      assertContainsElements(List.of(modules.getNames(getProject(), true)), "served_mod", "other_mod");
+      assertSize(1, modules.getItemsByName("other_mod", "other_mod", getProject(), true));
+      // No ELP server runs in this test.
+      assertSize(1, modules.getItemsByName("served_mod", "served_mod", getProject(), true));
+      assertFalse("Go to Symbol does not ask for the modules",
+                  ContainerUtil.exists(ChooseByNameContributor.SYMBOL_EP_NAME.getExtensionList(), c -> c instanceof ErlangModuleContributor));
+      assertTrue(ContainerUtil.exists(ChooseByNameContributor.CLASS_EP_NAME.getExtensionList(), c -> c instanceof ErlangModuleContributor));
     }
     finally {
       PsiTestUtil.removeContentEntry(getModule(), otherRoot);
