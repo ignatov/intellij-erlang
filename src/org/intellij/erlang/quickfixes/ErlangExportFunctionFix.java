@@ -221,8 +221,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   /**
-   * Inserts the entries after the last entry of the list and keeps the rest of the attribute as written.
-   * A trailing comma is reused, and a list with one entry per line gets the new entries on their own lines.
+   * Adds the entries at the end of the list, after any comment that follows the last entry, in the layout of the list.
    */
   public static void addToExport(@NotNull Project project,
                                  @NotNull ErlangExport export,
@@ -239,26 +238,56 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var last = ContainerUtil.getLastItem(exportFunctions.getExportFunctionList());
     int tailStart = last != null ? last.getTextRange().getEndOffset() : exportFunctions.getTextRange().getStartOffset() + 1;
 
-    String separator = ", ";
-    if (last != null) {
-      int lineStart = last.getTextRange().getStartOffset();
-      while (lineStart > 0 && (text.charAt(lineStart - 1) == ' ' || text.charAt(lineStart - 1) == '\t')) lineStart--;
-      if (lineStart > 0 && text.charAt(lineStart - 1) == '\n') {
-        separator = ",\n" + text.subSequence(lineStart, last.getTextRange().getStartOffset());
+    // Between the last entry and ']' there can be only whitespace, commas and comments. The commas are dropped
+    // and written again; the comments stay where they are, and the new entries go after the last of them.
+    StringBuilder tail = new StringBuilder();
+    int lastCommentEnd = -1;
+    int tailEnd = tailStart;
+    while (tailEnd < text.length()) {
+      char c = text.charAt(tailEnd);
+      if (c == '%') {
+        while (tailEnd < text.length() && text.charAt(tailEnd) != '\n') tail.append(text.charAt(tailEnd++));
+        lastCommentEnd = tail.length();
+      }
+      else if (c == ',' || Character.isWhitespace(c)) {
+        if (c != ',') tail.append(c);
+        tailEnd++;
+      }
+      else {
+        break;
       }
     }
-    String entries = (last != null ? separator : "") + String.join(separator, functionPresentations);
+    if (tailEnd >= text.length() || text.charAt(tailEnd) != ']') {
+      document.insertString(tailStart, (last != null ? ", " : "") + String.join(", ", functionPresentations));
+      documentManager.commitDocument(document);
+      return;
+    }
 
-    int tailEnd = tailStart;
-    while (tailEnd < text.length() && (text.charAt(tailEnd) == ',' || Character.isWhitespace(text.charAt(tailEnd)))) tailEnd++;
-    if (tailEnd < text.length() && text.charAt(tailEnd) == ']') {
-      String tail = text.subSequence(tailStart, tailEnd).toString();
-      int lastLineBreak = tail.lastIndexOf('\n');
-      document.replaceString(tailStart, tailEnd, entries + (lastLineBreak >= 0 ? tail.substring(lastLineBreak) : ""));
+    String kept = lastCommentEnd >= 0 ? tail.substring(0, lastCommentEnd) : "";
+    String rest = tail.substring(Math.max(lastCommentEnd, 0));
+    String closing = rest.contains("\n") ? rest.substring(rest.lastIndexOf('\n')) : "";
+
+    StringBuilder result = new StringBuilder();
+    if (last == null) {
+      result.append(String.join(", ", functionPresentations)).append(kept);
     }
     else {
-      document.insertString(tailStart, entries);
+      // The text before the last entry on its line tells the layout: one entry per line, comma first, or several per line
+      int lastStart = last.getTextRange().getStartOffset();
+      int lineStart = lastStart;
+      while (lineStart > 0 && text.charAt(lineStart - 1) != '\n') lineStart--;
+      String before = text.subSequence(lineStart, lastStart).toString();
+      boolean commaFirst = before.strip().equals(",");
+      String prefix = before.isBlank() || commaFirst ? "\n" + before : lastCommentEnd >= 0 ? "\n" + " ".repeat(before.length()) : " ";
+      String comma = commaFirst ? "" : ",";
+
+      result.append(comma).append(kept);
+      for (int i = 0; i < functionPresentations.size(); i++) {
+        if (i > 0) result.append(comma);
+        result.append(prefix).append(functionPresentations.get(i));
+      }
     }
+    document.replaceString(tailStart, tailEnd, result.append(closing));
     documentManager.commitDocument(document);
   }
 
