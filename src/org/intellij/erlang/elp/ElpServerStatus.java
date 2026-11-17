@@ -19,6 +19,7 @@ package org.intellij.erlang.elp;
 
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Whether an ELP server is running and serves a file. Implemented in the optional part of the plugin that is loaded with the
@@ -26,6 +27,11 @@ import org.jetbrains.annotations.NotNull;
  * module the project has no such service, and nothing is served by ELP.
  */
 public interface ElpServerStatus {
+  String LOADING = "ELP is still loading the project";
+  String NOT_RUNNING = "ELP is not running";
+  String COULD_NOT_LOAD = "ELP could not load the project";
+  String NOT_OFFERED = "ELP does not offer this";
+
   /**
    * @return {@code true} when an ELP server started for the {@link ElpMode#ELP} position is running in the project, would get
    * {@code file}, and announced the capability that {@code feature} needs
@@ -37,4 +43,13 @@ public interface ElpServerStatus {
    * the capability that {@code feature} needs
    */
   boolean isServingProject(@NotNull ElpEngine.Feature feature);
+
+  /**
+   * @return why ELP does not answer {@code feature} for {@code file} now, as a message to the user ({@link #LOADING},
+   * {@link #NOT_RUNNING}, ...), or {@code null} when it answers, see {@link #isServing}
+   */
+  @Nullable
+  default String whyNotServing(@NotNull VirtualFile file, @NotNull ElpEngine.Feature feature) {
+    return isServing(file, feature) ? null : NOT_RUNNING;
+  }
 }

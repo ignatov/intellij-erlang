@@ -18,6 +18,11 @@ package org.intellij.erlang.elp.lsp;
 
 import com.google.gson.reflect.TypeToken;
 import com.intellij.codeInsight.TargetElementUtil;
+import com.intellij.find.findUsages.FindUsagesHandler;
+import com.intellij.find.findUsages.FindUsagesOptions;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Segment;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.platform.lsp.api.LspServerState;
@@ -27,6 +32,7 @@ import com.intellij.usageView.UsageInfo;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.Location;
 import org.intellij.erlang.elp.ElpMode;
+import org.intellij.erlang.elp.ElpServerStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -98,9 +104,11 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
     assertEmpty("the Plugin position asks no server", myServer.requests());
 
     position(ElpMode.ELP);
+    List<String> hints = ElpHints.recordInTests(getTestRootDisposable());
     assertEmpty(usages(target));
     assertSize(1, myServer.requests(REFERENCES));
     assertEmpty(myServer.unanswered());
+    assertEmpty("ELP answered: there are no usages", hints);
   }
 
   /**
@@ -129,17 +137,44 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
     assertEquals(List.of("src/shop.erl:12:21 lookup"), sorted(usages(lookup)));
   }
 
+  /** While the server starts or after it stopped, an error hint says that ELP did not answer, and why. */
   public void testNoUsagesWhileTheServerStartsOrAfterItStopped() {
     PsiElement lookup = targetAt(myAnswers.get(REFERENCES, "exported_function"));
     position(ElpMode.PLUGIN);
     assertNotEmpty(usages(lookup));
     position(ElpMode.ELP);
+    List<String> hints = ElpHints.recordInTests(getTestRootDisposable());
     for (LspServerState state : List.of(LspServerState.Initializing, LspServerState.ShutdownNormally,
                                         LspServerState.ShutdownUnexpectedly)) {
       myClient.setState(state);
+      hints.clear();
       assertEmpty(state.name(), usages(lookup));
       assertEmpty(state.name(), myServer.requests());
+      String why = state == LspServerState.Initializing ? ElpServerStatus.LOADING : ElpServerStatus.NOT_RUNNING;
+      assertEquals(state.name(), List.of(ElpFindUsagesHandlerFactory.NO_ANSWER + ": " + why), hints);
     }
+  }
+
+  /**
+   * While ELP loads the project, the search does not end as "no usages": the hint says that ELP is still loading, and the search is
+   * cancelled.
+   */
+  public void testTheSearchIsCancelledWhileElpLoads() {
+    PsiElement lookup = targetAt(myAnswers.get(REFERENCES, "exported_function"));
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.LOADING);
+    List<String> hints = ElpHints.recordInTests(getTestRootDisposable());
+    FindUsagesHandler handler = new ElpFindUsagesHandlerFactory().createFindUsagesHandler(lookup, false);
+    assertNotNull(handler);
+    FindUsagesOptions options = handler.getFindUsagesOptions(null);
+    List<UsageInfo> found = new ArrayList<>();
+    EmptyProgressIndicator indicator = new EmptyProgressIndicator();
+    boolean completed = onPooledThread(() -> ProgressManager.getInstance().runProcess(
+      (Computable<Boolean>)() -> handler.processElementUsages(lookup, usage -> found.add(usage), options), indicator));
+    assertFalse(completed);
+    assertTrue("the search is cancelled", indicator.isCanceled());
+    assertEmpty(found);
+    assertEquals(List.of(ElpFindUsagesHandlerFactory.NO_ANSWER + ": " + ElpServerStatus.LOADING), hints);
+    assertEmpty(myServer.requests());
   }
 
   public void testNoUsagesWhenTheServerDoesNotOfferReferences() {
@@ -151,8 +186,10 @@ public class ElpRecordedFindUsagesTest extends ElpRecordedProjectTestBase {
     withoutReferences.getCapabilities().setReferencesProvider(false);
     myClient.setInitializeResult(withoutReferences);
     assertTrue(new ElpFindUsagesHandlerFactory().canFindUsages(lookup));
+    List<String> hints = ElpHints.recordInTests(getTestRootDisposable());
     assertEmpty(usages(lookup));
     assertEmpty(myServer.requests());
+    assertEquals(List.of(ElpFindUsagesHandlerFactory.NO_ANSWER + ": " + ElpServerStatus.NOT_OFFERED), hints);
   }
 
   /** The variable's usages: ELP leaves out the declaration, as the plugin does. */

@@ -24,6 +24,8 @@ import com.intellij.find.findUsages.FindUsagesOptions;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -51,13 +53,15 @@ import java.util.List;
 /**
  * Find usages of an element under a root that ELP serves: the target is still the plugin's element, so there is one target and no
  * choice popup, but its usages are ELP's {@code textDocument/references} at the element's name. Find Usages, Show Usages and the
- * usages shown on a declaration all go through this handler. When ELP has no answer (an error, a timeout, an empty list, the server
- * loads or crashed) there are no usages: the plugin does not search in parallel. Highlighting usages in the file is ELP's
+ * usages shown on a declaration all go through this handler. The plugin does not search in parallel: when ELP answers an empty list
+ * there are no usages, and when it does not answer (an error, a timeout, the server loads or crashed) an error hint says so and the
+ * search is cancelled, so that the user is not told that there are no usages. Highlighting usages in the file is ELP's
  * {@code textDocument/documentHighlight}, which the platform's LSP client asks for; this handler highlights nothing of its own.
  * Registered in {@code erlang-elp-lsp.xml} before the plugin's factory.
  */
 public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   private static final int TIMEOUT_MS = 10_000;
+  static final String NO_ANSWER = "ELP did not answer, so the usages are not shown";
 
   @Override
   public boolean canFindUsages(@NotNull PsiElement element) {
@@ -102,7 +106,12 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
                                         @NotNull Processor<? super UsageInfo> processor,
                                         @NotNull FindUsagesOptions options) {
       List<UsageInfo> usages = elpUsages(element);
-      if (usages == null) return true;
+      if (usages == null) {
+        ElpHints.showError(ReadAction.compute(element::getProject), null, noAnswer(element));
+        ProgressIndicator indicator = ProgressManager.getGlobalProgressIndicator();
+        if (indicator != null) indicator.cancel();
+        return false;
+      }
       for (UsageInfo usage : usages) {
         if (!processor.process(usage)) return false;
       }
@@ -134,6 +143,19 @@ public final class ElpFindUsagesHandlerFactory extends FindUsagesHandlerFactory 
       }
       return usages;
     }).executeSynchronously();
+  }
+
+  /** The text of the hint when ELP did not answer: why, when the reason is known. */
+  @NotNull
+  static String noAnswer(@NotNull PsiElement element) {
+    String why = ReadAction.nonBlocking(() -> {
+      if (!element.isValid()) return null;
+      PsiFile psiFile = element.getContainingFile();
+      VirtualFile file = psiFile != null ? psiFile.getOriginalFile().getVirtualFile() : null;
+      if (file == null || ElpLspServerStatus.findClient(element.getProject(), file, ElpEngine.Feature.FIND_USAGES) != null) return null;
+      return ElpLspServerStatus.whyNoClient(element.getProject(), file);
+    }).executeSynchronously();
+    return why != null ? NO_ANSWER + ": " + why : NO_ANSWER;
   }
 
   @Nullable

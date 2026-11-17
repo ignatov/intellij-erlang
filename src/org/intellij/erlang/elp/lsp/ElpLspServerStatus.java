@@ -60,6 +60,39 @@ public final class ElpLspServerStatus implements ElpServerStatus {
     return findClient(myProject, null, feature) != null;
   }
 
+  @Nullable
+  @Override
+  public String whyNotServing(@NotNull VirtualFile file, @NotNull ElpEngine.Feature feature) {
+    return findClient(myProject, file, feature) != null ? null : whyNoClient(myProject, file);
+  }
+
+  /**
+   * @return why no ELP client answers for {@code file} (any file when it is {@code null}), as a message to the user, when
+   * {@link #findClient} finds none
+   */
+  @NotNull
+  static String whyNoClient(@NotNull Project project, @Nullable VirtualFile file) {
+    String why = ElpServerStatus.NOT_RUNNING;
+    if (project.isDisposed()) return why;
+    for (LspServer client : clients(project)) {
+      if (!(client.getDescriptor() instanceof ElpLspClientDescriptor descriptor)) continue;
+      if (descriptor.getConfiguration().mode() != ElpMode.ELP || file != null && !descriptor.isSupportedFile(file)) continue;
+      LspServerState state = client.getState();
+      if (state == LspServerState.Initializing) return ElpServerStatus.LOADING;
+      if (state != LspServerState.Running) continue;
+      switch (descriptor.getLoadState().state()) {
+        case STARTING, LOADING -> {
+          return ElpServerStatus.LOADING;
+        }
+        case FAILED -> why = ElpServerStatus.COULD_NOT_LOAD;
+        case RUNNING -> why = ElpServerStatus.NOT_OFFERED;
+        case STOPPED -> {
+        }
+      }
+    }
+    return why;
+  }
+
   /**
    * @return a running ELP client of the {@link ElpMode#ELP} position that gets {@code file} (any file when it is {@code null}) and
    * announced the capability that {@code feature} needs. A client still initializing, or stopped, does not count, nor does a running
