@@ -71,7 +71,7 @@ public class RebarRunningStateUtil {
       commandLine.addParameter("skip_deps=true");
     }
     commandLine.addParameters(split);
-    commandLine.withEnvironment(configuration.getEnvData().getEnvs());
+    configuration.getEnvData().configureCommandLine(commandLine, true);
 
     return commandLine;
   }
