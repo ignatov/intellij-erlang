@@ -146,6 +146,24 @@ public class ErlangParameterHintsProviderTest extends DeclarativeInlayHintsProvi
              """);
   }
 
+  public void testWhitespaceInQuotedAtomIsKept() {
+    doTest("""
+             -module(test).
+             f('a  b') -> ok.
+             test() -> f(/*<# 'a  b': #>*/'a b').
+             """);
+  }
+
+  public void testWhitespaceBetweenTokensIsNormalized() {
+    doTest("""
+             -module(test).
+             f({a,
+                b}) -> ok.
+             g( c ) -> ok.
+             test() -> f({a, b}), g(c), f(/*<# {a, b}: #>*/x).
+             """);
+  }
+
   public void testRecordPattern() {
     doTest("""
              -module(test).
