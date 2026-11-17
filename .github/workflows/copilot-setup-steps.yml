@@ -32,7 +32,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     # Stays in ~/.gradle for the agent's own Gradle runs too, so they find in the cache what the warm-up resolved
     # through the mirror. The mirror needs jetbrains.com and aws.intellij.net on the firewall allow list of the agent
     # (cache-redirector.jetbrains.com redirects to artifacts-caching-proxy.aws.intellij.net); both are on it.
