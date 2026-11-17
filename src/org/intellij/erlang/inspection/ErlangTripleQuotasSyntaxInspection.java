@@ -34,12 +34,14 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
       public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
         String text = o.getText();
         int start = openingQuotesStart(text);
-        String quotes = "\"".repeat(Math.max(3, countOpeningQuotes(text)));
-        if (text.startsWith(quotes, start) && !text.startsWith(quotes + "\n", start)) {
-          holder.registerProblem(o, "Not white space after start of triple-quoted string");
-        }
-        if (text.endsWith(quotes) && !endsWithPattern(text, quotes)) {
-          holder.registerProblem(o, "Bad indentation in triple-quoted string");
+        if (start >= 0) {
+          String quotes = "\"".repeat(Math.max(3, countOpeningQuotes(text)));
+          if (text.startsWith(quotes, start) && !text.startsWith(quotes + "\n", start)) {
+            holder.registerProblem(o, "Not white space after start of triple-quoted string");
+          }
+          if (text.endsWith(quotes) && !endsWithPattern(text, quotes)) {
+            holder.registerProblem(o, "Bad indentation in triple-quoted string");
+          }
         }
       }
     };
@@ -54,7 +56,10 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
   }
 
   private static int openingQuotesStart(String text) {
-    return text.startsWith("~") ? (text.length() > 1 && text.charAt(1) != '"' ? 2 : 1) : 0;
+    if (!text.startsWith("~")) return 0;
+    if (text.length() > 1 && text.charAt(1) == '"') return 1;
+    if (text.length() > 2 && text.charAt(2) == '"' && "bBsS".indexOf(text.charAt(1)) >= 0) return 2;
+    return -1;
   }
 
   private static boolean endsWithPattern(String tripleQuotedString, String quotes) {

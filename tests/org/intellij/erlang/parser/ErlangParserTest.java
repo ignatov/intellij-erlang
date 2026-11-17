@@ -125,9 +125,12 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testSixQuoteMultilineStringAndSigil() {
     PsiFile file = parseText("-module(six_quotes).\n" +
                              "plain() -> \"\"\"\"\"\"\n  hello\n  \"\"\"\"\"\".\n" +
-                             "sigil() -> ~\"\"\"\"\"\"\n  world\n  \"\"\"\"\"\".\n");
+                             "sigil() -> ~\"\"\"\"\"\"\n  world\n  \"\"\"\"\"\".\n" +
+                             "plain_with_space() -> \"\"\"\"\"\" \n  hello\n  \"\"\"\"\"\".\n" +
+                             "sigil_with_space() -> ~\"\"\"\"\"\" \n  world\n  \"\"\"\"\"\".\n" +
+                             "sigil_with_prefix_and_tab() -> ~s\"\"\"\"\"\"\t\n  text\n  \"\"\"\"\"\".\n");
     assertFalse(PsiTreeUtil.hasErrorElements(file));
-    assertEquals(2, PsiTreeUtil.findChildrenOfType(file, ErlangStringLiteral.class).size());
+    assertEquals(5, PsiTreeUtil.findChildrenOfType(file, ErlangStringLiteral.class).size());
   }
 
   public void testTripleQuotedDocStringDoesNotExposeFunctionAsStub() {

@@ -198,8 +198,8 @@ SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
 <YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
 
-<YYINITIAL> {MultiQuotedStringStart} /\n     { return multiQuotedString(0, ERL_STRING); }
-<YYINITIAL> {SigilMultiQuoteStringStart} /\n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
+<YYINITIAL> {MultiQuotedStringStart} / [ \t\r]* \n     { return multiQuotedString(0, ERL_STRING); }
+<YYINITIAL> {SigilMultiQuoteStringStart} / [ \t\r]* \n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
