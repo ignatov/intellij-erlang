@@ -16,10 +16,15 @@
 
 package org.intellij.erlang.elp.lsp;
 
+import com.intellij.codeInsight.navigation.CtrlMouseData;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction;
+import com.intellij.codeInsight.navigation.actions.GotoDeclarationOrUsageHandler2;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.platform.lsp.api.LspServerState;
@@ -29,6 +34,7 @@ import com.intellij.psi.PsiFileSystemItem;
 import com.intellij.psi.PsiNamedElement;
 import org.intellij.erlang.elp.ElpMode;
 import org.intellij.erlang.elp.ElpServedRoots;
+import org.intellij.erlang.elp.ElpServerStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -206,6 +212,65 @@ public class ElpRecordedGotoDeclarationTest extends ElpRecordedProjectTestBase {
       assertEquals(recorded.toString(), plugin, elpPosition);
     }
     assertEmpty(myServer.requests());
+  }
+
+  /**
+   * Where ELP gives no target, Go to Declaration tells why with an error hint: while ELP loads, when it is not running, when it has
+   * no target. Ctrl-hover, which asks the handler without a modal progress, shows none.
+   */
+  public void testGoToDeclarationSaysWhyThereIsNoTarget() {
+    List<String> hints = ElpHints.recordInTests(getTestRootDisposable());
+    Editor editor = openAt(myAnswers.get(DEFINITION, "remote_function"));
+    int offset = editor.getCaretModel().getOffset();
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.LOADING);
+    assertAtCaret("loading", elpTargetsOfTheAction(editor, offset), offset);
+    assertAtCaret("loading, Ctrl-hover", elpTargets(editor, offset), offset);
+    assertEquals(List.of(ElpServerStatus.LOADING), hints);
+
+    myDescriptor.getLoadState().setStateForTests(ElpLoadState.State.RUNNING);
+    myClient.setState(LspServerState.ShutdownUnexpectedly);
+    hints.clear();
+    assertAtCaret("crashed", elpTargetsOfTheAction(editor, offset), offset);
+    assertEquals(List.of(ElpServerStatus.NOT_RUNNING), hints);
+
+    myClient.setState(LspServerState.Running);
+    Editor dynamic = openAt(myAnswers.get(DEFINITION, "dynamic_call"));
+    int dynamicOffset = dynamic.getCaretModel().getOffset();
+    hints.clear();
+    assertAtCaret("ELP's answer null", elpTargetsOfTheAction(dynamic, dynamicOffset), dynamicOffset);
+    assertEquals(List.of(ElpGotoDeclarationHandler.NO_TARGET), hints);
+  }
+
+  /**
+   * The element at the caret, the target where ELP gives none, is no link under Ctrl-hover: the platform underlines a target only
+   * when it is not the element under the mouse. ELP's targets are links.
+   */
+  public void testNoLinkUnderCtrlHoverWhereElpHasNoTarget() {
+    for (ElpRecordedAnswers.Case recorded : myAnswers.cases(DEFINITION)) {
+      String expected = ELP_TARGETS.get(recorded.kind());
+      if (expected == null) continue;
+      Editor editor = openAt(recorded);
+      int offset = editor.getCaretModel().getOffset();
+      PsiFile file = myFixture.getFile();
+      CtrlMouseData data = onPooledThread(() -> ReadAction.compute(
+        () -> GotoDeclarationOrUsageHandler2.Companion.getCtrlMouseData(editor, file, offset)));
+      assertNotNull(recorded.toString(), data);
+      assertEquals(recorded.toString(), !expected.equals(NOWHERE), data.isNavigatable());
+    }
+  }
+
+  @Nullable
+  private PsiElement[] elpTargetsOfTheAction(@NotNull Editor editor, int offset) {
+    PsiFile file = myFixture.getFile();
+    EmptyProgressIndicator modal = new EmptyProgressIndicator() {
+      @Override
+      public boolean isModal() {
+        return true;
+      }
+    };
+    return onPooledThread(() -> ProgressManager.getInstance().runProcess(
+      (Computable<PsiElement[]>)() -> ReadAction.compute(
+        () -> new ElpGotoDeclarationHandler().getGotoDeclarationTargets(file.findElementAt(offset), offset, editor)), modal));
   }
 
   private void assertAtCaret(@NotNull String message, @Nullable PsiElement[] targets, int offset) {

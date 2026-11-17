@@ -108,6 +108,19 @@ public final class ElpEngine {
   }
 
   /**
+   * @return why ELP does not answer {@code feature} where it owns it, as a message to the user, for example
+   * {@link ElpServerStatus#LOADING}; {@code null} where the plugin owns the feature or ELP answers
+   */
+  @Nullable
+  public static String whyElpDoesNotAnswer(@Nullable PsiElement context, @NotNull Feature feature) {
+    if (!ownsFeature(context, feature)) return null;
+    PsiFile file = context.getContainingFile();
+    VirtualFile virtualFile = file.getOriginalFile().getVirtualFile();
+    ElpServerStatus status = file.getProject().getService(ElpServerStatus.class);
+    return status == null || virtualFile == null ? ElpServerStatus.NOT_RUNNING : status.whyNotServing(virtualFile, feature);
+  }
+
+  /**
    * Whether {@code file} is an Erlang module or header that the ELP server of a served root of {@code project} gets, by the same
    * predicate as the server's supported files ({@link ElpFiles#serverGets}): a file under the served root, by the path the project
    * knows or by its real path, and a file outside the project's content, such as an OTP source. Does not look at the server.

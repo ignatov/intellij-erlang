@@ -22,6 +22,8 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -45,12 +47,16 @@ import java.util.List;
  * Go to declaration under a root that ELP serves: asks ELP's {@code textDocument/definition} before the platform looks at the
  * plugin's references. The platform asks the declaration handlers first and uses the first non-empty answer, so the plugin's
  * references never answer there: when ELP has no target (nothing there, a timeout, the server loads or crashed) the handler answers
- * with the element at the caret, which goes nowhere. Only on a declaration itself, which ELP answers with the declaration, the
- * handler answers nothing, so that the platform shows its usages, which ELP finds ({@code ElpFindUsagesHandlerFactory}).
+ * with the element at the caret, which goes nowhere. It is no link under Ctrl-hover, because the platform does not underline a
+ * target that is the element under the mouse; Go to Declaration moves the caret to the start of that element and an error hint
+ * says why ELP gave no target. Only on a declaration itself, which ELP answers with the declaration, the handler answers nothing,
+ * so that the platform shows its usages, which ELP finds ({@code ElpFindUsagesHandlerFactory}).
  * Registered in {@code erlang-elp-lsp.xml}.
  */
 public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
   private static final int TIMEOUT_MS = 2000;
+  /** Also for a {@code null} answer: the client gives {@code null} for ELP's answer "no definition" and for an error or a timeout. */
+  static final String NO_TARGET = "ELP gave no declaration to go to";
 
   @Override
   public PsiElement @Nullable [] getGotoDeclarationTargets(@Nullable PsiElement sourceElement, int offset, Editor editor) {
@@ -62,13 +68,19 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
     VirtualFile file = psiFile.getOriginalFile().getVirtualFile();
     Project project = psiFile.getProject();
     LspServer client = ElpLspServerStatus.findClient(project, file, ElpEngine.Feature.NAVIGATION);
-    if (client == null) return nowhere;
+    if (client == null) {
+      tellWhyNowhere(project, editor, ElpLspServerStatus.whyNoClient(project, file));
+      return nowhere;
+    }
 
     Document document = editor.getDocument();
     DefinitionParams params = new DefinitionParams(client.getDocumentIdentifier(file), Lsp4jUtilKt.getLsp4jPosition(document, offset));
     Either<List<? extends Location>, List<? extends LocationLink>> result =
       client.sendRequestSync(TIMEOUT_MS, server -> server.getTextDocumentService().definition(params));
-    if (result == null) return nowhere;
+    if (result == null) {
+      tellWhyNowhere(project, editor, NO_TARGET);
+      return nowhere;
+    }
 
     List<Target> targets = new ArrayList<>();
     if (result.isLeft()) {
@@ -84,7 +96,20 @@ public final class ElpGotoDeclarationHandler implements GotoDeclarationHandler {
       PsiElement element = findElement(project, client, target);
       if (element != null) elements.add(element);
     }
-    return elements.isEmpty() ? nowhere : elements.toArray(PsiElement.EMPTY_ARRAY);
+    if (elements.isEmpty()) {
+      tellWhyNowhere(project, editor, NO_TARGET);
+      return nowhere;
+    }
+    return elements.toArray(PsiElement.EMPTY_ARRAY);
+  }
+
+  /**
+   * Shows {@code why} only to the Go to Declaration action, which runs the handlers under its modal progress ("Resolving
+   * reference"); Ctrl-hover asks them too, in a read action without one, and must not show hints.
+   */
+  private static void tellWhyNowhere(@NotNull Project project, @NotNull Editor editor, @NotNull String why) {
+    ProgressIndicator indicator = ProgressManager.getGlobalProgressIndicator();
+    if (indicator != null && indicator.isModal()) ElpHints.showError(project, editor, why);
   }
 
   /**

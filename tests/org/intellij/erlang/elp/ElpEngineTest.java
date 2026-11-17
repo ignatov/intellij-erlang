@@ -20,6 +20,8 @@ package org.intellij.erlang.elp;
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.codeInsight.daemon.LineMarkerInfo;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.codeInsight.completion.CompletionParameters;
+import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction;
@@ -49,6 +51,7 @@ import com.intellij.testFramework.ServiceContainerUtil;
 import com.intellij.testFramework.utils.parameterInfo.MockCreateParameterInfoContext;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangParameterInfoHandler;
+import org.intellij.erlang.completion.ErlangCompletionContributor;
 import org.intellij.erlang.documentation.ErlangDocumentationProvider;
 import org.intellij.erlang.editor.ErlangFoldingBuilder;
 import org.intellij.erlang.editor.ErlangWordSelectioner;
@@ -184,6 +187,25 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
     configure("/opt/elp/bin/elp", ElpMode.ELP, true);
     assertDoesntContain(variants(), "bar1", "bar2");
+  }
+
+  /** Under a served root where ELP cannot complete, the empty lookup says why instead of "No suggestions". */
+  public void testEmptyCompletionSaysWhyElpDoesNotComplete() {
+    myFixture.configureByText("a.erl", "-module(a).\nfoo() -> ok.\nbar() -> fo<caret>");
+    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
+    assertEmpty(myFixture.completeBasic());
+    assertEquals(ElpServerStatus.NOT_RUNNING, emptyLookupMessage());
+
+    configure("/opt/elp/bin/elp", ElpMode.PLUGIN, true);
+    assertNull(emptyLookupMessage());
+  }
+
+  private String emptyLookupMessage() {
+    PsiFile file = myFixture.getFile();
+    int offset = myFixture.getCaretOffset();
+    CompletionParameters parameters = new CompletionParameters(file.findElementAt(offset - 1), file, CompletionType.BASIC, offset, 1,
+                                                               myFixture.getEditor(), () -> false);
+    return new ErlangCompletionContributor().handleEmptyLookup(parameters, myFixture.getEditor());
   }
 
   public void testCompletionOfReferenceVariants() {

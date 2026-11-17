@@ -21,6 +21,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -123,8 +124,19 @@ public class ErlangCompletionContributor extends CompletionContributor {
 
   @Override
   public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
-    if (ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION)) return;
+    if (ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION)) {
+      // ELP completes alone; while it cannot, the lookup says why.
+      String why = ElpEngine.whyElpDoesNotAnswer(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
+      if (why != null) result.addLookupAdvertisement(why);
+      return;
+    }
     super.fillCompletionVariants(parameters, result);
+  }
+
+  @Nullable
+  @Override
+  public String handleEmptyLookup(@NotNull CompletionParameters parameters, Editor editor) {
+    return ElpEngine.whyElpDoesNotAnswer(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION);
   }
 
   public ErlangCompletionContributor() {
