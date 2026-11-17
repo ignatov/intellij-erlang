@@ -42,6 +42,7 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -255,7 +256,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
   /**
    * Adds the function to the given export, or, when the given export is null, to a new export attribute inserted
-   * before the given element.
+   * before the given element, or after the -module attribute when the element is null or comes before it.
    */
   public static void exportFunction(@NotNull Project project,
                                     @NotNull ErlangFunction function,
@@ -265,7 +266,15 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       updateExport(project, function, export);
     }
     else if (function.getContainingFile() instanceof ErlangFile file) {
-      insertNewExport(project, file, function, newExportBefore);
+      ErlangModule module = file.getModule();
+      PsiElement moduleAttribute = module != null ? module.getParent() : null;
+      if (moduleAttribute != null &&
+          (newExportBefore == null || newExportBefore.getTextOffset() < moduleAttribute.getTextOffset())) {
+        createNewExport(project, file, function, moduleAttribute);
+      }
+      else {
+        insertNewExport(project, file, function, newExportBefore);
+      }
     }
   }
 

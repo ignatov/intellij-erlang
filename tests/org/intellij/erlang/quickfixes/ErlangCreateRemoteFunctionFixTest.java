@@ -62,6 +62,8 @@ public class ErlangCreateRemoteFunctionFixTest extends ErlangLightPlatformCodeIn
   public void testExportOutsideIf()    { doTest("Create Function exportOutsideIf_target:f/1"); }
   public void testConditionalExportAll() { doTest("Create Function conditionalExportAll_target:f/1"); }
   public void testNewExportOutsideIfdef() { doTest("Create Function newExportOutsideIfdef_target:f/1"); }
+  public void testNewExportAfterModuleIfndef() { doTest("Create Function newExportAfterModuleIfndef_target:f/1"); }
+  public void testNewExportAfterModuleDefine() { doTest("Create Function newExportAfterModuleDefine_target:f/1"); }
   public void testReservedWordName()   { doTest("Create Function reservedWordName_target:'if'/1"); }
   public void testReservedWordFun()    { doTest("Create Function reservedWordFun_target:'end'/1"); }
   public void testFixAll()             { doTest("Fix all 'Unresolved function' problems in file"); }
