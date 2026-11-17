@@ -27,6 +27,7 @@ import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -582,6 +583,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testNoDeletedModulesInModuleCompletion() {
     PsiFile deleted = myFixture.addFileToProject("deleted_module_1262.erl", "-module(deleted_module_1262).");
+    assertTrue(ErlangModuleIndex.getNames(getProject()).contains("deleted_module_1262"));
     WriteCommandAction.runWriteCommandAction(getProject(), () -> deleted.delete());
     myFixture.configureByText("a.erl", "foo() -> deleted_mod<caret>");
     myFixture.completeBasic();
