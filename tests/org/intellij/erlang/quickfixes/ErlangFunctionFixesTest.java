@@ -45,6 +45,29 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testEmpty()      { doTest("Export function"); }
   public void testWithout()    { doTest("Export function"); }
   public void testCommon()     { doTest("Export function"); }
+  public void testMacroWithExport()      { doTest("Export function"); }
+  public void testMacroWithout()         { doTest("Export function"); }
+  public void testMacroDefinedBelowExport() { doTest("Export function"); }
+  public void testMacroDefinedTwice()      { doTest("Export function"); }
+  public void testMacroSeveralExports()    { doTest("Export function"); }
+  public void testMacroNotDefined()        { doTest("Export function"); }
+  public void testMacroRedefinedBelowFunction()   { doTest("Export function"); }
+
+  // Known limitation until the plugin evaluates conditional compilation: when the function or a -define of its macro
+  // is inside -ifdef/-ifndef/-if, the export goes where it goes for any other function. The expected files below are not
+  // correct in every configuration: with -DTEST erlc fails with "undefined macro 'name'" (the -export is above the
+  // -define), and without it they compile but export nothing (the -export is inside the -ifdef(TEST) branch).
+  public void testMacroAndFunctionInSeparateIfdefs() { doTest("Export function"); }
+  public void testMacroAndFunctionInSameIfdef()      { doTest("Export function"); }
+  public void testMacroDefinedInIfdefAndElse()       { doTest("Export function"); }
+
+  public void testMacroDefinedAfterFunction() {
+    myFixture.configureByFile("macroDefinedAfterFunction.erl");
+    assertNoIntentionsAvailable("Export function", "no -export can be placed below the -define and above the functions");
+  }
+
+  public void testQuotedAtomWithExport() { doTest("Export function"); }
+  public void testQuotedAtomWithout()    { doTest("Export function"); }
 
   public void testDelete()     { doTest("Remove function"); }
   public void testDeleteSpec() { doTest("Remove function"); }
@@ -69,6 +92,17 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertEquals(2, getExportsToShow(myFixture.getFile()).size());
     myFixture.configureByFile("fewNonEmpties2.erl");
     assertEquals(2, getExportsToShow(myFixture.getFile()).size());
+  }
+
+  public void testExportsToShowInPopupForMacroFunction() {
+    myFixture.configureByFile("macroSeveralExports.erl");
+    var file = (ErlangFile) myFixture.getFile();
+    var function = file.getFunctions().getLast();
+    var anchor = ErlangExportFunctionFix.getMacroExportAnchor(file, function);
+    assertNotNull(anchor);
+    var exports = ErlangExportFunctionFix.getExportsBelow(file, ErlangExportFunctionFix.getExportPsiElements(file), anchor);
+    assertEquals(1, exports.size());
+    assertEquals("[another/0]", exports.getFirst().getExportFunctions().getText());
   }
 
   private static List<ErlangExport> getExportsToShow(PsiFile file) {

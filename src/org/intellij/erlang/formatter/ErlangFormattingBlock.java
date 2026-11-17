@@ -28,6 +28,7 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
@@ -487,7 +488,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_MAYBE_MATCH_EXPRS) return Indent.getNoneIndent();
 
-    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
+    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && (newChildIndex == 1 || startsLine(myNode))) return Indent.getNoneIndent();
 
     if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) {
       return Indent.getNormalIndent(false);
@@ -506,6 +507,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
     }
 
     return null;
+  }
+
+  private static boolean startsLine(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
   }
 
   @Nullable

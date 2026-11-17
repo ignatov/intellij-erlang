@@ -35,7 +35,7 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
       @Override
       public void visitStringLiteral(@NotNull ErlangStringLiteral o) {
         String text = o.getText();
-        if (text.startsWith("\"\"\"") && !text.startsWith("\"\"\"\n")) {
+        if (text.startsWith("\"\"\"") && !isWhiteSpaceAfterOpening(text)) {
           holder.registerProblem(o, "Not white space after start of triple-quoted string");
         }
         if (text.endsWith("\"\"\"") && !endsWithPattern(text)) {
@@ -43,6 +43,17 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
         }
       }
     };
+  }
+
+  private static boolean isWhiteSpaceAfterOpening(String tripleQuotedString) {
+    int lineEnd = tripleQuotedString.indexOf('\n');
+    if (lineEnd < 0) return false;
+    for (int i = 3; i < lineEnd; i++) {
+      char c = tripleQuotedString.charAt(i);
+      // the white space of erl_scan: 0..32 and 128..160
+      if (!(c <= ' ' || c >= '\u0080' && c <= '\u00a0')) return false;
+    }
+    return true;
   }
 
   private static boolean endsWithPattern(String tripleQuotedString) {
