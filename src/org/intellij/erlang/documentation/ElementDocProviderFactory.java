@@ -35,6 +35,14 @@ public final class ElementDocProviderFactory {
 
   @Nullable
   static ElementDocProvider create(@NotNull PsiElement psiElement) {
+    return create(psiElement, null);
+  }
+
+  /**
+   * @param context the element at the caret, used to pick the macro definition that applies at a macro use
+   */
+  @Nullable
+  static ElementDocProvider create(@NotNull PsiElement psiElement, @Nullable PsiElement context) {
     Project project = psiElement.getProject();
     if (psiElement instanceof ErlangModule erlangModule) {
       VirtualFile virtualFile = getVirtualFile(psiElement);
@@ -59,6 +67,9 @@ public final class ElementDocProviderFactory {
         return new ErlangSdkTypeDocProvider(project, virtualFile, typeDefinition.getName());
       }
       return null; // TODO implement TypeDocProvider
+    }
+    else if (psiElement instanceof ErlangMacrosDefinition macrosDefinition) {
+      return new ErlangMacroDocProvider(macrosDefinition, context);
     }
     else {
       ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(
