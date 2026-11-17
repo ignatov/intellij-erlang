@@ -17,9 +17,17 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.SyntaxTraverser;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiUtilCore;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangCaseExpression;
+import org.intellij.erlang.psi.ErlangCrClause;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class ErlangSingleClauseCaseInspection extends ErlangInspectionBase {
   @Override
@@ -28,10 +36,20 @@ public class ErlangSingleClauseCaseInspection extends ErlangInspectionBase {
     return new ErlangVisitor() {
       @Override
       public void visitCaseExpression(@NotNull ErlangCaseExpression o) {
-        if (o.getCrClauseList().size() == 1) {
+        List<ErlangCrClause> clauses = o.getCrClauseList();
+        if (clauses.size() == 1 && !mayHaveClausesFromMacro(clauses.get(0))) {
           registerProblem(holder, o.getCase(), "'case' expression has only one clause");
         }
       }
     };
+  }
+
+  // A macro call that the parser could not fit into the clause may expand to more clauses, as in
+  // `case X of ?CLAUSES end` or `case X of a -> 1 ?MORE end`.
+  private static boolean mayHaveClausesFromMacro(@NotNull ErlangCrClause clause) {
+    return PsiTreeUtil.findChildOfType(clause, PsiErrorElement.class) != null &&
+           SyntaxTraverser.psiTraverser(clause).traverse()
+             .filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_QMARK)
+             .isNotEmpty();
   }
 }
