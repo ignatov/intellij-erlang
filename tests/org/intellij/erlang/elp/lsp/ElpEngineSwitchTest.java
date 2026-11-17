@@ -244,7 +244,7 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
 
   /**
    * A file under another content root, which this server does not load, stays with the plugin, so its inspections are not
-   * silenced; so does a file outside the project's content, such as an OTP source, which the client gets but no served root holds.
+   * silenced. A file outside the project's content, such as an OTP source, goes to the client, so it is ELP's.
    */
   public void testAFileUnderAnotherContentRootStaysWithThePlugin() throws Exception {
     Path otherDir = FileUtil.createTempDirectory("elp-other-root", null, true).toPath();
@@ -265,11 +265,60 @@ public class ElpEngineSwitchTest extends ElpRecordedProjectTestBase {
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.DIAGNOSTICS));
       assertFalse(ElpEngine.ownsFeature(getProject(), other, Feature.NAVIGATION));
       assertTrue(myDescriptor.isSupportedFile(outside));
-      assertFalse(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
+      assertTrue(ElpEngine.ownsFeature(getProject(), outside, Feature.DIAGNOSTICS));
       assertTrue(ElpEngine.ownsFeature(getProject(), file("src/shop.erl"), Feature.DIAGNOSTICS));
     }
     finally {
       PsiTestUtil.removeContentEntry(getModule(), otherRoot);
+    }
+  }
+
+  /**
+   * One engine per file: the files that the server of a served root gets are exactly those where the plugin is silent. An OTP
+   * source of the project's SDK goes to ELP, so hover, inlay hints, folding and the diagnostics there are ELP's alone; so are the
+   * files of a symlinked root by their real path.
+   */
+  public void testElpGetsExactlyTheFilesWhereThePluginIsSilent() throws Exception {
+    VirtualFile lists = LocalFileSystem.getInstance().refreshAndFindFileByPath(
+      new java.io.File("testData/mockSdk-R15B02/lib/stdlib-1.18.2/src/lists.erl").getAbsolutePath());
+    assertNotNull(lists);
+    Path temp = FileUtil.createTempDirectory("elp-real-root", null, true).toPath().toRealPath();
+    Path real = Files.createDirectories(temp.resolve("real/linked/src"));
+    Files.writeString(real.resolve("linked.erl"), "-module(linked).\n");
+    Path link = Files.createSymbolicLink(temp.resolve("link"), temp.resolve("real"));
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), temp.toString());
+    VirtualFile linkedRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(link.resolve("linked"));
+    VirtualFile byRealPath = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(real.resolve("linked.erl"));
+    assertNotNull(linkedRoot);
+    assertNotNull(byRealPath);
+    PsiTestUtil.addSourceContentToRoots(getModule(), linkedRoot);
+    try {
+      IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+      VirtualFile byLink = linkedRoot.findFileByRelativePath("src/linked.erl");
+      assertNotNull(byLink);
+      ElpLspClientDescriptor linked = new ElpLspClientDescriptor(getProject(), linkedRoot, new ElpConfiguration(ELP_PATH, ElpMode.ELP));
+      linked.resolveRealRoot();
+      ElpServedRoots.getInstance().setRootsForTests(List.of(myRoot.getPath(), linkedRoot.getPath()), getTestRootDisposable());
+
+      Map<VirtualFile, Boolean> expected = new java.util.LinkedHashMap<>();
+      expected.put(file("src/shop.erl"), true);
+      expected.put(file("src/shop.hrl"), true);
+      expected.put(file("rebar.config"), false);
+      expected.put(lists, true);
+      for (Map.Entry<VirtualFile, Boolean> entry : expected.entrySet()) {
+        VirtualFile file = entry.getKey();
+        assertEquals(file.getPath(), entry.getValue().booleanValue(), myDescriptor.isSupportedFile(file));
+        assertEquals(file.getPath(), entry.getValue().booleanValue(), ElpEngine.ownsFeature(getProject(), file, Feature.DOCUMENTATION));
+      }
+      for (VirtualFile file : List.of(byLink, byRealPath)) {
+        assertTrue(file.getPath(), linked.isSupportedFile(file));
+        assertTrue(file.getPath(), ElpEngine.ownsFeature(getProject(), file, Feature.FOLDING));
+      }
+      assertFalse("the file of another root", myDescriptor.isSupportedFile(byLink));
+    }
+    finally {
+      ElpServedRoots.getInstance().setRealPath(linkedRoot.getPath(), null);
+      PsiTestUtil.removeContentEntry(getModule(), linkedRoot);
     }
   }
 

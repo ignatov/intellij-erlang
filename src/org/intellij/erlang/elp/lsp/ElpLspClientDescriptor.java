@@ -25,11 +25,9 @@ import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.platform.lsp.api.Lsp4jClient;
@@ -162,18 +160,12 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
     return myConfiguration;
   }
 
-  /**
-   * The Erlang modules and headers of this server's ELP: those under its root, by the path the project knows or by the real path,
-   * and those outside the project's content, such as the OTP sources, which ELP loads too. A file under another content root is
-   * not this server's: ELP does not load it with this root, and the plugin, or the server of that root, answers there.
-   */
+  /** The Erlang modules and headers of this server's ELP, see {@link ElpFiles#serverGets}. */
   @Override
   public boolean isSupportedFile(@NotNull VirtualFile file) {
     if (!ElpFiles.isElpFile(file)) return false;
-    if (VfsUtilCore.isAncestor(getRoots()[0], file, false)) return true;
     RealRoot realRoot = myRealRoot;
-    if (realRoot != null && isUnder(file.getPath(), realRoot.real())) return true;
-    return ReadAction.computeBlocking(() -> !getProject().isDisposed() && !ProjectFileIndex.getInstance(getProject()).isInContent(file));
+    return ReadAction.computeBlocking(() -> ElpFiles.serverGets(getProject(), getRoots()[0], realRoot != null ? realRoot.real() : null, file));
   }
 
   /**
@@ -326,6 +318,8 @@ final class ElpLspClientDescriptor extends LspServerDescriptor {
       }
     }
     myRealRoot = realRoot;
+    // The plugin goes silent for the same files, see ElpFiles.serverGets.
+    ElpServedRoots.getInstance().setRealPath(root.getPath(), realRoot != null ? realRoot.real() : null);
     if (realRoot != null) LOG.info("ELP gets the files under " + realRoot.link() + " by their real path " + realRoot.real());
   }
 

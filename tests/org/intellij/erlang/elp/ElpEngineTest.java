@@ -31,14 +31,19 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.SyntaxTraverser;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.refactoring.rename.RenameHandler;
 import com.intellij.refactoring.rename.RenameHandlerRegistry;
+import com.intellij.testFramework.IndexingTestUtil;
 import com.intellij.testFramework.PlatformTestUtil;
+import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.testFramework.ServiceContainerUtil;
 import com.intellij.testFramework.utils.parameterInfo.MockCreateParameterInfoContext;
 import com.intellij.util.containers.ContainerUtil;
@@ -65,6 +70,8 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -414,30 +421,42 @@ public class ElpEngineTest extends ErlangLightPlatformCodeInsightFixtureTestCase
 
   /**
    * Go to Symbol and Go to Class: the plugin's contributors are silent in a project whose roots ELP serves all, and in a project
-   * with roots that ELP does not serve they leave out only the files under served roots.
+   * with roots that ELP does not serve they leave out only the files under served roots. A served root is a workspace root: here
+   * the content root of the test project and another content root.
    */
-  public void testSymbolContributorsLeaveServedFilesToElp() {
+  public void testSymbolContributorsLeaveServedFilesToElp() throws Exception {
     myFixture.addFileToProject("served/served_mod.erl", "-module(served_mod).\nserved_fun() -> ok.");
-    myFixture.addFileToProject("other/other_mod.erl", "-module(other_mod).\nother_fun() -> ok.");
-    String root = contentRoot();
-    ErlangSymbolContributor symbols = new ErlangSymbolContributor();
-    ErlangModuleContributor modules = new ErlangModuleContributor();
-    configure("/opt/elp/bin/elp", ElpMode.ELP, false);
-    assertContainsElements(List.of(symbols.getNames(getProject(), false)), "served_fun", "other_fun");
-    assertSize(1, modules.getItemsByName("served_mod", "served_mod", getProject(), false));
+    Path otherDir = FileUtil.createTempDirectory("elp-other-root", null, true).toPath();
+    Files.writeString(otherDir.resolve("other_mod.erl"), "-module(other_mod).\nother_fun() -> ok.");
+    VfsRootAccess.allowRootAccess(getTestRootDisposable(), otherDir.toString());
+    VirtualFile otherRoot = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(otherDir);
+    assertNotNull(otherRoot);
+    PsiTestUtil.addSourceContentToRoots(getModule(), otherRoot);
+    try {
+      IndexingTestUtil.waitUntilIndexesAreReady(getProject());
+      String root = contentRoot();
+      ErlangSymbolContributor symbols = new ErlangSymbolContributor();
+      ErlangModuleContributor modules = new ErlangModuleContributor();
+      configure("/opt/elp/bin/elp", ElpMode.ELP, false);
+      assertContainsElements(List.of(symbols.getNames(getProject(), false)), "served_fun", "other_fun");
+      assertSize(1, modules.getItemsByName("served_mod", "served_mod", getProject(), false));
 
-    ElpServedRoots.getInstance().setRootsForTests(List.of(root + "/served"), getTestRootDisposable());
-    assertFalse(ElpEngine.servesWholeProject(getProject()));
-    assertEmpty(modules.getItemsByName("served_mod", "served_mod", getProject(), false));
-    assertSize(1, modules.getItemsByName("other_mod", "other_mod", getProject(), false));
-    assertEmpty(symbols.getItemsByName("served_fun", "served_fun", getProject(), false));
-    assertSize(1, symbols.getItemsByName("other_fun", "other_fun", getProject(), false));
+      ElpServedRoots.getInstance().setRootsForTests(List.of(root), getTestRootDisposable());
+      assertFalse(ElpEngine.servesWholeProject(getProject()));
+      assertEmpty(modules.getItemsByName("served_mod", "served_mod", getProject(), false));
+      assertSize(1, modules.getItemsByName("other_mod", "other_mod", getProject(), false));
+      assertEmpty(symbols.getItemsByName("served_fun", "served_fun", getProject(), false));
+      assertSize(1, symbols.getItemsByName("other_fun", "other_fun", getProject(), false));
 
-    configure("/opt/elp/bin/elp", ElpMode.ELP, true);
-    assertTrue(ElpEngine.servesWholeProject(getProject()));
-    assertEmpty(symbols.getNames(getProject(), true));
-    assertEmpty(modules.getNames(getProject(), true));
-    assertEmpty(modules.getItemsByName("other_mod", "other_mod", getProject(), true));
+      ElpServedRoots.getInstance().setRootsForTests(List.of(root, otherRoot.getPath()), getTestRootDisposable());
+      assertTrue(ElpEngine.servesWholeProject(getProject()));
+      assertEmpty(symbols.getNames(getProject(), true));
+      assertEmpty(modules.getNames(getProject(), true));
+      assertEmpty(modules.getItemsByName("other_mod", "other_mod", getProject(), true));
+    }
+    finally {
+      PsiTestUtil.removeContentEntry(getModule(), otherRoot);
+    }
   }
 
   /**

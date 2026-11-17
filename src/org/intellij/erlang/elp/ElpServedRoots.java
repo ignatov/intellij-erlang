@@ -26,10 +26,13 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The workspace roots that ELP serves: a stable, stored fact, not the live state of a server. In a served root every language
@@ -53,6 +56,11 @@ public final class ElpServedRoots implements PersistentStateComponent<ElpServedR
 
   /** The canonical system-independent paths of the served roots, without a trailing slash. Never modified, only replaced. */
   private volatile List<String> myRoots = List.of();
+  /**
+   * The real paths of the workspace roots that lie under a symlink, as the server of each root found them when it started; not
+   * stored. Never modified, only replaced.
+   */
+  private volatile Map<String, String> myRealPaths = Map.of();
 
   @NotNull
   public static ElpServedRoots getInstance() {
@@ -92,6 +100,25 @@ public final class ElpServedRoots implements PersistentStateComponent<ElpServedR
       if (isUnder(path, root)) return true;
     }
     return false;
+  }
+
+  /**
+   * @return the real path of the workspace root {@code root}, when its server found that it lies under a symlink, see
+   * {@link #setRealPath}; otherwise {@code null}
+   */
+  @Nullable
+  public String getRealPath(@NotNull String root) {
+    return myRealPaths.get(canonical(root));
+  }
+
+  /** Remembers the real path of the workspace root {@code root}, or forgets it when {@code realPath} is {@code null}. */
+  public synchronized void setRealPath(@NotNull String root, @Nullable String realPath) {
+    String path = canonical(root);
+    if (realPath == null ? !myRealPaths.containsKey(path) : canonical(realPath).equals(myRealPaths.get(path))) return;
+    Map<String, String> realPaths = new HashMap<>(myRealPaths);
+    if (realPath == null) realPaths.remove(path);
+    else realPaths.put(path, canonical(realPath));
+    myRealPaths = Map.copyOf(realPaths);
   }
 
   public boolean isEmpty() {
@@ -147,7 +174,8 @@ public final class ElpServedRoots implements PersistentStateComponent<ElpServedR
     return canonical.length() > 1 && canonical.endsWith("/") ? canonical.substring(0, canonical.length() - 1) : canonical;
   }
 
-  private static boolean isUnder(@NotNull String path, @NotNull String root) {
+  /** Whether the system-independent {@code path} is {@code root} or lies under it. */
+  public static boolean isUnder(@NotNull String path, @NotNull String root) {
     if (!path.startsWith(root)) return false;
     return path.length() == root.length() || root.endsWith("/") || path.charAt(root.length()) == '/';
   }

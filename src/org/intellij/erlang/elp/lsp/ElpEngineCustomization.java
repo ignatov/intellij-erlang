@@ -41,10 +41,7 @@ import org.jetbrains.annotations.NotNull;
 final class ElpEngineCustomization extends ElpDiagnosticsOnlyCustomization {
   private final LspCodeActionsCustomizer myCodeActions = new LspCodeActionsSupport();
 
-  /**
-   * The client also gets the files outside the project's content, such as the OTP sources, where the plugin completes: ELP completes
-   * only where the plugin is silent, so that the list is filled by exactly one of them.
-   */
+  /** ELP completes only where the plugin is silent, so that the list is filled by exactly one of them. */
   private final LspCompletionCustomizer myCompletion = new LspCompletionSupport() {
     @Override
     public boolean shouldRunCodeCompletion(@NotNull CompletionParameters parameters) {
