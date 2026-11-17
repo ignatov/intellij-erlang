@@ -84,6 +84,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiFile file = context.getFile();
     if (ErlangParserUtil.isApplicationConfigFileType(file)) return;
     int startOffset = context.getStartOffset();
+    if (startOffset > 0 && file.findElementAt(startOffset - 1) instanceof PsiComment) return;
     PsiElement elementAt = file.findElementAt(startOffset);
     PsiElement parent = elementAt == null ? null : elementAt.getParent();
     ErlangExport export = PsiTreeUtil.getPrevSiblingOfType(parent, ErlangExport.class);
