@@ -74,13 +74,12 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     ErlangMacrosDefinition resolved = (ErlangMacrosDefinition) resolve;
     ErlangFile file = (ErlangFile) resolve.getContainingFile();
     String name = resolved.getName();
-    List<Integer> undefOffsets = file == args.getContainingFile() ? getUndefOffsets(file, name, args.getTextOffset()) : Collections.emptyList();
+    ConditionalBranches branches = file == args.getContainingFile() ? new ConditionalBranches(file, name, args.getTextOffset()) : null;
     Map<Integer, ErlangMacrosDefinition> definitionsByArity = new TreeMap<>();
     for (ErlangMacrosDefinition definition : file.getMacroses()) {
       ErlangArgumentDefinitionList argumentDefinitionList = definition.getArgumentDefinitionList();
       if (argumentDefinitionList == null || !name.equals(definition.getName())) continue;
-      int definitionEnd = definition.getTextRange().getEndOffset();
-      if (ContainerUtil.exists(undefOffsets, offset -> offset >= definitionEnd)) continue;
+      if (branches != null && branches.isUndefined(definition)) continue;
       int arity = argumentDefinitionList.getArgumentDefinitionList().size();
       if (definition == resolved) definitionsByArity.put(arity, definition);
       else definitionsByArity.putIfAbsent(arity, definition);
@@ -88,29 +87,67 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     return new ArrayList<>(definitionsByArity.values());
   }
 
-  @NotNull
-  private static List<Integer> getUndefOffsets(@NotNull ErlangFile file, @NotNull String macroName, int before) {
-    List<Integer> offsets = new ArrayList<>();
-    int conditionalDepth = 0;
-    for (ErlangAttribute attribute : file.getAttributes()) {
-      int offset = attribute.getTextOffset();
-      if (offset >= before) break;
-      ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
-      String directive = atomAttribute != null ? atomAttribute.getName() :
-                         attribute.getNode().findChildByType(ErlangTypes.ERL_IF) != null ? "if" : "";
-      switch (directive) {
-        case "if", "ifdef", "ifndef" -> conditionalDepth++;
-        case "endif" -> conditionalDepth = Math.max(0, conditionalDepth - 1);
-        case "undef" -> {
-          ErlangMacrosName undefName = PsiTreeUtil.getChildOfType(atomAttribute, ErlangMacrosName.class);
-          if (conditionalDepth == 0 && undefName != null && macroName.equals(ErlangPsiImplUtil.getNameIdentifier(undefName).getText())) {
-            offsets.add(offset);
+  /**
+   * Tracks the -if/-ifdef/-ifndef branches open at each point of a file before a call, and the -undef of one macro there.
+   * An -undef removes an earlier definition when every branch open at the -undef is also open at the definition or at the call,
+   * so it runs whenever one of them is compiled.
+   */
+  private static class ConditionalBranches {
+    private final TreeMap<Integer, List<Integer>> myOpenBranchesAfter = new TreeMap<>();
+    private final Map<Integer, List<Integer>> myUndefs = new TreeMap<>();
+    private final List<Integer> myCallBranches;
+
+    ConditionalBranches(@NotNull ErlangFile file, @NotNull String macroName, int callOffset) {
+      List<Integer> open = new ArrayList<>();
+      int nextBranch = 0;
+      for (ErlangAttribute attribute : file.getAttributes()) {
+        int offset = attribute.getTextOffset();
+        if (offset >= callOffset) break;
+        ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+        String directive = atomAttribute != null ? atomAttribute.getName() :
+                           attribute.getElseAtomAttribute() != null ? "else" :
+                           attribute.getNode().findChildByType(ErlangTypes.ERL_IF) != null ? "if" : "";
+        switch (directive) {
+          case "if", "ifdef", "ifndef" -> open.add(nextBranch++);
+          case "else", "elif" -> {
+            if (!open.isEmpty()) open.set(open.size() - 1, nextBranch++);
           }
+          case "endif" -> {
+            if (!open.isEmpty()) open.remove(open.size() - 1);
+          }
+          case "undef" -> {
+            ErlangMacrosName undefName = PsiTreeUtil.getChildOfType(atomAttribute, ErlangMacrosName.class);
+            if (undefName != null && macroName.equals(ErlangPsiImplUtil.getNameIdentifier(undefName).getText())) {
+              myUndefs.put(offset, List.copyOf(open));
+            }
+          }
+          default -> {}
         }
-        default -> {}
+        myOpenBranchesAfter.put(offset, List.copyOf(open));
       }
+      myCallBranches = openBranchesAt(callOffset);
     }
-    return offsets;
+
+    boolean isUndefined(@NotNull ErlangMacrosDefinition definition) {
+      int definitionEnd = definition.getTextRange().getEndOffset();
+      List<Integer> definitionBranches = openBranchesAt(definition.getTextRange().getStartOffset());
+      for (Map.Entry<Integer, List<Integer>> undef : myUndefs.entrySet()) {
+        if (undef.getKey() < definitionEnd) continue;
+        List<Integer> undefBranches = undef.getValue();
+        if (isPrefix(undefBranches, definitionBranches) || isPrefix(undefBranches, myCallBranches)) return true;
+      }
+      return false;
+    }
+
+    @NotNull
+    private List<Integer> openBranchesAt(int offset) {
+      Map.Entry<Integer, List<Integer>> entry = myOpenBranchesAfter.lowerEntry(offset);
+      return entry != null ? entry.getValue() : Collections.emptyList();
+    }
+
+    private static boolean isPrefix(@NotNull List<Integer> prefix, @NotNull List<Integer> list) {
+      return prefix.size() <= list.size() && prefix.equals(list.subList(0, prefix.size()));
+    }
   }
 
   @Override

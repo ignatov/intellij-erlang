@@ -88,6 +88,18 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     doMacroTest("-define(F(X), X).\n-ifdef(T).\n-endif.\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).", 1, "X, [Y]");
   }
 
+  public void testUndefInSameConditionalAsDefinitionIsApplied() {
+    doMacroTest("-ifndef(G).\n-define(G, 1).\n-define(F(X), X).\n-undef(F).\n-define(F(X, Y), {X, Y}).\n-endif.\nbar() -> ?F(1, <caret>).", 1, "X, [Y]");
+  }
+
+  public void testUndefInSameConditionalAsCallIsApplied() {
+    doMacroTest("-define(F(X), X).\n-ifdef(TEST).\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).\n-endif.", 1, "X, [Y]");
+  }
+
+  public void testUndefInSameConditionalAsDefinitionAndCallIsApplied() {
+    doMacroTest("-ifdef(TEST).\n-define(F(X), X).\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).\n-endif.", 1, "X, [Y]");
+  }
+
   public void testFunctionCallInsideMacro() {
     doTest(FOO + "-define(BAR(X), X).\nbar() -> ?BAR(foo(1, <caret>)).", 1);
     assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
