@@ -20,7 +20,9 @@ import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
@@ -576,6 +578,14 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testModuleCompletionWithColon() {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
+  }
+
+  public void testNoDeletedModulesInModuleCompletion() {
+    PsiFile deleted = myFixture.addFileToProject("deleted_module_1262.erl", "-module(deleted_module_1262).");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> deleted.delete());
+    myFixture.configureByText("a.erl", "foo() -> deleted_mod<caret>");
+    myFixture.completeBasic();
+    assertEquals("foo() -> deleted_mod", myFixture.getEditor().getDocument().getText());
   }
 
   public void testModuleCompletionWithoutColon() {
