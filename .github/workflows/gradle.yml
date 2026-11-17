@@ -24,7 +24,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Test, Build and Verify Plugin
@@ -61,6 +63,13 @@ jobs:
     - name: Verify generated lexer, parser and PSI
       # Regenerates gen/ from Erlang.flex and grammars/erlang.bnf into build/ and fails if the committed gen/ differs.
       run: ./gradlew --no-daemon verifyGeneratedSources
+    - name: Save the Gradle dependency cache
+      # Only a push to master saves, from one job per OS: build on Linux, test-os on macOS and Windows. Every other
+      # job, branch and pull request restores the entry of master.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
 
   other-ides:
     # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.1.
@@ -88,7 +97,9 @@ jobs:
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Test against IntelliJ IDEA ${{ matrix.ide }}
@@ -133,7 +144,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
@@ -233,9 +246,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        # No Gradle cache on Windows: in a restored cache Gradle finds the extracted IDE modified ("The contents of
-        # the immutable workspace ... have been modified") and fails before any test runs.
-        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Test
@@ -259,6 +272,12 @@ jobs:
           build/reports/tests/test
           build/test-results/test
         if-no-files-found: ignore
+    - name: Save the Gradle dependency cache
+      # As in build: only a push to master saves.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
 
   compilation-tests-os:
     name: compilation-tests-${{ matrix.os }}
@@ -287,8 +306,9 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        # No Gradle cache on Windows, as in test-os.
-        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
