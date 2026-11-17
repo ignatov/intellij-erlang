@@ -129,6 +129,26 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test444()    throws Exception { alignBlocks(); doTest(); }
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
+  public void test830()    throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830Fun() throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830CommaFirst() throws Exception { setUpCommaFirst(); setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830AlignFunClauses() throws Exception {
+    getErlangSettings().ALIGN_FUN_CLAUSES = true;
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830CommaFirstBroken() throws Exception {
+    setUpCommaFirst();
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830FunArgument() throws Exception {
+    alignBlocks();
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830CommaFirstFunArgument() throws Exception { setUpCommaFirst(); setUpFunctionParametersWrapIfLong(); doTest(); }
 
   public void test897() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
@@ -526,6 +546,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testNamedFunExpr()   throws Exception { doTest(); }
 
   public void testComprehensions() throws Exception { doTest(); }
+
+  private void setUpFunctionParametersWrapIfLong() {
+    CommonCodeStyleSettings settings = getCommonSettings();
+    settings.RIGHT_MARGIN = 40;
+    settings.METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
+  }
 
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
