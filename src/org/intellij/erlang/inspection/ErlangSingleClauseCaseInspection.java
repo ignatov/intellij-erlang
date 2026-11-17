@@ -17,14 +17,15 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.SyntaxTraverser;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
+import com.intellij.util.ObjectUtils;
+import com.intellij.util.containers.JBIterable;
 import org.intellij.erlang.ErlangTypes;
-import org.intellij.erlang.psi.ErlangCaseExpression;
-import org.intellij.erlang.psi.ErlangCrClause;
-import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -44,12 +45,24 @@ public class ErlangSingleClauseCaseInspection extends ErlangInspectionBase {
     };
   }
 
-  // A macro call that the parser could not fit into the clause may expand to more clauses, as in
-  // `case X of ?CLAUSES end` or `case X of a -> 1 ?MORE end`.
+  // A macro call may expand to more clauses, which the parser cannot see. Either the parser could not fit the
+  // call into the clause, as in `case X of ?CLAUSES end`, or the macro body has a `;` at the top level, as in
+  // `case X of a -> ?REST end` with `-define(REST, ok; _ -> error)`. Nested expressions with their own clauses
+  // are not searched.
   private static boolean mayHaveClausesFromMacro(@NotNull ErlangCrClause clause) {
-    return PsiTreeUtil.findChildOfType(clause, PsiErrorElement.class) != null &&
-           SyntaxTraverser.psiTraverser(clause).traverse()
-             .filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_QMARK)
-             .isNotEmpty();
+    JBIterable<PsiElement> elements = SyntaxTraverser.psiTraverser(clause)
+      .expand(e -> e == clause || !(e instanceof ErlangClauseOwner || e instanceof ErlangIfExpression || e instanceof ErlangFunExpression))
+      .traverse();
+    boolean hasMacroCall = elements.filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_QMARK).isNotEmpty();
+    if (!hasMacroCall) return false;
+    if (elements.filter(PsiErrorElement.class).isNotEmpty()) return true;
+    return elements.filter(ErlangMacros.class).filter(ErlangSingleClauseCaseInspection::bodyHasTopLevelSemicolon).isNotEmpty();
+  }
+
+  private static boolean bodyHasTopLevelSemicolon(@NotNull ErlangMacros macros) {
+    PsiReference reference = macros.getReference();
+    ErlangMacrosDefinition definition = ObjectUtils.tryCast(reference != null ? reference.resolve() : null, ErlangMacrosDefinition.class);
+    ErlangMacrosBody body = definition != null ? definition.getMacrosBody() : null;
+    return body != null && SyntaxTraverser.psiApi().children(body).filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_SEMI).isNotEmpty();
   }
 }

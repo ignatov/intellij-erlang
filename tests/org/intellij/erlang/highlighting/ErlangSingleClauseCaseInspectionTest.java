@@ -39,6 +39,8 @@ public class ErlangSingleClauseCaseInspectionTest extends ErlangLightPlatformCod
   public void testNested()               { doTest(); }
   public void testMacroClauses()         { doTest(); }
   public void testMacroMoreClauses()     { doTest(); }
+  public void testMacroBodyClauses()     { doTest(); }
+  public void testNestedMacroClauses()   { doTest(); }
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
