@@ -1,0 +1,45 @@
+<!--
+  ~ Copyright 2012-2026 Sergey Ignatov
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<html>
+<body>
+Reports usage of OTP 29 syntax in Erlang versions prior to OTP 29.
+<p>
+    The following constructs were introduced in Erlang/OTP 29 and are not supported in earlier versions:
+</p>
+<ul>
+    <li>Multi-valued comprehensions: <code>[I, -I || I &lt;- lists:seq(1, 5)]</code></li>
+</ul>
+<p>
+    Using them with an older Erlang SDK will result in syntax errors. This inspection helps prevent such errors by
+    highlighting incompatible usage.
+</p>
+<p>
+    Example of unsupported usage in Erlang versions prior to OTP 29:
+</p>
+<pre><code>
+[I, -I || I &lt;- lists:seq(1, 5)]
+</code></pre>
+<p>
+    To fix this issue, either upgrade your Erlang SDK to version 29 or later, or return a single value from the
+    comprehension head.
+</p>
+<!-- tooltip end -->
+<p>
+    See <a href="https://www.erlang.org/eeps/eep-0078">EEP 78</a> (multi-valued comprehensions).
+</p>
+</body>
+</html>

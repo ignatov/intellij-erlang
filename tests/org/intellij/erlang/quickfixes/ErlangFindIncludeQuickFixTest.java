@@ -33,11 +33,6 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
   }
 
   @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
-  @Override
   protected void setUp() throws Exception {
     super.setUp();
     //noinspection unchecked
@@ -55,6 +50,6 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
     launchIntention("Find include");
     List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(myFixture.getModule());
     assertEquals(1, includeDirectories.size());
-    assertTrue(includeDirectories.get(0).getPath().endsWith(expectedIncludePath));
+    assertTrue(includeDirectories.getFirst().getPath().endsWith(expectedIncludePath));
   }
 }

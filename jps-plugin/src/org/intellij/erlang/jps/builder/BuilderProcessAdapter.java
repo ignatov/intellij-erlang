@@ -16,16 +16,17 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.execution.process.ProcessAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.incremental.CompileContext;
+import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 
 
-public class BuilderProcessAdapter extends ProcessAdapter {
+public abstract class BuilderProcessAdapter {
   private final CompileContext myContext;
   protected final String myBuilderName;
   protected final String myCompileTargetRootPath;
+  private boolean myErrorReported;
 
   protected BuilderProcessAdapter(@NotNull CompileContext context,
                                   @NotNull String builderName,
@@ -35,7 +36,19 @@ public class BuilderProcessAdapter extends ProcessAdapter {
     myCompileTargetRootPath = compileTargetRootPath;
   }
 
+  public abstract void onTextAvailable(@NotNull String text);
+
+  public void processTerminated() {
+  }
+
   protected void showMessage(@NotNull CompilerMessage message) {
+    if (message.getKind() == BuildMessage.Kind.ERROR) {
+      myErrorReported = true;
+    }
     myContext.processMessage(message);
+  }
+
+  public boolean isErrorReported() {
+    return myErrorReported;
   }
 }

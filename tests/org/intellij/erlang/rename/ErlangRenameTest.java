@@ -16,8 +16,15 @@
 
 package org.intellij.erlang.rename;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
+import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+import java.util.List;
 
 public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -29,6 +36,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testQuotedFunction()    { doTest("bar"); }
   public void testQuoteFunctionName() { doTest("BAR"); }
 
+  public void testImportedFunctionInExport() {
+    myFixture.configureByFiles("importedFunctionInExport.erl", "importedFunctionInExportUser.erl");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResultByFile("importedFunctionInExport-after.erl");
+    myFixture.checkResultByFile("importedFunctionInExportUser.erl", "importedFunctionInExportUser-after.erl", false);
+  }
+
   public void testUnquotedMacro()     { doTest("bar"); }
   public void testQuotedMacro()       { doTest("bar"); }
   public void testUnderscoreMacro()   { doTest("Foo"); }
@@ -36,10 +50,64 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }
+
+  public void testMapKeyInFunHeadBody()           { doTest("Key2"); }
+  public void testMapKeyInFunHeadBodyFromKey()    { doTest("Key2"); }
+  public void testMapKeyInFunHeadBodyFromBody()   { doTest("Key2"); }
+  public void testMapKeyInFunHeadGuard()          { doTest("Key2"); }
+  public void testMapKeyInNestedFunHeads()        { doTest("Key2"); }
+  public void testMapKeyInNestedFunHeadsFromOuter() { doTest("Key2"); }
+
+  public void testNamedFunName()                  { doTest("Fact"); }
+  public void testNamedFunShadowingArgument()     { doTest("Arg"); }
+  public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
   public void testQuotedModule()       { doTest("quotedModule-after", true); }
+
+  public void testFileRenameToErl()          { doFileRenameTest("fileRenameToErlNew.erl"); }
+  public void testFileRenameToUpperCaseErl() { doFileRenameTest("fileRenameToUpperCaseErlNew.ERL"); }
+  public void testFileRenameToBak()          { doFileRenameTest("fileRenameToBak.erl.bak"); }
+  public void testFileRenameToHrl()          { doFileRenameTest("fileRenameToHrlNew.hrl"); }
+  public void testFileRenameToSameNameHrl()  { doFileRenameTest("fileRenameToSameNameHrl.hrl"); }
+
+  public void testFileRenameToErlWithReferences() { doFileRenameWithReferencesTest("fileRenameToErlWithReferencesNew.erl"); }
+  public void testFileRenameToBakWithReferences() { doFileRenameWithReferencesTest("fileRenameToBakWithReferences.erl.bak"); }
+
+  public void testFileRenameToBakAndBack() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    myFixture.renameElement(myFixture.getFile(), getTestName(true) + ".erl.bak");
+    myFixture.renameElement(myFixture.getFile(), getTestName(true) + ".erl");
+    assertEquals(getTestName(true) + ".erl", myFixture.getFile().getName());
+    assertInstanceOf(myFixture.getFile(), ErlangFile.class);
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  public void testFileRenameToHrlHasNoIncorrectModuleName() {
+    myFixture.configureByText("abc.erl", "-module(abc).\n\nf() -> ok.\n");
+    myFixture.renameElement(myFixture.getFile(), "def.hrl");
+    assertEquals("def.hrl", myFixture.getFile().getName());
+    myFixture.enableInspections(ErlangIncorrectModuleNameInspection.class);
+    List<HighlightInfo> infos = myFixture.doHighlighting(HighlightSeverity.WARNING);
+    assertEmpty(ContainerUtil.filter(infos, info -> info.getDescription() != null && info.getDescription().startsWith("Module with name")));
+  }
+
+  private void doFileRenameTest(String newFileName) {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    myFixture.renameElement(myFixture.getFile(), newFileName);
+    assertEquals(newFileName, myFixture.getFile().getName());
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
+
+  private void doFileRenameWithReferencesTest(String newFileName) {
+    String caller = getTestName(true) + "Caller";
+    myFixture.configureByFiles(getTestName(true) + ".erl", caller + ".erl");
+    myFixture.renameElement(myFixture.getFile(), newFileName);
+    assertEquals(newFileName, myFixture.getFile().getName());
+    myFixture.checkResultByFile(caller + ".erl", caller + "-after.erl", false);
+    myFixture.checkResultByFile(getTestName(true) + "-after.erl");
+  }
 
   private void doTest(String newName) {
     doTest(newName, false);

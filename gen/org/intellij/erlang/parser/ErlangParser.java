@@ -231,7 +231,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{'
   //    (<<app_atom_named ('description')>> ',' string_literal
   //   | <<app_atom_named ('id')>> ',' string_literal
-  //   | <<app_atom_named ('vsn')>> ',' string_literal
+  //   | <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   //   | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
   //   | <<app_atom_named ('maxP')>> ',' app_integer
   //   | <<app_atom_named ('maxT')>> ',' app_integer
@@ -259,7 +259,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   // <<app_atom_named ('description')>> ',' string_literal
   //   | <<app_atom_named ('id')>> ',' string_literal
-  //   | <<app_atom_named ('vsn')>> ',' string_literal
+  //   | <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   //   | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
   //   | <<app_atom_named ('maxP')>> ',' app_integer
   //   | <<app_atom_named ('maxT')>> ',' app_integer
@@ -339,7 +339,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // <<app_atom_named ('vsn')>> ',' string_literal
+  // <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   private static boolean app_parameter_1_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_2")) return false;
     boolean r, p;
@@ -347,7 +347,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = app_atom_named(b, l + 1, ErlangParser::app_parameter_1_2_0_0);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && string_literal(b, l + 1) && r;
+    r = p && app_parameter_1_2_2(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -359,6 +359,15 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, "vsn");
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal | config_expression
+  private static boolean app_parameter_1_2_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "app_parameter_1_2_2")) return false;
+    boolean r;
+    r = string_literal(b, l + 1);
+    if (!r) r = config_expression(b, l + 1);
     return r;
   }
 
@@ -863,8 +872,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '-' (
   //     module
   //   | export
+  //   | export_record_attribute
   //   | export_type_attribute
   //   | import_directive
+  //   | import_record_attribute
   //   | specification
   //   | callback_spec
   //   | optional_callbacks
@@ -888,8 +899,10 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   // module
   //   | export
+  //   | export_record_attribute
   //   | export_type_attribute
   //   | import_directive
+  //   | import_record_attribute
   //   | specification
   //   | callback_spec
   //   | optional_callbacks
@@ -902,25 +915,27 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "attribute_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = module(b, l + 1);
+    r = module_$(b, l + 1);
     if (!r) r = export(b, l + 1);
+    if (!r) r = export_record_attribute(b, l + 1);
     if (!r) r = export_type_attribute(b, l + 1);
     if (!r) r = import_directive(b, l + 1);
+    if (!r) r = import_record_attribute(b, l + 1);
     if (!r) r = specification(b, l + 1);
     if (!r) r = callback_spec(b, l + 1);
     if (!r) r = optional_callbacks(b, l + 1);
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = ifdef_ifndef_undef_attribute(b, l + 1);
-    if (!r) r = attribute_1_10(b, l + 1);
+    if (!r) r = attribute_1_12(b, l + 1);
     if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", ErlangParser::atom_attribute);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_10(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "attribute_1_10")) return false;
+  private static boolean attribute_1_12(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_12")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
@@ -1025,20 +1040,21 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' integer
+  // q_var ':' int_type
   public static boolean bin_base_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_BIN_BASE_TYPE, "<type>");
     r = q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_COLON, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_COLON);
+    r = r && int_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
   /* ********************************************************** */
-  // bin_base_type ',' bin_unit_type
+  // bin_base_type [',' bin_unit_type]
   static boolean bin_base_type_list(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_base_type_list")) return false;
     if (!nextTokenIs(b, ERL_VAR)) return false;
@@ -1046,8 +1062,26 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_);
     r = bin_base_type(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && bin_unit_type(b, l + 1) && r;
+    r = r && bin_base_type_list_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // [',' bin_unit_type]
+  private static boolean bin_base_type_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_base_type_list_1")) return false;
+    bin_base_type_list_1_0(b, l + 1);
+    return true;
+  }
+
+  // ',' bin_unit_type
+  private static boolean bin_base_type_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_base_type_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && bin_unit_type(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -1159,7 +1193,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var ':' q_var '*' integer
+  // q_var ':' q_var '*' int_type
   public static boolean bin_unit_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "bin_unit_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_VAR)) return false;
@@ -1168,7 +1202,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = q_var(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
     r = r && q_var(b, l + 1);
-    r = r && consumeTokens(b, 0, ERL_OP_AR_MUL, ERL_INTEGER);
+    r = r && consumeToken(b, ERL_OP_AR_MUL);
+    r = r && int_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -1213,7 +1248,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' [bin_base_type | bin_unit_type | bin_base_type_list] '>>'
+  // '<<' [bin_base_type_list | bin_unit_type] '>>'
   public static boolean binary_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type")) return false;
     if (!nextTokenIs(b, "<type>", ERL_BIN_START)) return false;
@@ -1227,20 +1262,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // [bin_base_type | bin_unit_type | bin_base_type_list]
+  // [bin_base_type_list | bin_unit_type]
   private static boolean binary_type_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type_1")) return false;
     binary_type_1_0(b, l + 1);
     return true;
   }
 
-  // bin_base_type | bin_unit_type | bin_base_type_list
+  // bin_base_type_list | bin_unit_type
   private static boolean binary_type_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_type_1_0")) return false;
     boolean r;
-    r = bin_base_type(b, l + 1);
+    r = bin_base_type_list(b, l + 1);
     if (!r) r = bin_unit_type(b, l + 1);
-    if (!r) r = bin_base_type_list(b, l + 1);
     return r;
   }
 
@@ -1412,6 +1446,22 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = p && consumeToken(b, ERL_END) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // '(' q_atom ',' typed_record_fields ')'
+  static boolean classic_record_definition_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "classic_record_definition_body")) return false;
+    if (!nextTokenIs(b, ERL_PAR_LEFT)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_PAR_LEFT);
+    r = r && q_atom(b, l + 1);
+    r = r && consumeToken(b, ERL_COMMA);
+    r = r && typed_record_fields(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_RIGHT);
+    exit_section_(b, m, null, r);
+    return r;
   }
 
   /* ********************************************************** */
@@ -2007,6 +2057,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "export_functions_1")) return false;
     export_function_list(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // 'export_record' <<attribute_tail record_refs>>
+  public static boolean export_record_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "export_record_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_EXPORT_RECORD_ATTRIBUTE, "<attribute>");
+    r = consumeToken(b, "export_record");
+    p = r; // pin = 1
+    r = r && attribute_tail(b, l + 1, ErlangParser::record_refs);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */
@@ -3094,6 +3157,23 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // 'import_record' '(' module_ref ',' record_refs ')'
+  public static boolean import_record_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "import_record_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_IMPORT_RECORD_ATTRIBUTE, "<attribute>");
+    r = consumeToken(b, "import_record");
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
+    r = p && report_error_(b, module_ref(b, l + 1)) && r;
+    r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
+    r = p && report_error_(b, record_refs(b, l + 1)) && r;
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // '-' 'include' '(' include_string ')'
   public static boolean include(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "include")) return false;
@@ -3140,52 +3220,132 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-'? (integer | macros argument_list? | char)
+  // int_type_operand (int_type_op int_type_operand)*
   public static boolean int_type(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type")) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ERL_INT_TYPE, "<type>");
-    r = int_type_0(b, l + 1);
+    Marker m = enter_section_(b, l, _COLLAPSE_, ERL_INT_TYPE, "<type>");
+    r = int_type_operand(b, l + 1);
     r = r && int_type_1(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
-  // '-'?
-  private static boolean int_type_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "int_type_0")) return false;
-    consumeToken(b, ERL_OP_MINUS);
+  // (int_type_op int_type_operand)*
+  private static boolean int_type_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!int_type_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "int_type_1", c)) break;
+    }
     return true;
   }
 
-  // integer | macros argument_list? | char
-  private static boolean int_type_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "int_type_1")) return false;
+  // int_type_op int_type_operand
+  private static boolean int_type_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = int_type_op(b, l + 1);
+    r = r && int_type_operand(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // '+' | '-' | '*' | div | rem | band | bor | bxor | bsl | bsr
+  static boolean int_type_op(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_op")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_OP_PLUS);
+    if (!r) r = consumeToken(b, ERL_OP_MINUS);
+    if (!r) r = consumeToken(b, ERL_OP_AR_MUL);
+    if (!r) r = consumeToken(b, ERL_DIV);
+    if (!r) r = consumeToken(b, ERL_REM);
+    if (!r) r = consumeToken(b, ERL_BAND);
+    if (!r) r = consumeToken(b, ERL_BOR);
+    if (!r) r = consumeToken(b, ERL_BXOR);
+    if (!r) r = consumeToken(b, ERL_BSL);
+    if (!r) r = consumeToken(b, ERL_BSR);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+  static boolean int_type_operand(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = int_type_operand_0(b, l + 1);
+    r = r && int_type_operand_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // int_type_prefix_op*
+  private static boolean int_type_operand_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_0")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!int_type_prefix_op(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "int_type_operand_0", c)) break;
+    }
+    return true;
+  }
+
+  // integer | macros argument_list? | char | '(' int_type ')'
+  private static boolean int_type_operand_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = consumeToken(b, ERL_INTEGER);
-    if (!r) r = int_type_1_1(b, l + 1);
+    if (!r) r = int_type_operand_1_1(b, l + 1);
     if (!r) r = consumeToken(b, ERL_CHAR);
+    if (!r) r = int_type_operand_1_3(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // macros argument_list?
-  private static boolean int_type_1_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "int_type_1_1")) return false;
+  private static boolean int_type_operand_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = macros(b, l + 1);
-    r = r && int_type_1_1_1(b, l + 1);
+    r = r && int_type_operand_1_1_1(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // argument_list?
-  private static boolean int_type_1_1_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "int_type_1_1_1")) return false;
+  private static boolean int_type_operand_1_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1_1_1")) return false;
     argument_list(b, l + 1);
     return true;
+  }
+
+  // '(' int_type ')'
+  private static boolean int_type_operand_1_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1_3")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_PAR_LEFT);
+    r = r && int_type(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_RIGHT);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // '+' | '-' | bnot
+  static boolean int_type_prefix_op(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_prefix_op")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_OP_PLUS);
+    if (!r) r = consumeToken(b, ERL_OP_MINUS);
+    if (!r) r = consumeToken(b, ERL_BNOT);
+    return r;
   }
 
   /* ********************************************************** */
@@ -3222,7 +3382,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // [ lc_generator_definition ('<-' | '<=')] expression
+  // [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')] expression
   public static boolean lc_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression")) return false;
     boolean r;
@@ -3233,14 +3393,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // [ lc_generator_definition ('<-' | '<=')]
+  // [ lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')]
   private static boolean lc_expression_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0")) return false;
     lc_expression_0_0(b, l + 1);
     return true;
   }
 
-  // lc_generator_definition ('<-' | '<=')
+  // lc_generator_definition ('<-' | '<=' | '<:-' | '<:=')
   private static boolean lc_expression_0_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0_0")) return false;
     boolean r;
@@ -3251,17 +3411,19 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // '<-' | '<='
+  // '<-' | '<=' | '<:-' | '<:='
   private static boolean lc_expression_0_0_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_expression_0_0_1")) return false;
     boolean r;
     r = consumeToken(b, ERL_OP_LT_MINUS);
     if (!r) r = consumeToken(b, ERL_OP_LT_EQ);
+    if (!r) r = consumeToken(b, ERL_OP_LT_COLON_MINUS);
+    if (!r) r = consumeToken(b, ERL_OP_LT_COLON_EQ);
     return r;
   }
 
   /* ********************************************************** */
-  // lc_expression (',' lc_expression)*
+  // lc_expression ((',' | '&&') lc_expression)*
   static boolean lc_exprs(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs")) return false;
     boolean r, p;
@@ -3273,7 +3435,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // (',' lc_expression)*
+  // ((',' | '&&') lc_expression)*
   private static boolean lc_exprs_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs_1")) return false;
     while (true) {
@@ -3284,16 +3446,25 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // ',' lc_expression
+  // (',' | '&&') lc_expression
   private static boolean lc_exprs_1_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "lc_exprs_1_0")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_COMMA);
+    r = lc_exprs_1_0_0(b, l + 1);
     p = r; // pin = 1
     r = r && lc_expression(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // ',' | '&&'
+  private static boolean lc_exprs_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_exprs_1_0_0")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_COMMA);
+    if (!r) r = consumeToken(b, ERL_OP_AND_AND);
+    return r;
   }
 
   /* ********************************************************** */
@@ -3305,6 +3476,40 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = map_match(b, l + 1);
     if (!r) r = expression(b, l + 1, -1);
     exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // expression (',' expression)*
+  static boolean lc_head(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = expression(b, l + 1, -1);
+    r = r && lc_head_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // (',' expression)*
+  private static boolean lc_head_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!lc_head_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "lc_head_1", c)) break;
+    }
+    return true;
+  }
+
+  // ',' expression
+  private static boolean lc_head_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "lc_head_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_COMMA);
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -3336,17 +3541,66 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '[' expression '||' lc_exprs ']'
+  // '[' lc_head '||' lc_exprs ']'
   public static boolean list_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_BRACKET_LEFT)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BRACKET_LEFT);
-    r = r && expression(b, l + 1, -1);
+    r = r && lc_head(b, l + 1);
     r = r && consumeToken(b, ERL_OR_OR);
     r = r && lc_exprs(b, l + 1);
     r = r && consumeToken(b, ERL_BRACKET_RIGHT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // (',' expression)+ &('||')
+  static boolean list_comprehension_head_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail")) return false;
+    if (!nextTokenIs(b, ERL_COMMA)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail_0(b, l + 1);
+    r = r && list_comprehension_head_tail_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // (',' expression)+
+  private static boolean list_comprehension_head_tail_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail_0_0(b, l + 1);
+    while (r) {
+      int c = current_position_(b);
+      if (!list_comprehension_head_tail_0_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "list_comprehension_head_tail_0", c)) break;
+    }
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ',' expression
+  private static boolean list_comprehension_head_tail_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_COMMA);
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &('||')
+  private static boolean list_comprehension_head_tail_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_comprehension_head_tail_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = consumeToken(b, ERL_OR_OR);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -3388,7 +3642,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression_parse_error? marked_lc_tail | expression (marked_lc_tail | list_expression_tail)
+  // expression_parse_error? marked_lc_tail | expression (list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail)
   static boolean list_expr_or_comprehension_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body")) return false;
     boolean r;
@@ -3417,7 +3671,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // expression (marked_lc_tail | list_expression_tail)
+  // expression (list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail)
   private static boolean list_expr_or_comprehension_body_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1")) return false;
     boolean r;
@@ -3428,12 +3682,26 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // marked_lc_tail | list_expression_tail
+  // list_comprehension_head_tail marked_lc_tail | marked_lc_tail | list_expression_tail
   private static boolean list_expr_or_comprehension_body_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1_1")) return false;
     boolean r;
-    r = marked_lc_tail(b, l + 1);
+    Marker m = enter_section_(b);
+    r = list_expr_or_comprehension_body_1_1_0(b, l + 1);
+    if (!r) r = marked_lc_tail(b, l + 1);
     if (!r) r = list_expression_tail(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // list_comprehension_head_tail marked_lc_tail
+  private static boolean list_expr_or_comprehension_body_1_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "list_expr_or_comprehension_body_1_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = list_comprehension_head_tail(b, l + 1);
+    r = r && marked_lc_tail(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -4201,8 +4469,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   /* ********************************************************** */
   // 'module' '(' q_atom [',' module_tail] ')'
-  public static boolean module(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "module")) return false;
+  public static boolean module_$(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "module_$")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MODULE, "<module>");
     r = consumeToken(b, "module");
@@ -4265,6 +4533,20 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = consumeToken(b, ERL_REM);
     if (!r) r = consumeToken(b, ERL_BAND);
     if (!r) r = consumeToken(b, ERL_AND);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // record_hash q_atom typed_record_fields
+  static boolean native_record_definition_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "native_record_definition_body")) return false;
+    if (!nextTokenIs(b, ERL_RADIX)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = record_hash(b, l + 1);
+    r = r && q_atom(b, l + 1);
+    r = r && typed_record_fields(b, l + 1);
+    exit_section_(b, m, null, r);
     return r;
   }
 
@@ -4371,6 +4653,54 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && attribute_tail(b, l + 1, ErlangParser::optional_callback_functions);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // !('(' int_type ')' ('..' | int_type_op)) '(' top_type ')'
+  static boolean parenthesized_type(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_type")) return false;
+    if (!nextTokenIs(b, "<type>", ERL_PAR_LEFT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, null, "<type>");
+    r = parenthesized_type_0(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_LEFT);
+    p = r; // pin = 2
+    r = r && report_error_(b, top_type(b, l + 1));
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // !('(' int_type ')' ('..' | int_type_op))
+  private static boolean parenthesized_type_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_type_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !parenthesized_type_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // '(' int_type ')' ('..' | int_type_op)
+  private static boolean parenthesized_type_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_type_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeToken(b, ERL_PAR_LEFT);
+    r = r && int_type(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_RIGHT);
+    r = r && parenthesized_type_0_0_3(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // '..' | int_type_op
+  private static boolean parenthesized_type_0_0_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_type_0_0_3")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_DOT_DOT);
+    if (!r) r = int_type_op(b, l + 1);
+    return r;
   }
 
   /* ********************************************************** */
@@ -4558,7 +4888,43 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-' 'record' '(' q_atom ',' typed_record_fields ')'
+  // unqualified_record_ref (',' unqualified_record_ref)*
+  static boolean record_attribute_ref_list(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = unqualified_record_ref(b, l + 1);
+    p = r; // pin = 1
+    r = r && record_attribute_ref_list_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // (',' unqualified_record_ref)*
+  private static boolean record_attribute_ref_list_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list_1")) return false;
+    while (true) {
+      int c = current_position_(b);
+      if (!record_attribute_ref_list_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "record_attribute_ref_list_1", c)) break;
+    }
+    return true;
+  }
+
+  // ',' unqualified_record_ref
+  private static boolean record_attribute_ref_list_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_attribute_ref_list_1_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COMMA);
+    p = r; // pin = 1
+    r = r && unqualified_record_ref(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '-' 'record' (classic_record_definition_body | native_record_definition_body)
   public static boolean record_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_definition")) return false;
     if (!nextTokenIs(b, ERL_OP_MINUS)) return false;
@@ -4567,13 +4933,18 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, ERL_OP_MINUS);
     r = r && consumeToken(b, "record");
     p = r; // pin = 2
-    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
-    r = p && report_error_(b, q_atom(b, l + 1)) && r;
-    r = p && report_error_(b, consumeToken(b, ERL_COMMA)) && r;
-    r = p && report_error_(b, typed_record_fields(b, l + 1)) && r;
-    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    r = r && record_definition_2(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // classic_record_definition_body | native_record_definition_body
+  private static boolean record_definition_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_definition_2")) return false;
+    boolean r;
+    r = classic_record_definition_body(b, l + 1);
+    if (!r) r = native_record_definition_body(b, l + 1);
+    return r;
   }
 
   /* ********************************************************** */
@@ -4804,14 +5175,55 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom
+  // [module_ref ':'] q_atom
   public static boolean record_ref(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_ref")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REF, "<record ref>");
-    r = q_atom(b, l + 1);
+    r = record_ref_0(b, l + 1);
+    r = r && q_atom(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  // [module_ref ':']
+  private static boolean record_ref_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_0")) return false;
+    record_ref_0_0(b, l + 1);
+    return true;
+  }
+
+  // module_ref ':'
+  private static boolean record_ref_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_ref_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = module_ref(b, l + 1);
+    r = r && consumeToken(b, ERL_COLON);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // '[' record_attribute_ref_list? ']'
+  public static boolean record_refs(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_refs")) return false;
+    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REFS, null);
+    r = consumeToken(b, ERL_BRACKET_LEFT);
+    p = r; // pin = 1
+    r = r && report_error_(b, record_refs_1(b, l + 1));
+    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // record_attribute_ref_list?
+  private static boolean record_refs_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_refs_1")) return false;
+    record_attribute_ref_list(b, l + 1);
+    return true;
   }
 
   /* ********************************************************** */
@@ -4985,13 +5397,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // string
+  // string | triple_quoted_string | sigil_string
   public static boolean string_literal(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "string_literal")) return false;
-    if (!nextTokenIs(b, "<expression>", ERL_STRING)) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_STRING_LITERAL, "<expression>");
     r = consumeToken(b, ERL_STRING);
+    if (!r) r = consumeToken(b, ERL_TRIPLE_QUOTED_STRING);
+    if (!r) r = consumeToken(b, ERL_SIGIL_STRING);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -5324,7 +5737,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '(' top_type ')'
+  // parenthesized_type
   //   | int_type ['..' int_type]
   //   | fun '(' fun_type_100_t? ')'
   //   | type_ref_with_module ['(' top_type_list? ')']
@@ -5338,7 +5751,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "type")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _COLLAPSE_, ERL_TYPE, "<type>");
-    r = type_0(b, l + 1);
+    r = parenthesized_type(b, l + 1);
     if (!r) r = type_1(b, l + 1);
     if (!r) r = type_2(b, l + 1);
     if (!r) r = type_3(b, l + 1);
@@ -5350,19 +5763,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = map_type(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
-  }
-
-  // '(' top_type ')'
-  private static boolean type_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "type_0")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_);
-    r = consumeToken(b, ERL_PAR_LEFT);
-    p = r; // pin = 1
-    r = r && report_error_(b, top_type(b, l + 1));
-    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
   }
 
   // int_type ['..' int_type]
@@ -5563,7 +5963,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '-' ('type'|'opaque') <<attribute_tail type_body>>
+  // '-' ('type'|'opaque'|'nominal') <<attribute_tail type_body>>
   public static boolean type_definition(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_definition")) return false;
     if (!nextTokenIs(b, ERL_OP_MINUS)) return false;
@@ -5577,12 +5977,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r || p;
   }
 
-  // 'type'|'opaque'
+  // 'type'|'opaque'|'nominal'
   private static boolean type_definition_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_definition_1")) return false;
     boolean r;
     r = consumeToken(b, "type");
     if (!r) r = consumeToken(b, "opaque");
+    if (!r) r = consumeToken(b, "nominal");
     return r;
   }
 
@@ -5968,6 +6369,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "typed_record_fields_1")) return false;
     typed_exprs(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // q_atom
+  public static boolean unqualified_record_ref(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "unqualified_record_ref")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_REF, "<unqualified record ref>");
+    r = q_atom(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */

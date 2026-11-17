@@ -17,18 +17,23 @@
 package org.intellij.erlang.dialyzer;
 
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
+import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
 import com.intellij.codeInspection.InspectionProfile;
 import com.intellij.codeInspection.ex.DisableInspectionToolAction;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
+import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
@@ -49,7 +54,6 @@ import java.util.List;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
-  private static final NotificationGroup NOTIFICATION_GROUP = NotificationGroup.logOnlyGroup("Dialyzer-based inspections");
 
   @Nullable
   private static Problem parseProblem(String input) {
@@ -75,14 +79,14 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
     InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-    if (!profile.isToolEnabled(key)) return null;
+    if (!profile.isToolEnabled(key, file)) return null;
 
     String workingDir = ObjectUtils.notNull(file.getProject().getBasePath(), "");
     String dialyzerPath = homePath + "/bin/dialyzer" + (SystemInfo.isWindows ? ".exe" : "");
 
     String currentPltPath = DialyzerSettings.getInstance(file.getProject()).getCurrentPltPath();
 
-    return new State(dialyzerPath, currentPltPath, canonicalPath, workingDir);
+    return new State(file.getProject(), dialyzerPath, currentPltPath, canonicalPath, workingDir);
   }
 
   @Nullable
@@ -103,7 +107,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
         for (String line : output.getStdoutLines()) {
           LOG.debug(line);
           if (line.startsWith("dialyzer: ")) {
-            NOTIFICATION_GROUP.createNotification(line, NotificationType.WARNING).notify(null); // todo: get a project
+            NotificationGroup.logOnlyGroup("Dialyzer-based inspections")
+                             .createNotification(line, NotificationType.WARNING)
+                             .notify(state.myProject);
             return state;
           }
           Problem problem = parseProblem(line);
@@ -118,6 +124,13 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   @Override
   public void apply(@NotNull PsiFile file, State annotationResult, @NotNull AnnotationHolder holder) {
     if (annotationResult == null || !file.isValid()) return;
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
+    if (key == null) return;
+    InspectionProfile profile = InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile();
+    HighlightSeverity severity = profile.getErrorLevel(key, file).getSeverity();
+    SeverityRegistrar registrar = SeverityRegistrar.getSeverityRegistrar(file.getProject());
+    TextAttributes customAttributes = registrar.getTextAttributesBySeverity(severity);
+    TextAttributesKey attributesKey = registrar.getHighlightInfoTypeBySeverity(severity).getAttributesKey();
     String text = file.getText();
     for (Problem problem : annotationResult.problems) {
       int offset = StringUtil.lineColToOffset(text, problem.myLine - 1, 0);
@@ -129,20 +142,17 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
       TextRange problemRange = TextRange.create(offset, offset + width);
       String message = "Dialyzer: " + problem.myDescription;
-      HighlightDisplayKey key = HighlightDisplayKey.find(ErlangDialyzerInspection.INSPECTION_SHORT_NAME);
-      if (key != null) {
-        holder
-          .newAnnotation(HighlightSeverity.WARNING, message)
-          .range(problemRange)
-          .withFix(new DisableInspectionToolAction(key) {
-            @NotNull
-            @Override
-            public String getName() {
-              return "Disable 'Dialyzer-based inspections'";
-            }
-          })
-          .create();
-      }
+      AnnotationBuilder builder = holder.newAnnotation(severity, message).range(problemRange);
+      builder = customAttributes != null ? builder.enforcedTextAttributes(customAttributes) : builder.textAttributes(attributesKey);
+      builder
+        .withFix(new DisableInspectionToolAction(key) {
+          @NotNull
+          @Override
+          public String getName() {
+            return "Disable 'Dialyzer-based inspections'";
+          }
+        })
+        .create();
     }
   }
 
@@ -166,12 +176,14 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
 
   public static class State {
     public final List<Problem> problems = new ArrayList<>();
+    private final Project myProject;
     private final String myDialyzerPath;
     private final String myCurrentPltPath;
     private final String myFilePath;
     private final String myWorkingDir;
 
-    public State(String dialyzerPath, String currentPltPath, String filePath, String workingDir) {
+    public State(Project project, String dialyzerPath, String currentPltPath, String filePath, String workingDir) {
+      myProject = project;
       myDialyzerPath = dialyzerPath;
       myCurrentPltPath = currentPltPath;
       myFilePath = filePath;

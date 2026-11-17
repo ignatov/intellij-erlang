@@ -28,9 +28,21 @@ public class ErlangRecordRefImpl extends ErlangCompositeElementImpl implements E
   }
 
   @Override
+  @Nullable
+  public ErlangModuleRef getModuleRef() {
+    return PsiTreeUtil.getChildOfType(this, ErlangModuleRef.class);
+  }
+
+  @Override
   @NotNull
   public ErlangQAtom getQAtom() {
     return notNullChild(PsiTreeUtil.getChildOfType(this, ErlangQAtom.class));
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getColon() {
+    return findChildByType(ERL_COLON);
   }
 
   @Override

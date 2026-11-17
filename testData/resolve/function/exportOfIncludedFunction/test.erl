@@ -1,0 +1,3 @@
+-module(test).
+-include("incl.hrl").
+-export([fo<caret>o/0]).

@@ -54,11 +54,6 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   }
 
   @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
-
-  @Override
   protected String getTestDataPath() {
     return "testData/highlighting/";
   }
@@ -86,7 +81,8 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
       ErlangDefiningImportedFunctionInspection.class,
       ErlangImportDirectiveOverridesAutoImportedBifInspection.class,
       ErlangAmbiguousCallOfAutoImportedFunctionInspection.class,
-      ErlangFunctionAlreadyImportedInspection.class
+      ErlangFunctionAlreadyImportedInspection.class,
+      ErlangTripleQuotasSyntaxInspection.class
     );
   }
 
@@ -116,6 +112,16 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
     myFixture.checkHighlighting(true, false, false);
   }
 
+  protected void addErlangModuleWithFunctionsAutoImportedSince28() {
+    myFixture.addFileToProject("erlang.erl", """
+      -module(erlang).
+      -export([max/2, link/2, exit_signal/2]).
+      max(A, _) -> A.
+      link(_, _) -> true.
+      exit_signal(_, _) -> true.
+      """);
+  }
+
   protected void enableUnresolvedMacroInspection() {
     //noinspection unchecked
     myFixture.enableInspections(ErlangUnresolvedMacrosInspection.class);
@@ -134,5 +140,20 @@ public abstract class ErlangHighlightingTestBase extends ErlangLightPlatformCode
   protected void enableErlang25SyntaxInspection() {
     //noinspection unchecked
     myFixture.enableInspections(Erlang25SyntaxInspection.class);
+  }
+
+  protected void enableErlang27SyntaxInspection() {
+    //noinspection unchecked
+    myFixture.enableInspections(Erlang27SyntaxInspection.class);
+  }
+
+  protected void enableErlang28SyntaxInspection() {
+    //noinspection unchecked
+    myFixture.enableInspections(Erlang28SyntaxInspection.class);
+  }
+
+  protected void enableErlang29SyntaxInspection() {
+    //noinspection unchecked
+    myFixture.enableInspections(Erlang29SyntaxInspection.class);
   }
 }

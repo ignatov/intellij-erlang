@@ -9,8 +9,14 @@ import org.intellij.erlang.ErlangStringLiteralEscaper;
 
 public interface ErlangStringLiteral extends ErlangExpression, PsiLanguageInjectionHost {
 
-  @NotNull
+  @Nullable
+  PsiElement getSigilString();
+
+  @Nullable
   PsiElement getString();
+
+  @Nullable
+  PsiElement getTripleQuotedString();
 
   boolean isValidHost();
 

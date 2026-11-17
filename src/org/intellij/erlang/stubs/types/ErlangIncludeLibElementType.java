@@ -44,7 +44,7 @@ public class ErlangIncludeLibElementType extends ErlangStubElementType<ErlangInc
   }
 
   @Override
-  public ErlangIncludeLibStub createStub(@NotNull ErlangIncludeLib psi, StubElement parentStub) {
+  public @NotNull ErlangIncludeLibStub createStub(@NotNull ErlangIncludeLib psi, StubElement parentStub) {
     ErlangIncludeString includeString = psi.getIncludeString();
     String text = includeString != null ? StringUtil.unquoteString(includeString.getText()) : "";
     return new ErlangIncludeLibStub(parentStub, this, text);

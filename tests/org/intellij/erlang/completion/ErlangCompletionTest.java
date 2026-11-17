@@ -16,8 +16,10 @@
 
 package org.intellij.erlang.completion;
 
+import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -26,7 +28,9 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,9 +52,71 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     setUpProjectSdk();
   }
 
+  public void testNoUnqualifiedNotAutoImportedBifs() {
+    doTestVariants("foo() -> md<caret>. md_local() -> ok.", CompletionType.BASIC, 1, CheckType.EXCLUDES,
+                   "md5", "md5_init", "md5_update", "md5_final");
+  }
+
+  public void testAutoImportedBifsNotMarkedInBifTable() {
+    doCheckResult("foo(P) -> port_to_l<caret>", "foo(P) -> port_to_list(<caret>)");
+    doCheckResult("foo(R) -> ref_to_l<caret>", "foo(R) -> ref_to_list(<caret>)");
+  }
+
   public void testKeywords1() { doTestInclude("-<caret>", "module", "record", "define"); }
   public void testVariablesFromDefinition() { doTestInclude("foo(A, B, C)-> <caret>", "A", "B", "C"); }
   public void testVariablesFromBody() { doTestInclude("foo(A, B, C)-> D=1, <caret>", "A", "B", "C", "D"); }
+
+  public void testVariableFromLowercasePrefixCaseInsensitive() {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      doCheckResult(
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            my<caret>""",
+        """
+          start(_StartType, _StartArgs) ->
+            MyName = 1,
+            MyName<caret>""");
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
+
+  public void testVariablesFromLowercasePrefixCaseInsensitive() {
+    doCaseInsensitiveTest(() -> doTestInclude(
+      """
+        foo(MyArg) ->
+          MyName = 1,
+          my<caret>""", "MyArg", "MyName"));
+  }
+
+  public void testNoVariablesFromLowercasePrefixInRemoteCall() {
+    doCaseInsensitiveTest(() -> doTestVariants(
+      """
+        -module(a).
+        my_one() -> ok.
+        my_two() -> ok.
+        foo(MyArg) ->
+          MyName = 1,
+          a:my<caret>""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "MyArg", "MyName"));
+  }
+
+  private static void doCaseInsensitiveTest(@NotNull Runnable test) {
+    CodeInsightSettings settings = CodeInsightSettings.getInstance();
+    int oldCaseSensitive = settings.getCompletionCaseSensitive();
+    settings.setCompletionCaseSensitive(CodeInsightSettings.NONE);
+    try {
+      test.run();
+    }
+    finally {
+      settings.setCompletionCaseSensitive(oldCaseSensitive);
+    }
+  }
+
   public void testFunctions() {
     doTestInclude(
       """
@@ -73,10 +139,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -record(buz, {id}).
         bar(A)-> A#<caret>""", "foo", "buz");
   }  
+
+  public void testNativeRecords() {
+    doTestInclude(
+      """
+        -record #foo{id}.
+        -record #buz{id}.
+        bar(A)-> A#<caret>""", "foo", "buz");
+  }
   
   public void testRecordFields() {
     doTestEquals(
       "-record(foo, {id, two}).\n" +
+      "bar(A)-> #foo{<caret>}", "id", "two");
+  }
+
+  public void testNativeRecordFields() {
+    doTestEquals(
+      "-record #foo{id, two}.\n" +
       "bar(A)-> #foo{<caret>}", "id", "two");
   }
   
@@ -121,6 +201,66 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "id", "'WeirdCase'", "'strange-symbol'");
   }
 
+  public void testExportRecordAttribute() {
+    doTestInclude(
+      """
+        -record #local{id}.
+        -export_record([<caret>]).""", "local");
+  }
+
+  public void testImportRecordAttribute() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion("-import_record(geometry, [<caret>]).");
+  }
+
+  public void testImportedNativeRecord() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion(
+      """
+        -import_record(geometry, [point]).
+        bar(A)-> A#<caret>""");
+  }
+
+  public void testModuleQualifiedNativeRecord() {
+    addNativeRecordRemoteModule();
+    assertNativeRecordCompletion("bar() -> #geometry:<caret>");
+  }
+
+  public void testImportedNativeRecordFields() {
+    addNativeRecordRemoteModule();
+    doTestEquals(
+      """
+        -import_record(geometry, [point]).
+        bar() -> #point{<caret>}""", "x", "y");
+  }
+
+  public void testModuleQualifiedNativeRecordFields() {
+    addNativeRecordRemoteModule();
+    doTestEquals("bar() -> #geometry:point{<caret>}", "x", "y");
+  }
+
+  private void addNativeRecordRemoteModule() {
+    myFixture.addFileToProject(
+      "geometry.erl",
+      """
+        -module(geometry).
+
+        -record #point{x = 0, y = 0}.
+        -record #hidden{secret = 0}.
+
+        -export_record([point]).
+        """);
+  }
+
+  private void assertNativeRecordCompletion(@NotNull String text) {
+    myFixture.configureByText("a.erl", text);
+    myFixture.complete(CompletionType.BASIC, 1);
+    List<String> variants = myFixture.getLookupElementStrings();
+    assertNotNull(variants);
+    assertTrue("Missing variant: point", variants.contains("point"));
+    assertFalse("Unexpected non-exported record variant: hidden", variants.contains("hidden"));
+  }
+
   public void testMacros() {
     doTestInclude(
       """
@@ -147,6 +287,56 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     );
   }
 
+  public void testErlInternalBuiltInTypes() {
+    doTestInclude(
+      "-type foo() :: <caret>.",
+      "arity", "binary", "bitstring", "dynamic", "function", "identifier", "iodata", "map", "nil",
+      "nonempty_binary", "nonempty_bitstring", "nonempty_improper_list", "nonempty_list",
+      "nonempty_maybe_improper_list", "tuple"
+    );
+  }
+
+  public void testBuiltInTypeWithoutZeroArityPutsCaretInsideParentheses() {
+    myFixture.configureByText("a.erl", "-type foo() :: nonempty_imp<caret>.");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    myFixture.getLookup().setCurrentItem(ContainerUtil.find(elements, e -> e.getLookupString().equals("nonempty_improper_list")));
+    myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    myFixture.checkResult("-type foo() :: nonempty_improper_list(<caret>).");
+  }
+
+  public void testLocalTypeHidesBuiltInTypeOfSameName() {
+    doCheckResult(
+      """
+        -type dynamic() :: term().
+        -type foo() :: dyna<caret>.""",
+      """
+        -type dynamic() :: term().
+        -type foo() :: dynamic()<caret>.""");
+  }
+
+  public void testNoBuiltInTypesInExportType() {
+    doTestEquals(
+      """
+        -type tuple_a() :: a.
+        -type tuple_b() :: b.
+        -export_type([tupl<caret>]).""",
+      "tuple_a", "tuple_b");
+  }
+
+  public void testLocalTypeOfOtherArityKeepsBuiltInType() {
+    myFixture.configureByText("a.erl", """
+      -type list(A, B) :: {A, B}.
+      -type t() :: lis<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
+  }
+
+  public void testNoUndefinedOrDeprecatedBuiltInTypes() {
+    doTestVariants("-type foo() :: <caret>.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "improper_list", "bool");
+  }
+
   public void testTypesInSpec() {
     doTestInclude(
       """
@@ -164,7 +354,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testBif() {
-    doTestInclude("foo() -> <caret>", "is_function", "is_record", "universaltime_to_posixtime");
+    doTestInclude("foo() -> <caret>", "is_function", "is_record", "tuple_size");
   }
 
   public void testBifFromModules() {
@@ -323,7 +513,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.complete(CompletionType.BASIC, 1);
     List<String> compList = myFixture.getLookupElementStrings();
     assertNotNull(compList);
-    assertEquals(compList.get(0), "bar");
+    assertEquals(compList.getFirst(), "bar");
   }
 
   public void testFunctionExpandByPartialName() {
@@ -360,7 +550,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testModuleFunctionCompletionForEmptyText() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
-    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "finish_after_on_load");
+    doTestInclude("foo() -> <caret>.", "fake_module", "fake_module:bar", "fake_module:tar", "group_leader");
   }
   
   public void testModuleFunctionCompletionQuoted() {
@@ -448,8 +638,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariants("% <caret>", CompletionType.BASIC, 1, CheckType.EQUALS);
   }
 
-  public void _testIncludeCompletion() throws Exception {
-    localFileSystemSetUp();
+  public void testIncludeCompletion() {
     myFixture.configureByFiles("include/includeCompletion.erl", "include/include/header.hrl");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "include/");
   }

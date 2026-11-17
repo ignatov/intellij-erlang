@@ -21,6 +21,7 @@ import com.intellij.lang.documentation.ExternalDocumentationProvider;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -28,7 +29,12 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +44,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ErlangDocumentationProvider extends AbstractDocumentationProvider implements ExternalDocumentationProvider {
-  private static final Pattern PATTERN_PSI_LINK = Pattern.compile("(.+?)(#(.*?)-(.*?))?");
+  private static final Pattern PATTERN_PSI_LINK = Pattern.compile("([^#]+)(?:#(.*))?");
+  // Legacy OTP documentation anchors: "type-Name" and "Name-Arity"
+  private static final Pattern PATTERN_LEGACY_ANCHOR = Pattern.compile("(.*?)-(.*)");
+  // Modern (OTP 27+) documentation anchors: "t:Name/Arity" (type), "c:Name/Arity" (callback) and "Name/Arity"
+  private static final Pattern PATTERN_MODERN_ANCHOR = Pattern.compile("(?:([tc]):)?(.+)/(\\d+)");
 
   @Nullable
   @Override
@@ -62,6 +72,23 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
 
   @Nullable
   @Override
+  public String getQuickNavigateInfo(PsiElement element, PsiElement originalElement) {
+    if (!(element instanceof ErlangFunction function)) return null;
+    String info = ErlangPsiImplUtil.createFunctionPresentation(function);
+    ErlangModule module = function.getContainingFile() instanceof ErlangFile file ? file.getModule() : null;
+    if (module != null) {
+      info = ErlangPsiImplUtil.toAtomName(module.getName()) + ":" + info;
+    }
+    ErlangSpecification spec = function.findSpecification();
+    if (spec != null) {
+      PsiElement specAttribute = spec.getParent() instanceof ErlangAttribute attribute ? attribute : spec;
+      info += "\n" + specAttribute.getText();
+    }
+    return StringUtil.escapeXmlEntities(info).replace("\n", "<br/>");
+  }
+
+  @Nullable
+  @Override
   public PsiElement getDocumentationElementForLink(@NotNull PsiManager psiManager,
                                                    @NotNull String link,
                                                    @Nullable PsiElement context) {
@@ -73,20 +100,29 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
       for (VirtualFile vFile : vFiles) {
         PsiFile psiFile = psiManager.findFile(vFile);
         if (psiFile instanceof ErlangFile erlFile) {
-          if (linkMatcher.group(2) == null) {
+          String anchor = linkMatcher.group(2);
+          if (anchor == null) {
             return erlFile.getModule();
           }
-          else {
-            String functionName = linkMatcher.group(3);
-            if (functionName.equals("type")) {
-              String typeName = linkMatcher.group(4);
-              return erlFile.getType(typeName);
+          Matcher modernMatcher = PATTERN_MODERN_ANCHOR.matcher(anchor);
+          if (modernMatcher.matches()) {
+            String kind = modernMatcher.group(1);
+            if (kind == null) {
+              return erlFile.getFunction(modernMatcher.group(2), Integer.parseInt(modernMatcher.group(3)));
             }
-            else {
-              int arity = Integer.valueOf(linkMatcher.group(4));
-              return erlFile.getFunction(functionName, arity);
+            return kind.equals("t") ? erlFile.getType(modernMatcher.group(2)) : erlFile.getModule();
+          }
+          Matcher legacyMatcher = PATTERN_LEGACY_ANCHOR.matcher(anchor);
+          if (legacyMatcher.matches()) {
+            String functionName = legacyMatcher.group(1);
+            if (functionName.equals("type")) {
+              return erlFile.getType(legacyMatcher.group(2));
+            }
+            if (StringUtil.isNotNegativeNumber(legacyMatcher.group(2))) {
+              return erlFile.getFunction(functionName, Integer.parseInt(legacyMatcher.group(2)));
             }
           }
+          return erlFile.getModule();
         }
       }
     }

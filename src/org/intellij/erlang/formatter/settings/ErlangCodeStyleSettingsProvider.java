@@ -16,13 +16,21 @@
 
 package org.intellij.erlang.formatter.settings;
 
+import com.intellij.lang.Language;
 import com.intellij.psi.codeStyle.CodeStyleConfigurable;
 import com.intellij.psi.codeStyle.CodeStyleSettings;
 import com.intellij.psi.codeStyle.CodeStyleSettingsProvider;
 import com.intellij.psi.codeStyle.CustomCodeStyleSettings;
+import org.intellij.erlang.ErlangLanguage;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangCodeStyleSettingsProvider extends CodeStyleSettingsProvider {
+  @NotNull
+  @Override
+  public Language getLanguage() {
+    return ErlangLanguage.INSTANCE;
+  }
+
   @Override
   public String getConfigurableDisplayName() {
     return "Erlang";
@@ -37,7 +45,7 @@ public class ErlangCodeStyleSettingsProvider extends CodeStyleSettingsProvider {
 
   @NotNull
   @Override
-  public CustomCodeStyleSettings createCustomSettings(CodeStyleSettings settings) {
+  public CustomCodeStyleSettings createCustomSettings(@NotNull CodeStyleSettings settings) {
     return new ErlangCodeStyleSettings(settings);
   }
 }

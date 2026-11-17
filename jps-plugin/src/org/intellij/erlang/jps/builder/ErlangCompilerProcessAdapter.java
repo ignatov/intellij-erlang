@@ -16,8 +16,6 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.openapi.util.Key;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
@@ -31,8 +29,8 @@ public class ErlangCompilerProcessAdapter extends BuilderProcessAdapter {
   }
 
   @Override
-  public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-    showMessage(createCompilerMessage(myBuilderName, myCompileTargetRootPath, event.getText()));
+  public void onTextAvailable(@NotNull String text) {
+    showMessage(createCompilerMessage(myBuilderName, myCompileTargetRootPath, text));
   }
 
   @NotNull

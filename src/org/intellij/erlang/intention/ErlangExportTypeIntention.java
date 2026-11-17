@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.intention;
 
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -45,6 +46,11 @@ public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
     assert type != null;
     ErlangExportTypeFix.processType(project, type);
+  }
+
+  @Override
+  public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project, @NotNull Editor editor, @NotNull PsiFile file) {
+    return IntentionPreviewInfo.EMPTY;
   }
   
   @Nullable

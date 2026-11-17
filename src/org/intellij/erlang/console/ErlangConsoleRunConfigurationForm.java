@@ -36,7 +36,8 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   private TextFieldWithBrowseButton myWorkingDirPathField;
   private JComboBox<Module> myModuleComboBox;
 
-  @Nullable private final Module myInitialModule;
+  @Nullable
+  private final Module myInitialModule;
 
   public ErlangConsoleRunConfigurationForm(@NotNull Project project, @Nullable Module module) {
     myInitialModule = module;
@@ -81,9 +82,13 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
 
   @NotNull
   private static SimpleListCellRenderer<Module> getListCellRendererWrapper() {
-    return new SimpleListCellRenderer<Module>() {
+    return new SimpleListCellRenderer<>() {
       @Override
-      public void customize(@NotNull JList<? extends Module> list, @Nullable Module module, int index, boolean selected, boolean hasFocus) {
+      public void customize(@NotNull JList<? extends Module> list,
+                            @Nullable Module module,
+                            int index,
+                            boolean selected,
+                            boolean hasFocus) {
         if (module != null) {
           setText(module.getName());
         }

@@ -31,7 +31,7 @@ public class ErlangUnitRunConfigurationType extends ConfigurationTypeBase {
     super("ErlangUnitRunConfigurationType",
           "Erlang Eunit",
           "Eunit run configuration",
-      ErlangIcons.EUNIT);
+      ErlangIcons.getEunit());
     addFactory(new ErlangUnitConfigurationFactory(this));
   }
 

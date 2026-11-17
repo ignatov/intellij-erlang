@@ -24,6 +24,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -91,7 +92,7 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
 
     @Nullable
     @Override
-    public Object getData(@NonNls String dataId) {
+    public Object getData(@NonNls @NotNull String dataId) {
       if (CommonDataKeys.VIRTUAL_FILE_ARRAY.getName().equals(dataId)) {
         return myVirtualFiles;
       }

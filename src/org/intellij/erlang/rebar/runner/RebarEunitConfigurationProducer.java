@@ -25,18 +25,18 @@ import org.intellij.erlang.eunit.ErlangTestRunConfigProducersUtil;
 import org.intellij.erlang.eunit.ErlangUnitTestElementUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
 public class RebarEunitConfigurationProducer extends RunConfigurationProducer<RebarEunitRunConfiguration> {
-
   public RebarEunitConfigurationProducer() {
     super(RebarEunitRunConfigurationType.getInstance());
   }
 
   @Override
-  protected boolean setupConfigurationFromContext(RebarEunitRunConfiguration configuration,
-                                                  ConfigurationContext context,
+  protected boolean setupConfigurationFromContext(@NotNull RebarEunitRunConfiguration configuration,
+                                                  @NotNull ConfigurationContext context,
                                                   Ref<PsiElement> sourceElement) {
     PsiElement psiElement = sourceElement.get();
     if (psiElement == null || !psiElement.isValid() ||
@@ -59,7 +59,7 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
   }
 
   @Override
-  public boolean isConfigurationFromContext(RebarEunitRunConfiguration configuration, ConfigurationContext context) {
+  public boolean isConfigurationFromContext(@NotNull RebarEunitRunConfiguration configuration, ConfigurationContext context) {
     PsiElement psiElement = context.getPsiLocation();
     if (psiElement == null || !psiElement.isValid()) {
       return false;
@@ -77,7 +77,7 @@ public class RebarEunitConfigurationProducer extends RunConfigurationProducer<Re
 
     VirtualFile virtualFile = suites.iterator().next().getVirtualFile();
     String firstModuleName = virtualFile != null ? virtualFile.getNameWithoutExtension() : "";
-    String firstFuntionName = functions.size() > 0 ? firstModuleName + ":" + functions.iterator().next().getName() : "";
+    String firstFuntionName = !functions.isEmpty() ? firstModuleName + ":" + functions.iterator().next().getName() : "";
 
     if (functions.size() == 1) return firstFuntionName;
     if (suites.size() == 1) return firstModuleName;

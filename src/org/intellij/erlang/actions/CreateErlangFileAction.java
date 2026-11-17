@@ -42,7 +42,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
       setTitle(DIALOG_TITLE).
       addKind("Empty module", ErlangIcons.FILE, "Erlang Module").
       addKind("Header file", ErlangIcons.HEADER, "Erlang Header").
-      addKind("EUnit tests", ErlangIcons.EUNIT, "Erlang EUnit Tests").
+      addKind("EUnit tests", ErlangIcons.getEunit(), "Erlang EUnit Tests").
       //-----------
       addKind("OTP application",
               ErlangIcons.OTP_APPLICATION,

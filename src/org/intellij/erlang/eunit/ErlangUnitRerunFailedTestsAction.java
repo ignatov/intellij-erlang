@@ -34,8 +34,10 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
   public ErlangUnitRerunFailedTestsAction(@NotNull ComponentContainer componentContainer) {
@@ -61,7 +63,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     return new MyRunProfile((RunConfigurationBase) model.getProperties().getConfiguration()) {
       @NotNull
       @Override
-      public Module[] getModules() {
+      public Module @NotNull [] getModules() {
         return ((ErlangUnitRunConfiguration)getPeer()).getModules();
       }
 
@@ -75,25 +77,31 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
       private ErlangUnitRunConfiguration createRerunFailedTestsRunConfiguration() {
         Project project = getProject();
-        ErlangUnitRunConfiguration configuration = new ErlangUnitRunConfiguration(project, "", ErlangUnitRunConfigurationType.getInstance());
-
-        configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
-
         LinkedHashSet<String> testsToRerun = new LinkedHashSet<>();
         for (AbstractTestProxy testProxy : getFailedTests(project)) {
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;
 
-          if (!(psiElement instanceof ErlangFunction)) continue;
+          if (!(psiElement instanceof ErlangFunction function)) continue;
 
-          ErlangFunction function = (ErlangFunction) psiElement;
           String functionName = ErlangPsiImplUtil.getQualifiedFunctionName(function);
           testsToRerun.add(functionName);
         }
 
-        configuration.getConfigData().setFunctionNames(testsToRerun);
-        return configuration;
+        return createRerunConfiguration((ErlangUnitRunConfiguration)getPeer(), testsToRerun);
       }
     };
+  }
+
+  @VisibleForTesting
+  @NotNull
+  static ErlangUnitRunConfiguration createRerunConfiguration(@NotNull ErlangUnitRunConfiguration original,
+                                                             @NotNull Set<String> functionNames) {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(original.getProject(), "", ErlangUnitRunConfigurationType.getInstance());
+    configuration.setEnvData(original.getEnvData());
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+    configuration.getConfigData().setFunctionNames(functionNames);
+    return configuration;
   }
 }

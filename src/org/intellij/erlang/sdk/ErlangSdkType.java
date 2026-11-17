@@ -18,6 +18,7 @@ package org.intellij.erlang.sdk;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
@@ -29,6 +30,7 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.SystemInfo;
@@ -38,6 +40,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.util.concurrency.annotations.RequiresWriteLock;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangModelSerializerExtension;
@@ -47,6 +50,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.swing.*;
 import java.io.File;
@@ -72,7 +76,7 @@ public class ErlangSdkType extends SdkType {
 
   @NotNull
   public static ErlangSdkType getInstance() {
-    return SdkType.findInstance(ErlangSdkType.class);
+    return findInstance(ErlangSdkType.class);
   }
 
   private ErlangSdkType() {
@@ -83,12 +87,6 @@ public class ErlangSdkType extends SdkType {
   @Override
   public Icon getIcon() {
     return ErlangIcons.FILE;
-  }
-
-  @NotNull
-  @Override
-  public Icon getIconForAddAction() {
-    return getIcon();
   }
 
   @Nullable
@@ -113,17 +111,15 @@ public class ErlangSdkType extends SdkType {
     var searchRoots = new String[]{
       System.getProperty("user.home") + "/.asdf/installs/erlang",
       "/opt/brewroot/Cellar/erlang", // Brew install location for M1 arm64
+      "/opt/homebrew/Cellar/erlang", // Brew install location for M1 arm64
       "/usr/local/Cellar/erlang",
-      "/usr/local/Cellar/erlang-r14",
-      "/usr/local/Cellar/erlang-r15",
-      "/usr/local/Cellar/erlang-r16",
       };
 
     return searchForErlangRecursivelyIn(searchRoots);
   }
 
   // Look into nested directories under each of the roots, and see if there's */lib/erlang in them
-  // Reason is that on MacOS and Linux the erl/erlc binaries are often installed separately
+  // Reason is that on macOS and Linux the erl/erlc binaries are often installed separately
   // from the rest of the OTP files
   private static @Nullable String searchForErlangRecursivelyIn(String[] roots) {
     // For home brew we trying to find something like /usr/local/Cellar/erlang/*/lib/erlang as SDK root
@@ -157,9 +153,35 @@ public class ErlangSdkType extends SdkType {
     return searchForErlangRecursivelyIn(searchRoots);
   }
 
-  @NotNull
-  private static String suggestWindowsErlangPath() {
-    return "C:\\cygwin\\bin";
+  private static @Nullable String suggestWindowsErlangPath() {
+    Set<String> roots = new LinkedHashSet<>();
+    for (String variable : new String[]{"ProgramW6432", "ProgramFiles", "ProgramFiles(x86)"}) {
+      String programFiles = System.getenv(variable);
+      if (StringUtil.isNotEmpty(programFiles)) roots.add(programFiles);
+    }
+    String scoop = StringUtil.notNullize(System.getenv("SCOOP"), System.getProperty("user.home") + "\\scoop");
+    roots.add(scoop + "\\apps\\erlang\\current");
+    return findWindowsErlangHome(new ArrayList<>(roots));
+  }
+
+  // A root is an Erlang home itself (Scoop's apps\erlang\current) or holds one: the Erlang/OTP installer puts it into
+  // <Program Files>\Erlang OTP from OTP 25 on, erl-<OTP version> in OTP 23 and 24, erl<ERTS version> before.
+  // Names are tried in descending natural order, so "Erlang OTP" comes first.
+  @VisibleForTesting
+  static @Nullable String findWindowsErlangHome(@NotNull List<String> roots) {
+    for (String root : roots) {
+      File rootDir = new File(root);
+      if (isWindowsErlangHome(rootDir)) return rootDir.getAbsolutePath();
+      File[] homes = rootDir.listFiles(file -> StringUtil.startsWithIgnoreCase(file.getName(), "erl") && isWindowsErlangHome(file));
+      if (homes == null || homes.length == 0) continue;
+      Arrays.sort(homes, (a, b) -> StringUtil.naturalCompare(b.getName(), a.getName()));
+      return homes[0].getAbsolutePath();
+    }
+    return null;
+  }
+
+  private static boolean isWindowsErlangHome(@NotNull File home) {
+    return new File(home, "bin/erl.exe").isFile() && new File(home, "bin/erlc.exe").isFile();
   }
 
   @Override
@@ -207,7 +229,8 @@ public class ErlangSdkType extends SdkType {
 
   @Override
   public void setupSdkPaths(@NotNull Sdk sdk) {
-    configureSdkPaths(sdk);
+    Application application = ApplicationManager.getApplication();
+    application.invokeAndWait(() -> application.runWriteAction(() -> configureSdkPaths(sdk)));
   }
 
   @Nullable
@@ -221,6 +244,13 @@ public class ErlangSdkType extends SdkType {
 
   @Nullable
   public static ErlangSdkRelease getRelease(@NotNull PsiElement element) {
+    ErlangSdkRelease release = getSdkRelease(element);
+    return release != null || ErlangSystemUtil.isSmallIde() ? release : ErlangSdkRelease.DefaultRelease;
+  }
+
+  // the release of the Erlang SDK of the element's module or project; null when there is none, unlike getRelease
+  @Nullable
+  public static ErlangSdkRelease getSdkRelease(@NotNull PsiElement element) {
     if (ErlangSystemUtil.isSmallIde()) {
       return getReleaseForSmallIde(element.getProject());
     }
@@ -228,7 +258,7 @@ public class ErlangSdkType extends SdkType {
     Module module = ModuleUtilCore.findModuleForPsiElement(element);
     ErlangSdkRelease byModuleSdk = getRelease(module != null ? ModuleRootManager.getInstance(module).getSdk() : null);
 
-    return byModuleSdk != null ? byModuleSdk : getRelease(element.getProject());
+    return byModuleSdk != null ? byModuleSdk : getRelease(ProjectRootManager.getInstance(element.getProject()).getProjectSdk());
   }
 
   @NotNull
@@ -238,17 +268,26 @@ public class ErlangSdkType extends SdkType {
     return release != null ? release : ErlangSdkRelease.DefaultRelease;
   }
 
+  @NotNull
+  public static ErlangSdkRelease getRelease(@Nullable Module module) {
+    if (module == null) return ErlangSdkRelease.DefaultRelease;
+    ErlangSdkRelease byModuleSdk = getRelease(ModuleRootManager.getInstance(module).getSdk());
+    return byModuleSdk != null ? byModuleSdk : getRelease(module.getProject());
+  }
+
   @TestOnly
   @NotNull
   public static Sdk createMockSdk(@NotNull String sdkHome, @NotNull ErlangSdkRelease version) {
-    getInstance().mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), version); // we'll not try to detect sdk version in tests environment
-    Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
-    SdkModificator sdkModificator = sdk.getSdkModificator();
-    sdkModificator.setHomePath(sdkHome);
-    sdkModificator.setVersionString(getVersionString(version)); // must be set after home path, otherwise setting home path clears the version string
-    sdkModificator.commitChanges();
-    configureSdkPaths(sdk);
-    return sdk;
+    return ApplicationManager.getApplication().runWriteAction((Computable<Sdk>) () -> {
+      getInstance().mySdkHomeToReleaseCache.put(getVersionCacheKey(sdkHome), version); // we'll not try to detect sdk version in tests environment
+      Sdk sdk = new ProjectJdkImpl(getDefaultSdkName(sdkHome, version), getInstance());
+      SdkModificator sdkModificator = sdk.getSdkModificator();
+      sdkModificator.setHomePath(sdkHome);
+      sdkModificator.setVersionString(getVersionString(version)); // must be set after the home path, otherwise setting the home path clears the version string
+      sdkModificator.commitChanges();
+      configureSdkPaths(sdk);
+      return sdk;
+    });
   }
 
   @Nullable
@@ -384,6 +423,7 @@ public class ErlangSdkType extends SdkType {
     return otpRelease != null && ertsVersion != null ? new ErlangSdkRelease(otpRelease, ertsVersion) : null;
   }
 
+  @RequiresWriteLock
   private static void configureSdkPaths(@NotNull Sdk sdk) {
     SdkModificator sdkModificator = sdk.getSdkModificator();
     setupLocalSdkPaths(sdkModificator);
@@ -396,8 +436,14 @@ public class ErlangSdkType extends SdkType {
   }
 
   @Nullable
-  private static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
-    return version == null ? null : "http://www.erlang.org/documentation/doc-" + version.getErtsVersion();
+  public static String getDefaultDocumentationUrl(@Nullable ErlangSdkRelease version) {
+    if (version == null) return null;
+
+    String otpMajorRelease = version.getOtpRelease().replaceFirst("^(\\d+).*$", "$1");
+    String documentationVersion = version.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)
+                                  ? "docs/" + otpMajorRelease
+                                  : "doc";
+    return "https://www.erlang.org/" + documentationVersion;
   }
 
   private static void setupLocalSdkPaths(@NotNull SdkModificator sdkModificator) {

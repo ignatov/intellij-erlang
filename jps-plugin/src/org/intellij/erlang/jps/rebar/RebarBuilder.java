@@ -16,16 +16,13 @@
 
 package org.intellij.erlang.jps.rebar;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.BaseOSProcessHandler;
-import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.text.StringUtil;
 import org.intellij.erlang.jps.builder.*;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
 import org.jetbrains.jps.incremental.CompileContext;
@@ -41,12 +38,14 @@ import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Collections;
+import java.util.*;
 
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   private static final String NAME = "rebar";
-  private static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+  public static final String REBAR_CONFIG_FILE_NAME = "rebar.config";
+  private static final String ERL_COMPILER_OPTIONS = "ERL_COMPILER_OPTIONS";
+  private static final String TESTS_REBAR_PATH_PROPERTY = "rebar.path";
+  private static final List<String> REBAR_WRAPPER_EXTENSIONS = Arrays.asList(".cmd", ".bat", ".exe", ".ps1");
 
   public RebarBuilder() {
     super(Collections.singleton(ErlangTargetType.INSTANCE));
@@ -64,6 +63,15 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
     if (!compilerOptions.myUseRebarCompiler) return;
 
+    if (!hasRebarConfig(module)) {
+      // ErlangBuilder compiles such modules with erlc instead of skipping them, see #1028.
+      String messageText = "rebar.config is not found in module '" + module.getName() + "', so it is compiled with erlc. " +
+                           "Add rebar.config to the module content root to compile it with rebar, " +
+                           "or turn off 'Compile project with rebar' in the Erlang Compiler settings.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, messageText));
+      return;
+    }
+
     String rebarPath = getRebarExecutablePath(project);
     if (rebarPath == null) {
       String errorMessage = "Rebar path is not set";
@@ -73,19 +81,21 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
-    boolean isRebarRun = false;
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
-      String contentRootPath = JpsPathUtil.urlToPath(contentRootUrl);
-      File contentRootDir = JpsPathUtil.urlToFile(contentRootUrl);
-      File rebarConfigFile = new File(contentRootDir, REBAR_CONFIG_FILE_NAME);
-      if (!rebarConfigFile.exists()) continue;
-      runRebar(escriptPath, rebarPath, contentRootPath, compilerOptions.myAddDebugInfoEnabled, context);
-      isRebarRun = true;
+      if (!hasRebarConfig(contentRootUrl)) continue;
+      runRebar(escriptPath, rebarPath, JpsPathUtil.urlToPath(contentRootUrl), compilerOptions.myAddDebugInfoEnabled, context);
     }
-    if (!isRebarRun) {
-      String messageText = "Skipped module '" + module.getName() + "' because rebar.config is not found.";
-      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.INFO, messageText));
+  }
+
+  public static boolean hasRebarConfig(@NotNull JpsModule module) {
+    for (String contentRootUrl : module.getContentRootsList().getUrls()) {
+      if (hasRebarConfig(contentRootUrl)) return true;
     }
+    return false;
+  }
+
+  private static boolean hasRebarConfig(@NotNull String contentRootUrl) {
+    return new File(JpsPathUtil.urlToFile(contentRootUrl), REBAR_CONFIG_FILE_NAME).isFile();
   }
 
   @NotNull
@@ -99,37 +109,59 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
                                @Nullable String contentRootPath,
                                boolean addDebugInfo,
                                @NotNull CompileContext context) throws ProjectBuildException {
-    GeneralCommandLine commandLine = new GeneralCommandLine();
-    commandLine.withWorkDirectory(contentRootPath);
-    commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarPath);
-    commandLine.addParameter("compile");
+    List<String> command = new ArrayList<>();
+    command.add(escriptPath);
+    command.add(rebarPath);
+    command.add("compile");
 
-    if (addDebugInfo) {
-      commandLine.getEnvironment().put("ERL_FLAGS", "+debug_info");
+    Map<String, String> environment = null;
+    if (addDebugInfo && System.getenv(ERL_COMPILER_OPTIONS) == null) {
+      // The compiler reads its default options from ERL_COMPILER_OPTIONS, so this works for rebar and rebar3 and
+      // overrides no_debug_info in erl_opts. ERL_FLAGS="+debug_info", used before, is an emulator flag and had no effect.
+      environment = new HashMap<>();
+      environment.put(ERL_COMPILER_OPTIONS, "[debug_info]");
     }
 
-    Process process;
-    try {
-      process = commandLine.createProcess();
+    File workingDirectory = contentRootPath != null ? new File(contentRootPath) : null;
+    BuilderProcessAdapter adapter = new RebarProcessAdapter(context, NAME, contentRootPath != null ? contentRootPath : "");
+    
+    int exitCode = ProcessRunner.runProcess(command, workingDirectory, environment, adapter);
+    
+    if (exitCode != 0) {
+      throw new ProjectBuildException("Rebar process finished with exit code " + exitCode);
     }
-    catch (ExecutionException e) {
-      throw new ProjectBuildException("Failed to run rebar", e);
-    }
-    BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new RebarProcessAdapter(context, NAME, commandLine.getWorkDirectory().getPath());
-    handler.addProcessListener(adapter);
-    handler.startNotify();
-    handler.waitFor();
-    if (process.exitValue() != 0) {
-      throw new ProjectBuildException("Rebar process finished with exit code " + process.exitValue());
-    }
+  }
+
+  /**
+   * The rebar or rebar3 escript for the tests that run a real rebar build, set with -Drebar.path=...; null if unset.
+   */
+  @TestOnly
+  @Nullable
+  public static String getTestsRebarPath() {
+    return StringUtil.nullize(System.getProperty(TESTS_REBAR_PATH_PROPERTY), true);
   }
 
   @Nullable
   private static String getRebarExecutablePath(@Nullable JpsProject project) {
     JpsRebarConfigurationExtension rebarConfigurationExtension = JpsRebarConfigurationExtension.getExtension(project);
     String rebarPath = rebarConfigurationExtension != null ? rebarConfigurationExtension.getRebarPath() : null;
-    return StringUtil.isEmptyOrSpaces(rebarPath) ? null : rebarPath;
+    return StringUtil.isEmptyOrSpaces(rebarPath) ? null : getRebarEscriptPath(rebarPath);
+  }
+
+  /**
+   * The rebar escript to run with escript for the rebar path of the settings. A wrapper such as rebar3.cmd, which the
+   * rebar3 docs tell Windows users to create next to the escript, is not an escript, so the escript next to it (the path
+   * without the extension) is used instead. Any other path, and a wrapper without such an escript, is returned as is.
+   */
+  @NotNull
+  public static String getRebarEscriptPath(@NotNull String rebarPath) {
+    String lowerCasePath = rebarPath.toLowerCase(Locale.ROOT);
+    for (String extension : REBAR_WRAPPER_EXTENSIONS) {
+      if (lowerCasePath.endsWith(extension)) {
+        File escript = new File(rebarPath.substring(0, rebarPath.length() - extension.length()));
+        return escript.isFile() ? escript.getPath() : rebarPath;
+      }
+    }
+    return rebarPath;
   }
 }

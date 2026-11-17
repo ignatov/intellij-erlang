@@ -55,7 +55,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
   }
 
   @Override
-  protected void doAddPromptToHistory() {
+  public void doAddPromptToHistory() {
   }
 
   @Override

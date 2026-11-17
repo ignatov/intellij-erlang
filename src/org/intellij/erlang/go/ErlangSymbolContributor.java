@@ -34,13 +34,13 @@ import java.util.List;
 public class ErlangSymbolContributor implements ChooseByNameContributor {
   @NotNull
   @Override
-  public String[] getNames(Project project, boolean includeNonProjectItems) {
+  public String @NotNull [] getNames(Project project, boolean includeNonProjectItems) {
     return ArrayUtil.toStringArray(StubIndex.getInstance().getAllKeys(ErlangAllNameIndex.KEY, project));
   }
 
   @NotNull
   @Override
-  public NavigationItem[] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
+  public NavigationItem @NotNull [] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
     GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
     Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
     List<NavigationItem> items = new ArrayList<>(result.size());

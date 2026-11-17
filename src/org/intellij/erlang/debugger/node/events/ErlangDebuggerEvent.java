@@ -28,8 +28,7 @@ public abstract class ErlangDebuggerEvent {
 
   @Nullable
   public static ErlangDebuggerEvent create(OtpErlangObject message) {
-    if (!(message instanceof OtpErlangTuple)) return null;
-    OtpErlangTuple messageTuple = (OtpErlangTuple) message;
+    if (!(message instanceof OtpErlangTuple messageTuple)) return null;
     String messageName = OtpErlangTermUtil.getAtomText(messageTuple.elementAt(0));
     if (messageName == null) return null;
 

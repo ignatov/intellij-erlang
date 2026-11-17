@@ -32,6 +32,7 @@ import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 
@@ -63,6 +64,16 @@ public class ErlangDebugOptionsEditorForm extends SettingsEditor<ErlangRunConfig
       ContainerUtil.map2Set(myModulesNotToInterpretListModel.getItems(),
                             String::valueOf);
     erlangDebugOptions.setModulesNotToInterpret(modules);
+  }
+
+  void setAutoUpdatedModulesNotToInterpret(@NotNull Set<String> modules) {
+    if (myAutoUpdateModulesNotToInterpretCheckBox.isSelected()) {
+      myModulesNotToInterpretListModel.replaceAll(new ArrayList<>(modules));
+    }
+  }
+
+  void setAutoUpdateModulesNotToInterpretEditable(boolean editable) {
+    myAutoUpdateModulesNotToInterpretCheckBox.setEnabled(editable);
   }
 
   @NotNull

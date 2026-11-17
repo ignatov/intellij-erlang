@@ -27,6 +27,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testQuoteUnquote()      { doTest(); }
   public void test23()                { doTest(); }
   public void testRecordsResolve()    { doTest(); }
+  public void testNativeRecordsResolve() { doTest("native_records_resolve.erl", "native_records_remote.erl"); }
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testDuplicate()         { doTest(); }
@@ -57,6 +58,22 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
   public void testIllegalPattern()    { doTest(); }
+  public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
+  public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
+  public void testIllegalPatternListOpMinus() { doTest(); }
+  public void testIllegalPatternListOpRight() { doTest(); }
+  public void testIllegalPatternQualifiedMacroCall() { doTest(); }
+  public void testIllegalPatternListPrefix() { doTest(); }
+  public void testIllegalPatternCatchClass() { doTest(); }
+  public void testIllegalPatternMapKey() { doTest(); }
+  public void testIllegalPatternPredefinedMacro() { doTest(); }
+  public void testIllegalPatternBinarySegmentListOp() { doTest(); }
+  public void testIllegalPatternCatchClassMatch() { doTest(); }
+  public void testIllegalPatternQuotedPredefinedMacro() { doTest(); }
+  public void testIllegalPatternNestedMapKey() { doTest(); }
+  public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
+  public void testIllegalPatternGuardMatch() { doTest(); }
+  public void testIllegalPatternCatchClassMacroCall() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
@@ -64,6 +81,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test387()               { doTest(); }
   public void testMultiTarget()       { doTest(); }
   public void testInFunClause()       { doTest(); }
+  public void testMapKeyInFunHead()   { doTest(); }
+  public void testNamedFunVariables() { doTest(); }
+  public void testAnonymousFunLaterClauseVariables() { doTest(); }
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testDefineImported1()   { doTest(); }
@@ -72,6 +92,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAutoimportCall1()   { doTest(); }
   public void testAutoimportCall2()   { doTest(); }
   public void testAutoimportCall3()   { doTest(); }
+  public void testNotAutoImportedCall() { doTest(); }
+  public void testImportedNotAutoImportedBif() { doTest("ImportedNotAutoImportedBif.erl", "ImportedNotAutoImportedBif.hrl"); }
 
   public void testNoAutoImport1()     { doTest(); }
   public void testNoAutoImport2()     { doTest(); }
@@ -81,6 +103,15 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
   public void test605()               { doTest(); }
+  public void test821()               { doTest(); }
+  public void testFunVarArityInMacroArguments() { doTest(); }
+  public void testFunVarArityInConstantMacroArguments() { doTest(); }
+  public void testFunVarArityInMacroArgumentsInTypes() { doTest(); }
+  public void testFunVarArityInPredefinedMacroArguments() { doTest(); }
+  public void test536()               { doTest("536.erl", "536.hrl"); }
+  public void testExportPseudoFunctions() { doTest(); }
+  public void testIncorrectModuleName() { doTest(); }
+  public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
@@ -104,6 +135,28 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testImportAutoimported()    { doTestWithInclude(); }
 
+  public void test940() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.addFileToProject("stdlib/include/ms_transform.hrl", "-compile({parse_transform, ms_transform}).");
+    doTest();
+  }
+
+  public void test940WithoutMsTransform() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
+  public void test940Review() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
+  public void test940Dbg() {
+    myFixture.configureByText("ets.erl", "-module(ets).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    myFixture.configureByText("dbg.erl", "-module(dbg).\n-export([fun2ms/1]).\nfun2ms(F) -> F.");
+    doTest();
+  }
+
   public void testErlang17SyntaxError() {
     enableErlang17SyntaxInspection();
     doTest();
@@ -114,7 +167,27 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testErlang27SyntaxError() {
+    enableErlang27SyntaxInspection();
+    doTest();
+  }
+
+  public void testErlang28SyntaxError() {
+    enableErlang28SyntaxInspection();
+    doTest();
+  }
+
+  public void testErlang29SyntaxError() {
+    enableErlang29SyntaxInspection();
+    doTest();
+  }
+
   public void testUnresolvedMacros()  {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testBinaryTypeSizeMacros() {
     enableUnresolvedMacroInspection();
     doTest();
   }
@@ -140,4 +213,5 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
 
   public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
   public void testFunctionImportFromInclusion()           { doTestWithApp(); }
+  public void testExportFromInclusion()                   { doTestWithApp(); }
 }

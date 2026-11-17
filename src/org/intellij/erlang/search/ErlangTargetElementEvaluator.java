@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class ErlangTargetElementEvaluator implements TargetElementEvaluatorEx {
   @Override
-  public boolean isIdentifierPart(PsiFile element, CharSequence text, int offset) {
+  public boolean isIdentifierPart(@NotNull PsiFile element, @NotNull CharSequence text, int offset) {
     return false;
   }
 

@@ -20,6 +20,7 @@ import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
@@ -58,7 +59,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     try {
       List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory());
       return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
     }
   }
@@ -92,6 +94,12 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   public ErlangEntryPoint getDebugEntryPoint() throws ExecutionException {
     return getEntryPointInternal(true);
+  }
+
+  @NotNull
+  @Override
+  protected EnvironmentVariablesData getEnvData() {
+    return myConfiguration.getEnvData();
   }
 
   @Override
@@ -139,18 +147,18 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       for (Map.Entry<String, List<String>> e : modules.entrySet()) {
         String moduleName = e.getKey();
 
-        result.append("{\"module \'").append(moduleName).append("\'\", [");
+        result.append("{\"module '").append(moduleName).append("'\", [");
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-            .append("fun ").append(moduleName).append(':').append(function).append("/0")
-            .append(isGenerator ? "}" : "")
-            .append(", ");
+                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append(isGenerator ? "}" : "")
+                .append(", ");
         }
         result.setLength(result.length() - 2);
         result.append("]}, ");
       }
-      if (result.length() != 0) {
+      if (!result.isEmpty()) {
         result.setLength(result.length() - 2);
       }
       tests = result.toString();

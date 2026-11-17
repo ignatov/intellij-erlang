@@ -31,12 +31,6 @@ public class JpsErlangCompilerOptionsExtension extends JpsCompositeElementBase<J
   }
 
   @NotNull
-  @Override
-  public JpsErlangCompilerOptionsExtension createCopy() {
-    return new JpsErlangCompilerOptionsExtension(new ErlangCompilerOptions(myOptions));
-  }
-
-  @NotNull
   public ErlangCompilerOptions getOptions() {
     return myOptions;
   }

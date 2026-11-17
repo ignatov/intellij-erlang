@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 final class ErlangSdkModuleDocProvider extends ErlangSdkDocProviderBase {
   private static final Pattern PATTERN_MODULE_BEGIN = Pattern.compile("^ {2}<h3>MODULE</h3>$");
   private static final Pattern PATTERN_MODULE_END = Pattern.compile("^ {2}<h3>EXPORTS</h3>$");
+  private static final Pattern PATTERN_MODERN_MODULE_BEGIN = Pattern.compile("^\\s*<section id=\"moduledoc\">$");
 
   public ErlangSdkModuleDocProvider(@NotNull Project project, @NotNull VirtualFile virtualFile) {
     super(project, virtualFile);
@@ -44,5 +45,10 @@ final class ErlangSdkModuleDocProvider extends ErlangSdkDocProviderBase {
   @Override
   public boolean isDocEnd(@NotNull String line) {
     return PATTERN_MODULE_END.matcher(line).matches();
+  }
+
+  @Override
+  protected boolean isModernDocBegin(@NotNull String line) {
+    return PATTERN_MODERN_MODULE_BEGIN.matcher(line).matches();
   }
 }

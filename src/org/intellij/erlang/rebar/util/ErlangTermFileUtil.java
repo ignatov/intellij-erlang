@@ -73,7 +73,7 @@ public final class ErlangTermFileUtil {
   public static String getNameOfNamedTuple(@Nullable ErlangExpression expression) {
     ErlangTupleExpression tupleExpression = expression instanceof ErlangTupleExpression ? (ErlangTupleExpression) expression : null;
     List<ErlangExpression> expressions = tupleExpression != null ? tupleExpression.getExpressionList() : null;
-    ErlangExpression configExpression = expressions != null && !expressions.isEmpty() ? expressions.get(0) : null;
+    ErlangExpression configExpression = expressions != null && !expressions.isEmpty() ? expressions.getFirst() : null;
     PsiElement nameQAtom = configExpression instanceof ErlangConfigExpression ? configExpression.getFirstChild() : null;
     ErlangAtom atom = nameQAtom instanceof ErlangQAtom ? ((ErlangQAtom) nameQAtom).getAtom() : null;
     return atom != null ? atom.getName() : null;

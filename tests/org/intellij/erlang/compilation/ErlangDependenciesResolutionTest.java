@@ -18,7 +18,6 @@ package org.intellij.erlang.compilation;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -29,13 +28,11 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.builder.ErlangFileDescriptor;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-@Ignore
 public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
   @Override
   protected void setUp() throws Exception {
@@ -66,10 +63,10 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
 
   private void doSetUpSourcePath(final String sourcePath, boolean isTestSource) throws IOException {
     final String sourceDirectoryName = isTestSource ? "test" : "src";
-    final VirtualFile moduleFile = myModule.getModuleFile();
-    assertNotNull(moduleFile);
+    // The .iml file is not written to disk until the project is saved, so use its directory instead.
+    final String moduleDirPath = myModule.getModuleNioFile().getParent().toString();
     VirtualFile moduleSourceDir = ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> {
-      VirtualFile moduleSourceDir1 = VfsUtil.createDirectoryIfMissing(moduleFile.getParent(), sourceDirectoryName);
+      VirtualFile moduleSourceDir1 = VfsUtil.createDirectoryIfMissing(moduleDirPath + "/" + sourceDirectoryName);
       FileUtil.copyDirContent(new File(sourcePath), new File(moduleSourceDir1.getPath()));
       VfsUtil.markDirtyAndRefresh(false, true, true, moduleSourceDir1);
       return moduleSourceDir1;

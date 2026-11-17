@@ -17,8 +17,6 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
-import com.intellij.concurrency.AsyncFutureFactory;
-import com.intellij.concurrency.AsyncFutureResult;
 import com.intellij.openapi.application.ApplicationManager;
 import org.intellij.erlang.debugger.node.commands.ErlangDebuggerCommandsProducer;
 import org.intellij.erlang.debugger.node.events.ErlangDebuggerEvent;
@@ -36,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,7 +47,7 @@ public class ErlangDebuggerNode {
   private OtpErlangPid myLastSuspendedPid;
 
   private final Queue<ErlangDebuggerCommandsProducer.ErlangDebuggerCommand> myCommandsQueue = new LinkedList<>();
-  private int myLocalDebuggerPort = -1;
+  private final int myLocalDebuggerPort;
   @NotNull
   private final ErlangDebuggerEventListener myEventListener;
   @NotNull
@@ -129,17 +128,17 @@ public class ErlangDebuggerNode {
 
   @NotNull
   private Future<Integer> runDebuggerServer() {
-    final AsyncFutureResult<Integer> portFuture = AsyncFutureFactory.getInstance().createAsyncFutureResult();
+    final CompletableFuture<Integer> portFuture = new CompletableFuture<>();
     ApplicationManager.getApplication().executeOnPooledThread(() -> runDebuggerServerImpl(portFuture));
     return portFuture;
   }
 
-  private void runDebuggerServerImpl(@NotNull AsyncFutureResult<Integer> portFuture) {
+  private void runDebuggerServerImpl(@NotNull CompletableFuture<Integer> portFuture) {
     try {
       Exception cachedException = null;
       LOG.debug("Opening a server socket.");
       try (ServerSocket serverSocket = new ServerSocket(0)) {
-        portFuture.set(serverSocket.getLocalPort());
+        portFuture.complete(serverSocket.getLocalPort());
 
         LOG.debug("Listening on port " + serverSocket.getLocalPort() + ".");
 
@@ -174,7 +173,7 @@ public class ErlangDebuggerNode {
     }
     catch (Exception th) {
       if (!portFuture.isDone()) {
-        portFuture.setException(th);
+        portFuture.completeExceptionally(th);
       }
       else {
         LOG.debug(th);
@@ -274,12 +273,11 @@ public class ErlangDebuggerNode {
    * @param in
    * @param size
    * @param force
-   * @return bytes read or null if the request was not forced and it timed out, or if an I/O exception occurred.
+   * @return bytes read or null if the request was not forced, and it timed out, or if an I/O exception occurred.
    * @throws SocketException when a socket exception is thrown from passed input stream or if a number of
    *                         retry attempts was exceeded.
    */
-  @Nullable
-  private static byte[] readBytes(@NotNull InputStream in, int size, boolean force) throws SocketException {
+  private static byte @Nullable [] readBytes(@NotNull InputStream in, int size, boolean force) throws SocketException {
     try {
       int bytesReadTotal = 0;
       byte[] buffer = new byte[size];
@@ -315,7 +313,7 @@ public class ErlangDebuggerNode {
   }
 
   @Nullable
-  private static OtpErlangObject decode(@NotNull byte[] bytes) {
+  private static OtpErlangObject decode(byte @NotNull [] bytes) {
     try {
       return new OtpInputStream(bytes).read_any();
     }

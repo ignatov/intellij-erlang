@@ -44,7 +44,7 @@ public class ErlangSpecificationElementType extends ErlangStubElementType<Erlang
   }
 
   @Override
-  public ErlangSpecificationStub createStub(@NotNull ErlangSpecification psi, StubElement parent) {
+  public @NotNull ErlangSpecificationStub createStub(@NotNull ErlangSpecification psi, StubElement parent) {
     return new ErlangSpecificationStub(parent, this, ErlangPsiImplUtil.getName(psi), ErlangPsiImplUtil.getArity(psi));
   }
 

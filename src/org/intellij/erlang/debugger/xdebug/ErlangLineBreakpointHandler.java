@@ -35,6 +35,6 @@ public class ErlangLineBreakpointHandler extends XBreakpointHandler<XLineBreakpo
 
   @Override
   public void unregisterBreakpoint(@NotNull XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint, boolean temporary) {
-    myDebugProcess.removeBreakpoint(breakpoint, temporary);
+    myDebugProcess.removeBreakpoint(breakpoint);
   }
 }

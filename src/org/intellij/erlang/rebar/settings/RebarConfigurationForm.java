@@ -21,6 +21,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.io.FileUtil;
@@ -32,8 +33,10 @@ import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -48,22 +51,35 @@ public class RebarConfigurationForm {
   private TextFieldWithBrowseButton myRebarPathSelector;
   private JTextField myRebarVersionText;
   private JPanel myLinkContainer;
+  @Nullable private Project myProject;
 
   public RebarConfigurationForm() {
-    myRebarPathSelector.addBrowseFolderListener("Select Rebar Executable", "", null,
-                                                FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
+    ErlangUiUtil.addBrowseFolderListener(myRebarPathSelector, "Select Rebar Executable", "", null,
+                                         FileChooserDescriptorFactory.singleFile());
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(@NotNull DocumentEvent documentEvent) {
-        validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
+        validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
       }
     });
+
+    ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      String rebarPath = RebarRunningStateUtil.getRebarPath(null);
+      if (getPath().isEmpty()) {
+        ApplicationManager.getApplication().invokeLater(() -> setPath(rebarPath));
+      }
+    });
+  }
+
+  // The version check runs the rebar escript with the escript of this project's Erlang SDK.
+  public void setProject(@Nullable Project project) {
+    myProject = project;
   }
 
   public void setPath(@NotNull String rebarPath) {
     if (!myRebarPathSelector.getText().equals(rebarPath)) {
       myRebarPathSelector.setText(rebarPath);
-      validateRebarPath(myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
+      validateRebarPath(myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
     }
   }
 
@@ -76,15 +92,15 @@ public class RebarConfigurationForm {
     return myRebarVersionText.getText().startsWith("rebar");
   }
 
-  private static void validateRebarPath(String rebarPath, Consumer<String> consumer) {
-    File rebarFile = new File(rebarPath);
-    if (!rebarFile.exists()) {
-      consumer.accept("");
-      return;
-    }
-
+  private static void validateRebarPath(String rebarPath, @Nullable Project project, Consumer<String> consumer) {
     ApplicationManager.getApplication().executeOnPooledThread(
       () -> {
+        File rebarFile = new File(rebarPath);
+        if (!rebarFile.exists()) {
+          consumer.accept("File " + rebarPath + " not found");
+          return;
+        }
+
         ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
         String version = rebar.getStdOut();
 
@@ -93,7 +109,7 @@ public class RebarConfigurationForm {
           return;
         }
 
-        String escriptPath = RebarRunningStateUtil.findEscriptExecutable();
+        String escriptPath = RebarRunningStateUtil.findEscriptExecutable(project);
         ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, rebarPath, "--version");
         String versionWithEscript = escript.getStdOut();
 
@@ -152,7 +168,7 @@ public class RebarConfigurationForm {
             if (path != null) {
               FileUtil.setExecutable(new File(path));
               myRebarPathSelector.setText(path);
-              validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), s -> myRebarVersionText.setText(s));
+              validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
             }
           }
           catch (Exception ignore) {

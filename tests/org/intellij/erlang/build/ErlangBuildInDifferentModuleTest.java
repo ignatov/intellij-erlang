@@ -37,16 +37,6 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     myCompilationRunner = new CompilationRunner(myModule, myOtherModule);
   }
 
-  @Override
-  protected void tearDown() throws Exception {
-    try {
-      myCompilationRunner.tearDown();
-    }
-    finally {
-      super.tearDown();
-    }
-  }
-
   public void testBuildWithGlobalParseTransform() throws Exception {
     addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
     addSourceFile(myOtherModule, "parse_transform1.erl", ErlangModuleTextGenerator.pt("parse_transform1").build());

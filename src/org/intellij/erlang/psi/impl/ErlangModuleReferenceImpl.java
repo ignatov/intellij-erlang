@@ -37,6 +37,7 @@ import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -52,6 +53,8 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     GlobalSearchScope scope = getSearchScope();
     List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, scope);
     if (modules.size() > 1) {
+      // Create a mutable copy before sorting to avoid UnsupportedOperationException
+      modules = new ArrayList<>(modules);
       ContainerUtil.sort(modules, new ModuleResolutionComparator());
     }
     return ContainerUtil.getFirstItem(modules);
@@ -59,7 +62,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     return ArrayUtil.EMPTY_OBJECT_ARRAY;
   }
 
@@ -116,7 +119,9 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
       return FileUtil.comparePaths(m1File.getPath(), m2File.getPath());
     }
 
-    private int compareByLibDir(@NotNull VirtualFile m1File, @NotNull VirtualFile m2File, @Nullable VirtualFile libDir) {
+    private static int compareByLibDir(@NotNull VirtualFile m1File,
+                                       @NotNull VirtualFile m2File,
+                                       @Nullable VirtualFile libDir) {
       if (libDir == null) return COMPARE_NO_RESULT;
 
       boolean m1InLib = VfsUtilCore.isAncestor(libDir, m1File, true);
@@ -129,7 +134,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     }
 
     @Nullable
-    private VirtualFile getVirtualFile(@NotNull PsiElement e) {
+    private static VirtualFile getVirtualFile(@NotNull PsiElement e) {
       PsiFile psiFile = e.getContainingFile();
       return psiFile != null ? psiFile.getVirtualFile() : null;
     }

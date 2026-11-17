@@ -28,8 +28,10 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -111,7 +113,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   private List<Block> buildSubBlocks() {
     final List<Block> blocks = new ArrayList<>();
-    final Alignment baseAlignment = Alignment.createAlignment(true);
+    final Alignment baseAlignment = Alignment.createAlignment(!(myNode.getPsi() instanceof ErlangFakeBinaryExpression));
     final Alignment baseAlignment2 = Alignment.createAlignment(true);
     final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
     final Ref<Wrap> chopDownIfLongWrap = new Ref<>();
@@ -142,12 +144,104 @@ public class ErlangFormattingBlock extends AbstractBlock {
       new BinaryExpressionSequenceBlocksBuilder().build(myNode);
     }
     else {
+      ASTNode funHeadEnd = getFunHeadEnd();
+      List<Block> funHead = funHeadEnd != null ? new ArrayList<>() : null;
       for (ASTNode child = myNode.getFirstChildNode(); child != null; child = child.getTreeNext()) {
         if (!shouldCreateBlockFor(child)) continue;
-        blocks.add(createChildBlock(myNode, child, chopDownIfLongWrap, baseAlignment, baseAlignment2, alignmentStrategy, -1));
+        Block block = createChildBlock(myNode, child, chopDownIfLongWrap, baseAlignment, baseAlignment2, alignmentStrategy, -1);
+        if (funHead == null) {
+          blocks.add(block);
+          continue;
+        }
+        funHead.add(block);
+        if (child == funHeadEnd) {
+          blocks.add(new FunHeadBlock(funHead));
+          funHead = null;
+        }
       }
     }
     return Collections.unmodifiableList(blocks);
+  }
+
+  /**
+   * With relative indents, the body of a fun clause that starts on the line of {@code fun} is indented relative to
+   * {@code fun}, as {@code end} is. The platform only anchors a child on a new line to the column of its direct parent,
+   * so {@code fun} and the clauses are grouped in a {@link FunHeadBlock} that starts at {@code fun}.
+   */
+  @Nullable
+  private ASTNode getFunHeadEnd() {
+    if (!myErlangSettings.INDENT_RELATIVE || myNode.getElementType() != ERL_FUN_EXPRESSION) return null;
+    ASTNode clauses = myNode.findChildByType(ERL_FUN_CLAUSES);
+    if (clauses == null || clauses.getTextLength() == 0) return null;
+    int funStart = myNode.getStartOffset();
+    CharSequence beforeClauses = myNode.getChars().subSequence(0, clauses.getStartOffset() - funStart);
+    return StringUtil.containsLineBreak(beforeClauses) ? null : clauses;
+  }
+
+  /**
+   * Its enforced indent and alignment make the platform compute the offset of its children's lines from the column
+   * of the enclosing fun expression instead of the start of the line.
+   */
+  private class FunHeadBlock implements Block {
+    private final List<Block> mySubBlocks;
+    private final Alignment myAlignment = Alignment.createAlignment();
+
+    private FunHeadBlock(@NotNull List<Block> subBlocks) {
+      mySubBlocks = Collections.unmodifiableList(subBlocks);
+    }
+
+    @NotNull
+    @Override
+    public TextRange getTextRange() {
+      return TextRange.create(mySubBlocks.getFirst().getTextRange().getStartOffset(),
+                              mySubBlocks.getLast().getTextRange().getEndOffset());
+    }
+
+    @NotNull
+    @Override
+    public List<Block> getSubBlocks() {
+      return mySubBlocks;
+    }
+
+    @Nullable
+    @Override
+    public Wrap getWrap() {
+      return null;
+    }
+
+    @NotNull
+    @Override
+    public Indent getIndent() {
+      return Indent.getIndent(Indent.Type.NONE, false, true);
+    }
+
+    @NotNull
+    @Override
+    public Alignment getAlignment() {
+      return myAlignment;
+    }
+
+    @Nullable
+    @Override
+    public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
+      return ErlangFormattingBlock.this.getSpacing(child1, child2);
+    }
+
+    @NotNull
+    @Override
+    public ChildAttributes getChildAttributes(int newChildIndex) {
+      return getFlatChildAttributes(newChildIndex);
+    }
+
+    @Override
+    public boolean isIncomplete() {
+      return mySubBlocks.getLast().isIncomplete();
+    }
+
+    @Override
+    public boolean isLeaf() {
+      return false;
+    }
   }
 
   private static boolean shouldCreateBlockFor(ASTNode node) {
@@ -190,10 +284,29 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.CALL_PARAMETERS_WRAP);
     }
+    if (parentType == ERL_ARGUMENT_DEFINITION_LIST) {
+      if (!areFunctionParametersWrapped(parent)) return null;
+      boolean wrapped = myErlangSettings.NEW_LINE_BEFORE_COMMA ? node.getElementType() == ERL_COMMA : nodePsi instanceof ErlangArgumentDefinition;
+      // a fun head broken right after "fun(" pushes the aligned blocks around the fun far to the right
+      if (wrapped && myErlangSettings.ALIGN_MULTILINE_BLOCK && parentPsi.getParent() instanceof ErlangFunClause &&
+        PsiTreeUtil.getPrevSiblingOfType(nodePsi, ErlangArgumentDefinition.class) == null) {
+        return null;
+      }
+      return wrapped ? WrappingUtil.getWrapType(mySettings.METHOD_PARAMETERS_WRAP) : null;
+    }
     if (parentPsi instanceof ErlangFakeBinaryExpression && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.BINARY_OPERATION_WRAP);
     }
     return null;
+  }
+
+  private boolean areFunctionParametersWrapped(@NotNull ASTNode argumentDefinitionList) {
+    if (mySettings.METHOD_PARAMETERS_WRAP == CommonCodeStyleSettings.DO_NOT_WRAP) return false;
+    if (!(argumentDefinitionList.getPsi().getParent() instanceof ErlangFunClause)) return true;
+    // aligned fun clauses would anchor wrapped parameters to the clause column,
+    // and aligned commas of a wrapped comma-first fun head cannot be aligned ("Can't align block")
+    return !myErlangSettings.ALIGN_FUN_CLAUSES &&
+      !(myErlangSettings.NEW_LINE_BEFORE_COMMA && myErlangSettings.ALIGN_MULTILINE_BLOCK);
   }
 
   @Nullable
@@ -272,6 +385,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Override
   @Nullable
   public Spacing getSpacing(@Nullable Block child1, @NotNull Block child2) {
+    if (child1 instanceof FunHeadBlock) {
+      child1 = child1.getSubBlocks().getLast();
+    }
     if (child2 instanceof ErlangFormattingBlock) {
       ASTNode node = ((ErlangFormattingBlock) child2).getNode();
       if (COMMENTS.contains(node.getElementType()) && mySettings.KEEP_FIRST_COLUMN_COMMENT) {
@@ -284,7 +400,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
       ((ErlangFormattingBlock) child2).getNode().getElementType() == ERL_FUN_CLAUSES) {
       ErlangFunClauses funClauses = (ErlangFunClauses) ((ErlangFormattingBlock) child2).getNode().getPsi();
       List<ErlangFunClause> funClauseList = funClauses.getFunClauseList();
-      if (!funClauseList.isEmpty() && funClauseList.get(0).getArgumentDefinition() != null) {
+      if (!funClauseList.isEmpty() && funClauseList.getFirst().getArgumentDefinition() != null) {
         return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
     }
@@ -298,12 +414,33 @@ public class ErlangFormattingBlock extends AbstractBlock {
       }
       return Spacing.createSpacing(spaceAroundArrow, spaceAroundArrow, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
     }
+    //comma first function parameters are wrapped before the commas, so a line break after a comma is not kept
+    if (myErlangSettings.NEW_LINE_BEFORE_COMMA && myNode.getElementType() == ERL_ARGUMENT_DEFINITION_LIST &&
+      areFunctionParametersWrapped(myNode) &&
+      child1 instanceof ErlangFormattingBlock && ((ErlangFormattingBlock) child1).getNode().getElementType() == ERL_COMMA &&
+      child2 instanceof ErlangFormattingBlock && ((ErlangFormattingBlock) child2).getNode().getPsi() instanceof ErlangArgumentDefinition) {
+      int spaceAfterComma = mySettings.SPACE_AFTER_COMMA ? 1 : 0;
+      return Spacing.createSpacing(spaceAfterComma, spaceAfterComma, 0, false, 0);
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
 
   @NotNull
   @Override
   public ChildAttributes getChildAttributes(int newChildIndex) {
+    List<Block> subBlocks = getSubBlocks();
+    if (newChildIndex > 0 && !subBlocks.isEmpty() && subBlocks.getFirst() instanceof FunHeadBlock funHead) {
+      newChildIndex += funHead.getSubBlocks().size() - 1;
+    }
+    return getFlatChildAttributes(newChildIndex);
+  }
+
+  /**
+   * Computes the attributes of a new child as if a {@link FunHeadBlock} were not there, with the index of the new child
+   * among the sub-blocks whose {@link FunHeadBlock} is replaced by its own sub-blocks.
+   */
+  @NotNull
+  private ChildAttributes getFlatChildAttributes(int newChildIndex) {
     Indent childIndent = getChildIndent(myNode.getElementType(), newChildIndex);
     IElementType type = getPreviousElementType(newChildIndex);
     Alignment alignment = getChildAlignment(type);
@@ -318,7 +455,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     List<Block> subBlocks = getSubBlocks();
     if (type != ERL_COMMA && myErlangSettings.NEW_LINE_BEFORE_COMMA) {
       if (BRACKETS_CONTAINERS.contains(parentType) || parentType == ERL_RECORD_TUPLE) {
-        return subBlocks.get(0).getAlignment();
+        return subBlocks.getFirst().getAlignment();
       }
     }
     if (type == ERL_COMMA && myErlangSettings.ALIGN_MULTILINE_BLOCK) {
@@ -332,10 +469,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
   @Nullable
   private IElementType getPreviousElementType(int newChildIndex) {
     if (newChildIndex <= 0) return null;
-    Block block = getSubBlocks().get(newChildIndex - 1);
+    List<Block> flatSubBlocks = new ArrayList<>();
+    for (Block subBlock : getSubBlocks()) {
+      flatSubBlocks.addAll(subBlock instanceof FunHeadBlock ? subBlock.getSubBlocks() : List.of(subBlock));
+    }
+    Block block = flatSubBlocks.get(newChildIndex - 1);
     while (block instanceof ErlangFormattingBlock && !block.getSubBlocks().isEmpty()) {
       List<Block> subBlocks = block.getSubBlocks();
-      Block childBlock = subBlocks.get(subBlocks.size() - 1);
+      Block childBlock = subBlocks.getLast();
       if (!(childBlock instanceof ErlangFormattingBlock)) break;
       else {
         ASTNode node = ((ErlangFormattingBlock) childBlock).getNode();
@@ -375,7 +516,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_MAYBE_MATCH_EXPRS) return Indent.getNoneIndent();
 
-    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
+    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && (newChildIndex == 1 || startsLine(myNode))) return Indent.getNoneIndent();
 
     if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) {
       return Indent.getNormalIndent(false);
@@ -394,6 +535,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
     }
 
     return null;
+  }
+
+  private static boolean startsLine(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
   }
 
   @Nullable

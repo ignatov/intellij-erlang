@@ -40,8 +40,8 @@ public final class PsiExprUtil {
       this.expression = expr;
     }
 
-    public @Nullable ErlangQVar qVar;
-    public ErlangExpression expression;
+    public final @Nullable ErlangQVar qVar;
+    public final ErlangExpression expression;
 
     // For logging
     public String getQVarString() {

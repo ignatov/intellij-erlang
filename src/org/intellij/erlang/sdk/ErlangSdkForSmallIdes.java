@@ -27,6 +27,7 @@ import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.concurrency.annotations.RequiresEdt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,6 +37,7 @@ public abstract class ErlangSdkForSmallIdes {
   private ErlangSdkForSmallIdes() {
   }
 
+  @RequiresEdt
   public static void setUpOrUpdateSdk(@NotNull final Project project, @NotNull final String path) {
     ApplicationManager.getApplication().runWriteAction(() -> {
       LibraryTable table = LibraryTablesRegistrar.getInstance().getLibraryTable(project);

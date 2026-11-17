@@ -33,7 +33,7 @@ public class ErlangFacetBasedFrameworkDetector extends FacetBasedFrameworkDetect
   }
 
   @Override
-  public FacetType<ErlangFacet, ErlangFacetConfiguration> getFacetType() {
+  public @NotNull FacetType<ErlangFacet, ErlangFacetConfiguration> getFacetType() {
     return FacetType.findInstance(ErlangFacetType.class);
   }
 

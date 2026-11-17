@@ -60,7 +60,7 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     assertTrue(testappuserErl instanceof ErlangFile);
     List<ErlangFile> directlyIncludedFiles = ErlangPsiImplUtil.getDirectlyIncludedFiles((ErlangFile) testappuserErl);
     assertEquals(1, directlyIncludedFiles.size());
-    PsiDirectory ebinDirectory = directlyIncludedFiles.get(0).getParent();
+    PsiDirectory ebinDirectory = directlyIncludedFiles.getFirst().getParent();
     assertNotNull(ebinDirectory);
     PsiDirectory appDir = ebinDirectory.getParent();
     assertNotNull(appDir);

@@ -48,22 +48,22 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
   }
 
   @Override
-  public String getId() {
+  public @NotNull String getId() {
     return myProject.getName();
   }
 
   @Override
-  public Collection<BuildTarget<?>> computeDependencies(BuildTargetRegistry targetRegistry,
-                                                        TargetOutputIndex outputIndex) {
+  public @NotNull Collection<BuildTarget<?>> computeDependencies(@NotNull BuildTargetRegistry targetRegistry,
+                                                                 @NotNull TargetOutputIndex outputIndex) {
     return ContainerUtil.emptyList();
   }
 
   @NotNull
   @Override
-  public List<ErlangSourceRootDescriptor> computeRootDescriptors(JpsModel model,
-                                                                 ModuleExcludeIndex index,
-                                                                 IgnoredFileIndex ignoredFileIndex,
-                                                                 BuildDataPaths dataPaths) {
+  public List<ErlangSourceRootDescriptor> computeRootDescriptors(@NotNull JpsModel model,
+                                                                 @NotNull ModuleExcludeIndex index,
+                                                                 @NotNull IgnoredFileIndex ignoredFileIndex,
+                                                                 @NotNull BuildDataPaths dataPaths) {
     if (model == null) {
       return ContainerUtil.emptyList();
     }
@@ -80,7 +80,6 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
     if (!(o instanceof ErlangModuleBuildOrderTarget)) return false;
 
     ErlangModuleBuildOrderTarget that = (ErlangModuleBuildOrderTarget) o;
-
     if (!myProject.equals(that.myProject)) return false;
 
     return true;
@@ -93,10 +92,10 @@ public class ErlangModuleBuildOrderTarget extends BuildTarget<ErlangSourceRootDe
 
   @Nullable
   @Override
-  public ErlangSourceRootDescriptor findRootDescriptor(String rootId, BuildRootIndex rootIndex) {
+  public ErlangSourceRootDescriptor findRootDescriptor(@NotNull String rootId, @NotNull BuildRootIndex rootIndex) {
     return ErlangTargetBuilderUtil.findRootDescriptor(rootId,
                                                       rootIndex,
-                                                      (ErlangModuleBuildOrderTargetType) getTargetType());
+                                                      getTargetType());
   }
 
   @NotNull

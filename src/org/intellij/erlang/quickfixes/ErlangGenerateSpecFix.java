@@ -37,7 +37,6 @@ import java.util.Objects;
 
 public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
   public static final String NAME = "Generate function spec";
-  private static final String ANY_TYPE_STRING = "any()";
 
   @NotNull
   @Override
@@ -60,6 +59,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   /**
    * Try and guess variable name used in the given expression, for spec argument naming purpose.
+   *
    * @return The guess or null
    */
   private static @Nullable String guessArgumentName(ErlangCompositeElement expression) {
@@ -72,7 +72,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
       if (recordRef != null) {
         var RecordName = recordRef.getQAtom().getText();
-        return RecordName.length() > 0
+        return !RecordName.isEmpty()
                ? RecordName.substring(0, 1).toUpperCase() + RecordName.substring(1)
                : null;
       }
@@ -109,7 +109,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
 
     String typeString = argType.toString();
-    var argName = guessArgumentName(argumentPatterns.get(0));
+    var argName = guessArgumentName(argumentPatterns.getFirst());
 
     return argName == null || argName.isEmpty()
            ? typeString
@@ -138,7 +138,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
     return unionType.isEmpty()
            ? ErlType.ANY_TYPE
-           : types.get(0);
+           : types.getFirst();
   }
 
   private static ErlType computeReturnType(ErlangFunction function) {

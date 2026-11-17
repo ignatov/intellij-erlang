@@ -16,10 +16,7 @@
 
 package org.intellij.erlang.console;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.CommonDataKeys;
-import com.intellij.openapi.actionSystem.Presentation;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +36,11 @@ public class ErlangConsoleExecuteAction extends AnAction {
       return;
     }
     presentation.setEnabledAndVisible(consoleView.isRunning());
+  }
+
+  @Override
+  public @NotNull ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
   }
 
   @Override

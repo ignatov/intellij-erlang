@@ -32,12 +32,6 @@ public class JpsRebarConfigurationExtension extends JpsCompositeElementBase<JpsR
     myState = state;
   }
 
-  @NotNull
-  @Override
-  public JpsRebarConfigurationExtension createCopy() {
-    return new JpsRebarConfigurationExtension(new RebarSettingsState(myState));
-  }
-
   public void setRebarSettingsState(RebarSettingsState state) {
     myState = state;
   }

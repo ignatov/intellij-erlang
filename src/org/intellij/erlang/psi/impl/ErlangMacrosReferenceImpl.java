@@ -40,7 +40,7 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
   }
 
   @Override
-  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+  public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
     ErlangPsiImplUtil.setName(myNameElement, newElementName);
     return myElement;
   }
@@ -63,12 +63,12 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getMacrosLookupElements(myElement.getContainingFile()));
   }
 
   @Override
-  public boolean isReferenceTo(PsiElement element) {
+  public boolean isReferenceTo(@NotNull PsiElement element) {
     ErlangMacrosDefinition definition = ObjectUtils.tryCast(element, ErlangMacrosDefinition.class);
     String macroName = definition != null ? definition.getName() : null;
     return macroName != null && macroName.equals(myReferenceName) && definition.getMacrosName() != myNameElement;

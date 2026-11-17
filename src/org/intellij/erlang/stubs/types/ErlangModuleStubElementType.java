@@ -45,7 +45,7 @@ public class ErlangModuleStubElementType extends ErlangNamedStubElementType<Erla
   }
 
   @Override
-  public ErlangModuleStub createStub(@NotNull ErlangModule psi, StubElement parentStub) {
+  public @NotNull ErlangModuleStub createStub(@NotNull ErlangModule psi, StubElement parentStub) {
     return new ErlangModuleStub(parentStub, this, psi.getName());
   }
 

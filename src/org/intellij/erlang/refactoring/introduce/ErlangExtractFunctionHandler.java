@@ -148,7 +148,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   private static void perform(@NotNull List<ErlangExpression> selection) {
     final ErlangExpression first = ContainerUtil.getFirstItem(selection);
     final ErlangFunction function = PsiTreeUtil.getParentOfType(first, ErlangFunction.class);
-    final ErlangExpression last = selection.get(selection.size() - 1);
+    final ErlangExpression last = selection.getLast();
     assert first != null;
     assert function != null;
     assert last != null;
@@ -175,7 +175,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
       try {
         PsiFile file = first.getContainingFile();
-        WriteCommandAction.writeCommandAction(project, file).withName("Extract function").run(() -> {
+        WriteCommandAction.writeCommandAction(project, file).withName("Extract Function").run(() -> {
           ErlangFunction newFunction = ErlangElementFactory.createFunctionFromText(project, functionText);
 
           PsiElement functionParent = function.getParent();
@@ -211,9 +211,9 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
 
   private static Pair<List<ErlangNamedElement>, List<ErlangNamedElement>> analyze(@NotNull List<? extends PsiElement> elements) {
-    PsiElement first = elements.get(0);
+    PsiElement first = elements.getFirst();
     PsiElement scope = PsiTreeUtil.getTopmostParentOfType(first, ErlangFunction.class);
-    PsiElement lastElement = elements.get(elements.size() - 1);
+    PsiElement lastElement = elements.getLast();
     final int lastElementEndOffset = lastElement.getTextOffset() + lastElement.getTextLength();
     final int firstElementStartOffset = first.getTextOffset();
 
@@ -267,10 +267,10 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     }
 
     @Override
-    public void visitElement(PsiElement element) {
+    public void visitElement(@NotNull PsiElement element) {
       if (element instanceof ErlangQVar) {
         PsiReference reference = element.getReference();
-        PsiElement resolve = reference != null ? reference.resolve() : null;
+        PsiElement resolve = reference.resolve();
         if (resolve instanceof ErlangNamedElement) {
           myComponentNames.add((ErlangNamedElement) resolve);
         }
@@ -287,6 +287,6 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
   }
 
   @Override
-  public void invoke(@NotNull Project project, @NotNull PsiElement[] elements, DataContext dataContext) {
+  public void invoke(@NotNull Project project, @NotNull PsiElement @NotNull [] elements, DataContext dataContext) {
   }
 }

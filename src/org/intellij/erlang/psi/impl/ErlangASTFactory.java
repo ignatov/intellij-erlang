@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ErlangASTFactory extends DefaultASTFactoryImpl {
   @Override
-  public LeafElement createComment(@NotNull IElementType type, CharSequence text) {
+  public @NotNull LeafElement createComment(@NotNull IElementType type, @NotNull CharSequence text) {
     return new ErlangCommentImpl(type, text);
   }
 

@@ -49,7 +49,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     String consoleOutput = "some text||src/a_module.erl:123: more text here";
     Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     List<Filter.ResultItem> resultItems = result.getResultItems();
-    Filter.ResultItem item = resultItems.get(0);
+    Filter.ResultItem item = resultItems.getFirst();
     assertEquals(11, item.getHighlightStartOffset());
     assertEquals(31, item.getHighlightEndOffset());
     assertNotNull(item.getHyperlinkInfo());
@@ -61,7 +61,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
 
     List<Filter.ResultItem> resultItems = result.getResultItems();
-    Filter.ResultItem item = resultItems.get(0);
+    Filter.ResultItem item = resultItems.getFirst();
     assertEquals(11, item.getHighlightStartOffset());
     assertEquals(32 + getProject().getBasePath().length(), item.getHighlightEndOffset());
     assertNotNull(item.getHyperlinkInfo());
@@ -72,7 +72,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     String consoleOutput = "some text||src/B_module.erl:123: more text here"; // may be case insensitive
     Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     List<Filter.ResultItem> resultItems = result.getResultItems();
-    Filter.ResultItem item = resultItems.get(0);
+    Filter.ResultItem item = resultItems.getFirst();
     assertEquals(11, item.getHighlightStartOffset());
     assertEquals(31, item.getHighlightEndOffset());
     assertNull(item.getHyperlinkInfo());
@@ -83,7 +83,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     String consoleOutput = "some text (src/a_module.erl, line 123) more text here";
     Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     List<Filter.ResultItem> resultItems = result.getResultItems();
-    Filter.ResultItem item = resultItems.get(0);
+    Filter.ResultItem item = resultItems.getFirst();
     assertEquals(11, item.getHighlightStartOffset());
     assertEquals(37, item.getHighlightEndOffset());
     assertNotNull(item.getHyperlinkInfo());
@@ -106,7 +106,7 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     String consoleOutput = "some text [{file,\"src/a_module.erl\"},{line,123}] more text here";
     Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
     List<Filter.ResultItem> resultItems = result.getResultItems();
-    Filter.ResultItem item = resultItems.get(0);
+    Filter.ResultItem item = resultItems.getFirst();
     assertEquals(10, item.getHighlightStartOffset());
     assertEquals(48, item.getHighlightEndOffset());
     assertNotNull(item.getHyperlinkInfo());

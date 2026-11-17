@@ -1,0 +1,65 @@
+name: Factory wake
+
+# Wakes the project's automation when master moves, which is what a merged pull request does, and when the
+# maintainer writes a command in a pull request. The dispatcher (factory-tick.yml, which runs
+# dispatcher/dispatch.py of the private repository ignatov/intellij-erlang-triage) moves bug-fix work from one
+# agent session to the next; a merged pull request ends an item and frees the queue, and a comment of the
+# maintainer that starts with "/" (for example "/merge", "/round: ...", "/close") is a decision the dispatcher
+# reads on its next tick.
+# The job starts one dispatcher tick and does nothing else. It reads nothing from the push or the comment
+# that triggered it beyond the conditions of the job, and it never checks out code. The dispatcher reads
+# the comment itself and checks its author again.
+#
+# The trigger of a merge is the push to master, not the closed pull request:
+#   - GitHub blocks pull_request_target in public repositories by default from December 2, 2026;
+#   - a run of pull_request_target whose pull request Copilot opened waits for a person's approval, so the
+#     merge of an agent's pull request started no tick. The actor of a push is the person who merged.
+# A pull request that is closed without a merge starts no tick; factory-timer.yml covers it.
+#
+# The end of an agent session or of a CI run is not a trigger either: GitHub holds every workflow run whose
+# actor is Copilot until a person approves it, also a workflow_run of master, so such a run would only wait.
+# factory-timer.yml covers those.
+#
+# Both triggers run the workflow of master. The job starts factory-tick.yml of master with its own GITHUB_TOKEN
+# (workflow_dispatch is one of the two events that this token may start a run with); no secret is used here.
+
+on:
+  push:
+    branches:
+      - master
+  issue_comment:
+    types:
+      - created
+
+permissions: {}
+
+concurrency:
+  # One tick runs and at most one waits; a burst of events becomes one more tick.
+  group: factory-wake
+  cancel-in-progress: false
+
+jobs:
+  wake:
+    # Only people with write access can push to master, so a fork cannot start ticks. A comment starts a
+    # tick only when the repository owner wrote it in a pull request and it starts with "/"; comments of
+    # anyone else start nothing.
+    if: >-
+      github.event_name == 'push'
+      || (github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && github.event.comment.user.login == github.repository_owner
+        && startsWith(github.event.comment.body, '/'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start a tick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
+            echo "::error::The tick could not be started."
+            exit 1
+          fi

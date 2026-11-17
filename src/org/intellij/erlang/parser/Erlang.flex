@@ -19,6 +19,23 @@ import static org.intellij.erlang.ErlangTypes.*;
       this((java.io.Reader)null);
       this.project = project_;
     }
+
+    // A string opened by N > 3 double quotes ends at the next N double quotes (EEP 64).
+    // Returns the end offset of the closing quotes, or -1 if there are none.
+    private int findClosingQuotesEnd(int quotes) {
+      int count = 0;
+      for (int i = zzMarkedPos; i < zzEndRead; i++) {
+        if (zzBuffer.charAt(i) != '"') count = 0;
+        else if (++count == quotes) return i + 1;
+      }
+      return -1;
+    }
+
+    private IElementType multiQuotedString(int prefixLength, IElementType type) {
+      int end = findClosingQuotesEnd(yylength() - prefixLength);
+      if (end >= 0) zzMarkedPos = end;
+      return type;
+    }
 %}
 
 %class _ErlangLexer
@@ -56,6 +73,10 @@ IntegerLiteral = {DecimalLiteral} | {ExplicitRadixLiteral}
 ExponentPart = [Ee] [+-]? {DecimalLiteral}
 FloatLiteral = {DecimalLiteral} "." {DecimalLiteral} {ExponentPart}?
 
+/* Based float literals (OTP 28+, EEP 75): base#digits.digits with an optional #e exponent */
+BasedDigits = [0-9a-zA-Z]+ ( _[0-9a-zA-Z]+ )*
+BasedFloatLiteral = [0-9]{1,2} "#" {BasedDigits} "." {BasedDigits} ("#" {ExponentPart})?
+
 OctalEscape = \\ [0-7]{1,3}
 ControlName = [@A-Z\[\\\]\^_] /* this is the octal range \100 - \137 */ 
 ControlEscape = \\ \^ {ControlName}
@@ -68,7 +89,10 @@ CharLiteral = \$ {CharLiteralChar} | \$
 ESC = "\\" ( [^] )
 CHAR = {ESC} | [^\'\"\\]
 STRING_BAD1 = \" ({CHAR} | \') *
-StringLiteral = {STRING_BAD1} \"
+TripleQuotedString = \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+/* The opening of a string with more than three double quotes, the rest is matched in multiQuotedString() */
+MultiQuotedStringStart = \"\"\"\"+
+StringLiteral = {TripleQuotedString} | {STRING_BAD1} \"
 
 NameChar = {ErlangLetter} | {ErlangDigit} | @ | _
 NameChars = {NameChar}*
@@ -79,6 +103,31 @@ AtomName = ({ErlangLowercase} {NameChar}*)
 EmptyAtom = ''
 
 Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
+
+/* Sigil support (OTP 27+) */
+/* Sigil with double-quoted string delimiter */
+SigilDoubleQuoteString = "~" [bBsS]? \" ([^\\\"] | {ESC})* \"
+/* Sigil with triple-quoted string delimiter */
+SigilTripleQuoteString = "~" [bBsS]? \"\"\" ([^\"] ([^\"] | \"[^\"] | \"\"[^\"])*)? \"\"\"
+SigilMultiQuoteStringStart = "~" [bBsS]? \"\"\"\"+
+/* Sigil with single-quote delimiter */
+SigilSingleQuoteString = "~" [bBsS]? \' ([^\\\'] | {ESC})* \'
+/* Sigil with parentheses delimiter */
+SigilParenString = "~" [bBsS]? \( ([^\\\)] | {ESC})* \)
+/* Sigil with brackets delimiter */
+SigilBracketString = "~" [bBsS]? \[ ([^\\\]] | {ESC})* \]
+/* Sigil with braces delimiter */
+SigilBraceString = "~" [bBsS]? \{ ([^\\\}] | {ESC})* \}
+/* Sigil with angle brackets delimiter */
+SigilAngleString = "~" [bBsS]? \< ([^\\\>] | {ESC})* \>
+/* Sigil with slash delimiter */
+SigilSlashString = "~" [bBsS]? \/ ([^\\\\/] | {ESC})* \/
+/* Sigil with pipe delimiter */
+SigilPipeString = "~" [bBsS]? \| ([^\\\|] | {ESC})* \|
+/* Sigil with backtick delimiter */
+SigilBacktickString = "~" [bBsS]? \` ([^\\\`] | {ESC})* \`
+/* Sigil with hash delimiter */
+SigilHashString = "~" [bBsS]? "#" ([^\\#] | {ESC})* "#"
 
 %state IN_QUOTES
 
@@ -139,14 +188,36 @@ Variable = (_ {NameChars}) | ({ErlangUppercase} {NameChars})
 <YYINITIAL> "!"                           { return ERL_OP_EXL; }
 <YYINITIAL> "<-"                          { return ERL_OP_LT_MINUS; }
 <YYINITIAL> "<="                          { return ERL_OP_LT_EQ; }
+<YYINITIAL> "<:-"                         { return ERL_OP_LT_COLON_MINUS; }
+<YYINITIAL> "<:="                         { return ERL_OP_LT_COLON_EQ; }
 <YYINITIAL> "andalso"                     { return ERL_ANDALSO; }
 <YYINITIAL> "orelse"                      { return ERL_ORELSE; }
+<YYINITIAL> "&&"                          { return ERL_OP_AND_AND; }
 
 <YYINITIAL> {IntegerLiteral}              { return ERL_INTEGER; }
 <YYINITIAL> {FloatLiteral}                { return ERL_FLOAT; }
+<YYINITIAL> {BasedFloatLiteral}           { return ERL_FLOAT; }
+
+<YYINITIAL> {MultiQuotedStringStart} / [ \t\r]* \n     { return multiQuotedString(0, ERL_STRING); }
+<YYINITIAL> {SigilMultiQuoteStringStart} / [ \t\r]* \n { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
 
 <YYINITIAL> {CharLiteral}                 { return ERL_CHAR; }
 <YYINITIAL> {StringLiteral}               { return ERL_STRING; }
+<YYINITIAL> {TripleQuotedString}          { return ERL_TRIPLE_QUOTED_STRING; }
+<YYINITIAL> {MultiQuotedStringStart}      { return multiQuotedString(0, ERL_STRING); }
+
+<YYINITIAL> {SigilTripleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilMultiQuoteStringStart}  { return multiQuotedString(yycharat(1) == '"' ? 1 : 2, ERL_SIGIL_STRING); }
+<YYINITIAL> {SigilDoubleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilSingleQuoteString}      { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilParenString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBracketString}          { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBraceString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilAngleString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilSlashString}            { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilPipeString}             { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilBacktickString}         { return ERL_SIGIL_STRING; }
+<YYINITIAL> {SigilHashString}             { return ERL_SIGIL_STRING; }
 
 <YYINITIAL> {AtomName} | {EmptyAtom}      { return ERL_ATOM_NAME; }
 <YYINITIAL> '                             { yybegin(IN_QUOTES); return ERL_SINGLE_QUOTE; }

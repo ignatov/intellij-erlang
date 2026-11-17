@@ -20,10 +20,16 @@ import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.colors.EditorColors;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.util.Ref;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiDocumentManager;
@@ -78,6 +84,16 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
   }
 
   @Override
+  public boolean isAvailable(@NotNull Project project,
+                             @NotNull PsiFile file,
+                             @NotNull PsiElement startElement,
+                             @NotNull PsiElement endElement) {
+    return !(startElement instanceof ErlangFunction function) ||
+           !(file instanceof ErlangFile erlangFile) ||
+           canBeExported(erlangFile, function);
+  }
+
+  @Override
   public @NotNull IntentionPreviewInfo generatePreview(@NotNull Project project,
                                                        @NotNull Editor editor,
                                                        @NotNull PsiFile file) {
@@ -89,14 +105,17 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @Nullable Editor editor) {
     if (!(function.getContainingFile() instanceof ErlangFile file)) return;
 
-    var exports = getExportPsiElements(file);
+    if (!canBeExported(file, function)) return;
+
+    var macroAnchor = getMacroExportAnchor(file, function);
+    var exports = getExportsBelow(file, getExportPsiElements(file), macroAnchor);
 
     if (exports.isEmpty()) {
-      createNewExport(project, file, function, null);
+      createNewExport(project, file, function, macroAnchor);
       return;
     }
 
-    if (editor == null || ApplicationManager.getApplication().isUnitTestMode()) {
+    if (editor == null || ApplicationManager.getApplication().isUnitTestMode() || ApplicationManager.getApplication().isHeadlessEnvironment()) {
       var first = ContainerUtil.getFirstItem(exports);
       assert first != null;
       updateExport(project, function, first);
@@ -111,22 +130,22 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     }
 
     Consumer<PsiAnchor> onClick = anchor ->
-      CommandProcessor.getInstance().executeCommand(
-        project,
-        () ->
-          ApplicationManager.getApplication().runWriteAction(
-            () -> {
-              PsiElement erlangExport = anchor.retrieve();
-              PsiDocumentManager.getInstance(project).commitAllDocuments();
+      WriteCommandAction.writeCommandAction(project, file)
+        .withName("Export Function")
+        .run(() -> {
+          PsiElement erlangExport = anchor.retrieve();
+          PsiDocumentManager.getInstance(project).commitAllDocuments();
 
-              if (erlangExport instanceof ErlangExport erlangExportTyped) {
-                updateExport(project, function, erlangExportTyped);
-              }
-              else {
-                createNewExport(project, file, function, exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
-              }
-            }), "Export Function", null);
+          if (erlangExport instanceof ErlangExport erlangExportTyped) {
+            updateExport(project, function, erlangExportTyped);
+          }
+          else {
+            createNewExport(project, file, function, exports.isEmpty() ? null : exports.get(exports.size() - 1).getParent());
+          }
+        });
 
+    // Variable to store the current highlighter
+    Ref<RangeHighlighter> currentHighlighter = new Ref<>();
 
     List<PsiAnchor> collect = exportsShow.stream().map(PsiAnchor::create).collect(Collectors.toList());
     JBPopupFactory.getInstance().createPopupChooserBuilder(collect)
@@ -134,10 +153,36 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                   .setMovable(false)
                   .setResizable(false)
                   .setItemChosenCallback(onClick)
+                  .setItemSelectedCallback(anchor -> {
+                    removeHighlighter(editor, currentHighlighter);
+
+                    PsiElement element = anchor == null ? null : anchor.retrieve();
+                    if (element instanceof ErlangExport export && export.getExportFunctions() != null) {
+                      TextRange range = export.getExportFunctions().getTextRange();
+                      currentHighlighter.set(editor.getMarkupModel().addRangeHighlighter(
+                        range.getStartOffset(), range.getEndOffset(),
+                        HighlighterLayer.SELECTION, EditorColors.SEARCH_RESULT_ATTRIBUTES.getDefaultAttributes(),
+                        HighlighterTargetArea.EXACT_RANGE));
+                    }
+                  })
+
                   .setRequestFocus(true)
                   .setRenderer(getRenderer())
+                  .setCancelCallback(() -> {
+                    removeHighlighter(editor, currentHighlighter);
+                    return true;
+                  })
                   .createPopup()
                   .showInBestPositionFor(editor);
+  }
+
+  private static void removeHighlighter(@NotNull Editor editor, @NotNull Ref<RangeHighlighter> currentHighlighter) {
+    // Remove previous highlighter
+    RangeHighlighter highlighter = currentHighlighter.get();
+    if (highlighter != null) {
+      editor.getMarkupModel().removeHighlighter(highlighter);
+      currentHighlighter.set(null);
+    }
   }
 
   @NotNull
@@ -190,7 +235,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
 
     var replace = exportFunctions.getText().replace("[", "").replace("]", "");
     var s = replace + (!StringUtil.isEmptyOrSpaces(replace) ? ", " : "") +
-            ErlangPsiImplUtil.createFunctionPresentation(function);
+            getExportText(function);
     var attribute = PsiTreeUtil.getParentOfType(oldExport, ErlangAttribute.class);
 
     if (attribute == null) return;
@@ -203,7 +248,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                       @NotNull ErlangFunction function,
                                       @Nullable PsiElement elementAfter) {
     if (elementAfter != null) {
-      file.addAfter(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addAfter(createExport(project, getExportText(function)),
                     elementAfter);
       file.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), elementAfter);
       return;
@@ -212,14 +257,90 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
     var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
 
     if (elementBefore != null) {
-      file.addBefore(createExport(project, function.getName() + "/" + function.getArity()),
+      file.addBefore(createExport(project, getExportText(function)),
                      elementBefore);
       file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
     }
   }
 
+  @NotNull
+  private static String getExportText(@NotNull ErlangFunction function) {
+    return function.getAtomName().getText() + "/" + function.getArity();
+  }
+
   private static PsiElement createExport(Project project, String text) {
     return ErlangElementFactory.createExportFromText(project, text);
+  }
+
+  /**
+   * For a function whose name is a macro whose {@code -define}s are all at the top level of this file, returns the last
+   * such {@code -define} above the function: the export entry must go below it. Returns {@code null} when the usual
+   * placement applies: the macro has no {@code -define} above the function, or the function or any {@code -define}
+   * of the macro is inside {@code -ifdef}/{@code -ifndef}/{@code -if}, whose active branch the plugin does not know.
+   */
+  @Nullable
+  static PsiElement getMacroExportAnchor(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var macros = function.getAtomName().getMacros();
+    var macrosName = macros != null ? macros.getMacrosName() : null;
+    if (macrosName == null) return null;
+
+    var name = ErlangPsiImplUtil.getNameIdentifier(macrosName).getText();
+    var definitions = ContainerUtil.filter(file.getMacroses(), d -> name.equals(d.getName()));
+    if (definitions.isEmpty()) return null;
+
+    var functionOffset = function.getTextRange().getStartOffset();
+    if (isInConditionalBlock(file, functionOffset)) return null;
+    for (var definition : definitions) {
+      if (isInConditionalBlock(file, definition.getTextRange().getStartOffset())) return null;
+    }
+
+    return ContainerUtil.findLast(definitions, d -> d.getTextRange().getEndOffset() <= functionOffset);
+  }
+
+  /**
+   * erlc rejects an {@code -export} below a function definition, so a macro-named function whose macro is defined
+   * below the first function of the file cannot be exported.
+   */
+  public static boolean canBeExported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    var anchor = getMacroExportAnchor(file, function);
+    return anchor == null || anchor.getTextRange().getEndOffset() <= getFirstFunctionOffset(file);
+  }
+
+  @NotNull
+  static List<ErlangExport> getExportsBelow(@NotNull ErlangFile file,
+                                            @NotNull List<ErlangExport> exports,
+                                            @Nullable PsiElement anchor) {
+    if (anchor == null) return exports;
+    var anchorOffset = anchor.getTextRange().getEndOffset();
+    var firstFunctionOffset = getFirstFunctionOffset(file);
+    return ContainerUtil.filter(exports, export -> {
+      var offset = export.getTextRange().getStartOffset();
+      return offset >= anchorOffset && offset < firstFunctionOffset;
+    });
+  }
+
+  private static int getFirstFunctionOffset(@NotNull ErlangFile file) {
+    var first = ContainerUtil.getFirstItem(file.getFunctions());
+    return first != null ? first.getTextRange().getStartOffset() : Integer.MAX_VALUE;
+  }
+
+  private static boolean isInConditionalBlock(@NotNull ErlangFile file, int offset) {
+    var depth = 0;
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      if (attribute.getTextRange().getStartOffset() >= offset) break;
+      depth += getConditionalDepthChange(attribute);
+    }
+    return depth > 0;
+  }
+
+  private static int getConditionalDepthChange(@NotNull ErlangAttribute attribute) {
+    var directive = PsiTreeUtil.nextVisibleLeaf(attribute.getOpMinus());
+    var text = directive != null ? directive.getText() : "";
+    return switch (text) {
+      case "ifdef", "ifndef", "if" -> 1;
+      case "endif" -> -1;
+      default -> 0;
+    };
   }
 
   @NotNull
@@ -244,4 +365,5 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
         return functions != null && !functions.getExportFunctionList().isEmpty();
       });
   }
+
 }

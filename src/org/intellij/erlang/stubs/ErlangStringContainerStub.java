@@ -23,6 +23,7 @@ import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangIncludeString;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.jetbrains.annotations.Nullable;
 
 abstract class ErlangStringContainerStub<T extends ErlangCompositeElement> extends StubBase<T> {
   private final StringRef myStringRef;
@@ -31,7 +32,7 @@ abstract class ErlangStringContainerStub<T extends ErlangCompositeElement> exten
     this(parent, elementType, StringRef.fromString(name));
   }
 
-  protected ErlangStringContainerStub(StubElement parent, IStubElementType elementType, StringRef nameRef) {
+  protected ErlangStringContainerStub(StubElement parent, IStubElementType elementType, @Nullable StringRef nameRef) {
     super(parent, elementType);
     myStringRef = nameRef;
   }

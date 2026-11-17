@@ -44,6 +44,7 @@ import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -62,9 +63,10 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
     super(context);
     String projectFileDirectory = context.getProjectFileDirectory();
     //noinspection DialogTitleCapitalization
-    myProjectRootComponent.addBrowseFolderListener("Select `rebar.config` of a Rebar Project to Import", "", null,
-                                                   FileChooserDescriptorFactory.createSingleFolderDescriptor());
+    ErlangUiUtil.addBrowseFolderListener(myProjectRootComponent, "Select `rebar.config` of a Rebar Project to Import", "", null,
+                                         FileChooserDescriptorFactory.createSingleFolderDescriptor());
     myProjectRootComponent.setText(projectFileDirectory); // provide project path
+    myRebarConfigurationForm.setProject(context.getProject());
 
     myGetDepsCheckbox.setVisible(ourEnabled);
     BackgroundTaskUtil.executeOnPooledThread(myProjectRootComponent, () -> {
@@ -124,13 +126,12 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
 
   private static void fetchDependencies(@NotNull final VirtualFile projectRoot, @NotNull final String rebarPath) {
     Project project = ProjectImportBuilder.getCurrentProject();
-    String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
-    final String escriptPath = sdkPath != null
-                               ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
-                               : RebarRunningStateUtil.findEscriptExecutable();
-
     ProgressManager.getInstance().run(new Task.Modal(project, "Fetching Dependencies", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
+        String sdkPath = project != null ? ErlangSdkType.getSdkPath(project) : null;
+        final String escriptPath = sdkPath != null
+                                   ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath()
+                                   : RebarRunningStateUtil.findEscriptExecutable();
         indicator.setIndeterminate(true);
         GeneralCommandLine commandLine = new GeneralCommandLine();
         commandLine.withWorkDirectory(projectRoot.getCanonicalPath());

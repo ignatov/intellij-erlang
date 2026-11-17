@@ -59,7 +59,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
   }

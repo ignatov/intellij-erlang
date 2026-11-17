@@ -16,9 +16,11 @@
 
 package org.intellij.erlang.inspection;
 
-import com.intellij.codeInspection.LocalQuickFixBase;
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.codeInspection.util.IntentionFamilyName;
+import com.intellij.codeInspection.util.IntentionName;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -58,9 +60,15 @@ public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
     registerProblem(holder, module, message, new RemoveDuplicateBehaviourFix());
   }
 
-  private static class RemoveDuplicateBehaviourFix extends LocalQuickFixBase {
-    protected RemoveDuplicateBehaviourFix() {
-      super(FIX_MESSAGE);
+  private static class RemoveDuplicateBehaviourFix implements LocalQuickFix {
+    @Override
+    public @IntentionName @NotNull String getName() {
+      return FIX_MESSAGE;
+    }
+
+    @Override
+    public @IntentionFamilyName @NotNull String getFamilyName() {
+      return getName();
     }
 
     @Override

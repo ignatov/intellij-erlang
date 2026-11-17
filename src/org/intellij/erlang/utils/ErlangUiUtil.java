@@ -20,6 +20,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +30,16 @@ public class ErlangUiUtil {
 
   public static void installWorkingDirectoryChooser(@NotNull TextFieldWithBrowseButton on, @Nullable Project project) {
     FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-    on.addBrowseFolderListener("Choose Working Directory", null, project, descriptor);
+    addBrowseFolderListener(on, "Choose Working Directory", null, project, descriptor);
+  }
+
+  public static void addBrowseFolderListener(
+    TextFieldWithBrowseButton button,
+    @Nullable @NlsContexts.DialogTitle String title,
+    @Nullable @NlsContexts.Label String description,
+    @Nullable Project project,
+    FileChooserDescriptor fileChooserDescriptor
+  ) {
+    button.addBrowseFolderListener(project, fileChooserDescriptor.withTitle(title).withDescription(description));
   }
 }

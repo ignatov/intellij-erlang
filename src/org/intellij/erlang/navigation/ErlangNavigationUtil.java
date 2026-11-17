@@ -42,7 +42,7 @@ public class ErlangNavigationUtil {
   @NotNull
   public static List<ErlangCallbackSpec> getCallbackSpecs(@NotNull ErlangFunction function) {
     final String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(function);
-    return ContainerUtil.mapNotNull(((ErlangFile)function.getContainingFile()).getBehaviours(), behaviour -> {
+    return ContainerUtil.mapNotNull(((ErlangFile) function.getContainingFile()).getBehaviours(), behaviour -> {
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
       return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
     });
@@ -70,17 +70,15 @@ public class ErlangNavigationUtil {
             return getContainingFile().getName();
           }
 
-          @Nullable
           @Override
-          public Icon getIcon(boolean unused) {
+          public @NotNull Icon getIcon(boolean unused) {
             return ErlangIcons.CALLBACK;
           }
         };
       }
 
-      @Nullable
       @Override
-      public Icon getIcon(int flags) {
+      public @NotNull Icon getIcon(int flags) {
         return ErlangIcons.CALLBACK;
       }
     };

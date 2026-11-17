@@ -31,7 +31,7 @@ public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase
     super("ErlangRemoteDebugRunConfiguration",
       "Erlang Remote Node",
       "Erlang remote node debug run configuration",
-      ErlangIcons.REMOTE_NODE);
+      ErlangIcons.getRemoteNode());
     addFactory(new ConfigurationFactory(this) {
       @NotNull
       @Override

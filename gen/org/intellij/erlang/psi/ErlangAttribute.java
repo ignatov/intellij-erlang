@@ -23,10 +23,16 @@ public interface ErlangAttribute extends ErlangCompositeElement {
   ErlangExport getExport();
 
   @Nullable
+  ErlangExportRecordAttribute getExportRecordAttribute();
+
+  @Nullable
   ErlangExportTypeAttribute getExportTypeAttribute();
 
   @Nullable
   ErlangImportDirective getImportDirective();
+
+  @Nullable
+  ErlangImportRecordAttribute getImportRecordAttribute();
 
   @Nullable
   ErlangModule getModule();

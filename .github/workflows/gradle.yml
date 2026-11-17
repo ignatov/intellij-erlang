@@ -1,17 +1,550 @@
 name: Java CI
 
-on: [push]
+on:
+  push:
+    # Pushes to master only: a branch is tested by the pull_request run of its pull request, so one push does not
+    # run the workflow twice. Tag pushes (v* releases, the rolling nightly tag) never run this workflow.
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+# A newer commit of a pull request cancels the run of its older commit: that result no longer matters, and every
+# pull request and agent session shares the runners of the account. A push has a group of its own, so no push run
+# is cancelled: every commit of master is built and the nightly job is not interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up JDK 17
-      uses: actions/setup-java@v1
+    - uses: actions/checkout@v7
       with:
-        java-version: 17
-    - name: Build with Gradle
-      run: ./gradlew clean test
+        # A pull request run checks out the merge commit; with its parents, the step below reads the base from HEAD^1.
+        fetch-depth: 2
+    - name: Test the stub changes check
+      run: python3 -m unittest discover -s scripts/stubs -p 'test_*.py'
+    - name: Check that the merge keeps the stub changes of master
+      # The stub version is the number of entries of ErlangStubChanges. Two pull requests that append one conflict on
+      # purpose; this fails when the resolution dropped, reordered or edited an entry of the base, or inserted one
+      # before them. If the base has no ErlangStubChanges.java, there is nothing to compare.
+      if: github.event_name == 'pull_request'
+      run: |
+        if ! git rev-parse --verify --quiet 'HEAD^2' > /dev/null; then
+          echo "::error::HEAD is not the merge commit of the pull request"
+          exit 1
+        fi
+        file=src/org/intellij/erlang/stubs/ErlangStubChanges.java
+        base="$RUNNER_TEMP/ErlangStubChanges.base.java"
+        if [[ -n "$(git ls-tree 'HEAD^1' -- "$file")" ]]; then
+          git show "HEAD^1:$file" > "$base"
+        fi
+        python3 scripts/stubs/stub_changes.py "$base" "$file"
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Test, Build and Verify Plugin
+      env:
+        BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
+      run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
+    - name: Check the compatibility range of the archive
+      # The archive must be the one built against the oldest supported IDE, with the upper bound that CI covers.
+      run: |
+        shopt -s nullglob
+        zips=(build/distributions/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected one plugin archive, found ${#zips[@]}"
+          exit 1
+        fi
+        unzip -q "${zips[0]}" -d "$RUNNER_TEMP/archive"
+        range=""
+        for jar in "$RUNNER_TEMP"/archive/*/lib/*.jar; do
+          if unzip -l "$jar" META-INF/plugin.xml > /dev/null 2>&1; then
+            range="$(unzip -p "$jar" META-INF/plugin.xml | grep -o '<idea-version[^>]*>')"
+          fi
+        done
+        echo "$range"
+        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+          echo "::error::Unexpected compatibility range in ${zips[0]}: '$range'"
+          exit 1
+        fi
+    - name: Upload Plugin Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: intellij-erlang-plugin
+        path: build/distributions/*.zip
+        if-no-files-found: error
+    - name: Verify generated lexer, parser and PSI
+      # Regenerates gen/ from Erlang.flex and grammars/erlang.bnf into build/ and fails if the committed gen/ differs.
+      run: ./gradlew --no-daemon verifyGeneratedSources
+    - name: Save the Gradle dependency cache
+      # Only a push to master saves, from one job per OS: build on Linux, test-os on macOS and Windows. Every other
+      # job, branch and pull request restores the entry of master.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
+
+  other-ides:
+    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.1.
+    # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
+    # archive against it. The list ends at the IDE of until-build (supportedUntilBuild in build.gradle).
+    #
+    # A push to master runs every IDE of the list. A pull request, and a push to any other branch, runs only the
+    # newest one: the two jobs were most of the runner time of a pull request, and the runners of the account are
+    # shared by every pull request and agent session. So a difference with an IDE in between shows on master, after
+    # the merge, and is fixed before the next release, which checks the archive against every IDE again.
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '[{"ide":"2026.2","java":"21"},{"ide":"2026.3","java":"25"}]'
+          || '[{"ide":"2026.3","java":"25"}]') }}
+    name: ide-${{ matrix.ide }}
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.java }}
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Test against IntelliJ IDEA ${{ matrix.ide }}
+      env:
+        IDE: ${{ matrix.ide }}
+      run: ./gradlew --no-daemon clean test -PplatformVersion="$IDE"
+    - name: Download Plugin Artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: intellij-erlang-plugin
+        path: ${{ runner.temp }}/plugin
+    - name: Verify the archive against IntelliJ IDEA ${{ matrix.ide }}
+      env:
+        COMPAT_IDE: ${{ matrix.ide }}
+      run: |
+        shopt -s nullglob
+        zips=("$RUNNER_TEMP"/plugin/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected one plugin archive, found ${#zips[@]}"
+          exit 1
+        fi
+        scripts/compat/gradle.sh verifyPlugin -PcompatPluginArchive="${zips[0]}"
+    - name: Upload test and verifier reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ide-${{ matrix.ide }}-reports
+        path: |
+          build/reports/tests/test
+          build/compat/released-verifier
+        if-no-files-found: ignore
+
+  compilation-tests:
+    # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
+    # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Install Erlang/OTP
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        . /etc/os-release
+        base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
+        sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::$base/builds.txt has no OTP-$OTP_VERSION"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "$base/OTP-$OTP_VERSION.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
+    - name: Install rebar3
+      # The official escript, pinned and checked against the sha256 that GitHub publishes for the release asset.
+      # rebar3 3.28.0 supports Erlang/OTP 27 to 29.
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
+    - name: Run compilation tests
+      run: |
+        erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        echo "Erlang/OTP $(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().') at $erlang_root"
+        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root" -Drebar.path="$REBAR3_PATH"
+        # The rebar tests skip themselves without rebar; here every test has to run.
+        skipped="$(grep -L 'skipped="0"' build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml || true)"
+        if [[ -n "$skipped" ]]; then
+          echo "::error::Compilation tests were skipped in: $skipped"
+          exit 1
+        fi
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compilation-test-reports
+        path: |
+          build/reports/tests/testCompilation
+          jps-plugin/build/reports/tests/testCompilation
+          .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
+
+  # The tests and the compilation tests on Windows and macOS. A push to master runs both OSes; a pull request runs
+  # only Windows. The account runs at most 5 macOS jobs at a time, so on pull requests the macOS jobs waited half an
+  # hour and more for a runner and often failed with "job was not acquired by Runner".
+  # On a pull request the Windows jobs are required checks. On master a failure on either OS turns the run red,
+  # nightly waits for both, and macos-failure files an issue when a macOS job failed.
+  # buildPlugin, verifyPlugin and verifyGeneratedSources do not depend on the OS and run only in build.
+  test-os:
+    name: test-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Keep LF line endings and allow long paths
+      # The golden files of testData are compared with LF line endings.
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Test
+      run: ./gradlew --no-daemon test
+    - name: Summarize test results
+      if: ${{ !cancelled() }}
+      run: |
+        shopt -s nullglob
+        files=(build/test-results/test/*.xml)
+        { grep -ho '<testsuite [^>]*>' "${files[@]}" /dev/null || true; } | awk '
+          function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+          { tests += attr("tests"); failures += attr("failures"); errors += attr("errors"); skipped += attr("skipped") }
+          END { printf "%d tests, %d failures, %d errors, %d skipped in %d classes\n", tests, failures, errors, skipped, NR }' \
+          | tee -a "$GITHUB_STEP_SUMMARY"
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-reports-${{ runner.os }}
+        path: |
+          build/reports/tests/test
+          build/test-results/test
+        if-no-files-found: ignore
+    - name: Save the Gradle dependency cache
+      # As in build: only a push to master saves.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
+
+  compilation-tests-os:
+    name: compilation-tests-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS only on a push to master, as in test-os.
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Keep LF line endings and allow long paths
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.longpaths true
+    - uses: actions/checkout@v7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Install Erlang/OTP on macOS
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
+      # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
+      if: runner.os == 'macOS'
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        case "$(uname -m)" in
+          arm64) target=aarch64-apple-darwin ;;
+          x86_64) target=x86_64-apple-darwin ;;
+          *) echo "::error::No erlef/otp_builds build for $(uname -m)"; exit 1 ;;
+        esac
+        sha256=$(curl -fsSL --retry 3 "https://raw.githubusercontent.com/erlef/otp_builds/main/builds/$target.csv" \
+          | awk -F, -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::erlef/otp_builds has no OTP-$OTP_VERSION for $target"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/erlef/otp_builds/releases/download/OTP-$OTP_VERSION/otp-$target.tar.gz"
+        echo "$sha256  $archive" | shasum -a 256 -c -
+        root="$RUNNER_TEMP/otp"
+        mkdir -p "$root"
+        tar -xzf "$archive" -C "$root"
+        echo "$root/bin" >> "$GITHUB_PATH"
+    - name: Install Erlang/OTP on Windows
+      # The official archive of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change the pins
+      # together in all three. The sha256 is the one GitHub publishes for the release asset; SHA256.txt of the release
+      # does not list the Windows builds.
+      if: runner.os == 'Windows'
+      env:
+        OTP_VERSION: '27.3.4.9'
+        OTP_SHA256: 749e6db4459499e60b6b433da7accca05a9227a844fd1a5e8734308342c5cae4
+      run: |
+        temp="$(cygpath -u "$RUNNER_TEMP")"
+        archive="$temp/otp.zip"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/erlang/otp/releases/download/OTP-$OTP_VERSION/otp_win64_$OTP_VERSION.zip"
+        echo "$OTP_SHA256  $archive" | sha256sum -c -
+        root="$temp/otp"
+        mkdir -p "$root"
+        unzip -q "$archive" -d "$root"
+        cygpath -w "$root/bin" >> "$GITHUB_PATH"
+    - name: Check Erlang/OTP
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
+    - name: Install rebar3
+      # The same pinned escript as the compilation-tests job. The build runs it as `escript <path> compile`, so on
+      # Windows too rebar.path is the escript itself.
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -u "$rebar3")"
+        fi
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        if command -v sha256sum > /dev/null; then
+          echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        else
+          echo "$REBAR3_SHA256  $rebar3" | shasum -a 256 -c -
+        fi
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        if [ "$RUNNER_OS" = Windows ]; then
+          rebar3="$(cygpath -w "$rebar3")"
+        fi
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
+    - name: Run compilation tests
+      run: |
+        erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        echo "Erlang/OTP $(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().') at $erlang_root"
+        echo "rebar3 at $REBAR3_PATH"
+        ./gradlew --no-daemon testCompilation -Derlang.sdk.path="$erlang_root" -Drebar.path="$REBAR3_PATH"
+        # The rebar tests skip themselves without rebar; here every test has to run.
+        skipped="$(grep -L 'skipped="0"' build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml || true)"
+        if [[ -n "$skipped" ]]; then
+          echo "::error::Compilation tests were skipped in: $skipped"
+          exit 1
+        fi
+    - name: Summarize test results
+      if: ${{ !cancelled() }}
+      run: |
+        shopt -s nullglob
+        files=(build/test-results/testCompilation/*.xml jps-plugin/build/test-results/testCompilation/*.xml)
+        { grep -ho '<testsuite [^>]*>' "${files[@]}" /dev/null || true; } | awk '
+          function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+          { tests += attr("tests"); failures += attr("failures"); errors += attr("errors"); skipped += attr("skipped") }
+          END { printf "%d tests, %d failures, %d errors, %d skipped in %d classes\n", tests, failures, errors, skipped, NR }' \
+          | tee -a "$GITHUB_STEP_SUMMARY"
+    - name: Upload test reports
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: compilation-test-reports-${{ runner.os }}
+        path: |
+          build/reports/tests/testCompilation
+          build/test-results/testCompilation
+          jps-plugin/build/reports/tests/testCompilation
+          jps-plugin/build/test-results/testCompilation
+          .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
+        if-no-files-found: ignore
+
+  nightly:
+    needs: [build, other-ides, compilation-tests, test-os, compilation-tests-os]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: nightly-release
+      cancel-in-progress: false
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Skip if master has moved on
+      id: head
+      run: |
+        head="$(git ls-remote origin refs/heads/master | cut -f1)"
+        if [[ "$head" == "$GITHUB_SHA" ]]; then
+          echo "current=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "master is at $head, not $GITHUB_SHA; a newer run will publish the nightly build."
+          echo "current=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Download Plugin Artifact
+      if: steps.head.outputs.current == 'true'
+      uses: actions/download-artifact@v8
+      with:
+        name: intellij-erlang-plugin
+        path: dist
+    - name: Publish nightly pre-release
+      if: steps.head.outputs.current == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        shopt -s nullglob
+        zips=(dist/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected exactly one plugin ZIP, found ${#zips[@]}"
+          exit 1
+        fi
+        cp "${zips[0]}" intellij-erlang-nightly.zip
+
+        git tag -f nightly "$GITHUB_SHA"
+        git push -f origin refs/tags/nightly
+
+        cat > nightly-notes.md <<EOF
+        Unsigned development build of \`master\` at commit $GITHUB_SHA (plugin version \`$(basename "${zips[0]}" .zip | sed 's/^intellij-erlang-//')\`, CI run $RUN_NUMBER).
+
+        It is not published to JetBrains Marketplace. To install it, open **Settings | Plugins**, choose **Install Plugin from Disk...** and select \`intellij-erlang-nightly.zip\`.
+        EOF
+
+        if gh release view nightly > /dev/null 2>&1; then
+          gh release edit nightly --prerelease --title "Nightly build" --notes-file nightly-notes.md
+          gh release upload nightly intellij-erlang-nightly.zip --clobber
+        else
+          gh release create nightly intellij-erlang-nightly.zip --verify-tag --prerelease \
+            --title "Nightly build" --notes-file nightly-notes.md
+        fi
+
+  macos-failure:
+    # Pull requests do not run macOS, so a break that shows only on macOS is first seen on master. When a macOS job of
+    # a push to master failed or timed out, this job opens the issue below, or comments on it while it is open. A
+    # failure on Windows only, a cancelled macOS job and a green run file nothing.
+    needs: [test-os, compilation-tests-os]
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      issues: write
+    concurrency:
+      group: macos-failure-issue
+      cancel-in-progress: false
+
+    steps:
+    - name: File an issue for the failed macOS jobs
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TITLE: 'CI: macOS jobs failed on master'
+      run: |
+        failed="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" --paginate \
+          --jq '.jobs[] | select((.name | test("^(test|compilation-tests)-macos")) and (.conclusion == "failure" or .conclusion == "timed_out")) | "- [\(.name)](\(.html_url))"')"
+        if [[ -z "$failed" ]]; then
+          echo "No macOS job failed."
+          exit 0
+        fi
+        run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        body="$(printf 'macOS jobs of Java CI failed on master. Pull requests do not run macOS, so this is the first run that shows it.\n\nRun: %s (attempt %s)\nCommit: %s\n\nFailed jobs:\n%s\n' \
+          "$run_url" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" "$failed")"
+        number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,title \
+          --jq '[.[] | select(.title == env.TITLE)][0].number // empty')"
+        if [[ -n "$number" ]]; then
+          gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+        else
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
+        fi

@@ -54,7 +54,7 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
     }
     if (comment != null && comment.getTokenType() == ErlangParserDefinition.ERL_FUNCTION_DOC_COMMENT &&
         ErlangPsiImplUtil.notFromPreviousFunction(comment, prevFunction)) {
-      commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentsText(
+      commentText += "<b>Comment:</b><br/>" + ErlangDocUtil.getCommentText(
         ErlangDocUtil.collectPrevComments(comment), "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
     }
     return ErlangDocUtil.wrapInPreTag(commentText);

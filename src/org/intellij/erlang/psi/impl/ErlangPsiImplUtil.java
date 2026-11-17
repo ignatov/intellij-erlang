@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -83,12 +84,17 @@ import java.util.regex.Pattern;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
-  public static final Set<String> KNOWN_MACROS = ContainerUtil.set("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
-  public static final Set<String> BUILT_IN_TYPES = ContainerUtil.set(
-    "any", "atom", "boolean", "byte", "char", "float", "integer", "iolist", "list", "maybe_improper_list", "mfa",
-    "module", "neg_integer", "no_return", "node", "non_neg_integer", "none", "nonempty_string", "number", "pid", "port",
-    "pos_integer", "reference", "string", "term", "timeout"
+  public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
+    "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
+  public static final Set<String> BUILT_IN_TYPES = Set.of(
+    "any", "arity", "atom", "binary", "bitstring", "boolean", "byte", "char", "dynamic", "float", "function",
+    "identifier", "integer", "iodata", "iolist", "list", "map", "maybe_improper_list", "mfa", "module", "neg_integer",
+    "nil", "no_return", "node", "non_neg_integer", "none", "nonempty_binary", "nonempty_bitstring",
+    "nonempty_improper_list", "nonempty_list", "nonempty_maybe_improper_list", "nonempty_string", "number", "pid",
+    "port", "pos_integer", "reference", "string", "term", "timeout", "tuple"
   );
+  private static final Set<String> BUILT_IN_TYPES_WITHOUT_ZERO_ARITY = Set.of("nonempty_improper_list");
   public static final Key<LanguageConsoleImpl> ERLANG_CONSOLE = Key.create("ERLANG_CONSOLE");
 
   @NotNull
@@ -490,6 +496,34 @@ public class ErlangPsiImplUtil {
     return false;
   }
 
+  /**
+   * Whether the element is in the arguments of a macro call, in an expression or a type, where the macro is not known
+   * to take no parameters. The compiler sees such an argument only as the macro body uses it.
+   */
+  public static boolean inParameterizedMacroCallArguments(@NotNull PsiElement psiElement) {
+    for (ErlangArgumentList arguments = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class);
+         arguments != null;
+         arguments = PsiTreeUtil.getParentOfType(arguments, ErlangArgumentList.class)) {
+      PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(arguments);
+      ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
+      if (macros != null && !isMacroWithoutParameters(macros)) return true;
+    }
+    return false;
+  }
+
+  private static boolean isMacroWithoutParameters(@NotNull ErlangMacros macros) {
+    ErlangMacrosName macrosName = macros.getMacrosName();
+    PsiFile file = macros.getContainingFile();
+    if (macrosName == null) return false;
+    String name = getNameIdentifier(macrosName).getText();
+    if (PREDEFINED_MACROS_WITHOUT_PARAMETERS.contains(name)) return true;
+    if (!(file instanceof ErlangFile erlangFile) || DumbService.isDumb(file.getProject())) return false;
+    List<ErlangMacrosDefinition> definitions = ContainerUtil.filter(
+      ContainerUtil.concat(erlangFile.getMacroses(), getErlangMacrosFromIncludes(erlangFile, true, "")),
+      definition -> name.equals(definition.getName()));
+    return !definitions.isEmpty() && ContainerUtil.and(definitions, definition -> definition.getArgumentDefinitionList() == null);
+  }
+
   public static boolean inCallback(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangCallbackSpec.class) != null;
   }
@@ -569,8 +603,10 @@ public class ErlangPsiImplUtil {
       }
       else {
         ErlangFile erlangFile = (ErlangFile) containingFile;
+        ErlangSdkRelease sdkRelease = ErlangSdkType.getSdkRelease(containingFile);
         functions.addAll(erlangFile.getFunctions());
-        functions.addAll(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"));
+        functions.addAll(ContainerUtil.filter(getExternalFunctionForCompletion(containingFile.getProject(), "erlang"),
+                                              f -> ErlangBifTable.isAutoImported(f.getName(), f.getArity(), sdkRelease)));
 
         List<ErlangImportFunction> directlyImported = erlangFile.getImportedFunctions();
         List<ErlangImportFunction> importsFromIncludes = getImportsFromIncludes(erlangFile, true, "", 0);
@@ -580,7 +616,8 @@ public class ErlangPsiImplUtil {
         }
 
         if (!withArity && (release == null || release.needBifCompletion("erlang"))) {
-          addBifs(lookupElements, ErlangBifTable.getBifs("erlang"));
+          addBifs(lookupElements, ContainerUtil.filter(ErlangBifTable.getBifs("erlang"),
+                                                      b -> ErlangBifTable.isAutoImported(b.getName(), b.getArity(), sdkRelease)));
         }
         if (!withArity && (release == null || release.needBifCompletion(""))) {
           addBifs(lookupElements, ErlangBifTable.getBifs(""));
@@ -718,12 +755,49 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getRecordLookupElements(@NotNull PsiFile containingFile) {
     if (containingFile instanceof ErlangFile) {
-      List<ErlangRecordDefinition> concat = ContainerUtil.concat(((ErlangFile) containingFile).getRecords(), getErlangRecordFromIncludes((ErlangFile) containingFile, true, ""));
-      return ContainerUtil.map(
-        concat,
-        rd -> LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD));
+      return createRecordLookupElements(getVisibleRecords((ErlangFile) containingFile));
     }
     return Collections.emptyList();
+  }
+
+  @NotNull
+  public static List<LookupElement> getRecordLookupElements(@NotNull ErlangRecordRef recordRef) {
+    ErlangImportRecordAttribute importRecordAttribute = PsiTreeUtil.getParentOfType(recordRef, ErlangImportRecordAttribute.class);
+    if (importRecordAttribute != null) {
+      return createRecordLookupElements(getRecordsFromModule(importRecordAttribute.getModuleRef(), true));
+    }
+
+    ErlangExportRecordAttribute exportRecordAttribute = PsiTreeUtil.getParentOfType(recordRef, ErlangExportRecordAttribute.class);
+    if (exportRecordAttribute != null) {
+      PsiFile containingFile = recordRef.getContainingFile();
+      if (containingFile instanceof ErlangFile erlangFile) {
+        return createRecordLookupElements(ContainerUtil.concat(erlangFile.getRecords(), getErlangRecordFromIncludes(erlangFile, true, "")));
+      }
+      return Collections.emptyList();
+    }
+
+    ErlangModuleRef moduleRef = recordRef.getModuleRef();
+    if (moduleRef != null) {
+      return createRecordLookupElements(getRecordsFromModule(moduleRef, true));
+    }
+
+    return getRecordLookupElements(recordRef.getContainingFile());
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getVisibleRecords(@NotNull ErlangFile containingFile) {
+    return ContainerUtil.concat(
+      containingFile.getRecords(),
+      getErlangRecordFromIncludes(containingFile, true, ""),
+      getImportedRecords(containingFile, true, "")
+    );
+  }
+
+  @NotNull
+  private static List<LookupElement> createRecordLookupElements(@NotNull List<ErlangRecordDefinition> records) {
+    return ContainerUtil.map(
+      records,
+      rd -> LookupElementBuilder.create(rd).withIcon(ErlangIcons.RECORD));
   }
 
   @NotNull
@@ -734,11 +808,14 @@ public class ErlangPsiImplUtil {
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
         protected boolean placeCaretInsideParentheses(InsertionContext context, LookupElement item) {
-          return false;
+          return BUILT_IN_TYPES_WITHOUT_ZERO_ARITY.contains(item.getLookupString());
         }
       };
 
-      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(BUILT_IN_TYPES, s -> PrioritizedLookupElement.withPriority(
+      Set<String> typeNames = ContainerUtil.map2Set(types, t -> t.getName() + "/" + getArity(t));
+      List<String> builtInTypeNames = ContainerUtil.filter(BUILT_IN_TYPES, s ->
+        !typeNames.contains(s + "/" + (BUILT_IN_TYPES_WITHOUT_ZERO_ARITY.contains(s) ? 2 : 0)));
+      List<LookupElement> builtInTypes = addBuiltInTypes ? ContainerUtil.map(builtInTypeNames, s -> PrioritizedLookupElement.withPriority(
         LookupElementBuilder.create(s).withIcon(ErlangIcons.TYPE).withInsertHandler(handler),
         ErlangCompletionContributor.TYPE_PRIORITY)) : ContainerUtil.emptyList();
 
@@ -793,7 +870,7 @@ public class ErlangPsiImplUtil {
     ErlangFunTypeSigs signature = getSignature(o);
     List<ErlangTypeSig> typeSigs = signature != null ? signature.getTypeSigList()
                                                      : ContainerUtil.emptyList();
-    ErlangTypeSig sig = !typeSigs.isEmpty() ? typeSigs.get(0) : null;
+    ErlangTypeSig sig = !typeSigs.isEmpty() ? typeSigs.getFirst() : null;
     return sig != null ? sig.getFunType().getFunTypeArguments().getTypeList().size() : -1;
   }
 
@@ -1160,8 +1237,7 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static VirtualFile getContainingOtpAppRoot(@NotNull Project project, @Nullable final VirtualFile file) {
     if (file == null) return null;
-    List<VirtualFile> allOtpAppRoots = ErlangApplicationIndex.getAllApplicationDirectories(project, GlobalSearchScope.allScope(project));
-    List<VirtualFile> containingOtpAppRoots = ContainerUtil.filter(allOtpAppRoots, appRoot -> VfsUtilCore.isAncestor(appRoot, file, true));
+    List<VirtualFile> containingOtpAppRoots = ErlangApplicationIndex.getApplicationDirectoriesContaining(project, file, GlobalSearchScope.allScope(project));
     //sort it in order to have longest path first
     ContainerUtil.sort(containingOtpAppRoots, (o1, o2) -> o2.getPath().length() - o1.getPath().length());
     return ContainerUtil.getFirstItem(containingOtpAppRoots);
@@ -1171,6 +1247,40 @@ public class ErlangPsiImplUtil {
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ContainerUtil.addIfNotNull(behaviourNames, getName(behaviour));
     }
+  }
+
+  private static final Set<String> MS_TRANSFORM_MODULES = Set.of("ets", "dbg");
+  private static final Set<String> MS_TRANSFORM_PSEUDO_FUNCTIONS = Set.of("object", "bindings");
+
+  // object() and bindings() in the literal fun passed to ets:fun2ms/1 or dbg:fun2ms/1 are rewritten by ms_transform
+  public static boolean isMsTransformPseudoFunctionCall(@NotNull PsiElement element, @NotNull String name, int arity) {
+    if (!(element instanceof ErlangFunctionCallExpression) || arity != 0 || !MS_TRANSFORM_PSEUDO_FUNCTIONS.contains(name)) return false;
+    ErlangFunExpression fun = PsiTreeUtil.getParentOfType(element, ErlangFunExpression.class);
+    ErlangFunClauses clauses = fun != null ? fun.getFunClauses() : null;
+    if (clauses == null || ContainerUtil.exists(clauses.getFunClauseList(), c -> c.getArgumentDefinition() != null)) return false;
+    PsiElement argument = fun;
+    while (argument.getParent() instanceof ErlangParenthesizedExpression) {
+      argument = argument.getParent();
+    }
+    ErlangArgumentList arguments = ObjectUtils.tryCast(argument.getParent(), ErlangArgumentList.class);
+    if (arguments == null || arguments.getExpressionList().size() != 1) return false;
+    ErlangFunctionCallExpression call = ObjectUtils.tryCast(arguments.getParent(), ErlangFunctionCallExpression.class);
+    ErlangGlobalFunctionCallExpression globalCall = call != null ? ObjectUtils.tryCast(call.getParent(), ErlangGlobalFunctionCallExpression.class) : null;
+    PsiFile file = element.getContainingFile();
+    return globalCall != null &&
+           "fun2ms".equals(call.getName()) &&
+           MS_TRANSFORM_MODULES.contains(getName(globalCall.getModuleRef().getQAtom())) &&
+           file instanceof ErlangFile erlangFile &&
+           isParseTransformDeclared(erlangFile, "ms_transform");
+  }
+
+  private static boolean isParseTransformDeclared(@NotNull ErlangFile file, @NotNull String parseTransform) {
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    for (ErlangFile includedFile : getIncludedFiles(file)) {
+      includedFile.addDeclaredParseTransforms(parseTransforms);
+    }
+    return parseTransforms.contains(parseTransform);
   }
 
   public static void extractParseTransforms(@NotNull ErlangListExpression list, @NotNull Set<String> parseTransforms) {
@@ -1184,7 +1294,7 @@ public class ErlangPsiImplUtil {
   public static void extractParseTransforms(@NotNull ErlangTupleExpression tuple, @NotNull Set<String> parseTransforms) {
     List<ErlangExpression> expressionList = tuple.getExpressionList();
     if (expressionList.size() != 2) return;
-    ErlangExpression first = expressionList.get(0);
+    ErlangExpression first = expressionList.getFirst();
     if (!"parse_transform".equals(getAtomName(first instanceof ErlangMaxExpression ? (ErlangMaxExpression) first : null))) return;
     ErlangExpression second = expressionList.get(1);
     String parseTransformModuleName = getAtomName(second instanceof ErlangMaxExpression ? (ErlangMaxExpression) second : null);
@@ -1222,6 +1332,93 @@ public class ErlangPsiImplUtil {
       }
     }
     return fromIncludes;
+  }
+
+  @Nullable
+  static ErlangRecordDefinition resolveRecordFromModule(@Nullable ErlangModuleRef moduleRef, @NotNull String name) {
+    return ContainerUtil.getFirstItem(getRecordsFromModule(moduleRef, false, name));
+  }
+
+  @Nullable
+  static ErlangRecordDefinition resolveImportedRecord(@NotNull ErlangImportRecordAttribute importRecordAttribute, @NotNull String name) {
+    ErlangRecordRefs recordRefs = importRecordAttribute.getRecordRefs();
+    if (recordRefs == null || !containsRecordRef(recordRefs, name)) return null;
+    return resolveRecordFromModule(importRecordAttribute.getModuleRef(), name);
+  }
+
+  @Nullable
+  static ErlangRecordDefinition getImportedRecord(@NotNull ErlangFile containingFile, @NotNull String name) {
+    return ContainerUtil.getFirstItem(getImportedRecords(containingFile, false, name));
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getImportedRecords(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
+    List<ErlangRecordDefinition> result = new SmartList<>();
+    for (ErlangAttribute attribute : containingFile.getAttributes()) {
+      ErlangImportRecordAttribute importRecordAttribute = attribute.getImportRecordAttribute();
+      if (importRecordAttribute == null) continue;
+
+      if (forCompletion) {
+        ErlangRecordRefs recordRefs = importRecordAttribute.getRecordRefs();
+        if (recordRefs == null) continue;
+
+        for (ErlangRecordRef recordRef : recordRefs.getRecordRefList()) {
+          String importedName = getName(recordRef.getQAtom());
+          ContainerUtil.addIfNotNull(result, resolveRecordFromModule(importRecordAttribute.getModuleRef(), importedName));
+        }
+      }
+      else {
+        ContainerUtil.addIfNotNull(result, resolveImportedRecord(importRecordAttribute, name));
+      }
+    }
+    return result;
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getRecordsFromModule(@Nullable ErlangModuleRef moduleRef, boolean forCompletion) {
+    return getRecordsFromModule(moduleRef, forCompletion, "");
+  }
+
+  @NotNull
+  private static List<ErlangRecordDefinition> getRecordsFromModule(@Nullable ErlangModuleRef moduleRef, boolean forCompletion, @NotNull String name) {
+    ErlangFile file = resolveToFile(moduleRef);
+    if (file == null) return Collections.emptyList();
+
+    if (forCompletion) {
+      List<ErlangRecordDefinition> exportedRecords = new SmartList<>();
+      for (ErlangRecordDefinition record : ContainerUtil.concat(file.getRecords(), getErlangRecordFromIncludes(file, true, ""))) {
+        if (isRecordExported(file, record.getName())) {
+          exportedRecords.add(record);
+        }
+      }
+      return exportedRecords;
+    }
+
+    ErlangRecordDefinition record = file.getRecord(name);
+    if (record == null) {
+      record = ContainerUtil.getFirstItem(getErlangRecordFromIncludes(file, false, name));
+    }
+    return record != null && isRecordExported(file, name) ? Collections.singletonList(record) : Collections.emptyList();
+  }
+
+  private static boolean isRecordExported(@NotNull ErlangFile file, @NotNull String name) {
+    for (ErlangAttribute attribute : file.getAttributes()) {
+      ErlangExportRecordAttribute exportRecordAttribute = attribute.getExportRecordAttribute();
+      ErlangRecordRefs recordRefs = exportRecordAttribute != null ? exportRecordAttribute.getRecordRefs() : null;
+      if (recordRefs != null && containsRecordRef(recordRefs, name)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean containsRecordRef(@NotNull ErlangRecordRefs recordRefs, @NotNull String name) {
+    for (ErlangRecordRef recordRef : recordRefs.getRecordRefList()) {
+      if (name.equals(getName(recordRef.getQAtom()))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @NotNull
@@ -1677,7 +1874,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getCallbackSpecArity(@NotNull ErlangCallbackSpec spec) {
-    ErlangFunTypeSigs sigs = spec.getFunTypeSigs();
+    ErlangFunTypeSigs sigs = getFunTypeSigs(spec);
     ErlangSpecFun fun = sigs != null ? sigs.getSpecFun() : null;
     Integer arity = fun != null ? getArity(fun) : null;
     return arity != null ? arity : -1;

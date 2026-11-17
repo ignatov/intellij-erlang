@@ -43,6 +43,7 @@ import com.intellij.openapi.vfs.VirtualFileVisitor;
 import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
 import com.intellij.packaging.artifacts.ModifiableArtifactModel;
 import com.intellij.projectImport.ProjectImportBuilder;
+import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
@@ -134,13 +135,13 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     boolean unitTestMode = ApplicationManager.getApplication().isUnitTestMode();
     
     myProjectRoot = projectRoot;
-    if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
-      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
-      ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
-    }
 
     ProgressManager.getInstance().run(new Task.Modal(getCurrentProject(), "Scanning Rebar Projects", true) {
       public void run(@NotNull final ProgressIndicator indicator) {
+        if (!unitTestMode && projectRoot instanceof VirtualDirectoryImpl) {
+          ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("deps");
+          ((VirtualDirectoryImpl) projectRoot).refreshAndFindChild("_build");
+        }
 
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
         final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<>(rebarConfigFiles.size());
@@ -188,18 +189,24 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
     if (!findIdeaModuleFiles(mySelectedOtpApps)) {
       return true;
     }
-    int resultCode = Messages.showYesNoCancelDialog(
-      ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
-      StringUtil.join(mySelectedOtpApps, importedOtpApp -> {
-        VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
-        return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
-      }, "") +
-      "\nWould you like to reuse them?", "Module files found",
-      Messages.getQuestionIcon());
-    if (resultCode == DialogWrapper.OK_EXIT_CODE) {
+    
+    // Use invokeLater and wait to ensure UI operations run on EDT
+    final int[] resultCode = new int[1];
+    ApplicationManager.getApplication().invokeAndWait(() -> {
+      resultCode[0] = Messages.showYesNoCancelDialog(
+        ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
+        StringUtil.join(mySelectedOtpApps, importedOtpApp -> {
+          VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
+          return ideaModuleFile != null ? "    " + ideaModuleFile.getPath() + "\n" : "";
+        }, "") +
+        "\nWould you like to reuse them?", "Module files found",
+        Messages.getQuestionIcon());
+    });
+    
+    if (resultCode[0] == DialogWrapper.OK_EXIT_CODE) {
       return true;
     }
-    else if (resultCode == DialogWrapper.CANCEL_EXIT_CODE) {
+    else if (resultCode[0] == DialogWrapper.CANCEL_EXIT_CODE) {
       try {
         deleteIdeaModuleFiles(mySelectedOtpApps);
         return true;
@@ -390,22 +397,24 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
   private static void deleteIdeaModuleFiles(@NotNull final List<ImportedOtpApp> importedOtpApps) throws IOException {
     final IOException[] ex = new IOException[1];
-    ApplicationManager.getApplication().runWriteAction(new Runnable() {
-      @Override
-      public void run() {
-        for (ImportedOtpApp importedOtpApp : importedOtpApps) {
-          VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
-          if (ideaModuleFile != null) {
-            try {
-              ideaModuleFile.delete(this);
-              importedOtpApp.setIdeaModuleFile(null);
-            } catch (IOException e) {
-              ex[0] = e;
+    ApplicationManager.getApplication().invokeAndWait(
+      () -> ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        @Override
+        public void run() {
+          for (ImportedOtpApp importedOtpApp : importedOtpApps) {
+            VirtualFile ideaModuleFile = importedOtpApp.getIdeaModuleFile();
+            if (ideaModuleFile != null) {
+              try {
+                ideaModuleFile.delete(this);
+                importedOtpApp.setIdeaModuleFile(null);
+              }
+              catch (IOException e) {
+                ex[0] = e;
+              }
             }
           }
         }
-      }
-    });
+      }));
     if (ex[0] != null) {
       throw ex[0];
     }

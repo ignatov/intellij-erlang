@@ -41,6 +41,18 @@ public class ErlangLcExpressionImpl extends ErlangExpressionImpl implements Erla
 
   @Override
   @Nullable
+  public PsiElement getOpLtColonEq() {
+    return findChildByType(ERL_OP_LT_COLON_EQ);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getOpLtColonMinus() {
+    return findChildByType(ERL_OP_LT_COLON_MINUS);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getOpLtEq() {
     return findChildByType(ERL_OP_LT_EQ);
   }

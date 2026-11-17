@@ -14,6 +14,12 @@ public interface ErlangLcExpression extends ErlangExpression {
   ErlangExpression getExpression();
 
   @Nullable
+  PsiElement getOpLtColonEq();
+
+  @Nullable
+  PsiElement getOpLtColonMinus();
+
+  @Nullable
   PsiElement getOpLtEq();
 
   @Nullable

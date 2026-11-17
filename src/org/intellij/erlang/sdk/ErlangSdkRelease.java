@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.Objects;
+
 public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_R14A = new ErlangSdkRelease("R14A", "5.8");
   public static final ErlangSdkRelease V_R15B02 = new ErlangSdkRelease("R15B02", "5.9.2");
@@ -31,6 +33,9 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
+  public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.1");
+  public static final ErlangSdkRelease V_28_0 = new ErlangSdkRelease("28", "16.0");
+  public static final ErlangSdkRelease V_29_0 = new ErlangSdkRelease("29", "17.0");
 
   // The release with most features, assumed to be in effect if the version cannot be determined. The parser will use
   // this to guess the features available in the Erlang SDK.
@@ -64,6 +69,10 @@ public final class ErlangSdkRelease {
     return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) > 0;
   }
 
+  public boolean isNewerOrEqualTo(@NotNull ErlangSdkRelease other) {
+    return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) >= 0;
+  }
+
   public boolean needBifCompletion(@NotNull String moduleName) {
     return V_R16A.isNewerThan(this) || "lager".equals(moduleName) || moduleName.isEmpty();
   }
@@ -85,7 +94,7 @@ public final class ErlangSdkRelease {
     return null;
   }
 
-  // True if Erlang of this version supports 'maybe' as a keyword, otherwise it is parsed as atom.
+  // True, if Erlang of this version supports 'maybe' as a keyword, otherwise it is parsed as atom.
   private boolean erlangIsAtLeast25() {
     if (haveErlang25 != null) {
       return haveErlang25;

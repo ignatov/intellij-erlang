@@ -25,7 +25,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtilBase;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;

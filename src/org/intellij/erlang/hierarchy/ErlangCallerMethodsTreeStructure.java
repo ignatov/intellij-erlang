@@ -45,7 +45,7 @@ public class ErlangCallerMethodsTreeStructure extends HierarchyTreeStructure {
 
   @NotNull
   @Override
-  protected Object[] buildChildren(@NotNull HierarchyNodeDescriptor descriptor) {
+  protected Object @NotNull [] buildChildren(@NotNull HierarchyNodeDescriptor descriptor) {
     ErlangFunction function = ObjectUtils.tryCast(descriptor.getPsiElement(), ErlangFunction.class);
     if (function == null) return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
     SearchScope searchScope = getSearchScope(myCurrentScopeType, function);

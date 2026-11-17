@@ -28,7 +28,7 @@ public class SendSelectionToErlangConsoleAction extends AnAction {
   @Override
   public void update(@NotNull AnActionEvent actionEvent) {
     Presentation presentation = actionEvent.getPresentation();
-    presentation.setIcon(ErlangIcons.ERLANG_CONSOLE);
+    presentation.setIcon(ErlangIcons.getErlangConsole());
     presentation.setEnabledAndVisible(true);
     DataContext dataContext = actionEvent.getDataContext();
     PsiFile psiFile = CommonDataKeys.PSI_FILE.getData(dataContext);
@@ -48,6 +48,11 @@ public class SendSelectionToErlangConsoleAction extends AnAction {
     }
     ErlangConsoleView consoleView = ErlangConsoleViewDirectory.getInstance().getConsole(project);
     presentation.setEnabledAndVisible(consoleView != null && consoleView.isRunning());
+  }
+
+  @Override
+  public @NotNull ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
   }
 
   @Override

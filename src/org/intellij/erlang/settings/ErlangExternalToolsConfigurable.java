@@ -47,6 +47,8 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.io.File;
 
+import static org.intellij.erlang.utils.ErlangUiUtil.addBrowseFolderListener;
+
 public class ErlangExternalToolsConfigurable implements SearchableConfigurable, Configurable.NoScroll {
   public static final String ERLANG_RELATED_TOOLS = "Erlang External Tools";
 
@@ -68,9 +70,10 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarSettings = RebarSettings.getInstance(project);
     myEmacsSettings = EmacsSettings.getInstance(project);
     myDialyzerSettings = DialyzerSettings.getInstance(project);
-    myEmacsPathSelector.addBrowseFolderListener("Select Emacs Executable", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
-    myPltPathSelector.addBrowseFolderListener("Select Dialyzer PLT", "", null, FileChooserDescriptorFactory.createSingleLocalFileDescriptor());
-    mySdkPathSelector.addBrowseFolderListener("Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Select Erlang SDK Root"));
+    myRebarConfigurationForm.setProject(project);
+    addBrowseFolderListener(myEmacsPathSelector, "Select Emacs Executable", "", null, FileChooserDescriptorFactory.singleFile());
+    addBrowseFolderListener(myPltPathSelector, "Select Dialyzer PLT", "", null, FileChooserDescriptorFactory.singleFile());
+    addBrowseFolderListener(mySdkPathSelector, "Select Erlang SDK Path", "", null, FileChooserDescriptorFactory.createSingleFolderDescriptor().withTitle("Select Erlang SDK Root"));
 
     if (StringUtil.isEmpty(myRebarSettings.getRebarPath())) {
       VirtualFile baseDir = ProjectUtil.guessProjectDir(project);
@@ -113,12 +116,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   @Override
   public String getId() {
     return ERLANG_RELATED_TOOLS;
-  }
-
-  @Nullable
-  @Override
-  public Runnable enableSearch(String option) {
-    return null;
   }
 
   @NonNls
@@ -166,10 +163,6 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
     mySdkPathSelector.setText(StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)));
     validateEmacsPath();
-  }
-
-  @Override
-  public void disposeUIResources() {
   }
 
   private void validateEmacsPath() {

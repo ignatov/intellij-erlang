@@ -1,0 +1,3 @@
+-module(fileRenameToUpperCaseErlNew).
+
+f() -> ok.

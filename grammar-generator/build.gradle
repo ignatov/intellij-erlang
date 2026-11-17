@@ -1,0 +1,56 @@
+// Generates the parser and PSI in gen/ from grammars/erlang.bnf for generateLexerAndParser and verifyGeneratedSources in the
+// root project. The Grammar-Kit plugin runs inside the IntelliJ Platform test harness, as "Generate Parser Code" does in the
+// IDE: GenerateParserFromSources sets up a Java project with the source roots src/ and gen/ of the root project and its
+// compile classpath, so that Grammar-Kit reads psiImplUtilClass, mixins and stub classes from sources.
+//
+// This is a separate project because a test task of the root project runs with the Erlang plugin built and installed in
+// its sandbox, so it couldn't generate gen/ when src/ doesn't compile against the gen/ in the repository. Here the plugin
+// under test is this project, whose only class is the runner; nothing of the root project is compiled.
+
+def parserOutput = layout.buildDirectory.dir('generated/grammarKitParser')
+def generatorPackage = 'org/intellij/erlang/grammar/generation/**'
+def erlangProjectDir = rootProject.projectDir
+
+intellijPlatformTesting.testIde.register('generateParserFromSources') {
+  plugins {
+    // The Grammar-Kit release that was current when gen/ was last regenerated in the IDE (June 2026).
+    plugin('org.jetbrains.idea.grammar', '2023.3.2')
+  }
+  task {
+    group = 'grammar'
+    description = 'Generates the parser and PSI from grammars/erlang.bnf into the build directory.'
+    environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
+    useJUnitPlatform()
+    include generatorPackage
+    testLogging {
+      exceptionFormat = 'full'
+    }
+    def outputDir = parserOutput.get().asFile
+    // The compile classpath of the root project, whose dependencies are declared for all projects, and its own library.
+    // The JPS plugin is left out: no class in src/ refers to it.
+    def libraries = sourceSets.main.compileClasspath + files(new File(erlangProjectDir, 'libs/OtpErlang.jar'))
+    systemProperty 'grammarKit.projectDir', erlangProjectDir.absolutePath
+    systemProperty 'grammarKit.outputDir', outputDir.absolutePath
+    jvmArgumentProviders.add({ ["-DgrammarKit.libraries=${libraries.asPath}".toString()] } as CommandLineArgumentProvider)
+    inputs.file(new File(erlangProjectDir, 'grammars/erlang.bnf'))
+    outputs.dir(outputDir)
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+    def systemDir = sandboxSystemDirectory
+    doFirst {
+      // Rules that were removed must not leave their PSI behind.
+      outputDir.deleteDir()
+      // Start with an empty VFS and empty indices: the stubs kept from the last run go stale when src/ or gen/ changes,
+      // and Grammar-Kit then fails with "Outdated stub in index".
+      systemDir.get().asFile.deleteDir()
+    }
+  }
+}
+configurations.matching { it.name == 'intellijPlatformTestDependencies_generateParserFromSources' }.configureEach {
+  extendsFrom(configurations.intellijPlatformTestDependencies)
+}
+
+// The runner is not a test. Only generateParserFromSources runs it, not `./gradlew test` or `testCompilation`.
+tasks.matching { it.name in ['test', 'testCompilation'] }.configureEach {
+  enabled = false
+}

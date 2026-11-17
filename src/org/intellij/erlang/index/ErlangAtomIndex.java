@@ -23,7 +23,6 @@ import com.intellij.util.CommonProcessors;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
-import gnu.trove.THashMap;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;

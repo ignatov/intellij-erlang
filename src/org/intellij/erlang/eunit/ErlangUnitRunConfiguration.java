@@ -63,7 +63,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
   }
 
   @Override
-  public void writeExternal(Element element) throws WriteExternalException {
+  public void writeExternal(@NotNull Element element) throws WriteExternalException {
     super.writeExternal(element);
     XmlSerializer.serializeInto(myConfigData, element);
   }

@@ -47,6 +47,14 @@ pre {
     font-weight: normal
 }
 
+h1.signature {
+    margin-top: 0
+}
+
+a.detail-link, a.icon-action {
+    display: none
+}
+
 .REFBODY {
     margin-left: 13mm
 }

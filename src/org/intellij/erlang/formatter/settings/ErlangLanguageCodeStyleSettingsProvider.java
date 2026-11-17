@@ -17,9 +17,9 @@
 package org.intellij.erlang.formatter.settings;
 
 import com.intellij.application.options.IndentOptionsEditor;
-import com.intellij.application.options.SmartIndentOptionsEditor;
 import com.intellij.lang.Language;
 import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizable;
+import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizableOptions;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.psi.codeStyle.LanguageCodeStyleSettingsProvider;
 import org.intellij.erlang.ErlangLanguage;
@@ -49,7 +49,7 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
   @Override
   public IndentOptionsEditor getIndentOptionsEditor() {
-    return new SmartIndentOptionsEditor();
+    return new ErlangIndentOptionsEditor();
   }
 
   @NotNull
@@ -131,8 +131,8 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
   }
 
   private static void showCustomWrapOption(CodeStyleSettingsCustomizable consumer, String name, String title, @Nullable String groupName) {
-    consumer.showCustomOption(ErlangCodeStyleSettings.class, name, title, groupName, 
-      CodeStyleSettingsCustomizable.WRAP_OPTIONS, CodeStyleSettingsCustomizable.WRAP_VALUES);
+    consumer.showCustomOption(ErlangCodeStyleSettings.class, name, title, groupName,
+                              CodeStyleSettingsCustomizableOptions.getInstance().WRAP_OPTIONS, CodeStyleSettingsCustomizable.WRAP_VALUES);
   }
 
   private static final String DEFAULT_CODE_SAMPLE =
@@ -197,5 +197,9 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
           List = [
             1,
             2
-          ].""";
+          ].
+
+      bar(X)
+          when is_integer(X) ->
+          X.""";
 }

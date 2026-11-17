@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.grazie.spellcheck.GrazieSpellCheckingInspection;
 import com.intellij.spellchecker.inspections.SpellCheckingInspection;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -23,11 +24,16 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    myFixture.enableInspections(new SpellCheckingInspection());
+    myFixture.enableInspections(new GrazieSpellCheckingInspection());
   }
 
-  public void testFunctionName() { doTest(); }
-  public void testAtom()         { doTest(); }
+  public void testFunctionName() {
+    doTest();
+  }
+
+  public void testAtom() {
+    doTest();
+  }
 
   private void doTest() {
     myFixture.testHighlighting(false, false, true, getTestName(true) + ".erl");
@@ -36,10 +42,5 @@ public class ErlangSpellcheckingTest extends ErlangLightPlatformCodeInsightFixtu
   @Override
   protected String getTestDataPath() {
     return "testData/spellchecker/";
-  }
-
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
   }
 }

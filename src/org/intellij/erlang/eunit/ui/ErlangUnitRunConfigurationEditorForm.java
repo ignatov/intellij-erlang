@@ -17,6 +17,7 @@
 package org.intellij.erlang.eunit.ui;
 
 import com.intellij.application.options.ModulesComboBox;
+import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.HideableTitledPanel;
@@ -44,6 +45,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   @SuppressWarnings("unused")
   private HideableTitledPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
+  private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
 
   public ErlangUnitRunConfigurationEditorForm() {
     myTestKindComboBox.addActionListener(e -> onTestKindSwitch());
@@ -70,12 +72,14 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     myErlangModulesField.setText(getCommaSeparatedNamesString(configData.getModuleNames()));
     myErlangFunctionsField.setText(getCommaSeparatedNamesString(configData.getFunctionNames()));
     myWorkingDirectoryComponent.setText(StringUtil.notNullize(configuration.getWorkDirectory()));
+    myEnvironmentVariablesComponent.setEnvData(configuration.getEnvData());
   }
 
   @Override
   protected void doApplyEditorTo(ErlangUnitRunConfiguration configuration) {
     configuration.setModule(myModuleComboBox.getSelectedModule());
     configuration.setWorkDirectory(StringUtil.nullize(myWorkingDirectoryComponent.getText()));
+    configuration.setEnvData(myEnvironmentVariablesComponent.getEnvData());
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();
     configData.setFunctionNames(parseCommaSeparatedNames(myErlangFunctionsField.getText()));
@@ -110,9 +114,13 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   }
 
   private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
-    return new ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind>() {
+    return new ListCellRendererWrapper<>() {
       @Override
-      public void customize(JList list, ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, int index, boolean selected, boolean hasFocus) {
+      public void customize(JList list,
+                            ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind,
+                            int index,
+                            boolean selected,
+                            boolean hasFocus) {
         if (kind != null) {
           String kindName = StringUtil.capitalize(kind.toString().toLowerCase());
           setText(kindName);

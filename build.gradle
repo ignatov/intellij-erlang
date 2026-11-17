@@ -1,22 +1,52 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.extensions.IntelliJPlatformDependenciesExtension
+import org.jetbrains.intellij.platform.gradle.tasks.GenerateLexerTask
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask
+
 plugins {
-  id 'org.jetbrains.intellij' version "1.16.0"
+  id 'org.jetbrains.intellij.platform' version '2.20.1'
 }
 
-dependencies {
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.6.1'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.3'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.3'
-  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.3'
-  testCompileOnly 'junit:junit:4.13.1'
+apply plugin: 'org.jetbrains.intellij.platform'
+
+// The oldest supported IDE: the released archive is built against it and serves every IDE up to supportedUntilBuild.
+// -PplatformVersion selects another IDE to compile, test and verify against.
+def platformVersionOverride = providers.gradleProperty('platformVersion').orNull
+def platformVersion = platformVersionOverride ?: '2026.1'
+// The newest IDE branch CI tests the sources and verifies the archive against. Raise it only together with the
+// IDE list of the other-ides job in .github/workflows/gradle.yml and of release.yml.
+def supportedUntilBuild = '263.*'
+
+subprojects {
+  apply plugin: 'org.jetbrains.intellij.platform.module'
 }
 
-version = "${version}.$buildNumber"
+
 allprojects {
   repositories { mavenCentral() }
+
+  dependencies {
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.6.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.3'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.3'
+    testCompileOnly 'junit:junit:4.13.1'
+  }
+
   apply plugin: 'java'
-  sourceCompatibility = javaVersion
-  targetCompatibility = javaTargetVersion
-  tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
+  
+  // Only apply the main Java version if this is not the JPS module
+  // JPS module defines its own bytecode compatibility separately (Java 11)
+  if (project.name != 'jps-plugin') {
+    java {
+      sourceCompatibility = JavaVersion.toVersion(javaVersion)
+      targetCompatibility = JavaVersion.toVersion(javaTargetVersion)
+    }
+  }
+  
+  tasks.withType(JavaCompile).configureEach { 
+    options.encoding = 'UTF-8' 
+  }
 
   sourceSets {
     main {
@@ -28,12 +58,52 @@ allprojects {
     }
   }
 
-  apply plugin: 'org.jetbrains.intellij'
-  intellij {
-    version = ideaVersion
-    plugins = ['copyright', 'java']
-    downloadSources = Boolean.valueOf(sources)
-    sameSinceUntilBuild = Boolean.valueOf(isEAP)
+  intellijPlatform {
+    version = "${version}.$buildNumber"
+//    plugins = ['copyright', 'java']
+//    downloadSources = Boolean.valueOf(sources)
+//    sameSinceUntilBuild = Boolean.valueOf(isEAP)
+  }
+
+  composedJar {
+    archiveVersion = ""
+  }
+
+  repositories {
+    intellijPlatform {
+      defaultRepositories()
+    }
+  }
+
+  dependencies {
+    intellijPlatform { IntelliJPlatformDependenciesExtension ijp ->
+      // https://data.services.jetbrains.com/products?code=IC
+      // -PplatformVersion overrides the IDE to build, test and verify against (the compatibility check, see AGENTS.md).
+      // A -SNAPSHOT version comes from the IntelliJ Maven snapshots repository, whose archives have no JetBrains Runtime.
+      if (platformVersion.endsWith('-SNAPSHOT')) {
+        ijp.intellijIdea(platformVersion) { useInstaller = false }
+        ijp.jetbrainsRuntime()
+      }
+      else {
+        ijp.intellijIdea(platformVersion)
+      }
+
+      ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
+      // The test runner and the structure view are part of the platform in 2026.1 and separate plugins of the IDE
+      // from 2026.2 on, under other ids in 2026.2 than later. plugin.xml depends on them optionally.
+      if (platformVersion ==~ /(2026\.1|261)([.-].*)?/) {
+        // Nothing to add.
+      }
+      else if (platformVersion ==~ /(2026\.2|262)([.-].*)?/) {
+        ijp.bundledPlugins("intellij.testRunner.plugin", "intellij.structureView.plugin")
+      }
+      else {
+        ijp.bundledPlugins("com.intellij.platform.testRunner", "com.intellij.structureView")
+        ijp.bundledModule("intellij.platform.debugger")
+      }
+      ijp.testFramework(TestFrameworkType.Platform.INSTANCE)
+      ijp.testFramework(TestFrameworkType.Plugin.Java.INSTANCE)
+    }
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
@@ -45,6 +115,7 @@ allprojects {
   }
 
   test {
+    environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
     useJUnitPlatform {
       exclude compilationPackages
     }
@@ -53,21 +124,30 @@ allprojects {
     }
   }
 
-  task testCompilation(type: Test, group: 'Verification', dependsOn: [classes, testClasses]) {
-    useJUnit {
+  // The compilation tests need the same IDE classpath and sandbox as `test`, so let the IntelliJ Platform
+  // Gradle plugin create and configure the task instead of declaring a plain Test task.
+  intellijPlatformTesting.testIde.register('testCompilation') {
+    task {
+      group = 'verification'
+      description = 'Runs the Erlang JPS and external build tests; requires -Derlang.sdk.path=<Erlang root>, -Drebar.path=<rebar3 escript> is optional.'
+      environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
+      useJUnitPlatform()
       include compilationPackages
+      testLogging {
+        exceptionFormat = 'full'
+      }
+      systemProperty 'erlang.sdk.path', System.getProperty('erlang.sdk.path', '')
+      // The rebar tests run a real rebar3 build when this is set to the rebar3 escript and are skipped otherwise.
+      systemProperty 'rebar.path', System.getProperty('rebar.path', '')
     }
-    testLogging {
-      exceptionFormat = 'full'
-    }
-    systemProperties = [
-      "erlang.sdk.path": System.getProperty("erlang.sdk.path")
-    ]
+  }
+  // Custom test tasks get their own dependency configurations; reuse the test frameworks declared for `test`.
+  configurations.matching { it.name == 'intellijPlatformTestDependencies_testCompilation' }.configureEach {
+    extendsFrom(configurations.intellijPlatformTestDependencies)
   }
 }
 
 repositories {
-  jcenter()
   flatDir {
     dirs 'libs'
   }
@@ -75,7 +155,244 @@ repositories {
 
 dependencies {
   implementation name: 'OtpErlang'
-  implementation project('jps-plugin')
+  // JPS is a shared library loaded by both the IDE and the compile server, not a content module.
+  implementation files(project(':jps-plugin').tasks.named('composedJar'))
+}
+
+intellijPlatform {
+  pluginConfiguration {
+    ideaVersion {
+      // since-build is the branch of the IDE built against. The upper bound is set only on the default build, the one
+      // that is released: a build against another IDE (-PplatformVersion) is for tests and the compatibility check.
+      if (platformVersionOverride == null) {
+        untilBuild = supportedUntilBuild
+      }
+    }
+  }
+  pluginVerification {
+    // The existing Marketplace plugin predates the restriction on org.jetbrains plugin IDs.
+    freeArgs = ['-mute', 'ForbiddenPluginIdPrefix']
+    // Gate releases on binary compatibility; legacy API usages remain visible in the report.
+    failureLevel = [VerifyPluginTask.FailureLevel.COMPATIBILITY_PROBLEMS,
+                    VerifyPluginTask.FailureLevel.MISSING_DEPENDENCIES,
+                    VerifyPluginTask.FailureLevel.INVALID_PLUGIN,
+                    VerifyPluginTask.FailureLevel.OVERRIDE_ONLY_API_USAGES]
+    ides {
+      // The IDE the plugin is built against, so -PplatformVersion selects the verified IDE too.
+      current()
+    }
+  }
+  // Only the root project applies the full platform plugin, so jps-plugin has no publishPlugin task.
+  // The release workflow supplies PUBLISH_TOKEN from the JETBRAINS_MARKETPLACE_TOKEN secret.
+  publishing {
+    token = providers.environmentVariable('PUBLISH_TOKEN')
+    channels = ['default']
+  }
+}
+
+// Add JPS Java 11 verification to the plugin build pipeline
+afterEvaluate {
+  // The JPS helper module is packaged into the main plugin but intentionally keeps
+  // Java 11 bytecode compatibility, so the generic IntelliJ Platform module check
+  // produces a misleading sourceCompatibility warning for the target platform.
+  project(':jps-plugin').tasks.named('verifyPluginProjectConfiguration') {
+    enabled = false
+  }
+
+  tasks.named('prepareSandbox') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
+  
+  tasks.named('buildPlugin') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
+  
+  tasks.named('check') {
+    dependsOn ':jps-plugin:verifyJpsJava11Compatibility'
+  }
+}
+
+// The external build process loads the Erlang JPS plugin from the jars listed in
+// <compileServer.plugin classpath="..."/>, resolved against the lib/ directory of the installed plugin.
+// If a name doesn't match the packaged jar, the IDE only logs an internal error, the build process doesn't know
+// Erlang modules and a build copies the .erl files to the output directory and reports success (#1077).
+def verifyCompileServerPluginLayout = tasks.register('verifyCompileServerPluginLayout') {
+  group = 'verification'
+  description = 'Verifies that the plugin ZIP contains the jars that compileServer.plugin puts on the build process classpath.'
+  def pluginZip = tasks.named('buildPlugin').flatMap { it.archiveFile }
+  inputs.file(pluginZip)
+
+  doLast {
+    def readEntries = { InputStream jarStream ->
+      def result = [:]
+      def jar = new java.util.zip.ZipInputStream(jarStream)
+      for (def entry = jar.nextEntry; entry != null; entry = jar.nextEntry) {
+        result[entry.name] = entry.name.endsWith('.class') || entry.name.startsWith('META-INF/') ? jar.readAllBytes() : null
+      }
+      result
+    }
+
+    def zip = new java.util.zip.ZipFile(pluginZip.get().asFile)
+    try {
+      def names = zip.entries().collect { it.name }
+      def libDir = names.find { it ==~ /[^\/]+\/lib\// }
+      if (libDir == null) throw new GradleException("No lib/ directory in ${zip.name}")
+      def mainJar = zip.getEntry(libDir + 'intellij-erlang.jar')
+      if (mainJar == null) throw new GradleException("No ${libDir}intellij-erlang.jar in ${zip.name}")
+      def javaDeps = readEntries(zip.getInputStream(mainJar))['META-INF/java-deps.xml']
+      if (javaDeps == null) throw new GradleException('No META-INF/java-deps.xml in intellij-erlang.jar')
+      def classpath = new groovy.xml.XmlSlurper().parse(new ByteArrayInputStream(javaDeps))
+        .depthFirst().find { it.name() == 'compileServer.plugin' }?.@classpath?.text()
+      if (!classpath) throw new GradleException('java-deps.xml does not register compileServer.plugin with a classpath')
+
+      def jpsJarFound = false
+      classpath.split(';').each { String jarName ->
+        def jarEntry = zip.getEntry(libDir + jarName)
+        if (jarEntry == null) {
+          throw new GradleException("compileServer.plugin refers to ${libDir}${jarName}, which is not in ${zip.name}. " +
+                                    "Jars in ${libDir}: ${names.findAll { it.startsWith(libDir) && it != libDir }}")
+        }
+        def jarEntries = readEntries(zip.getInputStream(jarEntry))
+        if (jarEntries.containsKey('META-INF/services/org.jetbrains.jps.incremental.BuilderService')) {
+          jpsJarFound = true
+          ['META-INF/services/org.jetbrains.jps.model.serialization.JpsModelSerializerExtension',
+           'org/intellij/erlang/jps/builder/ErlangBuilder.class',
+           'org/intellij/erlang/jps/model/JpsErlangModelSerializerExtension.class'].each {
+            if (!jarEntries.containsKey(it)) throw new GradleException("${jarName} does not contain ${it}")
+          }
+          // The build process may run on an older JDK than the IDE, so the JPS plugin keeps Java 11 bytecode.
+          jarEntries.findAll { it.key.endsWith('.class') }.each { String name, byte[] bytes ->
+            int major = ((bytes[6] & 0xFF) << 8) | (bytes[7] & 0xFF)
+            if (major > 55) throw new GradleException("${jarName}!/${name} has class file version ${major}, expected Java 11 (55) or lower")
+          }
+        }
+      }
+      if (!jpsJarFound) {
+        throw new GradleException("None of the compileServer.plugin jars (${classpath}) registers a JPS BuilderService")
+      }
+      logger.lifecycle("compileServer.plugin classpath '${classpath}' matches the layout of ${zip.name}")
+    }
+    finally {
+      zip.close()
+    }
+  }
+}
+
+tasks.named('buildPlugin') {
+  finalizedBy verifyCompileServerPluginLayout
+}
+tasks.named('check') {
+  dependsOn verifyCompileServerPluginLayout
+}
+
+// The lexer, parser and PSI in gen/ are generated from Erlang.flex and grammars/erlang.bnf and committed.
+// `./gradlew generateLexerAndParser` regenerates them in place; `./gradlew verifyGeneratedSources` generates them into
+// the build directory and fails if gen/ differs. Neither task is part of compileJava, test, check or buildPlugin.
+def generatedLexer = 'org/intellij/erlang/parser/_ErlangLexer.java'
+def generatedParser = 'org/intellij/erlang/parser/ErlangParser.java'
+def generatedPsi = 'org/intellij/erlang/psi'
+def generatedTypes = 'org/intellij/erlang/ErlangTypes.java'
+// The parser and PSI are generated by the Grammar-Kit plugin from the Java sources in src/ and gen/, see
+// grammar-generator/build.gradle. That doesn't compile the plugin, so gen/ can be regenerated when it is stale or missing.
+def parserGenerator = ':grammar-generator:generateParserFromSources'
+def parserOutput = project(':grammar-generator').layout.buildDirectory.dir('generated/grammarKitParser')
+
+tasks.register('generateParser') {
+  group = 'grammar'
+  description = 'Replaces the parser, ErlangTypes and PSI in gen/ with the output of generateParserFromSources.'
+  dependsOn parserGenerator
+  def outputDir = parserOutput.get().asFile
+  def genDir = file('gen')
+  doLast {
+    if (!new File(outputDir, generatedParser).isFile()) {
+      throw new GradleException("Grammar-Kit did not generate $outputDir/$generatedParser")
+    }
+    [generatedParser, generatedPsi, generatedTypes].each { new File(genDir, it).delete() || new File(genDir, it).deleteDir() }
+    copy {
+      from outputDir
+      into genDir
+    }
+  }
+}
+
+// JFlex 1.9.2, the IntelliJ-patched build that Grammar-Kit 2023.3.2 bundles and that wrote the committed lexer.
+configurations {
+  jflex
+}
+dependencies {
+  jflex 'org.jetbrains.intellij.deps.jflex:jflex:1.9.2'
+}
+tasks.withType(GenerateLexerTask).configureEach {
+  group = 'grammar'
+  sourceFile = file('src/org/intellij/erlang/parser/Erlang.flex')
+  pathToClass = generatedLexer
+  purgeOldFiles = true
+  classpath = configurations.jflex
+  // The lexer refers to the token types in ErlangTypes, so generate it after the parser.
+  mustRunAfter 'generateParser'
+  outputs.cacheIf { false }
+}
+tasks.register('generateLexer', GenerateLexerTask) {
+  description = 'Generates the lexer in gen/ from Erlang.flex.'
+  targetRootOutputDir = file('gen')
+}
+
+tasks.register('generateLexerAndParser') {
+  group = 'grammar'
+  description = 'Regenerates the lexer, parser and PSI in gen/ from Erlang.flex and grammars/erlang.bnf.'
+  dependsOn 'generateParser', 'generateLexer'
+}
+
+def lexerOutput = layout.buildDirectory.dir('generated/jflexLexer')
+def generateLexerForCheck = tasks.register('generateLexerForCheck', GenerateLexerTask) {
+  description = 'Generates the lexer into the build directory for verifyGeneratedSources.'
+  targetRootOutputDir = lexerOutput
+}
+
+tasks.register('verifyGeneratedSources') {
+  group = 'verification'
+  description = 'Fails if gen/ is not what Erlang.flex and grammars/erlang.bnf generate.'
+  dependsOn parserGenerator, generateLexerForCheck
+  mustRunAfter 'generateParser', 'generateLexer'
+  def committedRoot = file('gen')
+  def generatedRoots = [(lexerOutput.get().asFile): [generatedLexer],
+                        (parserOutput.get().asFile): [generatedParser, generatedPsi, generatedTypes]]
+
+  doLast {
+    def list = { File root, List<String> paths ->
+      def files = new TreeMap<String, File>()
+      paths.each { String path ->
+        def file = new File(root, path)
+        if (file.isDirectory()) {
+          file.eachFileRecurse(groovy.io.FileType.FILES) {
+            files[root.toPath().relativize(it.toPath()).toString().replace(File.separatorChar, '/' as char)] = it
+          }
+        }
+        else if (file.isFile()) {
+          files[path] = file
+        }
+      }
+      files
+    }
+    def committed = new TreeMap<String, File>()
+    def generated = new TreeMap<String, File>()
+    generatedRoots.each { File root, List<String> paths ->
+      committed.putAll(list(committedRoot, paths))
+      generated.putAll(list(root, paths))
+    }
+    def problems = []
+    (committed.keySet() + generated.keySet()).toSorted().each { String path ->
+      if (!generated.containsKey(path)) problems << "not generated any more: gen/$path"
+      else if (!committed.containsKey(path)) problems << "missing: gen/$path"
+      else if (committed[path].bytes != generated[path].bytes) problems << "differs: gen/$path"
+    }
+    if (!problems.isEmpty()) {
+      throw new GradleException("gen/ is out of date with Erlang.flex and grammars/erlang.bnf (${problems.size()} files).\n" +
+                                "Run ./gradlew generateLexerAndParser and commit gen/.\n  " +
+                                problems.take(50).join('\n  ') + (problems.size() > 50 ? '\n  ...' : ''))
+    }
+    logger.lifecycle("gen/ matches Erlang.flex and grammars/erlang.bnf (${committed.size()} files)")
+  }
 }
 
 apply plugin: 'idea'

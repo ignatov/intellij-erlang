@@ -28,8 +28,9 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 
 public class ErlangConsoleCommandLineState extends CommandLineState {
   @NotNull private final ErlangConsoleRunConfiguration myConfig;
@@ -52,16 +53,23 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    Project project = myConfig.getProject();
-    Module module = myConfig.getConfigurationModule().getModule();
-    GeneralCommandLine commandLine = new GeneralCommandLine();
-    commandLine.setExePath(ErlangConsoleUtil.getErlPath(project, module));
-    String consoleArgs = myConfig.getConsoleArgs();
-    commandLine.addParameters(StringUtil.split(consoleArgs, " "));
-    commandLine.addParameters(ErlangConsoleUtil.getCodePath(project, module, false));
-    commandLine.setWorkDirectory(ErlangConsoleUtil.getWorkingDirPath(project, myConfig.getWorkingDirPath()));
+    GeneralCommandLine commandLine = createCommandLine(myConfig);
     OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
     ProcessTerminatedListener.attach(handler);
     return handler;
+  }
+
+  @VisibleForTesting
+  @NotNull
+  static GeneralCommandLine createCommandLine(@NotNull ErlangConsoleRunConfiguration config) throws ExecutionException {
+    Project project = config.getProject();
+    Module module = config.getConfigurationModule().getModule();
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+    commandLine.setExePath(ErlangConsoleUtil.getErlPath(project, module));
+    String consoleArgs = config.getConsoleArgs();
+    commandLine.addParameters(ParametersListUtil.parse(consoleArgs));
+    commandLine.addParameters(ErlangConsoleUtil.getCodePath(project, module, false));
+    commandLine.setWorkDirectory(ErlangConsoleUtil.getWorkingDirPath(project, config.getWorkingDirPath()));
+    return commandLine;
   }
 }

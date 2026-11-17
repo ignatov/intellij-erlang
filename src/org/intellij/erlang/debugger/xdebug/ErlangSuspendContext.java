@@ -45,7 +45,7 @@ public class ErlangSuspendContext extends XSuspendContext {
   }
 
   @Override
-  public XExecutionStack[] getExecutionStacks() {
+  public XExecutionStack @NotNull [] getExecutionStacks() {
     return myExecutionStacks;
   }
 

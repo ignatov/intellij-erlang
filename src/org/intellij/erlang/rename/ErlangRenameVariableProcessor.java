@@ -33,9 +33,9 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
   }
 
   @Override
-  public void renameElement(PsiElement element,
-                            String newName,
-                            UsageInfo[] usages,
+  public void renameElement(@NotNull PsiElement element,
+                            @NotNull String newName,
+                            UsageInfo @NotNull [] usages,
                             @Nullable RefactoringElementListener listener) throws IncorrectOperationException {
     boolean variableNameIsInvalid;
     try {

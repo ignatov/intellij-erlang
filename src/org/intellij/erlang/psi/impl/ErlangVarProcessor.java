@@ -54,7 +54,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
-    if (inFunArgList(myOrigin)) return true;
+    if (inFunArgList(myOrigin)) {
+      if (!inMapPatternKey(myOrigin)) return true;
+      ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
+      if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
+    }
+    if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
@@ -79,8 +84,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
       // put all possible variables to list
-      boolean inArgDefList = inFunArgList(psiElement);
-      return !myVarList.add((ErlangQVar) psiElement) && !inArgDefList;
+      myVarList.add((ErlangQVar) psiElement);
+      return false;
     }
 
     return true;
@@ -89,6 +94,16 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private static boolean inFunArgList(PsiElement psiElement) {
     ErlangArgumentDefinitionList list = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinitionList.class);
     return list != null && list.getParent() instanceof ErlangFunClause;
+  }
+
+  private static boolean inMapPatternKey(PsiElement psiElement) {
+    ErlangMapEntry entry = PsiTreeUtil.getParentOfType(psiElement, ErlangMapEntry.class, true, ErlangArgumentDefinitionList.class);
+    while (entry != null) {
+      List<ErlangExpression> expressions = entry.getExpressionList();
+      if (entry.getMatch() != null && !expressions.isEmpty() && PsiTreeUtil.isAncestor(expressions.get(0), psiElement, false)) return true;
+      entry = PsiTreeUtil.getParentOfType(entry, ErlangMapEntry.class, true, ErlangArgumentDefinitionList.class);
+    }
+    return false;
   }
 
   private boolean hasNarrowerParentScope(PsiElement psiElement) {
@@ -100,7 +115,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (narrowestParentScopeOwner instanceof ErlangFunClause) {
       ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
       if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
-        return false;
+        // the name of a named fun is declared by its first clause only and is visible only inside that fun
+        if (funName == null) return false;
+        if (PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null) return true;
+        ErlangFunExpression funExpression = PsiTreeUtil.getParentOfType(narrowestParentScopeOwner, ErlangFunExpression.class);
+        return !PsiTreeUtil.isAncestor(funExpression, myOrigin, false);
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {

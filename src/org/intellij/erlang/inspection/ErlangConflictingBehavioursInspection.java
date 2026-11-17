@@ -41,9 +41,9 @@ public class ErlangConflictingBehavioursInspection extends ErlangInspectionBase 
     }
   }
 
-  private void reportProblem(@NotNull ErlangModule module,
-                             @NotNull ProblemsHolder problemsHolder,
-                             @NotNull List<Pair<String, List<String>>> callbacksAndRequiringModules) {
+  private static void reportProblem(@NotNull ErlangModule module,
+                                    @NotNull ProblemsHolder problemsHolder,
+                                    @NotNull List<Pair<String, List<String>>> callbacksAndRequiringModules) {
     assert !callbacksAndRequiringModules.isEmpty();
 
     StringBuilder builder = new StringBuilder("Conflicting behaviours - ");

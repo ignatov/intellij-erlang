@@ -51,21 +51,21 @@ public class ErlType {
     FUN, // a generic function type, any arity, any return
   }
 
-  public Kind kind;
+  public final Kind kind;
 
-  public static ErlType ANY_TYPE = new ErlType(Kind.ANY);
-  public static ErlType NONE_TYPE = new ErlType(Kind.NONE);
-  public static ErlType FLOAT_TYPE = new ErlType(Kind.FLOAT);
-  public static ErlType INTEGER_TYPE = new ErlType(Kind.INTEGER);
-  public static ErlType NUMBER_TYPE = new ErlType(Kind.NUMBER);
-  public static ErlType BINARY_TYPE = new ErlType(Kind.BINARY);
-  public static ErlType LIST_TYPE = new ErlType(Kind.LIST);
-  public static ErlType NIL_TYPE = new ErlType(Kind.NIL);
-  public static ErlType STRING_TYPE = new ErlType(Kind.STRING);
-  public static ErlType TUPLE_TYPE = new ErlType(Kind.TUPLE);
-  public static ErlType ATOM_TYPE = new ErlType(Kind.ATOM);
-  public static ErlType CHAR_TYPE = new ErlType(Kind.CHAR);
-  public static ErlType FUN_TYPE = new ErlType(Kind.FUN);
+  public static final ErlType ANY_TYPE = new ErlType(Kind.ANY);
+  public static final ErlType NONE_TYPE = new ErlType(Kind.NONE);
+  public static final ErlType FLOAT_TYPE = new ErlType(Kind.FLOAT);
+  public static final ErlType INTEGER_TYPE = new ErlType(Kind.INTEGER);
+  public static final ErlType NUMBER_TYPE = new ErlType(Kind.NUMBER);
+  public static final ErlType BINARY_TYPE = new ErlType(Kind.BINARY);
+  public static final ErlType LIST_TYPE = new ErlType(Kind.LIST);
+  public static final ErlType NIL_TYPE = new ErlType(Kind.NIL);
+  public static final ErlType STRING_TYPE = new ErlType(Kind.STRING);
+  public static final ErlType TUPLE_TYPE = new ErlType(Kind.TUPLE);
+  public static final ErlType ATOM_TYPE = new ErlType(Kind.ATOM);
+  public static final ErlType CHAR_TYPE = new ErlType(Kind.CHAR);
+  public static final ErlType FUN_TYPE = new ErlType(Kind.FUN);
 
   public ErlType(Kind kind) {
     this.kind = kind;

@@ -69,6 +69,12 @@ public class ErlangRecordDefinitionImpl extends ErlangNamedStubbedPsiElementBase
   }
 
   @Override
+  @Nullable
+  public PsiElement getRadix() {
+    return findChildByType(ERL_RADIX);
+  }
+
+  @Override
   public @NotNull String getName() {
     return ErlangPsiImplUtil.getName(this);
   }

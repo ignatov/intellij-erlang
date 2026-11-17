@@ -60,7 +60,7 @@ public class ErlangIncludeSourceRootEditHandler extends ModuleSourceRootEditHand
   @NotNull
   @Override
   public String getRootsGroupTitle() {
-    return "Include directories";
+    return "Include Directories";
   }
 
   @NotNull
@@ -72,6 +72,6 @@ public class ErlangIncludeSourceRootEditHandler extends ModuleSourceRootEditHand
   @NotNull
   @Override
   public String getUnmarkRootButtonText() {
-    return "Unmark include directory";
+    return "Unmark Include Directory";
   }
 }

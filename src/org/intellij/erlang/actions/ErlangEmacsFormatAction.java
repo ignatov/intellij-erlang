@@ -23,11 +23,12 @@ import com.intellij.execution.process.ProcessEvent;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
@@ -57,6 +58,11 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
     PsiFile psiFile = e.getData(CommonDataKeys.PSI_FILE);
     boolean isErlang = psiFile instanceof ErlangFile;
     e.getPresentation().setEnabled(isErlang);
+  }
+
+  @Override
+  public @NotNull ActionUpdateThread getActionUpdateThread() {
+    return ActionUpdateThread.BGT;
   }
 
   @Override
@@ -137,7 +143,9 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
               }
               final Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
               if (document == null) return;
-              CommandProcessor.getInstance().executeCommand(project, () -> ApplicationManager.getApplication().runWriteAction(() -> document.setText(emacsText)), NOTIFICATION_TITLE, "", document);
+              WriteCommandAction.writeCommandAction(project, psiFile)
+                .withName(NOTIFICATION_TITLE)
+                .run(() -> document.setText(emacsText));
 
               Notifications.Bus.notify(new Notification(groupId, NOTIFICATION_TITLE,
                 psiFile.getName() + " formatted with Emacs",

@@ -16,16 +16,13 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.BaseOSProcessHandler;
-import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.CommonProcessors;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.*;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
@@ -42,12 +39,10 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.*;
+import org.jetbrains.jps.util.JpsPathUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.*;
 
 import static org.intellij.erlang.jps.builder.ErlangBuilderUtil.LOG;
@@ -73,7 +68,8 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     JpsModule module = target.getModule();
     JpsProject project = module.getProject();
     ErlangCompilerOptions compilerOptions = ErlangBuilderUtil.getCompilerOptions(project);
-    if (compilerOptions.myUseRebarCompiler) return;
+    // RebarBuilder compiles modules that have rebar.config; erlc still compiles the rest, see #1028.
+    if (compilerOptions.myUseRebarCompiler && RebarBuilder.hasRebarConfig(module)) return;
 
     LOG.info("Build module " + target.getPresentableName());
     File sourceOutput = getBuildOutputDirectory(module, false, context);
@@ -177,61 +173,59 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
                               BuildOutputConsumer outputConsumer,
                               File outputDirectory,
                               boolean isTest) throws ProjectBuildException, IOException {
-    GeneralCommandLine commandLine = getErlcCommandLine(target, context, compilerOptions, outputDirectory, erlangModulePathsToCompile, isTest);
-    Process process;
-    LOG.debug("Run erlc compiler with command " + commandLine.getCommandLineString());
-    try {
-      process = commandLine.createProcess();
+    List<String> command = getErlcCommand(target, context, compilerOptions, outputDirectory, erlangModulePathsToCompile, isTest);
+    LOG.debug("Run erlc compiler with command " + String.join(" ", command));
+    
+    BuilderProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, "");
+    int exitCode = ProcessRunner.runProcess(command, outputDirectory, null, adapter);
+    if (exitCode != 0 && !adapter.isErrorReported()) {
+      // Don't let a failed erlc run pass for a successful build when its output didn't contain a recognizable error.
+      String message = "erlc finished with exit code " + exitCode + " while compiling module \"" + target.getModule().getName() + "\".";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, message));
     }
-    catch (ExecutionException e) {
-      throw new ProjectBuildException("Failed to launch erlang compiler", e);
-    }
-    BaseOSProcessHandler handler = new BaseOSProcessHandler(process, commandLine.getCommandLineString(), Charset.defaultCharset());
-    ProcessAdapter adapter = new ErlangCompilerProcessAdapter(context, NAME, "");
-    handler.addProcessListener(adapter);
-    handler.startNotify();
-    handler.waitFor();
+
     registerBeams(outputConsumer, erlangModulePathsToCompile, outputDirectory);
   }
 
-  private static GeneralCommandLine getErlcCommandLine(ErlangTarget target,
-                                                       CompileContext context,
-                                                       ErlangCompilerOptions compilerOptions,
-                                                       File outputDirectory,
-                                                       List<String> erlangModulePaths,
-                                                       boolean isTest) throws ProjectBuildException {
-    GeneralCommandLine commandLine = new GeneralCommandLine();
+  private static List<String> getErlcCommand(ErlangTarget target,
+                                             CompileContext context,
+                                             ErlangCompilerOptions compilerOptions,
+                                             File outputDirectory,
+                                             List<String> erlangModulePaths,
+                                             boolean isTest) throws ProjectBuildException {
+    List<String> command = new ArrayList<>();
     JpsModule module = target.getModule();
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
     File executable = JpsErlangSdkType.getByteCodeCompilerExecutable(sdk.getHomePath());
-    commandLine.withWorkDirectory(outputDirectory);
-    commandLine.setExePath(executable.getAbsolutePath());
-    addCodePath(commandLine, module, target, context);
-    addParseTransforms(commandLine, module);
-    addDebugInfo(commandLine, compilerOptions.myAddDebugInfoEnabled);
-    addIncludePaths(commandLine, module);
-    addMacroDefinitions(commandLine, isTest);
-    commandLine.addParameters(compilerOptions.myAdditionalErlcArguments);
-    commandLine.addParameters(erlangModulePaths);
-    return commandLine;
+    
+    command.add(executable.getAbsolutePath());
+    addCodePath(command, module, target, context);
+    addParseTransforms(command, module);
+    addDebugInfo(command, compilerOptions.myAddDebugInfoEnabled);
+    addIncludePaths(command, module);
+    addMacroDefinitions(command, isTest);
+    command.addAll(compilerOptions.myAdditionalErlcArguments);
+    command.addAll(erlangModulePaths);
+    return command;
   }
 
-  private static void addMacroDefinitions(GeneralCommandLine commandLine, boolean isTests) {
+  private static void addMacroDefinitions(List<String> command, boolean isTests) {
     if (isTests) {
-      commandLine.addParameters("-DTEST");
+      command.add("-DTEST");
     }
   }
 
-  private static void addDebugInfo(@NotNull GeneralCommandLine commandLine, boolean addDebugInfoEnabled) {
+  private static void addDebugInfo(@NotNull List<String> command, boolean addDebugInfoEnabled) {
     if (addDebugInfoEnabled) {
-      commandLine.addParameter("+debug_info");
+      command.add("+debug_info");
     }
   }
 
-  private static void addIncludePaths(@NotNull GeneralCommandLine commandLine, @Nullable JpsModule module) {
+  private static void addIncludePaths(@NotNull List<String> command, @Nullable JpsModule module) {
     if (module == null) return;
     for (JpsTypedModuleSourceRoot<JpsDummyElement> includeDirectory : module.getSourceRoots(ErlangIncludeSourceRootType.INSTANCE)) {
-      commandLine.addParameters("-I", includeDirectory.getFile().getPath());
+      command.add("-I");
+      command.add(includeDirectory.getFile().getPath());
     }
   }
 
@@ -279,26 +273,26 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return ContainerUtil.map(erlFilesCollector.getResults(), ErlangBuilderUtil::getPath);
   }
 
-  private static void addParseTransforms(@NotNull GeneralCommandLine commandLine,
+  private static void addParseTransforms(@NotNull List<String> command,
                                          @Nullable JpsModule module) {
     JpsErlangModuleExtension extension = JpsErlangModuleExtension.getExtension(module);
     List<String> parseTransforms = extension != null ? extension.getParseTransforms() : Collections.emptyList();
     if (parseTransforms.isEmpty()) return;
     for (String ptModule : parseTransforms) {
-      commandLine.addParameter("+{parse_transform, " + ptModule + "}");
+      command.add("+{parse_transform, " + ptModule + "}");
     }
   }
 
-  private static void addCodePath(@NotNull GeneralCommandLine commandLine,
+  private static void addCodePath(@NotNull List<String> command,
                                   @NotNull JpsModule module,
                                   @NotNull ErlangTarget target,
                                   @NotNull CompileContext context) throws ProjectBuildException {
     List<JpsModule> codePathModules = new SmartList<>();
     collectDependentModules(module, codePathModules, new HashSet<>());
-    addModuleToCodePath(commandLine, module, target.isTests(), context);
+    addModuleToCodePath(command, module, target.isTests(), context);
     for (JpsModule codePathModule : codePathModules) {
       if (codePathModule != module) {
-        addModuleToCodePath(commandLine, codePathModule, false, context);
+        addModuleToCodePath(command, codePathModule, false, context);
       }
     }
   }
@@ -320,20 +314,20 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     }
   }
 
-  private static void addModuleToCodePath(@NotNull GeneralCommandLine commandLine,
+  private static void addModuleToCodePath(@NotNull List<String> command,
                                           @NotNull JpsModule module,
                                           boolean forTests,
                                           @NotNull CompileContext context) throws ProjectBuildException {
     File outputDirectory = getBuildOutputDirectory(module, forTests, context);
-    commandLine.addParameters("-pa", outputDirectory.getPath());
+    command.add("-pa");
+    command.add(outputDirectory.getPath());
+    addContentRootsToCodePath(command, module);
+  }
+
+  static void addContentRootsToCodePath(@NotNull List<String> command, @NotNull JpsModule module) {
     for (String rootUrl : module.getContentRootsList().getUrls()) {
-      try {
-        String path = new URL(rootUrl).getPath();
-        commandLine.addParameters("-pa", path);
-      }
-      catch (MalformedURLException e) {
-        context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, "Failed to find content root for module: " + module.getName()));
-      }
+      command.add("-pa");
+      command.add(JpsPathUtil.urlToPath(rootUrl));
     }
   }
 

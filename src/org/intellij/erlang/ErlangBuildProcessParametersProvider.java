@@ -19,15 +19,15 @@ package org.intellij.erlang;
 import com.intellij.compiler.server.BuildProcessParametersProvider;
 import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.PathManager;
-import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ErlangBuildProcessParametersProvider extends BuildProcessParametersProvider {
   @NotNull
   @Override
   public List<String> getClassPath() {
-    return ContainerUtil.immutableList(PathManager.getJarPathForClass(ExecutionException.class));
+    return Collections.singletonList(PathManager.getJarPathForClass(ExecutionException.class));
   }
 }

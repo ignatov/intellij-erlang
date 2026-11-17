@@ -212,7 +212,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
                                            @NotNull final List<PsiElement> occurrences) {
     Project project = declaration.getProject();
     return WriteCommandAction.writeCommandAction(project, initializer.getContainingFile()).withName("Extract Variable").compute(() -> {
-      boolean alone = occurrences.size() == 1 && occurrences.get(0).getParent() instanceof ErlangClauseBody;
+      boolean alone = occurrences.size() == 1 && occurrences.getFirst().getParent() instanceof ErlangClauseBody;
       PsiElement createdDeclaration = replaceLeftmostArgumentDefinition(declaration, occurrences);
       if (createdDeclaration == null) {
         createdDeclaration = addDeclaration(declaration, occurrences);
@@ -299,7 +299,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   @Nullable
   private static PsiElement findAnchor(@NotNull List<PsiElement> occurrences) {
-    PsiElement anchor = occurrences.get(0);
+    PsiElement anchor = occurrences.getFirst();
     next:
     do {
       ErlangCompositeElement clause = PsiTreeUtil.getParentOfType(anchor, ErlangClauseBody.class, ErlangTryExpressionsClause.class);

@@ -50,7 +50,7 @@ public abstract class ErlangQAtomBasedReferenceImpl extends PsiReferenceBase<Psi
   }
 
   @Override
-  public PsiElement handleElementRename(String newElementName) throws IncorrectOperationException {
+  public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
     ErlangPsiImplUtil.renameQAtom(myQAtom, newElementName);
     return myElement;
   }

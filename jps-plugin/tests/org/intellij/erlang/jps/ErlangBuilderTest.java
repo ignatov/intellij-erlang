@@ -16,22 +16,13 @@
 
 package org.intellij.erlang.jps;
 
-import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.PathUtilRt;
-import org.intellij.erlang.jps.model.JpsErlangModuleType;
-import org.intellij.erlang.jps.model.JpsErlangSdkType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.jps.model.JpsDummyElement;
-import org.jetbrains.jps.model.JpsElement;
-import org.jetbrains.jps.model.library.JpsOrderRootType;
-import org.jetbrains.jps.model.library.JpsTypedLibrary;
-import org.jetbrains.jps.model.library.sdk.JpsSdk;
-import org.jetbrains.jps.util.JpsPathUtil;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 
-import java.io.File;
+import java.util.List;
 
-public class ErlangBuilderTest extends JpsBuildTestCase {
+public class ErlangBuilderTest extends ErlangJpsBuildTestCase {
   public void testSimple() {
     doSingleFileTest("src/simple.erl", "-module(simple). foo() -> ok.", "simple.beam");
   }
@@ -44,37 +35,39 @@ public class ErlangBuilderTest extends JpsBuildTestCase {
     doSingleFileTest("src/simple.app.src", "", "simple.app");
   }
 
+  public void testWarningsDoNotFailBuild() {
+    String file = createFile("src/simple.erl", "-module(simple). foo() -> ok.");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    result.assertSuccessful();
+    assertTrue(ContainerUtil.exists(result.getWarnMessages(), m -> m.getMessageText().contains("function foo/0 is unused")));
+    assertCompiled("m", "simple.beam");
+  }
+
+  public void testErlcFailureWithoutRecognizedErrorFailsBuild() {
+    ErlangCompilerOptions options = setCompilerOptions();
+    options.myAdditionalErlcArguments = List.of("+{bad");
+    String file = createFile("src/simple.erl", "-module(simple).");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    assertTrue(ContainerUtil.exists(result.getErrorMessages(), m -> m.getMessageText().contains("erlc finished with exit code")));
+  }
+
+  public void testModuleWithoutRebarConfigIsCompiledWithErlcWhenRebarIsEnabled() {
+    setCompilerOptions().myUseRebarCompiler = true;
+    String file = createFile("src/simple.erl", "-module(simple).");
+    addModule("m", PathUtilRt.getParentPath(file));
+    BuildResult result = rebuildAllWithoutAssertions();
+    result.assertSuccessful();
+    assertTrue(ContainerUtil.exists(result.getWarnMessages(), m -> m.getMessageText().contains("rebar.config is not found in module 'm'")));
+    assertCompiled("m", "simple.beam");
+  }
+
   private void doSingleFileTest(String relativePath, String text, String expectedOutputFileName) {
     String depFile = createFile(relativePath, text);
     String moduleName = "m";
     addModule(moduleName, PathUtilRt.getParentPath(depFile));
     rebuildAll();
     assertCompiled(moduleName, expectedOutputFileName);
-  }
-
-  private void assertCompiled(@NotNull String moduleName, @NotNull String fileName) {
-    String absolutePath = getAbsolutePath("out/production/" + moduleName);
-    assertNotNull(FileUtil.findFileInProvidedPath(absolutePath, fileName));
-  }
-
-  @Override
-  protected JpsSdk<JpsDummyElement> addJdk(String name, String path) {
-    String homePath = JpsErlangSdkType.getTestsSdkPath();
-    if (!new File(homePath).isDirectory()) {
-      fail(JpsErlangSdkType.getSdkConfigurationFailureMessage());
-    }
-    String versionString = "R16B";
-    JpsTypedLibrary<JpsSdk<JpsDummyElement>> jdk = myModel.getGlobal().addSdk(versionString, homePath, versionString, JpsErlangSdkType.INSTANCE);
-    jdk.addRoot(JpsPathUtil.pathToUrl(homePath), JpsOrderRootType.COMPILED);
-    return jdk.getProperties();
-  }
-
-  @Override
-  protected <T extends JpsElement> void addModule(@NotNull String moduleName,
-                                                  @NotNull String[] srcPaths,
-                                                  @Nullable String outputPath,
-                                                  @Nullable String testOutputPath,
-                                                  @NotNull JpsSdk<T> sdk) {
-    addModule(moduleName, srcPaths, outputPath, testOutputPath, sdk, JpsErlangModuleType.INSTANCE);
   }
 }

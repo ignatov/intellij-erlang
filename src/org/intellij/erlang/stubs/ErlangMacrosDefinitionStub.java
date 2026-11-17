@@ -21,9 +21,10 @@ import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.io.StringRef;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangMacrosDefinitionStub extends NamedStubBase<ErlangMacrosDefinition> {
-  public ErlangMacrosDefinitionStub(StubElement parent, IStubElementType elementType, StringRef name) {
+  public ErlangMacrosDefinitionStub(StubElement parent, IStubElementType elementType, @Nullable StringRef name) {
     super(parent, elementType, name);
   }
 

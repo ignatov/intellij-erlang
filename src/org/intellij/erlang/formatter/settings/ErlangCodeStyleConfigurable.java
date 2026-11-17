@@ -29,7 +29,7 @@ public class ErlangCodeStyleConfigurable extends CodeStyleAbstractConfigurable {
   }
 
   @Override
-  protected CodeStyleAbstractPanel createPanel(CodeStyleSettings settings) {
+  protected @NotNull CodeStyleAbstractPanel createPanel(@NotNull CodeStyleSettings settings) {
     return new ErlangCodeStyleMainPanel(getCurrentSettings(), settings);
   }
 

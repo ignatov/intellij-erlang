@@ -6,10 +6,15 @@
 .idea/shelf/
 .idea/libraries/
 .idea/.name
+.intellijPlatform/
 *.iml
 
 /build/
 /jps-plugin/build/
+/grammar-generator/build/
 .gradle
 /out/
+/bin
 /jps-plugin/out/
+/jps-plugin/bin/
+/node_modules/

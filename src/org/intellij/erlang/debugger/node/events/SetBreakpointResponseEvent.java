@@ -41,8 +41,7 @@ class SetBreakpointResponseEvent extends ErlangDebuggerEvent {
     if (OtpErlangTermUtil.isOkAtom(statusObject)) {
       myError = null;
     }
-    else if (statusObject instanceof OtpErlangTuple) {
-      OtpErlangTuple errorTuple = (OtpErlangTuple) statusObject;
+    else if (statusObject instanceof OtpErlangTuple errorTuple) {
       if (!OtpErlangTermUtil.isErrorAtom(errorTuple.elementAt(0))) throw new DebuggerEventFormatException();
       myError = OtpErlangTermUtil.toString(errorTuple.elementAt(1));
     }

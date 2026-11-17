@@ -37,7 +37,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @NotNull
   @Override
-  public ResolveResult[] multiResolve(boolean incompleteCode) {
+  public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
     ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
@@ -80,7 +80,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @NotNull
   @Override
-  public Object[] getVariants() {
+  public Object @NotNull [] getVariants() {
     return ArrayUtil.EMPTY_OBJECT_ARRAY;
   }
 

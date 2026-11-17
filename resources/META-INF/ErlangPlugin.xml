@@ -90,10 +90,11 @@
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterInCommentsHandler" id="ErlangEnterInComments"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterHandler" id="ErlangEnter"/>
-        <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterBetweenBracesHandler" id="ErlangEnterBetweenBraces"/>
+        <enterBetweenBracesDelegate language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangEnterBetweenBracesDelegate" id="ErlangEnterBwetweenBraces"/>
 
         <extendWordSelectionHandler implementation="org.intellij.erlang.editor.ErlangWordSelectioner" order="last"/>
         <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangClausesSmartEnterProcessor" id="ErlangClause"/>
+        <lang.smartEnterProcessor language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangTerminatorSmartEnterProcessor" id="ErlangTerm" order="after ErlangClause"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangStringLiteralImpl"
                                  implementationClass="org.intellij.erlang.editor.ErlangStringManipulator"/>
         <lang.elementManipulator forClass="org.intellij.erlang.psi.impl.ErlangASTFactory$ErlangCommentImpl" order="first"
@@ -105,6 +106,7 @@
         <lang.foldingBuilder language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangFoldingBuilder"/>
 
         <sdkType implementation="org.intellij.erlang.sdk.ErlangSdkType"/>
+        <workspaceModel.fileIndexContributor implementation="org.intellij.erlang.sdk.ErlangExcludeHtmlFileIndexContributor"/>
         <!-- run -->
         <programRunner implementation="org.intellij.erlang.runconfig.ErlangRunner"/>
         <configurationType implementation="org.intellij.erlang.application.ErlangApplicationRunConfigurationType"/>
@@ -136,6 +138,20 @@
         <breadcrumbsInfoProvider implementation="org.intellij.erlang.ErlangBreadcrumbsProvider"/>
 
         <codeInsight.parameterInfo language="Erlang" implementationClass="org.intellij.erlang.ErlangParameterInfoHandler"/>
+        <codeInsight.declarativeInlayProvider language="Erlang"
+                                              implementationClass="org.intellij.erlang.hints.ErlangParameterHintsProvider"
+                                              isEnabledByDefault="true"
+                                              group="PARAMETERS_GROUP"
+                                              providerId="erlang.parameter.hints"
+                                              bundle="messages.ErlangBundle"
+                                              nameKey="inlay.erlang.parameter.hints.name"
+                                              descriptionKey="inlay.erlang.parameter.hints.description">
+            <option optionId="erlang.parameter.hints.pattern.summaries"
+                    enabledByDefault="true"
+                    bundle="messages.ErlangBundle"
+                    nameKey="inlay.erlang.parameter.hints.pattern.summaries.name"
+                    descriptionKey="inlay.erlang.parameter.hints.pattern.summaries.description"/>
+        </codeInsight.declarativeInlayProvider>
         <codeInsight.gotoSuper language="Erlang" implementationClass="org.intellij.erlang.navigation.ErlangGotoSuperHandler"/>
 
         <fileBasedIndex implementation="org.intellij.erlang.index.ErlangModuleIndex"/>
@@ -215,6 +231,18 @@
         <localInspection language="Erlang" shortName="Erlang25Syntax" displayName="Erlang 25.0 syntax"
                          groupName="Erlang" enabledByDefault="true" level="ERROR"
                          implementationClass="org.intellij.erlang.inspection.Erlang25SyntaxInspection"/>
+        <localInspection language="Erlang" shortName="Erlang27Syntax" displayName="Erlang 27.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang27SyntaxInspection"/>
+        <localInspection language="Erlang" shortName="Erlang28Syntax" displayName="Erlang 28.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang28SyntaxInspection"/>
+        <localInspection language="Erlang" shortName="Erlang29Syntax" displayName="Erlang 29.0 syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.Erlang29SyntaxInspection"/>
+        <localInspection language="Erlang" shortName="ErlangTripleQuotas" displayName="Erlang triple quotas syntax"
+                         groupName="Erlang" enabledByDefault="true" level="ERROR"
+                         implementationClass="org.intellij.erlang.inspection.ErlangTripleQuotasSyntaxInspection"/>
 
         <!--warnings-->
         <localInspection language="Erlang" shortName="Erlang18Syntax" displayName="Erlang 18.0 syntax"
@@ -256,12 +284,16 @@
         <localInspection language="Erlang" shortName="ErlangConflictingBehaviours" displayName="Conflicting behaviours"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangConflictingBehavioursInspection"/>
+        <localInspection language="Erlang" shortName="ErlangSingleClauseCase" displayName="Single-clause 'case' expression"
+                         groupName="Erlang" enabledByDefault="false" level="WEAK WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 
         <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
+        <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
 
         <intentionAction>
           <language>Erlang</language>

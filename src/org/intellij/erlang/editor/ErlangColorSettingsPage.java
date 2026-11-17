@@ -25,7 +25,6 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.intellij.erlang.editor.ErlangSyntaxHighlighter.*;
@@ -55,27 +54,25 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
     new AttributesDescriptor("Guards", GUARD),
     new AttributesDescriptor("Callbacks", CALLBACK),
     new AttributesDescriptor("Specifications", SPEC),
-  };
+    };
 
-  private static final Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = new HashMap<>();
+  private static final Map<String, TextAttributesKey> ATTRIBUTES_KEY_MAP = Map.ofEntries(
+    Map.entry("a", ATOM),
+    Map.entry("d", DOC_TAG),
+    Map.entry("k", KEYWORD),
+    Map.entry("m", MACRO),
+    Map.entry("r", RECORDS),
+    Map.entry("f", FUNCTION),
+    Map.entry("t", TYPE),
+    Map.entry("bt", BUILT_IN_TYPE),
+    Map.entry("m_att", ATTRIBUTE),
+    Map.entry("c", FUNCTION_CALL),
+    Map.entry("mr", MODULE_REF),
+    Map.entry("g", GUARD),
+    Map.entry("s", SPEC),
+    Map.entry("cb", CALLBACK)
+  );
 
-  static {
-    ATTRIBUTES_KEY_MAP.put("a", ATOM);
-    ATTRIBUTES_KEY_MAP.put("d", DOC_TAG);
-    ATTRIBUTES_KEY_MAP.put("k", KEYWORD);
-    ATTRIBUTES_KEY_MAP.put("m", MACRO);
-    ATTRIBUTES_KEY_MAP.put("r", RECORDS);
-    ATTRIBUTES_KEY_MAP.put("f", FUNCTION);
-    ATTRIBUTES_KEY_MAP.put("t", TYPE);
-    ATTRIBUTES_KEY_MAP.put("bt", BUILT_IN_TYPE);
-    ATTRIBUTES_KEY_MAP.put("m_att", ATTRIBUTE);
-    ATTRIBUTES_KEY_MAP.put("c", FUNCTION_CALL);
-    ATTRIBUTES_KEY_MAP.put("mr", MODULE_REF);
-    ATTRIBUTES_KEY_MAP.put("g", GUARD);
-    ATTRIBUTES_KEY_MAP.put("s", SPEC);
-    ATTRIBUTES_KEY_MAP.put("cb", CALLBACK);
-  }
-  
   @NotNull
   public String getDisplayName() {
     return "Erlang";
@@ -106,29 +103,29 @@ public class ErlangColorSettingsPage implements ColorSettingsPage {
       %%% Module fact documentation
       <m_att>-module</m_att>(fact).
       <m_att>-export</m_att>([<f>fac</f>/1]).
-
+      
       <m_att>-record</m_att>(<r>state</r>, {id, name}).
-
+      
       <m_att>-define</m_att>(<m>MACRO</m>, macro_value).
-
+      
       <m_att>-type</m_att> <t>in</t>() :: ok | hello .
       <m_att>-type</m_att> <t>out</t>() :: ok | {error, <bt>term</bt>()}.
-
+      
       %% Factorial implementation
       %% <d>@doc</d> Documentation
       <f>fac</f>(0) -> 1;
       <f>fac</f>(N) when N > 0, <g>is_integer</g>(N) -> N * <c>fac</c>(N-1).
-
+      
       <f>string_sample</f>(A) -> "string
         second line".
-
+      
       <f>update_state</f>(State) -> State#<r>state</r>{id=10}.
-
+      
       <m_att>-spec</m_att> <s>simple</s>(<t>in</t>())-> <t>out</t>().\s
       <f>simple</f>(<a>ok</a>) -> <a>ok</a>.
-
+      
       <f>use_macro</f>() -> <mr>io</mr>:<c>format</c>(?<m>MACRO</m>).
-
+      
       <m_att>-callback</m_att> <cb>start_service</cb>() -> {<a>ok</a>, <bt>pid</bt>()}."""
       ;
   }

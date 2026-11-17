@@ -55,10 +55,6 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
       public JpsDummyElement loadProperties(@Nullable Element componentElement) {
         return JpsElementFactory.getInstance().createDummyElement();
       }
-
-      @Override
-      public void saveProperties(@NotNull JpsDummyElement properties, @NotNull Element componentElement) {
-      }
     });
   }
 
@@ -71,10 +67,6 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
       public JpsDummyElement loadProperties(@Nullable Element propertiesElement) {
         return JpsElementFactory.getInstance().createDummyElement();
       }
-
-      @Override
-      public void saveProperties(@NotNull JpsDummyElement properties, @NotNull Element element) {
-      }
     });
   }
 
@@ -85,7 +77,7 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
       @Override
       protected JpsErlangModuleExtension loadExtension(@NotNull Element facetConfigurationElement, String name, JpsElement parent, JpsModule module) {
         ErlangModuleExtensionProperties props = XmlSerializer.deserialize(facetConfigurationElement, ErlangModuleExtensionProperties.class);
-        return new JpsErlangModuleExtension(props == null ? new ErlangModuleExtensionProperties() : props);
+        return new JpsErlangModuleExtension(props);
       }
 
       @Override

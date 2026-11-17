@@ -34,7 +34,7 @@ public class ErlangCalleeMethodsTreeStructure extends HierarchyTreeStructure {
 
   @NotNull
   @Override
-  protected Object[] buildChildren(@NotNull HierarchyNodeDescriptor descriptor) {
+  protected Object @NotNull [] buildChildren(@NotNull HierarchyNodeDescriptor descriptor) {
     ErlangFunction function = ObjectUtils.tryCast(descriptor.getPsiElement(), ErlangFunction.class);
     return SyntaxTraverser
       .psiTraverser()

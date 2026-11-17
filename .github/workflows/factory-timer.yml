@@ -1,0 +1,61 @@
+name: Factory timer
+
+# The clock of the project's automation. The dispatcher (factory-tick.yml, which runs dispatcher/dispatch.py of the
+# private repository ignatov/intellij-erlang-triage) moves bug-fix work from one agent session to the next and has
+# to see the end of each session and CI run. GitHub drops most scheduled runs of a quiet repository, so each live
+# tick arms this timer at its end instead:
+#   1. the job "wait" waits in the environment factory-timer-<pace>; the wait timer of that environment
+#      decides how long (since 2026-11-17: active 10 minutes while the next tick can move something, idle 15
+#      minutes otherwise, settle 25 minutes while stale pull requests wait for master to settle); no runner is
+#      used while it waits;
+#   2. the job "wake" starts the next tick, factory-tick.yml of master with live.
+# A new run cancels the one that is still waiting, so there is always one timer.
+#
+# Both the tick and this timer start each other with their own GITHUB_TOKEN: workflow_dispatch is one of the two
+# events that this token may start a run with. No secret is used here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pace:
+        description: the environment factory-timer-<pace> to wait in; its wait timer decides how long
+        type: choice
+        options:
+          - active
+          - idle
+          - settle
+        default: idle
+
+permissions: {}
+
+concurrency:
+  group: factory-timer
+  cancel-in-progress: true
+
+jobs:
+  wait:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: factory-timer-${{ inputs.pace }}
+      # The environment is used for its wait timer only; this is not a deployment.
+      deployment: false
+    steps:
+      - run: echo "The wait is over."
+
+  wake:
+    needs: wait
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start the next tick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
+            echo "::error::The next tick could not be started."
+            exit 1
+          fi

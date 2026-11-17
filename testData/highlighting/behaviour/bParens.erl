@@ -1,0 +1,4 @@
+-module(bParens).
+-callback(on_receive(Data :: term()) -> term()).
+-callback(ready(Args :: term()) -> {ok, State :: term()}).
+-optional_callbacks([ready/1]).

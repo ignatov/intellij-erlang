@@ -49,16 +49,18 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   public void testCallbackImplementationsAreExportedOnce() { doCallbacksFixTest("testExported.erl", "b1.erl"); }
   public void testTest()                                   { doCallbacksFixTest("testBoth.erl", "b1.erl"); }
 
+  public void testParenthesizedCallbacks()                 { doHighlightingTest("testParens.erl", "bParens.erl"); }
+  public void testParenthesizedCallbacksUndefined()        { doHighlightingTest("testParensUndefined.erl", "bParens.erl"); }
+  public void testParenthesizedOptionalCallback()          { doHighlightingTest("testParensOptional.erl", "bParens.erl"); }
+  public void testParenthesizedCallbackIsExported()        { doCallbacksFixTest("testImplementedParens.erl", "bParens.erl"); }
+  public void testParenthesizedCallbackIsCreated()         { doCallbacksFixTest("testCreatedParens.erl", "bParens.erl"); }
+
   public void testRemoveDuplicate() {
     myFixture.configureByFiles("testRemoveDuplicate.erl", "b1.erl", "b2.erl");
     launchIntention(ErlangDuplicateBehaviourInspection.FIX_MESSAGE);
     myFixture.checkResultByFile("testRemoveDuplicate-after.erl");
   }
 
-  @Override
-  protected boolean isWriteActionRequired() {
-    return false;
-  }
 
   private void doHighlightingTest(String... files) {
     myFixture.configureByFiles(files);

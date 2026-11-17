@@ -280,6 +280,7 @@ ubif erlang:is_list/1
 ubif erlang:is_tuple/1
 ubif erlang:is_float/1
 ubif erlang:is_integer/1
+ubif erlang:is_integer/3
 ubif erlang:is_number/1
 ubif erlang:is_pid/1
 ubif erlang:is_port/1
