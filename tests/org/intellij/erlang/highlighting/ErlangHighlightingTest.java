@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.highlighting;
 
+import org.intellij.erlang.inspection.ErlangSpecificationForUndefinedFunctionInspection;
+
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
@@ -148,6 +150,40 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testBinaryTypeSizeMacros() {
     enableUnresolvedMacroInspection();
     doTest();
+  }
+
+  public void testSpecificationForUndefinedFunction() {
+    myFixture.enableInspections(ErlangSpecificationForUndefinedFunctionInspection.class);
+    myFixture.configureByText("spec.erl", """
+      -module(spec).
+      -export([defined/0, remote/0]).
+      -define(NAME, defined).
+
+      -<error descr="Specification for undefined function 'undefined'">spec undefined() -> ok</error>.
+      -spec defined() -> ok.
+      -spec spec:remote() -> ok.
+      -spec ?NAME(atom()) -> ok.
+
+      defined() -> ok.
+      remote() -> ok.
+      """);
+    myFixture.checkHighlighting();
+  }
+
+  /** A module qualifier from a macro, such as {@code ?MODULE}, is not resolved: such a spec is not reported. */
+  public void testSpecificationWithAMacroModuleQualifier() {
+    myFixture.enableInspections(ErlangSpecificationForUndefinedFunctionInspection.class);
+    myFixture.configureByText("spec.erl", """
+      -module(spec).
+      -export([defined/0]).
+      -define(M, spec).
+
+      -spec ?MODULE:defined() -> ok.
+      -spec ?M:defined() -> ok.
+
+      defined() -> ok.
+      """);
+    myFixture.checkHighlighting();
   }
 
   public void testAlreadyImported1()      { doTestWithInclude(); }

@@ -1,0 +1,21 @@
+<!--
+  The experimental ELP (Erlang Language Platform) integration through the platform LSP client.
+  Loaded only when the IDE has the LSP module, see the optional dependency on com.intellij.modules.lsp in plugin.xml.
+  -->
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <platform.lsp.serverSupportProvider implementation="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider"/>
+        <!-- Why ELP is not started, could not load a project or stopped: see ElpNotifications. -->
+        <notificationGroup id="Erlang ELP" displayType="BALLOON"/>
+        <!-- The engine switch: ElpEngine asks this service whether ELP serves a file; without the LSP module there is none. -->
+        <projectService serviceInterface="org.intellij.erlang.elp.ElpServerStatus"
+                        serviceImplementation="org.intellij.erlang.elp.lsp.ElpLspServerStatus"/>
+        <gotoDeclarationHandler implementation="org.intellij.erlang.elp.lsp.ElpGotoDeclarationHandler" order="first"/>
+        <findUsagesHandlerFactory implementation="org.intellij.erlang.elp.lsp.ElpFindUsagesHandlerFactory" order="first"/>
+        <renameHandler implementation="org.intellij.erlang.elp.lsp.ElpRenameHandler" order="first"/>
+    </extensions>
+    <applicationListeners>
+        <listener topic="org.intellij.erlang.elp.ElpSettings$Listener"
+                  class="org.intellij.erlang.elp.lsp.ElpLspIntegrationProvider$SettingsListener"/>
+    </applicationListeners>
+</idea-plugin>

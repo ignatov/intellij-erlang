@@ -1,0 +1,252 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "src/shop.erl",
+  "needle": "|",
+  "params": {
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "endCharacter": 41,
+    "endLine": 18,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 17
+   },
+   {
+    "endCharacter": 61,
+    "endLine": 22,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 21
+   },
+   {
+    "endCharacter": 20,
+    "endLine": 26,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 25
+   },
+   {
+    "endCharacter": 51,
+    "endLine": 29,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 28
+   },
+   {
+    "endCharacter": 6,
+    "endLine": 14,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 10
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "src/shop.hrl",
+  "needle": "|",
+  "params": {
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "endCharacter": 77,
+    "endLine": 3,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 3
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "src/shop_memory.erl",
+  "needle": "|",
+  "params": {
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "endCharacter": 6,
+    "endLine": 12,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 8
+   },
+   {
+    "endCharacter": 55,
+    "endLine": 16,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 15
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_defects.erl",
+  "kind": "src/shop_defects.erl",
+  "needle": "|",
+  "params": {
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 0
+  },
+  "result": [
+   {
+    "endCharacter": 28,
+    "endLine": 44,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 44
+   },
+   {
+    "endCharacter": 34,
+    "endLine": 34,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 34
+   },
+   {
+    "endCharacter": 36,
+    "endLine": 22,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 22
+   },
+   {
+    "endCharacter": 22,
+    "endLine": 38,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 38
+   },
+   {
+    "endCharacter": 21,
+    "endLine": 20,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 20
+   },
+   {
+    "endCharacter": 47,
+    "endLine": 36,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 36
+   },
+   {
+    "endCharacter": 58,
+    "endLine": 24,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 24
+   },
+   {
+    "endCharacter": 30,
+    "endLine": 42,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 42
+   },
+   {
+    "endCharacter": 21,
+    "endLine": 54,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 54
+   },
+   {
+    "endCharacter": 17,
+    "endLine": 51,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 50
+   },
+   {
+    "endCharacter": 38,
+    "endLine": 30,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 30
+   },
+   {
+    "endCharacter": 24,
+    "endLine": 26,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 26
+   },
+   {
+    "endCharacter": 44,
+    "endLine": 48,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 48
+   },
+   {
+    "endCharacter": 19,
+    "endLine": 40,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 40
+   },
+   {
+    "endCharacter": 44,
+    "endLine": 32,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 32
+   },
+   {
+    "endCharacter": 30,
+    "endLine": 28,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 28
+   },
+   {
+    "endCharacter": 19,
+    "endLine": 53,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 53
+   },
+   {
+    "endCharacter": 51,
+    "endLine": 46,
+    "kind": "region",
+    "startCharacter": 0,
+    "startLine": 46
+   }
+  ]
+ }
+]

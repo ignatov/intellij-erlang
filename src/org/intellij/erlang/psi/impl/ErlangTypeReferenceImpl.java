@@ -21,6 +21,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,6 +61,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @NotNull
   @Override
   public Object @NotNull [] getVariants() {
+    if (ElpEngine.ownsFeature(myQAtom, ElpEngine.Feature.COMPLETION)) return ArrayUtil.EMPTY_OBJECT_ARRAY;
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
     return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
   }

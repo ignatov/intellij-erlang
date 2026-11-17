@@ -1,0 +1,177 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "price(Na|me) ->",
+  "params": {
+   "position": {
+    "character": 8,
+    "line": 10
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 10
+  },
+  "result": [
+   {
+    "kind": 2,
+    "range": {
+     "end": {
+      "character": 44,
+      "line": 11
+     },
+     "start": {
+      "character": 40,
+      "line": 11
+     }
+    }
+   },
+   {
+    "kind": 3,
+    "range": {
+     "end": {
+      "character": 10,
+      "line": 10
+     },
+     "start": {
+      "character": 6,
+      "line": 10
+     }
+    }
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "function",
+  "needle": "sum([pr|ice(Name)",
+  "params": {
+   "position": {
+    "character": 9,
+    "line": 18
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 9,
+   "line": 18
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 4
+     },
+     "start": {
+      "character": 9,
+      "line": 4
+     }
+    }
+   },
+   {
+    "range": {
+     "end": {
+      "character": 11,
+      "line": 9
+     },
+     "start": {
+      "character": 6,
+      "line": 9
+     }
+    }
+   },
+   {
+    "range": {
+     "end": {
+      "character": 12,
+      "line": 18
+     },
+     "start": {
+      "character": 7,
+      "line": 18
+     }
+    }
+   },
+   {
+    "range": {
+     "end": {
+      "character": 12,
+      "line": 26
+     },
+     "start": {
+      "character": 7,
+      "line": 26
+     }
+    }
+   },
+   {
+    "range": {
+     "end": {
+      "character": 5,
+      "line": 10
+     },
+     "start": {
+      "character": 0,
+      "line": 10
+     }
+    }
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable_in_macro_argument",
+  "needle": "?PRICE(It|em)",
+  "params": {
+   "position": {
+    "character": 27,
+    "line": 12
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 27,
+   "line": 12
+  },
+  "result": [
+   {
+    "kind": 2,
+    "range": {
+     "end": {
+      "character": 29,
+      "line": 12
+     },
+     "start": {
+      "character": 25,
+      "line": 12
+     }
+    }
+   },
+   {
+    "kind": 3,
+    "range": {
+     "end": {
+      "character": 13,
+      "line": 12
+     },
+     "start": {
+      "character": 9,
+      "line": 12
+     }
+    }
+   }
+  ]
+ }
+]

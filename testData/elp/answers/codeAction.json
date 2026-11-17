@@ -1,0 +1,453 @@
+[
+ {
+  "error": null,
+  "file": "src/shop_defects.erl",
+  "kind": "unused_function",
+  "needle": "unused_f|unction() -> ok.",
+  "params": {
+   "context": {
+    "diagnostics": [
+     {
+      "code": "L1230",
+      "codeDescription": {
+       "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1230"
+      },
+      "message": "function unused_function/0 is unused",
+      "range": {
+       "end": {
+        "character": 15,
+        "line": 26
+       },
+       "start": {
+        "character": 0,
+        "line": 26
+       }
+      },
+      "severity": 2,
+      "source": "elp",
+      "tags": [
+       1
+      ]
+     }
+    ],
+    "triggerKind": 1
+   },
+   "range": {
+    "end": {
+     "character": 8,
+     "line": 26
+    },
+    "start": {
+     "character": 8,
+     "line": 26
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 26
+  },
+  "result": [
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "-doc \"\"\"\n[How to write documentation](https://www.erlang.org/doc/system/documentation.html)\n\"\"\".\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 26
+          },
+          "start": {
+           "character": 0,
+           "line": 26
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "",
+    "title": "Add -doc attribute"
+   },
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "-spec unused_function() -> return_type().\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 26
+          },
+          "start": {
+           "character": 0,
+           "line": 26
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "",
+    "title": "Add spec stub"
+   },
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "\n-export([unused_function/0]).\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 1
+          },
+          "start": {
+           "character": 0,
+           "line": 1
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "quickfix",
+    "title": "Export the function `unused_function/0`"
+   },
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 28
+          },
+          "start": {
+           "character": 0,
+           "line": 26
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "quickfix",
+    "title": "Remove the unused function `unused_function/0`"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_defects.erl",
+  "kind": "unused_variable",
+  "needle": "unused_variable(Unu|sed)",
+  "params": {
+   "context": {
+    "diagnostics": [
+     {
+      "code": "L1268",
+      "codeDescription": {
+       "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1268"
+      },
+      "message": "variable 'Unused' is unused",
+      "range": {
+       "end": {
+        "character": 22,
+        "line": 28
+       },
+       "start": {
+        "character": 16,
+        "line": 28
+       }
+      },
+      "severity": 2,
+      "source": "elp",
+      "tags": [
+       1
+      ]
+     }
+    ],
+    "triggerKind": 1
+   },
+   "range": {
+    "end": {
+     "character": 19,
+     "line": 28
+    },
+    "start": {
+     "character": 19,
+     "line": 28
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  },
+  "position": {
+   "character": 19,
+   "line": 28
+  },
+  "result": [
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "_",
+         "range": {
+          "end": {
+           "character": 16,
+           "line": 28
+          },
+          "start": {
+           "character": 16,
+           "line": 28
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "quickfix",
+    "title": "Prefix the variable name with an underscore: `_Unused`"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_defects.erl",
+  "kind": "undefined_function",
+  "needle": "missing_lo|cal(1)",
+  "params": {
+   "context": {
+    "diagnostics": [
+     {
+      "code": "L1227",
+      "codeDescription": {
+       "href": "https://whatsapp.github.io/erlang-language-platform/docs/erlang-error-index/l/L1227"
+      },
+      "message": "function missing_local/1 undefined",
+      "range": {
+       "end": {
+        "character": 35,
+        "line": 22
+       },
+       "start": {
+        "character": 19,
+        "line": 22
+       }
+      },
+      "severity": 1,
+      "source": "elp"
+     }
+    ],
+    "triggerKind": 1
+   },
+   "range": {
+    "end": {
+     "character": 29,
+     "line": 22
+    },
+    "start": {
+     "character": 29,
+     "line": 22
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  },
+  "position": {
+   "character": 29,
+   "line": 22
+  },
+  "result": [
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "\nmissing_local(N) ->\n    erlang:error(not_implemented).\n\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 23
+          },
+          "start": {
+           "character": 0,
+           "line": 23
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop_defects.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "quickfix",
+    "title": "Create function `missing_local/1`"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "\ns|um([], Acc)",
+  "params": {
+   "context": {
+    "diagnostics": [],
+    "triggerKind": 1
+   },
+   "range": {
+    "end": {
+     "character": 1,
+     "line": 28
+    },
+    "start": {
+     "character": 1,
+     "line": 28
+    }
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 1,
+   "line": 28
+  },
+  "result": [
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "-doc \"\"\"\n[How to write documentation](https://www.erlang.org/doc/system/documentation.html)\n\"\"\".\n-doc #{params => #{\"Arg1\" => \"Argument description\", \"Acc\" => \"Argument description\"}}.\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 28
+          },
+          "start": {
+           "character": 0,
+           "line": 28
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "",
+    "title": "Add -doc attribute"
+   },
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": "-spec sum(type1(), Acc :: type2()) -> return_type().\n",
+         "range": {
+          "end": {
+           "character": 0,
+           "line": 28
+          },
+          "start": {
+           "character": 0,
+           "line": 28
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "",
+    "title": "Add spec stub"
+   },
+   {
+    "edit": {
+     "documentChanges": [
+      {
+       "edits": [
+        {
+         "newText": ", sum/2",
+         "range": {
+          "end": {
+           "character": 50,
+           "line": 4
+          },
+          "start": {
+           "character": 50,
+           "line": 4
+          }
+         }
+        }
+       ],
+       "textDocument": {
+        "uri": "${PROJECT_URI}/src/shop.erl",
+        "version": 1
+       }
+      }
+     ]
+    },
+    "kind": "quickfix",
+    "title": "Export the function `sum/2`"
+   }
+  ]
+ }
+]

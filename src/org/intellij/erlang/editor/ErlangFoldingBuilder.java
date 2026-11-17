@@ -25,6 +25,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -41,8 +42,10 @@ public class ErlangFoldingBuilder extends FoldingBuilderEx implements DumbAware 
     if (!(root instanceof ErlangFile file)) return FoldingDescriptor.EMPTY_ARRAY;
 
     final List<FoldingDescriptor> result = new ArrayList<>();
-    for (ErlangFunction function : file.getFunctions()) {
-      result.add(new FoldingDescriptor(function, function.getTextRange()));
+    if (!ElpEngine.ownsFeature(file, ElpEngine.Feature.FOLDING)) {
+      for (ErlangFunction function : file.getFunctions()) {
+        result.add(new FoldingDescriptor(function, function.getTextRange()));
+      }
     }
 
     if (!quick) {

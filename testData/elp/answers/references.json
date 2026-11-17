@@ -1,0 +1,743 @@
+[
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "module",
+  "needle": "-module(|shop_backend)",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 8,
+    "line": 0
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 0
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 24,
+      "line": 9
+     },
+     "start": {
+      "character": 12,
+      "line": 9
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 19,
+      "line": 11
+     },
+     "start": {
+      "character": 7,
+      "line": 11
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 25,
+      "line": 16
+     },
+     "start": {
+      "character": 13,
+      "line": 16
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 28,
+      "line": 24
+     },
+     "start": {
+      "character": 16,
+      "line": 24
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 23,
+      "line": 1
+     },
+     "start": {
+      "character": 11,
+      "line": 1
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 24,
+      "line": 7
+     },
+     "start": {
+      "character": 12,
+      "line": 7
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 9
+     },
+     "start": {
+      "character": 8,
+      "line": 9
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "exported_function",
+  "needle": "\n|lookup(Backend, Key)",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 0,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 11
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 26,
+      "line": 11
+     },
+     "start": {
+      "character": 20,
+      "line": 11
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "function_used_in_macro_argument",
+  "needle": "\n|price(Name) ->",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 0,
+    "line": 10
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 10
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 12,
+      "line": 18
+     },
+     "start": {
+      "character": 7,
+      "line": 18
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 12,
+      "line": 26
+     },
+     "start": {
+      "character": 7,
+      "line": 26
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "\n|sum([], Acc)",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 0,
+    "line": 28
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 28
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 5,
+      "line": 18
+     },
+     "start": {
+      "character": 2,
+      "line": 18
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 31,
+      "line": 29
+     },
+     "start": {
+      "character": 28,
+      "line": 29
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "variable",
+  "needle": "price(|Name) ->",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 6,
+    "line": 10
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 6,
+   "line": 10
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 44,
+      "line": 11
+     },
+     "start": {
+      "character": 40,
+      "line": 11
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "record",
+  "needle": "-record(|item",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 8,
+    "line": 3
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 3
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 20,
+      "line": 20
+     },
+     "start": {
+      "character": 16,
+      "line": 20
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 14,
+      "line": 21
+     },
+     "start": {
+      "character": 10,
+      "line": 21
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 45,
+      "line": 7
+     },
+     "start": {
+      "character": 41,
+      "line": 7
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 31,
+      "line": 9
+     },
+     "start": {
+      "character": 27,
+      "line": 9
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 23,
+      "line": 14
+     },
+     "start": {
+      "character": 19,
+      "line": 14
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 8,
+      "line": 16
+     },
+     "start": {
+      "character": 4,
+      "line": 16
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 40,
+      "line": 16
+     },
+     "start": {
+      "character": 36,
+      "line": 16
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 30,
+      "line": 1
+     },
+     "start": {
+      "character": 26,
+      "line": 1
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 24,
+      "line": 32
+     },
+     "start": {
+      "character": 20,
+      "line": 32
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_defects.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "record_field",
+  "needle": "|price = ?DEFAULT_PRICE",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 31,
+    "line": 3
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 31,
+   "line": 3
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 33,
+      "line": 21
+     },
+     "start": {
+      "character": 28,
+      "line": 21
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 28,
+      "line": 16
+     },
+     "start": {
+      "character": 23,
+      "line": 16
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 36,
+      "line": 1
+     },
+     "start": {
+      "character": 31,
+      "line": 1
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "macro",
+  "needle": "-define(|DEFAULT_PRICE",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 8,
+    "line": 0
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 0
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 27,
+      "line": 13
+     },
+     "start": {
+      "character": 14,
+      "line": 13
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 53,
+      "line": 3
+     },
+     "start": {
+      "character": 40,
+      "line": 3
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop.hrl",
+  "kind": "macro_with_arguments",
+  "needle": "-define(|PRICE(",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 8,
+    "line": 1
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.hrl"
+   }
+  },
+  "position": {
+   "character": 8,
+   "line": 1
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 24,
+      "line": 12
+     },
+     "start": {
+      "character": 19,
+      "line": 12
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "type",
+  "needle": "-type |key()",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 6,
+    "line": 5
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 6,
+   "line": 5
+  },
+  "result": [
+   {
+    "range": {
+     "end": {
+      "character": 28,
+      "line": 9
+     },
+     "start": {
+      "character": 25,
+      "line": 9
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 29,
+      "line": 16
+     },
+     "start": {
+      "character": 26,
+      "line": 16
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 32,
+      "line": 24
+     },
+     "start": {
+      "character": 29,
+      "line": 24
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 28,
+      "line": 7
+     },
+     "start": {
+      "character": 25,
+      "line": 7
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 17,
+      "line": 3
+     },
+     "start": {
+      "character": 14,
+      "line": 3
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 26,
+      "line": 7
+     },
+     "start": {
+      "character": 23,
+      "line": 7
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   },
+   {
+    "range": {
+     "end": {
+      "character": 26,
+      "line": 10
+     },
+     "start": {
+      "character": 23,
+      "line": 10
+     }
+    },
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  ]
+ },
+ {
+  "error": null,
+  "file": "src/shop_backend.erl",
+  "kind": "callback",
+  "needle": "-callback |fetch(",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 10,
+    "line": 7
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_backend.erl"
+   }
+  },
+  "position": {
+   "character": 10,
+   "line": 7
+  },
+  "result": []
+ },
+ {
+  "error": null,
+  "file": "src/shop_typed.erl",
+  "kind": "exported_function_without_callers",
+  "needle": "\n|label(Name) ->",
+  "params": {
+   "context": {
+    "includeDeclaration": false
+   },
+   "position": {
+    "character": 0,
+    "line": 6
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_typed.erl"
+   }
+  },
+  "position": {
+   "character": 0,
+   "line": 6
+  },
+  "result": []
+ }
+]

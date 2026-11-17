@@ -1,0 +1,159 @@
+{
+  "tag": "2026-10-14",
+  "version": "1.1.0",
+  "repository": "https://github.com/WhatsApp/erlang-language-platform",
+  "downloadUrl": "https://github.com/WhatsApp/erlang-language-platform/releases/download/2026-10-14/",
+  "license": "MIT OR Apache-2.0",
+  "assets": [
+    {
+      "file": "elp-linux-aarch64-unknown-linux-gnu-otp-27.3.tar.gz",
+      "os": "linux",
+      "arch": "aarch64",
+      "target": "aarch64-unknown-linux-gnu",
+      "otp": "27.3",
+      "size": 39214062,
+      "sha256": "282f5f26105c6bc64e17745a38ba5718300c51072d34afbb2a03163dbc4abc71",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-linux-aarch64-unknown-linux-gnu-otp-28.5.tar.gz",
+      "os": "linux",
+      "arch": "aarch64",
+      "target": "aarch64-unknown-linux-gnu",
+      "otp": "28.5",
+      "size": 39211482,
+      "sha256": "2c30a04a746ae29400f26045ebed25277cf091512488e6dfa5727eac70d6beb9",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-linux-aarch64-unknown-linux-gnu-otp-29.1.tar.gz",
+      "os": "linux",
+      "arch": "aarch64",
+      "target": "aarch64-unknown-linux-gnu",
+      "otp": "29.1",
+      "size": 39215676,
+      "sha256": "c15b7760222d9fed417b996790cd14aaf949fbe3ef113240bddc2fa7e73aec21",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-linux-x86_64-unknown-linux-gnu-otp-27.3.tar.gz",
+      "os": "linux",
+      "arch": "x86_64",
+      "target": "x86_64-unknown-linux-gnu",
+      "otp": "27.3",
+      "size": 41904777,
+      "sha256": "797315627b37cda882c8f9c1cd6c1207700accae504e2651e3bddfa4af4d7a73",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-linux-x86_64-unknown-linux-gnu-otp-28.5.tar.gz",
+      "os": "linux",
+      "arch": "x86_64",
+      "target": "x86_64-unknown-linux-gnu",
+      "otp": "28.5",
+      "size": 41901998,
+      "sha256": "e93c4b10a446c330c1db85a53f101bfebe88d19373b1213564c914953ddf5ec0",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-linux-x86_64-unknown-linux-gnu-otp-29.1.tar.gz",
+      "os": "linux",
+      "arch": "x86_64",
+      "target": "x86_64-unknown-linux-gnu",
+      "otp": "29.1",
+      "size": 41899837,
+      "sha256": "3251f2d3550adf28f33529686103fabb1fbf0b0e7deb5cd06b93dab06b8647ea",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-aarch64-apple-darwin-otp-27.3.tar.gz",
+      "os": "macos",
+      "arch": "aarch64",
+      "target": "aarch64-apple-darwin",
+      "otp": "27.3",
+      "size": 17796054,
+      "sha256": "b16fcae37bbae2def2163a4779ef09febd9904ec3382698a0032e118c770a7dc",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-aarch64-apple-darwin-otp-28.5.tar.gz",
+      "os": "macos",
+      "arch": "aarch64",
+      "target": "aarch64-apple-darwin",
+      "otp": "28.5",
+      "size": 17796997,
+      "sha256": "e7c4c0a9876f9e17c806453627d89f13b25d22b43e0481117a6934d2a28377d7",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-aarch64-apple-darwin-otp-29.1.tar.gz",
+      "os": "macos",
+      "arch": "aarch64",
+      "target": "aarch64-apple-darwin",
+      "otp": "29.1",
+      "size": 17796267,
+      "sha256": "3311edc6b4c1d6ed7cb6a8a4e37e3d8d19ffe879d006162d33753d2c72fdcdd4",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-x86_64-apple-darwin-otp-27.3.tar.gz",
+      "os": "macos",
+      "arch": "x86_64",
+      "target": "x86_64-apple-darwin",
+      "otp": "27.3",
+      "size": 18566542,
+      "sha256": "00cafdddb5c898ed1b045101f73134b52ff153af15eee42cba89aca6dcb97c42",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-x86_64-apple-darwin-otp-28.5.tar.gz",
+      "os": "macos",
+      "arch": "x86_64",
+      "target": "x86_64-apple-darwin",
+      "otp": "28.5",
+      "size": 18565612,
+      "sha256": "27f5f3ea6ab7213f0e3d9a93245dc59a501d92cc85edb11a8e421f0bdcf05e24",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-macos-x86_64-apple-darwin-otp-29.1.tar.gz",
+      "os": "macos",
+      "arch": "x86_64",
+      "target": "x86_64-apple-darwin",
+      "otp": "29.1",
+      "size": 18565512,
+      "sha256": "2eb4b2a7a17ff96f71ff456175db7c0cc265a1cee1e616ddbfb0c02771b51ed0",
+      "executable": "elp"
+    },
+    {
+      "file": "elp-windows-x86_64-pc-windows-msvc-otp-27.3.tar.gz",
+      "os": "windows",
+      "arch": "x86_64",
+      "target": "x86_64-pc-windows-msvc",
+      "otp": "27.3",
+      "size": 18067983,
+      "sha256": "e69210a0847082fcc314df54a8403db206470f96bc5a5aef801ebf262edd0cff",
+      "executable": "elp.exe"
+    },
+    {
+      "file": "elp-windows-x86_64-pc-windows-msvc-otp-28.5.tar.gz",
+      "os": "windows",
+      "arch": "x86_64",
+      "target": "x86_64-pc-windows-msvc",
+      "otp": "28.5",
+      "size": 18069416,
+      "sha256": "1df7408966ebd96890a5c3c04f5eab65532a72042b7cc7688e2af1f64df19b63",
+      "executable": "elp.exe"
+    },
+    {
+      "file": "elp-windows-x86_64-pc-windows-msvc-otp-29.1.tar.gz",
+      "os": "windows",
+      "arch": "x86_64",
+      "target": "x86_64-pc-windows-msvc",
+      "otp": "29.1",
+      "size": 18065945,
+      "sha256": "a3f5579c39f37c353ce258ec00dc5cdea0550c56ae6579206edfcd78638646e3",
+      "executable": "elp.exe"
+    }
+  ]
+}

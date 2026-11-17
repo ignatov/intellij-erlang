@@ -1,0 +1,121 @@
+[
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "remote_function",
+  "needle": "lookup(shop_memory, |Name)",
+  "params": {
+   "position": {
+    "character": 40,
+    "line": 11
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 40,
+   "line": 11
+  },
+  "result": {
+   "activeSignature": 0,
+   "signatures": [
+    {
+     "activeParameter": 1,
+     "documentation": {
+      "kind": "markdown",
+      "value": "```erlang\n-spec lookup(module(), key()) -> {ok, term()} | error.\n```"
+     },
+     "label": "shop_backend:lookup(Backend, Key)",
+     "parameters": [
+      {
+       "label": "Backend"
+      },
+      {
+       "label": "Key"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop.erl",
+  "kind": "local_function",
+  "needle": "sum(Rest, |Acc + Price)",
+  "params": {
+   "position": {
+    "character": 38,
+    "line": 29
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop.erl"
+   }
+  },
+  "position": {
+   "character": 38,
+   "line": 29
+  },
+  "result": {
+   "activeSignature": 0,
+   "signatures": [
+    {
+     "activeParameter": 1,
+     "label": "sum(Arg1, Acc)",
+     "parameters": [
+      {
+       "label": "Arg1"
+      },
+      {
+       "label": "Acc"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "error": null,
+  "file": "src/shop_memory.erl",
+  "kind": "otp_function",
+  "needle": "lists:keyfind(Key, |#item.name",
+  "params": {
+   "position": {
+    "character": 26,
+    "line": 9
+   },
+   "textDocument": {
+    "uri": "${PROJECT_URI}/src/shop_memory.erl"
+   }
+  },
+  "position": {
+   "character": 26,
+   "line": 9
+  },
+  "result": {
+   "activeSignature": 0,
+   "signatures": [
+    {
+     "activeParameter": 1,
+     "documentation": {
+      "kind": "markdown",
+      "value": "```erlang\n-spec keyfind(Key, N, TupleList) -> Tuple | false when\n      Key :: term(),\n      N :: pos_integer(),\n      TupleList :: [Tuple],\n      Tuple :: tuple().\n```\n\n-----\n\nSearches the list of tuples `TupleList` for a tuple whose `N`th element compares\nequal to `Key`.\n\nReturns `Tuple` if such a tuple is found; otherwise, returns `false`.\n\n## Examples\n\n```erlang\n1> lists:keyfind(b, 1, [{a,10}, {b,20}, {c,30}]).\n{b,20}\n2> lists:keyfind(unknown, 1, [{a,10}, {b,20}, {c,30}]).\nfalse\n```"
+     },
+     "label": "lists:keyfind(Key, N, TupleList)",
+     "parameters": [
+      {
+       "label": "Key"
+      },
+      {
+       "label": "N"
+      },
+      {
+       "label": "TupleList"
+      }
+     ]
+    }
+   ]
+  }
+ }
+]

@@ -47,6 +47,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.JBIterable;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
@@ -118,6 +119,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement atomName = PsiTreeUtil.prevVisibleLeaf(previousByOffset);
     PsiElement radix = atomName != null ? PsiTreeUtil.prevVisibleLeaf(atomName) : null;
     return is(radix, ErlangTypes.ERL_RADIX);
+  }
+
+  @Override
+  public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
+    if (ElpEngine.ownsFeature(parameters.getOriginalFile(), ElpEngine.Feature.COMPLETION)) return;
+    super.fillCompletionVariants(parameters, result);
   }
 
   public ErlangCompletionContributor() {

@@ -28,6 +28,7 @@ import com.intellij.util.SlowOperations;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
+import org.intellij.erlang.elp.ElpEngine;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,11 +40,13 @@ import java.util.List;
 public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangArgumentList, Object> {
   @Override
   public ErlangArgumentList findElementForParameterInfo(@NotNull CreateParameterInfoContext context) {
+    if (ElpEngine.ownsFeature(context.getFile(), ElpEngine.Feature.SIGNATURE_HELP)) return null;
     return getErlangArgumentList(context);
   }
 
   @Override
   public ErlangArgumentList findElementForUpdatingParameterInfo(@NotNull UpdateParameterInfoContext context) {
+    if (ElpEngine.ownsFeature(context.getFile(), ElpEngine.Feature.SIGNATURE_HELP)) return null;
     return getErlangArgumentList(context);
   }
 
