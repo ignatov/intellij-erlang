@@ -35,8 +35,9 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
         String text = o.getText();
         int start = openingQuotesStart(text);
         if (start >= 0) {
-          String quotes = "\"".repeat(Math.max(3, countOpeningQuotes(text)));
-          if (text.startsWith(quotes, start) && !text.startsWith(quotes + "\n", start)) {
+          int quoteCount = Math.max(3, countOpeningQuotes(text));
+          String quotes = "\"".repeat(quoteCount);
+          if (text.startsWith(quotes, start) && !isWhiteSpaceAfterOpening(text, start, quoteCount)) {
             holder.registerProblem(o, "Not white space after start of triple-quoted string");
           }
           if (text.endsWith(quotes) && !endsWithPattern(text, quotes)) {
@@ -60,6 +61,16 @@ public class ErlangTripleQuotasSyntaxInspection extends ErlangInspectionBase {
     if (text.length() > 1 && text.charAt(1) == '"') return 1;
     if (text.length() > 2 && text.charAt(2) == '"' && "bBsS".indexOf(text.charAt(1)) >= 0) return 2;
     return -1;
+  }
+
+  private static boolean isWhiteSpaceAfterOpening(String tripleQuotedString, int start, int quoteCount) {
+    int lineEnd = tripleQuotedString.indexOf('\n');
+    if (lineEnd < 0) return false;
+    for (int i = start + quoteCount; i < lineEnd; i++) {
+      char c = tripleQuotedString.charAt(i);
+      if (!(c <= ' ' || c >= '\u0080' && c <= '\u00a0')) return false;
+    }
+    return true;
   }
 
   private static boolean endsWithPattern(String tripleQuotedString, String quotes) {

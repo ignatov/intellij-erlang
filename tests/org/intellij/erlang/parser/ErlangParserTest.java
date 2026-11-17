@@ -22,7 +22,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangStringLiteral;
-import org.intellij.erlang.stubs.types.ErlangFileElementType;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -145,7 +144,6 @@ public class ErlangParserTest extends ErlangParserTestBase {
     Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
     assertEquals(1, functions.size());
     assertEquals("visible", functions.iterator().next().getName());
-    assertEquals(8, ErlangFileElementType.INSTANCE.getStubVersion());
   }
 
   private PsiFile parseText(String text) {

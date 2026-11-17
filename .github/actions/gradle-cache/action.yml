@@ -1,0 +1,54 @@
+name: Gradle dependency cache
+description: >-
+  Restores the Gradle dependency cache of the runner OS, or saves it with save: true: the modules and their metadata in
+  ~/.gradle/caches/modules-2 without the IntelliJ IDEA distributions, and the Gradle distribution of the wrapper.
+  Runs on Linux, macOS and Windows.
+
+inputs:
+  save:
+    description: >-
+      'false' restores the entry of the build files, or else the newest entry of the runner OS. 'true' saves the cache
+      under the key of the restore earlier in the job, unless that restore found the key itself.
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+  # The IDE distributions (the group idea, about 1.5 GB each) are downloaded from JetBrains in every job: their metadata
+  # stays in the cache, and Gradle downloads a file again when the metadata points to a missing one. Nothing outside
+  # modules-2 is cached either: not its lock file and gc.properties, and not the transforms with the extracted IDE,
+  # which Gradle found modified in a restored cache on Windows.
+  # The paths are part of the version of an entry: keep both lists the same, or no restore finds what a save stored.
+  - name: Restore the Gradle dependency cache
+    id: restore
+    if: inputs.save != 'true'
+    uses: actions/cache/restore@v6
+    with:
+      path: |
+        ~/.gradle/caches/modules-2/files-2.1/*
+        !~/.gradle/caches/modules-2/files-2.1/idea
+        ~/.gradle/caches/modules-2/metadata-*
+        ~/.gradle/caches/modules-2/resources-*
+        ~/.gradle/wrapper/dists
+      key: gradle-deps-v1-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle.properties', '**/gradle-wrapper.properties') }}
+      restore-keys: gradle-deps-v1-${{ runner.os }}-
+  - name: Keep the key for the save
+    if: inputs.save != 'true'
+    shell: bash
+    env:
+      KEY: ${{ steps.restore.outputs.cache-primary-key }}
+      HIT: ${{ steps.restore.outputs.cache-hit }}
+    run: |
+      echo "GRADLE_DEPS_CACHE_KEY=$KEY" >> "$GITHUB_ENV"
+      echo "GRADLE_DEPS_CACHE_HIT=$HIT" >> "$GITHUB_ENV"
+  - name: Save the Gradle dependency cache
+    if: inputs.save == 'true' && env.GRADLE_DEPS_CACHE_HIT != 'true'
+    uses: actions/cache/save@v6
+    with:
+      path: |
+        ~/.gradle/caches/modules-2/files-2.1/*
+        !~/.gradle/caches/modules-2/files-2.1/idea
+        ~/.gradle/caches/modules-2/metadata-*
+        ~/.gradle/caches/modules-2/resources-*
+        ~/.gradle/wrapper/dists
+      key: ${{ env.GRADLE_DEPS_CACHE_KEY }}

@@ -142,6 +142,41 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testGuardIndent() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentDefault() throws Exception {
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentMacroArgument() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentEnter() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doEnterTest();
+  }
+
+  public void testGuardIndentEnterCase() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doEnterTest();
+  }
+
+  private void setIndentSize(int indentSize) {
+    CodeStyleSettings.IndentOptions indentOptions = myTemporarySettings.getIndentOptions(ErlangFileType.MODULE);
+    assertNotNull(indentOptions);
+    indentOptions.INDENT_SIZE = indentSize;
+  }
+
   public void test292() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
     erlangSettings.ALIGN_MULTILINE_BLOCK = true;
@@ -218,12 +253,18 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTry3() throws Exception { doEnterTest(); }
   public void testTry4() throws Exception { doEnterTest(); }
   public void testTry5() throws Exception { doEnterTest(); }
+  public void testTryBodyComma() throws Exception { doEnterTest(); }
+  public void testTryBodyComma2() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma2() throws Exception { doEnterTest(); }
 
   public void testTryParasite1() throws Exception { doEnterTest(); }
   public void testTryParasite2() throws Exception { doEnterTest(); }
   public void testTryParasite3() throws Exception { doEnterTest(); }
   public void testTryParasite4() throws Exception { doEnterTest(); }
   public void testTryParasite5() throws Exception { doEnterTest(); }
+  public void testTryBodyCommaParasite() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineCommaParasite() throws Exception { doEnterTest(); }
 
   public void testBindTry()                 throws Exception { doEnterTest(); }
   public void testBindTryExpr()             throws Exception { doEnterTest(); }
