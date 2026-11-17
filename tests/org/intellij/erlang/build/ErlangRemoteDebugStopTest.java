@@ -70,20 +70,14 @@ public class ErlangRemoteDebugStopTest extends BasePlatformTestCase {
   }
 
   public void testStoppingSessionLeavesModulesOnRemoteNodeCallable() throws Exception {
-    File source = new File(myTempDir, MODULE + ".erl");
-    FileUtil.copy(new File("testData/debugger/remoteStop/" + MODULE + ".erl"), source);
-    String erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(mySdkPath).getPath();
-    assertEquals("", run(Arrays.asList(erlc, "+debug_info", "-o", myTempDir.getPath(), source.getPath())));
+    File source = compileModule();
 
     long id = System.currentTimeMillis();
-    Process target = start(Arrays.asList(erl(), "-noshell", "-sname", "target_" + id, "-setcookie", COOKIE,
-                                         "-pa", myTempDir.getPath(),
-                                         "-eval", "io:format(\"~s ~s~n\", [node(), erlang:system_info(otp_release)])."));
-    String[] targetInfo = new BufferedReader(new InputStreamReader(target.getInputStream(), StandardCharsets.UTF_8)).readLine().split(" ");
+    String[] targetInfo = startNode("target_" + id, "io:format('~s ~s~n', [node(), erlang:system_info(otp_release)]).");
     String targetNode = targetInfo[0];
     String beams = Integer.parseInt(targetInfo[1]) >= 27 ? "otp_27_plus" : "otp_pre_27";
     String expectedCompiled = "{" + MODULE + ",current,0}";
-    assertEquals(expectedCompiled, callOnTarget(targetNode));
+    assertEquals(expectedCompiled, callOnNode(targetNode));
 
     // What ErlangXDebugProcess does for a remote debug run configuration.
     ErlangDebuggerNode debuggerNode = new ErlangDebuggerNode(new RecordingListener());
@@ -95,29 +89,96 @@ public class ErlangRemoteDebugStopTest extends BasePlatformTestCase {
     OSProcessHandler debuggerHandler = new OSProcessHandler(debugger, "debugnode");
     debuggerHandler.startNotify();
 
-    String interpreted = callOnTarget(targetNode);
-    for (int i = 0; i < 60 && !interpreted.startsWith("{dbg_debugged,"); i++) {
-      TimeUnit.MILLISECONDS.sleep(500);
-      interpreted = callOnTarget(targetNode);
-    }
-    assertEmpty(myDebuggerErrors);
-    assertTrue("the module is not interpreted on the target node: " + interpreted, interpreted.startsWith("{dbg_debugged,"));
+    assertInterpreted(targetNode);
 
     // What XDebugSessionImpl.stop() does: destroy the process of the session, then stop the XDebugProcess once it is terminated.
     debuggerHandler.destroyProcess();
     assertTrue("the debugger node did not stop", debuggerHandler.waitFor(TimeUnit.SECONDS.toMillis(30)));
     debuggerNode.stop();
 
-    assertEquals("the target node must run its modules as before the debug session", expectedCompiled, callOnTarget(targetNode));
+    assertEquals("the target node must run its modules as before the debug session", expectedCompiled, callOnNode(targetNode));
+  }
+
+  // int:ni/1 interprets the modules on every node the debugger node is connected to, and once it is connected to the
+  // target it is connected to the target's cluster too.
+  public void testStoppingSessionLeavesModulesOnConnectedNodeCallable() throws Exception {
+    File source = compileModule();
+
+    long id = System.currentTimeMillis();
+    String[] targetInfo = startNode("target_" + id, "io:format('~s ~s~n', [node(), erlang:system_info(otp_release)]).");
+    String targetNode = targetInfo[0];
+    String beams = Integer.parseInt(targetInfo[1]) >= 27 ? "otp_27_plus" : "otp_pre_27";
+    String peerNode = startNode("peer_" + id, "pong = net_adm:ping('" + targetNode + "'), io:format('~s~n', [node()]).")[0];
+    String host = targetNode.substring(targetNode.indexOf('@'));
+    String debuggerNodeName = "debugger_node_" + id + host;
+    String expectedCompiled = "{" + MODULE + ",current,0}";
+    assertEquals(expectedCompiled, callOnNode(targetNode));
+    assertEquals(expectedCompiled, callOnNode(peerNode));
+
+    ErlangDebuggerNode debuggerNode = new ErlangDebuggerNode(new RecordingListener());
+    Process debugger = start(Arrays.asList(erl(), "-pa", new File("resources/debugger/beams/" + beams).getAbsolutePath(),
+                                           "-run", "debugnode", "main", String.valueOf(debuggerNode.getLocalDebuggerPort()),
+                                           "-sname", "debugger_node_" + id, "-setcookie", COOKIE, "-noshell"));
+    OSProcessHandler debuggerHandler = new OSProcessHandler(debugger, "debugnode");
+    debuggerHandler.startNotify();
+    // Connect the peer to the debugger node before the modules are interpreted, as the debugger node's connection to
+    // the target would do, but without depending on when global connects them.
+    String connected = call(peerNode, "net_kernel, connect_node, ['" + debuggerNodeName + "']");
+    for (int i = 0; i < 60 && !connected.equals("true"); i++) {
+      TimeUnit.MILLISECONDS.sleep(500);
+      connected = call(peerNode, "net_kernel, connect_node, ['" + debuggerNodeName + "']");
+    }
+    assertEquals("the peer node did not connect to the debugger node", "true", connected);
+    debuggerNode.interpretModules(List.of(source.getPath()));
+    debuggerNode.debugRemoteNode(targetNode, COOKIE);
+
+    assertInterpreted(targetNode);
+    assertInterpreted(peerNode);
+
+    debuggerHandler.destroyProcess();
+    assertTrue("the debugger node did not stop", debuggerHandler.waitFor(TimeUnit.SECONDS.toMillis(30)));
+    debuggerNode.stop();
+
+    assertEquals("the target node must run its modules as before the debug session", expectedCompiled, callOnNode(targetNode));
+    assertEquals("the peer node must run its modules as before the debug session", expectedCompiled, callOnNode(peerNode));
+  }
+
+  private File compileModule() throws Exception {
+    File source = new File(myTempDir, MODULE + ".erl");
+    FileUtil.copy(new File("testData/debugger/remoteStop/" + MODULE + ".erl"), source);
+    String erlc = JpsErlangSdkType.getByteCodeCompilerExecutable(mySdkPath).getPath();
+    assertEquals("", run(Arrays.asList(erlc, "+debug_info", "-o", myTempDir.getPath(), source.getPath())));
+    return source;
+  }
+
+  // The -eval expressions use no double quotes: on Windows ProcessBuilder passes them to erl unescaped.
+  private String[] startNode(String name, String eval) throws IOException {
+    Process node = start(Arrays.asList(erl(), "-noshell", "-sname", name, "-setcookie", COOKIE, "-pa", myTempDir.getPath(),
+                                       "-eval", eval));
+    return new BufferedReader(new InputStreamReader(node.getInputStream(), StandardCharsets.UTF_8)).readLine().split(" ");
+  }
+
+  private void assertInterpreted(String node) throws Exception {
+    String interpreted = callOnNode(node);
+    for (int i = 0; i < 60 && !interpreted.startsWith("{dbg_debugged,"); i++) {
+      TimeUnit.MILLISECONDS.sleep(500);
+      interpreted = callOnNode(node);
+    }
+    assertEmpty(myDebuggerErrors);
+    assertTrue("the module is not interpreted on " + node + ": " + interpreted, interpreted.startsWith("{dbg_debugged,"));
   }
 
   private String erl() {
     return JpsErlangSdkType.getByteCodeInterpreterExecutable(mySdkPath).getPath();
   }
 
-  private String callOnTarget(String targetNode) throws Exception {
+  private String callOnNode(String node) throws Exception {
+    return call(node, MODULE + ", current, []");
+  }
+
+  private String call(String node, String mfa) throws Exception {
     return run(Arrays.asList(erl(), "-noshell", "-sname", "probe_" + System.nanoTime(), "-setcookie", COOKIE, "-eval",
-                             "io:format(\"~0p\", [rpc:call('" + targetNode + "', " + MODULE + ", current, [])]), halt()."));
+                             "io:format('~0p', [rpc:call('" + node + "', " + mfa + ")]), halt()."));
   }
 
   private Process start(List<String> command) throws IOException {
