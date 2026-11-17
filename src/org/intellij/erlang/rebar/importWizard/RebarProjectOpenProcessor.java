@@ -18,12 +18,15 @@ package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectOpenProcessorBase;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +48,7 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
     builder.setRebarPath(rebarPath);
     builder.setIsImportingProject(wizardContext.isCreatingNewProject() && !rebarPath.isEmpty());
     builder.setProjectRoot(projectRoot);
-    builder.setList(selectOneAppPerName(builder.getList()));
+    builder.setList(selectApps(projectRoot, builder.getList()));
     return true;
   }
 
@@ -54,15 +57,23 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
     return RebarRunningStateUtil.getRebarPath(projectRoot.getPath());
   }
 
-  // Without the wizard there is no SelectImportedOtpAppsStep to resolve name conflicts, for example an app and its copy
-  // in _build/default/lib after rebar3 compile. Keep the app whose root is nearest to the project root.
+  // Without the wizard there is no SelectImportedOtpAppsStep to deselect apps. Skip the apps of releases under
+  // _build/<profile>/rel: they are OTP's own apps or links to them. Of apps with the same name, such as an app and its
+  // copy in _build/default/lib after rebar3 compile, keep the one outside _build, then the one fewest directories deep.
   @NotNull
-  private static List<ImportedOtpApp> selectOneAppPerName(@NotNull List<ImportedOtpApp> apps) {
+  private static List<ImportedOtpApp> selectApps(@NotNull VirtualFile projectRoot, @NotNull List<ImportedOtpApp> apps) {
     Map<String, ImportedOtpApp> appsByName = new LinkedHashMap<>();
+    Map<String, Integer> ranksByName = new HashMap<>();
     for (ImportedOtpApp app : apps) {
-      ImportedOtpApp other = appsByName.get(app.getName());
-      if (other == null || app.getRoot().getPath().length() < other.getRoot().getPath().length()) {
+      String relativePath = VfsUtilCore.getRelativePath(app.getRoot(), projectRoot);
+      List<String> segments = relativePath == null || relativePath.isEmpty() ? List.of() : StringUtil.split(relativePath, "/");
+      boolean inBuild = !segments.isEmpty() && "_build".equals(segments.get(0));
+      if (inBuild && segments.size() > 2 && "rel".equals(segments.get(2))) continue;
+      int rank = (inBuild ? 1000 : 0) + segments.size();
+      Integer otherRank = ranksByName.get(app.getName());
+      if (otherRank == null || rank < otherRank) {
         appsByName.put(app.getName(), app);
+        ranksByName.put(app.getName(), rank);
       }
     }
     return new ArrayList<>(appsByName.values());

@@ -18,6 +18,7 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -113,6 +114,22 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     finally {
       settings.setRebarPath(oldRebarPath);
     }
+  }
+
+  public void testRebarPathIgnoresDirectoryNamedRebar3() throws Exception {
+    File directory = FileUtil.createTempDirectory("rebar_project", null);
+    File rebar3 = new File(directory, "rebar3");
+    assertTrue(rebar3.mkdir());
+    String rebarPath =
+      ApplicationManager.getApplication().executeOnPooledThread(() -> RebarRunningStateUtil.getRebarPath(directory.getPath())).get();
+    assertFalse(rebarPath, rebar3.getPath().equals(rebarPath));
+  }
+
+  public void testRebarPathInDirectory() throws Exception {
+    File directory = FileUtil.createTempDirectory("rebar_project", null);
+    File rebar3 = createExecutable(directory, "rebar3");
+    assertEquals(rebar3.getPath(),
+                 ApplicationManager.getApplication().executeOnPooledThread(() -> RebarRunningStateUtil.getRebarPath(directory.getPath())).get());
   }
 
   public void testFindInPathWithWindowsExtension() throws IOException {

@@ -51,6 +51,8 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -136,6 +138,26 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   public void testOpenProcessorQuickImportCompiled() throws Exception {
     String rebarPath = createRebarInProjectRoot();
     assertEquals("modules: [demo at test], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // A release under _build/<profile>/rel holds OTP's own apps, copied or, in a dev mode release, linked into the OTP
+  // installation; none of them becomes a module.
+  public void testOpenProcessorQuickImportRelease() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    if (!SystemInfo.isWindows) {
+      File otpApp = FileUtil.createTempDirectory("crypto-1.0", null);
+      FileUtil.writeToFile(new File(otpApp, "ebin/crypto.app"), "{application, crypto, [{vsn, \"1.0\"}, {modules, []}]}.\n");
+      Files.createSymbolicLink(Paths.get(getProject().getBasePath(), "test/_build/prod/rel/demo/lib/crypto-1.0"), otpApp.toPath());
+    }
+    assertEquals("modules: [demo at test], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // The app directory name is much longer than the app name; the app outside _build must still win.
+  public void testOpenProcessorQuickImportUmbrella() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    assertEquals("modules: [umb at test/apps/umb_application_core_service], rebar path: '" + rebarPath + "', compile with rebar: true",
                  doQuickImport(new RebarProjectOpenProcessor()));
   }
 

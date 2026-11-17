@@ -112,7 +112,7 @@ public class RebarRunningStateUtil {
   public static String getRebarPath(@Nullable String directory) {
     if (directory != null) {
       File rebar = new File(directory, REBAR);
-      if (rebar.exists() && rebar.canExecute()) {
+      if (rebar.isFile() && rebar.canExecute()) {
         return rebar.getPath();
       }
     }
