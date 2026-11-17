@@ -200,8 +200,11 @@ jobs:
           jps-plugin/build/reports/tests/testCompilation
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
-  # The tests and the compilation tests on macOS and Windows. Required: a failure turns the run red, and nightly
-  # waits for them.
+  # The tests and the compilation tests on Windows and macOS. A push to master runs both OSes; a pull request runs
+  # only Windows. The account runs at most 5 macOS jobs at a time, so on pull requests the macOS jobs waited half an
+  # hour and more for a runner and often failed with "job was not acquired by Runner".
+  # On a pull request the Windows jobs are required checks. On master a failure on either OS turns the run red,
+  # nightly waits for both, and macos-failure files an issue when a macOS job failed.
   # buildPlugin, verifyPlugin and verifyGeneratedSources do not depend on the OS and run only in build.
   test-os:
     name: test-${{ matrix.os }}
@@ -210,7 +213,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
     defaults:
       run:
         shell: bash
@@ -262,7 +267,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        # macOS only on a push to master, as in test-os.
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
     defaults:
       run:
         shell: bash
@@ -452,4 +460,43 @@ jobs:
         else
           gh release create nightly intellij-erlang-nightly.zip --verify-tag --prerelease \
             --title "Nightly build" --notes-file nightly-notes.md
+        fi
+
+  macos-failure:
+    # Pull requests do not run macOS, so a break that shows only on macOS is first seen on master. When a macOS job of
+    # a push to master failed or timed out, this job opens the issue below, or comments on it while it is open. A
+    # failure on Windows only, a cancelled macOS job and a green run file nothing.
+    needs: [test-os, compilation-tests-os]
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      issues: write
+    concurrency:
+      group: macos-failure-issue
+      cancel-in-progress: false
+
+    steps:
+    - name: File an issue for the failed macOS jobs
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TITLE: 'CI: macOS jobs failed on master'
+      run: |
+        failed="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" --paginate \
+          --jq '.jobs[] | select((.name | test("^(test|compilation-tests)-macos")) and (.conclusion == "failure" or .conclusion == "timed_out")) | "- [\(.name)](\(.html_url))"')"
+        if [[ -z "$failed" ]]; then
+          echo "No macOS job failed."
+          exit 0
+        fi
+        run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        body="$(printf 'macOS jobs of Java CI failed on master. Pull requests do not run macOS, so this is the first run that shows it.\n\nRun: %s (attempt %s)\nCommit: %s\n\nFailed jobs:\n%s\n' \
+          "$run_url" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" "$failed")"
+        number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,title \
+          --jq '[.[] | select(.title == env.TITLE)][0].number // empty')"
+        if [[ -n "$number" ]]; then
+          gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+        else
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
         fi
