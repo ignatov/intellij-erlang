@@ -62,6 +62,12 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testExportFromAttributeSingle()    { doTest("Export function bar/1"); }
   public void testExportFromAttributeEmptyList() { doTest("Export function foo/0"); }
   public void testExportFromAttributeSeveral()   { doTest("Export functions..."); }
+  public void testExportFromAttributeTrailingComma()          { doTest("Export function bar/1"); }
+  public void testExportFromAttributeTrailingCommaMultiline() { doTest("Export function bar/1"); }
+  public void testExportFromAttributeReservedWord()           { doTest("Export function 'end'/0"); }
+  public void testExportReservedWordNew()                     { doTest("Export function"); }
+  public void testExportFromAttributeMultiline()              { doTest("Export function bar/1"); }
+  public void testExportFromAttributeMacro()                  { doTest("Export function bar/1"); }
 
   public void testExportFromAttributeAllExported() { doTestNoExportFromAttribute(); }
   public void testExportFromAttributeExportAll()   { doTestNoExportFromAttribute(); }

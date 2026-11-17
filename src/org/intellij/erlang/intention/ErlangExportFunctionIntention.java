@@ -22,21 +22,23 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.containers.ContainerUtil;
-import org.intellij.erlang.psi.ErlangExport;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -125,12 +127,40 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
   @NotNull
   private static List<String> getUnexportedFunctions(@NotNull ErlangFile file) {
     if (file.isExportedAll()) return List.of();
+    Set<String> exportedThroughMacros = getExportedThroughMacros(file);
     Set<String> result = new LinkedHashSet<>();
     for (ErlangFunction function : file.getFunctions()) {
       if (function.isExported() || function.getName().startsWith("?")) continue;
-      result.add(ErlangPsiImplUtil.createFunctionPresentation(function));
+      if (exportedThroughMacros.contains(function.getName() + "/" + function.getArity())) continue;
+      result.add(ErlangExportFunctionFix.createExportPresentation(function));
     }
     return List.copyOf(result);
+  }
+
+  @NotNull
+  private static Set<String> getExportedThroughMacros(@NotNull ErlangFile file) {
+    Set<String> result = new HashSet<>();
+    for (ErlangExport export : ErlangExportFunctionFix.getExportPsiElements(file)) {
+      ErlangExportFunctions exportFunctions = export.getExportFunctions();
+      if (exportFunctions == null) continue;
+      for (ErlangExportFunction exportFunction : exportFunctions.getExportFunctionList()) {
+        ErlangMacros macros = exportFunction.getQAtom().getMacros();
+        PsiReference reference = macros != null ? macros.getReference() : null;
+        PsiElement definition = reference != null ? reference.resolve() : null;
+        PsiElement arity = exportFunction.getInteger();
+        if (!(definition instanceof ErlangMacrosDefinition macrosDefinition) || arity == null ||
+            macrosDefinition.getArgumentDefinitionList() != null || macrosDefinition.getMacrosBody() == null) {
+          continue;
+        }
+        List<ErlangExpression> body = macrosDefinition.getMacrosBody().getExpressionList();
+        if (body.size() == 1 && body.get(0) instanceof ErlangMaxExpression max &&
+            max.getQAtom() != null && max.getQAtom().getAtom() != null) {
+          String name = StringUtil.unquoteString(ErlangPsiImplUtil.getName(max.getQAtom().getAtom()), '\'');
+          result.add(name + "/" + arity.getText());
+        }
+      }
+    }
+    return result;
   }
 
   @Nullable
