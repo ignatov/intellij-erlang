@@ -52,6 +52,10 @@ final class FakeElpServer implements LanguageServer {
   private final TextDocumentService myTextDocuments = new TextDocuments();
   /** How many more requests of a method are answered with the error "content modified". */
   private final Map<String, Integer> myContentModified = new ConcurrentHashMap<>();
+  /** How many more answers to {@code textDocument/rename} are computed from an older text of a file, see {@link #answerStale}. */
+  private volatile int myStale;
+  private volatile String myStaleUri;
+  private volatile int myStaleShift;
 
   FakeElpServer(@NotNull ElpRecordedAnswers answers) {
     myAnswers = answers;
@@ -82,6 +86,33 @@ final class FakeElpServer implements LanguageServer {
    */
   void answerContentModified(@NotNull String method, int times) {
     myContentModified.put(method, times);
+  }
+
+  /**
+   * Answers the next {@code times} requests of {@code textDocument/rename} as ELP answers when it has not read a change of the file
+   * {@code uri} yet: the ranges of the edits in that file are {@code shift} characters off, as they were in its older text.
+   */
+  void answerStale(@NotNull String uri, int times, int shift) {
+    myStaleUri = uri;
+    myStaleShift = shift;
+    myStale = times;
+  }
+
+  @Nullable
+  private WorkspaceEdit stale(@Nullable WorkspaceEdit edit) {
+    if (edit == null || myStale <= 0) return edit;
+    myStale--;
+    for (Either<TextDocumentEdit, ResourceOperation> change : Objects.requireNonNull(edit.getDocumentChanges())) {
+      if (!change.isLeft() || !change.getLeft().getTextDocument().getUri().equals(myStaleUri)) continue;
+      for (Object element : change.getLeft().getEdits()) {
+        Object textEdit = element instanceof Either<?, ?> either ? either.getLeft() : element;
+        if (!(textEdit instanceof TextEdit shifted)) continue;
+        Range range = shifted.getRange();
+        shifted.setRange(new Range(new Position(range.getStart().getLine(), range.getStart().getCharacter() + myStaleShift),
+                                   new Position(range.getEnd().getLine(), range.getEnd().getCharacter() + myStaleShift)));
+      }
+    }
+    return edit;
   }
 
   void clearRequests() {
@@ -126,7 +157,9 @@ final class FakeElpServer implements LanguageServer {
 
     @Override
     public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-      return answer("textDocument/rename", params.getTextDocument(), params.getPosition(), params, WorkspaceEdit.class);
+      CompletableFuture<WorkspaceEdit> answer =
+        answer("textDocument/rename", params.getTextDocument(), params.getPosition(), params, WorkspaceEdit.class);
+      return answer.thenApply(FakeElpServer.this::stale);
     }
 
     @Override

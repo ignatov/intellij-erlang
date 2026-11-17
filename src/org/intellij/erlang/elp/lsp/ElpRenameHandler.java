@@ -21,10 +21,12 @@ import com.intellij.ide.TitledHandler;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
@@ -76,6 +78,10 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   private static final int ATTEMPTS = 3;
   static final String CANNOT_RENAME = "ELP cannot rename the name at the caret";
   static final String NOT_RUNNING = "ELP is not running for this file yet: it is loading the project or has stopped.";
+  /** How many times an answer computed from an older text of a file is asked for again, see {@link #plan}. */
+  private static final int STALE_ATTEMPTS = 5;
+  private static final long STALE_PAUSE_MS = 250;
+  private static final Logger LOG = Logger.getInstance(ElpRenameHandler.class);
   private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_@]*");
 
   @Override
@@ -173,14 +179,58 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     });
   }
 
+  /**
+   * Sends the rename and applies the answer. ELP reads the changes of the files asynchronously and may answer from an older text
+   * of a file, with ranges that no longer hold the old name; such an answer is not applied (see {@link #plan}). ELP is told again
+   * that the file changed and asked again, after a pause, up to {@value #STALE_ATTEMPTS} times.
+   */
   @Nullable
   private static String rename(@NotNull Project project, @NotNull Target target, @NotNull String newName) {
-    AtomicReference<String> error = new AtomicReference<>();
-    WorkspaceEdit edit = ProgressManager.getInstance().runProcessWithProgressSynchronously(
-      () -> rename(target.client(), new RenameParams(target.id(), target.position(), newName), error), "Renaming with ELP", true,
-      project);
-    if (edit == null) return "ELP did not rename '" + target.oldName() + "': " + StringUtil.notNullize(error.get(), "no answer");
-    return apply(project, target.client().getDescriptor()::findFileByUri, edit);
+    Function<String, VirtualFile> findFile = target.client().getDescriptor()::findFileByUri;
+    for (int attempt = 1; ; attempt++) {
+      AtomicReference<String> error = new AtomicReference<>();
+      long pause = attempt == 1 ? 0 : STALE_PAUSE_MS * (attempt - 1);
+      WorkspaceEdit edit = ProgressManager.getInstance().runProcessWithProgressSynchronously(() -> {
+        if (pause > 0) pause(pause);
+        return rename(target.client(), new RenameParams(target.id(), target.position(), newName), error);
+      }, "Renaming with ELP", true, project);
+      if (edit == null) return "ELP did not rename '" + target.oldName() + "': " + StringUtil.notNullize(error.get(), "no answer");
+      Plan plan = plan(findFile, edit, target.oldName());
+      if (plan.stale() == null) return plan.problem() != null ? plan.problem() : plan.apply(project);
+      LOG.info("ELP answered the rename of '" + target.oldName() + "' for an older version of " + plan.stale().getPresentableUrl() +
+               "; the answer was rejected (attempt " + attempt + " of " + STALE_ATTEMPTS + ")");
+      if (attempt >= STALE_ATTEMPTS) return staleProblem(plan.stale());
+      tellChanged(project, target.client(), plan.stale());
+    }
+  }
+
+  @NotNull
+  static String staleProblem(@NotNull VirtualFile file) {
+    return "ELP answered for an older version of " + file.getName() + ". Nothing was renamed; try again.";
+  }
+
+  private static void pause(long millis) {
+    long deadline = System.nanoTime() + millis * 1_000_000;
+    ProgressIndicator indicator = ProgressManager.getInstance().getProgressIndicator();
+    while (System.nanoTime() < deadline && (indicator == null || !indicator.isCanceled())) {
+      try {
+        Thread.sleep(Math.min(50, Math.max(1, (deadline - System.nanoTime()) / 1_000_000)));
+      }
+      catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+  }
+
+  /** Tells ELP that a file that is not open in an editor changed, so that it reads it from the disk again. */
+  private static void tellChanged(@NotNull Project project, @NotNull LspServer client, @NotNull VirtualFile file) {
+    if (FileEditorManager.getInstance(project).isFileOpen(file) || !client.getDescriptor().isSupportedFile(file)) return;
+    List<FileEvent> changed = List.of(new FileEvent(client.getDescriptor().getFileUri(file), FileChangeType.Changed));
+    client.sendNotification(server -> {
+      server.getWorkspaceService().didChangeWatchedFiles(new DidChangeWatchedFilesParams(changed));
+      return Unit.INSTANCE;
+    });
   }
 
   private record Target(@NotNull LspServer client, @NotNull TextDocumentIdentifier id, @NotNull Position position,
@@ -332,16 +382,30 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
   }
 
   /**
-   * Applies ELP's answer to {@code textDocument/rename}. Its changes take effect in their order, as the LSP specification says:
-   * after a file rename the file has the new URI and the old one names nothing. ELP's module rename relies on it, it renames the
-   * file first and then edits the {@code -module} line under the new URI. Everything is checked before anything changes; then the
-   * text edits and the file renames are applied as one global undoable command.
+   * Applies ELP's answer to {@code textDocument/rename} of {@code oldName}, see {@link #plan}.
    *
    * @param findFile the file of a document URI, as the LSP client finds it
    * @return why the edit was not applied, or {@code null} when it was
    */
   @Nullable
-  static String apply(@NotNull Project project, @NotNull Function<String, VirtualFile> findFile, @NotNull WorkspaceEdit edit) {
+  static String apply(@NotNull Project project, @NotNull Function<String, VirtualFile> findFile, @NotNull WorkspaceEdit edit,
+                      @NotNull String oldName) {
+    Plan plan = plan(findFile, edit, oldName);
+    if (plan.stale() != null) return staleProblem(plan.stale());
+    return plan.problem() != null ? plan.problem() : plan.apply(project);
+  }
+
+  /**
+   * Checks ELP's answer to {@code textDocument/rename} of {@code oldName} against the documents. Its changes take effect in their
+   * order, as the LSP specification says: after a file rename the file has the new URI and the old one names nothing. ELP's module
+   * rename relies on it, it renames the file first and then edits the {@code -module} line under the new URI.
+   * Every text edit of a rename replaces an occurrence of the old name: the text in its range must be the old name, plain or
+   * quoted (see {@link #isOccurrence}). ELP answers from an older text of a file when it has not read a change of the file yet;
+   * the ranges of such an answer hold something else, or lie outside the document, and the answer is stale. Nothing of an answer
+   * is applied unless all of it is checked.
+   */
+  @NotNull
+  private static Plan plan(@NotNull Function<String, VirtualFile> findFile, @NotNull WorkspaceEdit edit, @NotNull String oldName) {
     // The URIs that the renames so far moved: the file now under the URI, or null for a URI that a file left.
     Map<String, VirtualFile> moved = new HashMap<>();
     // A file under two paths, such as a header in src and in rebar3's _build/default/lib/APP/src link to it, which ELP edits under
@@ -359,13 +423,13 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
     for (Either<TextDocumentEdit, ResourceOperation> change : changes(edit)) {
       if (change.isRight()) {
         String name = change.getRight() instanceof RenameFile rename ? newName(rename) : null;
-        if (name == null) return "ELP's rename creates, deletes or moves files; nothing was changed.";
+        if (name == null) return Plan.refused("ELP's rename creates, deletes or moves files; nothing was changed.");
         RenameFile rename = (RenameFile)change.getRight();
         VirtualFile file = fileAt.apply(rename.getOldUri());
-        if (file == null) return "ELP's rename renames " + rename.getOldUri() + ", which does not exist; nothing was changed.";
+        if (file == null) return Plan.refused("ELP's rename renames " + rename.getOldUri() + ", which does not exist; nothing was changed.");
         VirtualFile existing = fileAt.apply(rename.getNewUri());
         if (existing != null && !existing.equals(file)) {
-          return "ELP's rename renames " + file.getPresentableUrl() + " to " + name + ", which exists; nothing was changed.";
+          return Plan.refused("ELP's rename renames " + file.getPresentableUrl() + " to " + name + ", which exists; nothing was changed.");
         }
         renames.put(file, name);
         files.add(file);
@@ -376,25 +440,89 @@ public final class ElpRenameHandler implements RenameHandler, TitledHandler {
       String uri = change.getLeft().getTextDocument().getUri();
       VirtualFile file = fileAt.apply(uri);
       Document document = file != null ? FileDocumentManager.getInstance().getDocument(file) : null;
-      if (document == null) return "ELP's rename changes " + uri + ", which cannot be opened; nothing was changed.";
+      if (document == null) return Plan.refused("ELP's rename changes " + uri + ", which cannot be opened; nothing was changed.");
       List<TextEdit> edits = textEdits.computeIfAbsent(document, key -> new ArrayList<>());
       files.add(file);
       for (TextEdit textEdit : textEdits(change.getLeft())) {
-        if (Lsp4jUtilKt.getRangeInDocument(document, textEdit.getRange()) == null) {
-          return "ELP's rename does not match the text of " + file.getPresentableUrl() + "; nothing was changed.";
-        }
+        TextRange range = rangeIn(document, textEdit.getRange());
+        if (range == null || !isOccurrence(document.getText(range), oldName)) return new Plan(null, file, Map.of(), Set.of(), Map.of());
         if (!edits.contains(textEdit)) edits.add(textEdit);
       }
     }
-    if (ReadonlyStatusHandler.getInstance(project).ensureFilesWritable(files).hasReadonlyFiles()) return null;
-    WriteCommandAction.writeCommandAction(project).withName("Rename").withGlobalUndo().run(() -> {
-      textEdits.forEach(Lsp4jUtilKt::applyTextEdits);
-      PsiDocumentManager.getInstance(project).commitAllDocuments();
-      renames.forEach((file, name) -> {
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null) psiFile.setName(name);
+    return new Plan(null, null, textEdits, files, renames);
+  }
+
+  /**
+   * The range of an LSP range in a document, or {@code null} when it is not inside the document: a line past the last one, a
+   * character past the end of its line, or an end before the start.
+   */
+  @Nullable
+  private static TextRange rangeIn(@NotNull Document document, @NotNull Range range) {
+    int start = offset(document, range.getStart());
+    int end = offset(document, range.getEnd());
+    if (start < 0 || end < start) return null;
+    TextRange platform = Lsp4jUtilKt.getRangeInDocument(document, range);
+    return platform != null && platform.getStartOffset() == start && platform.getEndOffset() == end ? platform : null;
+  }
+
+  private static int offset(@NotNull Document document, @Nullable Position position) {
+    if (position == null || position.getLine() < 0 || position.getCharacter() < 0) return -1;
+    if (position.getLine() >= document.getLineCount()) return -1;
+    int lineStart = document.getLineStartOffset(position.getLine());
+    int lineEnd = document.getLineEndOffset(position.getLine());
+    return position.getCharacter() <= lineEnd - lineStart ? lineStart + position.getCharacter() : -1;
+  }
+
+  /**
+   * @return whether {@code text} is what a rename of {@code oldName} replaces: the same name, either of them possibly a quoted
+   * atom ({@code 'old name'}), compared without the quotes and with the escapes of the quoted form resolved
+   */
+  static boolean isOccurrence(@NotNull String text, @NotNull String oldName) {
+    String name = unquoted(text);
+    return name != null && !name.isEmpty() && name.equals(unquoted(oldName));
+  }
+
+  /** The name of a plain or a quoted name, or {@code null} for a quoted one that is not well formed. */
+  @Nullable
+  private static String unquoted(@NotNull String name) {
+    if (!name.startsWith("'")) return name.indexOf('\'') < 0 ? name : null;
+    if (name.length() < 2 || !name.endsWith("'")) return null;
+    StringBuilder result = new StringBuilder();
+    for (int i = 1; i < name.length() - 1; i++) {
+      char c = name.charAt(i);
+      if (c == '\'') return null;
+      if (c == '\\') {
+        if (++i >= name.length() - 1) return null;
+        c = name.charAt(i);
+      }
+      result.append(c);
+    }
+    return result.toString();
+  }
+
+  /**
+   * A checked answer: why it is refused, or the file whose text it does not match (a stale answer), or else what to change.
+   */
+  private record Plan(@Nullable String problem, @Nullable VirtualFile stale, @NotNull Map<Document, List<TextEdit>> textEdits,
+                      @NotNull Set<VirtualFile> files, @NotNull Map<VirtualFile, String> renames) {
+    @NotNull
+    static Plan refused(@NotNull String problem) {
+      return new Plan(problem, null, Map.of(), Set.of(), Map.of());
+    }
+
+    /** Applies the text edits and the file renames as one global undoable command. */
+    @Nullable
+    String apply(@NotNull Project project) {
+      if (ReadonlyStatusHandler.getInstance(project).ensureFilesWritable(files).hasReadonlyFiles()) return null;
+      WriteCommandAction.writeCommandAction(project).withName("Rename").withGlobalUndo().run(() -> {
+        textEdits.forEach(Lsp4jUtilKt::applyTextEdits);
+        PsiDocumentManager.getInstance(project).commitAllDocuments();
+        renames.forEach((file, name) -> {
+          PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+          if (psiFile != null) psiFile.setName(name);
+        });
       });
-    });
-    return null;
+      return null;
+    }
   }
 }

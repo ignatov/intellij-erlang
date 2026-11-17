@@ -140,6 +140,57 @@ public class ElpRenameHandlerTest extends ErlangLightPlatformCodeInsightFixtureT
   }
 
   /**
+   * An edit whose range does not hold the old name was computed from an older text of the file: nothing of the answer is applied,
+   * not even the edits of the other file.
+   */
+  public void testShiftedEditChangesNothingInAnyFile() {
+    assertStale(documentChanges(CALL_SITE_EDIT, MODULE_LINE_EDIT.formatted("temp:///src/jsx_encoder.erl").replace("\"character\": 8", "\"character\": 9")
+                                                .replace("\"character\": 19", "\"character\": 20")));
+  }
+
+  public void testEditPastTheEndOfALineChangesNothing() {
+    assertStale(documentChanges(CALL_SITE_EDIT, MODULE_LINE_EDIT.formatted("temp:///src/jsx_encoder.erl").replace("\"character\": 8", "\"character\": 18")
+                                                .replace("\"character\": 19", "\"character\": 29")));
+  }
+
+  public void testEditPastTheLastLineChangesNothing() {
+    assertStale(documentChanges(CALL_SITE_EDIT, MODULE_LINE_EDIT.formatted("temp:///src/jsx_encoder.erl").replace("\"line\": 0", "\"line\": 40")));
+  }
+
+  /** The module line edit after the file rename is checked against the text of the renamed file. */
+  public void testShiftedEditUnderTheNewUriChangesNothing() {
+    assertStale(documentChanges(RENAME, CALL_SITE_EDIT, MODULE_LINE_EDIT.formatted("temp:///src/jsx_encoder111.erl")
+      .replace("\"character\": 8", "\"character\": 7")));
+  }
+
+  /** A quoted atom is an occurrence of the name, and the edit of its range applies. */
+  public void testQuotedAtomIsRenamed() {
+    VirtualFile quoted = myFixture.addFileToProject("src/quoted.erl", "f() -> 'jsx_encoder'.\n").getVirtualFile();
+    assertApplied(documentChanges(CALL_SITE_EDIT, """
+      {"edits": [{"newText": "jsx_encoder111", "range": {"start": {"line": 0, "character": 7}, "end": {"line": 0, "character": 20}}}],
+       "textDocument": {"uri": "temp:///src/quoted.erl", "version": null}}"""));
+    assertEquals("f() -> jsx_encoder111.\n", document(quoted).getText());
+    assertEquals(RENAMED_JSX, document(myJsx).getText());
+  }
+
+  public void testOccurrence() {
+    assertTrue(ElpRenameHandler.isOccurrence("lookup", "lookup"));
+    assertTrue(ElpRenameHandler.isOccurrence("'lookup'", "lookup"));
+    assertTrue(ElpRenameHandler.isOccurrence("lookup", "'lookup'"));
+    assertTrue(ElpRenameHandler.isOccurrence("'it\\'s'", "'it\\'s'"));
+    assertTrue(ElpRenameHandler.isOccurrence("Name", "Name"));
+    assertFalse(ElpRenameHandler.isOccurrence("find(m", "find"));
+    assertFalse(ElpRenameHandler.isOccurrence("ookup", "lookup"));
+    assertFalse(ElpRenameHandler.isOccurrence("lookup(", "lookup"));
+    assertFalse(ElpRenameHandler.isOccurrence("'lookup", "lookup"));
+    assertFalse(ElpRenameHandler.isOccurrence("lookup'", "lookup"));
+    assertFalse(ElpRenameHandler.isOccurrence("shop_backend:lookup", "lookup"));
+    assertFalse(ElpRenameHandler.isOccurrence("?NAME", "NAME"));
+    assertFalse(ElpRenameHandler.isOccurrence("", ""));
+    assertFalse(ElpRenameHandler.isOccurrence("''", "''"));
+  }
+
+  /**
    * In a rebar3 project that was built, {@code _build/default/lib/APP/src} links to {@code src}, and ELP edits a header under both
    * paths. The first path gets the edits once; the other path is the same file and its document is left alone.
    */
@@ -158,7 +209,7 @@ public class ElpRenameHandlerTest extends ErlangLightPlatformCodeInsightFixtureT
     String headerEdit = """
       {"edits": [{"newText": "config2", "range": {"start": {"line": 0, "character": 8}, "end": {"line": 0, "character": 14}}}],
        "textDocument": {"uri": "%s", "version": null}}""";
-    assertApplied(documentChanges(headerEdit.formatted(header.getUrl()), headerEdit.formatted(linkedHeader.getUrl())));
+    assertNull(apply(documentChanges(headerEdit.formatted(header.getUrl()), headerEdit.formatted(linkedHeader.getUrl())), "config"));
     assertEquals("-record(config2, {}).\n", document(header).getText());
     assertFalse(FileDocumentManager.getInstance().isFileModified(linkedHeader));
     FileDocumentManager.getInstance().saveAllDocuments();
@@ -199,8 +250,18 @@ public class ElpRenameHandlerTest extends ErlangLightPlatformCodeInsightFixtureT
     assertTexts(ENCODER, JSX);
   }
 
+  private void assertStale(@NotNull WorkspaceEdit edit) {
+    assertEquals("ELP answered for an older version of jsx_encoder.erl. Nothing was renamed; try again.", apply(edit));
+    assertEquals("jsx_encoder.erl", myEncoder.getName());
+    assertTexts(ENCODER, JSX);
+  }
+
   private String apply(@NotNull WorkspaceEdit edit) {
-    return ElpRenameHandler.apply(getProject(), VirtualFileManager.getInstance()::findFileByUrl, edit);
+    return apply(edit, "jsx_encoder");
+  }
+
+  private String apply(@NotNull WorkspaceEdit edit, @NotNull String oldName) {
+    return ElpRenameHandler.apply(getProject(), VirtualFileManager.getInstance()::findFileByUrl, edit, oldName);
   }
 
   private void assertTexts(@NotNull String encoder, @NotNull String jsx) {

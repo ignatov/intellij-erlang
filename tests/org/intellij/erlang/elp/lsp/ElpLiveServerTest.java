@@ -207,9 +207,20 @@ public class ElpLiveServerTest extends ErlangLightPlatformCodeInsightFixtureTest
     assertTrue(shopDocument.getText(), shopDocument.getText().contains("shop_backend:find(shop_memory"));
     assertFalse("the edit is not saved", Files.readString(project.resolve("src/shop.erl")).contains("shop_backend:find("));
 
+    // ELP may still answer from the older text after the retries (see ElpRenameHandler#plan): then nothing may change at all.
     editor.getCaretModel().moveToOffset(editor.getDocument().getText().indexOf("\nfind(Backend, Key)") + 3);
-    assertNull(ElpRenameHandler.renameAtCaret(getProject(), editor, backendPsi, "fetch_item"));
+    String backendBefore = editor.getDocument().getText();
+    String shopBefore = shopDocument.getText();
+    String problem = ElpRenameHandler.renameAtCaret(getProject(), editor, backendPsi, "fetch_item");
+    System.out.println("second rename: " + (problem == null ? "renamed" : "refused"));
+    if (problem != null) {
+      assertEquals(ElpRenameHandler.staleProblem(problem.contains("shop.erl") ? shop : backend), problem);
+      assertEquals(backendBefore, editor.getDocument().getText());
+      assertEquals(shopBefore, shopDocument.getText());
+      return;
+    }
     assertTrue(editor.getDocument().getText(), editor.getDocument().getText().contains("\nfetch_item(Backend, Key) ->"));
+    assertTrue(editor.getDocument().getText(), editor.getDocument().getText().contains("-spec fetch_item(module(), key())"));
     assertTrue(shopDocument.getText(), shopDocument.getText().contains("shop_backend:fetch_item(shop_memory"));
   }
 
