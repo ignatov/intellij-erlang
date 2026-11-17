@@ -62,4 +62,23 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
       fail("the child of the command is still running after the timeout");
     }
   }
+
+  // The Emacs version check passes the path from the settings unchanged; a path relative to the IDE's directory must still start.
+  public void testRelativeExecutableRunsFromTempDirectory() throws IOException {
+    File directory = FileUtil.createTempDirectory(new File("build"), "relativeExecutable", null, true);
+    try {
+      File executable = new File(directory, SystemInfo.isWindows ? "emacs.cmd" : "emacs");
+      Files.writeString(executable.toPath(), SystemInfo.isWindows ? "@echo GNU Emacs 99.9\r\n" : "#!/bin/sh\necho GNU Emacs 99.9\n",
+                        StandardCharsets.UTF_8);
+      assertTrue(executable.setExecutable(true));
+      String relativePath = FileUtil.getRelativePath(new File("").getAbsoluteFile(), executable);
+      assertNotNull(relativePath);
+      assertFalse(new File(relativePath).isAbsolute());
+
+      assertEquals("GNU Emacs 99.9", ExtProcessUtil.execAndGetFirstLine(10000, relativePath, "--version").getStdOut());
+    }
+    finally {
+      FileUtil.delete(directory);
+    }
+  }
 }
