@@ -17,11 +17,15 @@
 package org.intellij.erlang.rebar.importWizard;
 
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.projectImport.ProjectOpenProcessorBase;
+import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarProjectImportBuilder> {
+  private final RebarProjectImportBuilder myBuilder = new RebarProjectImportBuilder();
+
   @NotNull
   public String[] getSupportedExtensions() {
     return new String[]{"rebar.config"};
@@ -30,13 +34,18 @@ public class RebarProjectOpenProcessor extends ProjectOpenProcessorBase<RebarPro
   public boolean doQuickImport(@NotNull VirtualFile configFile, @NotNull WizardContext wizardContext) {
     VirtualFile projectRoot = configFile.getParent();
     wizardContext.setProjectName(projectRoot.getName());
-    getBuilder().setProjectRoot(projectRoot);
+    String rebarPath = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+      () -> RebarRunningStateUtil.getRebarPath(projectRoot.getPath()), "Detecting Rebar", false, wizardContext.getProject());
+    RebarProjectImportBuilder builder = getBuilder();
+    builder.setRebarPath(rebarPath);
+    builder.setIsImportingProject(wizardContext.isCreatingNewProject());
+    builder.setProjectRoot(projectRoot);
     return true;
   }
 
   @NotNull
   @Override
   protected RebarProjectImportBuilder doGetBuilder() {
-    return new RebarProjectImportBuilder();
+    return myBuilder;
   }
 }
