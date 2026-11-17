@@ -106,7 +106,7 @@ public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuick
     List<String> getArguments();
   }
 
-  private static class DefaultFunctionTextProvider implements FunctionTextProvider {
+  public static class DefaultFunctionTextProvider implements FunctionTextProvider {
     private final String myName;
     private final int myArity;
 

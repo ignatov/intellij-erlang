@@ -42,6 +42,7 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -254,12 +255,41 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
       return;
     }
 
-    var elementBefore = ErlangQuickFixBase.getAnchorElement(file);
+    insertNewExport(project, file, function, ErlangQuickFixBase.getAnchorElement(file));
+  }
 
+  private static void insertNewExport(@NotNull Project project,
+                                      @NotNull ErlangFile file,
+                                      @NotNull ErlangFunction function,
+                                      @Nullable PsiElement elementBefore) {
     if (elementBefore != null) {
       file.addBefore(createExport(project, getExportText(function)),
                      elementBefore);
       file.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
+    }
+  }
+
+  /**
+   * Adds the function to the given export, or, when the given export is null, to a new export attribute inserted
+   * before the given element, or after the -module attribute when the element is null or comes before it.
+   */
+  public static void exportFunction(@NotNull Project project,
+                                    @NotNull ErlangFunction function,
+                                    @Nullable ErlangExport export,
+                                    @Nullable PsiElement newExportBefore) {
+    if (export != null) {
+      updateExport(project, function, export);
+    }
+    else if (function.getContainingFile() instanceof ErlangFile file) {
+      ErlangModule module = file.getModule();
+      PsiElement moduleAttribute = module != null ? module.getParent() : null;
+      if (moduleAttribute != null &&
+          (newExportBefore == null || newExportBefore.getTextOffset() < moduleAttribute.getTextOffset())) {
+        createNewExport(project, file, function, moduleAttribute);
+      }
+      else {
+        insertNewExport(project, file, function, newExportBefore);
+      }
     }
   }
 
