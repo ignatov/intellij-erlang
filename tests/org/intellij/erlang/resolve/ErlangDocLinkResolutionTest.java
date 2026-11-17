@@ -86,6 +86,30 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
     doCompletionTest("%% See {@link sys<caret>}", "%% See {@link system_cmd<caret>}");
   }
 
+  public void testCompleteInExport() {
+    doCompletionInCodeTest("-export([\n  %% @see sys<caret>\n  system_cmd/1]).\n");
+  }
+
+  public void testCompleteInType() {
+    doCompletionInCodeTest("-type t() :: a |\n  %% @see sys<caret>\n  b.\n");
+  }
+
+  public void testCompleteInSpec() {
+    doCompletionInCodeTest("-spec system_cmd(_) ->\n  %% @see sys<caret>\n  ok.\n");
+  }
+
+  public void testCompleteInRecordFields() {
+    doCompletionInCodeTest("-record(r, {a,\n  %% @see sys<caret>\n  b}).\n");
+  }
+
+  public void testCompleteInBehaviour() {
+    doCompletionInCodeTest("-behaviour(\n  %% @see sys<caret>\n  gen_server).\n");
+  }
+
+  public void testCompleteInRecordExpression() {
+    doCompletionInCodeTest("-record(r, {a}).\nf() -> #r{\n  %% @see sys<caret>\n  a = 1}.\n");
+  }
+
   public void testSeeFunctionFollowedByDescription() {
     doFunctionTest("%% @see fo<caret>o/1. More text", "test.erl", "foo", 1);
   }
@@ -158,6 +182,13 @@ public class ErlangDocLinkResolutionTest extends ErlangLightPlatformCodeInsightF
     myFixture.configureByText("test.erl", "-module(test).\n" + comment + code);
     myFixture.completeBasic();
     myFixture.checkResult("-module(test).\n" + expectedComment + code);
+  }
+
+  private void doCompletionInCodeTest(@NotNull String code) {
+    String text = "-module(test).\n" + code + "system_cmd(_) -> handler:system_cmd(1, 2, 3, 4, 5).\n";
+    myFixture.configureByText("test.erl", text);
+    myFixture.completeBasic();
+    myFixture.checkResult(text.replace("sys<caret>", "system_cmd<caret>"));
   }
 
   private void doFunctionTest(@NotNull String comment, @NotNull String expectedFile, @NotNull String name, int arity) {
