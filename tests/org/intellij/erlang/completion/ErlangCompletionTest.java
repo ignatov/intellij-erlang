@@ -684,6 +684,31 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResultWithItem("bar() -> ok. foo() -> 'a'ba<caret>", "bar", "bar() -> ok. foo() -> 'a'bar()<caret>");
   }
 
+  public void testRemoteFunctionExpressionAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionWithBothQuotesAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'те<caret>'.", "тест",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'тест'/3<caret>.");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = \"a\nit's\", mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  public void testRemoteFunctionExpressionAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = 'a\nb', fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = 'a\nb', mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
   private void doCheckQuotedRemoteFunction(@NotNull String before, @NotNull String item, @NotNull String after) {
     myFixture.configureByText("mymodule.erl",
                               "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2, bar/1]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok. bar(A) -> ok.");

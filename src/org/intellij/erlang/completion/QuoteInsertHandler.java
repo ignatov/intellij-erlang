@@ -21,6 +21,10 @@ import com.intellij.codeInsight.completion.InsertionContext;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.editor.highlighter.HighlighterIterator;
+import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -72,22 +76,40 @@ public class QuoteInsertHandler extends SingleCharInsertHandler {
   }
 
   /**
-   * @return the offsets of the quote tokens of quoted atoms on the lines from the one before the name to the one after it
+   * @return the offsets of the quote tokens of quoted atoms from the last offset before the name where the lexer is
+   * outside quotes to the end of the line after the name
    */
   @NotNull
   private static List<Integer> getQuoteTokenOffsets(@NotNull InsertionContext context, int startOffset, int tailOffset) {
     Document document = context.getDocument();
-    int lineStart = document.getLineStartOffset(document.getLineNumber(Math.max(0, startOffset - 1)));
+    int lexStart = getLexerRestartOffset(context.getEditor(), startOffset);
     int lineEnd = document.getLineEndOffset(document.getLineNumber(tailOffset));
     List<Integer> quotes = new ArrayList<>();
     Lexer lexer = new ErlangLexer(context.getProject());
-    lexer.start(document.getCharsSequence(), lineStart, lineEnd);
+    lexer.start(document.getCharsSequence(), lexStart, lineEnd);
     for (; lexer.getTokenType() != null; lexer.advance()) {
       if (lexer.getTokenType() == ErlangTypes.ERL_SINGLE_QUOTE) {
         quotes.add(lexer.getTokenStart());
       }
     }
     return quotes;
+  }
+
+  /**
+   * Only quotes and atom names can be lexed inside quotes, so the lexer is outside quotes after any other token,
+   * for example after a string that spans lines.
+   */
+  private static int getLexerRestartOffset(@NotNull Editor editor, int startOffset) {
+    if (startOffset == 0 || !(editor instanceof EditorEx)) return 0;
+    HighlighterIterator iterator = ((EditorEx) editor).getHighlighter().createIterator(startOffset - 1);
+    while (!iterator.atEnd()) {
+      IElementType type = iterator.getTokenType();
+      if (type != ErlangTypes.ERL_SINGLE_QUOTE && type != ErlangTypes.ERL_ATOM_NAME) {
+        return Math.min(iterator.getEnd(), startOffset);
+      }
+      iterator.retreat();
+    }
+    return 0;
   }
 
   /**
