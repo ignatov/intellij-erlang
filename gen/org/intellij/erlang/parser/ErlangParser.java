@@ -231,7 +231,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // '{'
   //    (<<app_atom_named ('description')>> ',' string_literal
   //   | <<app_atom_named ('id')>> ',' string_literal
-  //   | <<app_atom_named ('vsn')>> ',' string_literal
+  //   | <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   //   | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
   //   | <<app_atom_named ('maxP')>> ',' app_integer
   //   | <<app_atom_named ('maxT')>> ',' app_integer
@@ -259,7 +259,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
 
   // <<app_atom_named ('description')>> ',' string_literal
   //   | <<app_atom_named ('id')>> ',' string_literal
-  //   | <<app_atom_named ('vsn')>> ',' string_literal
+  //   | <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   //   | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
   //   | <<app_atom_named ('maxP')>> ',' app_integer
   //   | <<app_atom_named ('maxT')>> ',' app_integer
@@ -339,7 +339,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // <<app_atom_named ('vsn')>> ',' string_literal
+  // <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   private static boolean app_parameter_1_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_2")) return false;
     boolean r, p;
@@ -347,7 +347,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = app_atom_named(b, l + 1, ErlangParser::app_parameter_1_2_0_0);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && string_literal(b, l + 1) && r;
+    r = p && app_parameter_1_2_2(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -359,6 +359,15 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b);
     r = consumeToken(b, "vsn");
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal | config_expression
+  private static boolean app_parameter_1_2_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "app_parameter_1_2_2")) return false;
+    boolean r;
+    r = string_literal(b, l + 1);
+    if (!r) r = config_expression(b, l + 1);
     return r;
   }
 

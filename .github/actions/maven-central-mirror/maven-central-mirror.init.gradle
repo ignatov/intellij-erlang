@@ -1,0 +1,44 @@
+// Gradle init script of CI, installed into init.d of the Gradle user home by the action in this directory, so that it
+// applies to every Gradle build of the job. It routes Maven Central through the JetBrains cache redirector, which the
+// build already uses for the IntelliJ Platform: since November 2026 repo.maven.apache.org has answered GitHub-hosted
+// runners with 429 Too Many Requests, also for the requests that the Gradle Plugin Portal redirects to it.
+//  - The plugin repositories are the mirror and then the Gradle Plugin Portal, which serves only what is not on Maven
+//    Central (the plugin markers and the plugins published only to the portal), so it does not redirect to Maven Central.
+//  - Every Maven repository at a Maven Central URL, in the settings and in the projects and their buildscripts,
+//    including the repositories added later and by plugins, is switched to the mirror.
+def mirror = 'https://cache-redirector.jetbrains.com/maven-central'
+def centralHosts = ['repo.maven.apache.org', 'repo1.maven.org']
+
+def isMavenCentral = { URI url ->
+  url != null && url.scheme in ['http', 'https'] && url.host in centralHosts &&
+    (url.path ?: '').replaceAll('/+$', '') == '/maven2'
+}
+
+def routeThroughMirror = { RepositoryHandler repositories ->
+  repositories.withType(MavenArtifactRepository).configureEach { MavenArtifactRepository repository ->
+    if (isMavenCentral(repository.url)) {
+      logger.info("Repository '${repository.name}' at ${repository.url} is routed through ${mirror}")
+      repository.url = mirror
+    }
+  }
+}
+
+beforeSettings { Settings settings ->
+  // Declaring a plugin repository drops the implicit Gradle Plugin Portal, so it is added again after the mirror.
+  settings.pluginManagement.repositories { RepositoryHandler repositories ->
+    repositories.maven { MavenArtifactRepository repository ->
+      repository.name = 'MavenCentralMirror'
+      repository.url = mirror
+    }
+    repositories.gradlePluginPortal()
+  }
+  routeThroughMirror(settings.pluginManagement.repositories)
+  routeThroughMirror(settings.buildscript.repositories)
+  routeThroughMirror(settings.dependencyResolutionManagement.repositories)
+  logger.lifecycle("Maven Central is routed through ${mirror} (CI init script maven-central-mirror.init.gradle)")
+}
+
+beforeProject { Project project ->
+  routeThroughMirror(project.buildscript.repositories)
+  routeThroughMirror(project.repositories)
+}

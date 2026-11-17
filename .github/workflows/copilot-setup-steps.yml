@@ -32,9 +32,16 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
-    # The setup steps run outside the agent firewall, which does not allow the JetBrains hosts the IntelliJ
-    # Platform, its test dependencies and the Plugin Verifier come from. Resolve all of them now by running
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    # Stays in ~/.gradle for the agent's own Gradle runs too, so they find in the cache what the warm-up resolved
+    # through the mirror. The mirror needs jetbrains.com and aws.intellij.net on the firewall allow list of the agent
+    # (cache-redirector.jetbrains.com redirects to artifacts-caching-proxy.aws.intellij.net); both are on it.
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    # The setup steps run outside the agent firewall. Resolve up front the IntelliJ Platform, its test
+    # dependencies and the Plugin Verifier, by running
     # one small test class, buildPlugin and verifyPlugin. It runs before the Erlang steps because it does not
     # need Erlang, so a broken Erlang or rebar3 install cannot skip it.
     - name: Resolve dependencies and warm up the build

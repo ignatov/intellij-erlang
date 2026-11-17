@@ -1,0 +1,23 @@
+name: Route Maven Central through a mirror
+description: >-
+  Makes every later Gradle build of the job resolve Maven Central through the JetBrains cache redirector and retry
+  rate-limited downloads for longer: installs maven-central-mirror.init.gradle into init.d of the Gradle user home and
+  appends network-retry.properties to its gradle.properties. Runs in bash on Linux, macOS and Windows. CI only.
+
+runs:
+  using: composite
+  steps:
+  - name: Install the init script and the retry settings into the Gradle user home
+    shell: bash
+    run: |
+      set -euo pipefail
+      action="$GITHUB_ACTION_PATH"
+      home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+      if command -v cygpath > /dev/null; then
+        action="$(cygpath -u "$action")"
+        home="$(cygpath -u "$home")"
+      fi
+      mkdir -p "$home/init.d"
+      cp "$action/maven-central-mirror.init.gradle" "$home/init.d/"
+      cat "$action/network-retry.properties" >> "$home/gradle.properties"
+      echo "Installed $home/init.d/maven-central-mirror.init.gradle and the retry settings in $home/gradle.properties"

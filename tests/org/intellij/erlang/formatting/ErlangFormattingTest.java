@@ -129,6 +129,26 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test444()    throws Exception { alignBlocks(); doTest(); }
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
+  public void test830()    throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830Fun() throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830CommaFirst() throws Exception { setUpCommaFirst(); setUpFunctionParametersWrapIfLong(); doTest(); }
+  public void test830AlignFunClauses() throws Exception {
+    getErlangSettings().ALIGN_FUN_CLAUSES = true;
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830CommaFirstBroken() throws Exception {
+    setUpCommaFirst();
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830FunArgument() throws Exception {
+    alignBlocks();
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_ALWAYS;
+    doTest();
+  }
+  public void test830CommaFirstFunArgument() throws Exception { setUpCommaFirst(); setUpFunctionParametersWrapIfLong(); doTest(); }
 
   public void test897() throws Exception {
     ErlangCodeStyleSettings erlangSettings = getErlangSettings();
@@ -140,6 +160,41 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     indentOptions.INDENT_SIZE = 4;
     indentOptions.CONTINUATION_INDENT_SIZE = 8;
     doTest();
+  }
+
+  public void testGuardIndent() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentDefault() throws Exception {
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentMacroArgument() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doTest();
+  }
+
+  public void testGuardIndentEnter() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doEnterTest();
+  }
+
+  public void testGuardIndentEnterCase() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doEnterTest();
+  }
+
+  private void setIndentSize(int indentSize) {
+    CodeStyleSettings.IndentOptions indentOptions = myTemporarySettings.getIndentOptions(ErlangFileType.MODULE);
+    assertNotNull(indentOptions);
+    indentOptions.INDENT_SIZE = indentSize;
   }
 
   public void test292() throws Exception {
@@ -218,12 +273,18 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testTry3() throws Exception { doEnterTest(); }
   public void testTry4() throws Exception { doEnterTest(); }
   public void testTry5() throws Exception { doEnterTest(); }
+  public void testTryBodyComma() throws Exception { doEnterTest(); }
+  public void testTryBodyComma2() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineComma2() throws Exception { doEnterTest(); }
 
   public void testTryParasite1() throws Exception { doEnterTest(); }
   public void testTryParasite2() throws Exception { doEnterTest(); }
   public void testTryParasite3() throws Exception { doEnterTest(); }
   public void testTryParasite4() throws Exception { doEnterTest(); }
   public void testTryParasite5() throws Exception { doEnterTest(); }
+  public void testTryBodyCommaParasite() throws Exception { doEnterTest(); }
+  public void testTryBodySameLineCommaParasite() throws Exception { doEnterTest(); }
 
   public void testBindTry()                 throws Exception { doEnterTest(); }
   public void testBindTryExpr()             throws Exception { doEnterTest(); }
@@ -485,6 +546,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testNamedFunExpr()   throws Exception { doTest(); }
 
   public void testComprehensions() throws Exception { doTest(); }
+
+  private void setUpFunctionParametersWrapIfLong() {
+    CommonCodeStyleSettings settings = getCommonSettings();
+    settings.RIGHT_MARGIN = 40;
+    settings.METHOD_PARAMETERS_WRAP = CommonCodeStyleSettings.WRAP_AS_NEEDED;
+  }
 
   private void setUpCommaFirst() {
     getErlangSettings().NEW_LINE_BEFORE_COMMA = true;
