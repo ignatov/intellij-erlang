@@ -18,6 +18,7 @@ package org.intellij.erlang.utils;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +38,7 @@ public final class ExtProcessUtil {
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     try {
-      Process cmdRunner = new GeneralCommandLine(command).createProcess();
+      Process cmdRunner = new GeneralCommandLine(command).withWorkDirectory(FileUtil.getTempDirectory()).createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
       try {
         Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(() -> {
@@ -53,6 +54,7 @@ public final class ExtProcessUtil {
         catch (Exception ignored) {
         }
         cmdRunnerFuture.cancel(true);
+        cmdRunner.destroy();
       }
       finally {
         singleTreadExecutor.shutdown();
