@@ -301,8 +301,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
   private boolean areFunctionParametersWrapped(@NotNull ASTNode argumentDefinitionList) {
     if (mySettings.METHOD_PARAMETERS_WRAP == CommonCodeStyleSettings.DO_NOT_WRAP) return false;
-    // aligned fun clauses would anchor wrapped parameters to the clause column
-    return !(myErlangSettings.ALIGN_FUN_CLAUSES && argumentDefinitionList.getPsi().getParent() instanceof ErlangFunClause);
+    if (!(argumentDefinitionList.getPsi().getParent() instanceof ErlangFunClause)) return true;
+    // aligned fun clauses would anchor wrapped parameters to the clause column,
+    // and aligned commas of a wrapped comma-first fun head cannot be aligned ("Can't align block")
+    return !myErlangSettings.ALIGN_FUN_CLAUSES &&
+      !(myErlangSettings.NEW_LINE_BEFORE_COMMA && myErlangSettings.ALIGN_MULTILINE_BLOCK);
   }
 
   @Nullable
