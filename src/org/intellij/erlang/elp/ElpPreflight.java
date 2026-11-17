@@ -293,10 +293,12 @@ public final class ElpPreflight implements Disposable {
     String settingsKey = settingsKey();
     boolean trusted = isTrusted(myProject);
     Object[] sdk = ReadAction.computeBlocking(() -> {
-      if (myProject.isDisposed()) return new Object[3];
+      if (myProject.isDisposed()) return new Object[4];
       String home = ErlangSdkType.getSdkPath(myProject);
       ErlangSdkRelease release = StringUtil.isNotEmpty(home) ? ErlangSdkType.getProjectSdkRelease(myProject) : null;
-      return new Object[]{home, release, RebarSettings.getInstance(myProject).getRebarPath()};
+      VirtualFile baseDir = ProjectUtil.guessProjectDir(myProject);
+      String workDirectory = baseDir != null && baseDir.isInLocalFileSystem() ? baseDir.getPath() : null;
+      return new Object[]{home, release, RebarSettings.getInstance(myProject).getRebarPath(), workDirectory};
     });
     String sdkHome = (String)sdk[0];
     String otpRelease = sdk[1] instanceof ErlangSdkRelease release ? release.getOtpRelease() : null;
@@ -307,7 +309,7 @@ public final class ElpPreflight implements Disposable {
     String rebar3Version = null;
     String rebar3Error = null;
     if (rebar3 != null) {
-      String[] versionOrError = rebar3Version(rebar3, path);
+      String[] versionOrError = rebar3Version(rebar3, path, (String)sdk[3]);
       rebar3Version = versionOrError[0];
       rebar3Error = versionOrError[1];
     }
@@ -453,18 +455,21 @@ public final class ElpPreflight implements Disposable {
   }
 
   /**
-   * Runs {@code rebar3 version} with the server's PATH: rebar3 is an escript and needs {@code escript} on it.
+   * Runs {@code rebar3 version} with the server's PATH: rebar3 is an escript and needs {@code escript} on it. It runs in the
+   * project's directory, as ELP runs it, not in the IDE's installation directory.
    *
+   * @param workDirectory the project's base directory, if it has one on the local file system
    * @return the version and {@code null}, or {@code null} and why it failed
    */
   @NotNull
   @RequiresBackgroundThread
-  static String[] rebar3Version(@NotNull String rebar3, @Nullable String path) {
+  static String[] rebar3Version(@NotNull String rebar3, @Nullable String path, @Nullable String workDirectory) {
     String key = rebar3 + "@" + new File(rebar3).lastModified() + "@" + path;
     String cached = ourRebar3Versions.get(key);
     if (cached != null) return new String[]{cached, null};
     GeneralCommandLine commandLine = new GeneralCommandLine(rebar3, "version");
     if (path != null) commandLine.withEnvironment("PATH", path);
+    if (workDirectory != null && new File(workDirectory).isDirectory()) commandLine.setWorkDirectory(workDirectory);
     try {
       ProcessOutput output = new CapturingProcessHandler(commandLine).runProcess(30_000);
       String version = parseRebar3Version(output.getStdout());

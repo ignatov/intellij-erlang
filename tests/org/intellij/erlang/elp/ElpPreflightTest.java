@@ -201,6 +201,16 @@ public class ElpPreflightTest extends ErlangLightPlatformCodeInsightFixtureTestC
     assertTrue(trusted.problems().toString(), trusted.canStart());
   }
 
+  /** rebar3 runs in the project, as ELP runs it there, not in the IDE's installation directory. */
+  public void testRebar3RunsInTheProject() throws Exception {
+    Path project = FileUtil.createTempDirectory("elp-preflight-project", null, true).toPath().toRealPath();
+    Path cwd = project.resolve("cwd");
+    String rebar3 = script("rebar3", "pwd > '" + cwd + "'\necho 'rebar 3.28.0 on Erlang/OTP 29 Erts 17.1'");
+    assertEquals("3.28.0", PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ElpPreflight.rebar3Version(rebar3, null, project.toString())[0]), 30_000));
+    assertEquals(project.toString(), Files.readString(cwd).trim());
+  }
+
   public void testFactsAreForgottenWhenTheRootsChange() throws Exception {
     PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
       () -> ElpPreflight.getInstance(getProject()).gatherFacts()), 30_000);
