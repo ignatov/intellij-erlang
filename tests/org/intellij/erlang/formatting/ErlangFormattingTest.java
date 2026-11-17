@@ -153,6 +153,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testGuardIndentMacroArgument() throws Exception {
+    getErlangSettings().GUARD_INDENT_SIZE = 2;
+    setIndentSize(4);
+    doTest();
+  }
+
   public void testGuardIndentEnter() throws Exception {
     getErlangSettings().GUARD_INDENT_SIZE = 2;
     setIndentSize(4);

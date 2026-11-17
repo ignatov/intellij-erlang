@@ -85,8 +85,11 @@ public class ErlangIndentProcessor {
     }
 
     if ((parentType == ERL_GUARD || parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN) && grandfatherType != ERL_IF_CLAUSE) {
+      ASTNode clauseGuard = parentType == ERL_GUARD ? grandfather : parent;
+      boolean inArgumentList = clauseGuard != null && clauseGuard.getTreeParent() != null &&
+                               clauseGuard.getTreeParent().getElementType() == ERL_ARGUMENT_LIST;
       int guardIndentSize = myErlangSettings.GUARD_INDENT_SIZE;
-      return guardIndentSize >= 0 ? Indent.getSpaceIndent(guardIndentSize) : Indent.getNormalIndent();
+      return guardIndentSize >= 0 && !inArgumentList ? Indent.getSpaceIndent(guardIndentSize) : Indent.getNormalIndent();
     }
     if (parentType == ERL_RECORD_TUPLE) {
       // todo: not a smart solution
