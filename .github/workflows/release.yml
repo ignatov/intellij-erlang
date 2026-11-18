@@ -7,28 +7,40 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to publish, e.g. v0.11.1300'
+        description: 'Existing release tag to publish, e.g. v0.11.1300; with dry_run, the tag the release would get'
         required: true
         type: string
+      dry_run:
+        description: 'Build, test and verify the head of the chosen branch as that tag, upload the archive, publish nothing'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: release-${{ inputs.tag || github.ref_name }}${{ inputs.dry_run && '-dry-run' || '' }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  # Tests, builds and verifies the archive of the release. It uses no secret: a dry run runs only this job, so it never
+  # gets the Marketplace token, also when it is started from a branch.
+  build:
     runs-on: ubuntu-24.04
 
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
+    outputs:
+      build_number: ${{ steps.version.outputs.build_number }}
+      plugin_version: ${{ steps.version.outputs.plugin_version }}
+
     steps:
     - uses: actions/checkout@v7
       with:
-        ref: refs/tags/${{ inputs.tag || github.ref_name }}
+        # A dry run builds the commit it was started on, as the release of that tag would build it.
+        ref: ${{ inputs.dry_run && github.sha || format('refs/tags/{0}', inputs.tag || github.ref_name) }}
 
     - name: Derive build number from tag
       id: version
@@ -46,16 +58,7 @@ jobs:
         fi
         echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
         echo "plugin_version=$gradle_version.$build_number" >> "$GITHUB_OUTPUT"
-        echo "Publishing plugin version $gradle_version.$build_number"
-
-    - name: Check Marketplace token
-      env:
-        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
-      run: |
-        if [[ -z "$PUBLISH_TOKEN" ]]; then
-          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set. Create a token at https://plugins.jetbrains.com/author/me/tokens and run: gh secret set JETBRAINS_MARKETPLACE_TOKEN"
-          exit 1
-        fi
+        echo "Building plugin version $gradle_version.$build_number"
 
     - name: Set up JDK 21
       uses: actions/setup-java@v6
@@ -117,16 +120,68 @@ jobs:
           echo "::endgroup::"
         done
 
+    - name: Upload the plugin archive
+      uses: actions/upload-artifact@v7
+      with:
+        name: intellij-erlang-${{ steps.version.outputs.plugin_version }}
+        path: build/distributions/intellij-erlang-${{ steps.version.outputs.plugin_version }}.zip
+        if-no-files-found: error
+
+  # Publishes the tag that the build job tested and verified: to the JetBrains Marketplace, then as a GitHub release.
+  publish:
+    needs: build
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: refs/tags/${{ inputs.tag || github.ref_name }}
+
+    - name: Check Marketplace token
+      env:
+        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+      run: |
+        if [[ -z "$PUBLISH_TOKEN" ]]; then
+          echo "::error::Repository secret JETBRAINS_MARKETPLACE_TOKEN is not set. Create a token at https://plugins.jetbrains.com/author/me/tokens and run: gh secret set JETBRAINS_MARKETPLACE_TOKEN"
+          exit 1
+        fi
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+
+    - name: Check out the actions of this workflow
+      uses: actions/checkout@v7
+      with:
+        path: workflow-actions
+        sparse-checkout: .github/actions
+        persist-credentials: false
+
+    - name: Restore the Gradle dependency cache
+      uses: ./workflow-actions/.github/actions/gradle-cache
+
+    - name: Route Maven Central through a mirror
+      uses: ./workflow-actions/.github/actions/maven-central-mirror
+
     - name: Publish plugin
       env:
         PUBLISH_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
-        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+        BUILD_NUMBER: ${{ needs.build.outputs.build_number }}
       run: ./gradlew --no-daemon buildPlugin publishPlugin -PbuildNumber="$BUILD_NUMBER"
 
     - name: Create GitHub release
       env:
         GH_TOKEN: ${{ github.token }}
-        PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
+        PLUGIN_VERSION: ${{ needs.build.outputs.plugin_version }}
       run: |
         zip="build/distributions/intellij-erlang-$PLUGIN_VERSION.zip"
         if [[ ! -f "$zip" ]]; then
