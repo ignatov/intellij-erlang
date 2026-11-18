@@ -200,6 +200,32 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testUnresolvedMacrosInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInConditionalBranches() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInIfInsideIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosUndefInInclude() {
+    enableUnresolvedMacroInspection();
+    myFixture.configureByText("undef_m.hrl", "-undef(M).");
+    doTest();
+  }
+
+  public void testUnresolvedMacrosQuotedInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testMacroThenStringLiteral() {
     enableUnresolvedMacroInspection();
     doTest();
