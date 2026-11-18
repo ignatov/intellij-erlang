@@ -199,27 +199,43 @@ public class ErlangDebuggerNode {
     byte[] messageBytes = receive(socket);
     if (messageBytes == null) return;
 
-    ErlangDebuggerEvent event;
+    OtpErlangObject receivedMessage;
     try {
-      OtpErlangObject receivedMessage = decode(messageBytes);
-      if (receivedMessage == null) return;
-
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Message received: " + receivedMessage);
-      }
-
-      event = ErlangDebuggerEvent.create(receivedMessage);
+      receivedMessage = decode(messageBytes);
     }
     catch (StackOverflowError e) {
-      reportTooDeeplyNestedMessage(messageBytes);
+      reportTooDeeplyNestedMessage(messageBytes, "decode");
       return;
     }
-    boolean messageRecognized = event != null;
-    if (messageRecognized) {
-      event.process(this, myEventListener);
+    if (receivedMessage == null) return;
+
+    if (LOG.isDebugEnabled()) {
+      logReceivedMessage(receivedMessage, messageBytes);
     }
 
-    LOG.debug("Message processed: " + messageRecognized);
+    try {
+      ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
+      boolean messageRecognized = event != null;
+      if (messageRecognized) {
+        event.process(this, myEventListener);
+      }
+
+      LOG.debug("Message processed: " + messageRecognized);
+    }
+    catch (StackOverflowError e) {
+      reportTooDeeplyNestedMessage(messageBytes, "process");
+    }
+  }
+
+  private static void logReceivedMessage(@NotNull OtpErlangObject receivedMessage, byte @NotNull [] bytes) {
+    String messageText;
+    try {
+      messageText = receivedMessage.toString();
+    }
+    catch (StackOverflowError e) {
+      messageText = "a term of " + bytes.length + " bytes nested too deeply to print";
+    }
+    LOG.debug("Message received: " + messageText);
   }
 
   private void sendMessages(@NotNull Socket socket) throws SocketException {
@@ -334,13 +350,13 @@ public class ErlangDebuggerNode {
     }
   }
 
-  private void reportTooDeeplyNestedMessage(byte @NotNull [] bytes) {
-    LOG.warn("Failed to process an erlang term: it is nested too deeply.");
+  private void reportTooDeeplyNestedMessage(byte @NotNull [] bytes, @NotNull String failedAction) {
+    LOG.warn("Failed to " + failedAction + " an erlang term: it is nested too deeply.");
     if (EVALUATE_RESPONSE.equals(getMessageName(bytes))) {
       myEventListener.evaluationFailed("The result is nested too deeply to show");
     }
     else {
-      myEventListener.unknownMessage("a term of " + bytes.length + " bytes nested too deeply to process");
+      myEventListener.unknownMessage("a term of " + bytes.length + " bytes nested too deeply to " + failedAction);
     }
   }
 

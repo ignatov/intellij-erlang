@@ -27,6 +27,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -141,6 +142,75 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
       OtpErlangAtom placeholder = atom("deep_term_placeholder");
       byte[] message = new OtpOutputStream(tuple(atom("evaluate_response"), placeholder)).toByteArray();
       sendBytes(peer, replace(message, new OtpOutputStream(placeholder).toByteArray(), nestedTuples(20000)));
+
+      assertEquals("The result is nested too deeply to show", evaluationErrorFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertFalse("the debugger session was stopped", stoppedFuture.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // With debug logging on (as under the test framework), a decoded term too deep for toString() in the
+  // "Message received" line must still be delivered: only a term that cannot be decoded may be dropped.
+  // The depths at which decoding or toString() overflow shift with the JIT state, so try a range of them.
+  public void testDecodedTermTooDeepToLogIsDelivered() throws Exception {
+    OtpErlangPid deepPid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+    OtpErlangPid lastPid = new OtpErlangPid("nonode@nohost", 86, 0, 0);
+    List<String> unknownMessages = new CopyOnWriteArrayList<>();
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture, stoppedFuture, false) {
+      @Override
+      public void unknownMessage(String messageText) {
+        unknownMessages.add(messageText);
+      }
+
+      @Override
+      public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+        if (lastPid.equals(pid)) super.breakpointReached(pid, snapshots);
+      }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      for (int round = 0; round < 3; round++) {
+        for (int depth = 3000 + round * 50; depth <= 12000; depth += 250) {
+          sendBytes(peer, breakpointReachedWithBinding(deepPid, nestedTuples(depth)));
+          sendBytes(peer, breakpointReachedWithBinding(deepPid, nestedLists(depth)));
+        }
+      }
+      send(peer, tuple(atom("breakpoint_reached"), lastPid, list(snapshot(lastPid, list()))));
+
+      snapshotsFuture.get(TIMEOUT_SECONDS * 6, TimeUnit.SECONDS);
+      assertFalse("the debugger session was stopped", stoppedFuture.isDone());
+      for (String message : unknownMessages) {
+        assertTrue("a message was dropped although it was decoded: " + message, message.endsWith("too deeply to decode"));
+      }
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // A watch or a value hint renders the evaluation result on the debugger server thread. An overflow there must
+  // fail the evaluation and keep the session; the listener throws it to stand in for a value too deep to render.
+  public void testOverflowWhileProcessingAnEvaluateResponseFailsTheEvaluation() throws Exception {
+    CompletableFuture<String> evaluationErrorFuture = new CompletableFuture<>();
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>(), stoppedFuture, false) {
+      @Override
+      public void handleEvaluationResponse(OtpErlangObject response) {
+        throw new StackOverflowError();
+      }
+
+      @Override
+      public void evaluationFailed(String errorMessage) {
+        evaluationErrorFuture.complete(errorMessage);
+      }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      send(peer, tuple(atom("evaluate_response"), tuple(new OtpErlangLong(1), atom("nil"))));
 
       assertEquals("The result is nested too deeply to show", evaluationErrorFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
       assertFalse("the debugger session was stopped", stoppedFuture.isDone());
