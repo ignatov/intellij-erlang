@@ -175,9 +175,9 @@ jobs:
             args+=(--fail-on-critical)
           fi
           # watch.py prints only counts with --notify. The number of new alerts starts the manager (job manager).
+          # tee, not a file printed afterwards, so that a run cut by its timeout still shows what watch.py printed.
           status=0
-          python3 -I "$desk/dispatcher/watch.py" "${args[@]}" > "$RUNNER_TEMP/watch.out" 2>&1 || status=$?
-          cat "$RUNNER_TEMP/watch.out"
+          python3 -I "$desk/dispatcher/watch.py" "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/watch.out" || status=$?
           new=$(sed -nE 's/^alerts: .*; new ([0-9]+), cleared [0-9]+, open before [0-9]+$/\1/p' "$RUNNER_TEMP/watch.out" \
             | tail -n 1)
           echo "new=${new:-0}" >> "$GITHUB_OUTPUT"

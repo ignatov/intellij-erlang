@@ -30,19 +30,19 @@ name: Factory manager
 # job outputs hold only commit ids, the run id, booleans and the message sealed with a key that exists only in the
 # private repository (AES-256-CBC, PBKDF2, a new random key per run in the box).
 #
-# Why two environments: assume that a job's runner holds every secret the job could use (its environment's and the
-# repository's: toJSON(secrets) lists them all), and that a process with sudo can read them from the runner's memory. The write token is therefore in factory-manager,
-# which the model's job does not use. Repository-level secrets reach the model's job too; keep them out of the
-# repository level (move them into environments).
+# Why two environments: defence in depth. The write token is in factory-manager, which the model's job does not
+# use, and no step of that job names it. GitHub sends a runner the secrets its job references (inferred from the
+# docs, not tested), so other secrets of the repository should not reach the model's job either.
 #
-# What the model's job can do, and what is left. It runs `copilot -p` (non-interactive: a tool request that would
-# prompt is denied), with only read tools and the shell available, the read-only commands the CLI recognises plus a
-# few git reads allowed, writes, URLs, memory and the commands that reach the network or raise privileges denied,
-# file access limited to the checkouts, no custom instructions, no built-in MCP servers, and (unless
-# FACTORY_MANAGER_SANDBOX is "off") the CLI's OS sandbox for shell commands with outbound network off. The job fails
-# before the model runs when the sandbox's prerequisites are missing. A hosted runner has no egress filter of its
-# own: the CLI process itself talks to the Copilot API, and anything it can read it could send elsewhere if a prompt
-# injection found a way past these rules. The maintainer accepted that risk; there is no proxy.
+# What the model's job can do, and what is left. It runs `copilot --prompt` (non-interactive: a tool request that
+# would prompt is denied) with only the read tools view, grep and glob: no shell, no writes, no URLs, no memory, no
+# MCP servers, no custom instructions, file access limited to the checkouts, a cap of AI credits, and the CLI's OS
+# sandbox (no network, the checkouts read-only, the runner's home denied) for what the CLI starts. The process
+# starts from an empty environment with only the Copilot token, which --secret-env-vars keeps from what it starts.
+# When the sandbox cannot start, the model does not run; there is no switch to run without it. A hosted runner has
+# no egress filter of its own: the CLI process itself talks to the Copilot API, and anything it can read it could
+# send elsewhere if a prompt injection found a way past these rules. The maintainer accepted that risk; there is no
+# proxy. "Re-run failed jobs" does not call the model again: think runs only in the first attempt of a run.
 #
 # What keeps the secrets in, as in factory-tick.yml:
 #   - The secrets are environment secrets; both environments allow deployments from master only. There is no
@@ -54,16 +54,18 @@ name: Factory manager
 #     only its lines of counts; its full output goes to last-run.log on manager-log. No artifact, no step summary.
 #   - Values from the event, the inputs and other jobs reach the scripts only through env, never inside a script.
 #
-# Started by the watch (factory-watch.yml starts it when it announces a new alert), by a person (workflow_dispatch;
-# "rehearse" calls the model but posts nothing and leaves manager-log alone: the message, the ledger after collect
-# and the logs go to the desk branch manager-rehearsal), and by a schedule twice a day, the backstop for the digest.
+# Started by the watch (factory-watch.yml starts it when it announces a new alert), by a person (workflow_dispatch),
+# and by a schedule twice a day, the backstop for the digest. A rehearsal (the input "rehearse", or every run while
+# FACTORY_MANAGER is "rehearse") calls the model but posts nothing and leaves manager-log alone: manager.py runs
+# with --rehearse (as if manager.enabled were on, nothing posted), and the message, the ledger after collect and the
+# logs go to the desk branch manager-rehearsal. While FACTORY_MANAGER is "rehearse", only a person starts a run.
 # GitHub drops many scheduled runs of this repository: when neither schedule fires and no alert starts a run after
 # manager.digest_hour_utc, that day has no digest, and the next one covers the time since the last digest.
 # One run at a time: the concurrency group queues; a newer queued run replaces an older queued one, a running one is
 # never cancelled.
 #
-# Setup: repository variable FACTORY_MANAGER ("true" turns the workflow on); optionally FACTORY_MANAGER_SANDBOX
-# ("off" runs the shell without the CLI's sandbox) and FACTORY_MANAGER_MAX_CREDITS (a cap per run). Environment
+# Setup: repository variable FACTORY_MANAGER ("true" turns the workflow on, "rehearse" allows only rehearsals started
+# by hand); optionally FACTORY_MANAGER_MAX_CREDITS (the cap of AI credits per run, 400 when unset). Environment
 # factory-manager: MANAGER_DESK_TOKEN (desk only: Contents read and write, Issues read and write). Environment
 # factory-manager-think: MANAGER_READ_TOKEN (desk only: Contents read) and COPILOT_GITHUB_TOKEN (a user-owned
 # fine-grained token with the Copilot Requests permission). The desk branch manager-log must exist (an empty
@@ -106,7 +108,10 @@ env:
 
 jobs:
   plan:
-    if: vars.FACTORY_MANAGER == 'true' && github.ref == 'refs/heads/master'
+    # "rehearse" lets only a person start a run, and every run a rehearsal: the schedule and the watch post nothing.
+    if: >-
+      github.ref == 'refs/heads/master' && (vars.FACTORY_MANAGER == 'true'
+      || (vars.FACTORY_MANAGER == 'rehearse' && github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # The public runs that the watch reads.
@@ -129,10 +134,12 @@ jobs:
         id: mode
         env:
           REHEARSE: ${{ inputs.rehearse }}
+          SWITCH: ${{ vars.FACTORY_MANAGER }}
         run: |
-          mode=live
-          if [ "$REHEARSE" = "true" ]; then
-            mode=rehearse
+          # Live only when the switch is "true" and the run was not asked to rehearse.
+          mode=rehearse
+          if [ "$SWITCH" = "true" ] && [ "$REHEARSE" != "true" ]; then
+            mode=live
           fi
           echo "Mode: $mode"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
@@ -206,6 +213,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TICK_LIVE: ${{ vars.FACTORY_TICK_LIVE }}
           TIMER: ${{ vars.FACTORY_TIMER }}
+          MODE: ${{ steps.mode.outputs.mode }}
           PYTHONUNBUFFERED: '1'
         run: |
           desk="$RUNNER_TEMP/desk"
@@ -213,6 +221,10 @@ jobs:
           log="$RUNNER_TEMP/plan.log"
           args=(plan --desk "$desk" --ledger "$RUNNER_TEMP/ledger" --out "$box" --branches "$RUNNER_TEMP/branches.txt"
                 --tick-live "${TICK_LIVE:-false}" --timer "${TIMER:-false}")
+          if [ "$MODE" != "live" ]; then
+            # As if manager.enabled were on; the ledger of a rehearsal is never pushed to manager-log.
+            args+=(--rehearse)
+          fi
           if [ -s "$RUNNER_TEMP/last-tick.log" ]; then
             args+=(--tick-log "$RUNNER_TEMP/last-tick.log")
           fi
@@ -321,6 +333,10 @@ jobs:
       COPILOT_URL: https://github.com/github/copilot-cli/releases/download/v1.0.114/copilot-linux-x64.tar.gz
       COPILOT_SHA256: b91a96f2257297cfb67ed6784a2a658609a6b8c2ee2ded18af9c9abe8cc790ae
       MODEL: claude-fable-5.2
+      # The one limit of the prompt (manager.PROMPT_BYTES): one argument of a Linux command line holds 128 KiB.
+      PROMPT_BYTES: '120000'
+      # Outside the runner's home, which the sandbox denies: the checkouts, the CLI's home and its HOME.
+      MANAGER_ROOT: /srv/factory-manager
     steps:
       - name: Fetch the desk and the prompt
         id: fetch
@@ -329,7 +345,14 @@ jobs:
           DESK_SHA: ${{ needs.plan.outputs.desk }}
           BOX: ${{ needs.plan.outputs.box }}
           PUBLIC_SHA: ${{ github.sha }}
+          ATTEMPT: ${{ github.run_attempt }}
         run: |
+          # "Re-run failed jobs" would call the model again for a run that collect has recorded already, outside
+          # the caps of the day; a new run plans again instead.
+          if [ "$ATTEMPT" != "1" ]; then
+            echo "::error::This is attempt $ATTEMPT of the run; the model runs only in the first attempt. Start a new run."
+            exit 1
+          fi
           sha_re='^[0-9a-f]{40}$'
           if ! [[ "$DESK_SHA" =~ $sha_re && "$BOX" =~ $sha_re && "$PUBLIC_SHA" =~ $sha_re ]]; then
             echo "::error::The plan handed on no valid commit ids."
@@ -349,9 +372,10 @@ jobs:
           chmod 700 "$RUNNER_TEMP/askpass.sh"
           export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
           umask 077
-          work="$RUNNER_TEMP/work"
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 700 "$MANAGER_ROOT"
+          work="$MANAGER_ROOT/work"
           think="$RUNNER_TEMP/think"
-          mkdir -p "$work" "$think"
+          mkdir -p "$work" "$think" "$MANAGER_ROOT/home" "$MANAGER_ROOT/copilot-home"
           # The box goes into a repository of its own, outside the directories the model may read.
           git init --quiet "$RUNNER_TEMP/box-repo"
           if ! git -C "$RUNNER_TEMP/box-repo" fetch --quiet --depth 1 "$DESK_URL" refs/heads/manager-box > /dev/null 2>&1 \
@@ -387,10 +411,8 @@ jobs:
           echo "Prompt: $(wc -c < "$think/prompt.md") bytes."
 
       - name: Install the Copilot CLI and its sandbox
-        env:
-          SANDBOX: ${{ vars.FACTORY_MANAGER_SANDBOX }}
         run: |
-          bin="$RUNNER_TEMP/copilot-bin"
+          bin="$MANAGER_ROOT/bin"
           mkdir -p "$bin"
           if ! curl -fsSL --retry 3 -o "$RUNNER_TEMP/copilot.tar.gz" "$COPILOT_URL"; then
             echo "::error::The Copilot CLI could not be downloaded."
@@ -403,13 +425,10 @@ jobs:
           tar -xzf "$RUNNER_TEMP/copilot.tar.gz" -C "$bin"
           COPILOT_AUTO_UPDATE=false "$bin/copilot" --version > "$RUNNER_TEMP/copilot-version.txt"
           head -n 1 "$RUNNER_TEMP/copilot-version.txt"
-          if [ "$SANDBOX" = "off" ]; then
-            echo "::warning::FACTORY_MANAGER_SANDBOX is off: shell commands of the model run without the CLI's sandbox."
-            exit 0
-          fi
           # The sandbox of the CLI on Linux: bubblewrap 0.5+, and for its private network namespace slirp4netns,
           # util-linux 2.35+, iptables and /dev/net/tun (copilot help sandbox). Ubuntu 24.04 restricts the user
-          # namespaces that bubblewrap needs; the runner's sudo lifts that for this machine.
+          # namespaces that bubblewrap needs; the runner's sudo lifts that for this machine. There is no way to
+          # run without the sandbox: when it cannot start, the model does not run.
           if ! { sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap slirp4netns; } > "$RUNNER_TEMP/apt.log" 2>&1; then
             echo "::error::The packages of the sandbox could not be installed; the model does not run."
             exit 1
@@ -435,70 +454,106 @@ jobs:
         id: think
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          SANDBOX: ${{ vars.FACTORY_MANAGER_SANDBOX }}
           MAX_CREDITS: ${{ vars.FACTORY_MANAGER_MAX_CREDITS }}
         run: |
           if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
             echo "::error::The secret COPILOT_GITHUB_TOKEN is not set in the environment factory-manager-think."
             exit 1
           fi
-          think="$RUNNER_TEMP/think"
-          home="$RUNNER_TEMP/copilot-home"
-          umask 077
-          mkdir -p "$home"
-          # One argument of a Linux command line holds at most 128 KiB.
-          bytes=$(wc -c < "$think/prompt.md")
-          if [ "$bytes" -gt 130000 ]; then
-            echo "::error::The prompt has $bytes bytes, more than one command-line argument can carry; lower manager.max_prompt_chars."
+          # A cap of AI credits for the run, always: 400 unless the variable names another positive number.
+          credits="${MAX_CREDITS:-400}"
+          if ! [[ "$credits" =~ ^[1-9][0-9]{0,5}$ ]]; then
+            echo "::error::FACTORY_MANAGER_MAX_CREDITS is not a positive number of credits; the model does not run."
             exit 1
           fi
-          # The sandbox of shell commands: no network, no bypass, no git or gh credentials injected, and none of the
-          # runner's command files (outputs, env, summary), the sealed parts or the CLI's home.
-          python3 -I - "$home/settings.json" "$RUNNER_TEMP/work" "$(dirname "$GITHUB_OUTPUT")" "$think" "$home" \
-              "$RUNNER_TEMP/box-repo" <<'PY'
+          think="$RUNNER_TEMP/think"
+          work="$MANAGER_ROOT/work"
+          home="$MANAGER_ROOT/copilot-home"
+          umask 077
+          bytes=$(wc -c < "$think/prompt.md")
+          if [ "$bytes" -gt "$PROMPT_BYTES" ]; then
+            echo "::error::The prompt has $bytes bytes, more than $PROMPT_BYTES; manager.py keeps it under that limit."
+            exit 1
+          fi
+          # The sandbox: no network, no bypass, no git or gh credentials injected, no grant of the working
+          # directory, the profile or the dev-tool caches; the checkouts read-only; the runner's home (its
+          # workspace, temp directory, command files and the sealed parts) and the CLI's home denied.
+          python3 -I - "$home/settings.json" "$work" "$home" "$HOME" "$RUNNER_TEMP" <<'PY'
           import json, os, sys
-          work = os.path.realpath(sys.argv[2])
-          # A denied path that holds the checkouts would deny the model its work.
-          denied = [p for p in sys.argv[3:] if not (work + os.sep).startswith(os.path.realpath(p) + os.sep)]
+          path, work, home = sys.argv[1], os.path.realpath(sys.argv[2]), sys.argv[3]
+          for denied in [home] + sys.argv[4:]:
+              if (work + os.sep).startswith(os.path.realpath(denied) + os.sep):
+                  sys.exit("the checkouts lie inside a denied path: %s" % denied)
           json.dump({"autoUpdate": False, "sandbox": {
               "enabled": True, "allowBypass": False, "auth": {"git": False, "gh": False},
+              "addCurrentWorkingDirectory": False, "allowDevToolAccess": False,
+              "sandboxMcpServers": True, "sandboxLspServers": True, "sandboxExtensions": True,
               "userPolicy": {"network": {"allowOutbound": False, "allowLocalNetwork": False},
-                             "filesystem": {"deniedPaths": denied}}}}, open(sys.argv[1], "w"), indent=1)
+                             "filesystem": {"readonlyPaths": [os.path.join(work, "desk"), os.path.join(work, "public")],
+                                            "readwritePaths": [], "deniedPaths": [home] + sys.argv[4:]}}}},
+              open(path, "w"), indent=1)
           PY
-          # The lists of tools are one argument each, comma-separated, as the CLI's reference documents them.
-          # shellcheck disable=SC2054
+          # No shell for the model: the desk is a checkout of depth 1, so git history gives nothing, and the read
+          # tools (view, grep, glob) cover the files. One flag per tool, so that no list depends on how the CLI
+          # splits a comma-separated value.
           args=(--model="$MODEL" --silent --no-color --stream=off --no-ask-user --no-auto-update
                 --no-custom-instructions --disable-builtin-mcps --disable-client-telemetry --sync-session=off
-                --disallow-temp-dir --log-level=warning --log-dir="$think/logs"
-                --available-tools=view,grep,glob,bash,read_bash,stop_bash,list_bash
-                --allow-tool='shell(git log),shell(git show),shell(git blame),shell(git diff)'
-                --deny-tool='write,url,memory,shell(sudo),shell(su),shell(curl),shell(wget),shell(nc),shell(ncat),shell(ssh),shell(scp),shell(gh),shell(git push),shell(git fetch),shell(git pull),shell(git clone),shell(git remote),shell(git config),shell(python),shell(python3),shell(node),shell(perl),shell(ruby)'
-                --usage-output-file="$think/usage.json")
-          if [ -d "$RUNNER_TEMP/work/public/.git" ]; then
-            args+=(--add-dir="$RUNNER_TEMP/work/public")
-          fi
-          if [ "$SANDBOX" != "off" ]; then
-            args+=(--sandbox)
-          fi
-          if [[ "$MAX_CREDITS" =~ ^[0-9]+$ ]]; then
-            args+=(--max-ai-credits="$MAX_CREDITS")
+                --disallow-temp-dir --sandbox --max-ai-credits="$credits"
+                --log-level=warning --log-dir="$think/logs" --usage-output-file="$think/usage.json"
+                "--secret-env-vars=COPILOT_GITHUB_TOKEN,GH_TOKEN,GITHUB_TOKEN")
+          for tool in view grep glob; do
+            args+=(--available-tools="$tool")
+          done
+          for tool in bash read_bash write_bash stop_bash list_bash create edit apply_patch web_fetch task \
+              read_agent write_agent list_agents skill ask_user; do
+            args+=(--excluded-tools="$tool")
+          done
+          for rule in shell write url memory; do
+            args+=(--deny-tool="$rule")
+          done
+          if [ -d "$work/public/.git" ]; then
+            args+=(--add-dir="$work/public")
           fi
           prompt=$(cat "$think/prompt.md")
+          timeout_bin=$(command -v timeout)
           status=0
-          # The model's process gets no file of the runner's commands (outputs, env, path, summary) and only the
-          # Copilot token; its stdout is the final message (--silent), and nothing of it reaches this log.
-          (cd "$RUNNER_TEMP/work/desk" && env -u GITHUB_OUTPUT -u GITHUB_ENV -u GITHUB_PATH -u GITHUB_STEP_SUMMARY \
-              -u GITHUB_STATE COPILOT_HOME="$home" COPILOT_AUTO_UPDATE=false COPILOT_DISABLE_LOGIN_SHELL_ENV=1 \
-              COPILOT_TASK_WAIT_TIMEOUT_SECONDS=60 NO_COLOR=1 \
-              timeout --kill-after=30s 35m "$RUNNER_TEMP/copilot-bin/copilot" -p "$prompt" "${args[@]}") \
+          # The model's process starts from an empty environment: a short PATH, its own HOME and CLI home, and the
+          # Copilot token, which --secret-env-vars keeps out of the environments of the tools it starts. Its stdout
+          # is the final message (--silent), and nothing of it reaches this log.
+          (cd "$work/desk" && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" LANG=C.UTF-8 \
+              TERM=dumb NO_COLOR=1 CI=true COPILOT_HOME="$home" COPILOT_AUTO_UPDATE=false \
+              COPILOT_DISABLE_LOGIN_SHELL_ENV=1 COPILOT_TASK_WAIT_TIMEOUT_SECONDS=60 \
+              COPILOT_GITHUB_TOKEN="$COPILOT_GITHUB_TOKEN" \
+              "$timeout_bin" --kill-after=30s 35m "$MANAGER_ROOT/bin/copilot" --prompt="$prompt" "${args[@]}") \
               < /dev/null > "$think/message.txt" 2> "$think/cli.err" || status=$?
           closings=$(grep -cE '^[*>_ ]*\[\[\[END MANAGER\]\]\]' "$think/message.txt") || closings=0
-          models=$(grep -ciF -- "$MODEL" "$think/usage.json" 2> /dev/null) || models=0
+          # The model of the run, from the usage the CLI wrote: any key or text of the JSON that is the model id.
+          model_used=$(python3 -I - "$think/usage.json" "$MODEL" <<'PY'
+          import json, sys
+          try:
+              data = json.load(open(sys.argv[1], encoding="utf-8"))
+          except (OSError, ValueError):
+              print("unreadable")
+              sys.exit(0)
+          want = sys.argv[2].lower()
+          def names(x):
+              if isinstance(x, dict):
+                  for k, v in x.items():
+                      yield str(k)
+                      yield from names(v)
+              elif isinstance(x, list):
+                  for v in x:
+                      yield from names(v)
+              elif isinstance(x, str):
+                  yield x
+          print("yes" if any(n.lower() == want for n in names(data)) else "no")
+          PY
+          )
           echo "Exit status: $status"
           echo "Message: $(wc -c < "$think/message.txt") bytes, $closings closing line(s) of the envelope."
-          echo "Usage names the model $MODEL: $([ "$models" -gt 0 ] && echo yes || echo no)."
+          echo "Usage names the model $MODEL: $model_used."
           ok=false
-          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$models" -gt 0 ]; then
+          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ]; then
             ok=true
           fi
           echo "$ok" > "$think/ok"
@@ -514,9 +569,13 @@ jobs:
         run: |
           think="$RUNNER_TEMP/think"
           umask 077
-          python3 -I - "$think" > "$think/sealed.json" <<'PY'
+          # A job output is read in finish through env, and one environment string holds at most 128 KiB: the
+          # message is cut to manager.max_message_chars (what collect reads at most) and the sealed value must stay
+          # under 100000 bytes; else only the logs are sealed, and collect records a failed run.
+          seal() {
+            python3 -I - "$think" "$MANAGER_ROOT/work/desk/dispatcher/config.json" "$1" > "$think/sealed.json" <<'PY'
           import glob, json, os, sys
-          d = sys.argv[1]
+          d, config, with_message = sys.argv[1], sys.argv[2], sys.argv[3] == "yes"
           def text(path, tail=None):
               try:
                   with open(os.path.join(d, path), encoding="utf-8", errors="replace") as f:
@@ -524,18 +583,37 @@ jobs:
               except OSError:
                   return ""
               return s[-tail:] if tail else s
-          logs = "".join(text(p, 20000) for p in sorted(glob.glob(os.path.join(d, "logs", "*.log"))))
-          json.dump({"ok": text("ok").strip() == "true", "message": text("message.txt"),
-                     "stderr": text("cli.err", 20000), "usage": text("usage.json", 20000),
-                     "logs": logs[-40000:]}, sys.stdout)
+          try:
+              limit = json.load(open(config, encoding="utf-8"))["manager"]["max_message_chars"]
+          except (OSError, ValueError, KeyError, TypeError):
+              limit = 80000
+          limit = limit if isinstance(limit, int) and 0 < limit <= 80000 else 80000
+          message = text("message.txt")
+          note = ""
+          if len(message) > limit:
+              # The last envelope is what collect reads, so the end of the message is kept.
+              message, note = message[-limit:], "the message was cut to its last %d characters" % limit
+          if not with_message:
+              message, note = "", "the sealed message was too large for a job output"
+          logs = "".join(text(p, 4000) for p in sorted(glob.glob(os.path.join(d, "logs", "*.log"))))
+          json.dump({"ok": with_message and text("ok").strip() == "true", "message": message, "note": note,
+                     "stderr": text("cli.err", 4000), "usage": text("usage.json", 2000), "logs": logs[-8000:]},
+                    sys.stdout, ensure_ascii=False)
           PY
-          gzip -9 -c "$think/sealed.json" \
-            | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass "file:$think/key" \
-            | base64 | tr -d '\n' > "$RUNNER_TEMP/sealed.txt"
+            gzip -9 -c "$think/sealed.json" \
+              | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass "file:$think/key" \
+              | base64 | tr -d '\n' > "$RUNNER_TEMP/sealed.txt"
+          }
+          seal yes
           size=$(wc -c < "$RUNNER_TEMP/sealed.txt")
-          if [ "$size" -gt 900000 ]; then
-            echo "::error::The sealed message has $size bytes, too many for a job output."
-            exit 1
+          if [ "$size" -gt 100000 ]; then
+            echo "::warning::The sealed message has $size bytes, too many for finish; only the logs are handed on."
+            seal no
+            size=$(wc -c < "$RUNNER_TEMP/sealed.txt")
+            if [ "$size" -gt 100000 ]; then
+              echo "::error::Even the logs do not fit into $size bytes; nothing is handed on."
+              exit 1
+            fi
           fi
           echo "Sealed: $size bytes."
           echo "message=$(cat "$RUNNER_TEMP/sealed.txt")" >> "$GITHUB_OUTPUT"
@@ -555,6 +633,20 @@ jobs:
       name: factory-manager
       deployment: false
     steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          PLANNED: ${{ needs.plan.outputs.mode }}
+          SWITCH: ${{ vars.FACTORY_MANAGER }}
+        run: |
+          # Live only when the plan was live and the switch is still "true"; anything else is a rehearsal.
+          mode=rehearse
+          if [ "$PLANNED" = "live" ] && [ "$SWITCH" = "true" ]; then
+            mode=live
+          fi
+          echo "Mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
       - name: Fetch the desk and the plan
         id: fetch
         env:
@@ -630,8 +722,8 @@ jobs:
           sealed = json.load(open(sys.argv[1], encoding="utf-8"))
           out = sys.argv[2]
           with open(os.path.join(out, "think.log"), "w", encoding="utf-8") as f:
-              f.write("--- think: %s, ok %s\n--- stderr of the CLI\n%s\n--- usage\n%s\n--- logs of the CLI\n%s\n" % (
-                  sys.argv[3], sealed.get("ok"), sealed.get("stderr") or "", sealed.get("usage") or "",
+              f.write("--- think: %s, ok %s %s\n--- stderr of the CLI\n%s\n--- usage\n%s\n--- logs of the CLI\n%s\n" % (
+                  sys.argv[3], sealed.get("ok"), sealed.get("note") or "", sealed.get("stderr") or "", sealed.get("usage") or "",
                   sealed.get("logs") or ""))
           # The message reaches collect only from a run that think judged usable.
           if sealed.get("ok") is True and sys.argv[3] == "success" and isinstance(sealed.get("message"), str):
@@ -644,6 +736,8 @@ jobs:
 
       - name: Collect
         id: collect
+        # Also after a failed open of the message: then without one, so that the run counts as failed.
+        if: always() && steps.fetch.outcome == 'success'
         env:
           PYTHONUNBUFFERED: '1'
         run: |
@@ -670,13 +764,15 @@ jobs:
           MANAGER_DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
           # The public notice is posted with this token, so github-actions[bot] writes it.
           GH_TOKEN: ${{ github.token }}
-          MODE: ${{ needs.plan.outputs.mode }}
+          MODE: ${{ steps.mode.outputs.mode }}
           PYTHONUNBUFFERED: '1'
         run: |
           desk="$RUNNER_TEMP/desk"
           args=(publish --ledger "$RUNNER_TEMP/box/ledger")
           if [ "$MODE" = "live" ]; then
             args+=(--live)
+          else
+            args+=(--rehearse)
           fi
           status=0
           (cd "$desk" && python3 -E -s dispatcher/manager.py "${args[@]}") > "$RUNNER_TEMP/publish.log" 2>&1 || status=$?
@@ -692,11 +788,24 @@ jobs:
           fi
           exit "$status"
 
+      - name: Record a failed collect
+        # A collect that failed (a crash on the message) would leave the run reserved and out of the breaker's
+        # count: collect again without the message, which records a failed run.
+        if: always() && steps.fetch.outcome == 'success' && steps.collect.outcome == 'failure'
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          status=0
+          (cd "$desk" && python3 -E -s dispatcher/manager.py collect --desk "$desk" --ledger "$box/ledger" \
+              --plan "$box/plan.json") > "$RUNNER_TEMP/collect-again.log" 2>&1 || status=$?
+          echo "Collect without the message: exit status $status."
+          exit "$status"
+
       - name: Keep the ledger
         if: always() && steps.fetch.outcome == 'success'
         env:
           DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
-          MODE: ${{ needs.plan.outputs.mode }}
+          MODE: ${{ steps.mode.outputs.mode }}
           RUN: ${{ needs.plan.outputs.run }}
           LEDGER: ${{ needs.plan.outputs.ledger }}
           RUN_ID: ${{ github.run_id }}
@@ -707,7 +816,8 @@ jobs:
           umask 077
           {
             echo "run: $RUN_ID, manager run $RUN, $MODE"
-            for part in "$box/plan.log" "$RUNNER_TEMP/think.log" "$RUNNER_TEMP/collect.log" "$RUNNER_TEMP/publish.log"; do
+            for part in "$box/plan.log" "$RUNNER_TEMP/think.log" "$RUNNER_TEMP/collect.log" \
+                "$RUNNER_TEMP/collect-again.log" "$RUNNER_TEMP/publish.log"; do
               echo "--- $(basename "$part")"
               cat "$part" 2> /dev/null || echo "(none)"
             done
