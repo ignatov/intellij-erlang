@@ -350,9 +350,9 @@ public class ErlangPsiImplUtil {
 
                ErlangFile file = (ErlangFile) myElement.getContainingFile();
                VirtualFile virtualFile = file.getVirtualFile();
-               File ioFile = VfsUtilCore.virtualToIoFile(virtualFile);
+               File ioDir = VfsUtilCore.virtualToIoFile(virtualFile.getParent());
 
-               String relativePath = FileUtilRt.getRelativePath(ioFile, newHeaderIoFile);
+               String relativePath = FileUtilRt.getRelativePath(ioDir, newHeaderIoFile);
 
                Module module = ModuleUtilCore.findModuleForPsiElement(file);
                for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
@@ -533,7 +533,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangIfAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
   public static boolean inSpecification(PsiElement psiElement) {
