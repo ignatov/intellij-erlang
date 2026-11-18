@@ -20,7 +20,6 @@ import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
@@ -30,7 +29,6 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Map;
 
 public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -94,36 +92,6 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     String config = doWriteModifiedConfig(null);
     assertTrue(config, config.contains(REPORT_OPTION));
     assertTrue(config, config.contains(NO_TTY_OPTION));
-  }
-
-  public void testEscriptReleaseThroughSymbolicLink() throws IOException {
-    File root = createOtpInstallation("27.0", "15.0");
-    File link = new File(FileUtil.createTempDirectory("usr_bin", null), "escript");
-    Files.createSymbolicLink(link.toPath(), new File(root, "bin/escript").toPath());
-    ErlangSdkRelease release = RebarEunitRunningState.getEscriptRelease(link.getPath());
-    assertNotNull(release);
-    assertEquals("15.0", release.getErtsVersion());
-    assertEquals("otp_27_plus", release.getBundledBeamDirectory());
-  }
-
-  public void testEscriptReleaseInErtsDirectory() throws IOException {
-    File root = createOtpInstallation("26.2.5", "14.2.5");
-    ErlangSdkRelease release = RebarEunitRunningState.getEscriptRelease(new File(root, "erts-14.2.5/bin/escript").getPath());
-    assertNotNull(release);
-    assertEquals("otp_pre_27", release.getBundledBeamDirectory());
-  }
-
-  public void testEscriptReleaseOfMissingEscript() throws IOException {
-    File directory = FileUtil.createTempDirectory("no_escript", null);
-    assertNull(RebarEunitRunningState.getEscriptRelease(new File(directory, "escript").getPath()));
-  }
-
-  private static File createOtpInstallation(String otpVersion, String ertsVersion) throws IOException {
-    File root = FileUtil.createTempDirectory("otp_" + otpVersion, null);
-    FileUtil.writeToFile(new File(root, "releases/" + StringUtil.substringBefore(otpVersion + ".", ".") + "/OTP_VERSION"), otpVersion + "\n");
-    FileUtil.writeToFile(new File(root, "bin/escript"), "");
-    FileUtil.writeToFile(new File(root, "erts-" + ertsVersion + "/bin/escript"), "");
-    return root;
   }
 
   private String getErlFlags(String userErlFlags, File reportsRoot) {

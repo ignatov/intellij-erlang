@@ -39,7 +39,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.util.PathUtil;
 import com.intellij.util.Processor;
-import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.console.ErlangConsoleUtil;
@@ -53,16 +52,12 @@ import org.intellij.erlang.psi.ErlangTupleExpression;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.rebar.util.ErlangTermFileUtil;
-import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.util.List;
 
 public class RebarEunitRunningState extends CommandLineState {
@@ -148,42 +143,12 @@ public class RebarEunitRunningState extends CommandLineState {
       File configFile = new File(tempDirectory, CONFIG_FILE_NAME);
 
       writeModifiedConfig(myConfiguration.getProject(), new File(workingDirectory, CONFIG_FILE_NAME), configFile);
-      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, getRebarErlangRelease(myConfiguration.getProject()));
+      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(myConfiguration.getProject()));
 
       return tempDirectory;
     } catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
     }
-  }
-
-  // The release of the Erlang that runs rebar: the project SDK or, without one, the installation of the escript on
-  // PATH, which RebarRunningStateUtil.getRebarCommandLine runs then.
-  @NotNull
-  @RequiresBackgroundThread
-  private static ErlangSdkRelease getRebarErlangRelease(@NotNull Project project) {
-    if (ErlangSdkType.getSdkPath(project) != null) return ErlangSdkType.getRelease(project);
-    ErlangSdkRelease release = getEscriptRelease(RebarRunningStateUtil.findEscriptExecutable());
-    return release != null ? release : ErlangSdkRelease.DefaultRelease;
-  }
-
-  // The release of the installation of an escript executable, which is <root>/bin/escript or <root>/erts-*/bin/escript
-  // once symbolic links (/usr/bin/escript, Homebrew's bin) are resolved.
-  @VisibleForTesting
-  @Nullable
-  @RequiresBackgroundThread
-  static ErlangSdkRelease getEscriptRelease(@NotNull String escriptPath) {
-    Path root;
-    try {
-      Path bin = Path.of(escriptPath).toRealPath().getParent();
-      root = bin != null ? bin.getParent() : null;
-    }
-    catch (IOException | InvalidPathException e) {
-      return null;
-    }
-    if (root != null && root.getFileName() != null && root.getFileName().toString().startsWith("erts-")) {
-      root = root.getParent();
-    }
-    return root != null ? ErlangSdkType.detectRelease(root.toString()) : null;
   }
 
   @VisibleForTesting
