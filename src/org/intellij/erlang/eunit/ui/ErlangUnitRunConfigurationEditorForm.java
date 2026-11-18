@@ -18,10 +18,11 @@ package org.intellij.erlang.eunit.ui;
 
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.ui.HideableTitledPanel;
-import com.intellij.ui.ListCellRendererWrapper;
+import com.intellij.ui.SimpleListCellRenderer;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
@@ -43,11 +44,12 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   private JLabel myErlangFunctionsLabel;
   private JComboBox myTestKindComboBox;
   @SuppressWarnings("unused")
-  private HideableTitledPanel myDebugOptionsHideablePanel;
+  private DialogPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
   private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
 
-  public ErlangUnitRunConfigurationEditorForm() {
+  public ErlangUnitRunConfigurationEditorForm(@NotNull Project project) {
+    super(project);
     myTestKindComboBox.addActionListener(e -> onTestKindSwitch());
     ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirectoryComponent, null);
   }
@@ -113,10 +115,10 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
     myErlangModulesField.setVisible(moduleTestSelected);
   }
 
-  private static ListCellRendererWrapper<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
-    return new ListCellRendererWrapper<>() {
+  private static SimpleListCellRenderer<ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> getTestKindListCellRendererWrapper() {
+    return new SimpleListCellRenderer<>() {
       @Override
-      public void customize(JList list,
+      public void customize(@NotNull JList<? extends ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind> list,
                             ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind,
                             int index,
                             boolean selected,
@@ -146,6 +148,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   }
 
   private void createUIComponents() {
-    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel();
+    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel(false);
+    myEnvironmentVariablesComponent = createEnvironmentVariablesComponent();
   }
 }

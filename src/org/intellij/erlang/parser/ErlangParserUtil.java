@@ -30,7 +30,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.indexing.IndexingDataKeys;
-import gnu.trove.TObjectLongHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
@@ -65,16 +65,16 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return fileType == ErlangFileType.APP || fileType == ErlangFileType.TERMS;
   }
 
-  private static final Key<TObjectLongHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
+  private static final Key<Object2LongOpenHashMap<String>> MODES_KEY = Key.create("MODES_KEY");
 
-  private static TObjectLongHashMap<String> getParsingModes(PsiBuilder builder_) {
-    TObjectLongHashMap<String> flags = builder_.getUserData(MODES_KEY);
-    if (flags == null) builder_.putUserData(MODES_KEY, flags = new TObjectLongHashMap<>());
+  private static Object2LongOpenHashMap<String> getParsingModes(PsiBuilder builder_) {
+    Object2LongOpenHashMap<String> flags = builder_.getUserData(MODES_KEY);
+    if (flags == null) builder_.putUserData(MODES_KEY, flags = new Object2LongOpenHashMap<>());
     return flags;
   }
 
   public static boolean isModeOn(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    return getParsingModes(builder_).get(mode) > 0;
+    return getParsingModes(builder_).getLong(mode) > 0;
   }
 
   public static boolean withOn(PsiBuilder builder_, int level_, String mode, Parser parser) {
@@ -82,8 +82,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   private static boolean withImpl(PsiBuilder builder_, int level_, String mode, boolean onOff, Parser whenOn, Parser whenOff) {
-    TObjectLongHashMap<String> map = getParsingModes(builder_);
-    long prev = map.get(mode);
+    Object2LongOpenHashMap<String> map = getParsingModes(builder_);
+    long prev = map.getLong(mode);
     boolean change = ((prev & 1) == 0) == onOff;
     if (change) map.put(mode, prev << 1 | (onOff? 1 : 0));
     boolean result = (change ? whenOn : whenOff).parse(builder_, level_);
@@ -92,15 +92,15 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   public static boolean enterMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    TObjectLongHashMap<String> flags = getParsingModes(builder_);
-    if (!flags.increment(mode)) flags.put(mode, 1);
+    Object2LongOpenHashMap<String> flags = getParsingModes(builder_);
+    flags.addTo(mode, 1);
     return true;
   }
 
   public static boolean exitMode(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level, String mode) {
-    TObjectLongHashMap<String> flags = getParsingModes(builder_);
-    long count = flags.get(mode);
-    if (count == 1) flags.remove(mode);
+    Object2LongOpenHashMap<String> flags = getParsingModes(builder_);
+    long count = flags.getLong(mode);
+    if (count == 1) flags.removeLong(mode);
     else if (count > 1) flags.put(mode, count -1);
     else builder_.error("Could not exit inactive '" + mode + "' mode at offset " + builder_.getCurrentOffset());
     return true;

@@ -183,6 +183,9 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
       if (((ErlangFile) o.getContainingFile()).getFunction(functionName, functionArity) != null) {
         registerProblem(myHolder, o, "Call to local/imported function " + functionPresentation + " is illegal in guard");
       }
+      else if (ErlangPsiImplUtil.isMsTransformPseudoFunctionCall(o, functionName, functionArity)) {
+        return;
+      }
       else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
         registerProblem(myHolder, o, ERROR);
       }
