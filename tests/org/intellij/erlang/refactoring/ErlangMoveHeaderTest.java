@@ -28,10 +28,17 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor;
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    ErlangLightPlatformCodeInsightFixtureTestCase.maskJsHintRefactoringListener(getProject(), myFixture.getTestRootDisposable());
+  }
+
   public void testMoveFromIncludeDirToModuleDir() {
     PsiFile includeFile = myFixture.addFileToProject("include/a.hrl", "");
     PsiDirectory includeDir = includeFile.getParent();
