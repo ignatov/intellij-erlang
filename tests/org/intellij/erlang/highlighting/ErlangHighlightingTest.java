@@ -113,6 +113,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testExportPseudoFunctions() { doTest(); }
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
+  public void test982()               { doTest(); }
+  public void test982Scope()          { doTest(); }
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";

@@ -17,6 +17,7 @@
 package org.intellij.erlang.refactoring;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
 import org.intellij.erlang.psi.ErlangQVar;
 
@@ -31,6 +32,21 @@ public class ErlangInlineVariableTest extends LightJavaCodeInsightFixtureTestCas
   public void testFunctionCallSubstitution()           { doTest(); }
   public void testFunctionCallSubstitutionWithArity1() { doTest(); }
   public void testFunctionCallSubstitutionWithArity2() { doTest(); }
+  public void testFunInCaseHead()                      { doTest(); }
+  public void testComprehensionInCaseHead()            { doTest(); }
+  public void testCaseHeadBindingFromHead()            { doTestRefused("Cannot inline a variable bound in a case head."); }
+  public void testCaseHeadBindingFromUse()             { doTestRefused("Cannot inline a variable bound in a case head."); }
+  public void testCaseHeadBindingInCall()              { doTestRefused("Cannot inline a variable bound in a case head."); }
+  public void testCaseHeadBindingInTuple()             { doTestRefused("Cannot inline a variable bound in a case head."); }
+  public void testCaseHeadRematch()                    { doTest(); }
+  public void testCaseHeadRematchFromUse()             { doTest(); }
+  public void testCaseHeadRematchInFun()               { doTest(); }
+  public void testBeginInCaseHead()                    { doTest(); }
+  public void testIfInCaseHead()                       { doTest(); }
+  public void testTryInCaseHead()                      { doTest(); }
+  public void testReceiveInCaseHead()                  { doTest(); }
+  public void testReceiveAfterInCaseHead()             { doTest(); }
+  public void testMaybeInCaseHead()                    { doTest(); }
 
   @Override
   protected String getTestDataPath() {
@@ -44,5 +60,20 @@ public class ErlangInlineVariableTest extends LightJavaCodeInsightFixtureTestCas
     assertInstanceOf(element, ErlangQVar.class);
     new ErlangInlineVariableHandler().inlineElement(myFixture.getProject(), myFixture.getEditor(), element);
     myFixture.checkResultByFile(testName + "-after.erl");
+  }
+
+  private void doTestRefused(String expectedMessage) {
+    String testName = getTestName(true);
+    myFixture.configureByFile(testName + ".erl");
+    PsiElement element = myFixture.getElementAtCaret();
+    assertInstanceOf(element, ErlangQVar.class);
+    try {
+      new ErlangInlineVariableHandler().inlineElement(myFixture.getProject(), myFixture.getEditor(), element);
+      fail("Inline should be refused");
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException e) {
+      assertEquals(expectedMessage, e.getMessage());
+    }
+    myFixture.checkResultByFile(testName + ".erl");
   }
 }
