@@ -17,14 +17,23 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.testFramework.LoggedErrorProcessor;
+import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -58,6 +67,44 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
     finally {
       node.stop();
+    }
+  }
+
+  // #1289: a peer that declares a frame of 0x7FFFFFFF bytes must not make the node allocate it. HotSpot always rejects
+  // new byte[Integer.MAX_VALUE] with "OutOfMemoryError: Requested array size exceeds VM limit".
+  public void testHugeFrameLengthDoesNotAllocate() throws Throwable {
+    List<Throwable> logged = Collections.synchronizedList(new ArrayList<>());
+    CountDownLatch errorLogged = new CountDownLatch(1);
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public @NotNull Set<Action> processError(@NotNull String category, @NotNull String message, String @NotNull [] details,
+                                               @Nullable Throwable t) {
+        logged.add(t != null ? t : new Throwable(message));
+        errorLogged.countDown();
+        return EnumSet.noneOf(Action.class);
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0x7FFFFFFF);
+        out.flush();
+        stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        // The pooled thread logs an escaping Error after debuggerStopped() has run in the finally block.
+        errorLogged.await(2, TimeUnit.SECONDS);
+      }
+      finally {
+        node.stop();
+      }
+    });
+    for (Throwable t : logged) {
+      for (Throwable c = t; c != null; c = c.getCause()) {
+        if (c instanceof OutOfMemoryError) throw new AssertionError("The node allocated the declared frame length: " + c, t);
+      }
     }
   }
 
