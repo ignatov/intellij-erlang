@@ -226,4 +226,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
   public void testFunctionImportFromInclusion()           { doTestWithApp(); }
   public void testExportFromInclusion()                   { doTestWithApp(); }
+
+  // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
+  public void testLongOperatorChain() {
+    myFixture.configureByText("chain_12000.erl",
+                              "-module(chain_12000).\n-export([f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
+    myFixture.checkHighlighting();
+  }
 }

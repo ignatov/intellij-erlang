@@ -38,6 +38,13 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testCaseHeadRematch()                   { doTest(2); }
   public void testCaseHeadRematchArgument()           { doTest(3); }
 
+  // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
+  public void testLongOperatorChain() {
+    myFixture.configureByText("chain_12000.erl",
+                              "-module(chain_12000).\n-export([<caret>f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
+    assertEquals(1, myFixture.findUsages(myFixture.getElementAtCaret()).size());
+  }
+
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
 //  public void testEmptyAtomFunctionInMultipleFiles() { doTest(3, "emptyAtomFunctionInSingleFile.erl"); }
