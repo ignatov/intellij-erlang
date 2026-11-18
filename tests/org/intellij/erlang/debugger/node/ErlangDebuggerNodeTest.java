@@ -19,10 +19,12 @@ package org.intellij.erlang.debugger.node;
 import com.ericsson.otp.erlang.*;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +36,7 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
   // top frame first (observed with OTP 27: [{3,{t,f,[1]}},{2,{t,main,[]}}]).
   public void testEvaluateSendsTheStackPointerOfTheSelectedFrame() throws Exception {
     CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
-    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture));
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture, new CompletableFuture<>(), true));
     try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
       peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
       OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
@@ -61,8 +63,67 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1309: a frame binds T = lists:foldl(fun(I, A) -> {I, A} end, nil, lists:seq(1, 20000)), nested 20000 levels deep.
+  // The session must survive such a snapshot and go on processing the next message.
+  public void testDeeplyNestedTermDoesNotKillTheServerThread() throws Exception {
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture, stoppedFuture, false));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      OtpErlangAtom placeholder = atom("deep_term_placeholder");
+      OtpErlangTuple frame = tuple(new OtpErlangLong(2), tuple(atom("t"), atom("main"), list()),
+                                   list(tuple(atom("T"), placeholder)));
+      OtpErlangTuple deepSnapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                          tuple(atom("t"), new OtpErlangLong(9)), list(frame));
+      byte[] message = new OtpOutputStream(tuple(atom("breakpoint_reached"), pid, list(deepSnapshot))).toByteArray();
+      sendBytes(peer, replace(message, new OtpOutputStream(placeholder).toByteArray(), nestedTuples(20000)));
+
+      OtpErlangTuple snapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                      tuple(atom("t"), new OtpErlangLong(9)), list());
+      send(peer, tuple(atom("breakpoint_reached"), pid, list(snapshot)));
+
+      List<ErlangProcessSnapshot> snapshots = snapshotsFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      assertEquals(1, snapshots.size());
+      assertFalse("the debugger session was stopped", stoppedFuture.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // {1, {1, ... {1, nil} ...}} in the external term format, without the version tag.
+  private static byte[] nestedTuples(int depth) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    for (int i = 0; i < depth; i++) {
+      out.write(OtpExternal.smallTupleTag);
+      out.write(2);
+      out.write(OtpExternal.smallIntTag);
+      out.write(1);
+    }
+    out.write(OtpExternal.nilTag);
+    return out.toByteArray();
+  }
+
+  private static byte[] replace(byte[] bytes, byte[] target, byte[] replacement) {
+    for (int i = 0; i + target.length <= bytes.length; i++) {
+      if (Arrays.equals(Arrays.copyOfRange(bytes, i, i + target.length), target)) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(bytes, 0, i);
+        out.write(replacement, 0, replacement.length);
+        out.write(bytes, i + target.length, bytes.length - i - target.length);
+        return out.toByteArray();
+      }
+    }
+    throw new AssertionError("placeholder not found");
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
-    byte[] bytes = new OtpOutputStream(message).toByteArray();
+    sendBytes(socket, new OtpOutputStream(message).toByteArray());
+  }
+
+  private static void sendBytes(Socket socket, byte[] bytes) throws Exception {
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
     out.writeInt(1 + bytes.length);
     out.write(OtpExternal.versionTag);
@@ -91,19 +152,26 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
 
   private static class RecordingListener implements ErlangDebuggerEventListener {
     private final CompletableFuture<List<ErlangProcessSnapshot>> mySnapshots;
+    private final CompletableFuture<Void> myStopped;
+    private final boolean myFailOnUnknownMessage;
 
-    RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots) {
+    RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots, CompletableFuture<Void> stopped,
+                      boolean failOnUnknownMessage) {
       mySnapshots = snapshots;
+      myStopped = stopped;
+      myFailOnUnknownMessage = failOnUnknownMessage;
     }
 
     @Override public void debuggerStarted() { }
     @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
     @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
-    @Override public void unknownMessage(String messageText) { mySnapshots.completeExceptionally(new AssertionError(messageText)); }
+    @Override public void unknownMessage(String messageText) {
+      if (myFailOnUnknownMessage) mySnapshots.completeExceptionally(new AssertionError(messageText));
+    }
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
-    @Override public void debuggerStopped() { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
   }
 }
