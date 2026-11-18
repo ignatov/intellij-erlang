@@ -231,7 +231,7 @@ type_ref ::= q_atom {
 ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')' {pin=2 elementType=atom_attribute}
 else_atom_attribute ::= 'else' {pin=1}
 on_load ::= &'on_load' atom_name '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
-atom_attribute ::= atom_name ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
+atom_attribute ::= (atom_name | single_quote atom_name single_quote) ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
 export_functions ::= '[' export_function_list? ']' {pin=1}
 private export_function_list ::= export_function (',' export_function)*
 export_function ::= q_atom '/' integer {
@@ -360,7 +360,7 @@ meta list_of ::= '[' <<p>>? (',' <<p>>)* ']' {elementType=list_expression pin(".
 app_parameter ::= '{'
    (<<app_atom_named ('description')>> ',' string_literal
   | <<app_atom_named ('id')>> ',' string_literal
-  | <<app_atom_named ('vsn')>> ',' string_literal
+  | <<app_atom_named ('vsn')>> ',' (string_literal | config_expression)
   | <<app_atom_named ('modules')>> ',' <<list_of app_module_expression>>
   | <<app_atom_named ('maxP')>> ',' app_integer
   | <<app_atom_named ('maxT')>> ',' app_integer
@@ -612,7 +612,7 @@ private exprs ::= expression (exprs_tail)* {pin=2 recoverWhile=exprs_recover}
 private exprs_tail ::= ',' expression {pin=1 recoverWhile=exprs_recover}
 private exprs_recover ::= !(')' | ',' | '->' | '.' | ':-' | ';' | '}' | after | catch | else | end | of | atom '(')
 guard ::= exprs (';' exprs)* {pin(".*")=1}
-private atomic ::= q_atom !'(' | integer | (string_literal | macros)+ | float | char
+private atomic ::= &(('?' macros_name)+ string_literal) (string_literal | !('?' '?') macros)+ | q_atom !'(' | integer | (string_literal | macros)+ | float | char
 string_literal ::= string | triple_quoted_string | sigil_string {
   implements = "com.intellij.psi.PsiLanguageInjectionHost"
   methods = [isValidHost updateText createLiteralTextEscaper]

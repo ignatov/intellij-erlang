@@ -111,12 +111,6 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
 
   @Nullable
   @Override
-  public Collection<String> findConflicts(@NotNull PsiElement element, @NotNull PsiElement @NotNull [] allElementsToDelete) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public UsageInfo[] preprocessUsages(@NotNull Project project, UsageInfo @NotNull [] usages) {
     return usages;
   }

@@ -18,8 +18,8 @@ package org.intellij.erlang.application.ui;
 
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
+import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
@@ -36,7 +36,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   private JTextField myErlFlagsTextField;
   private JCheckBox myStopErlangInterpreterCheckBox;
   @SuppressWarnings("unused")
-  private HideableTitledPanel myDebugOptionsHideablePanel;
+  private DialogPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
   private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
   private JCheckBox myUseTestsCodePathCheckBox;
@@ -82,6 +82,6 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   }
 
   private void createUIComponents() {
-    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel();
+    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel(false);
   }
 }
