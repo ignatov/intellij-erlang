@@ -37,7 +37,7 @@ import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
-import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.intellij.erlang.utils.ErlangExternalToolsConfigureAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -71,7 +71,7 @@ public class RebarRunningStateUtil {
       commandLine.addParameter("skip_deps=true");
     }
     commandLine.addParameters(split);
-    commandLine.withEnvironment(configuration.getEnvData().getEnvs());
+    configuration.getEnvData().configureCommandLine(commandLine, true);
 
     return commandLine;
   }
@@ -88,9 +88,8 @@ public class RebarRunningStateUtil {
       if (isEmpty || notCorrect) {
         Notifications.Bus.notify(
           new Notification("Rebar run configuration", "Rebar settings",
-                           "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly") +
-                           "<br/><a href='configure'>Configure</a>",
-                           NotificationType.ERROR, new ErlangExternalToolsNotificationListener(project)), project);
+                           "Rebar executable path is " + (isEmpty ? "empty" : "not specified correctly"),
+                           NotificationType.ERROR).addAction(new ErlangExternalToolsConfigureAction(project)), project);
       }
       throw e;
     }
@@ -112,7 +111,7 @@ public class RebarRunningStateUtil {
   public static String getRebarPath(@Nullable String directory) {
     if (directory != null) {
       File rebar = new File(directory, REBAR);
-      if (rebar.exists() && rebar.canExecute()) {
+      if (rebar.isFile() && rebar.canExecute()) {
         return rebar.getPath();
       }
     }

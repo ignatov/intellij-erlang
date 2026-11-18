@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.codeInsight.navigation.CtrlMouseHandler;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -693,6 +694,67 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
+  public void testQuickNavigateInfoLocalFunctionWithSpec() {
+    doTestQuickNavigateInfo("test:foo/1<br/>-spec foo(integer()) -&gt; ok.",
+                            """
+                              -module(test).
+                              -spec foo(integer()) -> ok.
+                              foo(_) -> ok.
+                              bar() -> fo<caret>o(1).
+                              """);
+  }
+
+  public void testQuickNavigateInfoLocalFunctionWithoutSpec() {
+    doTestQuickNavigateInfo("test:foo/0",
+                            """
+                              -module(test).
+                              foo() -> ok.
+                              bar() -> fo<caret>o().
+                              """);
+  }
+
+  public void testQuickNavigateInfoQuotedFunctionName() {
+    doTestQuickNavigateInfo("test:&#39;my-foo&#39;/0",
+                            """
+                              -module(test).
+                              'my-foo'() -> ok.
+                              bar() -> 'my-f<caret>oo'().
+                              """);
+  }
+
+  public void testQuickNavigateInfoSdkFunction() {
+    doTestQuickNavigateInfo("lists:foreach/2<br/>" +
+                            "-spec foreach(Fun, List) -&gt; ok when<br/>" +
+                            "      Fun :: fun((Elem :: T) -&gt; term()),<br/>" +
+                            "      List :: [T],<br/>" +
+                            "      T :: term().",
+                            """
+                              -module(test).
+                              test() ->
+                                  lists:for<caret>each(foo, bar).
+                              """);
+  }
+
+  public void testQuickNavigateInfoCtrlHover() {
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -spec foo(integer()) -> ok.
+      foo(_) -> ok.
+      bar() -> fo<caret>o(1).
+      """);
+    assertEquals("test:foo/1<br/>-spec foo(integer()) -&gt; ok.",
+                 CtrlMouseHandler.getGoToDeclarationOrUsagesText(myFixture.getEditor()));
+  }
+
+  public void testQuickNavigateInfoNotFunction() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(test).
+                                                 test() ->
+                                                     lis<caret>ts:foreach(foo, bar).
+                                                 """);
+    assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
@@ -715,6 +777,11 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.getUrlFor(element, null).getFirst());
+  }
+
+  private void doTestQuickNavigateInfo(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
   private void doTestExternalDoc(@NotNull String expected, @NotNull String text) {

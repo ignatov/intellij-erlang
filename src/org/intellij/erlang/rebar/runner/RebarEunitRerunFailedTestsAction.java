@@ -48,6 +48,7 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -107,7 +108,6 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
         final Project project = getProject();
-        RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(project, "");
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
         List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
@@ -128,19 +128,8 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
           notifyGeneratedTestsFailed(failedGeneratedTests);
         }
 
-        configuration.setCommand(RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false));
-        configuration.setName("");
-        configuration.setSkipDependencies(true);
-        configuration.setModule(getModule());
-
-        return configuration;
-      }
-
-      @Nullable
-      private Module getModule() {
-        RebarEunitRunConfiguration oldRunConf = (RebarEunitRunConfiguration) getPeer();
-        ErlangModuleBasedConfiguration configurationModule = oldRunConf.getConfigurationModule();
-        return configurationModule != null ? configurationModule.getModule() : null;
+        String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false);
+        return createRerunConfiguration((RebarEunitRunConfiguration) getPeer(), command);
       }
 
       private static void notifyGeneratedTestsFailed(final List<ErlangFunction> failedGeneratedTests) {
@@ -168,5 +157,18 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return result;
       }
     };
+  }
+
+  @VisibleForTesting
+  @NotNull
+  static RebarEunitRunConfiguration createRerunConfiguration(@NotNull RebarEunitRunConfiguration original, @NotNull String command) {
+    RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(original.getProject(), "");
+    configuration.setCommand(command);
+    configuration.setName("");
+    configuration.setSkipDependencies(true);
+    configuration.setEnvData(original.getEnvData());
+    ErlangModuleBasedConfiguration configurationModule = original.getConfigurationModule();
+    configuration.setModule(configurationModule != null ? configurationModule.getModule() : null);
+    return configuration;
   }
 }
