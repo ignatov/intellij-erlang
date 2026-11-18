@@ -24,6 +24,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
@@ -417,8 +418,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static void suggestModules(@NotNull CompletionResultSet result, @NotNull PsiElement position, boolean withColon) {
     Project project = position.getProject();
 
+    GlobalSearchScope scope = GlobalSearchScope.allScope(project);
     Collection<String> names = ErlangModuleIndex.getNames(project);
     for (String name : names) {
+      ProgressManager.checkCanceled();
+      if (!result.getPrefixMatcher().prefixMatches(name)) continue;
+      if (ErlangModuleIndex.getVirtualFilesByName(project, name, scope).isEmpty()) continue;
       result.addElement(
         PrioritizedLookupElement.withPriority(
           LookupElementBuilder.create(name)
