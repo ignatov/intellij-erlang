@@ -16,12 +16,17 @@
 
 package org.intellij.erlang.resolve;
 
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveResult;
+import com.intellij.psi.ResolveState;
+import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.impl.ResolveUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,6 +105,70 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
     else assertContainsElements(variants, "Foo");
   }
 
+  public void testRenameArgumentMatchedInPatternOfEarlierCase() {
+    doRenameTest("f(Y<caret>) -> case g() of {ok, Y} -> a; _ -> b end, h(Y).",
+                 "f(Zz<caret>) -> case g() of {ok, Zz} -> a; _ -> b end, h(Zz).");
+  }
+
+  public void testRenameBindingMatchedInPatternOfEarlierCase() {
+    doRenameTest("f() -> Y<caret> = g(), case g() of Y -> ok; _ -> no end, Y.",
+                 "f() -> Zz<caret> = g(), case g() of Zz -> ok; _ -> no end, Zz.");
+  }
+
+  public void testRenameArgumentMatchedInListPatternOfEarlierCase() {
+    doRenameTest("f(Y<caret>) -> case g() of [Y | _] -> ok; [] -> ok end, Y.",
+                 "f(Zz<caret>) -> case g() of [Zz | _] -> ok; [] -> ok end, Zz.");
+  }
+
+  public void testRenameArgumentMatchedInRecordPatternOfEarlierCase() {
+    doRenameTest("f(Y<caret>) -> case g() of #r{a = Y} -> ok end, Y.",
+                 "f(Zz<caret>) -> case g() of #r{a = Zz} -> ok end, Zz.");
+  }
+
+  public void testRenameArgumentUsedAsMapKeyInPatternOfEarlierCase() {
+    doRenameTest("f(K<caret>) -> case g() of #{K := V} -> V end, K.",
+                 "f(Zz<caret>) -> case g() of #{Zz := V} -> V end, Zz.");
+  }
+
+  public void testRenameArgumentUsedAsBinarySizeInPatternOfEarlierCase() {
+    doRenameTest("f(Y<caret>) -> case g() of <<_:Y>> -> ok end, Y.",
+                 "f(Zz<caret>) -> case g() of <<_:Zz>> -> ok end, Zz.");
+  }
+
+  public void testRenameArgumentMatchedInPatternsOfTwoEarlierCases() {
+    doRenameTest("f(Y<caret>) -> case g() of Y -> a end, case h() of Y -> b end, Y.",
+                 "f(Zz<caret>) -> case g() of Zz -> a end, case h() of Zz -> b end, Zz.");
+  }
+
+  public void testRenameArgumentMatchedInSelector() {
+    doRenameTest("f(Y<caret>) -> case {ok, Y} = g() of _ -> Y end.",
+                 "f(Zz<caret>) -> case {ok, Zz} = g() of _ -> Zz end.");
+  }
+
+  public void testFindUsagesOfArgumentMatchedInPatternOfEarlierCase() {
+    myFixture.configureByText("nested_cases.erl", "f(Y) -> case g() of {ok, Y} -> a; _ -> b end, h(Y).");
+    assertEquals(2, myFixture.findUsages(findVars("Y").get(0)).size());
+  }
+
+  public void testRenameBindingMatchedInPatternOfNestedCase() {
+    doRenameTest("f() -> case a of _ -> ok end, case b of _ -> Y<caret> = 1, case c of Y -> Y end end.",
+                 "f() -> case a of _ -> ok end, case b of _ -> Zz<caret> = 1, case c of Zz -> Zz end end.");
+  }
+
+  public void testEnclosingSelectorsWithoutBindingAreNotSearched() {
+    configureNestedCases(30);
+    List<ErlangQVar> vars = findVars("X");
+    int[] offered = {0};
+    ResolveUtil.treeWalkUp(vars.get(vars.size() - 1), new PsiScopeProcessor() {
+      @Override
+      public boolean execute(@NotNull PsiElement element, @NotNull ResolveState state) {
+        if (element instanceof ErlangQVar && "X".equals(element.getText())) offered[0]++;
+        return true;
+      }
+    });
+    assertEquals(1, offered[0]);
+  }
+
   public void testFindUsagesAndRenameInNestedCases() {
     configureNestedCases(20);
     List<ErlangQVar> vars = findVars("X");
@@ -107,6 +176,12 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
     myFixture.renameElement(vars.get(0), "Y");
     assertEquals(0, findVars("X").size());
     assertEquals(21, findVars("Y").size());
+  }
+
+  private void doRenameTest(String before, String after) {
+    myFixture.configureByText("nested_cases.erl", before);
+    myFixture.renameElementAtCaret("Zz");
+    myFixture.checkResult(after);
   }
 
   private void doTest(String function, int occurrence, Integer... expected) {

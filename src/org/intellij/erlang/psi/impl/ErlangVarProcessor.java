@@ -19,6 +19,10 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -83,12 +87,42 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
+      if (inCasePatternOrSelector(psiElement) && addBindingsOfMatchedVariable((ErlangQVar) psiElement)) return false;
       // put all possible variables to list
       myVarList.add((ErlangQVar) psiElement);
       return false;
     }
 
     return true;
+  }
+
+  /**
+   * A variable in a case pattern or selector that is already bound there is only matched again, so its uses after it
+   * refer to the bindings that it resolves to.
+   */
+  private boolean addBindingsOfMatchedVariable(@NotNull ErlangQVar var) {
+    PsiReference reference = var.getReference();
+    if (!(reference instanceof PsiPolyVariantReference)) return false;
+    boolean added = false;
+    for (ResolveResult result : ((PsiPolyVariantReference) reference).multiResolve(false)) {
+      PsiElement target = result.getElement();
+      if (target instanceof ErlangQVar && target != var) {
+        myVarList.add((ErlangQVar) target);
+        added = true;
+      }
+    }
+    return added;
+  }
+
+  private static boolean inCasePatternOrSelector(@NotNull PsiElement psiElement) {
+    PsiElement child = psiElement;
+    for (PsiElement parent = child.getParent();
+         parent != null && !(parent instanceof ErlangClauseBody) && !(parent instanceof PsiFile);
+         child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangCrClause && child instanceof ErlangArgumentDefinition) return true;
+      if (parent instanceof ErlangCaseExpression && child == ((ErlangCaseExpression) parent).getExpression()) return true;
+    }
+    return false;
   }
 
   private static boolean inFunArgList(PsiElement psiElement) {

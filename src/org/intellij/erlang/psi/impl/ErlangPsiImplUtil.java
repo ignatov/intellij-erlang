@@ -1106,7 +1106,8 @@ public class ErlangPsiImplUtil {
     ErlangExpression selector = o.getExpression();
     if (lastParent != null) {
       // inside the case only the selector is not walked up yet: its own clause was, and the other clauses bind nothing for it
-      return lastParent == selector || selector == null || processDeclarationRecursive(selector, processor, state);
+      return lastParent == selector || selector == null || selector instanceof ErlangMaxExpression ||
+             processDeclarationRecursive(selector, processor, state);
     }
     if (selector != null && !processDeclarationRecursive(selector, processor, state)) return false;
     boolean result = true;
