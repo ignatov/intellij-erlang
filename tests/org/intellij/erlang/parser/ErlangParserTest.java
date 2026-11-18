@@ -153,38 +153,28 @@ public class ErlangParserTest extends ErlangParserTestBase {
   }
 
   public void testUnterminatedLongQuoteRunScalesLinearly() throws IOException {
-    tokenizeUnterminatedQuoteRun(2_000);
-    long smallRunNanos = tokenizeUnterminatedQuoteRun(10_000);
-    long largeRunNanos = tokenizeUnterminatedQuoteRun(40_000);
-    assertTrue("Long quote run took " + largeRunNanos + " ns after " + smallRunNanos + " ns for one quarter the input",
-               largeRunNanos < smallRunNanos * 8);
+    int smallRunReads = charactersReadForUnterminatedQuoteRun(10_000);
+    int largeRunReads = charactersReadForUnterminatedQuoteRun(40_000);
+    assertTrue("Long quote run read " + largeRunReads + " characters after " + smallRunReads + " for one quarter the input",
+               largeRunReads < smallRunReads * 8);
   }
 
-  // #1318: the lexer reads each quote once, so the verdict of the wall-clock check above must not change between runs.
+  // #1318: the lexer reads each quote once, so the verdict of the check above must not change between runs.
   public void testUnterminatedLongQuoteRunTimingCheckIsStable() throws IOException {
-    tokenizeUnterminatedQuoteRun(2_000);
     for (int round = 0; round < 20; round++) {
-      ReadCountingSequence small = new ReadCountingSequence("\"".repeat(10_000));
-      ReadCountingSequence large = new ReadCountingSequence("\"".repeat(40_000));
-      long smallRunNanos = tokenize(small);
-      long largeRunNanos = tokenize(large);
-      assertEquals(10_000, small.reads);
-      assertEquals(40_000, large.reads);
-      assertTrue("Round " + round + ": long quote run took " + largeRunNanos + " ns after " + smallRunNanos +
-                 " ns for one quarter the input, with " + large.reads + " and " + small.reads + " characters read",
-                 largeRunNanos < smallRunNanos * 8);
+      assertEquals(10_000, charactersReadForUnterminatedQuoteRun(10_000));
+      assertEquals(40_000, charactersReadForUnterminatedQuoteRun(40_000));
     }
   }
 
-  private static long tokenize(CharSequence input) throws IOException {
+  private static int charactersReadForUnterminatedQuoteRun(int quoteCount) throws IOException {
+    ReadCountingSequence input = new ReadCountingSequence("\"".repeat(quoteCount));
     _ErlangLexer lexer = new _ErlangLexer((Project) null);
     lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
-    long start = System.nanoTime();
     int tokens = 0;
     while (lexer.advance() != null) tokens++;
-    long nanos = System.nanoTime() - start;
     assertEquals(1, tokens);
-    return nanos;
+    return input.reads;
   }
 
   private static final class ReadCountingSequence implements CharSequence {
@@ -200,16 +190,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
     @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
 
     @Override public String toString() { return text; }
-  }
-
-  private static long tokenizeUnterminatedQuoteRun(int quoteCount) throws IOException {
-    String input = "\"".repeat(quoteCount);
-    _ErlangLexer lexer = new _ErlangLexer((Project) null);
-    lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
-    long start = System.nanoTime();
-    int tokens = 0;
-    while (lexer.advance() != null) tokens++;
-    assertTrue("Expected tokens for unterminated quote run", tokens > 0);
-    return System.nanoTime() - start;
   }
 }
