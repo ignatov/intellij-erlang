@@ -47,6 +47,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testVariableResolve()   { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
+  public void testIfConditionalCompilation() { doTest(); }
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
   public void test211()               { doTest(); }
@@ -118,6 +119,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     String testDataFile = getTestName(false) + ".erl";
     myFixture.configureByFile(testDataFile);
     myFixture.checkHighlighting(false, true, false, false);
+  }
+
+  public void testIfAttributeAnnotations() {
+    testAttributeAnnotations();
   }
 
   private void doTestWithInclude() {
