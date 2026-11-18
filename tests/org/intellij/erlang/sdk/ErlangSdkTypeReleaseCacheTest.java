@@ -21,6 +21,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +63,30 @@ public class ErlangSdkTypeReleaseCacheTest extends ErlangLightPlatformCodeInsigh
       modificator.setHomePath("testData/mockSdk-R27/");
       modificator.setVersionString(ErlangSdkRelease.V_27_0.toString());
     });
+
+    assertEquals("27", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+  }
+
+  // Project Structure changes only the home and keeps the version string of the old home
+  public void testReleaseFollowsChangedHomeAlone() {
+    assertEquals("25", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+
+    ErlangSdkType.createMockSdk("testData/mockSdk-R27/", ErlangSdkRelease.V_27_0); // pre-caches the release of that home
+    modifyProjectSdk(modificator -> modificator.setHomePath("testData/mockSdk-R27/"));
+
+    assertEquals("27", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+    String expectedVersionString = ErlangSdkRelease.V_27_0.toString();
+    PlatformTestUtil.waitWithEventsDispatching(() -> "the version string is " + getProjectSdk().getVersionString(),
+                                               () -> expectedVersionString.equals(getProjectSdk().getVersionString()), 10);
+    assertEquals("27", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+  }
+
+  public void testReleaseFollowsChangedHomeWithoutVersionString() {
+    modifyProjectSdk(modificator -> modificator.setVersionString(null));
+    assertEquals("25", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+
+    ErlangSdkType.createMockSdk("testData/mockSdk-R27/", ErlangSdkRelease.V_27_0); // pre-caches the release of that home
+    modifyProjectSdk(modificator -> modificator.setHomePath("testData/mockSdk-R27/"));
 
     assertEquals("27", ErlangSdkType.getRelease(getProject()).getOtpRelease());
   }

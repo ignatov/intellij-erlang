@@ -20,6 +20,7 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -524,13 +525,40 @@ public class ErlangSdkType extends SdkType {
       }
 
       ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(versionString);
-      ErlangSdkRelease release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(homePath));
+      ErlangSdkRelease release;
+      if (fromVersionString != null && cached != null && Objects.equals(cached.versionString(), versionString)) {
+        // only the home changed, so the version string may be the old home's: detect the release of the new home
+        ErlangSdkRelease known = homePath != null ? getInstance().mySdkHomeToReleaseCache.get(getVersionCacheKey(homePath)) : null;
+        release = known != null ? known : fromVersionString;
+        updateVersionStringInBackground(sdk, homePath, versionString);
+      }
+      else {
+        release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(homePath));
+      }
 
       sdk.putUserData(ERLANG_SDK_RELEASE, release != null ? new CachedRelease(versionString, homePath, release) : null);
 
       return release;
     }
     return null;
+  }
+
+  // detection may start erl, so it runs on a pooled thread; the version string is written once the dialogs are closed
+  private static void updateVersionStringInBackground(@NotNull Sdk sdk, @Nullable String homePath, @NotNull String oldVersionString) {
+    if (homePath == null) return;
+    Application application = ApplicationManager.getApplication();
+    application.executeOnPooledThread(() -> {
+      String detected = getVersionString(getInstance().detectSdkVersion(homePath));
+      if (detected == null || detected.equals(oldVersionString)) return;
+      application.invokeLater(() -> {
+        if (!Objects.equals(sdk.getHomePath(), homePath) || !Objects.equals(sdk.getVersionString(), oldVersionString)) return;
+        application.runWriteAction(() -> {
+          SdkModificator modificator = sdk.getSdkModificator();
+          modificator.setVersionString(detected);
+          modificator.commitChanges();
+        });
+      }, ModalityState.nonModal());
+    });
   }
 
   @Nullable
