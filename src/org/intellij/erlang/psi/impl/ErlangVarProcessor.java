@@ -56,6 +56,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
+    if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
       if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
@@ -106,6 +107,15 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return result.isEmpty() ? List.of(var) : result;
   }
 
+  // the name in the first clause of a named fun declares a new variable that shadows any outer one
+  private static boolean isNamedFunDeclaration(@NotNull PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return definition != null
+           && definition.getParent() instanceof ErlangFunClause clause
+           && clause.getArgumentDefinition() == definition
+           && PsiTreeUtil.getPrevSiblingOfType(clause, ErlangFunClause.class) == null;
+  }
+
   private static boolean inFunArgList(PsiElement psiElement) {
     ErlangArgumentDefinitionList list = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinitionList.class);
     return list != null && list.getParent() instanceof ErlangFunClause;
@@ -130,8 +140,9 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (narrowestParentScopeOwner instanceof ErlangFunClause) {
       ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
       if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
-        // the name of a named fun is declared by its first clause only
-        return funName != null && PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null;
+        // the name of a named fun is declared by its first clause only, and is visible only inside the fun
+        return funName != null && (PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null
+                                   || !PsiTreeUtil.isAncestor(PsiTreeUtil.getParentOfType(narrowestParentScopeOwner, ErlangFunExpression.class), myOrigin, false));
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
