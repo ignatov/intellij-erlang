@@ -119,14 +119,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @TestOnly
-  ErlangXDebugProcess(@NotNull XDebugSession session, @NotNull ErlangDebuggerNode debuggerNode) {
+  ErlangXDebugProcess(@NotNull XDebugSession session,
+                      @NotNull ErlangDebuggerNode debuggerNode,
+                      @NotNull ErlangDebugLocationResolver locationResolver) {
     super(session);
     mySession = session;
     myExecutionEnvironment = null;
     myRunningState = null;
     myDebuggerNode = debuggerNode;
     myErlangProcessHandler = null;
-    myLocationResolver = null;
+    myLocationResolver = locationResolver;
   }
 
   @NotNull
@@ -139,10 +141,10 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                               @NotNull ErlangTraceElement traceElement) {
     // need to pause the debugging session otherwise the callback might get invalidated
     mySession.pause();
-    PendingEvaluation evaluation = new PendingEvaluation(expression, callback, traceElement);
+    PendingEvaluation evaluation = new PendingEvaluation(myDebuggerNode.getLastSuspendedPid(), expression, callback, traceElement);
     myEvaluations.addLast(evaluation);
     if (myEvaluations.size() == 1) {
-      myDebuggerNode.evaluate(expression, traceElement);
+      send(evaluation);
     }
   }
 
@@ -152,14 +154,43 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     if (evaluation != null) {
       PendingEvaluation next = myEvaluations.peekFirst();
       if (next != null) {
-        myDebuggerNode.evaluate(next.expression(), next.traceElement());
+        send(next);
       }
       evaluation.callback().evaluated(ErlangXValueFactory.create(response));
-      mySession.resume();
+      // resuming before the queued evaluations are answered would let them reach a running process
+      if (next == null) {
+        mySession.resume();
+      }
     }
   }
 
-  private record PendingEvaluation(@NotNull String expression,
+  // An evaluation for a process that is no longer at a breakpoint gets no answer, so it must not keep the queue.
+  @NotNull
+  private synchronized List<PendingEvaluation> dropEvaluationsOfProcessesNotAtBreak(@NotNull List<ErlangProcessSnapshot> snapshots) {
+    PendingEvaluation sent = myEvaluations.peekFirst();
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+      PendingEvaluation evaluation = iterator.next();
+      boolean atBreak = ContainerUtil.exists(snapshots, snapshot -> snapshot.getPid().equals(evaluation.pid()) &&
+                                                                   "break".equals(snapshot.getStatus()));
+      if (!atBreak) {
+        iterator.remove();
+        dropped.add(evaluation);
+      }
+    }
+    PendingEvaluation head = myEvaluations.peekFirst();
+    if (head != null && head != sent) {
+      send(head);
+    }
+    return dropped;
+  }
+
+  private void send(@NotNull PendingEvaluation evaluation) {
+    myDebuggerNode.evaluate(evaluation.pid(), evaluation.expression(), evaluation.traceElement());
+  }
+
+  private record PendingEvaluation(@NotNull OtpErlangPid pid,
+                                   @NotNull String expression,
                                    @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
                                    @NotNull ErlangTraceElement traceElement) {
   }
@@ -204,6 +235,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+    for (PendingEvaluation evaluation : dropEvaluationsOfProcessesNotAtBreak(snapshots)) {
+      evaluation.callback().errorOccurred("The process is no longer at a breakpoint");
+    }
     ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, erlangProcessSnapshot -> erlangProcessSnapshot.getPid().equals(pid));
     assert processInBreakpoint != null;
     ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);

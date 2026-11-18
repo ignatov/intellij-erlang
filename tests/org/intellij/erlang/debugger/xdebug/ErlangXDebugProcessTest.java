@@ -17,6 +17,7 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XValue;
@@ -117,6 +118,73 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
+  // Resuming after the first of three answers let the third evaluation reach a running process, which killed it.
+  public void testSessionResumesOnlyAfterTheLastQueuedAnswer() throws Exception {
+    CountDownLatch responses = new CountDownLatch(3);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      List<String> sessionCalls = new CopyOnWriteArrayList<>();
+      ErlangXDebugProcess process = createProcessWithoutTarget(node, sessionCalls);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      process.evaluateExpression("A", new RecordingCallback(), frame);
+      process.evaluateExpression("B", new RecordingCallback(), frame);
+      process.evaluateExpression("L", new RecordingCallback(), frame);
+      for (int i = 0; i < 3; i++) {
+        receive(peer);
+        send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(i)}));
+      }
+      assertTrue("the node did not deliver all answers", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+      assertEquals(1, ContainerUtil.count(sessionCalls, "resume"::equals));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // An evaluation for a process that has left its breakpoint gets no answer; it must not block later evaluations.
+  public void testEvaluationOfProcessNoLongerAtBreakDoesNotBlockLaterOnes() throws Exception {
+    CountDownLatch responses = new CountDownLatch(1);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      processHolder[0] = process;
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+
+      OtpErlangPid child = new OtpErlangPid("nonode@nohost", 86, 0, 0);
+      node.processSuspended(child);
+      RecordingCallback watchAtChild = new RecordingCallback();
+      process.evaluateExpression("A", watchAtChild, frame);
+      assertEquals(child, ((OtpErlangTuple)receive(peer)).elementAt(1));
+
+      OtpErlangPid main = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      node.processSuspended(main);
+      process.breakpointReached(main, List.of(new ErlangProcessSnapshot(child, frame, "exit", null, 0, null, List.of()),
+                                              new ErlangProcessSnapshot(main, frame, "break", null, 0, null, List.of())));
+      assertEquals(List.of(new OtpErlangString("error: The process is no longer at a breakpoint")), watchAtChild.myValues);
+
+      RecordingCallback watchAtMain = new RecordingCallback();
+      process.evaluateExpression("A", watchAtMain, frame);
+      assertEquals(main, ((OtpErlangTuple)receive(peer)).elementAt(1));
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(10)}));
+      assertTrue("the node did not deliver the answer", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertEquals(List.of(new OtpErlangLong(10)), watchAtMain.myValues);
+      assertEquals(1, watchAtChild.myValues.size());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
   // An evaluation that never gets an answer (the evaluated process is gone) must not wait for ever.
   public void testPendingEvaluationFailsWhenSessionStops() throws Exception {
     ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
@@ -142,10 +210,18 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
   }
 
   @NotNull
-  private static ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node) {
+  private ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node) {
+    return createProcessWithoutTarget(node, new CopyOnWriteArrayList<>());
+  }
+
+  @NotNull
+  private ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node, @NotNull List<String> sessionCalls) {
     XDebugSession session = (XDebugSession)Proxy.newProxyInstance(
-      ErlangXDebugProcessTest.class.getClassLoader(), new Class[]{XDebugSession.class}, (proxy, method, args) -> null);
-    return new ErlangXDebugProcess(session, node);
+      ErlangXDebugProcessTest.class.getClassLoader(), new Class[]{XDebugSession.class}, (proxy, method, args) -> {
+        sessionCalls.add(method.getName());
+        return null;
+      });
+    return new ErlangXDebugProcess(session, node, new ErlangDebugLocationResolver(getProject(), null, false));
   }
 
   private static void send(Socket socket, OtpErlangObject message) throws Exception {

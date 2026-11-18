@@ -80,6 +80,10 @@ public class ErlangDebuggerNode {
     myLastSuspendedPid = pid;
   }
 
+  public OtpErlangPid getLastSuspendedPid() {
+    return myLastSuspendedPid;
+  }
+
   public void setBreakpoint(@NotNull String module, int line) {
     addCommand(ErlangDebuggerCommandsProducer.getSetBreakpointCommand(module, line));
   }
@@ -117,7 +121,11 @@ public class ErlangDebuggerNode {
   }
 
   public void evaluate(@NotNull String expression, @NotNull ErlangTraceElement traceElement) {
-    addCommand(ErlangDebuggerCommandsProducer.getEvaluateCommand(myLastSuspendedPid, expression, traceElement));
+    evaluate(myLastSuspendedPid, expression, traceElement);
+  }
+
+  public void evaluate(@NotNull OtpErlangPid pid, @NotNull String expression, @NotNull ErlangTraceElement traceElement) {
+    addCommand(ErlangDebuggerCommandsProducer.getEvaluateCommand(pid, expression, traceElement));
   }
 
   private void addCommand(ErlangDebuggerCommandsProducer.ErlangDebuggerCommand command) {
