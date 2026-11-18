@@ -12,14 +12,21 @@ name: Factory watch
 #   1. a loop of its own: each run ends by starting the next one with workflow_dispatch and wait=true; that run
 #      first waits in the environment of a wait timer (factory-timer-idle, 15 minutes, unless
 #      FACTORY_WATCH_TIMER_ENVIRONMENT names another one), using no runner while it waits. The next run is started
-#      also when the check failed, so a red check does not end the loop; it is not started when the check did not
-#      run, so a wait that cannot start does not become a loop without a wait.
-#   2. a schedule twice an hour, the backstop that starts the loop again when it broke (GitHub drops most
-#      scheduled runs of this repository, so it is no clock by itself).
-# The concurrency group keeps one run: a new one cancels the run that waits or works, and the newest run carries
-# the loop on. Cancelling a check halfway loses nothing: the record of what was announced is the bot's comments on
-# the issue (each line carries <!-- factory:watch:<key> --> or <!-- factory:watch-clear:<key> -->), so a comment
-# that was posted is recorded and one that was not is posted by the next run.
+#      also when the check failed, so a red check does not end the loop, and not when the check did not run.
+#      An environment that does not exist is created by GitHub without a wait timer (a typo in the variable, a
+#      deleted environment), so a run with wait=true that reaches the job rearm in less than 10 minutes stops the
+#      loop with an error instead of starting the next one.
+#   2. the timer of the tick (factory-timer.yml) starts this workflow whenever it has no run that is queued,
+#      waiting or running, so each live chain restarts the other one;
+#   3. a schedule twice an hour, the last backstop (GitHub drops most scheduled runs of this repository, so it is
+#      no clock by itself).
+# The concurrency is per job. The job wait has a group of its own that cancels a waiting one, so there is one loop:
+# a run started by the schedule or the tick's timer replaces the wait of the loop and carries it on. The job check
+# has a group that queues, so two checks never post at once. The workflow has no group: a run's own rearm must not
+# cancel it, or a red scheduled run would end as cancelled and GitHub would mail nobody. A check cancelled halfway
+# loses nothing: the record of what was announced is the bot's comments on the issue (each line carries
+# <!-- factory:watch:<key> --> or <!-- factory:watch-clear:<key> -->), so a comment that was posted is recorded and
+# one that was not is posted by the next run.
 #
 # Who is told: the comments are written with GITHUB_TOKEN, so they are by github-actions[bot] and not by the owner,
 # whose own actions GitHub does not notify him of; a comment with a new alert mentions him. A scheduled run that
@@ -54,10 +61,6 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: factory-watch
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: bash
@@ -67,6 +70,9 @@ jobs:
     if: vars.FACTORY_WATCH == 'true' && inputs.wait
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    concurrency:
+      group: factory-watch-wait
+      cancel-in-progress: true
     environment:
       name: ${{ vars.FACTORY_WATCH_TIMER_ENVIRONMENT || 'factory-timer-idle' }}
       # The environment is used for its wait timer only; this is not a deployment.
@@ -81,6 +87,9 @@ jobs:
       && (needs.wait.result == 'success' || needs.wait.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    concurrency:
+      group: factory-watch-check
+      cancel-in-progress: false
     permissions:
       actions: read
       issues: write
@@ -202,7 +211,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          WAITED: ${{ inputs.wait == true }}
         run: |
+          if [ "$WAITED" = true ]; then
+            # A wait timer that did not wait (an environment without one) would make a loop every two minutes.
+            started=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .run_started_at) || started=""
+            elapsed=$(( $(date -u +%s) - $(date -u -d "$started" +%s 2> /dev/null || echo 0) ))
+            if [ -z "$started" ] || [ "$elapsed" -lt 600 ]; then
+              echo "::error::This run waited less than 10 minutes (or its start could not be read): the environment of the wait has no wait timer. The loop stops; fix FACTORY_WATCH_TIMER_ENVIRONMENT or the environment."
+              exit 1
+            fi
+          fi
           for attempt in 1 2 3; do
             if gh workflow run factory-watch.yml -R "$REPO" --ref master -f wait=true; then
               exit 0
