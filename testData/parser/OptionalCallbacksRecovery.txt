@@ -22,7 +22,7 @@ ERL_FILE
       PsiElement(()('(')
       ERL_OPTIONAL_CALLBACK_FUNCTIONS
         PsiElement([)('[')
-        PsiErrorElement:<q atom> or ']' expected, got ')'
+        PsiErrorElement:<callback function> or ']' expected, got ')'
           <empty list>
       PsiElement())(')')
   ERL_FUNCTION

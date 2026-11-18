@@ -181,6 +181,12 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return doBuild(CompileScopeTestBuilder.rebuild().all());
   }
 
+  protected BuildResult makeAll() {
+    BuildResult result = doBuild(CompileScopeTestBuilder.make().all());
+    result.assertSuccessful();
+    return result;
+  }
+
   private BuildResult doBuild(CompileScopeTestBuilder scope) {
     ProjectDescriptor descriptor = createProjectDescriptor(new BuildLoggingManager(myLogger));
     try {

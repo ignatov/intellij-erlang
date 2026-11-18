@@ -120,6 +120,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
+  public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
 
   public void testSixQuoteMultilineStringAndSigil() {
@@ -152,21 +153,42 @@ public class ErlangParserTest extends ErlangParserTestBase {
   }
 
   public void testUnterminatedLongQuoteRunScalesLinearly() throws IOException {
-    tokenizeUnterminatedQuoteRun(2_000);
-    long smallRunNanos = tokenizeUnterminatedQuoteRun(10_000);
-    long largeRunNanos = tokenizeUnterminatedQuoteRun(40_000);
-    assertTrue("Long quote run took " + largeRunNanos + " ns after " + smallRunNanos + " ns for one quarter the input",
-               largeRunNanos < smallRunNanos * 8);
+    int smallRunReads = charactersReadForUnterminatedQuoteRun(10_000);
+    int largeRunReads = charactersReadForUnterminatedQuoteRun(40_000);
+    assertTrue("Long quote run read " + largeRunReads + " characters after " + smallRunReads + " for one quarter the input",
+               largeRunReads < smallRunReads * 8);
   }
 
-  private static long tokenizeUnterminatedQuoteRun(int quoteCount) throws IOException {
-    String input = "\"".repeat(quoteCount);
+  // #1318: the lexer reads each quote once, so the verdict of the check above must not change between runs.
+  public void testUnterminatedLongQuoteRunTimingCheckIsStable() throws IOException {
+    for (int round = 0; round < 20; round++) {
+      assertEquals(10_000, charactersReadForUnterminatedQuoteRun(10_000));
+      assertEquals(40_000, charactersReadForUnterminatedQuoteRun(40_000));
+    }
+  }
+
+  private static int charactersReadForUnterminatedQuoteRun(int quoteCount) throws IOException {
+    ReadCountingSequence input = new ReadCountingSequence("\"".repeat(quoteCount));
     _ErlangLexer lexer = new _ErlangLexer((Project) null);
     lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
-    long start = System.nanoTime();
     int tokens = 0;
     while (lexer.advance() != null) tokens++;
-    assertTrue("Expected tokens for unterminated quote run", tokens > 0);
-    return System.nanoTime() - start;
+    assertEquals(1, tokens);
+    return input.reads;
+  }
+
+  private static final class ReadCountingSequence implements CharSequence {
+    private final String text;
+    private int reads;
+
+    ReadCountingSequence(String text) { this.text = text; }
+
+    @Override public int length() { return text.length(); }
+
+    @Override public char charAt(int index) { reads++; return text.charAt(index); }
+
+    @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
+
+    @Override public String toString() { return text; }
   }
 }

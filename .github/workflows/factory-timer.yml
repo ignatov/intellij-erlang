@@ -50,6 +50,20 @@ jobs:
     permissions:
       actions: write
     steps:
+      - name: Start the watch when it has no run
+        # factory-watch.yml has a loop of its own; this restarts it when it broke. It never fails this job.
+        if: vars.FACTORY_WATCH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          busy=$(gh run list -R "$REPO" -w factory-watch.yml -L 20 --json status \
+            --jq '[.[] | select(.status != "completed")] | length') || busy=""
+          if [ "$busy" = "0" ]; then
+            gh workflow run factory-watch.yml -R "$REPO" --ref master -f wait=true \
+              || echo "::warning::The watch could not be started."
+          fi
+
       - name: Start the next tick
         env:
           GH_TOKEN: ${{ github.token }}
