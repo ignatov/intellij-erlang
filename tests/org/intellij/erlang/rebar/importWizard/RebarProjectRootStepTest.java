@@ -16,26 +16,17 @@
 
 package org.intellij.erlang.rebar.importWizard;
 
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import org.intellij.erlang.jps.model.JpsErlangSdkType;
-import org.intellij.erlang.sdk.ErlangSdkRelease;
-import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -50,23 +41,12 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
   protected void setUp() throws Exception {
     super.setUp();
     myTempDir = FileUtil.createTempDirectory("rebarFetch", null);
-    FileUtil.copyDir(new File("testData/mockSdk-R15B02"), myTempDir);
-    // The SDK's escript stands for a rebar get-deps that does not finish (an unreachable host): it prints and sleeps.
-    File escript = JpsErlangSdkType.getScriptInterpreterExecutable(myTempDir.getPath());
-    assertTrue(escript.getParentFile().mkdirs());
-    Files.writeString(escript.toPath(), "#!/bin/sh\necho " + STARTED + "\nexec sleep 600\n", StandardCharsets.UTF_8);
-    assertTrue(escript.setExecutable(true));
-    Sdk sdk = ErlangSdkType.createMockSdk(myTempDir.getPath(), ErlangSdkRelease.V_R15B02);
-    ApplicationManager.getApplication().runWriteAction(() -> {
-      ProjectJdkTable.getInstance().addJdk(sdk);
-      ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk);
-    });
   }
 
   @Override
   protected void tearDown() throws Exception {
     try {
-      // Kill what the fetch left running, so that a failure here does not leave a sleeping process behind.
+      // Kill what the fetch left running, so that a failure here does not leave a blocked process behind.
       ProcessHandle.current().descendants().forEach(ProcessHandle::destroyForcibly);
       if (myTempDir != null) FileUtil.delete(myTempDir);
     }
@@ -77,13 +57,10 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
 
   // #1306: Cancel in the "Fetching Dependencies" dialog cancels the indicator; the fetch must stop and kill rebar.
   public void testFetchDependenciesStopsOnCancel() throws Exception {
-    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(myTempDir);
-    assertNotNull(projectRoot);
-    Task.Modal task = createFetchDependenciesTask(getProject(), projectRoot, new File(myTempDir, "rebar").getPath());
-    assertTrue("The fetch must be cancellable", task.isCancellable());
-
     ProgressIndicator indicator = new ProgressIndicatorBase();
-    Future<?> fetch = ApplicationManager.getApplication().executeOnPooledThread(() -> task.run(indicator));
+    GeneralCommandLine rebar = hangingRebar();
+    Future<?> fetch = ApplicationManager.getApplication().executeOnPooledThread(
+      () -> RebarProjectRootStep.runGetDeps(indicator, rebar));
 
     long deadline = System.currentTimeMillis() + 60_000;
     while (!String.valueOf(indicator.getText2()).contains(STARTED)) {
@@ -91,8 +68,8 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
       assertTrue("rebar did not start", System.currentTimeMillis() < deadline);
       Thread.sleep(50);
     }
-    List<ProcessHandle> rebar = ProcessHandle.current().descendants().toList();
-    assertFalse("rebar is not running", rebar.isEmpty());
+    List<ProcessHandle> processes = ProcessHandle.current().descendants().toList();
+    assertFalse("rebar is not running", processes.isEmpty());
 
     indicator.cancel(); // what the Cancel button of the modal progress dialog does
 
@@ -101,24 +78,29 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
     }
     catch (TimeoutException e) {
       fail("The fetch did not stop within 10 s after Cancel; rebar is still alive: " +
-           rebar.stream().filter(ProcessHandle::isAlive).map(ProcessHandle::pid).toList());
+           processes.stream().filter(ProcessHandle::isAlive).map(ProcessHandle::pid).toList());
     }
     catch (java.util.concurrent.ExecutionException | java.util.concurrent.CancellationException ignored) {
       // a fetch that stops by throwing ProcessCanceledException is fine
     }
-    for (ProcessHandle process : rebar) {
+    for (ProcessHandle process : processes) {
       process.onExit().get(10, TimeUnit.SECONDS);
     }
   }
 
-  // The task of RebarProjectRootStep.fetchDependencies, which validate() skips in unit test mode.
-  private static Task.Modal createFetchDependenciesTask(Project project, VirtualFile projectRoot, String rebarPath)
-    throws Exception {
-    Class<?> taskClass = Class.forName(RebarProjectRootStep.class.getName() + "$1");
-    assertTrue(Task.Modal.class.isAssignableFrom(taskClass));
-    Constructor<?> constructor = taskClass.getDeclaredConstructor(Project.class, String.class, boolean.class,
-                                                                  Project.class, VirtualFile.class, String.class);
-    constructor.setAccessible(true);
-    return (Task.Modal)constructor.newInstance(project, "Fetching Dependencies", true, project, projectRoot, rebarPath);
+  // Stands for a rebar get-deps that does not finish (an unreachable host): the test JVM's java runs a program
+  // that prints and then blocks on its standard input, which the fetch never closes. It works on every OS.
+  private GeneralCommandLine hangingRebar() throws Exception {
+    Path source = myTempDir.toPath().resolve("HangingRebar.java");
+    Files.writeString(source, "public class HangingRebar {\n" +
+                              "  public static void main(String[] args) throws Exception {\n" +
+                              "    System.out.println(\"" + STARTED + "\");\n" +
+                              "    System.out.flush();\n" +
+                              "    while (System.in.read() != -1) {}\n" +
+                              "    Thread.sleep(600_000);\n" +
+                              "  }\n" +
+                              "}\n", StandardCharsets.UTF_8);
+    String java = ProcessHandle.current().info().command().orElseThrow();
+    return new GeneralCommandLine(java, source.toString()).withWorkDirectory(myTempDir);
   }
 }
