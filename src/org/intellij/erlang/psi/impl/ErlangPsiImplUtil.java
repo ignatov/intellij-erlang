@@ -47,8 +47,12 @@ import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.NamedStubBase;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
@@ -133,8 +137,8 @@ public class ErlangPsiImplUtil {
 
       @Override
       public boolean isReferenceTo(@NotNull PsiElement element) {
-        // the name of a record field in a macro body (#933) is a record field, not a plain atom
-        return element instanceof ErlangQAtom && !(element.getParent() instanceof ErlangTypedExpr) &&
+        // the name of a typed record field (#933) is a record field, not a plain atom
+        return element instanceof ErlangQAtom && !isTypedRecordFieldName((ErlangQAtom) element) &&
                standaloneAtom(o) && Objects.equals(element.getText(), getElement().getText());
       }
 
@@ -150,6 +154,30 @@ public class ErlangPsiImplUtil {
         return ArrayUtil.EMPTY_OBJECT_ARRAY;
       }
     };
+  }
+
+  /**
+   * True for the name of a typed record field (#933): the name of a field in a macro body or in a record definition,
+   * or the whole body of a macro that names a typed field ({@code -define(NAME, id).} with {@code ?NAME = 1 :: integer()}
+   * in a record definition or in a typed macro body).
+   */
+  private static boolean isTypedRecordFieldName(@NotNull ErlangQAtom atom) {
+    PsiElement parent = atom.getParent();
+    if (parent instanceof ErlangTypedExpr) return true;
+    if (!(parent instanceof ErlangMaxExpression) || !(parent.getParent() instanceof ErlangMacrosBody body)) return false;
+    if (body.getExpressionList().size() != 1 || !(body.getParent() instanceof ErlangMacrosDefinition definition)) return false;
+    return CachedValuesManager.getCachedValue(definition, () -> CachedValueProvider.Result.create(
+      isUsedAsTypedRecordFieldName(definition), PsiModificationTracker.MODIFICATION_COUNT));
+  }
+
+  private static boolean isUsedAsTypedRecordFieldName(@NotNull ErlangMacrosDefinition definition) {
+    return !ReferencesSearch.search(definition).forEach(reference -> {
+      ErlangMacros macros = PsiTreeUtil.getParentOfType(reference.getElement(), ErlangMacros.class, false);
+      PsiElement qAtom = macros != null ? macros.getParent() : null;
+      PsiElement typedExpr = qAtom instanceof ErlangQAtom ? qAtom.getParent() : null;
+      return !(typedExpr instanceof ErlangTypedExpr) ||
+             ((ErlangTypedExpr) typedExpr).getColonColon() == null && !(typedExpr.getParent() instanceof ErlangMacrosBody);
+    });
   }
 
   public static boolean standaloneAtom(@NotNull ErlangQAtom o) {

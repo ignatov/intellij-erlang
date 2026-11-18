@@ -36,6 +36,8 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapKeyInNestedFunHeads()            { doTest(2); }
   public void testTypedMacroRecordFieldUsages()       { doTest(1); }
   public void testTypedMacroRecordFieldUsagesFromUsage() { doTest(2); }
+  public void testMacroNamedTypedRecordField()         { doTest(2); }
+  public void testMacroNamedTypedRecordFieldInTypedBody() { doTest(2); }
 
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
