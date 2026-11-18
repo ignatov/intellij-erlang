@@ -20,11 +20,7 @@ import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiPolyVariantReference;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.ResolveResult;
 import com.intellij.psi.ResolveState;
-import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -32,6 +28,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +36,8 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
-  private static final ResolveCache.PolyVariantResolver<PsiPolyVariantReference> MULTI_RESOLVER =
-    (reference, incompleteCode) -> reference.multiResolve(incompleteCode);
   private final List<ErlangQVar> myVarList = new SmartList<>();
+  private final List<ErlangQVar> myMatchedVars = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
 
@@ -90,7 +86,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
-      if (inCasePatternOrSelector(psiElement) && addBindingsOfMatchedVariable((ErlangQVar) psiElement)) return false;
+      if (inCasePatternOrSelector(psiElement) && isMatchedVariableBeforeOrigin((ErlangQVar) psiElement)) return true;
       // put all possible variables to list
       myVarList.add((ErlangQVar) psiElement);
       return false;
@@ -100,25 +96,37 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   }
 
   /**
-   * A variable in a case pattern or selector that is already bound there is only matched again, so its uses after it
-   * refer to the bindings that it resolves to.
+   * A variable in a case pattern or selector before the origin may be bound earlier and only matched again there, so
+   * the walk goes on to find that binding. Without one, the earliest of these variables is the binding.
    */
-  private boolean addBindingsOfMatchedVariable(@NotNull ErlangQVar var) {
-    // only a variable before the origin is redirected, so that two variables never resolve through each other
+  private boolean isMatchedVariableBeforeOrigin(@NotNull ErlangQVar var) {
     if (var.getTextRange().getStartOffset() >= myOrigin.getTextRange().getStartOffset()) return false;
-    PsiReference reference = var.getReference();
-    if (!(reference instanceof PsiPolyVariantReference)) return false;
-    ResolveResult[] results = ResolveCache.getInstance(var.getProject())
-      .resolveWithCaching((PsiPolyVariantReference) reference, MULTI_RESOLVER, true, false);
-    boolean added = false;
-    for (ResolveResult result : results) {
-      PsiElement target = result.getElement();
-      if (target instanceof ErlangQVar && target != var) {
-        if (!myVarList.contains(target)) myVarList.add((ErlangQVar) target);
-        added = true;
+    myMatchedVars.add(var);
+    return true;
+  }
+
+  @NotNull
+  private List<ErlangQVar> bindingsOfMatchedVariables() {
+    ErlangQVar earliest = null;
+    for (ErlangQVar var : myMatchedVars) {
+      if (earliest == null || var.getTextRange().getStartOffset() < earliest.getTextRange().getStartOffset()) earliest = var;
+    }
+    if (earliest == null) return myVarList;
+    // the other clauses of the same case bind it too
+    ErlangCrClause clause = PsiTreeUtil.getParentOfType(earliest, ErlangCrClause.class);
+    Map<ErlangCrClause, ErlangQVar> earliestByClause = new LinkedHashMap<>();
+    earliestByClause.put(clause, earliest);
+    for (ErlangQVar var : myMatchedVars) {
+      ErlangCrClause varClause = PsiTreeUtil.getParentOfType(var, ErlangCrClause.class);
+      if (clause == null || varClause == null || varClause == clause || varClause.getParent() != clause.getParent()) continue;
+      ErlangQVar current = earliestByClause.get(varClause);
+      if (current == null || var.getTextRange().getStartOffset() < current.getTextRange().getStartOffset()) {
+        earliestByClause.put(varClause, var);
       }
     }
-    return added;
+    myVarList.addAll(earliestByClause.values());
+    myMatchedVars.clear();
+    return myVarList;
   }
 
   private static boolean inCasePatternOrSelector(@NotNull PsiElement psiElement) {
@@ -188,6 +196,6 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
 
   @NotNull
   public List<ErlangQVar> getAllResults() {
-    return myVarList;
+    return myVarList.isEmpty() ? bindingsOfMatchedVariables() : myVarList;
   }
 }

@@ -207,6 +207,26 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
     assertTrue("Resolving after 18 cases took " + nanos / 1_000_000 + " ms", nanos < 2_000_000_000L);
   }
 
+  /**
+   * Resolving a variable through each earlier case that matches it again overflowed the stack at about 300 cases.
+   */
+  public void testArgumentMatchedInManyEarlierCases() {
+    myFixture.configureByText("nested_cases.erl",
+                              "-module(nested_cases).\n-export([f/1]).\nf(Y) -> " +
+                              "case g() of Y -> ok; _ -> no end, ".repeat(1000) + "Y.\ng() -> a.\n");
+    List<ErlangQVar> vars = findVars("Y");
+    assertEquals(vars.get(0), vars.get(vars.size() - 1).getReference().resolve());
+    assertEquals(vars.get(0), vars.get(vars.size() - 2).getReference().resolve());
+  }
+
+  public void testBindingInPatternOfFirstOfManyEarlierCases() {
+    myFixture.configureByText("nested_cases.erl",
+                              "-module(nested_cases).\n-export([f/0]).\nf() -> case g() of Y -> ok end, " +
+                              "case g() of Y -> ok; _ -> no end, ".repeat(1000) + "Y.\ng() -> a.\n");
+    List<ErlangQVar> vars = findVars("Y");
+    assertEquals(vars.get(0), vars.get(vars.size() - 1).getReference().resolve());
+  }
+
   public void testFindUsagesAndRenameInNestedCases() {
     configureNestedCases(20);
     List<ErlangQVar> vars = findVars("X");
