@@ -239,7 +239,7 @@ public class ErlangDebuggerNode {
   }
 
   @Nullable
-  private static OtpErlangObject receive(@NotNull Socket socket) throws SocketException {
+  private OtpErlangObject receive(@NotNull Socket socket) throws SocketException {
     try {
       InputStream in = socket.getInputStream();
 
@@ -313,12 +313,17 @@ public class ErlangDebuggerNode {
   }
 
   @Nullable
-  private static OtpErlangObject decode(byte @NotNull [] bytes) {
+  private OtpErlangObject decode(byte @NotNull [] bytes) {
     try {
       return new OtpInputStream(bytes).read_any();
     }
     catch (OtpErlangDecodeException e) {
       LOG.warn("Failed to decode an erlang term.", e);
+      return null;
+    }
+    catch (StackOverflowError e) {
+      LOG.warn("Failed to decode an erlang term: it is nested too deeply.");
+      myEventListener.unknownMessage("a term of " + bytes.length + " bytes nested too deeply to decode");
       return null;
     }
   }
