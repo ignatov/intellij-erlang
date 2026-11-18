@@ -52,6 +52,8 @@ public class ErlangDebuggerNode {
   private final ErlangDebuggerEventListener myEventListener;
   @NotNull
   private final AtomicBoolean myStopped = new AtomicBoolean(false);
+  @Nullable
+  private volatile ServerSocket myServerSocket;
 
   public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
     myEventListener = eventListener;
@@ -70,6 +72,15 @@ public class ErlangDebuggerNode {
 
   public void stop() {
     myStopped.set(true);
+    ServerSocket serverSocket = myServerSocket;
+    if (serverSocket != null) {
+      try {
+        serverSocket.close();
+      }
+      catch (IOException e) {
+        LOG.debug(e);
+      }
+    }
   }
 
   private boolean isStopped() {
@@ -138,6 +149,7 @@ public class ErlangDebuggerNode {
       Exception cachedException = null;
       LOG.debug("Opening a server socket.");
       try (ServerSocket serverSocket = new ServerSocket(0)) {
+        myServerSocket = serverSocket;
         portFuture.complete(serverSocket.getLocalPort());
 
         LOG.debug("Listening on port " + serverSocket.getLocalPort() + ".");
