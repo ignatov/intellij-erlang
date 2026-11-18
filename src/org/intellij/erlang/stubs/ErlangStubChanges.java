@@ -42,6 +42,7 @@ public final class ErlangStubChanges {
     "#1114 EEP 64 triple-quoted string lexing changes file stubs",
     "#1063 quoted atoms as attribute names",
     "#1119 a macro followed by a string literal parses as one string",
+    "#1115 a backslash in ~B and ~S sigils no longer escapes the closing delimiter",
   };
 
   private ErlangStubChanges() {

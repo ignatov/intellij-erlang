@@ -108,6 +108,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testNewNumbers()                          { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
+  public void testVerbatimSigilBackslash()              { doTest(false); }
   public void testTripleQuotesMoreThanThree()           { doTest(false); }
   public void testOtp28Generators()                     { doTest(false); }
   public void testBasedFloats()                         { doTest(false); }
