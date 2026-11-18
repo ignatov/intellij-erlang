@@ -52,6 +52,54 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
     doTest("f(Y) -> case a of _ -> g(Y), Y = 1 end.", 2, 1);
   }
 
+  public void testBindingInSelectorOfNestedCase() {
+    doTest("f() -> case a of _ -> case Y = g() of _ -> Y end end.", 2, 1);
+  }
+
+  public void testBindingInTupleMatchInSelectorOfNestedCase() {
+    doTest("f() -> case a of _ -> case {ok, Y} = g() of {ok, _} -> Y end end.", 2, 1);
+  }
+
+  public void testBindingInArgumentOfSelectorOfNestedCase() {
+    doTest("f(L) -> case a of _ -> case lists:keyfind(k, 1, Y = L) of false -> Y; T -> {T, Y} end end.", 3, 1);
+  }
+
+  public void testBindingInSelectorOfNestedCaseInGuard() {
+    doTest("f() -> case a of _ -> case Y = g() of Z when Z > Y -> Y end end.", 2, 1);
+  }
+
+  public void testBindingInBlockOfSelectorOfNestedCase() {
+    doTest("f() -> case a of _ -> case begin Y = g(), Y end of _ -> Y end end.", 3, 1);
+  }
+
+  public void testBindingInPatternOfEarlierNestedCase() {
+    doTest("f() -> case a of _ -> case g() of Y -> ok end, Y end.", 2, 1);
+  }
+
+  public void testBindingInSelectorOfEarlierNestedCase() {
+    doTest("f() -> case a of _ -> case Y = g() of _ -> ok end, Y end.", 2, 1);
+  }
+
+  public void testRenameBindingInSelectorOfNestedCase() {
+    myFixture.configureByText("nested_cases.erl", "f() -> case a of _ -> case Y<caret> = g() of _ -> case Y of _ -> Y end end end.");
+    myFixture.renameElementAtCaret("Zz");
+    myFixture.checkResult("f() -> case a of _ -> case Zz<caret> = g() of _ -> case Zz of _ -> Zz end end end.");
+  }
+
+  public void testRenameBindingInPatternOfEarlierNestedCase() {
+    myFixture.configureByText("nested_cases.erl", "f() -> case a of _ -> case g() of Y<caret> -> ok end, Y end.");
+    myFixture.renameElementAtCaret("Zz");
+    myFixture.checkResult("f() -> case a of _ -> case g() of Zz<caret> -> ok end, Zz end.");
+  }
+
+  public void testCompletionOfBindingInSelectorOfNestedCase() {
+    myFixture.configureByText("nested_cases.erl", "f() -> case a of _ -> case Foo = g() of _ -> Fo<caret> end end.");
+    myFixture.completeBasic();
+    List<String> variants = myFixture.getLookupElementStrings();
+    if (variants == null) myFixture.checkResult("f() -> case a of _ -> case Foo = g() of _ -> Foo<caret> end end.");
+    else assertContainsElements(variants, "Foo");
+  }
+
   public void testFindUsagesAndRenameInNestedCases() {
     configureNestedCases(20);
     List<ErlangQVar> vars = findVars("X");
