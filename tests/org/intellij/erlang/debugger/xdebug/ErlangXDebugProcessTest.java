@@ -221,6 +221,87 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
+  // While its evaluation waits in a receive of interpreted code the interpreter reports the process as waiting.
+  public void testEvaluationOfProcessWaitingInTheEvaluationIsKeptAtAnotherBreakpoint() throws Exception {
+    CountDownLatch responses = new CountDownLatch(1);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      processHolder[0] = process;
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+
+      OtpErlangPid main = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      node.processSuspended(main);
+      RecordingCallback watchAtMain = new RecordingCallback();
+      process.evaluateExpression("t6:wait(A)", watchAtMain, frame);
+      assertEquals(main, ((OtpErlangTuple)receive(peer)).elementAt(1));
+
+      OtpErlangPid child = new OtpErlangPid("nonode@nohost", 86, 0, 0);
+      node.processSuspended(child);
+      process.breakpointReached(child, List.of(new ErlangProcessSnapshot(main, frame, "waiting", null, 0, null, List.of()),
+                                               new ErlangProcessSnapshot(child, frame, "break", null, 0, null, List.of())));
+      RecordingCallback watchAtChild = new RecordingCallback();
+      process.evaluateExpression("t6:wait(A)", watchAtChild, frame);
+
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(10)}));
+      assertTrue("the node did not deliver the answer", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertEquals(List.of(new OtpErlangLong(10)), watchAtMain.myValues);
+      assertEquals(List.of(), watchAtChild.myValues);
+      assertEquals(child, ((OtpErlangTuple)receive(peer)).elementAt(1));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // An evaluation queued for a process that the user resumes would reach the running process and kill it.
+  public void testQueuedEvaluationOfResumedProcessIsNotSent() throws Exception {
+    CountDownLatch responses = new CountDownLatch(1);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      processHolder[0] = process;
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+
+      OtpErlangPid main = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      node.processSuspended(main);
+      RecordingCallback watchAtMain = new RecordingCallback();
+      process.evaluateExpression("t3:slow(A)", watchAtMain, frame);
+      assertEquals(main, ((OtpErlangTuple)receive(peer)).elementAt(1));
+
+      OtpErlangPid child = new OtpErlangPid("nonode@nohost", 86, 0, 0);
+      node.processSuspended(child);
+      process.breakpointReached(child, List.of(new ErlangProcessSnapshot(main, frame, "running", null, 0, null, List.of()),
+                                               new ErlangProcessSnapshot(child, frame, "break", null, 0, null, List.of())));
+      RecordingCallback watchAtChild = new RecordingCallback();
+      process.evaluateExpression("t3:slow(A)", watchAtChild, frame);
+      process.resume(null);
+      assertEquals(List.of(new OtpErlangString("error: The process has been resumed")), watchAtChild.myValues);
+      OtpErlangTuple resume = (OtpErlangTuple)receive(peer);
+      assertEquals(atom("continue"), resume.elementAt(0));
+      assertEquals(child, resume.elementAt(1));
+
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(10)}));
+      assertTrue("the node did not deliver the answer", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertEquals(List.of(new OtpErlangLong(10)), watchAtMain.myValues);
+      peer.setSoTimeout(500);
+      try {
+        fail("an evaluation was sent to the resumed process: " + receive(peer));
+      }
+      catch (SocketTimeoutException expected) {
+      }
+    }
+    finally {
+      node.stop();
+    }
+  }
+
   // An evaluation that never gets an answer (the evaluated process is gone) must not wait for ever.
   public void testPendingEvaluationFailsWhenSessionStops() throws Exception {
     ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];

@@ -165,7 +165,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   // An evaluation for a process that is no longer at a breakpoint gets no answer, so it must not keep the queue.
-  // A process that is evaluating an expression at its breakpoint is reported as running; its answer is on the way.
+  // A process that is evaluating an expression at its breakpoint is reported as running, or as waiting in a receive
+  // of interpreted code; its answer is on the way.
   @NotNull
   private synchronized List<PendingEvaluation> dropEvaluationsOfProcessesNotAtBreak(@NotNull List<ErlangProcessSnapshot> snapshots) {
     PendingEvaluation sent = myEvaluations.peekFirst();
@@ -174,7 +175,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       PendingEvaluation evaluation = iterator.next();
       boolean atBreak = ContainerUtil.exists(snapshots, snapshot -> snapshot.getPid().equals(evaluation.pid()) &&
                                                                    ("break".equals(snapshot.getStatus()) ||
-                                                                    "running".equals(snapshot.getStatus())));
+                                                                    "running".equals(snapshot.getStatus()) ||
+                                                                    "waiting".equals(snapshot.getStatus())));
       if (!atBreak) {
         iterator.remove();
         dropped.add(evaluation);
@@ -185,6 +187,25 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       send(head);
     }
     return dropped;
+  }
+
+  // An evaluation that is queued but not sent would reach the process after it has been resumed or stepped, and kill it.
+  private void failUnsentEvaluationsOfLastSuspendedProcess() {
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    synchronized (this) {
+      OtpErlangPid pid = myDebuggerNode.getLastSuspendedPid();
+      PendingEvaluation sent = myEvaluations.peekFirst();
+      for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+        PendingEvaluation evaluation = iterator.next();
+        if (evaluation != sent && evaluation.pid().equals(pid)) {
+          iterator.remove();
+          dropped.add(evaluation);
+        }
+      }
+    }
+    for (PendingEvaluation evaluation : dropped) {
+      evaluation.callback().errorOccurred("The process has been resumed");
+    }
   }
 
   private void send(@NotNull PendingEvaluation evaluation) {
@@ -330,16 +351,19 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepOut();
   }
 
@@ -358,6 +382,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void resume(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.resume();
   }
 
