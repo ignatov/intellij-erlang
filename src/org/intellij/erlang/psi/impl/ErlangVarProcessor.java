@@ -146,12 +146,14 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
 
   // A case or receive exports the variables of its clauses to the clause body around it, and further out
   // through every case or receive clause around that body, but not out of a fun or a comprehension.
+  // Inside a comprehension the qualifier order is checked by the resolve walk.
   private static boolean isExportedTo(@NotNull ErlangCompositeElement clause, @NotNull PsiElement origin) {
     PsiElement expression = clause.getParent();
     while (expression instanceof ErlangCaseExpression || expression instanceof ErlangReceiveExpression) {
       PsiElement body = PsiTreeUtil.getParentOfType(expression, ErlangClauseBody.class, ErlangListComprehension.class, ErlangFunClause.class);
-      if (!(body instanceof ErlangClauseBody)) return false;
-      if (!PsiTreeUtil.isAncestor(expression, origin, false) && PsiTreeUtil.isAncestor(body, origin, false)) return true;
+      boolean visibleInBody = !PsiTreeUtil.isAncestor(expression, origin, false) && PsiTreeUtil.isAncestor(body, origin, false);
+      if (!(body instanceof ErlangClauseBody)) return visibleInBody && body instanceof ErlangListComprehension;
+      if (visibleInBody) return true;
       PsiElement bodyOwner = body.getParent();
       expression = bodyOwner instanceof ErlangCrClause || bodyOwner instanceof ErlangAfterClauseBody ? bodyOwner.getParent() : null;
     }
