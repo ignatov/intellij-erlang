@@ -22,6 +22,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.roots.LibraryOrSdkOrderEntry;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -320,7 +321,9 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
                                           @NotNull VirtualFile virtualFile) {
     List<String> fileUrls = null;
     for (OrderEntry orderEntry : orderEntries) {
-      VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
+      VirtualFile[] docRootFiles = orderEntry instanceof LibraryOrSdkOrderEntry libraryOrSdkOrderEntry
+                                   ? libraryOrSdkOrderEntry.getRootFiles(JavadocOrderRootType.getInstance())
+                                   : VirtualFile.EMPTY_ARRAY;
       String sdkHttpDocRelPath = legacyHttpDocRelPath(virtualFile);
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {

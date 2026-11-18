@@ -26,7 +26,7 @@ import com.intellij.lang.annotation.AnnotationBuilder;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
-import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
@@ -107,9 +107,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
         for (String line : output.getStdoutLines()) {
           LOG.debug(line);
           if (line.startsWith("dialyzer: ")) {
-            NotificationGroup.logOnlyGroup("Dialyzer-based inspections")
-                             .createNotification(line, NotificationType.WARNING)
-                             .notify(state.myProject);
+            new Notification("Dialyzer-based inspections", line, NotificationType.WARNING).notify(state.myProject);
             return state;
           }
           Problem problem = parseProblem(line);

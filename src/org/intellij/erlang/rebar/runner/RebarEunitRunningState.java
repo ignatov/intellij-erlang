@@ -155,7 +155,7 @@ public class RebarEunitRunningState extends CommandLineState {
     PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
     // Write the text as is, with the \n line separators of PSI. Adding the file to a PsiDirectory would save it with
     // the line separator of the code style, which is the one of the OS (\r\n on Windows) for a new file.
-    String text = ReadAction.compute(configPsi::getText);
+    String text = ReadAction.computeBlocking(configPsi::getText);
     FileUtil.writeToFile(newConfig, text);
   }
 

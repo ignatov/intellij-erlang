@@ -24,7 +24,7 @@ import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  // Up to version 7 an unterminated '-if(' swallowed the rest of the file, so stubs cached by
+  // Up to version 10 an unterminated '-if(' swallowed the rest of the file, so stubs cached by
   // older versions lack the functions below it. The version must change to drop those stubs.
   public void testUnterminatedIfAttribute() {
     PsiFile file = myFixture.configureByText("p4.erl", "-module(p4).\n-if(\nf() -> ok.\ng() -> ok.\n");
@@ -33,6 +33,6 @@ public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (stub.getPsi() instanceof ErlangFunction) functions++;
     }
     assertEquals(2, functions);
-    assertTrue(ErlangFileElementType.INSTANCE.getStubVersion() > 7);
+    assertTrue(ErlangFileElementType.INSTANCE.getStubVersion() > 10);
   }
 }

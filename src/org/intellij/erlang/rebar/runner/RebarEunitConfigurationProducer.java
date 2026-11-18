@@ -17,7 +17,8 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.actions.RunConfigurationProducer;
+import com.intellij.execution.actions.LazyRunConfigurationProducer;
+import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -29,9 +30,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public class RebarEunitConfigurationProducer extends RunConfigurationProducer<RebarEunitRunConfiguration> {
-  public RebarEunitConfigurationProducer() {
-    super(RebarEunitRunConfigurationType.getInstance());
+public class RebarEunitConfigurationProducer extends LazyRunConfigurationProducer<RebarEunitRunConfiguration> {
+  @NotNull
+  @Override
+  public ConfigurationFactory getConfigurationFactory() {
+    return RebarEunitRunConfigurationType.getInstance().getConfigurationFactories()[0];
   }
 
   @Override

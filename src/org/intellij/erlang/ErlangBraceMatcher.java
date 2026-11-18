@@ -77,7 +77,43 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
     return steps;
   }
 
+  /**
+   * The lexer returns ERL_FUN both for a fun block ({@code fun (...) -> ... end}, {@code fun Name(...) -> ... end})
+   * and for a fun reference ({@code fun [M:]F/A}), which has no {@code end}.
+   */
+  @Override
+  public boolean isLBraceToken(@NotNull HighlighterIterator iterator, @NotNull CharSequence fileText, @NotNull FileType fileType) {
+    if (iterator.getTokenType() == ErlangTypes.ERL_FUN) return isFunBlockStart(iterator);
+    return super.isLBraceToken(iterator, fileText, fileType);
+  }
+
+  private static boolean isFunBlockStart(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    try {
+      steps += advanceToSignificantToken(iterator);
+      if (!iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_VAR) {
+        steps += advanceToSignificantToken(iterator);
+      }
+      return !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_PAR_LEFT;
+    }
+    finally {
+      for (int i = 0; i < steps; i++) iterator.retreat();
+    }
+  }
+
+  private static int advanceToSignificantToken(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    do {
+      iterator.advance();
+      steps++;
+    }
+    while (!iterator.atEnd() &&
+           (iterator.getTokenType() == TokenType.WHITE_SPACE || ErlangParserDefinition.COMMENTS.contains(iterator.getTokenType())));
+    return steps;
+  }
+
   private static class ErlangPairedBraceMatcher implements PairedBraceMatcher {
+    @NotNull
     @Override
     public BracePair @NotNull [] getPairs() {
       return PAIRS;

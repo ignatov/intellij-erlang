@@ -101,7 +101,7 @@ public class ErlangRunConfigurationEnvironmentTest extends ErlangLightPlatformCo
     configuration.setEnvData(ENV_DATA);
     ErlangApplicationConfiguration edited = createApplicationConfiguration();
 
-    applyThroughEditor(new ErlangRunConfigurationEditorForm(), configuration, edited);
+    applyThroughEditor(new ErlangRunConfigurationEditorForm(getProject()), configuration, edited);
     assertEquals(ENV_DATA, edited.getEnvData());
   }
 
@@ -110,7 +110,7 @@ public class ErlangRunConfigurationEnvironmentTest extends ErlangLightPlatformCo
     configuration.setEnvData(ENV_DATA);
     ErlangUnitRunConfiguration edited = createUnitConfiguration();
 
-    applyThroughEditor(new ErlangUnitRunConfigurationEditorForm(), configuration, edited);
+    applyThroughEditor(new ErlangUnitRunConfigurationEditorForm(getProject()), configuration, edited);
     assertEquals(ENV_DATA, edited.getEnvData());
   }
 
