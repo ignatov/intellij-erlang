@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.stubs;
 
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.testFramework.PsiTestUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -31,4 +32,11 @@ public class ErlangStubTextConsistencyTest extends ErlangLightPlatformCodeInsigh
   }
 
   public void testStubMismatchUnclosedRecord() { doTest(); }
+
+  public void testStubsMatchTextAfterEdit() {
+    myFixture.configureByText("a.erl", "-module(a).\n<caret>\nf() -> ok.\n");
+    myFixture.type("-record(r(");
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    PsiTestUtil.checkStubsMatchText(myFixture.getFile());
+  }
 }

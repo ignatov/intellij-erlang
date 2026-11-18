@@ -22,14 +22,12 @@ import com.intellij.lang.PsiParser;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.impl.source.resolve.FileContextUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.indexing.IndexingDataKeys;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangFileType;
@@ -110,53 +108,11 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
     ErrorState state = new ErrorState();
     ErrorState.initState(state, builder, root, ArrayUtil.mergeArrays(tokenSets, ErlangParser.EXTENDS_SETS_));
-    PsiFile file = builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
-    VirtualFile data = file != null ? file.getUserData(IndexingDataKeys.VIRTUAL_FILE) : null;
-    PsiBuilder result = new MyBuilder(builder, state, parser, data != null);
+    PsiBuilder result = new Builder(builder, state, parser);
     ErrorState errorState = ErrorState.get(result);
     errorState.altMode = true;
     errorState.braces = ErlangBraceMatcher.PAIRS;
     return result;
-  }
-
-  private static class MyBuilder extends Builder {
-    private final boolean indexing;
-
-    private MyBuilder(PsiBuilder builder, ErrorState state, PsiParser parser, boolean indexing) {
-      super(builder, state, parser);
-      this.indexing = indexing;
-    }
-  }
-
-  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
-  public static boolean consumeToken(PsiBuilder builder, IElementType token) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    if (!indexing) return GeneratedParserUtilBase.consumeToken(builder, token);
-
-    if (nextTokenIsFast(builder, token)) {
-      builder.advanceLexer();
-      return true;
-    }
-    return false;
-  }
-
-  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
-  public static boolean nextTokenIs(PsiBuilder builder, IElementType token) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    return indexing ? nextTokenIsFast(builder, token) : GeneratedParserUtilBase.nextTokenIs(builder, token);
-  }
-
-  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
-  public static boolean nextTokenIs(PsiBuilder builder, String frameName, IElementType... tokens) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    return indexing ? nextTokenIsFast(builder, tokens) : GeneratedParserUtilBase.nextTokenIs(builder, frameName, tokens);
-  }
-
-  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
-  public static void addVariant(PsiBuilder builder, String text) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    if (indexing) return;
-    GeneratedParserUtilBase.addVariant(builder, text);
   }
 
   @SuppressWarnings("UnusedParameters")
