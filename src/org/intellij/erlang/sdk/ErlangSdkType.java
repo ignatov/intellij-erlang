@@ -450,6 +450,9 @@ public class ErlangSdkType extends SdkType {
     String sdkHome = sdkModificator.getHomePath();
 
     {
+      // An installation prefix such as /usr or /opt/homebrew keeps OTP in lib/erlang/lib, next to other libraries in lib
+      File prefixLibDir = new File(new File(sdkHome), "lib/erlang/lib");
+      if (tryToProcessAsStandardLibraryDir(sdkModificator, prefixLibDir)) return;
       File stdLibDir = new File(new File(sdkHome), "lib");
       if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
     }
