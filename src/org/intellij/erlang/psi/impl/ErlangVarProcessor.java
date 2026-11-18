@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
@@ -60,6 +59,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
     }
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
+    ErlangFunExpression namedFun = getNamedFunOfName(myOrigin);
+    if (namedFun != null && namedFun != getNamedFunOfName(psiElement)) return true;
+    ErlangFunExpression candidateNamedFun = getNamedFunOfName(psiElement);
+    if (candidateNamedFun != null && !PsiTreeUtil.isAncestor(candidateNamedFun, myOrigin, false)) return true;
+    ErlangArgumentDefinition generatorPattern = getFreshGeneratorPattern(myOrigin);
+    if (generatorPattern != null && !PsiTreeUtil.isAncestor(generatorPattern, psiElement, false)) return true;
     
     ErlangFunctionClause functionClause = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangFunctionClause.class);
     ErlangSpecification spec = PsiTreeUtil.getTopmostParentOfType(myOrigin, ErlangSpecification.class);
@@ -96,6 +101,22 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return list != null && list.getParent() instanceof ErlangFunClause;
   }
 
+  // The name of a named fun shadows an outer variable with the same name.
+  private static ErlangFunExpression getNamedFunOfName(PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    PsiElement clause = definition != null ? definition.getParent() : null;
+    if (!(clause instanceof ErlangFunClause) || ((ErlangFunClause) clause).getArgumentDefinition() != definition) return null;
+    return PsiTreeUtil.getParentOfType(clause, ErlangFunExpression.class);
+  }
+
+  // A generator pattern binds fresh variables that shadow outer ones, except in map keys and binary sizes.
+  private static ErlangArgumentDefinition getFreshGeneratorPattern(PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    if (definition == null || !(definition.getParent() instanceof ErlangLcExpression)) return null;
+    if (inMapPatternKey(psiElement) || isBinaryWidthExpression(psiElement)) return null;
+    return definition;
+  }
+
   private static boolean inMapPatternKey(PsiElement psiElement) {
     ErlangMapEntry entry = PsiTreeUtil.getParentOfType(psiElement, ErlangMapEntry.class, true, ErlangArgumentDefinitionList.class);
     while (entry != null) {
@@ -122,13 +143,24 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
         return !PsiTreeUtil.isAncestor(funExpression, myOrigin, false);
       }
     }
-    if (narrowestParentScopeOwner instanceof ErlangCrClause) {
-      ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
-      if (Comparing.equal(
-        PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
-        PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
-    }
+    if (narrowestParentScopeOwner instanceof ErlangCrClause && isExportedTo(narrowestParentScopeOwner, myOrigin)) return false;
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
+  }
+
+  // A case or receive exports the variables of its clauses to the clause body around it, and further out
+  // through every case or receive clause around that body, but not out of a fun or a comprehension.
+  // Inside a comprehension the qualifier order is checked by the resolve walk.
+  private static boolean isExportedTo(@NotNull ErlangCompositeElement clause, @NotNull PsiElement origin) {
+    PsiElement expression = clause.getParent();
+    while (expression instanceof ErlangCaseExpression || expression instanceof ErlangReceiveExpression) {
+      PsiElement body = PsiTreeUtil.getParentOfType(expression, ErlangClauseBody.class, ErlangListComprehension.class, ErlangFunClause.class);
+      boolean visibleInBody = !PsiTreeUtil.isAncestor(expression, origin, false) && PsiTreeUtil.isAncestor(body, origin, false);
+      if (!(body instanceof ErlangClauseBody)) return visibleInBody && body instanceof ErlangListComprehension;
+      if (visibleInBody) return true;
+      PsiElement bodyOwner = body.getParent();
+      expression = bodyOwner instanceof ErlangCrClause || bodyOwner instanceof ErlangAfterClauseBody ? bodyOwner.getParent() : null;
+    }
+    return false;
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {
@@ -138,8 +170,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (crClause == null || crClauseOrigin == null) return false;
     if (crClause.getParent() != crClauseOrigin.getParent()) return false;
 
-    ErlangCaseExpression caseExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
-    ErlangCaseExpression caseExpressionOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCaseExpression.class);
+    ErlangCompositeElement caseExpression = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class, ErlangReceiveExpression.class);
+    ErlangCompositeElement caseExpressionOrigin = PsiTreeUtil.getParentOfType(myOrigin, ErlangCaseExpression.class, ErlangReceiveExpression.class);
 
     if (caseExpressionOrigin != null && caseExpression == caseExpressionOrigin && crClause != crClauseOrigin) return true;
     return false;

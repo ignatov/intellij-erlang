@@ -24,6 +24,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.usageView.UsageViewUtil;
 import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangReceiveExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +46,9 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   }
 
   static boolean processDeclarations(@NotNull PsiElement element, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    if (element instanceof ErlangReceiveExpression receive && lastParent == null) {
+      return ErlangPsiImplUtil.processReceiveDeclarations(receive, processor, state);
+    }
     return processor.execute(element, state) && ResolveUtil.processChildren(element, processor, state, lastParent, place);
   }
 

@@ -51,6 +51,32 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }
 
+  public void testVarInReceivePatterns()            { doTest("Child"); }
+  public void testVarInReceivePatternsFromPattern() { doTest("Child"); }
+  public void testVarInReceivePatternsUsedInBody()  { doTest("Child"); }
+  public void testVarMatchedAgain()                 { doTest("B"); }
+  public void testVarShadowedInGenerator()          { doTest("Z"); }
+  public void testVarShadowedInGeneratorFromOuter() { doTest("Zz"); }
+  public void testVarInGeneratorMapKey()            { doTest("Zz"); }
+  public void testVarInGeneratorBinarySize()        { doTest("Zz"); }
+  public void testVarShadowedByNamedFun()           { doTest("Zz"); }
+  public void testVarShadowedByNamedFunFromOuter()  { doTest("Zz"); }
+  public void testVarExportedFromCase()             { doTest("Zz"); }
+  public void testVarMatchedAgainInComprehensionHead() { doTest("Zz"); }
+  public void testVarInNestedComprehensionSource()  { doTest("Zz"); }
+  public void testVarMatchedInComprehensionFilter() { doTest("Zz"); }
+  public void testVarShadowedByLaterGenerator()     { doTest("Zz"); }
+  public void testVarExportedFromReceive()          { doTest("Zz"); }
+  public void testVarBoundInReceiveInCaseClause()   { doTest("Zz"); }
+  public void testVarBoundInReceiveTimeout()        { doTest("Zz"); }
+  public void testVarBoundInReceiveInComprehensionHead() { doTest("Zz"); }
+  public void testVarBoundInReceiveClauseAndAfter() { doTest("Zz"); }
+  public void testVarExportedUsedInLaterClause()    { doTest("Zz"); }
+  public void testVarExportedFromCaseInComprehension()   { doTest("Zz"); }
+  public void testVarUsedInReceiveTimeoutInCaseClause()  { doTest("Zz"); }
+  public void testVarBoundInReceiveAfterInCaseClause()   { doTest("Zz"); }
+  public void testVarInCasePattern()                { doTest("B"); }
+
   public void testMapKeyInFunHeadBody()           { doTest("Key2"); }
   public void testMapKeyInFunHeadBodyFromKey()    { doTest("Key2"); }
   public void testMapKeyInFunHeadBodyFromBody()   { doTest("Key2"); }
