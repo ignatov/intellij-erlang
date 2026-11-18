@@ -24,6 +24,7 @@ import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.ResolveState;
+import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
@@ -38,6 +39,8 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
 public class ErlangVarProcessor implements PsiScopeProcessor {
   public static final Key<Map<String, ErlangQVar>> ERLANG_VARIABLE_CONTEXT = Key.create("ERLANG_VARIABLE_CONTEXT");
+  private static final ResolveCache.PolyVariantResolver<PsiPolyVariantReference> MULTI_RESOLVER =
+    (reference, incompleteCode) -> reference.multiResolve(incompleteCode);
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
@@ -101,13 +104,17 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
    * refer to the bindings that it resolves to.
    */
   private boolean addBindingsOfMatchedVariable(@NotNull ErlangQVar var) {
+    // only a variable before the origin is redirected, so that two variables never resolve through each other
+    if (var.getTextRange().getStartOffset() >= myOrigin.getTextRange().getStartOffset()) return false;
     PsiReference reference = var.getReference();
     if (!(reference instanceof PsiPolyVariantReference)) return false;
+    ResolveResult[] results = ResolveCache.getInstance(var.getProject())
+      .resolveWithCaching((PsiPolyVariantReference) reference, MULTI_RESOLVER, true, false);
     boolean added = false;
-    for (ResolveResult result : ((PsiPolyVariantReference) reference).multiResolve(false)) {
+    for (ResolveResult result : results) {
       PsiElement target = result.getElement();
       if (target instanceof ErlangQVar && target != var) {
-        myVarList.add((ErlangQVar) target);
+        if (!myVarList.contains(target)) myVarList.add((ErlangQVar) target);
         added = true;
       }
     }

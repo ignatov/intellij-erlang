@@ -169,6 +169,44 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
     assertEquals(1, offered[0]);
   }
 
+  public void testCaseInComprehensionMatchingArgumentTwice() {
+    doResolveAllAndHighlight("f(L, K) -> [case X of {K, V} -> V; _ -> none end || X <- L, case X of {K, _} -> true; _ -> false end].");
+  }
+
+  public void testTwoCasesInComprehensionHeadMatchingArgument() {
+    doResolveAllAndHighlight("f(L, K) -> [{case X of {K, V} -> V; _ -> none end, case X of {K, _} -> true; _ -> false end} || X <- L].");
+  }
+
+  public void testCaseInComprehensionWithVariableTwiceInPattern() {
+    doResolveAllAndHighlight("f(L) -> [case X of {Y, Y} -> ok; _ -> no end || X <- L].");
+  }
+
+  public void testCaseInComprehensionWithVariableTwiceInSelector() {
+    doResolveAllAndHighlight("f(L) -> [case {Y, Y} = g(X) of _ -> Y end || X <- L].");
+  }
+
+  public void testCaseInMapComprehensionWithVariableTwiceInPattern() {
+    doResolveAllAndHighlight("f(L) -> #{X => case X of {Y, Y} -> Y; _ -> no end || X <- L}.");
+  }
+
+  public void testArgumentMatchedInTwoClausesOfEarlierCasesHasOneTarget() {
+    configureRepeatedMatches(12);
+    List<ErlangQVar> vars = findVars("Y");
+    ResolveResult[] results = ((PsiPolyVariantReference) vars.get(vars.size() - 1).getReference()).multiResolve(false);
+    assertEquals(1, results.length);
+    assertEquals(vars.get(0), results[0].getElement());
+  }
+
+  /**
+   * Each earlier pattern is resolved once. When each of them resolved the two patterns before it again, 18 cases
+   * took 2^18 resolves and several seconds.
+   */
+  public void testArgumentMatchedInTwoClausesOfEarlierCasesScales() {
+    resolveLastOfRepeatedMatches(4);
+    long nanos = resolveLastOfRepeatedMatches(18);
+    assertTrue("Resolving after 18 cases took " + nanos / 1_000_000 + " ms", nanos < 2_000_000_000L);
+  }
+
   public void testFindUsagesAndRenameInNestedCases() {
     configureNestedCases(20);
     List<ErlangQVar> vars = findVars("X");
@@ -193,6 +231,29 @@ public class ErlangNestedCaseVariableResolutionTest extends ErlangLightPlatformC
       targets.add(vars.indexOf(result.getElement()) + 1);
     }
     assertEquals(List.of(expected), targets);
+  }
+
+  private void doResolveAllAndHighlight(String function) {
+    myFixture.configureByText("nested_cases.erl", "-module(nested_cases).\n-export([f/1, f/2]).\n" + function + "\ng(X) -> X.\n");
+    for (ErlangQVar var : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
+      ((PsiPolyVariantReference) var.getReference()).multiResolve(false);
+    }
+    myFixture.doHighlighting();
+  }
+
+  private void configureRepeatedMatches(int cases) {
+    myFixture.configureByText("nested_cases.erl",
+                              "-module(nested_cases).\n-export([f/1]).\nf(Y) -> " +
+                              "case g() of {a, Y} -> 1; {b, Y} -> 2 end, ".repeat(cases) + "Y.\ng() -> a.\n");
+  }
+
+  private long resolveLastOfRepeatedMatches(int cases) {
+    configureRepeatedMatches(cases);
+    List<ErlangQVar> vars = findVars("Y");
+    PsiReference reference = vars.get(vars.size() - 1).getReference();
+    long start = System.nanoTime();
+    assertEquals(vars.get(0), reference.resolve());
+    return System.nanoTime() - start;
   }
 
   private void configureNestedCases(int nesting) {
