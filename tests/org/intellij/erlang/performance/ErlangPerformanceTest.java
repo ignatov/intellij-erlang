@@ -57,5 +57,21 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
     }).attempts(100).start();
   }
 
+  public void testConditionalBranches() {
+    StringBuilder source = new StringBuilder("-module(conditional_branches).\n");
+    for (int i = 0; i < 1000; i++) {
+      source.append("-ifdef(FEATURE_").append(i).append(").\n")
+        .append("function_").append(i).append("() -> ok.\n")
+        .append("-else.\n")
+        .append("function_").append(i).append("() -> ok.\n")
+        .append("-endif.\n");
+    }
+
+    PlatformTestUtil.newBenchmark("conditional branch inspection", () -> {
+      myFixture.configureByText("ConditionalBranches.erl", source.toString());
+      myFixture.doHighlighting();
+    }).attempts(10).start();
+  }
+
 //  public void testDialyzerDataflow() { doTest(5000); }
 }

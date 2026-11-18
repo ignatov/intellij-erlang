@@ -16,10 +16,15 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.CachedValue;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiModificationTracker;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -35,18 +40,28 @@ import java.util.Map;
  * {@code -ifdef/-ifndef/-if ... -elif/-else ... -endif} block, so that at most one of them is compiled.
  */
 final class ErlangConditionalBranches {
+  private static final Key<CachedValue<ErlangConditionalBranches>> KEY = Key.create("erlang.conditional.branches");
+
   private record Branch(@NotNull PsiElement block, int index) {
   }
 
   private final ErlangFile myFile;
-  private final Map<PsiElement, List<Branch>> myBranches = new HashMap<>();
+  private final Map<PsiElement, List<Branch>> myBranches;
+
+  static ErlangConditionalBranches getInstance(@NotNull ErlangFile file) {
+    return CachedValuesManager.getCachedValue(file, KEY,
+                                             () -> CachedValueProvider.Result.create(
+                                               new ErlangConditionalBranches(file),
+                                               PsiModificationTracker.MODIFICATION_COUNT));
+  }
 
   ErlangConditionalBranches(@NotNull ErlangFile file) {
     myFile = file;
+    Map<PsiElement, List<Branch>> branches = new HashMap<>();
     List<Branch> stack = new ArrayList<>();
     for (PsiElement child = file.getFirstChild(); child != null; child = child.getNextSibling()) {
       if (child instanceof PsiWhiteSpace || child instanceof PsiComment) continue;
-      myBranches.put(child, List.copyOf(stack));
+      branches.put(child, List.copyOf(stack));
       if (child instanceof ErlangAttribute attribute) {
         String directive = getDirective(attribute);
         if (directive == null) continue;
@@ -66,6 +81,7 @@ final class ErlangConditionalBranches {
         }
       }
     }
+    myBranches = Map.copyOf(branches);
   }
 
   boolean areExclusive(@NotNull PsiElement first, @NotNull PsiElement second) {

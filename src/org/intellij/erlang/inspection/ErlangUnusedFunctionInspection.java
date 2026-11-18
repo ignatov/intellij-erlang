@@ -41,7 +41,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
-    ErlangConditionalBranches branches = new ErlangConditionalBranches(file);
+    ErlangConditionalBranches branches = ErlangConditionalBranches.getInstance(file);
     for (ErlangFunction function : file.getFunctions()) {
       if (!isUnusedFunction(file, function, branches)) continue;
 
