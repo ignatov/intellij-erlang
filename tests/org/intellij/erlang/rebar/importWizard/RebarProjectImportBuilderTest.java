@@ -20,6 +20,7 @@ import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.facet.FacetManager;
 import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
+import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
@@ -28,9 +29,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
@@ -46,6 +51,8 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,6 +124,97 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  // File | Open of a directory with rebar.config: the platform's ProjectOpenProcessorBase calls doQuickImport,
+  // then getBuilder().validate(...) and getBuilder().commit(project, null, EMPTY_MODULES_PROVIDER), without the wizard.
+  public void testOpenProcessorQuickImport() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    assertEquals("modules: [demo at test], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // After rebar3 compile the app is also found in _build/default/lib; the project root copy must win.
+  public void testOpenProcessorQuickImportCompiled() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    assertEquals("modules: [demo at test], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // A release under _build/<profile>/rel holds OTP's own apps, copied or, in a dev mode release, linked into the OTP
+  // installation; none of them becomes a module.
+  public void testOpenProcessorQuickImportRelease() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    if (!SystemInfo.isWindows) {
+      File otpApp = FileUtil.createTempDirectory("crypto-1.0", null);
+      FileUtil.writeToFile(new File(otpApp, "ebin/crypto.app"), "{application, crypto, [{vsn, \"1.0\"}, {modules, []}]}.\n");
+      Files.createSymbolicLink(Paths.get(getProject().getBasePath(), "test/_build/prod/rel/demo/lib/crypto-1.0"), otpApp.toPath());
+    }
+    assertEquals("modules: [demo at test], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // The app directory name is much longer than the app name; the app outside _build must still win.
+  public void testOpenProcessorQuickImportUmbrella() throws Exception {
+    String rebarPath = createRebarInProjectRoot();
+    assertEquals("modules: [umb at test/apps/umb_application_core_service], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  // An app in _checkouts linked to a checkout outside the project, as rebar3 users set _checkouts up.
+  public void testOpenProcessorQuickImportSymlinkedCheckout() throws Exception {
+    if (SystemInfo.isWindows) return;
+    String rebarPath = createRebarInProjectRoot();
+    File checkout = FileUtil.createTempDirectory("mylib", null);
+    FileUtil.writeToFile(new File(checkout, "src/mylib.app.src"), "{application, mylib, [{vsn, \"1.0\"}, {applications, [kernel, stdlib]}]}.\n");
+    Files.createDirectories(Paths.get(getProject().getBasePath(), "test/_checkouts"));
+    Files.createSymbolicLink(Paths.get(getProject().getBasePath(), "test/_checkouts/mylib"), checkout.toPath());
+    assertEquals("modules: [demo at test, mylib at test/_checkouts/mylib], rebar path: '" + rebarPath + "', compile with rebar: true",
+                 doQuickImport(new RebarProjectOpenProcessor()));
+  }
+
+  public void testOpenProcessorQuickImportWithoutRebar() throws Exception {
+    RebarProjectOpenProcessor processor = new RebarProjectOpenProcessor() {
+      @NotNull
+      @Override
+      protected String findRebarPath(@NotNull VirtualFile projectRoot) {
+        return "";
+      }
+    };
+    assertEquals("modules: [demo at test], rebar path: '', compile with rebar: false", doQuickImport(processor));
+  }
+
+  @NotNull
+  private String createRebarInProjectRoot() throws Exception {
+    File rebar = new File(getProject().getBasePath() + "/test", "rebar3");
+    FileUtil.writeToFile(rebar, "#!/bin/sh\n");
+    assertTrue(rebar.setExecutable(true));
+    return rebar.getPath();
+  }
+
+  @NotNull
+  private String doQuickImport(@NotNull RebarProjectOpenProcessor processor) {
+    Project project = getProject();
+    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(project.getBasePath() + "/test");
+    assertNotNull(projectRoot);
+    VirtualFile rebarConfig = projectRoot.findChild("rebar.config");
+    assertNotNull(rebarConfig);
+
+    WizardContext wizardContext = new WizardContext(null, getTestRootDisposable());
+    assertTrue(processor.doQuickImport(rebarConfig, wizardContext));
+    assertTrue(processor.getBuilder().validate(null, project));
+    processor.getBuilder().commit(project, null, ModulesProvider.EMPTY_MODULES_PROVIDER);
+
+    List<String> importedModules = new ArrayList<>();
+    for (Module module : ModuleManager.getInstance(project).getModules()) {
+      if (module == getModule()) continue;
+      VirtualFile[] contentRoots = ModuleRootManager.getInstance(module).getContentRoots();
+      assertEquals(1, contentRoots.length);
+      importedModules.add(module.getName() + " at " + VfsUtilCore.getRelativePath(contentRoots[0], projectRoot.getParent()));
+    }
+    return "modules: " + importedModules +
+           ", rebar path: '" + RebarSettings.getInstance(project).getRebarPath() + "'" +
+           ", compile with rebar: " + ErlangCompilerSettings.getInstance(project).isUseRebarCompilerEnabled();
   }
 
   private static void createMockSdk() {

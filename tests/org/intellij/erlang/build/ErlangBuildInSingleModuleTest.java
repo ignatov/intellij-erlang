@@ -16,15 +16,21 @@
 
 package org.intellij.erlang.build;
 
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.compiler.CompilerMessage;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.assertNotEquals;
@@ -171,6 +177,47 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     });
     compileAndAssertOutput(false);
     assertFalse(beam.exists());
+  }
+
+  public void testAppSrcModulesSkipExcludedDirectory() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addSourceFile(myModule, "a.app.src", "{application, a, []}.");
+    VirtualFile excluded = createSourceSubdirectory("excl");
+    addFileToDirectory(excluded, "excl_mod.erl", ErlangModuleTextGenerator.module("excl_mod").build());
+    PsiTestUtil.addExcludedRoot(myModule, excluded);
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  public void testAppSrcModulesSkipNestedTestRoot() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addSourceFile(myModule, "a.app.src", "{application, a, []}.");
+    VirtualFile nested = createSourceSubdirectory("nested");
+    addFileToDirectory(nested, "one_tests.erl", ErlangModuleTextGenerator.module("one_tests").build());
+    PsiTestUtil.addSourceRoot(myModule, nested, true);
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  public void testAppSrcInTestRootFollowsAddedModules() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addTestFile(myModule, "a.app.src", "{application, a, []}.");
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+
+    addSourceFile(myModule, "two.erl", ErlangModuleTextGenerator.module("two").build());
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one,two]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  private VirtualFile createSourceSubdirectory(String name) throws IOException {
+    VirtualFile sourceRoot = ContainerUtil.getFirstItem(ModuleRootManager.getInstance(myModule).getSourceRoots(JavaSourceRootType.SOURCE));
+    assertNotNull(sourceRoot);
+    return WriteAction.computeAndWait(() -> sourceRoot.createChildDirectory(this, name));
+  }
+
+  private String loadOutputFile(String name) throws IOException {
+    return FileUtil.loadFile(new File(getOutputDirectory(myModule, false), name), StandardCharsets.UTF_8);
   }
 
   private void doTestRebuildInSingleModule(VirtualFile dependency,

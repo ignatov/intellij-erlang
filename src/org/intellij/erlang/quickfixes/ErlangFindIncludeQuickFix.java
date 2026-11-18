@@ -104,7 +104,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     String includeFileName = getFileName(includeString);
 
     ProgressManager.getInstance().run(
-      new Task.Backgroundable(project, editor.getComponent(), "Searching for include file '" + includeFileName + "'...", true, null) {
+      new Task.Backgroundable(project, "Searching for include file '" + includeFileName + "'...", true) {
         @Override
         public void run(@NotNull ProgressIndicator indicator) {
           indicator.setIndeterminate(true);
