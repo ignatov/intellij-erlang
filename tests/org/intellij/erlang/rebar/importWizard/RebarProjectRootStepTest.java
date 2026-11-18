@@ -31,11 +31,16 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String STARTED = "fetching";
+  private static final Pattern STARTED_PID = Pattern.compile(STARTED + " (\\d+)");
 
   private File myTempDir;
+  private ProcessHandle myRebar;
 
   @Override
   protected void setUp() throws Exception {
@@ -47,7 +52,7 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
   protected void tearDown() throws Exception {
     try {
       // Kill what the fetch left running, so that a failure here does not leave a blocked process behind.
-      ProcessHandle.current().descendants().forEach(ProcessHandle::destroyForcibly);
+      if (myRebar != null) Stream.concat(myRebar.descendants(), Stream.of(myRebar)).forEach(ProcessHandle::destroyForcibly);
       if (myTempDir != null) FileUtil.delete(myTempDir);
     }
     finally {
@@ -63,13 +68,16 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
       () -> RebarProjectRootStep.runGetDeps(indicator, rebar));
 
     long deadline = System.currentTimeMillis() + 60_000;
-    while (!String.valueOf(indicator.getText2()).contains(STARTED)) {
+    Matcher started;
+    while (!(started = STARTED_PID.matcher(String.valueOf(indicator.getText2()))).find()) {
       assertFalse("The fetch ended before rebar printed anything: " + indicator.getText2(), fetch.isDone());
       assertTrue("rebar did not start", System.currentTimeMillis() < deadline);
       Thread.sleep(50);
     }
-    List<ProcessHandle> processes = ProcessHandle.current().descendants().toList();
-    assertFalse("rebar is not running", processes.isEmpty());
+    // Only the process that the fetch started and its descendants; the test JVM can have other children (conhost.exe).
+    myRebar = ProcessHandle.of(Long.parseLong(started.group(1))).orElseThrow();
+    assertTrue("rebar is not a child of the test JVM", ProcessHandle.current().descendants().anyMatch(myRebar::equals));
+    List<ProcessHandle> processes = Stream.concat(Stream.of(myRebar), myRebar.descendants()).toList();
 
     indicator.cancel(); // what the Cancel button of the modal progress dialog does
 
@@ -84,17 +92,22 @@ public class RebarProjectRootStepTest extends ErlangLightPlatformCodeInsightFixt
       // a fetch that stops by throwing ProcessCanceledException is fine
     }
     for (ProcessHandle process : processes) {
-      process.onExit().get(10, TimeUnit.SECONDS);
+      try {
+        process.onExit().get(10, TimeUnit.SECONDS);
+      }
+      catch (TimeoutException e) {
+        fail("rebar process " + process.pid() + " (" + process.info().command().orElse("?") + ") is alive 10 s after Cancel");
+      }
     }
   }
 
   // Stands for a rebar get-deps that does not finish (an unreachable host): the test JVM's java runs a program
-  // that prints and then blocks on its standard input, which the fetch never closes. It works on every OS.
+  // that prints its pid and then blocks on its standard input, which the fetch never closes. It works on every OS.
   private GeneralCommandLine hangingRebar() throws Exception {
     Path source = myTempDir.toPath().resolve("HangingRebar.java");
     Files.writeString(source, "public class HangingRebar {\n" +
                               "  public static void main(String[] args) throws Exception {\n" +
-                              "    System.out.println(\"" + STARTED + "\");\n" +
+                              "    System.out.println(\"" + STARTED + " \" + ProcessHandle.current().pid());\n" +
                               "    System.out.flush();\n" +
                               "    while (System.in.read() != -1) {}\n" +
                               "    Thread.sleep(600_000);\n" +
