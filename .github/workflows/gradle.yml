@@ -13,18 +13,50 @@ on:
 permissions:
   contents: read
 
+# A newer commit of a pull request cancels the run of its older commit: that result no longer matters, and every
+# pull request and agent session shares the runners of the account. A push has a group of its own, so no push run
+# is cancelled: every commit of master is built and the nightly job is not interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        # A pull request run checks out the merge commit; with its parents, the step below reads the base from HEAD^1.
+        fetch-depth: 2
+    - name: Test the stub changes check
+      run: python3 -m unittest discover -s scripts/stubs -p 'test_*.py'
+    - name: Check that the merge keeps the stub changes of master
+      # The stub version is the number of entries of ErlangStubChanges. Two pull requests that append one conflict on
+      # purpose; this fails when the resolution dropped, reordered or edited an entry of the base, or inserted one
+      # before them. If the base has no ErlangStubChanges.java, there is nothing to compare.
+      if: github.event_name == 'pull_request'
+      run: |
+        if ! git rev-parse --verify --quiet 'HEAD^2' > /dev/null; then
+          echo "::error::HEAD is not the merge commit of the pull request"
+          exit 1
+        fi
+        file=src/org/intellij/erlang/stubs/ErlangStubChanges.java
+        base="$RUNNER_TEMP/ErlangStubChanges.base.java"
+        if [[ -n "$(git ls-tree 'HEAD^1' -- "$file")" ]]; then
+          git show "HEAD^1:$file" > "$base"
+        fi
+        python3 scripts/stubs/stub_changes.py "$base" "$file"
     - name: Set up JDK 21
       uses: actions/setup-java@v6
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     - name: Test, Build and Verify Plugin
       env:
         BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
@@ -46,7 +78,7 @@ jobs:
           fi
         done
         echo "$range"
-        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+        if [[ "$range" != *'since-build="262"'* || "$range" != *'until-build="263.*"'* ]]; then
           echo "::error::Unexpected compatibility range in ${zips[0]}: '$range'"
           exit 1
         fi
@@ -59,24 +91,26 @@ jobs:
     - name: Verify generated lexer, parser and PSI
       # Regenerates gen/ from Erlang.flex and grammars/erlang.bnf into build/ and fails if the committed gen/ differs.
       run: ./gradlew --no-daemon verifyGeneratedSources
+    - name: Save the Gradle dependency cache
+      # Only a push to master saves, from one job per OS: build on Linux, test-os on macOS and Windows. Every other
+      # job, branch and pull request restores the entry of master.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
 
   other-ides:
-    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.1.
+    # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.2.
     # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
     # archive against it. The list ends at the IDE of until-build (supportedUntilBuild in build.gradle).
-    #
-    # A push to master runs every IDE of the list. A pull request, and a push to any other branch, runs only the
-    # newest one: the two jobs were most of the runner time of a pull request, and the runners of the account are
-    # shared by every pull request and agent session. So a difference with an IDE in between shows on master, after
-    # the merge, and is fixed before the next release, which checks the archive against every IDE again.
     needs: build
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
-          && '[{"ide":"2026.2","java":"21"},{"ide":"2026.3","java":"25"}]'
-          || '[{"ide":"2026.3","java":"25"}]') }}
+        include:
+          - ide: '2026.3'
+            java: '25'
     name: ide-${{ matrix.ide }}
 
     steps:
@@ -86,7 +120,11 @@ jobs:
       with:
         distribution: temurin
         java-version: ${{ matrix.java }}
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     - name: Test against IntelliJ IDEA ${{ matrix.ide }}
       env:
         IDE: ${{ matrix.ide }}
@@ -129,7 +167,11 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        cache: gradle
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
       # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
       env:
@@ -194,8 +236,11 @@ jobs:
           jps-plugin/build/reports/tests/testCompilation
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
 
-  # The tests and the compilation tests on macOS and Windows. Required: a failure turns the run red, and nightly
-  # waits for them.
+  # The tests and the compilation tests on Windows and macOS. A push to master runs both OSes; a pull request runs
+  # only Windows. The account runs at most 5 macOS jobs at a time, so on pull requests the macOS jobs waited half an
+  # hour and more for a runner and often failed with "job was not acquired by Runner".
+  # On a pull request the Windows jobs are required checks. On master a failure on either OS turns the run red,
+  # nightly waits for both, and macos-failure files an issue when a macOS job failed.
   # buildPlugin, verifyPlugin and verifyGeneratedSources do not depend on the OS and run only in build.
   test-os:
     name: test-${{ matrix.os }}
@@ -204,7 +249,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
     defaults:
       run:
         shell: bash
@@ -222,9 +269,11 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        # No Gradle cache on Windows: in a restored cache Gradle finds the extracted IDE modified ("The contents of
-        # the immutable workspace ... have been modified") and fails before any test runs.
-        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     - name: Test
       run: ./gradlew --no-daemon test
     - name: Summarize test results
@@ -246,6 +295,12 @@ jobs:
           build/reports/tests/test
           build/test-results/test
         if-no-files-found: ignore
+    - name: Save the Gradle dependency cache
+      # As in build: only a push to master saves.
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: ./.github/actions/gradle-cache
+      with:
+        save: true
 
   compilation-tests-os:
     name: compilation-tests-${{ matrix.os }}
@@ -254,7 +309,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        # macOS only on a push to master, as in test-os.
+        os: ${{ fromJSON(github.event_name == 'push' && github.ref == 'refs/heads/master'
+          && '["macos-latest","windows-latest"]'
+          || '["windows-latest"]') }}
     defaults:
       run:
         shell: bash
@@ -271,8 +329,11 @@ jobs:
       with:
         distribution: temurin
         java-version: '21'
-        # No Gradle cache on Windows, as in test-os.
-        cache: ${{ runner.os != 'Windows' && 'gradle' || '' }}
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
       # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
       # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
@@ -442,4 +503,43 @@ jobs:
         else
           gh release create nightly intellij-erlang-nightly.zip --verify-tag --prerelease \
             --title "Nightly build" --notes-file nightly-notes.md
+        fi
+
+  macos-failure:
+    # Pull requests do not run macOS, so a break that shows only on macOS is first seen on master. When a macOS job of
+    # a push to master failed or timed out, this job opens the issue below, or comments on it while it is open. A
+    # failure on Windows only, a cancelled macOS job and a green run file nothing.
+    needs: [test-os, compilation-tests-os]
+    if: >-
+      always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      issues: write
+    concurrency:
+      group: macos-failure-issue
+      cancel-in-progress: false
+
+    steps:
+    - name: File an issue for the failed macOS jobs
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TITLE: 'CI: macOS jobs failed on master'
+      run: |
+        failed="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?per_page=100" --paginate \
+          --jq '.jobs[] | select((.name | test("^(test|compilation-tests)-macos")) and (.conclusion == "failure" or .conclusion == "timed_out")) | "- [\(.name)](\(.html_url))"')"
+        if [[ -z "$failed" ]]; then
+          echo "No macOS job failed."
+          exit 0
+        fi
+        run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        body="$(printf 'macOS jobs of Java CI failed on master. Pull requests do not run macOS, so this is the first run that shows it.\n\nRun: %s (attempt %s)\nCommit: %s\n\nFailed jobs:\n%s\n' \
+          "$run_url" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$GITHUB_SHA" "$failed")"
+        number="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number,title \
+          --jq '[.[] | select(.title == env.TITLE)][0].number // empty')"
+        if [[ -n "$number" ]]; then
+          gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+        else
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$body"
         fi

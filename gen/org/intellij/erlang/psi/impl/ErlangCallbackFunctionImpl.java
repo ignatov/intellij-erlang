@@ -41,6 +41,24 @@ public class ErlangCallbackFunctionImpl extends ErlangStubbedPsiElementBase<Erla
 
   @Override
   @Nullable
+  public PsiElement getComma() {
+    return findChildByType(ERL_COMMA);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyLeft() {
+    return findChildByType(ERL_CURLY_LEFT);
+  }
+
+  @Override
+  @Nullable
+  public PsiElement getCurlyRight() {
+    return findChildByType(ERL_CURLY_RIGHT);
+  }
+
+  @Override
+  @Nullable
   public PsiElement getOpArDiv() {
     return findChildByType(ERL_OP_AR_DIV);
   }
