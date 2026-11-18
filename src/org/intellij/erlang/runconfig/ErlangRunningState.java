@@ -77,10 +77,11 @@ public abstract class ErlangRunningState extends CommandLineState {
     setWorkDirectory(commandLine);
     setEnvironment(commandLine);
     setCodePath(commandLine);
+    setErlangFlags(commandLine);
     setEntryPoint(commandLine);
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
-    setErlangFlags(commandLine);
+    setExtraArguments(commandLine);
     TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
@@ -156,7 +157,16 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   public final void setErlangFlags(GeneralCommandLine commandLine) {
-    commandLine.addParameters(getErlFlags());
+    List<String> flags = getErlFlags();
+    int extra = flags.indexOf("-extra");
+    commandLine.addParameters(extra < 0 ? flags : flags.subList(0, extra));
+  }
+
+  // everything after -extra is plain arguments, so it must stay at the end of the command line
+  public final void setExtraArguments(GeneralCommandLine commandLine) {
+    List<String> flags = getErlFlags();
+    int extra = flags.indexOf("-extra");
+    if (extra >= 0) commandLine.addParameters(flags.subList(extra, flags.size()));
   }
 
   @NotNull
