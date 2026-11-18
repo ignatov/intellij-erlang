@@ -33,7 +33,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class ErlangCallerMethodsTreeStructure extends HierarchyTreeStructure {
   private final String myCurrentScopeType;
@@ -51,11 +50,12 @@ public class ErlangCallerMethodsTreeStructure extends HierarchyTreeStructure {
     SearchScope searchScope = getSearchScope(myCurrentScopeType, function);
     Set<ErlangFunction> result = new HashSet<>();
     ReferencesSearch.search(function, searchScope).forEach(
-      (Consumer<? super PsiReference>) r -> {
+      r -> {
         ProgressManager.checkCanceled();
         PsiElement element = r.getElement();
         ErlangFunction f = PsiTreeUtil.getParentOfType(element, ErlangFunction.class, false);
         ContainerUtil.addIfNotNull(result, f);
+        return true;
       }
     );
     return result.stream().map(f -> new ErlangFunctionNodeDescriptor(myProject, f)).toArray();

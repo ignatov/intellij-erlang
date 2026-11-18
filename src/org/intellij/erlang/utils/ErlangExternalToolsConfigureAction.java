@@ -17,28 +17,26 @@
 package org.intellij.erlang.utils;
 
 import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.event.HyperlinkEvent;
-
-public class ErlangExternalToolsNotificationListener implements NotificationListener {
+public class ErlangExternalToolsConfigureAction extends NotificationAction {
   @NotNull
   private final Project myProject;
 
-  public ErlangExternalToolsNotificationListener(@NotNull Project project) {
+  public ErlangExternalToolsConfigureAction(@NotNull Project project) {
+    super("Configure");
     myProject = project;
   }
 
   @Override
-  public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-    if (event.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-      if (event.getDescription().equals("configure") && !myProject.isDisposed()) {
-        ShowSettingsUtil.getInstance().showSettingsDialog(myProject, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
-      }
+  public void actionPerformed(@NotNull AnActionEvent e, @NotNull Notification notification) {
+    if (!myProject.isDisposed()) {
+      ShowSettingsUtil.getInstance().showSettingsDialog(myProject, ErlangExternalToolsConfigurable.ERLANG_RELATED_TOOLS);
     }
   }
 }
