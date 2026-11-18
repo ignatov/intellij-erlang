@@ -93,12 +93,107 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // A term that decodes can still be too deep for OtpErlangObject.toString(), which recurses with larger frames.
+  // The depths at which decoding or toString() overflow shift with the JIT state, so try a range of them.
+  public void testNestedTermsOfManyDepthsDoNotKillTheServerThread() throws Exception {
+    OtpErlangPid deepPid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+    OtpErlangPid lastPid = new OtpErlangPid("nonode@nohost", 86, 0, 0);
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture, stoppedFuture, false) {
+      @Override
+      public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+        if (lastPid.equals(pid)) super.breakpointReached(pid, snapshots);
+      }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      for (int round = 0; round < 5; round++) {
+        for (int depth = 3000 + round * 50; depth <= 15000; depth += 250) {
+          sendBytes(peer, breakpointReachedWithBinding(deepPid, nestedTuples(depth)));
+          sendBytes(peer, breakpointReachedWithBinding(deepPid, nestedLists(depth)));
+          sendBytes(peer, breakpointReachedWithBinding(deepPid, nestedMaps(depth)));
+        }
+      }
+      send(peer, tuple(atom("breakpoint_reached"), lastPid, list(snapshot(lastPid, list()))));
+
+      List<ErlangProcessSnapshot> snapshots = snapshotsFuture.get(TIMEOUT_SECONDS * 6, TimeUnit.SECONDS);
+      assertEquals(lastPid, snapshots.get(0).getPid());
+      assertFalse("the debugger session was stopped", stoppedFuture.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // An evaluate_response too deep to decode must end the evaluation, not leave it pending.
+  public void testTooDeeplyNestedEvaluateResponseFailsTheEvaluation() throws Exception {
+    CompletableFuture<String> evaluationErrorFuture = new CompletableFuture<>();
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>(), stoppedFuture, false) {
+      @Override
+      public void evaluationFailed(String errorMessage) {
+        evaluationErrorFuture.complete(errorMessage);
+      }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      OtpErlangAtom placeholder = atom("deep_term_placeholder");
+      byte[] message = new OtpOutputStream(tuple(atom("evaluate_response"), placeholder)).toByteArray();
+      sendBytes(peer, replace(message, new OtpOutputStream(placeholder).toByteArray(), nestedTuples(20000)));
+
+      assertEquals("The result is nested too deeply to show", evaluationErrorFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertFalse("the debugger session was stopped", stoppedFuture.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  private static byte[] breakpointReachedWithBinding(OtpErlangPid pid, byte[] value) {
+    OtpErlangAtom placeholder = atom("deep_term_placeholder");
+    OtpErlangTuple frame = tuple(new OtpErlangLong(2), tuple(atom("t"), atom("main"), list()),
+                                 list(tuple(atom("T"), placeholder)));
+    byte[] message = new OtpOutputStream(tuple(atom("breakpoint_reached"), pid, list(snapshot(pid, list(frame))))).toByteArray();
+    return replace(message, new OtpOutputStream(placeholder).toByteArray(), value);
+  }
+
+  private static OtpErlangTuple snapshot(OtpErlangPid pid, OtpErlangList stack) {
+    return tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"), tuple(atom("t"), new OtpErlangLong(9)), stack);
+  }
+
   // {1, {1, ... {1, nil} ...}} in the external term format, without the version tag.
   private static byte[] nestedTuples(int depth) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     for (int i = 0; i < depth; i++) {
       out.write(OtpExternal.smallTupleTag);
       out.write(2);
+      out.write(OtpExternal.smallIntTag);
+      out.write(1);
+    }
+    out.write(OtpExternal.nilTag);
+    return out.toByteArray();
+  }
+
+  // [[ ... [] ... ]] in the external term format, without the version tag.
+  private static byte[] nestedLists(int depth) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    for (int i = 0; i < depth; i++) {
+      out.write(OtpExternal.listTag);
+      out.writeBytes(new byte[]{0, 0, 0, 1});
+    }
+    for (int i = 0; i <= depth; i++) {
+      out.write(OtpExternal.nilTag);
+    }
+    return out.toByteArray();
+  }
+
+  // #{1 => #{1 => ... #{1 => nil} ...}} in the external term format, without the version tag.
+  private static byte[] nestedMaps(int depth) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    for (int i = 0; i < depth; i++) {
+      out.write(OtpExternal.mapTag);
+      out.writeBytes(new byte[]{0, 0, 0, 1});
       out.write(OtpExternal.smallIntTag);
       out.write(1);
     }
@@ -173,5 +268,6 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
     @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
+    @Override public void evaluationFailed(String errorMessage) { }
   }
 }

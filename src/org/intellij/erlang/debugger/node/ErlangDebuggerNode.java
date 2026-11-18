@@ -43,6 +43,7 @@ import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 public class ErlangDebuggerNode {
   private static final int RECEIVE_TIMEOUT = 50;
   private static final int RETRIES_ON_TIMEOUT = 10;
+  private static final String EVALUATE_RESPONSE = "evaluate_response";
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -195,12 +196,24 @@ public class ErlangDebuggerNode {
   }
 
   private void receiveMessage(@NotNull Socket socket) throws SocketException {
-    OtpErlangObject receivedMessage = receive(socket);
-    if (receivedMessage == null) return;
+    byte[] messageBytes = receive(socket);
+    if (messageBytes == null) return;
 
-    LOG.debug("Message received: " + receivedMessage);
+    ErlangDebuggerEvent event;
+    try {
+      OtpErlangObject receivedMessage = decode(messageBytes);
+      if (receivedMessage == null) return;
 
-    ErlangDebuggerEvent event = ErlangDebuggerEvent.create(receivedMessage);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Message received: " + receivedMessage);
+      }
+
+      event = ErlangDebuggerEvent.create(receivedMessage);
+    }
+    catch (StackOverflowError e) {
+      reportTooDeeplyNestedMessage(messageBytes);
+      return;
+    }
     boolean messageRecognized = event != null;
     if (messageRecognized) {
       event.process(this, myEventListener);
@@ -238,8 +251,7 @@ public class ErlangDebuggerNode {
     }
   }
 
-  @Nullable
-  private OtpErlangObject receive(@NotNull Socket socket) throws SocketException {
+  private static byte @Nullable [] receive(@NotNull Socket socket) throws SocketException {
     try {
       InputStream in = socket.getInputStream();
 
@@ -248,8 +260,7 @@ public class ErlangDebuggerNode {
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
 
-      byte[] objectBytes = readBytes(in, objectSize, true);
-      return objectBytes == null ? null : decode(objectBytes);
+      return readBytes(in, objectSize, true);
     }
     catch (SocketException e) {
       throw e;
@@ -313,7 +324,7 @@ public class ErlangDebuggerNode {
   }
 
   @Nullable
-  private OtpErlangObject decode(byte @NotNull [] bytes) {
+  private static OtpErlangObject decode(byte @NotNull [] bytes) {
     try {
       return new OtpInputStream(bytes).read_any();
     }
@@ -321,9 +332,25 @@ public class ErlangDebuggerNode {
       LOG.warn("Failed to decode an erlang term.", e);
       return null;
     }
-    catch (StackOverflowError e) {
-      LOG.warn("Failed to decode an erlang term: it is nested too deeply.");
-      myEventListener.unknownMessage("a term of " + bytes.length + " bytes nested too deeply to decode");
+  }
+
+  private void reportTooDeeplyNestedMessage(byte @NotNull [] bytes) {
+    LOG.warn("Failed to process an erlang term: it is nested too deeply.");
+    if (EVALUATE_RESPONSE.equals(getMessageName(bytes))) {
+      myEventListener.evaluationFailed("The result is nested too deeply to show");
+    }
+    else {
+      myEventListener.unknownMessage("a term of " + bytes.length + " bytes nested too deeply to process");
+    }
+  }
+
+  @Nullable
+  private static String getMessageName(byte @NotNull [] bytes) {
+    try {
+      OtpInputStream in = new OtpInputStream(bytes);
+      return in.read_tuple_head() > 0 ? in.read_atom() : null;
+    }
+    catch (OtpErlangDecodeException e) {
       return null;
     }
   }

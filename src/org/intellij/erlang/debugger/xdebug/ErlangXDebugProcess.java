@@ -138,6 +138,14 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @Override
+  public synchronized void evaluationFailed(String errorMessage) {
+    if (myEvalCallback != null) {
+      myEvalCallback.errorOccurred(errorMessage);
+      mySession.resume();
+    }
+  }
+
+  @Override
   public void debuggerStarted() {
     getSession().reportMessage("Debug process started", MessageType.INFO);
   }
