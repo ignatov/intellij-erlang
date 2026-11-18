@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final int TIMEOUT_SECONDS = 10;
@@ -202,6 +204,31 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1288: a session stopped before erl connects back must close the debugger port and end the server thread.
+  public void testStopBeforeDebuggerConnectsReleasesThePort() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>(), stoppedFuture));
+    node.stop();
+
+    boolean stopped;
+    try {
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      stopped = true;
+    }
+    catch (TimeoutException e) {
+      stopped = false;
+    }
+    boolean portOpen;
+    try (Socket ignored = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      portOpen = true; // this connect also unblocks accept(), so the server thread ends
+    }
+    catch (ConnectException e) {
+      portOpen = false;
+    }
+    assertFalse("debugger port " + node.getLocalDebuggerPort() + " still accepts connections after stop()", portOpen);
+    assertTrue("debuggerStopped() was not called within " + TIMEOUT_SECONDS + "s after stop()", stopped);
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
     byte[] bytes = new OtpOutputStream(message).toByteArray();
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -232,9 +259,15 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
 
   private static class RecordingListener implements ErlangDebuggerEventListener {
     private final CompletableFuture<List<ErlangProcessSnapshot>> mySnapshots;
+    private final CompletableFuture<Void> myStopped;
 
     RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots) {
+      this(snapshots, new CompletableFuture<>());
+    }
+
+    RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots, CompletableFuture<Void> stopped) {
       mySnapshots = snapshots;
+      myStopped = stopped;
     }
 
     @Override public void debuggerStarted() { }
@@ -245,7 +278,7 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
-    @Override public void debuggerStopped() { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
   }
 }
