@@ -24,8 +24,11 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectBundle;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.roots.ui.configuration.SdkPopupFactory;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -33,7 +36,6 @@ import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotificationProvider;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
-import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
@@ -77,14 +79,20 @@ public class ErlangSdkNotificationProvider implements EditorNotificationProvider
   public @Nullable Function<? super @NotNull FileEditor, ? extends @Nullable JComponent> collectNotificationData(@NotNull Project project,
                                                                                                                  @NotNull VirtualFile file) {
     if (ApplicationManager.getApplication().isUnitTestMode()) return null;
-    if (!(file.getFileType() instanceof ErlangFileType)) return null;
+    if (file.getFileType() != ErlangFileType.MODULE && file.getFileType() != ErlangFileType.HEADER) return null;
 
     PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
     if (psiFile == null || psiFile.getLanguage() != ErlangLanguage.INSTANCE) return null;
 
-    ErlangSdkRelease sdkRelease = ErlangSdkType.getSdkRelease(psiFile);
-    if (sdkRelease != null) return null;
+    if (!isSdkUnset(project, psiFile)) return null;
 
     return fileEditor -> createPanel(project, psiFile);
+  }
+
+  private static boolean isSdkUnset(@NotNull Project project, @NotNull PsiFile file) {
+    if (ErlangSystemUtil.isSmallIde()) return StringUtil.isEmpty(ErlangSdkType.getSdkPath(project));
+    Module module = ModuleUtilCore.findModuleForPsiElement(file);
+    return (module == null || ModuleRootManager.getInstance(module).getSdk() == null) &&
+           ProjectRootManager.getInstance(project).getProjectSdk() == null;
   }
 }

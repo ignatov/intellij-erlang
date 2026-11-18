@@ -20,6 +20,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ex.ApplicationEx;
+import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -46,6 +47,42 @@ public class ErlangSdkNotificationProviderTest extends ErlangLightPlatformCodeIn
   public void testBannerShownWithoutSdk() {
     VirtualFile file = myFixture.configureByText("a.erl", "-module(a).\n").getVirtualFile();
     assertNotNull("no 'Project SDK is not defined' banner for an .erl file without an Erlang SDK", collectNotificationData(file));
+  }
+
+  public void testBannerShownForHeaderWithoutSdk() {
+    VirtualFile file = myFixture.configureByText("a.hrl", "-define(A, 1).\n").getVirtualFile();
+    assertNotNull("no 'Project SDK is not defined' banner for an .hrl file without an Erlang SDK", collectNotificationData(file));
+  }
+
+  // *.config files are Erlang terms files, but a web.config of a non-Erlang project holds XML
+  public void testNoBannerForWebConfigWithoutSdk() {
+    VirtualFile file = myFixture.configureByText("web.config", "<configuration/>\n").getVirtualFile();
+    assertNull("a 'Project SDK is not defined' banner for web.config", collectNotificationData(file));
+  }
+
+  // small IDEs keep the Erlang SDK in their own setting, so the project SDK does not matter there
+  public void testNonErlangProjectSdk() {
+    Sdk jdk = ProjectJdkTable.getInstance().createSdk("mock jdk", JavaSdk.getInstance());
+    try {
+      ApplicationManager.getApplication().runWriteAction(() -> {
+        ProjectJdkTable.getInstance().addJdk(jdk);
+        ProjectRootManager.getInstance(getProject()).setProjectSdk(jdk);
+      });
+      VirtualFile file = myFixture.configureByText("a.erl", "-module(a).\n").getVirtualFile();
+      Object banner = collectNotificationData(file);
+      if (ErlangSystemUtil.isSmallIde()) {
+        assertNotNull("no 'Project SDK is not defined' banner in a small IDE without an Erlang SDK", banner);
+      }
+      else {
+        assertNull("a 'Project SDK is not defined' banner in a project whose SDK is a JDK", banner);
+      }
+    }
+    finally {
+      ApplicationManager.getApplication().runWriteAction(() -> {
+        ProjectRootManager.getInstance(getProject()).setProjectSdk(null);
+        ProjectJdkTable.getInstance().removeJdk(jdk);
+      });
+    }
   }
 
   public void testNoBannerWithSdk() {
