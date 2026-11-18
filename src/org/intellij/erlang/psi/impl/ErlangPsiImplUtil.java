@@ -1103,6 +1103,8 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    ErlangExpression head = o.getExpression();
+    if (head != null && head != lastParent && !processDeclarationRecursive(head, processor, state, true)) return false;
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
@@ -1118,10 +1120,15 @@ public class ErlangPsiImplUtil {
   }
 
   private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
+    return processDeclarationRecursive(o, processor, state, false);
+  }
+
+  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
       ErlangCompositeElement top = queue.remove();
+      if (skipFunExpressions && top instanceof ErlangFunExpression) continue;
       if (!processor.execute(top, state)) return false;
       queue.addAll(PsiTreeUtil.getChildrenOfTypeAsList(top, ErlangCompositeElement.class));
     }

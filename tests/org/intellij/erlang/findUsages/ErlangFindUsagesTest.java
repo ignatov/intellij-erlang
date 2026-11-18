@@ -34,6 +34,9 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapKeyInFunHeadBody()               { doTest(2); }
   public void testMapKeyInFunHeadGuard()              { doTest(2); }
   public void testMapKeyInNestedFunHeads()            { doTest(2); }
+  public void testCaseHeadVariable()                  { doTest(3); }
+  public void testCaseHeadRematch()                   { doTest(2); }
+  public void testCaseHeadRematchArgument()           { doTest(3); }
 
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
