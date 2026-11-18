@@ -165,7 +165,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     if (fastParse.remappedTokens.isEmpty()) return;
     PsiBuilder.Marker start = builder.mark();
     for (Map.Entry<Integer, IElementType> token : fastParse.remappedTokens.entrySet()) {
-      while (builder.rawTokenIndex() < token.getKey() && !builder.eof()) builder.advanceLexer();
+      while (!builder.eof() && builder.rawTokenIndex() < token.getKey()) builder.advanceLexer(); // eof() skips whitespaces
       if (builder.rawTokenIndex() == token.getKey()) builder.remapCurrentToken(token.getValue());
     }
     start.rollbackTo();

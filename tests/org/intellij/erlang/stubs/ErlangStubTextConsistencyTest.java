@@ -33,6 +33,8 @@ public class ErlangStubTextConsistencyTest extends ErlangLightPlatformCodeInsigh
 
   public void testStubMismatchUnclosedRecord() { doTest(); }
 
+  public void testStubMismatchRemappedDot() { doTest(); }
+
   public void testStubsMatchTextAfterEdit() {
     myFixture.configureByText("a.erl", "-module(a).\n<caret>\nf() -> ok.\n");
     myFixture.type("-record(r(");
