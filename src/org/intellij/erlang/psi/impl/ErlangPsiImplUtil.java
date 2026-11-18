@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.*;
 import com.intellij.openapi.util.io.FileUtilRt;
@@ -84,6 +85,8 @@ import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
   public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
+    "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
     "any", "arity", "atom", "binary", "bitstring", "boolean", "byte", "char", "dynamic", "float", "function",
     "identifier", "integer", "iodata", "iolist", "list", "map", "maybe_improper_list", "mfa", "module", "neg_integer",
@@ -347,9 +350,9 @@ public class ErlangPsiImplUtil {
 
                ErlangFile file = (ErlangFile) myElement.getContainingFile();
                VirtualFile virtualFile = file.getVirtualFile();
-               File ioFile = VfsUtilCore.virtualToIoFile(virtualFile);
+               File ioDir = VfsUtilCore.virtualToIoFile(virtualFile.getParent());
 
-               String relativePath = FileUtilRt.getRelativePath(ioFile, newHeaderIoFile);
+               String relativePath = FileUtilRt.getRelativePath(ioDir, newHeaderIoFile);
 
                Module module = ModuleUtilCore.findModuleForPsiElement(file);
                for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
@@ -493,6 +496,34 @@ public class ErlangPsiImplUtil {
     return false;
   }
 
+  /**
+   * Whether the element is in the arguments of a macro call, in an expression or a type, where the macro is not known
+   * to take no parameters. The compiler sees such an argument only as the macro body uses it.
+   */
+  public static boolean inParameterizedMacroCallArguments(@NotNull PsiElement psiElement) {
+    for (ErlangArgumentList arguments = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class);
+         arguments != null;
+         arguments = PsiTreeUtil.getParentOfType(arguments, ErlangArgumentList.class)) {
+      PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(arguments);
+      ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
+      if (macros != null && !isMacroWithoutParameters(macros)) return true;
+    }
+    return false;
+  }
+
+  private static boolean isMacroWithoutParameters(@NotNull ErlangMacros macros) {
+    ErlangMacrosName macrosName = macros.getMacrosName();
+    PsiFile file = macros.getContainingFile();
+    if (macrosName == null) return false;
+    String name = getNameIdentifier(macrosName).getText();
+    if (PREDEFINED_MACROS_WITHOUT_PARAMETERS.contains(name)) return true;
+    if (!(file instanceof ErlangFile erlangFile) || DumbService.isDumb(file.getProject())) return false;
+    List<ErlangMacrosDefinition> definitions = ContainerUtil.filter(
+      ContainerUtil.concat(erlangFile.getMacroses(), getErlangMacrosFromIncludes(erlangFile, true, "")),
+      definition -> name.equals(definition.getName()));
+    return !definitions.isEmpty() && ContainerUtil.and(definitions, definition -> definition.getArgumentDefinitionList() == null);
+  }
+
   public static boolean inCallback(PsiElement psiElement) {
     return PsiTreeUtil.getParentOfType(psiElement, ErlangCallbackSpec.class) != null;
   }
@@ -502,7 +533,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangIfAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
   public static boolean inSpecification(PsiElement psiElement) {
@@ -679,6 +710,11 @@ public class ErlangPsiImplUtil {
         Editor editor = context.getEditor();
         Document document = editor.getDocument();
         context.commitDocument();
+        ErlangCallbackFunction callback = PsiTreeUtil.getParentOfType(context.getFile().findElementAt(context.getStartOffset()), ErlangCallbackFunction.class);
+        if (callback != null && callback.getCurlyLeft() != null) {
+          insertTupleArity(callback, context);
+          return;
+        }
         PsiElement next = findNextToken(context);
         ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
 
@@ -691,6 +727,16 @@ public class ErlangPsiImplUtil {
         PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
         document.insertString(context.getTailOffset(), "/" + arity);
         editor.getCaretModel().moveToOffset(context.getTailOffset());
+      }
+
+      private void insertTupleArity(@NotNull ErlangCallbackFunction callback, @NotNull InsertionContext context) {
+        Document document = context.getDocument();
+        PsiElement comma = callback.getComma();
+        PsiElement integer = callback.getInteger();
+        int start = comma != null ? comma.getTextRange().getStartOffset() : context.getTailOffset();
+        int end = integer != null ? integer.getTextRange().getEndOffset() : comma != null ? comma.getTextRange().getEndOffset() : start;
+        document.replaceString(start, end, ", " + arity);
+        context.getEditor().getCaretModel().moveToOffset(start + 2 + String.valueOf(arity).length());
       }
 
       @Nullable
@@ -1072,6 +1118,8 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    ErlangExpression head = o.getExpression();
+    if (head != null && head != lastParent && !processDeclarationRecursive(head, processor, state, true)) return false;
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
@@ -1087,10 +1135,15 @@ public class ErlangPsiImplUtil {
   }
 
   private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
+    return processDeclarationRecursive(o, processor, state, false);
+  }
+
+  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
       ErlangCompositeElement top = queue.remove();
+      if (skipFunExpressions && top instanceof ErlangFunExpression) continue;
       if (!processor.execute(top, state)) return false;
       queue.addAll(PsiTreeUtil.getChildrenOfTypeAsList(top, ErlangCompositeElement.class));
     }
@@ -1216,6 +1269,40 @@ public class ErlangPsiImplUtil {
     for (ErlangBehaviour behaviour : file.getBehaviours()) {
       ContainerUtil.addIfNotNull(behaviourNames, getName(behaviour));
     }
+  }
+
+  private static final Set<String> MS_TRANSFORM_MODULES = Set.of("ets", "dbg");
+  private static final Set<String> MS_TRANSFORM_PSEUDO_FUNCTIONS = Set.of("object", "bindings");
+
+  // object() and bindings() in the literal fun passed to ets:fun2ms/1 or dbg:fun2ms/1 are rewritten by ms_transform
+  public static boolean isMsTransformPseudoFunctionCall(@NotNull PsiElement element, @NotNull String name, int arity) {
+    if (!(element instanceof ErlangFunctionCallExpression) || arity != 0 || !MS_TRANSFORM_PSEUDO_FUNCTIONS.contains(name)) return false;
+    ErlangFunExpression fun = PsiTreeUtil.getParentOfType(element, ErlangFunExpression.class);
+    ErlangFunClauses clauses = fun != null ? fun.getFunClauses() : null;
+    if (clauses == null || ContainerUtil.exists(clauses.getFunClauseList(), c -> c.getArgumentDefinition() != null)) return false;
+    PsiElement argument = fun;
+    while (argument.getParent() instanceof ErlangParenthesizedExpression) {
+      argument = argument.getParent();
+    }
+    ErlangArgumentList arguments = ObjectUtils.tryCast(argument.getParent(), ErlangArgumentList.class);
+    if (arguments == null || arguments.getExpressionList().size() != 1) return false;
+    ErlangFunctionCallExpression call = ObjectUtils.tryCast(arguments.getParent(), ErlangFunctionCallExpression.class);
+    ErlangGlobalFunctionCallExpression globalCall = call != null ? ObjectUtils.tryCast(call.getParent(), ErlangGlobalFunctionCallExpression.class) : null;
+    PsiFile file = element.getContainingFile();
+    return globalCall != null &&
+           "fun2ms".equals(call.getName()) &&
+           MS_TRANSFORM_MODULES.contains(getName(globalCall.getModuleRef().getQAtom())) &&
+           file instanceof ErlangFile erlangFile &&
+           isParseTransformDeclared(erlangFile, "ms_transform");
+  }
+
+  private static boolean isParseTransformDeclared(@NotNull ErlangFile file, @NotNull String parseTransform) {
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    for (ErlangFile includedFile : getIncludedFiles(file)) {
+      includedFile.addDeclaredParseTransforms(parseTransforms);
+    }
+    return parseTransforms.contains(parseTransform);
   }
 
   public static void extractParseTransforms(@NotNull ErlangListExpression list, @NotNull Set<String> parseTransforms) {

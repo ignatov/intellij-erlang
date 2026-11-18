@@ -52,6 +52,7 @@ public class ErlangDebuggerNode {
   private final ErlangDebuggerEventListener myEventListener;
   @NotNull
   private final AtomicBoolean myStopped = new AtomicBoolean(false);
+  @Nullable
   private volatile ServerSocket myServerSocket;
 
   public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
@@ -71,14 +72,13 @@ public class ErlangDebuggerNode {
 
   public void stop() {
     myStopped.set(true);
-    // unblocks accept() when the debug target never connects, e.g. when it dies at boot
     ServerSocket serverSocket = myServerSocket;
     if (serverSocket != null) {
       try {
         serverSocket.close();
       }
       catch (IOException e) {
-        LOG.debug("Failed to close the server socket.", e);
+        LOG.debug(e);
       }
     }
   }
@@ -309,7 +309,10 @@ public class ErlangDebuggerNode {
             return null;
           }
           if (++attemptsMade >= RETRIES_ON_TIMEOUT) {
-            throw e;
+            SocketException socketException = new SocketException("Timed out reading " + size + " bytes, " +
+                                                                  bytesReadTotal + " read.");
+            socketException.initCause(e);
+            throw socketException;
           }
         }
       }
