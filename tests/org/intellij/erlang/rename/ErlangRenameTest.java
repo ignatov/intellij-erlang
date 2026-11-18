@@ -61,6 +61,14 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testNamedFunName()                  { doTest("Fact"); }
   public void testNamedFunShadowingArgument()     { doTest("Arg"); }
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
+
+  // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
+  public void testLongOperatorChain() {
+    String chain = " + 1".repeat(12000);
+    myFixture.configureByText("chain_12000.erl", "-module(chain_12000).\n-export([f/0]).\n<caret>f() -> 1" + chain + ".\n");
+    myFixture.renameElementAtCaret("g");
+    myFixture.checkResult("-module(chain_12000).\n-export([g/0]).\ng() -> 1" + chain + ".\n");
+  }
   
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
