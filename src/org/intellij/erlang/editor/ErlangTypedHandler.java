@@ -38,7 +38,7 @@ public class ErlangTypedHandler extends TypedHandlerDelegate {
 
     AutoPopupController autoPopupController = AutoPopupController.getInstance(project);
     if (c == ':') {
-      autoPopupController.autoPopupMemberLookup(editor, null);
+      autoPopupController.scheduleAutoPopup(editor);
       return Result.STOP;
     }
 
