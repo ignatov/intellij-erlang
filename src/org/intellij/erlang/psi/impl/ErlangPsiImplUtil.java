@@ -1103,6 +1103,8 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    // the variables that the clauses bind are visible after the case only; inside it, its own clause was already walked up
+    if (lastParent != null) return true;
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
