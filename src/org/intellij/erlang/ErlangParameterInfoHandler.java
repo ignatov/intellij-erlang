@@ -25,7 +25,6 @@ import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.SlowOperations;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
@@ -47,6 +46,10 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     List<ErlangMacrosDefinition> macrosDefinitions = args != null ? getCalledMacrosDefinitions(args) : Collections.emptyList();
     if (!macrosDefinitions.isEmpty()) {
       context.setItemsToShow(ArrayUtil.toObjectArray(macrosDefinitions));
+    }
+    else if (args != null) {
+      Object[] items = getCalledFunctionItems(args);
+      if (items != null) context.setItemsToShow(items);
     }
     return args;
   }
@@ -85,6 +88,48 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
       else definitionsByArity.putIfAbsent(arity, definition);
     }
     return new ArrayList<>(definitionsByArity.values());
+  }
+
+  @Nullable
+  private static Object[] getCalledFunctionItems(@NotNull ErlangArgumentList args) {
+    ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
+    if (erlFunctionCall == null) return null;
+    PsiReference reference = erlFunctionCall.getReference();
+    List<ErlangFunctionClause> clauses = new ArrayList<>();
+    if (reference instanceof PsiPolyVariantReference) {
+      ResolveResult[] resolveResults = ((PsiPolyVariantReference) reference).multiResolve(true);
+      for (ResolveResult result : resolveResults) {
+        PsiElement element = result.getElement();
+        if (element instanceof ErlangFunction) {
+          clauses.addAll(((ErlangFunction) element).getFunctionClauseList());
+        }
+      }
+    }
+    if (clauses.isEmpty()) {
+      PsiElement resolve = reference.resolve();
+      if (resolve instanceof ErlangFunction) {
+        List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
+        clauses.addAll(clauseList);
+      }
+    }
+    if (!clauses.isEmpty()) {
+      clauses.sort((lhs, rhs) -> {
+        int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+        int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
+        return Integer.signum(lhsSize - rhsSize);
+      });
+      return ArrayUtil.toObjectArray(clauses);
+    }
+    ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
+    if (erlGlobalFunctionCall != null) {
+      ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
+      String moduleName = moduleRef.getText();
+      String functionName = erlFunctionCall.getName();
+      List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.emptyList();
+      return ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo));
+    }
+    String name = erlFunctionCall.getName();
+    return ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name)));
   }
 
   /**
@@ -152,53 +197,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
 
   @Override
   public void showParameterInfo(@NotNull ErlangArgumentList args, @NotNull CreateParameterInfoContext context) {
-    Object[] macrosDefinitions = context.getItemsToShow();
-    if (macrosDefinitions != null && macrosDefinitions.length > 0) {
-      context.showHint(args, args.getTextRange().getStartOffset(), this);
-      return;
-    }
-    ErlangFunctionCallExpression erlFunctionCall = PsiTreeUtil.getParentOfType(args, ErlangFunctionCallExpression.class);
-    if (erlFunctionCall != null) {
-      PsiReference reference = erlFunctionCall.getReference();
-      List<ErlangFunctionClause> clauses = new ArrayList<>();
-      if (reference instanceof PsiPolyVariantReference) {
-        ResolveResult[] resolveResults = SlowOperations.allowSlowOperations(() -> ((PsiPolyVariantReference) reference).multiResolve(true)) ;
-        for (ResolveResult result : resolveResults) {
-          PsiElement element = result.getElement();
-          if (element instanceof ErlangFunction) {
-            clauses.addAll(((ErlangFunction) element).getFunctionClauseList());
-          }
-        }
-      }
-      if (clauses.isEmpty()) {
-        PsiElement resolve = SlowOperations.allowSlowOperations(reference::resolve);
-        if (resolve instanceof ErlangFunction) {
-          List<ErlangFunctionClause> clauseList = ((ErlangFunction) resolve).getFunctionClauseList();
-          clauses.addAll(clauseList);
-        }
-      }
-      if (!clauses.isEmpty()) {
-        clauses.sort((lhs, rhs) -> {
-          int lhsSize = lhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
-          int rhsSize = rhs.getArgumentDefinitionList().getArgumentDefinitionList().size();
-          return Integer.signum(lhsSize - rhsSize);
-        });
-        context.setItemsToShow(ArrayUtil.toObjectArray(clauses));
-      }
-      else {
-        ErlangGlobalFunctionCallExpression erlGlobalFunctionCall = PsiTreeUtil.getParentOfType(erlFunctionCall, ErlangGlobalFunctionCallExpression.class);
-        if (erlGlobalFunctionCall != null) {
-          ErlangModuleRef moduleRef = erlGlobalFunctionCall.getModuleRef();
-          String moduleName = moduleRef.getText();
-          String functionName = erlFunctionCall.getName();
-          List<ErlangBifDescriptor> moduleInfo = functionName.equals(ErlangBifTable.MODULE_INFO) ? ErlangBifTable.getBifs("", functionName) : Collections.emptyList();
-          context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs(moduleName, functionName), moduleInfo)));
-        }
-        else {
-          String name = erlFunctionCall.getName();
-          context.setItemsToShow(ArrayUtil.toObjectArray(ContainerUtil.concat(ErlangBifTable.getBifs("erlang", name), ErlangBifTable.getBifs("", name))));
-        }
-      }
+    if (context.getItemsToShow() != null) {
       context.showHint(args, args.getTextRange().getStartOffset(), this);
     }
   }
