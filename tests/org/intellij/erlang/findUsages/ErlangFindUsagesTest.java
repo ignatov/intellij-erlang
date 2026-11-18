@@ -65,6 +65,13 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals(myFixture.getFile().getText().indexOf("N:8"), target.getTextOffset());
   }
 
+  public void testNamedFunNameIsNotVisibleAfterReceive() {
+    myFixture.configureByText("namedFun.erl", "f() -> receive _ -> fun G() -> G end end, <caret>G.\n");
+    PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset());
+    assertNotNull(reference);
+    assertNull(reference.resolve());
+  }
+
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
 //  public void testEmptyAtomFunctionInMultipleFiles() { doTest(3, "emptyAtomFunctionInSingleFile.erl"); }

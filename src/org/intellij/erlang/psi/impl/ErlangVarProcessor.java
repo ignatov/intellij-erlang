@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.psi.impl;
 
-import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.ResolveState;
@@ -62,6 +61,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     ErlangFunExpression namedFun = getNamedFunOfName(myOrigin);
     if (namedFun != null && namedFun != getNamedFunOfName(psiElement)) return true;
+    ErlangFunExpression candidateNamedFun = getNamedFunOfName(psiElement);
+    if (candidateNamedFun != null && !PsiTreeUtil.isAncestor(candidateNamedFun, myOrigin, false)) return true;
     ErlangArgumentDefinition generatorPattern = getFreshGeneratorPattern(myOrigin);
     if (generatorPattern != null && !PsiTreeUtil.isAncestor(generatorPattern, psiElement, false)) return true;
     
@@ -139,13 +140,22 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
         return funName != null && PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null;
       }
     }
-    if (narrowestParentScopeOwner instanceof ErlangCrClause) {
-      ErlangCompositeElement caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class, ErlangReceiveExpression.class);
-      if (Comparing.equal(
-        PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
-        PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
-    }
+    if (narrowestParentScopeOwner instanceof ErlangCrClause && isExportedTo(narrowestParentScopeOwner, myOrigin)) return false;
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
+  }
+
+  // A case or receive exports the variables of its clauses to the clause body around it, and further out
+  // through every case or receive clause around that body, but not out of a fun or a comprehension.
+  private static boolean isExportedTo(@NotNull ErlangCompositeElement clause, @NotNull PsiElement origin) {
+    PsiElement expression = clause.getParent();
+    while (expression instanceof ErlangCaseExpression || expression instanceof ErlangReceiveExpression) {
+      PsiElement body = PsiTreeUtil.getParentOfType(expression, ErlangClauseBody.class, ErlangListComprehension.class, ErlangFunClause.class);
+      if (!(body instanceof ErlangClauseBody)) return false;
+      if (!PsiTreeUtil.isAncestor(expression, origin, false) && PsiTreeUtil.isAncestor(body, origin, false)) return true;
+      PsiElement bodyOwner = body.getParent();
+      expression = bodyOwner instanceof ErlangCrClause || bodyOwner instanceof ErlangAfterClauseBody ? bodyOwner.getParent() : null;
+    }
+    return false;
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {

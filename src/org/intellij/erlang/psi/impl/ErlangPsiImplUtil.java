@@ -1094,6 +1094,8 @@ public class ErlangPsiImplUtil {
       if (pattern != null) result &= processDeclarationRecursive(pattern, processor, state);
     }
     ErlangAfterClauseBody afterClauseBody = o.getAfterClauseBody();
+    ErlangExpression timeout = afterClauseBody != null ? afterClauseBody.getExpression() : null;
+    if (timeout != null) result &= processDeclarationRecursive(timeout, processor, state);
     ErlangClauseBody afterBody = afterClauseBody != null ? afterClauseBody.getClauseBody() : null;
     if (afterBody != null) result &= processDeclarationRecursive(afterBody, processor, state);
     return result;
@@ -2069,8 +2071,12 @@ public class ErlangPsiImplUtil {
 
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
     if (element instanceof ErlangQVar && Objects.equals(origin.getText(), element.getText())) {
-      ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
-      ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class);
+      ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class, ErlangAfterClauseBody.class);
+      ErlangCompositeElement cr1 = PsiTreeUtil.getParentOfType(origin, ErlangCrClause.class, ErlangAfterClauseBody.class);
+      // the after body of a receive binds like one more clause of it
+      if (cr1 instanceof ErlangAfterClauseBody || cr2 instanceof ErlangAfterClauseBody) {
+        return cr1 != null && cr2 != null && cr1 != cr2 && cr1.getParent() == cr2.getParent();
+      }
       if (cr1 != null && cr2 != null) {
         ErlangCaseExpression ce1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class);
         ErlangCaseExpression ce2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class);
