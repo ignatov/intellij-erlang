@@ -21,22 +21,33 @@ import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.ui.HideableTitledPanel;
+import com.intellij.ui.dsl.builder.Align;
+import com.intellij.ui.dsl.builder.BuilderKt;
+import com.intellij.ui.dsl.builder.CollapsibleRow;
 import com.intellij.util.concurrency.AppExecutorUtil;
+import kotlin.Unit;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.CancellablePromise;
 
+import javax.swing.*;
 import java.util.Set;
 
-public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends ErlangRunConfigurationBase> extends SettingsEditor<RunConfig> {
+public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends ErlangRunConfigurationBase> extends ErlangSettingsEditor<RunConfig> {
   private final ErlangDebugOptionsEditorForm myDebugOptionsEditor = new ErlangDebugOptionsEditorForm();
   private CancellablePromise<Set<String>> myModulesNotToInterpretSearch;
 
   protected ErlangDebuggableRunConfigurationEditor() {
+    this(null);
+  }
+
+  protected ErlangDebuggableRunConfigurationEditor(@Nullable Project project) {
+    super(project);
     Disposer.register(this, myDebugOptionsEditor);
   }
 
@@ -93,10 +104,18 @@ public abstract class ErlangDebuggableRunConfigurationEditor<RunConfig extends E
   protected abstract void doApplyEditorTo(RunConfig runConfig);
 
 
-  protected HideableTitledPanel createDebugOptionsHideablePanel() {
-    HideableTitledPanel hideablePanel = new HideableTitledPanel("&Debug Options", false);
-    hideablePanel.setOn(false);
-    hideablePanel.setContentComponent(myDebugOptionsEditor.getComponent());
-    return hideablePanel;
+  protected DialogPanel createDebugOptionsHideablePanel(boolean expanded) {
+    JComponent content = myDebugOptionsEditor.getComponent();
+    return BuilderKt.panel(panel -> {
+      CollapsibleRow debugOptions = panel.collapsibleGroup("&Debug Options", false, group -> {
+        group.row((JLabel) null, row -> {
+          row.cell(content).align(Align.FILL);
+          return Unit.INSTANCE;
+        }).resizableRow();
+        return Unit.INSTANCE;
+      });
+      debugOptions.setExpanded(expanded);
+      return Unit.INSTANCE;
+    });
   }
 }

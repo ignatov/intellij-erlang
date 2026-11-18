@@ -98,6 +98,8 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       if (importedFunction != null) return importedFunction;
     }
 
+    if (ErlangPsiImplUtil.isMsTransformPseudoFunctionCall(getElement(), myReferenceName, myArity)) return getElement();
+
     if (!file.isNoAutoImport(myReferenceName, myArity)) {
       ErlangSdkRelease release = ErlangSdkType.getRelease(file);
       if (ErlangBifTable.isAutoImported(myReferenceName, myArity, ErlangSdkType.getSdkRelease(file))) {

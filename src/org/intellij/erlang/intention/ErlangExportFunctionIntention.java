@@ -37,7 +37,8 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
     if (!file.getManager().isInProject(file)) return false;
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null && file instanceof ErlangFile) {
-      return !((ErlangFile) file).getExportedFunctions().contains(function);
+      return !((ErlangFile) file).getExportedFunctions().contains(function) &&
+             ErlangExportFunctionFix.canBeExported((ErlangFile) file, function);
     }
     return false;
   }
