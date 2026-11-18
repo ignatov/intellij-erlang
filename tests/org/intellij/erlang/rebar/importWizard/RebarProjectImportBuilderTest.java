@@ -184,6 +184,24 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     assertEquals("modules: [demo at test], rebar path: '', compile with rebar: false", doQuickImport(processor));
   }
 
+  // #516: a rebar that is neither in the project nor on PATH was entered once and saved in the project's rebar.xml;
+  // importing the project again must keep that path instead of asking for it again.
+  public void testOpenProcessorQuickImportKeepsSavedRebarPath() throws Exception {
+    File rebar = new File(FileUtil.createTempDirectory("rebar_bin", null), "rebar3");
+    FileUtil.writeToFile(rebar, "#!/bin/sh\n");
+    assertTrue(rebar.setExecutable(true));
+    RebarSettings.getInstance(getProject()).setRebarPath(rebar.getPath());
+    RebarProjectOpenProcessor processor = new RebarProjectOpenProcessor() {
+      @NotNull
+      @Override
+      protected String findRebarPath(@NotNull VirtualFile projectRoot) {
+        return ""; // no rebar in the project directory and none on PATH
+      }
+    };
+    assertEquals("modules: [demo at test], rebar path: '" + rebar.getPath() + "', compile with rebar: true",
+                 doQuickImport(processor));
+  }
+
   @NotNull
   private String createRebarInProjectRoot() throws Exception {
     File rebar = new File(getProject().getBasePath() + "/test", "rebar3");
