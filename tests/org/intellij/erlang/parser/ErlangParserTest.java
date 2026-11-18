@@ -133,6 +133,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
+  public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
 
   public void testSixQuoteMultilineStringAndSigil() {

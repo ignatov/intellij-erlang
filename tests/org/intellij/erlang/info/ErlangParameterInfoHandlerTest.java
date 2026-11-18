@@ -18,6 +18,8 @@ package org.intellij.erlang.info;
 
 import com.intellij.lang.parameterInfo.CreateParameterInfoContext;
 import com.intellij.lang.parameterInfo.ParameterInfoHandler;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -34,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String FOO = "foo(Arg1, Arg2) -> ok.\n";
@@ -100,6 +103,12 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     doMacroTest("-ifdef(TEST).\n-define(F(X), X).\n-undef(F).\n-define(F(X, Y), {X, Y}).\nbar() -> ?F(1, <caret>).\n-endif.", 1, "X, [Y]");
   }
 
+  public void testFunctionFromOtherModule() {
+    myFixture.addFileToProject("other.erl", "-module(other).\n-export([baz/2]).\nbaz(A, B) -> {A, B}.\n");
+    doTest("bar() -> other:baz(1, <caret>).", 1);
+    assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
+  }
+
   public void testFunctionCallInsideMacro() {
     doTest(FOO + "-define(BAR(X), X).\nbar() -> ?BAR(foo(1, <caret>)).", 1);
     assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
@@ -133,14 +142,17 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     myFixture.configureByText("a.erl", text);
     ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
     CreateParameterInfoContext createContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
-    ErlangArgumentList list = parameterInfoHandler.findElementForParameterInfo(createContext);
+    // the platform calls findElementForParameterInfo in a background read action and showParameterInfo on EDT,
+    // so the items to show, which need resolve, must be computed by the former
+    ErlangArgumentList list = findElementForParameterInfoInBackground(parameterInfoHandler, createContext);
 
     if (highlightedParameterIndex >= 0) {
       assertNotNull(list);
-      parameterInfoHandler.showParameterInfo(list, createContext);
       Object[] itemsToShow = createContext.getItemsToShow();
       assertNotNull(itemsToShow);
       assertTrue(itemsToShow.length > 0);
+      parameterInfoHandler.showParameterInfo(list, createContext);
+      assertSame(itemsToShow, createContext.getItemsToShow());
       myItemsToShow = itemsToShow;
     }
     MockUpdateParameterInfoContext updateContext = new MockUpdateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
@@ -152,6 +164,18 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
       assertNotNull(element);
       parameterInfoHandler.updateParameterInfo(element, updateContext);
       assertEquals(highlightedParameterIndex, updateContext.getCurrentParameter());
+    }
+  }
+
+  private static ErlangArgumentList findElementForParameterInfoInBackground(@NotNull ErlangParameterInfoHandler handler,
+                                                                           @NotNull CreateParameterInfoContext context) {
+    try {
+      return ApplicationManager.getApplication()
+        .executeOnPooledThread(() -> ReadAction.compute(() -> handler.findElementForParameterInfo(context)))
+        .get(1, TimeUnit.MINUTES);
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 

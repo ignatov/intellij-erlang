@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.builder;
 
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.jps.model.JpsErlangModuleType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +31,7 @@ import org.jetbrains.jps.model.module.JpsModule;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -93,8 +93,8 @@ public class ErlangTarget extends ModuleBasedTarget<ErlangSourceRootDescriptor> 
   @NotNull
   @Override
   public Collection<File> getOutputRoots(@NotNull CompileContext context) {
-    return ContainerUtil.newArrayList(JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, false),
-                                      JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, true));
+    return new ArrayList<>(Arrays.asList(JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, false),
+                                         JpsJavaExtensionService.getInstance().getOutputDirectory(myModule, true)));
   }
 
   @Override

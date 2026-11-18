@@ -98,13 +98,13 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
                                       @NotNull ErlangProjectBuildOrder projectBuildOrder) {
     try {
       LOG.debug("Serialize build order");
-      Document serializedDocument = new Document(XmlSerializer.serialize(projectBuildOrder, new SkipDefaultValuesSerializationFilters()));
+      Document serializedDocument = new Document(XmlSerializer.serialize(projectBuildOrder, new SkipDefaultValuesSerializationFilters(new ErlangProjectBuildOrder())));
       File parentDir = new File(projectSystemDirectory, ErlangBuilderUtil.BUILDER_DIRECTORY);
       //noinspection ResultOfMethodCallIgnored
       parentDir.mkdirs();
       File file = new File(parentDir, ErlangBuilderUtil.BUILD_ORDER_FILE_NAME);
       LOG.debug("Write build order to " + file.getAbsolutePath());
-      JDOMUtil.writeDocument(serializedDocument, file, System.lineSeparator());
+      JDOMUtil.writeDocument(serializedDocument, file.toPath(), System.lineSeparator());
     }
     catch (XmlSerializationException e) {
       LOG.error("Can't serialize build order object.", e);

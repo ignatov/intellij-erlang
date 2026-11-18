@@ -197,7 +197,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                                     boolean cellHasFocus) {
         var rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-        String text = ReadAction.compute(() -> {
+        String text = ReadAction.computeBlocking(() -> {
           PsiElement e = ((PsiAnchor) value).retrieve();
           if (e instanceof ErlangExport export && export.getExportFunctions() != null) {
             var exportText = export.getExportFunctions().getText();
