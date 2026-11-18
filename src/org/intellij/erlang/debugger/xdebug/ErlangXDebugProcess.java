@@ -165,6 +165,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   // An evaluation for a process that is no longer at a breakpoint gets no answer, so it must not keep the queue.
+  // A process that is evaluating an expression at its breakpoint is reported as running; its answer is on the way.
   @NotNull
   private synchronized List<PendingEvaluation> dropEvaluationsOfProcessesNotAtBreak(@NotNull List<ErlangProcessSnapshot> snapshots) {
     PendingEvaluation sent = myEvaluations.peekFirst();
@@ -172,7 +173,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
       PendingEvaluation evaluation = iterator.next();
       boolean atBreak = ContainerUtil.exists(snapshots, snapshot -> snapshot.getPid().equals(evaluation.pid()) &&
-                                                                   "break".equals(snapshot.getStatus()));
+                                                                   ("break".equals(snapshot.getStatus()) ||
+                                                                    "running".equals(snapshot.getStatus())));
       if (!atBreak) {
         iterator.remove();
         dropped.add(evaluation);
