@@ -149,7 +149,13 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
           });
           ProcessTerminatedListener.attach(handler);
           handler.startNotify();
-          handler.waitFor();
+          while (!handler.waitFor(100)) {
+            if (indicator.isCanceled()) {
+              handler.destroyProcess(); // kills the whole tree: escript, erl and whatever rebar started
+              handler.waitFor(5000);
+              return;
+            }
+          }
           indicator.setText2("Refreshing");
         }
         catch (ExecutionException e) {
