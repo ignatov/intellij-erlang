@@ -16,12 +16,16 @@
 
 package org.intellij.erlang.utils;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.refactoring.listeners.RefactoringElementListenerProvider;
+import com.intellij.testFramework.ExtensionTestUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import com.intellij.util.PlatformUtils;
 import com.intellij.util.containers.ContainerUtil;
@@ -33,6 +37,9 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends BasePlatformTestCase {
+  private static final String JSHINT_LISTENER_PROVIDER =
+    "com.intellij.lang.javascript.linter.jshint.JSHintRefactoringElementListenerProvider";
+
   private String myBackedUpPlatformPrefix;
   private final boolean myIsSmallIde;
 
@@ -51,6 +58,20 @@ public abstract class ErlangLightPlatformCodeInsightFixtureTestCase extends Base
       System.setProperty(PlatformUtils.PLATFORM_PREFIX_KEY, PlatformUtils.PYCHARM_PREFIX);
     }
     super.setUp();
+    maskJsHintRefactoringListener(getProject(), myFixture.getTestRootDisposable());
+  }
+
+  /**
+   * A rename or a move of a file asks every {@link RefactoringElementListenerProvider} for a listener. The one of the
+   * bundled JSHint plugin looks for a jshint package: with Node.js on PATH it starts {@code npm config get prefix} with
+   * a 30 s timeout and stops waiting for it after 2 s. npm can outlive the test, which then fails with a thread leak,
+   * as on the Windows runners. JSHint takes no part in refactoring Erlang code, so leave its provider out.
+   */
+  public static void maskJsHintRefactoringListener(@NotNull Project project, @NotNull Disposable parentDisposable) {
+    List<RefactoringElementListenerProvider> providers = ContainerUtil.filter(
+      RefactoringElementListenerProvider.EP_NAME.getExtensionList(project),
+      provider -> !provider.getClass().getName().equals(JSHINT_LISTENER_PROVIDER));
+    ExtensionTestUtil.maskExtensions(RefactoringElementListenerProvider.EP_NAME, providers, parentDisposable, false, project);
   }
 
   @Override

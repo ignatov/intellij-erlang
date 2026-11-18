@@ -1,0 +1,295 @@
+name: Robustness sweep
+
+# One cell of the robustness sweep: tests/org/intellij/erlang/sweep/ErlangRobustnessSweepTest (see the README next to
+# it) over a slice of erlang/otp, in one mode, with one kind of input. The workflow only runs the cell it is given and
+# uploads what the runner wrote. What to run next, the coverage ledger and the triage of the findings are kept outside
+# this repository; nothing here opens an issue or writes to the repository.
+
+run-name: >-
+  sweep ${{ inputs.input_kind }} ${{ inputs.mode }} ${{ inputs.corpus_set }} ${{ inputs.shard }}
+  ${{ inputs.corpus_tag }} seed ${{ inputs.seed }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_kind:
+        description: >-
+          What the cell feeds to the plugin: the unchanged files, one kind of mutation of them, the synthetic stress
+          inputs with the scaling probe, or the positive controls of the runner.
+        type: choice
+        default: originals
+        options:
+          - originals
+          - truncate
+          - delete-token
+          - dup-token
+          - swap-tokens
+          - garbage
+          - bracket
+          - unterminated-string
+          - unterminated-atom
+          - synthetic
+          - controls
+      mode:
+        description: normal, smallide (PyCharm platform prefix) or dumb (operations run in dumb mode).
+        type: choice
+        default: normal
+        options:
+          - normal
+          - smallide
+          - dumb
+      corpus_tag:
+        description: Tag of erlang/otp to use as the corpus; its major version selects the mock SDK (27, 28 or 29).
+        default: OTP-29.1
+      corpus_set:
+        description: >-
+          main: lib/*/src, lib/*/include, lib/*/examples, erts/preloaded/src. test: lib/*/test, erts/emulator/test,
+          erts/test.
+        type: choice
+        default: main
+        options:
+          - main
+          - test
+      shard:
+        description: Slice of the corpus set, i/n.
+        default: 0/8
+      mutations:
+        description: Mutations per file, for a mutation kind.
+        default: '2'
+      seed:
+        description: Seed of the run, a non-negative number. Empty takes the time.
+        default: ''
+      budget_minutes:
+        description: The runner stops before the next input after this many minutes (5 to 55).
+        default: '40'
+      ops:
+        description: Comma-separated operations; empty runs all operations of the mode.
+        default: ''
+      limit:
+        description: Only the first N files of the shard, for a trial run; 0 is no limit.
+        default: '0'
+
+permissions:
+  contents: read
+
+# One sweep at a time: a cell takes most of an hour of a runner, and the runners of the account are shared with every
+# pull request. A second dispatch waits for the first one.
+concurrency:
+  group: robustness-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Check the inputs
+      # Every input reaches the shell through the environment only, and only a value that matches its pattern is
+      # passed on to the later steps.
+      env:
+        INPUT_KIND: ${{ inputs.input_kind }}
+        MODE: ${{ inputs.mode }}
+        CORPUS_TAG: ${{ inputs.corpus_tag }}
+        CORPUS_SET: ${{ inputs.corpus_set }}
+        SHARD: ${{ inputs.shard }}
+        MUTATIONS: ${{ inputs.mutations }}
+        SEED: ${{ inputs.seed }}
+        BUDGET_MINUTES: ${{ inputs.budget_minutes }}
+        OPS: ${{ inputs.ops }}
+        LIMIT: ${{ inputs.limit }}
+      run: |
+        fail() {
+          echo "::error::$1"
+          exit 1
+        }
+        [[ "$INPUT_KIND" =~ ^(originals|truncate|delete-token|dup-token|swap-tokens|garbage|bracket|unterminated-string|unterminated-atom|synthetic|controls)$ ]] || fail "Unknown input_kind"
+        [[ "$MODE" =~ ^(normal|smallide|dumb)$ ]] || fail "Unknown mode"
+        [[ "$CORPUS_TAG" =~ ^OTP-[0-9]+(\.[0-9]+){0,5}(-rc[0-9]+)?$ ]] || fail "corpus_tag must be a release tag of erlang/otp, like OTP-29.1"
+        [[ "$CORPUS_SET" =~ ^(main|test)$ ]] || fail "Unknown corpus_set"
+        [[ "$SHARD" =~ ^([0-9]{1,3})/([1-9][0-9]{0,2})$ ]] || fail "shard must be i/n"
+        (( 10#${BASH_REMATCH[1]} < 10#${BASH_REMATCH[2]} )) || fail "shard must be i/n with i < n"
+        [[ "$MUTATIONS" =~ ^[0-9]{1,2}$ ]] || fail "mutations must be a number under 100"
+        [[ "$SEED" =~ ^[0-9]{0,18}$ ]] || fail "seed must be a non-negative number of at most 18 digits"
+        [[ "$BUDGET_MINUTES" =~ ^[0-9]{1,2}$ ]] || fail "budget_minutes must be 5 to 55"
+        (( 10#$BUDGET_MINUTES >= 5 && 10#$BUDGET_MINUTES <= 55 )) || fail "budget_minutes must be 5 to 55"
+        [[ "$OPS" =~ ^[a-z,-]{0,200}$ ]] || fail "ops must be a comma-separated list of operation names"
+        [[ "$LIMIT" =~ ^[0-9]{1,5}$ ]] || fail "limit must be a number"
+        if [[ -z "$SEED" ]]; then
+          SEED="$(date +%s)"
+        fi
+        {
+          echo "SWEEP_MODE=$MODE"
+          echo "SWEEP_SEED=$SEED"
+          echo "SWEEP_LIMIT=$LIMIT"
+          echo "SWEEP_INPUT_KIND=$INPUT_KIND"
+          echo "SWEEP_TOTAL_BUDGET_MINUTES=$((10#$BUDGET_MINUTES))"
+          if [[ -n "$OPS" ]]; then
+            echo "SWEEP_OPS=$OPS"
+          fi
+          case "$INPUT_KIND" in
+            controls)
+              echo "SWEEP_PLANT=1"
+              ;;
+            synthetic)
+              echo "SWEEP_SYNTH=only"
+              echo "SWEEP_SCALE=1"
+              ;;
+            *)
+              echo "SWEEP_CORPUS=$GITHUB_WORKSPACE/otp-corpus"
+              echo "SWEEP_CORPUS_ID=$CORPUS_TAG"
+              echo "SWEEP_CORPUS_SET=$CORPUS_SET"
+              echo "SWEEP_SHARD=$SHARD"
+              if [[ "$INPUT_KIND" == originals ]]; then
+                echo "SWEEP_ORIGINALS=1"
+                echo "SWEEP_MUTATIONS=0"
+              else
+                echo "SWEEP_ORIGINALS=0"
+                echo "SWEEP_MUTATIONS=$MUTATIONS"
+                echo "SWEEP_MUTATION_KINDS=$INPUT_KIND"
+              fi
+              ;;
+          esac
+        } >> "$GITHUB_ENV"
+    - name: Check out the corpus
+      # The corpus is the source tree of Erlang/OTP at a tag, not an installed Erlang: the mock SDK of the tests is the
+      # SDK. Only lib and erts are checked out, without history.
+      if: inputs.input_kind != 'controls' && inputs.input_kind != 'synthetic'
+      uses: actions/checkout@v7
+      with:
+        repository: erlang/otp
+        ref: ${{ inputs.corpus_tag }}
+        path: otp-corpus
+        fetch-depth: 1
+        persist-credentials: false
+        sparse-checkout: |
+          lib
+          erts
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      # Restore only: the cache is saved by pushes to master in gradle.yml.
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Run the sweep
+      # The runner halts the test JVM after a hang (exit code 3) or an OutOfMemoryError (4) and leaves a journal
+      # without an end record; the same command with SWEEP_RESUME=1 continues after the input that caused it. The
+      # loop stops when the journal is finished, and the time budget is counted over all attempts.
+      env:
+        SWEEP_REPORT: ${{ github.workspace }}/build/sweep/report.json
+        SWEEP_LEDGER: ${{ github.workspace }}/build/sweep/ledger.jsonl
+        SWEEP_DUMP_DIR: ${{ github.workspace }}/build/sweep/dumps
+      run: |
+        mkdir -p build/sweep
+        journal="$SWEEP_REPORT.journal.jsonl"
+        started=$SECONDS
+        attempt=0
+        code=0
+        while :; do
+          attempt=$((attempt + 1))
+          left=$(( SWEEP_TOTAL_BUDGET_MINUTES - (SECONDS - started) / 60 ))
+          if (( left < 1 )); then
+            left=1
+          fi
+          export SWEEP_BUDGET_MINUTES=$left
+          if (( attempt > 1 )); then
+            export SWEEP_RESUME=1
+          fi
+          code=0
+          ./gradlew --no-daemon test --rerun --tests 'org.intellij.erlang.sweep.ErlangRobustnessSweepTest' \
+            > "build/sweep/gradle-$attempt.log" 2>&1 || code=$?
+          tail -n 15 "build/sweep/gradle-$attempt.log"
+          if [[ -f "$journal" ]] && tail -n 1 "$journal" | grep -q '"t":"end"'; then
+            break
+          fi
+          if (( attempt >= 8 )); then
+            echo "::error::The sweep did not finish in $attempt attempts"
+            exit 1
+          fi
+          if [[ ! -f "$journal" ]]; then
+            echo "::error::The runner wrote no journal; see build/sweep/gradle-$attempt.log in the artifact"
+            exit 1
+          fi
+          echo "::warning::Attempt $attempt ended with exit code $code and an unfinished journal; resuming"
+        done
+        # A finished sweep is a success whatever it found. The positive controls fail the test when one does not fire.
+        if [[ "$SWEEP_INPUT_KIND" == controls ]]; then
+          exit "$code"
+        fi
+        if [[ ! -f "$SWEEP_REPORT" ]]; then
+          echo "::error::The journal is finished but there is no report"
+          exit 1
+        fi
+    - name: Summarise the report
+      if: always()
+      env:
+        SWEEP_REPORT: ${{ github.workspace }}/build/sweep/report.json
+      run: |
+        if [[ ! -f "$SWEEP_REPORT" ]]; then
+          echo "No report was written." >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        python3 - "$SWEEP_REPORT" >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+        import json
+        import sys
+
+        report = json.load(open(sys.argv[1], encoding="utf-8"))
+        config = report["config"]
+        totals = report["totals"]
+
+
+        def cell(text):
+            return str(text).replace("|", "\\|").replace("\n", " ").replace("<", "&lt;")[:300]
+
+
+        print("## Robustness sweep")
+        print()
+        print("| | |")
+        print("|---|---|")
+        for key in ("revision", "corpusId", "corpusSet", "sdkRelease", "shard", "mode", "seed", "originals", "mutations",
+                    "mutationKinds", "synthetic", "plant", "ops"):
+            print("| %s | %s |" % (key, cell(config.get(key))))
+        for key in ("complete", "files", "inputs", "failures", "signatures", "newSignatures", "slowOperations",
+                    "peakUsedHeapMb"):
+            print("| %s | %s |" % (key, cell(totals.get(key))))
+        print("| wall, minutes | %.1f |" % (totals.get("wallMs", 0) / 60000.0))
+        print("| properties | %s |" % cell(totals.get("properties")))
+        print()
+        signatures = report.get("signatures", [])
+        if signatures:
+            print("| Signature | Known | Count | Inputs | Operations | First input |")
+            print("|---|---|---|---|---|---|")
+            for s in signatures:
+                print("| `%s` | %s | %s | %s | %s | %s |" % (
+                    cell(s["signature"]).replace("`", "'").replace("&lt;", "<"), cell(s.get("known")), s.get("count"), s.get("inputs"),
+                    cell(", ".join(s.get("operations", []))), cell(s.get("firstInput"))))
+        else:
+            print("No failures.")
+        controls = report.get("controls", [])
+        missed = [c["name"] for c in controls if not c.get("fired") and c.get("required", True)]
+        if controls:
+            print()
+            print("Positive controls: %d, required and not fired: %d" % (len(controls), len(missed)))
+            for name in missed:
+                print("- %s" % cell(name))
+        EOF
+    - name: Upload the report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: robustness-sweep-${{ github.run_id }}
+        path: |
+          build/sweep/report.json
+          build/sweep/report.json.journal.jsonl
+          build/sweep/ledger.jsonl
+          build/sweep/dumps
+          build/sweep/gradle-*.log
+        if-no-files-found: warn

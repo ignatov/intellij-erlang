@@ -37,6 +37,7 @@ import org.intellij.erlang.utils.ErlangUiUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -92,7 +93,8 @@ public class RebarConfigurationForm {
     return myRebarVersionText.getText().startsWith("rebar");
   }
 
-  private static void validateRebarPath(String rebarPath, @Nullable Project project, Consumer<String> consumer) {
+  @VisibleForTesting
+  static void validateRebarPath(String rebarPath, @Nullable Project project, Consumer<String> consumer) {
     ApplicationManager.getApplication().executeOnPooledThread(
       () -> {
         File rebarFile = new File(rebarPath);
@@ -101,7 +103,9 @@ public class RebarConfigurationForm {
           return;
         }
 
-        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, rebarPath, "--version");
+        // The check runs in the temp directory, so a path relative to the IDE's directory must be made absolute.
+        String absoluteRebarPath = rebarFile.getAbsolutePath();
+        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, absoluteRebarPath, "--version");
         String version = rebar.getStdOut();
 
         if (version.startsWith("rebar")) {
@@ -110,7 +114,7 @@ public class RebarConfigurationForm {
         }
 
         String escriptPath = RebarRunningStateUtil.findEscriptExecutable(project);
-        ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, rebarPath, "--version");
+        ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, absoluteRebarPath, "--version");
         String versionWithEscript = escript.getStdOut();
 
         if (versionWithEscript.startsWith("rebar")) {

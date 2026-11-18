@@ -68,7 +68,7 @@
           <toolTipText value="Toggle whether to use -sname or -name for running debugger node"/>
         </properties>
       </component>
-      <component id="f984b" class="com.intellij.ui.HideableTitledPanel" binding="myDebugOptionsPanel" custom-create="true" default-binding="true">
+      <component id="f984b" class="com.intellij.openapi.ui.DialogPanel" binding="myDebugOptionsPanel" custom-create="true" default-binding="true">
         <constraints>
           <grid row="6" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>

@@ -1,1 +1,2 @@
 -optional_callbacks([foo/1]).
+-optional_callbacks([{foo, 1}, bar/0, {'baz', 2}]).

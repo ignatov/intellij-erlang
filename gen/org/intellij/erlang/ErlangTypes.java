@@ -69,6 +69,7 @@ public interface ErlangTypes {
   IElementType ERL_GENERIC_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GENERIC_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GLOBAL_FUNCTION_CALL_EXPRESSION = new ErlangCompositeElementType("ERL_GLOBAL_FUNCTION_CALL_EXPRESSION");
   IElementType ERL_GUARD = new ErlangCompositeElementType("ERL_GUARD");
+  IElementType ERL_IF_ATOM_ATTRIBUTE = new ErlangCompositeElementType("ERL_IF_ATOM_ATTRIBUTE");
   IElementType ERL_IF_CLAUSE = new ErlangCompositeElementType("ERL_IF_CLAUSE");
   IElementType ERL_IF_EXPRESSION = new ErlangCompositeElementType("ERL_IF_EXPRESSION");
   IElementType ERL_IMPORT_DIRECTIVE = new ErlangCompositeElementType("ERL_IMPORT_DIRECTIVE");
@@ -400,6 +401,9 @@ public interface ErlangTypes {
       }
       else if (type == ERL_GUARD) {
         return new ErlangGuardImpl(node);
+      }
+      else if (type == ERL_IF_ATOM_ATTRIBUTE) {
+        return new ErlangIfAtomAttributeImpl(node);
       }
       else if (type == ERL_IF_CLAUSE) {
         return new ErlangIfClauseImpl(node);
