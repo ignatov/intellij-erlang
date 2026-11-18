@@ -21,11 +21,14 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final int TIMEOUT_SECONDS = 10;
@@ -61,6 +64,68 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1305: a message that stalls after its length and part of its body must end the session (readBytes promises a
+  // SocketException once the retries on timeout are used up), not be dropped so that its rest is read as a new message.
+  public void testStalledFrameEndsTheSession() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    CompletableFuture<OtpErlangObject> evaluationFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new StallListener(stoppedFuture, evaluationFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      byte[] inner = new OtpOutputStream(tuple(atom("evaluate_response"), atom("desync"))).toByteArray();
+      int innerSize = 1 + inner.length;
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(4 + 4 + innerSize);
+      out.write(new byte[4]);
+      out.flush();
+
+      peer.setSoTimeout(5000);
+      int read;
+      try {
+        read = peer.getInputStream().read();
+      }
+      catch (SocketTimeoutException e) {
+        out.writeInt(innerSize);
+        out.write(OtpExternal.versionTag);
+        out.write(inner);
+        out.flush();
+        OtpErlangObject response = evaluationFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        fail("The node kept the session open after a stalled message and parsed the rest of its body as a new message: " +
+             "handleEvaluationResponse(" + response + ")");
+        return;
+      }
+      assertEquals("The node should close the connection", -1, read);
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1288: a session stopped before erl connects back must close the debugger port and end the server thread.
+  public void testStopBeforeDebuggerConnectsReleasesThePort() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>(), stoppedFuture));
+    node.stop();
+
+    boolean stopped;
+    try {
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      stopped = true;
+    }
+    catch (TimeoutException e) {
+      stopped = false;
+    }
+    boolean portOpen;
+    try (Socket ignored = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      portOpen = true; // this connect also unblocks accept(), so the server thread ends
+    }
+    catch (ConnectException e) {
+      portOpen = false;
+    }
+    assertFalse("debugger port " + node.getLocalDebuggerPort() + " still accepts connections after stop()", portOpen);
+    assertTrue("debuggerStopped() was not called within " + TIMEOUT_SECONDS + "s after stop()", stopped);
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
     byte[] bytes = new OtpOutputStream(message).toByteArray();
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -91,9 +156,15 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
 
   private static class RecordingListener implements ErlangDebuggerEventListener {
     private final CompletableFuture<List<ErlangProcessSnapshot>> mySnapshots;
+    private final CompletableFuture<Void> myStopped;
 
     RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots) {
+      this(snapshots, new CompletableFuture<>());
+    }
+
+    RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots, CompletableFuture<Void> stopped) {
       mySnapshots = snapshots;
+      myStopped = stopped;
     }
 
     @Override public void debuggerStarted() { }
@@ -103,7 +174,27 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
-    @Override public void debuggerStopped() { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
+  }
+
+  private static class StallListener implements ErlangDebuggerEventListener {
+    private final CompletableFuture<Void> myStopped;
+    private final CompletableFuture<OtpErlangObject> myEvaluationResponse;
+
+    StallListener(CompletableFuture<Void> stopped, CompletableFuture<OtpErlangObject> evaluationResponse) {
+      myStopped = stopped;
+      myEvaluationResponse = evaluationResponse;
+    }
+
+    @Override public void debuggerStarted() { }
+    @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
+    @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
+    @Override public void unknownMessage(String messageText) { }
+    @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
+    @Override public void breakpointIsSet(String module, int line) { }
+    @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
+    @Override public void handleEvaluationResponse(OtpErlangObject response) { myEvaluationResponse.complete(response); }
   }
 }
