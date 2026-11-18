@@ -16,7 +16,6 @@
 
 package org.intellij.erlang.jps.model;
 
-import com.intellij.util.xmlb.SkipDefaultValuesSerializationFilters;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.jps.rebar.JpsRebarSettingsSerializer;
 import org.jdom.Element;
@@ -78,11 +77,6 @@ public class JpsErlangModelSerializerExtension extends JpsModelSerializerExtensi
       protected JpsErlangModuleExtension loadExtension(@NotNull Element facetConfigurationElement, String name, JpsElement parent, JpsModule module) {
         ErlangModuleExtensionProperties props = XmlSerializer.deserialize(facetConfigurationElement, ErlangModuleExtensionProperties.class);
         return new JpsErlangModuleExtension(props);
-      }
-
-      @Override
-      protected void saveExtension(JpsErlangModuleExtension extension, Element facetConfigurationTag, JpsModule module) {
-        XmlSerializer.serializeInto(extension.getProperties(), facetConfigurationTag, new SkipDefaultValuesSerializationFilters());
       }
     });
   }

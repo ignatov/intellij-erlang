@@ -5,7 +5,6 @@ import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.jps.model.ErlangCompilerOptions;
 import org.intellij.erlang.jps.model.JpsErlangCompilerOptionsExtension;
-import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +13,8 @@ import org.jetbrains.jps.model.JpsProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 public class ErlangBuilderUtil {
@@ -28,11 +29,10 @@ public class ErlangBuilderUtil {
   @Nullable
   public static <T> T readFromXML(@NotNull CompileContext context, @NotNull String filename, @NotNull Class<T> tClass) {
     try {
-      File xmlFile = getXmlFile(context, filename);
-      if (!xmlFile.exists()) return null;
+      Path xmlFile = getXmlFile(context, filename);
+      if (!Files.exists(xmlFile)) return null;
 
-      Document document = JDOMUtil.loadDocument(xmlFile);
-      return XmlSerializer.deserialize(document, tClass);
+      return XmlSerializer.deserialize(JDOMUtil.load(xmlFile), tClass);
     }
     catch (JDOMException e) {
       LOG.error("Can't read XML from " + filename, e);
@@ -44,10 +44,9 @@ public class ErlangBuilderUtil {
   }
 
   @NotNull
-  private static File getXmlFile(@NotNull CompileContext context, @NotNull String filename) {
-    File dataStorageRoot = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageRoot();
-    File parentDirectory = new File(dataStorageRoot, BUILDER_DIRECTORY);
-    return new File(parentDirectory, filename);
+  private static Path getXmlFile(@NotNull CompileContext context, @NotNull String filename) {
+    Path dataStorageDir = context.getProjectDescriptor().dataManager.getDataPaths().getDataStorageDir();
+    return dataStorageDir.resolve(BUILDER_DIRECTORY).resolve(filename);
   }
 
   public static boolean isSource(@NotNull String fileName) {
