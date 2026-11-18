@@ -43,6 +43,8 @@ import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 public class ErlangDebuggerNode {
   private static final int RECEIVE_TIMEOUT = 50;
   private static final int RETRIES_ON_TIMEOUT = 10;
+  // a frame length the peer declares is checked against this before the buffer for the frame is allocated
+  private static final int MAX_MESSAGE_SIZE = 64 * 1024 * 1024;
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -245,6 +247,10 @@ public class ErlangDebuggerNode {
 
       int objectSize = readObjectSize(in);
       if (objectSize == -1) return null;
+      if (objectSize < 0 || objectSize > MAX_MESSAGE_SIZE) {
+        LOG.warn("Invalid debugger message size: " + objectSize + " bytes, the limit is " + MAX_MESSAGE_SIZE + " bytes.");
+        throw new SocketException("Invalid debugger message size: " + objectSize);
+      }
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
 

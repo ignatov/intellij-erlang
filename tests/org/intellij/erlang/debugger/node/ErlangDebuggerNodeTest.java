@@ -108,6 +108,34 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1289: a negative frame length ends the session with a warning instead of a NegativeArraySizeException.
+  public void testNegativeFrameLengthIsReported() throws Throwable {
+    List<String> warnings = Collections.synchronizedList(new ArrayList<>());
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public boolean processWarn(@NotNull String category, @NotNull String message, @Nullable Throwable t) {
+        warnings.add(message);
+        return false;
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0xFFFFFFFE);
+        out.flush();
+        assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      }
+      finally {
+        node.stop();
+      }
+    });
+    assertTrue(String.valueOf(warnings), warnings.stream().anyMatch(w -> w.contains("Invalid debugger message size: -2 bytes")));
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
     byte[] bytes = new OtpOutputStream(message).toByteArray();
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
