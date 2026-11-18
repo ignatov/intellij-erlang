@@ -206,6 +206,15 @@ jobs:
           cd "$RUNNER_TEMP/desk"
           out="$RUNNER_TEMP/state-push.log"
           git add dispatcher/state.json dispatcher/journal.csv
+          # What the driver of the robustness sweep keeps beside the state: the coverage ledger, the known
+          # signatures and the summaries of the collected runs. A path that the tick has not made yet is skipped,
+          # and one that cannot be added must not keep the state from being committed.
+          for path in discovery/robustness-sweep/ledger.jsonl discovery/robustness-sweep/known-signatures.tsv \
+              discovery/robustness-sweep/runs; do
+            if [ -e "$path" ] && ! git add -- "$path" >> "$out" 2>&1; then
+              echo "::warning::A file of the robustness sweep could not be added to the state commit."
+            fi
+          done
           if git diff --cached --quiet; then
             echo "State: no change."
             exit 0
