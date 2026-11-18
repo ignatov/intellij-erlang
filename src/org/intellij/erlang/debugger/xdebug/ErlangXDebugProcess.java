@@ -82,8 +82,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
-  // the debugger node answers evaluations in request order and the answers carry no request id
-  private final Deque<XDebuggerEvaluator.XEvaluationCallback> myEvalCallbacks = new ArrayDeque<>();
+  // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
+  // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
+  private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -138,17 +139,29 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                               @NotNull ErlangTraceElement traceElement) {
     // need to pause the debugging session otherwise the callback might get invalidated
     mySession.pause();
-    myEvalCallbacks.addLast(callback);
-    myDebuggerNode.evaluate(expression, traceElement);
+    PendingEvaluation evaluation = new PendingEvaluation(expression, callback, traceElement);
+    myEvaluations.addLast(evaluation);
+    if (myEvaluations.size() == 1) {
+      myDebuggerNode.evaluate(expression, traceElement);
+    }
   }
 
   @Override
   public synchronized void handleEvaluationResponse(OtpErlangObject response) {
-    XDebuggerEvaluator.XEvaluationCallback callback = myEvalCallbacks.pollFirst();
-    if (callback != null) {
-      callback.evaluated(ErlangXValueFactory.create(response));
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        myDebuggerNode.evaluate(next.expression(), next.traceElement());
+      }
+      evaluation.callback().evaluated(ErlangXValueFactory.create(response));
       mySession.resume();
     }
+  }
+
+  private record PendingEvaluation(@NotNull String expression,
+                                   @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
+                                   @NotNull ErlangTraceElement traceElement) {
   }
 
   @Override
@@ -297,13 +310,13 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   @Override
   public void stop() {
     myDebuggerNode.stop();
-    List<XDebuggerEvaluator.XEvaluationCallback> pending;
+    List<PendingEvaluation> pending;
     synchronized (this) {
-      pending = new ArrayList<>(myEvalCallbacks);
-      myEvalCallbacks.clear();
+      pending = new ArrayList<>(myEvaluations);
+      myEvaluations.clear();
     }
-    for (XDebuggerEvaluator.XEvaluationCallback callback : pending) {
-      callback.errorOccurred("The debug session has stopped");
+    for (PendingEvaluation evaluation : pending) {
+      evaluation.callback().errorOccurred("The debug session has stopped");
     }
   }
 

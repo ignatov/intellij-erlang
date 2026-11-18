@@ -33,6 +33,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -64,14 +65,52 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
       process.evaluateExpression("B", watchB, frame);
 
       assertEquals(atom("evaluate"), ((OtpErlangTuple)receive(peer)).elementAt(0));
-      assertEquals(atom("evaluate"), ((OtpErlangTuple)receive(peer)).elementAt(0));
-
       send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(1)}));
+      assertEquals(atom("evaluate"), ((OtpErlangTuple)receive(peer)).elementAt(0));
       send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("b")}));
       assertTrue("the node did not deliver both answers", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
       assertEquals("watch A (watch B got " + watchB.myValues + ")", List.of(new OtpErlangLong(1)), watchA.myValues);
       assertEquals("watch B", List.of(atom("b")), watchB.myValues);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // The meta process of the debugged pid loses an answer when a second evaluation reaches it while it is
+  // evaluating the first one (dbg_icmd:handle_user_msg/4 raises function_clause), so only one may be outstanding.
+  public void testNextEvaluationIsSentOnlyAfterTheAnswerToThePreviousOne() throws Exception {
+    CountDownLatch firstResponse = new CountDownLatch(1);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, firstResponse));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      RecordingCallback watchA = new RecordingCallback();
+      RecordingCallback watchB = new RecordingCallback();
+      process.evaluateExpression("A + 1", watchA, frame);
+      process.evaluateExpression("B", watchB, frame);
+
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      assertEquals(new OtpErlangList("A + 1"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      peer.setSoTimeout(500);
+      try {
+        fail("a second evaluation was sent before the first was answered: " + receive(peer));
+      }
+      catch (SocketTimeoutException expected) {
+      }
+
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), new OtpErlangLong(2)}));
+      assertTrue("the node did not deliver the answer", firstResponse.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertEquals(new OtpErlangList("B"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      assertEquals(List.of(new OtpErlangLong(2)), watchA.myValues);
+      assertEquals(List.of(), watchB.myValues);
     }
     finally {
       node.stop();
