@@ -136,6 +136,46 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     assertTrue(String.valueOf(warnings), warnings.stream().anyMatch(w -> w.contains("Invalid debugger message size: -2 bytes")));
   }
 
+  // #1289: a breakpoint snapshot sends the bindings of every frame, so a real one can be well above 64 MiB.
+  public void testFrameAbove64MiBIsDelivered() throws Exception {
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      OtpErlangTuple frame = tuple(new OtpErlangLong(1), tuple(atom("t"), atom("main"), list()),
+                                   list(tuple(atom("B"), new OtpErlangBinary(new byte[65 * 1024 * 1024]))));
+      OtpErlangTuple snapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                      tuple(atom("t"), new OtpErlangLong(3)), list(frame));
+      send(peer, tuple(atom("breakpoint_reached"), pid, list(snapshot)));
+
+      List<ErlangProcessSnapshot> snapshots = snapshotsFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      assertEquals(1, snapshots.get(0).getStack().size());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: FF FF FF FF is a length of -1, not "nothing read"; it ends the session and the session is told why.
+  public void testAllOnesFrameLengthIsReportedToTheSession() throws Exception {
+    CountDownLatch stopped = new CountDownLatch(1);
+    CompletableFuture<String> error = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+      @Override public void failedToReceiveMessage(String message) { error.complete(message); }
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0xFFFFFFFF);
+      out.flush();
+      assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertTrue(error.getNow("no error reported"), error.getNow("").contains("Invalid debugger message size: -1 bytes"));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
     byte[] bytes = new OtpOutputStream(message).toByteArray();
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -175,6 +215,7 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
     @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
     @Override public void unknownMessage(String messageText) { mySnapshots.completeExceptionally(new AssertionError(messageText)); }
+    @Override public void failedToReceiveMessage(String error) { mySnapshots.completeExceptionally(new AssertionError(error)); }
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }

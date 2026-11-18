@@ -43,8 +43,8 @@ import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 public class ErlangDebuggerNode {
   private static final int RECEIVE_TIMEOUT = 50;
   private static final int RETRIES_ON_TIMEOUT = 10;
-  // a frame length the peer declares is checked against this before the buffer for the frame is allocated
-  private static final int MAX_MESSAGE_SIZE = 64 * 1024 * 1024;
+  // the largest byte array HotSpot allocates
+  private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -153,6 +153,9 @@ public class ErlangDebuggerNode {
         }
         catch (Exception e) {
           cachedException = e;
+          if (e instanceof InvalidMessageException) {
+            myEventListener.failedToReceiveMessage(e.getMessage());
+          }
           throw e;
         }
         finally {
@@ -245,16 +248,22 @@ public class ErlangDebuggerNode {
     try {
       InputStream in = socket.getInputStream();
 
-      int objectSize = readObjectSize(in);
-      if (objectSize == -1) return null;
-      if (objectSize < 0 || objectSize > MAX_MESSAGE_SIZE) {
-        LOG.warn("Invalid debugger message size: " + objectSize + " bytes, the limit is " + MAX_MESSAGE_SIZE + " bytes.");
-        throw new SocketException("Invalid debugger message size: " + objectSize);
+      Integer objectSize = readObjectSize(in);
+      if (objectSize == null) return null;
+      long maxSize = Math.min(MAX_ARRAY_SIZE, Runtime.getRuntime().maxMemory());
+      if (objectSize < 0 || objectSize > maxSize) {
+        throw invalidMessage("Invalid debugger message size: " + objectSize + " bytes, the limit is " + maxSize + " bytes.");
       }
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
 
-      byte[] objectBytes = readBytes(in, objectSize, true);
+      byte[] objectBytes;
+      try {
+        objectBytes = readBytes(in, objectSize, true);
+      }
+      catch (OutOfMemoryError e) {
+        throw invalidMessage("Not enough memory for a message of " + objectSize + " bytes.");
+      }
       return objectBytes == null ? null : decode(objectBytes);
     }
     catch (SocketException e) {
@@ -266,9 +275,22 @@ public class ErlangDebuggerNode {
     return null;
   }
 
-  private static int readObjectSize(@NotNull InputStream in) throws SocketException {
+  @Nullable
+  private static Integer readObjectSize(@NotNull InputStream in) throws SocketException {
     byte[] bytes = readBytes(in, 4, false);
-    return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
+    return bytes != null ? ByteBuffer.wrap(bytes).getInt() : null;
+  }
+
+  @NotNull
+  private static InvalidMessageException invalidMessage(@NotNull String message) {
+    LOG.warn(message);
+    return new InvalidMessageException(message);
+  }
+
+  private static class InvalidMessageException extends SocketException {
+    InvalidMessageException(@NotNull String message) {
+      super(message);
+    }
   }
 
   /**
