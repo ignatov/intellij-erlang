@@ -1,0 +1,862 @@
+name: Factory manager
+
+# The model half of the factory manager. The watch (factory-watch.yml) says that the factory is stuck; the manager
+# says why, in which code path and what would release it, and writes a digest once a day. The deterministic half is
+# dispatcher/manager.py of the private repository ignatov/intellij-erlang-triage (its dispatcher/README.md, "The
+# manager" and "The contract of the workflow"); this workflow only carries its three steps and runs the model between
+# them. Nothing the model writes is carried out: manager.py checks its final message and posts what passes, in the
+# private repository, and one line of fixed phrases on the watch's issue here.
+#
+# Three jobs:
+#   plan    (MANAGER_DESK_TOKEN, GITHUB_TOKEN) runs "manager.py plan" on a fresh clone of the desk and the ledger of
+#           the branch manager-log. A live run pushes the ledger with the reservation of the model run to manager-log
+#           before the model runs, so a run that dies later still counts for the caps and the breaker. Then it
+#           pushes the "box", a commit of its own on the desk branch manager-box (force-pushed, one per run): the
+#           prompt, plan.json, the ledger after the plan, the plan's log and a random key of this run.
+#   think   (MANAGER_READ_TOKEN, COPILOT_GITHUB_TOKEN; environment factory-manager-think) fetches the desk at the
+#           commit the plan read and the prompt from the box, with a read-only token that only the fetch step holds,
+#           then removes the remote, makes the checkout read-only and runs GitHub Copilot CLI with only the Copilot
+#           token. The model's final message is sealed with the run's key and handed to finish as a job output.
+#   finish  (MANAGER_DESK_TOKEN, GITHUB_TOKEN with issues: write) runs always after a plan with work, also when think
+#           failed or timed out: "manager.py collect" (without a message then, which counts for the breaker), then
+#           "publish", then pushes the ledger to manager-log. plan.json comes from the box, never from think: the
+#           commit is named by plan's job output, and think's token cannot write.
+#
+# Why the box is a private branch and not a job output or an artifact: an artifact of a public repository can be
+# downloaded by any signed-in user; a job output is not encrypted at rest, is limited to 1 MB a job, and a job that
+# reads it through env prints it in its public log (every step's log shows its env). Encrypting the box with a long-
+# lived secret would put that secret into the model's job, where the model could read it and later decrypt public
+# outputs. The model's job needs a desk read token anyway (for its checkout), so the box costs no new secret. The
+# job outputs hold only commit ids, the run id, booleans and the message sealed with a key that exists only in the
+# private repository (AES-256-CBC, PBKDF2, a new random key per run in the box).
+#
+# Why two environments: defence in depth. The write token is in factory-manager, which the model's job does not
+# use, and no step of that job names it. GitHub sends a runner the secrets its job references (inferred from the
+# docs, not tested), so other secrets of the repository should not reach the model's job either.
+#
+# What the model's job can do, and what is left. It runs `copilot --prompt` (non-interactive: a tool request that
+# would prompt is denied) with only the read tools view, grep and glob: no shell, no writes, no URLs, no memory, no
+# MCP servers, no custom instructions, file access limited to the checkouts, a cap of AI credits, and the CLI's OS
+# sandbox (no network, the checkouts read-only, the runner's home denied) for what the CLI starts. The process
+# starts from an empty environment with only the Copilot token, which --secret-env-vars keeps from what it starts.
+# When the sandbox cannot start, the model does not run; there is no switch to run without it. A hosted runner has
+# no egress filter of its own: the CLI process itself talks to the Copilot API, and anything it can read it could
+# send elsewhere if a prompt injection found a way past these rules. The maintainer accepted that risk; there is no
+# proxy. "Re-run failed jobs" does not call the model again: think runs only in the first attempt of a run.
+#
+# What keeps the secrets in, as in factory-tick.yml:
+#   - The secrets are environment secrets; both environments allow deployments from master only. There is no
+#     pull_request trigger, and every job runs only on master.
+#   - No "uses:" step, and nothing from this repository's tree runs: the desk is fetched with plain git, the token
+#     coming from an askpass script that reads it from the environment of the step (never on a command line or in a
+#     URL). The public checkout of the model's job is data that the model reads.
+#   - The public log shows only counts, statuses and commit ids. manager.py prints counts only, and the steps print
+#     only its lines of counts; its full output goes to last-run.log on manager-log. No artifact, no step summary.
+#   - Values from the event, the inputs and other jobs reach the scripts only through env, never inside a script.
+#
+# Started by the watch (factory-watch.yml starts it when it announces a new alert), by a person (workflow_dispatch),
+# and by a schedule twice a day, the backstop for the digest. A rehearsal (the input "rehearse", or every run while
+# FACTORY_MANAGER is "rehearse") calls the model but posts nothing and leaves manager-log alone: manager.py runs
+# with --rehearse (as if manager.enabled were on, nothing posted), and the message, the ledger after collect and the
+# logs go to the desk branch manager-rehearsal. While FACTORY_MANAGER is "rehearse", only a person starts a run.
+# GitHub drops many scheduled runs of this repository: when neither schedule fires and no alert starts a run after
+# manager.digest_hour_utc, that day has no digest, and the next one covers the time since the last digest.
+# One run at a time: the concurrency group queues; a newer queued run replaces an older queued one, a running one is
+# never cancelled.
+#
+# Setup: repository variable FACTORY_MANAGER ("true" turns the workflow on, "rehearse" allows only rehearsals started
+# by hand); optionally FACTORY_MANAGER_MAX_CREDITS (the cap of AI credits per run, 400 when unset). Environment
+# factory-manager: MANAGER_DESK_TOKEN (desk only: Contents read and write, Issues read and write). Environment
+# factory-manager-think: MANAGER_READ_TOKEN (desk only: Contents read) and COPILOT_GITHUB_TOKEN (a user-owned
+# fine-grained token with the Copilot Requests permission). The desk branch manager-log must exist (an empty
+# history of its own); manager.enabled, manager.issue and manager.watch_issue are in the desk's config.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rehearse:
+        description: Call the model but post nothing; the result goes to the private branch manager-rehearsal
+        type: boolean
+        default: false
+  schedule:
+    - cron: '23 6 * * *'
+    - cron: '53 9 * * *'
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: factory-manager
+  cancel-in-progress: false
+
+env:
+  DESK_URL: https://github.com/ignatov/intellij-erlang-triage.git
+  PUBLIC_URL: ${{ github.server_url }}/${{ github.repository }}.git
+  GIT_TERMINAL_PROMPT: '0'
+  # No credential helper of the runner stores or offers anything; the askpass script answers.
+  GIT_CONFIG_NOSYSTEM: '1'
+  GIT_CONFIG_COUNT: '1'
+  GIT_CONFIG_KEY_0: credential.helper
+  GIT_CONFIG_VALUE_0: ''
+  GIT_AUTHOR_NAME: github-actions[bot]
+  GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  GIT_COMMITTER_NAME: github-actions[bot]
+  GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+jobs:
+  plan:
+    # "rehearse" lets only a person start a run, and every run a rehearsal: the schedule and the watch post nothing.
+    if: >-
+      github.ref == 'refs/heads/master' && (vars.FACTORY_MANAGER == 'true'
+      || (vars.FACTORY_MANAGER == 'rehearse' && github.event_name == 'workflow_dispatch'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The public runs that the watch reads.
+    permissions:
+      actions: read
+    environment:
+      name: factory-manager
+      # The environment is used for its secret and its branch policy only; this is not a deployment.
+      deployment: false
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+      run: ${{ steps.plan.outputs.run }}
+      think: ${{ steps.plan.outputs.think }}
+      work: ${{ steps.plan.outputs.work }}
+      desk: ${{ steps.desk.outputs.sha }}
+      box: ${{ steps.box.outputs.box }}
+      ledger: ${{ steps.box.outputs.ledger }}
+    steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          REHEARSE: ${{ inputs.rehearse }}
+          SWITCH: ${{ vars.FACTORY_MANAGER }}
+        run: |
+          # Live only when the switch is "true" and the run was not asked to rehearse.
+          mode=rehearse
+          if [ "$SWITCH" = "true" ] && [ "$REHEARSE" != "true" ]; then
+            mode=live
+          fi
+          echo "Mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the private repository and the ledger
+        id: desk
+        env:
+          DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+        run: |
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::error::The secret MANAGER_DESK_TOKEN is not set in the environment factory-manager."
+            exit 1
+          fi
+          # The askpass script holds no secret: it prints the token from the environment of the git process.
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          if ! git clone --quiet --depth 1 --single-branch --branch main "$DESK_URL" "$desk" \
+              > "$RUNNER_TEMP/clone.log" 2>&1; then
+            grep '^fatal: ' "$RUNNER_TEMP/clone.log" || true
+            echo "::error::The private repository could not be fetched."
+            exit 1
+          fi
+          # A detached HEAD: manager.py records the commit it read, and the model and collect read the same one.
+          git -C "$desk" checkout --quiet --detach
+          if ! git -C "$desk" ls-remote --heads origin 'refs/heads/manager-log' 'refs/heads/manager-log-failed/*' \
+              > "$RUNNER_TEMP/heads.txt" 2> /dev/null; then
+            echo "::error::The branches of the private repository could not be listed."
+            exit 1
+          fi
+          if grep -q 'refs/heads/manager-log-failed/' "$RUNNER_TEMP/heads.txt"; then
+            echo "::error::A ledger waits on a branch manager-log-failed/* of the private repository. Merge it into manager-log and delete the branch; until then the manager does not run."
+            exit 1
+          fi
+          if ! grep -qE 'refs/heads/manager-log$' "$RUNNER_TEMP/heads.txt"; then
+            echo "::error::The private repository has no branch manager-log. Create it as an empty history of its own; the manager does not start a ledger by itself."
+            exit 1
+          fi
+          if ! git -C "$desk" fetch --quiet --depth 1 origin refs/heads/manager-log > /dev/null 2>&1; then
+            echo "::error::The branch manager-log could not be fetched."
+            exit 1
+          fi
+          parent=$(git -C "$desk" rev-parse FETCH_HEAD)
+          mkdir -p "$RUNNER_TEMP/ledger"
+          git -C "$desk" archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/ledger"
+          # What the watch reads beside the state: the branches of failed state pushes and the last tick log.
+          if ! git -C "$desk" ls-remote --heads origin 'refs/heads/tick-state-failed/*' \
+              > "$RUNNER_TEMP/branches.txt" 2> /dev/null; then
+            echo "::error::The branches of the private repository could not be listed."
+            exit 1
+          fi
+          if git -C "$desk" fetch --quiet --depth 1 origin refs/heads/tick-log > /dev/null 2>&1; then
+            git -C "$desk" show FETCH_HEAD:last-tick.log > "$RUNNER_TEMP/last-tick.log" 2> /dev/null \
+              || rm -f "$RUNNER_TEMP/last-tick.log"
+          fi
+          echo "Fetched main and manager-log of the private repository."
+          echo "sha=$(git -C "$desk" rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "parent=$parent" >> "$GITHUB_OUTPUT"
+
+      - name: Plan
+        id: plan
+        env:
+          MANAGER_DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          TICK_LIVE: ${{ vars.FACTORY_TICK_LIVE }}
+          TIMER: ${{ vars.FACTORY_TIMER }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          PYTHONUNBUFFERED: '1'
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          log="$RUNNER_TEMP/plan.log"
+          args=(plan --desk "$desk" --ledger "$RUNNER_TEMP/ledger" --out "$box" --branches "$RUNNER_TEMP/branches.txt"
+                --tick-live "${TICK_LIVE:-false}" --timer "${TIMER:-false}")
+          if [ "$MODE" != "live" ]; then
+            # As if manager.enabled were on; the ledger of a rehearsal is never pushed to manager-log.
+            args+=(--rehearse)
+          fi
+          if [ -s "$RUNNER_TEMP/last-tick.log" ]; then
+            args+=(--tick-log "$RUNNER_TEMP/last-tick.log")
+          fi
+          status=0
+          (cd "$desk" && python3 -E -s dispatcher/manager.py "${args[@]}") > "$log" 2>&1 || status=$?
+          # Only the line of counts, of exactly this form.
+          counts_re='^manager: plan M-[0-9]{8}-[0-9]{4}: think (true|false), [0-9]+ to diagnose, [0-9]+ of the same pattern, [0-9]+ reused, [0-9]+ skipped, digest (true|false), [0-9]+ requests$'
+          line=$(grep -E "$counts_re" "$log" | tail -n 1) || line=""
+          echo "${line:-manager: (no line of counts)}"
+          echo "Exit status: $status"
+          if [ "$status" != 0 ] || [ ! -s "$box/plan.json" ]; then
+            echo "::error::The plan failed; its log is on the branch manager-box of the private repository."
+            exit 1
+          fi
+          # The run id, whether the model is needed, and whether finish has anything to do: the model's work, a
+          # reuse, an answer of the owner or an action left in the outbox by an earlier run.
+          python3 -I - "$box/plan.json" "$RUNNER_TEMP/ledger/ledger.json" "$box/prompt.md" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, os, re, sys
+          plan = json.load(open(sys.argv[1], encoding="utf-8"))
+          try:
+              ledger = json.load(open(sys.argv[2], encoding="utf-8"))
+          except (OSError, ValueError):
+              ledger = {}
+          run = str(plan.get("run"))
+          if not re.match(r"^M-[0-9]{8}-[0-9]{4}$", run):
+              sys.exit("no valid run id")
+          think = plan.get("think") is True
+          if think and not os.path.isfile(sys.argv[3]):
+              sys.exit("the plan needs the model but wrote no prompt")
+          work = think or bool(plan.get("reuse")) or bool(plan.get("answers")) or bool(ledger.get("outbox"))
+          print("run=%s" % run)
+          print("think=%s" % str(think).lower())
+          print("work=%s" % str(work).lower())
+          PY
+
+      - name: Hand the plan on
+        id: box
+        if: always() && steps.desk.outcome == 'success' && steps.plan.outcome != 'skipped'
+        env:
+          DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          PLANNED: ${{ steps.plan.outcome }}
+          RUN: ${{ steps.plan.outputs.run }}
+          PARENT: ${{ steps.desk.outputs.parent }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          umask 077
+          mkdir -p "$box"
+          cp "$RUNNER_TEMP/plan.log" "$box/plan.log" 2> /dev/null || true
+          # The tree of a directory, written into the desk's object store through an index of its own.
+          tree_of() {
+            local index="$RUNNER_TEMP/index.$$" status=0
+            GIT_INDEX_FILE="$index" git -C "$1" --git-dir="$desk/.git" --work-tree="$1" add -A -f . \
+              && GIT_INDEX_FILE="$index" git --git-dir="$desk/.git" write-tree || status=$?
+            rm -f "$index"
+            return "$status"
+          }
+          if [ "$PLANNED" != "success" ]; then
+            # Only the log of the failed plan, for the maintainer; finish does not run.
+            commit=$(git -C "$desk" commit-tree "$(tree_of "$box")" -m "Record a failed plan of the manager [skip ci]" -m "Run $RUN_ID.")
+            git -C "$desk" push --quiet --force origin "$commit:refs/heads/manager-box" > /dev/null 2>&1 \
+              || echo "::warning::The log of the plan could not be pushed to the branch manager-box."
+            exit 0
+          fi
+          ledger="$PARENT"
+          if [ "$MODE" = "live" ]; then
+            # The reservation of the model run, the owner's answers and the expired questions, before the model runs.
+            tree=$(tree_of "$RUNNER_TEMP/ledger")
+            if [ "$tree" != "$(git -C "$desk" rev-parse "$PARENT^{tree}")" ]; then
+              commit=$(git -C "$desk" commit-tree "$tree" -p "$PARENT" -m "Plan manager run $RUN [skip ci]" -m "Run $RUN_ID.")
+              if ! git -C "$desk" push --quiet origin "$commit:refs/heads/manager-log" > /dev/null 2>&1; then
+                echo "::error::The ledger could not be pushed to manager-log; the model does not run."
+                exit 1
+              fi
+              ledger="$commit"
+            fi
+          fi
+          openssl rand -hex 32 > "$box/key"
+          cp -R "$RUNNER_TEMP/ledger" "$box/ledger"
+          commit=$(git -C "$desk" commit-tree "$(tree_of "$box")" -m "Hand on manager run $RUN [skip ci]" -m "Run $RUN_ID, $MODE.")
+          if ! git -C "$desk" push --quiet --force origin "$commit:refs/heads/manager-box" > /dev/null 2>&1; then
+            echo "::error::The plan could not be pushed to the branch manager-box; the model does not run."
+            exit 1
+          fi
+          echo "Plan $RUN handed on: box $commit, ledger $ledger."
+          echo "box=$commit" >> "$GITHUB_OUTPUT"
+          echo "ledger=$ledger" >> "$GITHUB_OUTPUT"
+
+  think:
+    needs: plan
+    if: needs.plan.outputs.think == 'true' && needs.plan.outputs.box != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    # GITHUB_TOKEN can do nothing here, and no step names it.
+    permissions: {}
+    environment:
+      name: factory-manager-think
+      deployment: false
+    outputs:
+      message: ${{ steps.seal.outputs.message }}
+    env:
+      # The CLI is the standalone binary of a pinned release, checked against its published SHA256SUMS.txt.
+      COPILOT_URL: https://github.com/github/copilot-cli/releases/download/v1.0.114/copilot-linux-x64.tar.gz
+      COPILOT_SHA256: b91a96f2257297cfb67ed6784a2a658609a6b8c2ee2ded18af9c9abe8cc790ae
+      MODEL: claude-fable-5.2
+      # The one limit of the prompt (manager.PROMPT_BYTES): one argument of a Linux command line holds 128 KiB.
+      PROMPT_BYTES: '120000'
+      # Outside the runner's home, which the sandbox denies: the checkouts, the CLI's home and its HOME.
+      MANAGER_ROOT: /srv/factory-manager
+    steps:
+      - name: Fetch the desk and the prompt
+        id: fetch
+        env:
+          DESK_TOKEN: ${{ secrets.MANAGER_READ_TOKEN }}
+          DESK_SHA: ${{ needs.plan.outputs.desk }}
+          BOX: ${{ needs.plan.outputs.box }}
+          PUBLIC_SHA: ${{ github.sha }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          # "Re-run failed jobs" would call the model again for a run that collect has recorded already, outside
+          # the caps of the day; a new run plans again instead.
+          if [ "$ATTEMPT" != "1" ]; then
+            echo "::error::This is attempt $ATTEMPT of the run; the model runs only in the first attempt. Start a new run."
+            exit 1
+          fi
+          sha_re='^[0-9a-f]{40}$'
+          if ! [[ "$DESK_SHA" =~ $sha_re && "$BOX" =~ $sha_re && "$PUBLIC_SHA" =~ $sha_re ]]; then
+            echo "::error::The plan handed on no valid commit ids."
+            exit 1
+          fi
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::error::The secret MANAGER_READ_TOKEN is not set in the environment factory-manager-think."
+            exit 1
+          fi
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          umask 077
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 700 "$MANAGER_ROOT"
+          work="$MANAGER_ROOT/work"
+          think="$RUNNER_TEMP/think"
+          mkdir -p "$work" "$think" "$MANAGER_ROOT/home" "$MANAGER_ROOT/copilot-home"
+          # The box goes into a repository of its own, outside the directories the model may read.
+          git init --quiet "$RUNNER_TEMP/box-repo"
+          if ! git -C "$RUNNER_TEMP/box-repo" fetch --quiet --depth 1 "$DESK_URL" refs/heads/manager-box > /dev/null 2>&1 \
+              || [ "$(git -C "$RUNNER_TEMP/box-repo" rev-parse FETCH_HEAD)" != "$BOX" ]; then
+            echo "::error::The box of this run is not on the branch manager-box."
+            exit 1
+          fi
+          git -C "$RUNNER_TEMP/box-repo" show "$BOX:prompt.md" > "$think/prompt.md"
+          git -C "$RUNNER_TEMP/box-repo" show "$BOX:key" > "$think/key"
+          git init --quiet "$work/desk"
+          if ! git -C "$work/desk" fetch --quiet --depth 1 "$DESK_URL" "$DESK_SHA" > /dev/null 2>&1; then
+            echo "::error::The commit of the desk that the plan read could not be fetched."
+            exit 1
+          fi
+          git -C "$work/desk" checkout --quiet --detach FETCH_HEAD
+          rm -f "$RUNNER_TEMP/askpass.sh"
+          # The public repository at the commit of this run, without a token; optional (public:... citations).
+          git init --quiet "$work/public"
+          if git -C "$work/public" fetch --quiet --depth 1 "$PUBLIC_URL" "$PUBLIC_SHA" > /dev/null 2>&1; then
+            git -C "$work/public" checkout --quiet --detach FETCH_HEAD
+            echo "Fetched the public repository."
+          else
+            echo "::warning::The public repository could not be fetched; the model reads the desk only."
+          fi
+          # No credential may stay in a checkout: no remote, no header, no askpass, no token in a URL.
+          for repo in "$work/desk" "$work/public"; do
+            if git -C "$repo" config --local --list | grep -qiE '^remote\.|extraheader|askpass|credential|token|://[^/]*@'; then
+              echo "::error::A checkout keeps a credential or a remote; the model does not run."
+              exit 1
+            fi
+          done
+          chmod -R a-w "$work/desk" "$work/public"
+          echo "Prompt: $(wc -c < "$think/prompt.md") bytes."
+
+      - name: Install the Copilot CLI and its sandbox
+        run: |
+          bin="$MANAGER_ROOT/bin"
+          mkdir -p "$bin"
+          if ! curl -fsSL --retry 3 -o "$RUNNER_TEMP/copilot.tar.gz" "$COPILOT_URL"; then
+            echo "::error::The Copilot CLI could not be downloaded."
+            exit 1
+          fi
+          if ! echo "$COPILOT_SHA256  $RUNNER_TEMP/copilot.tar.gz" | sha256sum -c --quiet - > /dev/null 2>&1; then
+            echo "::error::The Copilot CLI does not have its pinned SHA-256."
+            exit 1
+          fi
+          tar -xzf "$RUNNER_TEMP/copilot.tar.gz" -C "$bin"
+          COPILOT_AUTO_UPDATE=false "$bin/copilot" --version > "$RUNNER_TEMP/copilot-version.txt"
+          head -n 1 "$RUNNER_TEMP/copilot-version.txt"
+          # The sandbox of the CLI on Linux: bubblewrap 0.5+, and for its private network namespace slirp4netns,
+          # util-linux 2.35+, iptables and /dev/net/tun (copilot help sandbox). Ubuntu 24.04 restricts the user
+          # namespaces that bubblewrap needs; the runner's sudo lifts that for this machine. There is no way to
+          # run without the sandbox: when it cannot start, the model does not run.
+          if ! { sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap slirp4netns; } > "$RUNNER_TEMP/apt.log" 2>&1; then
+            echo "::error::The packages of the sandbox could not be installed; the model does not run."
+            exit 1
+          fi
+          sudo sysctl -q -w kernel.apparmor_restrict_unprivileged_userns=0 > /dev/null 2>&1 || true
+          missing=""
+          for tool in bwrap slirp4netns unshare nsenter iptables ip6tables iptables-restore ip6tables-restore; do
+            command -v "$tool" > /dev/null 2>&1 || missing="$missing $tool"
+          done
+          [ -c /dev/net/tun ] && [ -r /dev/net/tun ] && [ -w /dev/net/tun ] || missing="$missing /dev/net/tun"
+          if [ -n "$missing" ]; then
+            echo "::error::The sandbox lacks:$missing; the model does not run."
+            exit 1
+          fi
+          if ! bwrap --unshare-all --die-with-parent --ro-bind / / --dev /dev --proc /proc true > /dev/null 2>&1 \
+              || ! unshare --user --map-current-user --net true > /dev/null 2>&1; then
+            echo "::error::bubblewrap or unshare cannot make a user and network namespace here; the model does not run."
+            exit 1
+          fi
+          echo "The sandbox's prerequisites are present."
+
+      - name: Think
+        id: think
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          MAX_CREDITS: ${{ vars.FACTORY_MANAGER_MAX_CREDITS }}
+        run: |
+          if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "::error::The secret COPILOT_GITHUB_TOKEN is not set in the environment factory-manager-think."
+            exit 1
+          fi
+          # A cap of AI credits for the run, always: 400 unless the variable names another positive number.
+          credits="${MAX_CREDITS:-400}"
+          if ! [[ "$credits" =~ ^[1-9][0-9]{0,5}$ ]]; then
+            echo "::error::FACTORY_MANAGER_MAX_CREDITS is not a positive number of credits; the model does not run."
+            exit 1
+          fi
+          think="$RUNNER_TEMP/think"
+          work="$MANAGER_ROOT/work"
+          home="$MANAGER_ROOT/copilot-home"
+          umask 077
+          bytes=$(wc -c < "$think/prompt.md")
+          if [ "$bytes" -gt "$PROMPT_BYTES" ]; then
+            echo "::error::The prompt has $bytes bytes, more than $PROMPT_BYTES; manager.py keeps it under that limit."
+            exit 1
+          fi
+          # The sandbox: no network, no bypass, no git or gh credentials injected, no grant of the working
+          # directory, the profile or the dev-tool caches; the checkouts read-only; the runner's home (its
+          # workspace, temp directory, command files and the sealed parts) and the CLI's home denied.
+          python3 -I - "$home/settings.json" "$work" "$home" "$HOME" "$RUNNER_TEMP" <<'PY'
+          import json, os, sys
+          path, work, home = sys.argv[1], os.path.realpath(sys.argv[2]), sys.argv[3]
+          for denied in [home] + sys.argv[4:]:
+              if (work + os.sep).startswith(os.path.realpath(denied) + os.sep):
+                  sys.exit("the checkouts lie inside a denied path: %s" % denied)
+          json.dump({"autoUpdate": False, "sandbox": {
+              "enabled": True, "allowBypass": False, "auth": {"git": False, "gh": False},
+              "addCurrentWorkingDirectory": False, "allowDevToolAccess": False,
+              "sandboxMcpServers": True, "sandboxLspServers": True, "sandboxExtensions": True,
+              "userPolicy": {"network": {"allowOutbound": False, "allowLocalNetwork": False},
+                             "filesystem": {"readonlyPaths": [os.path.join(work, "desk"), os.path.join(work, "public")],
+                                            "readwritePaths": [], "deniedPaths": [home] + sys.argv[4:]}}}},
+              open(path, "w"), indent=1)
+          PY
+          # No shell for the model: the desk is a checkout of depth 1, so git history gives nothing, and the read
+          # tools (view, grep, glob) cover the files. One flag per tool, so that no list depends on how the CLI
+          # splits a comma-separated value.
+          args=(--model="$MODEL" --silent --no-color --stream=off --no-ask-user --no-auto-update
+                --no-custom-instructions --disable-builtin-mcps --disable-client-telemetry --sync-session=off
+                --disallow-temp-dir --sandbox --max-ai-credits="$credits"
+                --log-level=warning --log-dir="$think/logs" --usage-output-file="$think/usage.json"
+                "--secret-env-vars=COPILOT_GITHUB_TOKEN,GH_TOKEN,GITHUB_TOKEN")
+          for tool in view grep glob; do
+            args+=(--available-tools="$tool")
+          done
+          for tool in bash read_bash write_bash stop_bash list_bash create edit apply_patch web_fetch task \
+              read_agent write_agent list_agents skill ask_user; do
+            args+=(--excluded-tools="$tool")
+          done
+          for rule in shell write url memory; do
+            args+=(--deny-tool="$rule")
+          done
+          if [ -d "$work/public/.git" ]; then
+            args+=(--add-dir="$work/public")
+          fi
+          prompt=$(cat "$think/prompt.md")
+          timeout_bin=$(command -v timeout)
+          status=0
+          # The model's process starts from an empty environment: a short PATH, its own HOME and CLI home, and the
+          # Copilot token, which --secret-env-vars keeps out of the environments of the tools it starts. Its stdout
+          # is the final message (--silent), and nothing of it reaches this log.
+          (cd "$work/desk" && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" LANG=C.UTF-8 \
+              TERM=dumb NO_COLOR=1 CI=true COPILOT_HOME="$home" COPILOT_AUTO_UPDATE=false \
+              COPILOT_DISABLE_LOGIN_SHELL_ENV=1 COPILOT_TASK_WAIT_TIMEOUT_SECONDS=60 \
+              COPILOT_GITHUB_TOKEN="$COPILOT_GITHUB_TOKEN" \
+              "$timeout_bin" --kill-after=30s 35m "$MANAGER_ROOT/bin/copilot" --prompt="$prompt" "${args[@]}") \
+              < /dev/null > "$think/message.txt" 2> "$think/cli.err" || status=$?
+          closings=$(grep -cE '^[*>_ ]*\[\[\[END MANAGER\]\]\]' "$think/message.txt") || closings=0
+          # The model of the run, from the usage the CLI wrote: any key or text of the JSON that is the model id.
+          model_used=$(python3 -I - "$think/usage.json" "$MODEL" <<'PY'
+          import json, sys
+          try:
+              data = json.load(open(sys.argv[1], encoding="utf-8"))
+          except (OSError, ValueError):
+              print("unreadable")
+              sys.exit(0)
+          want = sys.argv[2].lower()
+          def names(x):
+              if isinstance(x, dict):
+                  for k, v in x.items():
+                      yield str(k)
+                      yield from names(v)
+              elif isinstance(x, list):
+                  for v in x:
+                      yield from names(v)
+              elif isinstance(x, str):
+                  yield x
+          print("yes" if any(n.lower() == want for n in names(data)) else "no")
+          PY
+          )
+          echo "Exit status: $status"
+          echo "Message: $(wc -c < "$think/message.txt") bytes, $closings closing line(s) of the envelope."
+          echo "Usage names the model $MODEL: $model_used."
+          ok=false
+          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ]; then
+            ok=true
+          fi
+          echo "$ok" > "$think/ok"
+          if [ "$ok" != true ]; then
+            echo "::error::The model's run is not usable (exit status, envelope or model); finish records a failed run."
+            exit 1
+          fi
+
+      - name: Seal the message
+        id: seal
+        # Also after a failed run: the CLI's errors reach the ledger's last-run.log, never the message of collect.
+        if: always() && steps.fetch.outcome == 'success'
+        run: |
+          think="$RUNNER_TEMP/think"
+          umask 077
+          # A job output is read in finish through env, and one environment string holds at most 128 KiB: the
+          # message is cut to manager.max_message_chars (what collect reads at most) and the sealed value must stay
+          # under 100000 bytes; else only the logs are sealed, and collect records a failed run.
+          seal() {
+            python3 -I - "$think" "$MANAGER_ROOT/work/desk/dispatcher/config.json" "$1" > "$think/sealed.json" <<'PY'
+          import glob, json, os, sys
+          d, config, with_message = sys.argv[1], sys.argv[2], sys.argv[3] == "yes"
+          def text(path, tail=None):
+              try:
+                  with open(os.path.join(d, path), encoding="utf-8", errors="replace") as f:
+                      s = f.read()
+              except OSError:
+                  return ""
+              return s[-tail:] if tail else s
+          try:
+              limit = json.load(open(config, encoding="utf-8"))["manager"]["max_message_chars"]
+          except (OSError, ValueError, KeyError, TypeError):
+              limit = 80000
+          limit = limit if isinstance(limit, int) and 0 < limit <= 80000 else 80000
+          message = text("message.txt")
+          note = ""
+          if len(message) > limit:
+              # The last envelope is what collect reads, so the end of the message is kept.
+              message, note = message[-limit:], "the message was cut to its last %d characters" % limit
+          if not with_message:
+              message, note = "", "the sealed message was too large for a job output"
+          logs = "".join(text(p, 4000) for p in sorted(glob.glob(os.path.join(d, "logs", "*.log"))))
+          json.dump({"ok": with_message and text("ok").strip() == "true", "message": message, "note": note,
+                     "stderr": text("cli.err", 4000), "usage": text("usage.json", 2000), "logs": logs[-8000:]},
+                    sys.stdout, ensure_ascii=False)
+          PY
+            gzip -9 -c "$think/sealed.json" \
+              | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass "file:$think/key" \
+              | base64 | tr -d '\n' > "$RUNNER_TEMP/sealed.txt"
+          }
+          seal yes
+          size=$(wc -c < "$RUNNER_TEMP/sealed.txt")
+          if [ "$size" -gt 100000 ]; then
+            echo "::warning::The sealed message has $size bytes, too many for finish; only the logs are handed on."
+            seal no
+            size=$(wc -c < "$RUNNER_TEMP/sealed.txt")
+            if [ "$size" -gt 100000 ]; then
+              echo "::error::Even the logs do not fit into $size bytes; nothing is handed on."
+              exit 1
+            fi
+          fi
+          echo "Sealed: $size bytes."
+          echo "message=$(cat "$RUNNER_TEMP/sealed.txt")" >> "$GITHUB_OUTPUT"
+
+  finish:
+    needs: [plan, think]
+    # Always after a plan with work, also when think failed, timed out or was not needed.
+    if: >-
+      always() && needs.plan.result == 'success' && needs.plan.outputs.work == 'true'
+      && needs.plan.outputs.box != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # The public notice on the watch's issue, by github-actions[bot], so that its mention reaches the owner.
+    permissions:
+      issues: write
+    environment:
+      name: factory-manager
+      deployment: false
+    steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          PLANNED: ${{ needs.plan.outputs.mode }}
+          SWITCH: ${{ vars.FACTORY_MANAGER }}
+        run: |
+          # Live only when the plan was live and the switch is still "true"; anything else is a rehearsal.
+          mode=rehearse
+          if [ "$PLANNED" = "live" ] && [ "$SWITCH" = "true" ]; then
+            mode=live
+          fi
+          echo "Mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the desk and the plan
+        id: fetch
+        env:
+          DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+          DESK_SHA: ${{ needs.plan.outputs.desk }}
+          BOX: ${{ needs.plan.outputs.box }}
+          LEDGER: ${{ needs.plan.outputs.ledger }}
+          PUBLIC_SHA: ${{ github.sha }}
+        run: |
+          sha_re='^[0-9a-f]{40}$'
+          if ! [[ "$DESK_SHA" =~ $sha_re && "$BOX" =~ $sha_re && "$LEDGER" =~ $sha_re && "$PUBLIC_SHA" =~ $sha_re ]]; then
+            echo "::error::The plan handed on no valid commit ids."
+            exit 1
+          fi
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::error::The secret MANAGER_DESK_TOKEN is not set in the environment factory-manager."
+            exit 1
+          fi
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          umask 077
+          desk="$RUNNER_TEMP/desk"
+          git init --quiet "$desk"
+          git -C "$desk" remote add origin "$DESK_URL"
+          if ! git -C "$desk" fetch --quiet --depth 1 origin "$DESK_SHA" > /dev/null 2>&1; then
+            echo "::error::The commit of the desk that the plan read could not be fetched."
+            exit 1
+          fi
+          git -C "$desk" checkout --quiet --detach FETCH_HEAD
+          # The box by the commit id that plan handed on; think cannot write to the private repository.
+          if ! git -C "$desk" fetch --quiet --depth 1 origin refs/heads/manager-box > /dev/null 2>&1 \
+              || [ "$(git -C "$desk" rev-parse FETCH_HEAD)" != "$BOX" ]; then
+            echo "::error::The box of this run is not on the branch manager-box."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/box"
+          git -C "$desk" archive "$BOX" | tar -x -C "$RUNNER_TEMP/box"
+          git init --quiet "$RUNNER_TEMP/public"
+          if git -C "$RUNNER_TEMP/public" fetch --quiet --depth 1 "$PUBLIC_URL" "$PUBLIC_SHA" > /dev/null 2>&1; then
+            git -C "$RUNNER_TEMP/public" checkout --quiet --detach FETCH_HEAD
+          else
+            echo "::warning::The public repository could not be fetched; citations of public:... are dropped."
+          fi
+          echo "Fetched the desk and the box."
+
+      - name: Open the message
+        env:
+          SEALED: ${{ needs.think.outputs.message }}
+          THINK: ${{ needs.think.result }}
+        run: |
+          box="$RUNNER_TEMP/box"
+          umask 077
+          if [ -z "$SEALED" ]; then
+            echo "Think: $THINK, no message."
+            exit 0
+          fi
+          if ! printf '%s' "$SEALED" | base64 -d 2> /dev/null \
+              | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass "file:$box/key" 2> /dev/null \
+              | gunzip -c > "$RUNNER_TEMP/sealed.json" 2> /dev/null; then
+            echo "::warning::The sealed message could not be opened; collect records a failed run."
+            rm -f "$RUNNER_TEMP/sealed.json"
+            exit 0
+          fi
+          python3 -I - "$RUNNER_TEMP/sealed.json" "$RUNNER_TEMP" "$THINK" <<'PY'
+          import json, os, sys
+          sealed = json.load(open(sys.argv[1], encoding="utf-8"))
+          out = sys.argv[2]
+          with open(os.path.join(out, "think.log"), "w", encoding="utf-8") as f:
+              f.write("--- think: %s, ok %s %s\n--- stderr of the CLI\n%s\n--- usage\n%s\n--- logs of the CLI\n%s\n" % (
+                  sys.argv[3], sealed.get("ok"), sealed.get("note") or "", sealed.get("stderr") or "", sealed.get("usage") or "",
+                  sealed.get("logs") or ""))
+          # The message reaches collect only from a run that think judged usable.
+          if sealed.get("ok") is True and sys.argv[3] == "success" and isinstance(sealed.get("message"), str):
+              with open(os.path.join(out, "message.txt"), "w", encoding="utf-8") as f:
+                  f.write(sealed["message"])
+              print("Think: %s, a message of %d characters." % (sys.argv[3], len(sealed["message"])))
+          else:
+              print("Think: %s, the message is not used." % sys.argv[3])
+          PY
+
+      - name: Collect
+        id: collect
+        # Also after a failed open of the message: then without one, so that the run counts as failed.
+        if: always() && steps.fetch.outcome == 'success'
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          args=(collect --desk "$desk" --ledger "$box/ledger" --plan "$box/plan.json")
+          if [ -d "$RUNNER_TEMP/public/.git" ]; then
+            args+=(--public-dir "$RUNNER_TEMP/public")
+          fi
+          if [ -s "$RUNNER_TEMP/message.txt" ]; then
+            args+=(--message "$RUNNER_TEMP/message.txt")
+          fi
+          status=0
+          (cd "$desk" && python3 -E -s dispatcher/manager.py "${args[@]}") > "$RUNNER_TEMP/collect.log" 2>&1 || status=$?
+          counts_re='^manager: collected M-[0-9]{8}-[0-9]{4}: (nothing|[a-z_]+ [0-9]+(, [a-z_]+ [0-9]+)*); [0-9]+ problem\(s\)$'
+          line=$(grep -E "$counts_re" "$RUNNER_TEMP/collect.log" | tail -n 1) || line=""
+          echo "${line:-manager: (no line of counts)}"
+          echo "Exit status: $status"
+          exit "$status"
+
+      - name: Publish
+        if: steps.collect.outcome == 'success'
+        env:
+          MANAGER_DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+          # The public notice is posted with this token, so github-actions[bot] writes it.
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          PYTHONUNBUFFERED: '1'
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          args=(publish --ledger "$RUNNER_TEMP/box/ledger")
+          if [ "$MODE" = "live" ]; then
+            args+=(--live)
+          else
+            args+=(--rehearse)
+          fi
+          status=0
+          (cd "$desk" && python3 -E -s dispatcher/manager.py "${args[@]}") > "$RUNNER_TEMP/publish.log" 2>&1 || status=$?
+          line=$(grep -E '^manager: [0-9]+ posted, [0-9]+ dropped, [0-9]+ left$' "$RUNNER_TEMP/publish.log" | tail -n 1) || line=""
+          echo "${line:-manager: (no line of counts)}"
+          if [ "$MODE" != "live" ]; then
+            echo "Rehearsal: $(grep -c '^manager: WOULD post ' "$RUNNER_TEMP/publish.log") action(s) would be posted."
+          fi
+          echo "Exit status: $status"
+          if [ "$status" = 2 ]; then
+            echo "::warning::Actions are left in the outbox for the next run."
+            exit 0
+          fi
+          exit "$status"
+
+      - name: Record a failed collect
+        # A collect that failed (a crash on the message) would leave the run reserved and out of the breaker's
+        # count: collect again without the message, which records a failed run.
+        if: always() && steps.fetch.outcome == 'success' && steps.collect.outcome == 'failure'
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          status=0
+          (cd "$desk" && python3 -E -s dispatcher/manager.py collect --desk "$desk" --ledger "$box/ledger" \
+              --plan "$box/plan.json") > "$RUNNER_TEMP/collect-again.log" 2>&1 || status=$?
+          echo "Collect without the message: exit status $status."
+          exit "$status"
+
+      - name: Keep the ledger
+        if: always() && steps.fetch.outcome == 'success'
+        env:
+          DESK_TOKEN: ${{ secrets.MANAGER_DESK_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          RUN: ${{ needs.plan.outputs.run }}
+          LEDGER: ${{ needs.plan.outputs.ledger }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          box="$RUNNER_TEMP/box"
+          umask 077
+          {
+            echo "run: $RUN_ID, manager run $RUN, $MODE"
+            for part in "$box/plan.log" "$RUNNER_TEMP/think.log" "$RUNNER_TEMP/collect.log" \
+                "$RUNNER_TEMP/collect-again.log" "$RUNNER_TEMP/publish.log"; do
+              echo "--- $(basename "$part")"
+              cat "$part" 2> /dev/null || echo "(none)"
+            done
+          } > "$box/ledger/last-run.log"
+          dir="$box/ledger"
+          if [ "$MODE" != "live" ]; then
+            # A rehearsal leaves manager-log alone: its ledger, message and logs go to manager-rehearsal.
+            dir="$RUNNER_TEMP/rehearsal"
+            mkdir -p "$dir"
+            cp -R "$box/ledger" "$dir/ledger"
+            cp "$box/plan.json" "$dir/plan.json"
+            cp "$RUNNER_TEMP/message.txt" "$dir/message.txt" 2> /dev/null || true
+          fi
+          index="$RUNNER_TEMP/index.ledger"
+          GIT_INDEX_FILE="$index" git -C "$dir" --git-dir="$desk/.git" --work-tree="$dir" add -A -f .
+          tree=$(GIT_INDEX_FILE="$index" git --git-dir="$desk/.git" write-tree)
+          rm -f "$index"
+          if [ "$MODE" != "live" ]; then
+            commit=$(git -C "$desk" commit-tree "$tree" -m "Record a rehearsal of the manager [skip ci]" -m "Run $RUN_ID, manager run $RUN.")
+            if git -C "$desk" push --quiet --force origin "$commit:refs/heads/manager-rehearsal" > /dev/null 2>&1; then
+              echo "The rehearsal is on the branch manager-rehearsal of the private repository."
+              exit 0
+            fi
+            echo "::error::The rehearsal could not be pushed to the private repository."
+            exit 1
+          fi
+          if ! git -C "$desk" fetch --quiet --depth 1 origin "$LEDGER" > /dev/null 2>&1; then
+            echo "::error::The ledger commit of the plan could not be fetched; this run is not recorded on manager-log."
+            exit 1
+          fi
+          commit=$(git -C "$desk" commit-tree "$tree" -p "$LEDGER" -m "Record manager run $RUN [skip ci]" -m "Run $RUN_ID.")
+          # Never forced: a ledger that moved since the plan is not overwritten.
+          if git -C "$desk" push --quiet origin "$commit:refs/heads/manager-log" > /dev/null 2>&1; then
+            echo "The ledger is on the branch manager-log of the private repository."
+            exit 0
+          fi
+          if git -C "$desk" push --quiet origin "$commit:refs/heads/manager-log-failed/$RUN_ID" > /dev/null 2>&1; then
+            echo "::error::The ledger could not be pushed to manager-log. It is on the branch manager-log-failed/$RUN_ID of the private repository: merge it into manager-log and delete the branch; until then the manager does not run."
+          else
+            echo "::error::The ledger could not be pushed to the private repository."
+          fi
+          exit 1

@@ -44,7 +44,8 @@ name: Factory watch
 #
 # Repository variables: FACTORY_WATCH ("true" turns the workflow on), FACTORY_WATCH_ISSUE (the number of the
 # standing issue), and optionally FACTORY_WATCH_ENVIRONMENT, FACTORY_WATCH_TIMER_ENVIRONMENT, FACTORY_WATCH_TIMER
-# ("false" stops the loop; the schedule still runs). FACTORY_TICK_LIVE and FACTORY_TIMER are read, so a factory
+# ("false" stops the loop; the schedule still runs), FACTORY_MANAGER ("true": a check that announced a new alert
+# starts factory-manager.yml, which diagnoses it). FACTORY_TICK_LIVE and FACTORY_TIMER are read, so a factory
 # that the maintainer stopped is not reported as dead.
 # Secret of the environment: FACTORY_WATCH_TOKEN, a token that can read the private repository (Contents: read).
 # Without it FACTORY_DESK_TOKEN and then FACTORY_TOKEN are used, which exist only in factory-dispatch.
@@ -93,6 +94,8 @@ jobs:
     permissions:
       actions: read
       issues: write
+    outputs:
+      new: ${{ steps.watch.outputs.new }}
     environment:
       name: ${{ vars.FACTORY_WATCH_ENVIRONMENT || 'factory-watch' }}
       # The environment is used for its secret and its branch policy only; this is not a deployment.
@@ -153,6 +156,7 @@ jobs:
           echo "ok=$ok" >> "$GITHUB_OUTPUT"
 
       - name: Watch
+        id: watch
         if: steps.desk.outputs.ok == 'true'
         env:
           WATCH_TOKEN: ${{ github.token }}
@@ -170,8 +174,14 @@ jobs:
           if [ "$FAIL_ON_CRITICAL" = true ]; then
             args+=(--fail-on-critical)
           fi
-          # watch.py prints only counts with --notify.
-          python3 -I "$desk/dispatcher/watch.py" "${args[@]}"
+          # watch.py prints only counts with --notify. The number of new alerts starts the manager (job manager).
+          # tee, not a file printed afterwards, so that a run cut by its timeout still shows what watch.py printed.
+          status=0
+          python3 -I "$desk/dispatcher/watch.py" "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/watch.out" || status=$?
+          new=$(sed -nE 's/^alerts: .*; new ([0-9]+), cleared [0-9]+, open before [0-9]+$/\1/p' "$RUNNER_TEMP/watch.out" \
+            | tail -n 1)
+          echo "new=${new:-0}" >> "$GITHUB_OUTPUT"
+          exit "$status"
 
       - name: Report that the private repository cannot be read
         if: steps.desk.outputs.ok != 'true'
@@ -194,6 +204,27 @@ jobs:
             echo "Already announced on #$ISSUE."
           fi
           exit 1
+
+  manager:
+    needs: check
+    # A check that announced a new alert starts the factory manager (factory-manager.yml), also a check that failed
+    # on a critical alert. Off unless FACTORY_MANAGER is "true"; the manager's daily schedule is its backstop.
+    if: >-
+      !cancelled() && vars.FACTORY_MANAGER == 'true'
+      && needs.check.outputs.new != '' && needs.check.outputs.new != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start the factory manager
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-manager.yml -R "$REPO" --ref master; then
+            echo "::warning::The factory manager could not be started; its schedule is the backstop."
+          fi
 
   rearm:
     needs: check
