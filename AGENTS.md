@@ -1,7 +1,7 @@
 # AGENTS.md
 
 This is the IntelliJ Platform plugin for Erlang: lexer, parser, PSI, stubs, inspections, completion, run/debug, rebar and eunit.
-Plugin id `org.jetbrains.erlang`. One archive serves IntelliJ IDEA 2026.1, 2026.2 and 2026.3 (platform branches 261 to 263). It is built against the oldest of them, 2026.1, with Java 21.
+Plugin id `org.jetbrains.erlang`. One archive serves IntelliJ IDEA 2026.2 and 2026.3 (platform branches 262 and 263). It is built against the older of them, 2026.2, with Java 21.
 
 ## Layout
 - `src/`: the plugin sources (`org.intellij.erlang.*`).
@@ -15,7 +15,7 @@ Plugin id `org.jetbrains.erlang`. One archive serves IntelliJ IDEA 2026.1, 2026.
 
 ## Commands
 Use JDK 21 (CI uses Temurin 21) and the Gradle wrapper. Building or testing against 2026.3 (`-PplatformVersion=2026.3`) needs JDK 25.
-The first build downloads IntelliJ IDEA 2026.1 (several GB) from JetBrains hosts. Running even one test class takes minutes.
+The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts. Running even one test class takes minutes.
 
 | Purpose | Command |
 |---|---|
@@ -86,9 +86,9 @@ You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer 
 - `test` never needs Erlang. `testCompilation` reads `erlang.sdk.path` (default `/usr/lib/erlang/`) and `rebar.path` (the rebar3 escript; without it the rebar tests are skipped).
 
 ## Platform rules
-- Target 261 to 263. `since-build` is derived from `intellijIdea("2026.1")` and `until-build` is `263.*` (`supportedUntilBuild` in `build.gradle`). Do not use APIs newer than 261, and no Java language features or JDK APIs newer than 21. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
-- CI job `ide-2026.2` and `ide-2026.3` compile and test the same sources against the newer IDEs and run the Plugin Verifier on the archive there. A pull request runs only the newest one, `ide-2026.3`; a push to master runs both, so a failure of `ide-2026.2` shows on master after the merge and is fixed before the next release. Code must compile against all three: when an API differs between them, use the form all three have. A Copilot cloud session has only 2026.1 (the firewall blocks the downloads of the other IDEs), so do not run `-PplatformVersion` there: push and read the CI job `ide-2026.3`. A test that needs an API only some of them have looks it up by reflection (`ErlangMethodSeparatorProviderTest`).
-- The test runner and the structure view are part of the platform in 2026.1 and separate plugins from 2026.2 on. `plugin.xml` depends on them optionally, and `build.gradle` adds them per IDE.
+- Target 262 and 263. `since-build` is derived from `intellijIdea("2026.2")` and `until-build` is `263.*` (`supportedUntilBuild` in `build.gradle`). Do not use APIs newer than 262, and no Java language features or JDK APIs newer than 21. Do not add internal, experimental or override-only API usages; `verifyPlugin` reports them.
+- CI job `ide-2026.3` compiles and tests the same sources against the newer IDE and runs the Plugin Verifier on the archive there. Code must compile against both: when an API differs between them, use the form both have. A Copilot cloud session has only 2026.2 (the firewall blocks the downloads of the other IDEs), so do not run `-PplatformVersion` there: push and read the CI job `ide-2026.3`. A test that needs an API only one of them has looks it up by reflection (`ErlangMethodSeparatorProviderTest`).
+- The test runner and the structure view are separate plugins of the IDE. `plugin.xml` depends on them by their 2026.2 ids, which 2026.3 keeps as aliases, and `build.gradle` adds them per IDE.
 - `until-build` is raised only after the tests and the Plugin Verifier pass on the new IDE: add the IDE to the `other-ides` job of `gradle.yml` and to `release.yml`, then raise `supportedUntilBuild`.
 - `jps-plugin` must stay Java 11 bytecode (`options.release = 11`) and use only JPS and JDK APIs, no IDE classes. 828089b1 replaced `GeneralCommandLine` with `ProcessBuilder` for this reason.
 - Read PSI, VFS and indices under a read action. Modify PSI and documents in `WriteCommandAction`, which is the pattern in the quick fixes and refactorings.
