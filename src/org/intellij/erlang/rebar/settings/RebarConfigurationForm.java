@@ -60,7 +60,7 @@ public class RebarConfigurationForm {
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(@NotNull DocumentEvent documentEvent) {
-        validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+        validatePath();
       }
     });
 
@@ -82,7 +82,7 @@ public class RebarConfigurationForm {
   public void setPath(@NotNull String rebarPath) {
     if (!myRebarPathSelector.getText().equals(rebarPath)) {
       myRebarPathSelector.setText(rebarPath);
-      validateRebarPath(myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+      validatePath();
     }
   }
 
@@ -93,6 +93,17 @@ public class RebarConfigurationForm {
 
   public boolean isPathValid() {
     return myRebarVersionText.getText().startsWith("rebar");
+  }
+
+  // Checks run in parallel and end in any order; show only the result of the path that is in the field now.
+  private void validatePath() {
+    String rebarPath = getPath();
+    myRebarVersionText.setText("N/A");
+    validateRebarPath(rebarPath, myProject, s -> {
+      if (rebarPath.equals(getPath())) {
+        myRebarVersionText.setText(s);
+      }
+    });
   }
 
   @VisibleForTesting
@@ -174,7 +185,7 @@ public class RebarConfigurationForm {
             if (path != null) {
               FileUtil.setExecutable(new File(path));
               myRebarPathSelector.setText(path);
-              validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+              validatePath();
             }
           }
           catch (Exception ignore) {

@@ -23,6 +23,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,5 +53,34 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     finally {
       FileUtil.delete(directory);
     }
+  }
+
+  // A version check that ends after the path has changed again must not show its version next to the new path.
+  public void testVersionOfReplacedPathIsNotShown() throws Exception {
+    if (SystemInfo.isWindows) return;
+    File directory = FileUtil.createTempDirectory("replacedRebar", null, true);
+    File slow = new File(directory, "slow");
+    Files.writeString(slow.toPath(), "#!/bin/sh\nsleep 1\necho rebar 1.0.0 slow\n", StandardCharsets.UTF_8);
+    assertTrue(slow.setExecutable(true));
+    File fast = new File(directory, "fast");
+    Files.writeString(fast.toPath(), "#!/bin/sh\necho rebar 2.0.0 fast\n", StandardCharsets.UTF_8);
+    assertTrue(fast.setExecutable(true));
+
+    RebarConfigurationForm form = new RebarConfigurationForm();
+    form.setPath(slow.getPath());
+    form.setPath(fast.getPath());
+    long deadline = System.currentTimeMillis() + 2500;
+    while (System.currentTimeMillis() < deadline) {
+      PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+      PlatformTestUtil.waitForAlarm(10);
+    }
+    assertEquals(fast.getPath(), form.getPath());
+    assertEquals("rebar 2.0.0 fast", getVersionText(form));
+  }
+
+  private static String getVersionText(RebarConfigurationForm form) throws ReflectiveOperationException {
+    Field field = RebarConfigurationForm.class.getDeclaredField("myRebarVersionText");
+    field.setAccessible(true);
+    return ((javax.swing.JTextField) field.get(form)).getText();
   }
 }
