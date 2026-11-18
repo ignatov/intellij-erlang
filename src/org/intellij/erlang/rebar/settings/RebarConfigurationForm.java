@@ -66,9 +66,11 @@ public class RebarConfigurationForm {
 
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       String rebarPath = RebarRunningStateUtil.getRebarPath(null);
-      if (getPath().isEmpty()) {
-        ApplicationManager.getApplication().invokeLater(() -> setPath(rebarPath));
-      }
+      ApplicationManager.getApplication().invokeLater(() -> {
+        if (getPath().isEmpty()) {
+          setPath(rebarPath);
+        }
+      }, ModalityState.any());
     });
   }
 
