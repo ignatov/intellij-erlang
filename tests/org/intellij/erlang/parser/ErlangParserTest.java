@@ -160,6 +160,48 @@ public class ErlangParserTest extends ErlangParserTestBase {
                largeRunNanos < smallRunNanos * 8);
   }
 
+  // #1318: the lexer reads each quote once, so the verdict of the wall-clock check above must not change between runs.
+  public void testUnterminatedLongQuoteRunTimingCheckIsStable() throws IOException {
+    tokenizeUnterminatedQuoteRun(2_000);
+    for (int round = 0; round < 20; round++) {
+      ReadCountingSequence small = new ReadCountingSequence("\"".repeat(10_000));
+      ReadCountingSequence large = new ReadCountingSequence("\"".repeat(40_000));
+      long smallRunNanos = tokenize(small);
+      long largeRunNanos = tokenize(large);
+      assertEquals(10_000, small.reads);
+      assertEquals(40_000, large.reads);
+      assertTrue("Round " + round + ": long quote run took " + largeRunNanos + " ns after " + smallRunNanos +
+                 " ns for one quarter the input, with " + large.reads + " and " + small.reads + " characters read",
+                 largeRunNanos < smallRunNanos * 8);
+    }
+  }
+
+  private static long tokenize(CharSequence input) throws IOException {
+    _ErlangLexer lexer = new _ErlangLexer((Project) null);
+    lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
+    long start = System.nanoTime();
+    int tokens = 0;
+    while (lexer.advance() != null) tokens++;
+    long nanos = System.nanoTime() - start;
+    assertEquals(1, tokens);
+    return nanos;
+  }
+
+  private static final class ReadCountingSequence implements CharSequence {
+    private final String text;
+    private int reads;
+
+    ReadCountingSequence(String text) { this.text = text; }
+
+    @Override public int length() { return text.length(); }
+
+    @Override public char charAt(int index) { reads++; return text.charAt(index); }
+
+    @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
+
+    @Override public String toString() { return text; }
+  }
+
   private static long tokenizeUnterminatedQuoteRun(int quoteCount) throws IOException {
     String input = "\"".repeat(quoteCount);
     _ErlangLexer lexer = new _ErlangLexer((Project) null);
