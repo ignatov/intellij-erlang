@@ -111,6 +111,7 @@ final class ErlangConditionalBranches {
     for (PsiElement child = attribute.getFirstChild(); child != null; child = child.getNextSibling()) {
       if (child instanceof PsiWhiteSpace || child instanceof PsiComment || child instanceof PsiErrorElement) continue;
       if (child.getNode().getElementType() == ErlangTypes.ERL_OP_MINUS) continue;
+      if ("if".equals(child.getText())) return "if";
       if (child instanceof ErlangAtomAttribute atomAttribute) return atomAttribute.getName();
       if (child instanceof ErlangElseAtomAttribute) return "else";
       return child.getFirstChild() == null ? child.getText() : null;
