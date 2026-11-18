@@ -19,6 +19,7 @@ package org.intellij.erlang.rename;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
 import org.intellij.erlang.psi.ErlangFile;
@@ -74,6 +75,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
 
   public void testFileRenameToErlWithReferences() { doFileRenameWithReferencesTest("fileRenameToErlWithReferencesNew.erl"); }
   public void testFileRenameToBakWithReferences() { doFileRenameWithReferencesTest("fileRenameToBakWithReferences.erl.bak"); }
+
+  public void testIncludedHeaderRename() {
+    PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
+    PsiFile includer = myFixture.addFileToProject("includer.erl", "-module(includer).\n-include(\"header.hrl\").\n");
+    myFixture.renameElement(header, "renamed.hrl");
+    assertEquals("-module(includer).\n-include(\"renamed.hrl\").\n", includer.getText());
+  }
 
   public void testFileRenameToBakAndBack() {
     myFixture.configureByFile(getTestName(true) + ".erl");
