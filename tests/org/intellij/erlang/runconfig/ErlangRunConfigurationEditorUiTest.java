@@ -36,11 +36,11 @@ import java.util.List;
 
 public class ErlangRunConfigurationEditorUiTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testApplicationDebugOptionsAreCollapsed() {
-    assertDebugOptions(new ErlangRunConfigurationEditorForm(), false);
+    assertDebugOptions(new ErlangRunConfigurationEditorForm(getProject()), false);
   }
 
   public void testUnitDebugOptionsAreCollapsed() {
-    assertDebugOptions(new ErlangUnitRunConfigurationEditorForm(), false);
+    assertDebugOptions(new ErlangUnitRunConfigurationEditorForm(getProject()), false);
   }
 
   public void testRemoteDebugOptionsAreExpanded() {
@@ -48,7 +48,7 @@ public class ErlangRunConfigurationEditorUiTest extends ErlangLightPlatformCodeI
   }
 
   public void testUnitTestKindRenderer() {
-    ErlangUnitRunConfigurationEditorForm editor = new ErlangUnitRunConfigurationEditorForm();
+    ErlangUnitRunConfigurationEditorForm editor = new ErlangUnitRunConfigurationEditorForm(getProject());
     try {
       editor.resetFrom(new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance()));
       JComboBox<?> testKindComboBox = findTestKindComboBox(editor.getComponent());

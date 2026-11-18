@@ -18,6 +18,7 @@ package org.intellij.erlang.eunit.ui;
 
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
@@ -47,7 +48,8 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
   private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
 
-  public ErlangUnitRunConfigurationEditorForm() {
+  public ErlangUnitRunConfigurationEditorForm(@NotNull Project project) {
+    super(project);
     myTestKindComboBox.addActionListener(e -> onTestKindSwitch());
     ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirectoryComponent, null);
   }
@@ -147,5 +149,6 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
 
   private void createUIComponents() {
     myDebugOptionsHideablePanel = createDebugOptionsHideablePanel(false);
+    myEnvironmentVariablesComponent = createEnvironmentVariablesComponent();
   }
 }
