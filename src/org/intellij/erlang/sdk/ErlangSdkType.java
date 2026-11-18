@@ -507,19 +507,26 @@ public class ErlangSdkType extends SdkType {
     return version != null ? version.toString() : null;
   }
 
-  private static final Key<ErlangSdkRelease> ERLANG_SDK_RELEASE = Key.create("ERLANG_SDK_TYPE");
+  // the release together with the version string and the home it was found for, so that a change of either is seen
+  private record CachedRelease(@Nullable String versionString, @Nullable String homePath, @NotNull ErlangSdkRelease release) {}
+
+  private static final Key<CachedRelease> ERLANG_SDK_RELEASE = Key.create("ERLANG_SDK_TYPE");
 
   @Nullable
   private static ErlangSdkRelease getRelease(@Nullable Sdk sdk) {
     if (sdk != null && sdk.getSdkType() == getInstance()) {
+      String versionString = sdk.getVersionString();
+      String homePath = sdk.getHomePath();
 
-      var key = sdk.getUserData(ERLANG_SDK_RELEASE);
-      if (key != null) return key;
+      CachedRelease cached = sdk.getUserData(ERLANG_SDK_RELEASE);
+      if (cached != null && Objects.equals(cached.versionString(), versionString) && Objects.equals(cached.homePath(), homePath)) {
+        return cached.release();
+      }
 
-      ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(sdk.getVersionString());
-      ErlangSdkRelease release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
+      ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(versionString);
+      ErlangSdkRelease release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(homePath));
 
-      if (release != null) sdk.putUserData(ERLANG_SDK_RELEASE, release);
+      sdk.putUserData(ERLANG_SDK_RELEASE, release != null ? new CachedRelease(versionString, homePath, release) : null);
 
       return release;
     }
