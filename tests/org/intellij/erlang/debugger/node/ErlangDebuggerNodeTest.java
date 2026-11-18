@@ -23,6 +23,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -55,6 +56,43 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
       assertEquals(atom("evaluate"), evaluate.elementAt(0));
       assertEquals(pid, evaluate.elementAt(1));
       assertEquals(new OtpErlangLong(2), evaluate.elementAt(3));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1305: a message that stalls after its length and part of its body must end the session (readBytes promises a
+  // SocketException once the retries on timeout are used up), not be dropped so that its rest is read as a new message.
+  public void testStalledFrameEndsTheSession() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    CompletableFuture<OtpErlangObject> evaluationFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new StallListener(stoppedFuture, evaluationFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      byte[] inner = new OtpOutputStream(tuple(atom("evaluate_response"), atom("desync"))).toByteArray();
+      int innerSize = 1 + inner.length;
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(4 + 4 + innerSize);
+      out.write(new byte[4]);
+      out.flush();
+
+      peer.setSoTimeout(5000);
+      int read;
+      try {
+        read = peer.getInputStream().read();
+      }
+      catch (SocketTimeoutException e) {
+        out.writeInt(innerSize);
+        out.write(OtpExternal.versionTag);
+        out.write(inner);
+        out.flush();
+        OtpErlangObject response = evaluationFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        fail("The node kept the session open after a stalled message and parsed the rest of its body as a new message: " +
+             "handleEvaluationResponse(" + response + ")");
+        return;
+      }
+      assertEquals("The node should close the connection", -1, read);
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
     finally {
       node.stop();
@@ -105,5 +143,25 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
     @Override public void debuggerStopped() { }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
+  }
+
+  private static class StallListener implements ErlangDebuggerEventListener {
+    private final CompletableFuture<Void> myStopped;
+    private final CompletableFuture<OtpErlangObject> myEvaluationResponse;
+
+    StallListener(CompletableFuture<Void> stopped, CompletableFuture<OtpErlangObject> evaluationResponse) {
+      myStopped = stopped;
+      myEvaluationResponse = evaluationResponse;
+    }
+
+    @Override public void debuggerStarted() { }
+    @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
+    @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
+    @Override public void unknownMessage(String messageText) { }
+    @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
+    @Override public void breakpointIsSet(String module, int line) { }
+    @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
+    @Override public void handleEvaluationResponse(OtpErlangObject response) { myEvaluationResponse.complete(response); }
   }
 }
