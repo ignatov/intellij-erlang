@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -45,6 +46,8 @@ public class ErlangDebuggerNode {
   private static final int RETRIES_ON_TIMEOUT = 10;
   // the largest byte array HotSpot allocates
   private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+  // the buffer for a message starts at this size and grows as its bytes arrive
+  private static final int INITIAL_BUFFER_SIZE = 64 * 1024;
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -250,9 +253,8 @@ public class ErlangDebuggerNode {
 
       Integer objectSize = readObjectSize(in);
       if (objectSize == null) return null;
-      long maxSize = Math.min(MAX_ARRAY_SIZE, Runtime.getRuntime().maxMemory());
-      if (objectSize < 0 || objectSize > maxSize) {
-        throw invalidMessage("Invalid debugger message size: " + objectSize + " bytes, the limit is " + maxSize + " bytes.");
+      if (objectSize < 0 || objectSize > MAX_ARRAY_SIZE) {
+        throw invalidMessage("Invalid debugger message size: " + objectSize + " bytes, the limit is " + MAX_ARRAY_SIZE + " bytes.");
       }
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
@@ -308,12 +310,15 @@ public class ErlangDebuggerNode {
   private static byte @Nullable [] readBytes(@NotNull InputStream in, int size, boolean force) throws SocketException {
     try {
       int bytesReadTotal = 0;
-      byte[] buffer = new byte[size];
+      byte[] buffer = new byte[Math.min(size, INITIAL_BUFFER_SIZE)];
 
       int attemptsMade = 0;
       while (size != bytesReadTotal) {
+        if (bytesReadTotal == buffer.length) {
+          buffer = Arrays.copyOf(buffer, (int)Math.min(size, 2L * buffer.length));
+        }
         try {
-          int bytesRead = in.read(buffer, bytesReadTotal, size - bytesReadTotal);
+          int bytesRead = in.read(buffer, bytesReadTotal, buffer.length - bytesReadTotal);
           if (bytesRead < 0) {
             throw new SocketException("A socket was closed.");
           }

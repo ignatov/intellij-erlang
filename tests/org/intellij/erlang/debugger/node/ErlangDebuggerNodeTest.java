@@ -156,6 +156,32 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1289: a declared length is not allocated up front, so a huge one without a payload only times out the read.
+  public void testHugeFrameLengthWithoutPayloadKeepsTheSession() throws Exception {
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    CountDownLatch stopped = new CountDownLatch(1);
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture) {
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0x7FFFFFF7);
+      out.flush();
+      // The node gives up on the payload after RETRIES_ON_TIMEOUT * RECEIVE_TIMEOUT = 500 ms.
+      assertFalse("The session ended", stopped.await(2, TimeUnit.SECONDS));
+
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      OtpErlangTuple frame = tuple(new OtpErlangLong(1), tuple(atom("t"), atom("main"), list()), list());
+      OtpErlangTuple snapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                      tuple(atom("t"), new OtpErlangLong(3)), list(frame));
+      send(peer, tuple(atom("breakpoint_reached"), pid, list(snapshot)));
+      assertEquals(1, snapshotsFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS).size());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
   // #1289: FF FF FF FF is a length of -1, not "nothing read"; it ends the session and the session is told why.
   public void testAllOnesFrameLengthIsReportedToTheSession() throws Exception {
     CountDownLatch stopped = new CountDownLatch(1);
