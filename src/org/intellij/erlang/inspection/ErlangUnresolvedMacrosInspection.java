@@ -20,14 +20,10 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
@@ -99,7 +95,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       }
       ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
       if (atomAttribute == null) {
-        if (isIfAttribute(attribute)) conditions.push(new Condition(null, false));
+        if (attribute.getIfAtomAttribute() != null) conditions.push(new Condition(null, false));
         continue;
       }
       String directive = atomAttribute.getName();
@@ -160,11 +156,6 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       if (undefinesMacro(includedFile, name, visited)) return true;
     }
     return false;
-  }
-
-  private static boolean isIfAttribute(@NotNull ErlangAttribute attribute) {
-    PsiElement next = PsiTreeUtil.skipSiblingsForward(attribute.getOpMinus(), PsiWhiteSpace.class, PsiComment.class, PsiErrorElement.class);
-    return next != null && next.getNode().getElementType() == ErlangTypes.ERL_IF;
   }
 
   @Nullable
