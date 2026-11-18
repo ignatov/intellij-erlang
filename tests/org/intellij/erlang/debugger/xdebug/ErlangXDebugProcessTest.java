@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -79,26 +78,35 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
-  // The production constructor starts an Erlang node and a run configuration; this one only wires
-  // the session and the debugger node, which is all evaluateExpression and handleEvaluationResponse use.
-  @NotNull
-  private static ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node) throws Exception {
-    Field unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe");
-    unsafeField.setAccessible(true);
-    Object unsafe = unsafeField.get(null);
-    Method allocateInstance = unsafe.getClass().getMethod("allocateInstance", Class.class);
-    ErlangXDebugProcess process = (ErlangXDebugProcess)allocateInstance.invoke(unsafe, ErlangXDebugProcess.class);
-    XDebugSession session = (XDebugSession)Proxy.newProxyInstance(
-      ErlangXDebugProcessTest.class.getClassLoader(), new Class[]{XDebugSession.class}, (proxy, method, args) -> null);
-    setField(process, "mySession", session);
-    setField(process, "myDebuggerNode", node);
-    return process;
+  // An evaluation that never gets an answer (the evaluated process is gone) must not wait for ever.
+  public void testPendingEvaluationFailsWhenSessionStops() throws Exception {
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, new CountDownLatch(0)));
+    try (Socket ignored = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      RecordingCallback watch = new RecordingCallback();
+      process.evaluateExpression("A", watch, frame);
+      process.stop();
+
+      assertEquals(List.of(new OtpErlangString("error: The debug session has stopped")), watch.myValues);
+      process.handleEvaluationResponse(new OtpErlangLong(1));
+      assertEquals(1, watch.myValues.size());
+    }
+    finally {
+      node.stop();
+    }
   }
 
-  private static void setField(Object target, String name, Object value) throws Exception {
-    Field field = ErlangXDebugProcess.class.getDeclaredField(name);
-    field.setAccessible(true);
-    field.set(target, value);
+  @NotNull
+  private static ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node) {
+    XDebugSession session = (XDebugSession)Proxy.newProxyInstance(
+      ErlangXDebugProcessTest.class.getClassLoader(), new Class[]{XDebugSession.class}, (proxy, method, args) -> null);
+    return new ErlangXDebugProcess(session, node);
   }
 
   private static void send(Socket socket, OtpErlangObject message) throws Exception {

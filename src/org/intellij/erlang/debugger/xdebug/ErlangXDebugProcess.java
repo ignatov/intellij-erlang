@@ -63,6 +63,7 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.*;
 import java.util.*;
@@ -81,7 +82,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
-  private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
+  // the debugger node answers evaluations in request order and the answers carry no request id
+  private final Deque<XDebuggerEvaluator.XEvaluationCallback> myEvalCallbacks = new ArrayDeque<>();
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -115,6 +117,17 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                                          runConfig.isUseTestCodePath());
   }
 
+  @TestOnly
+  ErlangXDebugProcess(@NotNull XDebugSession session, @NotNull ErlangDebuggerNode debuggerNode) {
+    super(session);
+    mySession = session;
+    myExecutionEnvironment = null;
+    myRunningState = null;
+    myDebuggerNode = debuggerNode;
+    myErlangProcessHandler = null;
+    myLocationResolver = null;
+  }
+
   @NotNull
   public ErlangDebugLocationResolver getLocationResolver() {
     return myLocationResolver;
@@ -125,14 +138,15 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                               @NotNull ErlangTraceElement traceElement) {
     // need to pause the debugging session otherwise the callback might get invalidated
     mySession.pause();
-    myEvalCallback = callback;
+    myEvalCallbacks.addLast(callback);
     myDebuggerNode.evaluate(expression, traceElement);
   }
 
   @Override
   public synchronized void handleEvaluationResponse(OtpErlangObject response) {
-    if (myEvalCallback != null) {
-      myEvalCallback.evaluated(ErlangXValueFactory.create(response));
+    XDebuggerEvaluator.XEvaluationCallback callback = myEvalCallbacks.pollFirst();
+    if (callback != null) {
+      callback.evaluated(ErlangXValueFactory.create(response));
       mySession.resume();
     }
   }
@@ -283,6 +297,14 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   @Override
   public void stop() {
     myDebuggerNode.stop();
+    List<XDebuggerEvaluator.XEvaluationCallback> pending;
+    synchronized (this) {
+      pending = new ArrayList<>(myEvalCallbacks);
+      myEvalCallbacks.clear();
+    }
+    for (XDebuggerEvaluator.XEvaluationCallback callback : pending) {
+      callback.errorOccurred("The debug session has stopped");
+    }
   }
 
   @Override
