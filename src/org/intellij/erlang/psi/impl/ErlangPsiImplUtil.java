@@ -1103,11 +1103,16 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
-    List<ErlangCrClause> crClauseList = o.getCrClauseList();
+    ErlangExpression selector = o.getExpression();
+    if (lastParent != null) {
+      // inside the case only the selector is not walked up yet: its own clause was, and the other clauses bind nothing for it
+      return lastParent == selector || selector == null || selector instanceof ErlangMaxExpression ||
+             processDeclarationRecursive(selector, processor, state);
+    }
+    if (selector != null && !processDeclarationRecursive(selector, processor, state)) return false;
     boolean result = true;
-    for (ErlangCrClause c : crClauseList) {
-      ErlangClauseBody clauseBody = c.getClauseBody();
-      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+    for (ErlangCrClause c : o.getCrClauseList()) {
+      result &= processDeclarationRecursive(c, processor, state);
     }
     return result;
   }
