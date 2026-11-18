@@ -16,10 +16,17 @@
 
 package org.intellij.erlang.rebar.settings;
 
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +57,46 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
       assertEquals("rebar 9.9.9", version.get());
     }
     finally {
+      FileUtil.delete(directory);
+    }
+  }
+
+  // #698: when neither the rebar file nor the escript can be started (here: a rebar without the executable bit and an
+  // Erlang SDK without bin/escript, as with an IDE whose PATH has no escript), the check must report why, not stay silent.
+  public void testRebarAndEscriptCannotBeStarted() throws IOException {
+    if (SystemInfo.isWindows) return;
+    File directory = FileUtil.createTempDirectory("rebar698", null, true);
+    Project project = getProject();
+    Sdk previousSdk = ProjectRootManager.getInstance(project).getProjectSdk();
+    try {
+      File rebar = new File(directory, "rebar");
+      Files.writeString(rebar.toPath(),
+                        "#!/usr/bin/env escript\nmain(_) -> io:format(\"rebar 2.6.1 18 20151014_015616 No VCS info available.~n\").\n",
+                        StandardCharsets.UTF_8);
+      assertTrue(rebar.setExecutable(false, false));
+      assertFalse(rebar.canExecute());
+
+      String sdkHome = new File("testData/mockSdk-R15B02").getAbsolutePath();
+      assertFalse(new File(sdkHome, "bin/escript").exists());
+      Sdk sdk = ErlangSdkType.createMockSdk(sdkHome, ErlangSdkRelease.V_R15B02);
+      WriteAction.runAndWait(() -> {
+        ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable());
+        ProjectRootManager.getInstance(project).setProjectSdk(sdk);
+      });
+      assertEquals(sdkHome, ErlangSdkType.getSdkPath(project));
+
+      AtomicReference<String> message = new AtomicReference<>();
+      RebarConfigurationForm.validateRebarPath(rebar.getPath(), project, message::set);
+      long deadline = System.currentTimeMillis() + 10000;
+      while (message.get() == null && System.currentTimeMillis() < deadline) {
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+        PlatformTestUtil.waitForAlarm(10);
+      }
+      assertNotNull("The version check reported nothing although neither rebar nor escript could be started", message.get());
+      assertFalse(message.get(), message.get().startsWith("rebar"));
+    }
+    finally {
+      WriteAction.runAndWait(() -> ProjectRootManager.getInstance(project).setProjectSdk(previousSdk));
       FileUtil.delete(directory);
     }
   }
