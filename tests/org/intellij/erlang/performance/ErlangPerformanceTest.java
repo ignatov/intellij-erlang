@@ -24,9 +24,7 @@ import org.intellij.erlang.highlighting.ErlangHighlightingTestBase;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
-import org.junit.Ignore;
 
-@Ignore
 public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
@@ -67,10 +65,14 @@ public class ErlangPerformanceTest extends ErlangLightPlatformCodeInsightFixture
         .append("-endif.\n");
     }
 
-    PlatformTestUtil.newBenchmark("conditional branch inspection", () -> {
-      myFixture.configureByText("ConditionalBranches.erl", source.toString());
+    myFixture.configureByText("ConditionalBranches.erl", source.toString());
+    myFixture.doHighlighting();
+    long start = System.nanoTime();
+    for (int i = 0; i < 5; i++) {
       myFixture.doHighlighting();
-    }).attempts(10).start();
+    }
+    long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+    assertTrue("Conditional branch highlighting took " + elapsedMillis + " ms", elapsedMillis < 30_000);
   }
 
 //  public void testDialyzerDataflow() { doTest(5000); }
