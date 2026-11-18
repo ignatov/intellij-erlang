@@ -710,6 +710,11 @@ public class ErlangPsiImplUtil {
         Editor editor = context.getEditor();
         Document document = editor.getDocument();
         context.commitDocument();
+        ErlangCallbackFunction callback = PsiTreeUtil.getParentOfType(context.getFile().findElementAt(context.getStartOffset()), ErlangCallbackFunction.class);
+        if (callback != null && callback.getCurlyLeft() != null) {
+          insertTupleArity(callback, context);
+          return;
+        }
         PsiElement next = findNextToken(context);
         ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
 
@@ -722,6 +727,16 @@ public class ErlangPsiImplUtil {
         PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
         document.insertString(context.getTailOffset(), "/" + arity);
         editor.getCaretModel().moveToOffset(context.getTailOffset());
+      }
+
+      private void insertTupleArity(@NotNull ErlangCallbackFunction callback, @NotNull InsertionContext context) {
+        Document document = context.getDocument();
+        PsiElement comma = callback.getComma();
+        PsiElement integer = callback.getInteger();
+        int start = comma != null ? comma.getTextRange().getStartOffset() : context.getTailOffset();
+        int end = integer != null ? integer.getTextRange().getEndOffset() : comma != null ? comma.getTextRange().getEndOffset() : start;
+        document.replaceString(start, end, ", " + arity);
+        context.getEditor().getCaretModel().moveToOffset(start + 2 + String.valueOf(arity).length());
       }
 
       @Nullable
