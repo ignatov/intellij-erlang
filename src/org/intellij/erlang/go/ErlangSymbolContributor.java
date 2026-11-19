@@ -66,7 +66,7 @@ public class ErlangSymbolContributor implements GotoClassContributor, ChooseByNa
     if (Character.isDigit(pattern.charAt(separator + 1))) return null; // "name:12" goes to a line
     String module = pattern.substring(0, separator);
     if (StringUtil.containsAnyChar(module, "* ")) return null;
-    return ErlangModuleIndex.getVirtualFilesByName(parameters.getProject(), module, scope).isEmpty() ? null : module;
+    return ErlangModuleIndex.hasModule(module, scope) ? module : null;
   }
 
   private static boolean isInModule(@NotNull ErlangNamedElement element, @NotNull String module) {
