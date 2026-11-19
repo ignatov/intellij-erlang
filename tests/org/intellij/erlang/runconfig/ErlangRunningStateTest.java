@@ -47,6 +47,14 @@ public class ErlangRunningStateTest extends TestCase {
     assertEquals("hello world", entryPoint.getFunctionName());
   }
 
+  public void testControlQuestionMarkEscape() {
+    ErlangRunningState.ErlangEntryPoint entryPoint =
+      ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("m '\\^?'", "");
+
+    assertNotNull(entryPoint);
+    assertEquals("\u007f", entryPoint.getFunctionName());
+  }
+
   public void testUnterminatedQuotedFunctionName() {
     assertNull(ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("m 'hello world", ""));
   }

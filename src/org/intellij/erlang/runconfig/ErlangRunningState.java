@@ -185,11 +185,10 @@ public abstract class ErlangRunningState extends CommandLineState {
     return sb.append('\'').toString();
   }
 
-  // the name of the atom written as the given Erlang source, plain or in quotes with escapes
+  // the name of an atom from its PSI name: the text between the quotes with escapes, or '' for the empty atom
   @NotNull
-  public static String atomName(@NotNull String atom) {
-    if (atom.length() < 2 || !atom.startsWith("'") || !atom.endsWith("'")) return atom;
-    return unescape(atom.substring(1, atom.length() - 1));
+  public static String atomName(@NotNull String psiName) {
+    return "''".equals(psiName) ? "" : unescape(psiName);
   }
 
   @NotNull
@@ -215,7 +214,10 @@ public abstract class ErlangRunningState extends CommandLineState {
         case 't' -> sb.append('\t');
         case 'v' -> sb.append((char) 11);
         case '^' -> {
-          if (i < length) sb.append((char) (text.charAt(i++) & 31));
+          if (i < length) {
+            char control = text.charAt(i++);
+            sb.append(control == '?' ? (char) 127 : (char) (control & 31));
+          }
         }
         case 'x' -> {
           int end;

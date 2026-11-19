@@ -26,6 +26,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.testFramework.MapDataContext;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -146,6 +147,32 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
     ErlangRunningState.ErlangEntryPoint entryPoint = state.getDebugEntryPoint();
     assertEquals("m", entryPoint.getModuleName());
     assertEquals("it's", entryPoint.getFunctionName());
+  }
+
+  public void testCheckConfigurationDoesNotLoadModuleAst() throws Exception {
+    PsiFileImpl file = (PsiFileImpl) myFixture.addFileToProject("m2.erl", """
+      -module(m2).
+      -export(['my-func'/0]).
+      'my-func'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModule(getModule());
+    configuration.setModuleAndFunction("m2 'my-func'");
+    assertFalse(file.isContentsLoaded());
+    configuration.checkConfiguration();
+    assertFalse(file.isContentsLoaded());
+  }
+
+  public void testConfigurationNameKeepsEscapes() {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['a\\nb'/0]).
+      'a<caret>\\nb'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+    assertEquals("m.a\\nb", configuration.getName());
+    assertEquals("m 'a\\nb'", configuration.getModuleAndFunction());
   }
 
   private String getEval(ErlangApplicationConfiguration configuration) throws ExecutionException {
