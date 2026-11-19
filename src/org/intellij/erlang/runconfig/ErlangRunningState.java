@@ -87,7 +87,7 @@ public abstract class ErlangRunningState extends CommandLineState {
     return commandLine;
   }
 
-  protected List<String> getCodePath() throws ExecutionException {
+  public List<String> getCodePath() throws ExecutionException {
     return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
   }
 

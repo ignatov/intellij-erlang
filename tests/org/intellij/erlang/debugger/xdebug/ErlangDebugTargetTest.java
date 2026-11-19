@@ -21,6 +21,7 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.NopProcessHandler;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
@@ -33,6 +34,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +64,8 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     configuration.setErlFlags("-s lager start -extra foo bar");
 
     GeneralCommandLine commandLine = new GeneralCommandLine();
-    ErlangXDebugProcess.addDebugTargetParameters(commandLine, new ErlangApplicationRunningState(null, getModule(), configuration), 4242);
+    ErlangApplicationRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
+    ErlangXDebugProcess.addDebugTargetParameters(commandLine, state, state.getCodePath(), 4242);
 
     assertEquals(List.of("-pa", "/src", "-s", "lager", "start", "-run", "debugnode", "main", "4242", "-noshell",
                          "-s", "init", "stop", "-extra", "foo", "bar"), commandLine.getParametersList().getList());
@@ -88,6 +91,19 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     processHandler.destroyProcess();
 
     assertTrue("the debugger node must stop when the debug target terminates", stopped.await(10, TimeUnit.SECONDS));
+  }
+
+  public void testBeamsAreDeletedWhenTargetTerminates() throws Exception {
+    File beams = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
+    FileUtil.writeToFile(new File(beams, "debugnode.beam"), "");
+    NopProcessHandler processHandler = new NopProcessHandler();
+    ErlangXDebugProcess.deleteBeamsOnTermination(processHandler, new ErlangXDebugProcess.SetUp(beams, List.of(), List.of()));
+    processHandler.startNotify();
+
+    processHandler.destroyProcess();
+
+    assertTrue("the debug target has terminated", processHandler.waitFor(10_000));
+    assertFalse("the beams of the session must be deleted when the debug target terminates", beams.exists());
   }
 
   private static class StoppedListener implements ErlangDebuggerEventListener {
