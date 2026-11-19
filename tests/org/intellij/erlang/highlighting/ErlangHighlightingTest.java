@@ -106,6 +106,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport8()     { doTest(); }
   public void test605()               { doTest(); }
   public void test821()               { doTest(); }
+  public void test933()               { doTest(); }
   public void testFunVarArityInMacroArguments() { doTest(); }
   public void testFunVarArityInConstantMacroArguments() { doTest(); }
   public void testFunVarArityInMacroArgumentsInTypes() { doTest(); }
