@@ -17,12 +17,17 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
 import org.intellij.erlang.application.ErlangApplicationRunningState;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfigurationType;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunningState;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -52,6 +57,35 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
 
   public void testApplicationErlFlagsAreSplitOnSpaces() throws ExecutionException {
     assertErlFlags("+P 1000  -sname node", "+P", "1000", "-sname", "node");
+  }
+
+  // #1352: a remote node configuration whose debug node args were never set means no extra arguments
+  public void testRemoteDebugTemplateWithoutDebugNodeArgs() {
+    ErlangRemoteDebugRunConfiguration configuration = (ErlangRemoteDebugRunConfiguration)
+      ErlangRemoteDebugRunConfigurationType.getInstance().getConfigurationFactories()[0].createTemplateConfiguration(getProject());
+    configuration.setRemoteErlangNodeName("smoke_target@host");
+    configuration.setCookie("smokecookie");
+    assertRemoteDebugNodeFlagsOnlyName(configuration);
+  }
+
+  public void testRemoteDebugReadWithoutDebugNodeArgs() throws Exception {
+    ErlangRemoteDebugRunConfiguration configuration = new ErlangRemoteDebugRunConfiguration(getProject(), "remote smoke_target");
+    configuration.readExternal(JDOMUtil.load(
+      "<configuration name=\"remote smoke_target\" type=\"ErlangRemoteDebugRunConfiguration\" factoryName=\"Erlang Remote Node\">" +
+      "<option name=\"remoteErlangNodeName\" value=\"smoke_target@host\" />" +
+      "<option name=\"cookie\" value=\"smokecookie\" />" +
+      "</configuration>"));
+    assertRemoteDebugNodeFlagsOnlyName(configuration);
+  }
+
+  private void assertRemoteDebugNodeFlagsOnlyName(ErlangRemoteDebugRunConfiguration configuration) {
+    ErlangRemoteDebugRunningState state = new ErlangRemoteDebugRunningState(null, getModule(), configuration);
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+    state.setErlangFlags(commandLine);
+    List<String> parameters = commandLine.getParametersList().getList();
+    assertEquals(parameters.toString(), 2, parameters.size());
+    assertEquals("-sname", parameters.get(0));
+    assertTrue(parameters.toString(), parameters.get(1).startsWith("debugger_node_"));
   }
 
   private void assertErlFlags(String erlFlags, String... expected) throws ExecutionException {
