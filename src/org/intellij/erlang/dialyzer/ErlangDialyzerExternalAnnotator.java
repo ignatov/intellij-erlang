@@ -36,8 +36,10 @@ import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.UserDataHolderEx;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
@@ -49,11 +51,15 @@ import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
+  private static final Key<Set<String>> TIMED_OUT_FILES = Key.create("Erlang.DIALYZER_TIMED_OUT_FILES");
 
   @Nullable
   private static Problem parseProblem(String input) {
@@ -102,7 +108,15 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     catch (ExecutionException e) {
       LOG.debug(e);
     }
+    if (output != null && output.isTimeout()) {
+      if (timedOutFiles(state.myProject).add(state.myFilePath)) {
+        String message = "Dialyzer did not finish in time for " + new File(state.myFilePath).getName() + "; its warnings are not shown";
+        new Notification("Dialyzer-based inspections", message, NotificationType.WARNING).notify(state.myProject);
+      }
+      return state;
+    }
     if (output != null) {
+      timedOutFiles(state.myProject).remove(state.myFilePath);
       if (output.getStderrLines().isEmpty()) {
         for (String line : output.getStdoutLines()) {
           LOG.debug(line);
@@ -117,6 +131,11 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
       }
     }
     return state;
+  }
+
+  @NotNull
+  private static Set<String> timedOutFiles(@NotNull Project project) {
+    return ((UserDataHolderEx)project).putUserDataIfAbsent(TIMED_OUT_FILES, ConcurrentHashMap.newKeySet());
   }
 
   @Override

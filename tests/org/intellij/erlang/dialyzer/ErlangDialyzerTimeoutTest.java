@@ -62,6 +62,13 @@ public class ErlangDialyzerTimeoutTest extends ErlangLightPlatformCodeInsightFix
                !state.problems.isEmpty() || !myNotifications.isEmpty());
   }
 
+  public void testTimeoutIsNotifiedOncePerFile() throws IOException {
+    String script = "exec sleep 30\n";
+    assertEmpty(annotate(script).problems);
+    assertEmpty(annotate(script).problems);
+    assertSize(1, myNotifications);
+  }
+
   private ErlangDialyzerExternalAnnotator.State annotate(String script) throws IOException {
     File dialyzer = new File(myDirectory, "dialyzer");
     Files.writeString(dialyzer.toPath(), "#!/bin/sh\n" + script, StandardCharsets.UTF_8);
