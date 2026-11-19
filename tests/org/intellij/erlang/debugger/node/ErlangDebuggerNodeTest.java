@@ -353,6 +353,27 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1362: testTooDeeplyNestedEvaluateResponseFailsTheEvaluation (and ErlangXDebugProcessTest's
+  // testTooDeeplyNestedAnswerFailsOnlyItsOwnEvaluation) assume that 20000 nested tuples overflow the stack of the
+  // thread that decodes them. Nothing sets that stack size, so the assumption must hold for a larger stack too.
+  public void testTwentyThousandNestedTuplesOverflowDecodingOnALargerStack() throws Exception {
+    byte[] message = new OtpOutputStream(tuple(atom("evaluate_response"), atom("deep_term_placeholder"))).toByteArray();
+    byte[] bytes = replace(message, new OtpOutputStream(atom("deep_term_placeholder")).toByteArray(), nestedTuples(20000));
+    CompletableFuture<Throwable> outcome = new CompletableFuture<>();
+    Thread thread = new Thread(null, () -> {
+      try {
+        new OtpInputStream(bytes).read_any();
+        outcome.complete(null);
+      }
+      catch (Throwable t) {
+        outcome.complete(t);
+      }
+    }, "decoder with a 64 MB stack", 64L * 1024 * 1024);
+    thread.start();
+    Throwable thrown = outcome.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    assertTrue("20000 nested tuples decoded without a StackOverflowError: " + thrown, thrown instanceof StackOverflowError);
+  }
+
   // With debug logging on (as under the test framework), a decoded term too deep for toString() in the
   // "Message received" line must still be delivered: only a term that cannot be decoded may be dropped.
   // The depths at which decoding or toString() overflow shift with the JIT state, so try a range of them.
