@@ -25,6 +25,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangAtom;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -57,7 +58,7 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
     if (vFile == null) return false;
 
     String moduleName = vFile.getNameWithoutExtension();
-    String functionName = function.getName();
+    String functionName = functionName(function);
 
     configuration.setModuleAndFunction(moduleNameAndFunction(moduleName, functionName));
     configuration.setName(moduleName + "." + functionName);
@@ -77,7 +78,13 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
     if (function == null || vFile == null) return false;
 
     return StringUtil.equals(configuration.getModuleAndFunction(),
-      moduleNameAndFunction(vFile.getNameWithoutExtension(), function.getName()));
+      moduleNameAndFunction(vFile.getNameWithoutExtension(), functionName(function)));
+  }
+
+  @NotNull
+  public static String functionName(@NotNull ErlangFunction function) {
+    ErlangAtom atom = function.getAtomName().getAtom();
+    return atom != null ? ErlangRunningState.atomName(atom.getText()) : function.getName();
   }
 
   @NotNull

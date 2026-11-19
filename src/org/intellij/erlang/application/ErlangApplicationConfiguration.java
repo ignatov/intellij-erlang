@@ -27,6 +27,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.application.ui.ErlangRunConfigurationEditorForm;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -121,7 +122,9 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
 
     PsiFile containingFile = erlangModule.getContainingFile();
     assert containingFile instanceof ErlangFile;
-    ErlangFunction function = ((ErlangFile) containingFile).getFunction(entryPoint.getFunctionName(), entryPoint.getArgsList().size());
+    int arity = entryPoint.getArgsList().size();
+    ErlangFunction function = ContainerUtil.find(((ErlangFile) containingFile).getFunctions(), f ->
+      f.getArity() == arity && entryPoint.getFunctionName().equals(ErlangApplicationRunConfigurationProducer.functionName(f)));
     if (function == null) {
       throw new RuntimeConfigurationError("Module '" + entryPoint.getModuleName() + "' doesn't contain function '"
         + entryPoint.getFunctionName() + "' with " + entryPoint.getArgsList().size() + " arguments");

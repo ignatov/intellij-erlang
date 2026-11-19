@@ -96,6 +96,66 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
     assertEquals("m:'hello world'().", parameters.get(eval + 1));
   }
 
+  public void testEntryPointWithReservedWordFunctionName() throws Exception {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['end'/0]).
+      'e<caret>nd'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+    configuration.checkConfiguration();
+    assertEquals("m:'end'().", getEval(configuration));
+  }
+
+  public void testTypedQuotedReservedWordFunctionName() throws Exception {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['receive'/0]).
+      'receive'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModule(getModule());
+    configuration.setModuleAndFunction("m 'receive'");
+    configuration.checkConfiguration();
+    assertEquals("m:'receive'().", getEval(configuration));
+  }
+
+  public void testEntryPointWithEmptyFunctionName() throws Exception {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([''/0]).
+      '<caret>'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+    configuration.checkConfiguration();
+    assertEquals("m:''().", getEval(configuration));
+  }
+
+  public void testEntryPointWithEscapeInFunctionName() throws Exception {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['it\\'s'/0]).
+      'i<caret>t\\'s'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+    configuration.checkConfiguration();
+    assertEquals("m:'it\\'s'().", getEval(configuration));
+
+    ErlangRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
+    ErlangRunningState.ErlangEntryPoint entryPoint = state.getDebugEntryPoint();
+    assertEquals("m", entryPoint.getModuleName());
+    assertEquals("it's", entryPoint.getFunctionName());
+  }
+
+  private String getEval(ErlangApplicationConfiguration configuration) throws ExecutionException {
+    ErlangRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
+    List<String> parameters = state.getCommand().getParametersList().getList();
+    int eval = parameters.indexOf("-eval");
+    assertTrue(parameters.toString(), eval >= 0 && eval + 1 < parameters.size());
+    return parameters.get(eval + 1);
+  }
+
   private ErlangApplicationConfiguration createConfigurationAtCaret() {
     PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
     assertNotNull(element);
