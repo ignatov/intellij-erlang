@@ -24,10 +24,13 @@ import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
@@ -59,7 +62,7 @@ public class RebarRunningStateUtil {
     String sdkPath = ErlangSdkType.getSdkPath(project);
     String escriptPath = sdkPath != null ?
                          JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
-                         findEscriptExecutable();
+                         findEscriptExecutableOffEdt(project);
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
@@ -123,6 +126,15 @@ public class RebarRunningStateUtil {
   public static String findEscriptExecutable(@Nullable Project project) {
     String sdkPath = project != null && !project.isDisposed() ? ErlangSdkType.getSdkPath(project) : null;
     return sdkPath != null ? JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() : findEscriptExecutable();
+  }
+
+  // The run configurations build the command line on the EDT, where the lookup on PATH is not allowed.
+  @NotNull
+  private static String findEscriptExecutableOffEdt(@NotNull Project project) {
+    if (!ApplicationManager.getApplication().isDispatchThread()) return findEscriptExecutable();
+    return ProgressManager.getInstance().runProcessWithProgressSynchronously(
+      (ThrowableComputable<String, RuntimeException>) RebarRunningStateUtil::findEscriptExecutable,
+      "Looking for escript", false, project);
   }
 
   @NotNull

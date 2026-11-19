@@ -70,6 +70,12 @@ public class ErlangAttributeImpl extends ErlangCompositeElementImpl implements E
 
   @Override
   @Nullable
+  public ErlangIfAtomAttribute getIfAtomAttribute() {
+    return PsiTreeUtil.getChildOfType(this, ErlangIfAtomAttribute.class);
+  }
+
+  @Override
+  @Nullable
   public ErlangImportDirective getImportDirective() {
     return PsiTreeUtil.getChildOfType(this, ErlangImportDirective.class);
   }

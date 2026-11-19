@@ -52,7 +52,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
     myComboModules.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
     myComboModules.setSelectedModule(configuration.getConfigurationModule().getModule());
     myParamsField.setText(configuration.getParams());
-    myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
+    myStopErlangInterpreterCheckBox.setSelected(configuration.isStopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
     myWorkingDirectoryComponent.setText(configuration.getWorkDirectory());

@@ -1009,6 +1009,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | behaviour
   //   | on_load
   //   | ifdef_ifndef_undef_attribute
+  //   | if_atom_attribute
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   //   )
@@ -1036,6 +1037,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | behaviour
   //   | on_load
   //   | ifdef_ifndef_undef_attribute
+  //   | if_atom_attribute
   //   | else_atom_attribute <<enterMode "ELSE">>
   //   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   private static boolean attribute_1(PsiBuilder b, int l) {
@@ -1054,15 +1056,16 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!r) r = behaviour(b, l + 1);
     if (!r) r = on_load(b, l + 1);
     if (!r) r = ifdef_ifndef_undef_attribute(b, l + 1);
-    if (!r) r = attribute_1_12(b, l + 1);
+    if (!r) r = if_atom_attribute(b, l + 1);
+    if (!r) r = attribute_1_13(b, l + 1);
     if (!r) r = withOn(b, l + 1, "ATOM_ATTRIBUTE", ErlangParser::atom_attribute);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // else_atom_attribute <<enterMode "ELSE">>
-  private static boolean attribute_1_12(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "attribute_1_12")) return false;
+  private static boolean attribute_1_13(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "attribute_1_13")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = else_atom_attribute(b, l + 1);
@@ -1497,14 +1500,38 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '/' integer
+  // q_atom '/' integer | '{' q_atom ',' integer '}'
   public static boolean callback_function(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "callback_function")) return false;
-    boolean r, p;
+    boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_CALLBACK_FUNCTION, "<callback function>");
+    r = callback_function_0(b, l + 1);
+    if (!r) r = callback_function_1(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // q_atom '/' integer
+  private static boolean callback_function_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
     r = q_atom(b, l + 1);
-    p = r; // pin = 1
+    p = r; // pin = q_atom
     r = r && report_error_(b, consumeTokens(b, -1, ERL_OP_AR_DIV, ERL_INTEGER));
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // '{' q_atom ',' integer '}'
+  private static boolean callback_function_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "callback_function_1")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_CURLY_LEFT);
+    r = r && q_atom(b, l + 1);
+    p = r; // pin = q_atom
+    r = r && report_error_(b, consumeTokens(b, -1, ERL_COMMA, ERL_INTEGER, ERL_CURLY_RIGHT));
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -3095,6 +3122,21 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // ()
   private static boolean guarded_1_1_1_0(PsiBuilder b, int l) {
     return true;
+  }
+
+  /* ********************************************************** */
+  // 'if' '(' expression ')'
+  public static boolean if_atom_attribute(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "if_atom_attribute")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_IF_ATOM_ATTRIBUTE, "<attribute>");
+    r = consumeToken(b, "if");
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_PAR_LEFT));
+    r = p && report_error_(b, expression(b, l + 1, -1)) && r;
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */

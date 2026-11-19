@@ -24,6 +24,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
@@ -54,6 +55,20 @@ public class ErlangRebarBuildTest extends ErlangCompilationTestBase {
     // The module output stays empty: rebar3 output isn't copied there, so run configurations that put the module
     // output on the code path don't find these modules (#1016).
     assertEmpty(listFiles(getOutputDirectory(myModule, false)));
+  }
+
+  public void testRebar3OutputOnCodePath() throws Exception {
+    VirtualFile contentRoot = setUpRebarApp();
+    addSourceFile(myModule, "app1_mod.erl", ErlangModuleTextGenerator.module("app1_mod").build());
+    myCompilationRunner.compile();
+
+    // The module is not named after the application, and the IDE has not seen _build, which rebar3 created.
+    assertFalse("app1".equals(myModule.getName()));
+    String ebin = contentRoot.getPath() + "/_build/default/lib/app1/ebin";
+    List<String> codePath = ErlangConsoleUtil.getCodePath(myModule, false);
+    int index = codePath.indexOf(ebin);
+    assertTrue("The rebar3 output directory is not on the code path: " + codePath, index > 0);
+    assertEquals("-pa", codePath.get(index - 1));
   }
 
   public void testRebar3CompileErrorFailsBuild() throws Exception {

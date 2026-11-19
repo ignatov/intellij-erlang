@@ -151,7 +151,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
         String directive = atomAttribute != null ? atomAttribute.getName() :
                            attribute.getElseAtomAttribute() != null ? "else" :
-                           attribute.getNode().findChildByType(ErlangTypes.ERL_IF) != null ? "if" : "";
+                           attribute.getIfAtomAttribute() != null ? "if" : "";
         switch (directive) {
           case "if", "ifdef", "ifndef" -> open.add(nextBranch++);
           case "else", "elif" -> {

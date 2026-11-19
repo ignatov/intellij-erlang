@@ -106,6 +106,7 @@ public class ErlangFormattingModelBuilder implements FormattingModelBuilder {
 
       .beforeInside(rules, ERL_PAR_LEFT).none()
 
+      .afterInside(ERL_IF, ERL_IF_ATOM_ATTRIBUTE).none()
       .around(keywords).spaces(1)
 
       .before(ERL_FUN_TYPE_SIGS_BRACES).none()
