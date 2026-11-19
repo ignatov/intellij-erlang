@@ -16,43 +16,63 @@
 
 package org.intellij.erlang.go;
 
+import com.intellij.navigation.ChooseByNameContributorEx;
 import com.intellij.navigation.GotoClassContributor;
 import com.intellij.navigation.NavigationItem;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.stubs.StubIndex;
-import com.intellij.util.ArrayUtil;
+import com.intellij.util.Processor;
+import com.intellij.util.indexing.FindSymbolParameters;
+import com.intellij.util.indexing.IdFilter;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangStructureViewFactory;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.stubs.index.ErlangAllNameIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-public class ErlangSymbolContributor implements GotoClassContributor {
+public class ErlangSymbolContributor implements GotoClassContributor, ChooseByNameContributorEx {
   private static final String SEPARATOR = ":";
 
-  @NotNull
   @Override
-  public String @NotNull [] getNames(Project project, boolean includeNonProjectItems) {
-    return ArrayUtil.toStringArray(StubIndex.getInstance().getAllKeys(ErlangAllNameIndex.KEY, project));
+  public void processNames(@NotNull Processor<? super String> processor, @NotNull GlobalSearchScope scope, @Nullable IdFilter filter) {
+    StubIndex.getInstance().processAllKeys(ErlangAllNameIndex.KEY, processor, scope, filter);
   }
 
-  @NotNull
   @Override
-  public NavigationItem @NotNull [] getItemsByName(String name, String pattern, Project project, boolean includeNonProjectItems) {
-    GlobalSearchScope scope = includeNonProjectItems ? GlobalSearchScope.allScope(project) : GlobalSearchScope.projectScope(project);
-    Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
-    List<NavigationItem> items = new ArrayList<>(result.size());
-    for (ErlangNamedElement element : result) {
-      items.add(new ErlangSymbolNavigationItem(element));
-    }
-    return items.toArray(new NavigationItem[0]);
+  public void processElementsWithName(@NotNull String name,
+                                      @NotNull Processor<? super NavigationItem> processor,
+                                      @NotNull FindSymbolParameters parameters) {
+    GlobalSearchScope scope = parameters.getSearchScope();
+    String module = getExactModuleQualifier(parameters, scope);
+    StubIndex.getInstance().processElements(ErlangAllNameIndex.KEY, name, parameters.getProject(), scope, parameters.getIdFilter(),
+                                            ErlangNamedElement.class, element -> {
+        if (module != null && !isInModule(element, module)) return true;
+        return processor.process(new ErlangSymbolNavigationItem(element));
+      });
+  }
+
+  // "module:name", where module is the exact name of a module in the scope, lists only the symbols of that module.
+  // Any other qualifier is left to the fuzzy matching of the qualified name.
+  @Nullable
+  private static String getExactModuleQualifier(@NotNull FindSymbolParameters parameters, @NotNull GlobalSearchScope scope) {
+    String pattern = parameters.getCompletePattern().trim();
+    int separator = pattern.indexOf(SEPARATOR);
+    if (separator <= 0 || separator + 1 >= pattern.length()) return null;
+    if (Character.isDigit(pattern.charAt(separator + 1))) return null; // "name:12" goes to a line
+    String module = pattern.substring(0, separator);
+    if (StringUtil.containsAnyChar(module, "* ")) return null;
+    return ErlangModuleIndex.getVirtualFilesByName(parameters.getProject(), module, scope).isEmpty() ? null : module;
+  }
+
+  private static boolean isInModule(@NotNull ErlangNamedElement element, @NotNull String module) {
+    PsiFile file = element.getContainingFile();
+    return file != null && file.getFileType() == ErlangFileType.MODULE &&
+           module.equals(FileUtilRt.getNameWithoutExtension(file.getName()));
   }
 
   @Nullable
