@@ -23,6 +23,7 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XValue;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
+import org.intellij.erlang.debugger.node.ErlangDebuggerNodeTest;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
 import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -348,7 +349,7 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
       process.evaluateExpression("B", watchB, frame);
 
       assertEquals(new OtpErlangList("T"), ((OtpErlangTuple)receive(peer)).elementAt(2));
-      sendBytes(peer, tooDeeplyNestedEvaluateResponse(20000));
+      sendBytes(peer, tooDeeplyNestedEvaluateResponse(ErlangDebuggerNodeTest.TOO_DEEP_TO_DECODE));
       assertEquals(new OtpErlangList("B"), ((OtpErlangTuple)receive(peer)).elementAt(2));
       send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("b")}));
       assertTrue("the node did not deliver both answers", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
