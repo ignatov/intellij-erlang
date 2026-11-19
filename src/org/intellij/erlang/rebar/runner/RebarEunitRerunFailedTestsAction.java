@@ -38,13 +38,16 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,6 +55,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -107,28 +111,13 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       }
 
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
-        final Project project = getProject();
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
-        List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
-          Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-          PsiElement psiElement = location != null ? location.getPsiElement() : null;
-          ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
-          if (function != null && function.getArity() != 0) {
-            failedGeneratedTests.add(function);
-          }
-          return function;
-        });
-        Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, function -> {
-          PsiFile containingFile = function.getContainingFile();
-          return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
-        });
-        suites.remove(null);
+        String command = createRerunCommand(getProject(), getFailedTests(getProject()), failedGeneratedTests);
 
         if (!failedGeneratedTests.isEmpty()) {
           notifyGeneratedTestsFailed(failedGeneratedTests);
         }
 
-        String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false);
         return createRerunConfiguration((RebarEunitRunConfiguration) getPeer(), command);
       }
 
@@ -157,6 +146,49 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return result;
       }
     };
+  }
+
+  // With rebar3 a failed test that is not a function, such as a fun of a generator (eunit://m:-g_test_/0-fun-0-:9) or a line
+  // in a generator, reruns its module, so that no failed test is left out.
+  @VisibleForTesting
+  @NotNull
+  static String createRerunCommand(@NotNull Project project,
+                                   @NotNull List<? extends AbstractTestProxy> failedTestProxies,
+                                   @NotNull List<ErlangFunction> failedGeneratedTests) {
+    Set<String> otherModules = new LinkedHashSet<>();
+    List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(failedTestProxies, testProxy -> {
+      Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
+      PsiElement psiElement = location != null ? location.getPsiElement() : null;
+      ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
+      if (function != null && function.getArity() != 0) {
+        failedGeneratedTests.add(function);
+      }
+      if (function == null) {
+        ContainerUtil.addIfNotNull(otherModules, getModuleName(psiElement, testProxy.getLocationUrl()));
+      }
+      return function;
+    });
+    Set<ErlangFile> suites = new LinkedHashSet<>();
+    for (ErlangFunction function : failedTests) {
+      PsiFile containingFile = function.getContainingFile();
+      if (containingFile instanceof ErlangFile) suites.add((ErlangFile) containingFile);
+    }
+
+    if (RebarSettings.getInstance(project).isRebar3()) {
+      return RebarEunitConfigurationUtil.createRebar3Command(suites, failedTests, otherModules, false);
+    }
+    return RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false, false);
+  }
+
+  @Nullable
+  private static String getModuleName(@Nullable PsiElement psiElement, @Nullable String locationUrl) {
+    PsiFile file = psiElement != null ? psiElement.getContainingFile() : null;
+    VirtualFile virtualFile = file instanceof ErlangFile ? file.getVirtualFile() : null;
+    if (virtualFile != null) return virtualFile.getNameWithoutExtension();
+    String prefix = ErlangUnitRunConfigurationType.PROTOCOL + "://";
+    if (locationUrl == null || !locationUrl.startsWith(prefix)) return null;
+    String module = StringUtil.substringBefore(locationUrl.substring(prefix.length()) + ":", ":");
+    return StringUtil.isEmpty(module) ? null : module;
   }
 
   @VisibleForTesting

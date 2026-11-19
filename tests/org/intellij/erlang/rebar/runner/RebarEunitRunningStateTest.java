@@ -106,6 +106,14 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     assertEquals(List.of("eunit", "--module=a,b"), getParameters("eunit suites=a,b tests=b_test"));
     assertEquals(List.of("eunit", "--module=b"), getParameters("eunit suites=b "));
     assertEquals(List.of("eunit", "--test=b:b_test", "--generator=b:b_test_"), getParameters("eunit suites=b tests=b_test,b_test_"));
+    assertEquals(List.of("eunit", "--module=c"), getParameters("eunit suites=c tests=c_test,fhelper"));
+  }
+
+  public void testRebar3CommandRunsModuleOfFunctionThatIsNotATest() {
+    useRebar("rebar3");
+    ErlangFile file = (ErlangFile) myFixture.configureByText("c.erl", "-module(c).\nc_test() -> ok.\nhelper() -> ok.\n");
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(List.of(file), List.of(file.getFunction("helper", 0)), true);
+    assertEquals("eunit --module=c", command);
   }
 
   public void testRebar3CommandRunsGeneratorWithGeneratorOption() {

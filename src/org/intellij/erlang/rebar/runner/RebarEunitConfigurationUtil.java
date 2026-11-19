@@ -83,7 +83,7 @@ class RebarEunitConfigurationUtil {
                                           Collection<ErlangFunction> functions,
                                           boolean failIfNoSuitesSpecified,
                                           boolean rebar3) {
-    if (rebar3) return createRebar3Command(suites, functions, failIfNoSuitesSpecified);
+    if (rebar3) return createRebar3Command(suites, functions, List.of(), failIfNoSuitesSpecified);
     StringBuilder commandBuilder = new StringBuilder();
     commandBuilder.append("eunit ");
     if (!appendSuitesOption(commandBuilder, suites) && failIfNoSuitesSpecified) return "";
@@ -93,20 +93,40 @@ class RebarEunitConfigurationUtil {
   }
 
   // rebar3 ignores suites= and tests= without a message and runs every test; it selects with --module and --test=Module:Function.
+  // --test and --generator take only eunit test functions: a module whose other functions are selected (a fun or a test
+  // function with arguments that a generator lists), and each of moduleNames, is run as a whole.
   @NotNull
-  private static String createRebar3Command(Collection<ErlangFile> suites, Collection<ErlangFunction> functions, boolean failIfNoSuitesSpecified) {
+  static String createRebar3Command(Collection<ErlangFile> suites,
+                                    Collection<ErlangFunction> functions,
+                                    Collection<String> moduleNames,
+                                    boolean failIfNoSuitesSpecified) {
     Set<String> modules = new LinkedHashSet<>();
     for (ErlangFile suite : suites) {
       ContainerUtil.addIfNotNull(modules, getModuleName(suite));
     }
     if (modules.isEmpty() && failIfNoSuitesSpecified) return "";
+    Set<String> wholeModules = new LinkedHashSet<>(moduleNames);
+    for (ErlangFunction function : functions) {
+      if (!isTestFunction(function)) ContainerUtil.addIfNotNull(wholeModules, getModuleName(function.getContainingFile()));
+    }
     List<String> tests = new ArrayList<>();
     for (ErlangFunction function : functions) {
       String module = getModuleName(function.getContainingFile());
-      if (module != null) tests.add(module + ":" + function.getName());
+      if (module != null && !wholeModules.contains(module)) tests.add(module + ":" + function.getName());
     }
-    if (!tests.isEmpty()) return "eunit " + StringUtil.join(getRebar3TestOptions(tests), " ");
+    List<String> options = new ArrayList<>();
+    if (!wholeModules.isEmpty()) options.add("--module=" + StringUtil.join(wholeModules, ","));
+    options.addAll(getRebar3TestOptions(tests));
+    if (!options.isEmpty()) return "eunit " + StringUtil.join(options, " ");
     return modules.isEmpty() ? "eunit" : "eunit --module=" + StringUtil.join(modules, ",");
+  }
+
+  private static boolean isTestFunction(@NotNull ErlangFunction function) {
+    return function.getArity() == 0 && isTestName(function.getName());
+  }
+
+  private static boolean isTestName(@NotNull String name) {
+    return name.endsWith("_test") || name.endsWith("_test_");
   }
 
   // --test=M:F runs M:F() as one test, so a generator (a name ending in _test_) is passed with --generator=M:F.
@@ -130,7 +150,7 @@ class RebarEunitConfigurationUtil {
   }
 
   // The rebar 2 words suites= and tests= of a saved configuration as the options of rebar3. A test name of rebar 2 can be in
-  // any of the suites, so with several suites all the tests of the suites are run.
+  // any of the suites, so with several suites, or a name that is not of a test function, all the tests of the suites are run.
   @NotNull
   static List<String> toRebar3Arguments(@NotNull List<String> arguments) {
     String suites = null;
@@ -146,7 +166,7 @@ class RebarEunitConfigurationUtil {
     for (String argument : arguments) {
       if (argument.startsWith(SUITES)) {
         List<String> testNames = tests != null ? StringUtil.split(tests, ",") : List.of();
-        if (modules.size() == 1 && !testNames.isEmpty()) {
+        if (modules.size() == 1 && !testNames.isEmpty() && ContainerUtil.and(testNames, RebarEunitConfigurationUtil::isTestName)) {
           result.addAll(getRebar3TestOptions(ContainerUtil.map(testNames, name -> modules.getFirst() + ":" + name)));
         }
         else if (!modules.isEmpty()) {
