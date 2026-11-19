@@ -19,6 +19,7 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -79,6 +80,55 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     finally {
       rebarSettings.setRebarPath(oldRebarPath);
     }
+  }
+
+  public void testRebar3CommandSelectsModule() {
+    useRebar("rebar3");
+    ErlangFile file = (ErlangFile) myFixture.configureByText("b.erl", "-module(b).\nb_test() -> ok.\n");
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(List.of(file), List.of(), true);
+    assertEquals("eunit --module=b", command);
+    assertEquals(List.of("eunit", "--module=b"), getParameters(command));
+  }
+
+  public void testRebar3CommandNamesTestsWithTheirModules() {
+    useRebar("rebar3");
+    ErlangFile a = (ErlangFile) myFixture.addFileToProject("a.erl", "-module(a).\na2_test() -> ok.\n");
+    ErlangFile b = (ErlangFile) myFixture.addFileToProject("b.erl", "-module(b).\nb_test() -> ok.\n");
+    List<ErlangFunction> functions = List.of(a.getFunction("a2_test", 0), b.getFunction("b_test", 0));
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(List.of(a, b), functions, false);
+    assertEquals("eunit --test=a:a2_test,b:b_test", command);
+    assertEquals(List.of("eunit", "--test=a:a2_test,b:b_test"), getParameters(command));
+  }
+
+  public void testRebar3RunsSavedRebar2Command() {
+    useRebar("rebar3");
+    assertEquals(List.of("eunit", "--test=b:b_test,b:b2_test"), getParameters("eunit suites=b tests=b_test,b2_test"));
+    assertEquals(List.of("eunit", "--module=a,b"), getParameters("eunit suites=a,b tests=b_test"));
+    assertEquals(List.of("eunit", "--module=b"), getParameters("eunit suites=b "));
+  }
+
+  public void testRebar2CommandUnchanged() {
+    useRebar("rebar");
+    ErlangFile file = (ErlangFile) myFixture.configureByText("b.erl", "-module(b).\nb_test() -> ok.\n");
+    String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(List.of(file), List.of(file.getFunction("b_test", 0)), true);
+    assertEquals("eunit suites=b tests=b_test", command);
+    assertEquals(List.of("skip_deps=true", "eunit", "suites=b", "tests=b_test", "-C"), getParameters(command).subList(0, 5));
+  }
+
+  private void useRebar(String rebarName) {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    rebarSettings.setRebarPath("/opt/rebar/" + rebarName);
+    Disposer.register(getTestRootDisposable(), () -> rebarSettings.setRebarPath(oldRebarPath));
+  }
+
+  private List<String> getParameters(String command) {
+    RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(getProject(), "b");
+    configuration.setCommand(command);
+    configuration.setSkipDependencies(true);
+    List<String> parameters =
+      RebarEunitRunningState.getCommandLine(configuration, new File(FileUtil.getTempDirectory(), "eunit")).getParametersList().getList();
+    return parameters.subList(1, parameters.size());
   }
 
   public void testErlFlagsQuoteReportsDirectoryWithSpace() {

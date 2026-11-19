@@ -18,15 +18,26 @@ package org.intellij.erlang.rebar.runner;
 
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 class RebarEunitConfigurationUtil {
+  private static final String SUITES = "suites=";
+  private static final String TESTS = "tests=";
+
   private RebarEunitConfigurationUtil() {
   }
 
@@ -34,7 +45,7 @@ class RebarEunitConfigurationUtil {
     boolean suiteAdded = false;
     int lengthBeforeAppendingSuitesOption = commandBuilder.length();
 
-    commandBuilder.append("suites=");
+    commandBuilder.append(SUITES);
     for (ErlangFile suiteFile : suites) {
       VirtualFile virtualFile = suiteFile.getVirtualFile();
       if (virtualFile != null) {
@@ -56,17 +67,82 @@ class RebarEunitConfigurationUtil {
 
     Set<String> distinctFunctionNames = ContainerUtil.map2Set(functions, ErlangFunction::getName);
 
-    commandBuilder.append("tests=");
+    commandBuilder.append(TESTS);
     commandBuilder.append(StringUtil.join(distinctFunctionNames, ","));
   }
 
   @NotNull
   static String createDefaultRebarCommand(Collection<ErlangFile> suites, Collection<ErlangFunction> functions, boolean failIfNoSuitesSpecified) {
+    PsiElement element = ObjectUtils.chooseNotNull(ContainerUtil.getFirstItem(suites), ContainerUtil.getFirstItem(functions));
+    boolean rebar3 = element != null && RebarSettings.getInstance(element.getProject()).isRebar3();
+    return createDefaultRebarCommand(suites, functions, failIfNoSuitesSpecified, rebar3);
+  }
+
+  @NotNull
+  static String createDefaultRebarCommand(Collection<ErlangFile> suites,
+                                          Collection<ErlangFunction> functions,
+                                          boolean failIfNoSuitesSpecified,
+                                          boolean rebar3) {
+    if (rebar3) return createRebar3Command(suites, functions, failIfNoSuitesSpecified);
     StringBuilder commandBuilder = new StringBuilder();
     commandBuilder.append("eunit ");
     if (!appendSuitesOption(commandBuilder, suites) && failIfNoSuitesSpecified) return "";
     commandBuilder.append(' ');
     appendTestsOption(commandBuilder, functions);
     return commandBuilder.toString();
+  }
+
+  // rebar3 ignores suites= and tests= without a message and runs every test; it selects with --module and --test=Module:Function.
+  @NotNull
+  private static String createRebar3Command(Collection<ErlangFile> suites, Collection<ErlangFunction> functions, boolean failIfNoSuitesSpecified) {
+    Set<String> modules = new LinkedHashSet<>();
+    for (ErlangFile suite : suites) {
+      ContainerUtil.addIfNotNull(modules, getModuleName(suite));
+    }
+    if (modules.isEmpty() && failIfNoSuitesSpecified) return "";
+    Set<String> tests = new LinkedHashSet<>();
+    for (ErlangFunction function : functions) {
+      String module = getModuleName(function.getContainingFile());
+      if (module != null) tests.add(module + ":" + function.getName());
+    }
+    if (!tests.isEmpty()) return "eunit --test=" + StringUtil.join(tests, ",");
+    return modules.isEmpty() ? "eunit" : "eunit --module=" + StringUtil.join(modules, ",");
+  }
+
+  @Nullable
+  private static String getModuleName(@Nullable PsiFile file) {
+    VirtualFile virtualFile = file != null ? file.getVirtualFile() : null;
+    return virtualFile != null ? virtualFile.getNameWithoutExtension() : null;
+  }
+
+  // The rebar 2 words suites= and tests= of a saved configuration as the options of rebar3. A test name of rebar 2 can be in
+  // any of the suites, so with several suites all the tests of the suites are run.
+  @NotNull
+  static List<String> toRebar3Arguments(@NotNull List<String> arguments) {
+    String suites = null;
+    String tests = null;
+    for (String argument : arguments) {
+      if (argument.startsWith(SUITES)) suites = argument.substring(SUITES.length());
+      else if (argument.startsWith(TESTS)) tests = argument.substring(TESTS.length());
+    }
+    if (suites == null) return arguments;
+
+    List<String> modules = StringUtil.split(suites, ",");
+    List<String> result = new ArrayList<>();
+    for (String argument : arguments) {
+      if (argument.startsWith(SUITES)) {
+        List<String> testNames = tests != null ? StringUtil.split(tests, ",") : List.of();
+        if (modules.size() == 1 && !testNames.isEmpty()) {
+          result.add("--test=" + StringUtil.join(testNames, name -> modules.getFirst() + ":" + name, ","));
+        }
+        else if (!modules.isEmpty()) {
+          result.add("--module=" + suites);
+        }
+      }
+      else if (!argument.startsWith(TESTS)) {
+        result.add(argument);
+      }
+    }
+    return result;
   }
 }
