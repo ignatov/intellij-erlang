@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -43,6 +44,10 @@ import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 public class ErlangDebuggerNode {
   private static final int RECEIVE_TIMEOUT = 50;
   private static final int RETRIES_ON_TIMEOUT = 10;
+  // the largest byte array HotSpot allocates
+  private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+  // the buffer for a message starts at this size and grows as its bytes arrive
+  private static final int INITIAL_BUFFER_SIZE = 64 * 1024;
 
   private OtpErlangPid myLastSuspendedPid;
 
@@ -52,6 +57,8 @@ public class ErlangDebuggerNode {
   private final ErlangDebuggerEventListener myEventListener;
   @NotNull
   private final AtomicBoolean myStopped = new AtomicBoolean(false);
+  @Nullable
+  private volatile ServerSocket myServerSocket;
 
   public ErlangDebuggerNode(@NotNull ErlangDebuggerEventListener eventListener) throws ErlangDebuggerNodeException {
     myEventListener = eventListener;
@@ -70,6 +77,15 @@ public class ErlangDebuggerNode {
 
   public void stop() {
     myStopped.set(true);
+    ServerSocket serverSocket = myServerSocket;
+    if (serverSocket != null) {
+      try {
+        serverSocket.close();
+      }
+      catch (IOException e) {
+        LOG.debug(e);
+      }
+    }
   }
 
   private boolean isStopped() {
@@ -138,6 +154,7 @@ public class ErlangDebuggerNode {
       Exception cachedException = null;
       LOG.debug("Opening a server socket.");
       try (ServerSocket serverSocket = new ServerSocket(0)) {
+        myServerSocket = serverSocket;
         portFuture.complete(serverSocket.getLocalPort());
 
         LOG.debug("Listening on port " + serverSocket.getLocalPort() + ".");
@@ -151,6 +168,9 @@ public class ErlangDebuggerNode {
         }
         catch (Exception e) {
           cachedException = e;
+          if (e instanceof InvalidMessageException) {
+            myEventListener.failedToReceiveMessage(e.getMessage());
+          }
           throw e;
         }
         finally {
@@ -243,12 +263,21 @@ public class ErlangDebuggerNode {
     try {
       InputStream in = socket.getInputStream();
 
-      int objectSize = readObjectSize(in);
-      if (objectSize == -1) return null;
+      Integer objectSize = readObjectSize(in);
+      if (objectSize == null) return null;
+      if (objectSize < 0 || objectSize > MAX_ARRAY_SIZE) {
+        throw invalidMessage("Invalid debugger message size: " + objectSize + " bytes, the limit is " + MAX_ARRAY_SIZE + " bytes.");
+      }
 
       LOG.debug("Incoming packet size: " + objectSize + " bytes");
 
-      byte[] objectBytes = readBytes(in, objectSize, true);
+      byte[] objectBytes;
+      try {
+        objectBytes = readBytes(in, objectSize, true);
+      }
+      catch (OutOfMemoryError e) {
+        throw invalidMessage("Not enough memory for a message of " + objectSize + " bytes.");
+      }
       return objectBytes == null ? null : decode(objectBytes);
     }
     catch (SocketException e) {
@@ -260,9 +289,22 @@ public class ErlangDebuggerNode {
     return null;
   }
 
-  private static int readObjectSize(@NotNull InputStream in) throws SocketException {
+  @Nullable
+  private static Integer readObjectSize(@NotNull InputStream in) throws SocketException {
     byte[] bytes = readBytes(in, 4, false);
-    return bytes != null ? ByteBuffer.wrap(bytes).getInt() : -1;
+    return bytes != null ? ByteBuffer.wrap(bytes).getInt() : null;
+  }
+
+  @NotNull
+  private static InvalidMessageException invalidMessage(@NotNull String message) {
+    LOG.warn(message);
+    return new InvalidMessageException(message);
+  }
+
+  private static class InvalidMessageException extends SocketException {
+    InvalidMessageException(@NotNull String message) {
+      super(message);
+    }
   }
 
   /**
@@ -280,12 +322,15 @@ public class ErlangDebuggerNode {
   private static byte @Nullable [] readBytes(@NotNull InputStream in, int size, boolean force) throws SocketException {
     try {
       int bytesReadTotal = 0;
-      byte[] buffer = new byte[size];
+      byte[] buffer = new byte[Math.min(size, INITIAL_BUFFER_SIZE)];
 
       int attemptsMade = 0;
       while (size != bytesReadTotal) {
+        if (bytesReadTotal == buffer.length) {
+          buffer = Arrays.copyOf(buffer, (int)Math.min(size, 2L * buffer.length));
+        }
         try {
-          int bytesRead = in.read(buffer, bytesReadTotal, size - bytesReadTotal);
+          int bytesRead = in.read(buffer, bytesReadTotal, buffer.length - bytesReadTotal);
           if (bytesRead < 0) {
             throw new SocketException("A socket was closed.");
           }
@@ -297,7 +342,10 @@ public class ErlangDebuggerNode {
             return null;
           }
           if (++attemptsMade >= RETRIES_ON_TIMEOUT) {
-            throw e;
+            SocketException socketException = new SocketException("Timed out reading " + size + " bytes, " +
+                                                                  bytesReadTotal + " read.");
+            socketException.initCause(e);
+            throw socketException;
           }
         }
       }

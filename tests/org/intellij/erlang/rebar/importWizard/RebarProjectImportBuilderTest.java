@@ -23,6 +23,7 @@ import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PathMacroManager;
+import com.intellij.openapi.module.ModifiableModuleModel;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -34,9 +35,11 @@ import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
@@ -51,6 +54,7 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -70,7 +74,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     File currentTestRoot = new File(TEST_DATA_IMPORT, getTestName(true));
     String basePath = getProject().getBasePath();
     assertNotNull(basePath);
-    FileUtil.copyDir(currentTestRoot, new File(basePath));
+    if (currentTestRoot.isDirectory()) FileUtil.copyDir(currentTestRoot, new File(basePath));
   }
 
   @Override
@@ -124,6 +128,103 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     ErlangFacet facet = ErlangFacet.getFacet(modules[0]);
     assertNotNull(facet);
     assertSameElements(facet.getConfiguration().getParseTransforms(), "lager_transform");
+  }
+
+  public void testRebar3AppCodePath() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module module = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    String appRoot = ModuleRootManager.getInstance(module).getContentRoots()[0].getPath();
+    // What `rebar3 compile` writes for the app, as the build or the debug session does after the import.
+    File rebar3Ebin = new File(appRoot, "_build/default/lib/myapp/ebin");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp.app"), "{application, myapp, [{modules, [myapp_app, myapp_sup]}]}.");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp_app.beam"), "");
+    FileUtil.writeToFile(new File(rebar3Ebin, "myapp_sup.beam"), "");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    List<String> codePath = ErlangConsoleUtil.getCodePath(module, false);
+    int index = codePath.indexOf(FileUtil.toSystemIndependentName(rebar3Ebin.getPath()));
+    assertTrue("The rebar3 output directory is not on the code path: " + codePath, index > 0);
+    assertEquals("-pa", codePath.get(index - 1));
+  }
+
+  public void testRebar3OutputNotOnCodePathWithoutRebarBuild() throws Exception {
+    Module module = importRebar3App();
+    ErlangCompilerSettings.getInstance(module.getProject()).setUseRebarCompilerEnabled(false);
+    String appRoot = ModuleRootManager.getInstance(module).getContentRoots()[0].getPath();
+    // Left over from `rebar3 compile` in a terminal; the IDE compiler writes the module output <app>/ebin.
+    File rebar3Ebin = createRebar3Output(appRoot, "myapp");
+    File moduleOutput = new File(appRoot, "ebin");
+    FileUtil.writeToFile(new File(moduleOutput, "myapp_app.beam"), "");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(moduleOutput));
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    for (boolean forTests : new boolean[]{false, true}) {
+      assertNotOnCodePath(module, forTests, rebar3Ebin);
+    }
+  }
+
+  public void testRebar3BuildAboveContentRootNotOnCodePath() throws Exception {
+    String projectPath = getProject().getBasePath();
+    Module module = importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+    assertEquals("foo", module.getName());
+    // The Rebar build runs rebar3 in apps/foo, which writes into apps/foo/_build, so a _build above it is not its output.
+    File rebar3Ebin = createRebar3Output(projectPath + "/test", "foo");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    for (boolean forTests : new boolean[]{false, true}) {
+      assertNotOnCodePath(module, forTests, rebar3Ebin);
+    }
+  }
+
+  public void testRebar3OutputOfModuleNamedOtherThanApp() throws Exception {
+    Module module = importRebar3App();
+    ModifiableModuleModel moduleModel = ModuleManager.getInstance(module.getProject()).getModifiableModel();
+    moduleModel.renameModule(module, "other");
+    ApplicationManager.getApplication().runWriteAction(moduleModel::commit);
+    assertEquals("other", module.getName());
+    String appRoot = ModuleRootManager.getInstance(module).getContentRoots()[0].getPath();
+    File rebar3Ebin = createRebar3Output(appRoot, "myapp");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(rebar3Ebin));
+
+    assertOnCodePath(module, rebar3Ebin);
+  }
+
+  public void testRebar3OutputCreatedOutsideTheIde() throws Exception {
+    Module module = importRebar3App();
+    VirtualFile appRoot = ModuleRootManager.getInstance(module).getContentRoots()[0];
+    VfsUtil.markDirtyAndRefresh(false, true, true, appRoot);
+    appRoot.getChildren();
+    // rebar3 creates _build during the build before the launch, and nothing refreshes the IDE's view of the files.
+    File rebar3Ebin = createRebar3Output(appRoot.getPath(), "myapp");
+    assertNull(appRoot.findChild("_build"));
+
+    assertOnCodePath(module, rebar3Ebin);
+  }
+
+  @NotNull
+  private Module importRebar3App() throws Exception {
+    String projectPath = getProject().getBasePath();
+    FileUtil.copyDir(new File(TEST_DATA_IMPORT, "rebar3AppCodePath"), new File(projectPath));
+    return importProjectFrom(projectPath + "/test/", null, new RebarProjectImportProvider());
+  }
+
+  @NotNull
+  private static File createRebar3Output(@NotNull String root, @NotNull String appName) throws IOException {
+    File rebar3Ebin = new File(root, "_build/default/lib/" + appName + "/ebin");
+    FileUtil.writeToFile(new File(rebar3Ebin, appName + ".app"), "{application, " + appName + ", []}.");
+    return rebar3Ebin;
+  }
+
+  private static void assertOnCodePath(@NotNull Module module, @NotNull File dir) {
+    List<String> codePath = ErlangConsoleUtil.getCodePath(module, false);
+    int index = codePath.indexOf(FileUtil.toSystemIndependentName(dir.getPath()));
+    assertTrue("The rebar3 output directory is not on the code path: " + codePath, index > 0);
+    assertEquals("-pa", codePath.get(index - 1));
+  }
+
+  private static void assertNotOnCodePath(@NotNull Module module, boolean forTests, @NotNull File dir) {
+    List<String> codePath = ErlangConsoleUtil.getCodePath(module, forTests);
+    assertFalse("Unexpected directory on the code path: " + codePath, codePath.contains(FileUtil.toSystemIndependentName(dir.getPath())));
   }
 
   // File | Open of a directory with rebar.config: the platform's ProjectOpenProcessorBase calls doQuickImport,

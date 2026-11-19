@@ -55,7 +55,7 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
     myNextChildIdxToCompute = nextToLastChildIdx;
     boolean computedAllChildren = myNextChildIdxToCompute == myChildrenCount;
     if (!computedAllChildren) {
-      node.tooManyChildren(myChildrenCount - myNextChildIdxToCompute);
+      node.tooManyChildren(myChildrenCount - myNextChildIdxToCompute, () -> computeChildren(node));
     }
     node.addChildren(children, computedAllChildren);
   }

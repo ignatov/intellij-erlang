@@ -20,12 +20,9 @@ import com.intellij.execution.lineMarker.ExecutorAction;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.icons.AllIcons;
 import com.intellij.lang.injection.InjectedLanguageManager;
-import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.project.DumbAware;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.marker.ErlangBehaviourMarkerProvider;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -44,9 +41,6 @@ public class ErlangRunLineMarkerContributor extends RunLineMarkerContributor imp
     InjectedLanguageManager injectedLanguageManager = InjectedLanguageManager.getInstance(element.getProject());
     if (injectedLanguageManager.isInjectedFragment(psiFile)) return null;
 
-    final AnAction[] actions = ExecutorAction.getActions();
-    return new Info(AllIcons.RunConfigurations.TestState.Run, 
-                    actions,
-                    e -> StringUtil.join(ContainerUtil.mapNotNull(actions, action -> getText(action, e)), "\n"));
+    return new Info(AllIcons.RunConfigurations.TestState.Run, ExecutorAction.getActions());
   }
 }

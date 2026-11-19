@@ -290,10 +290,10 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
+        <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 
-        <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
         <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
 
         <intentionAction>

@@ -18,8 +18,8 @@ package org.intellij.erlang.actions;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
-import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -31,6 +31,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
@@ -44,7 +45,7 @@ import com.intellij.util.ExceptionUtil;
 import org.intellij.erlang.emacs.EmacsSettings;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.sdk.ErlangSdkType;
-import org.intellij.erlang.utils.ErlangExternalToolsNotificationListener;
+import org.intellij.erlang.utils.ErlangExternalToolsConfigureAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -80,10 +81,8 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
       String emacsPath = EmacsSettings.getInstance(project).getEmacsPath();
       if (emacsPath.isEmpty()) {
         Notifications.Bus.notify(
-          new Notification(groupId, NOTIFICATION_TITLE,
-            "Emacs executable path is empty"+
-            "<br/><a href='configure'>Configure</a>",
-          NotificationType.WARNING, new ErlangExternalToolsNotificationListener(project)), project);
+          new Notification(groupId, NOTIFICATION_TITLE, "Emacs executable path is empty",
+          NotificationType.WARNING).addAction(new ErlangExternalToolsConfigureAction(project)), project);
         return;
       }
       commandLine.setExePath(emacsPath);
@@ -124,11 +123,11 @@ public class ErlangEmacsFormatAction extends AnAction implements DumbAware {
 
       commandLine.addParameter(emacsCommand);
 
-      ApplicationManager.getApplication().saveAll();
+      FileDocumentManager.getInstance().saveAllDocuments();
 
       final String commandLineString = commandLine.getCommandLineString();
       OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLineString);
-      handler.addProcessListener(new ProcessAdapter() {
+      handler.addProcessListener(new ProcessListener() {
         @Override
         public void processTerminated(@NotNull ProcessEvent event) {
           ApplicationManager.getApplication().invokeLater(() -> {

@@ -53,6 +53,7 @@ public class RebarConfigurationForm {
   private JTextField myRebarVersionText;
   private JPanel myLinkContainer;
   @Nullable private Project myProject;
+  private int myCheckCount;
 
   public RebarConfigurationForm() {
     ErlangUiUtil.addBrowseFolderListener(myRebarPathSelector, "Select Rebar Executable", "", null,
@@ -60,7 +61,7 @@ public class RebarConfigurationForm {
     myRebarPathSelector.getTextField().getDocument().addDocumentListener(new DocumentAdapter() {
       @Override
       protected void textChanged(@NotNull DocumentEvent documentEvent) {
-        validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+        checkPath();
       }
     });
 
@@ -80,7 +81,7 @@ public class RebarConfigurationForm {
   public void setPath(@NotNull String rebarPath) {
     if (!myRebarPathSelector.getText().equals(rebarPath)) {
       myRebarPathSelector.setText(rebarPath);
-      validateRebarPath(myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+      checkPath();
     }
   }
 
@@ -93,13 +94,25 @@ public class RebarConfigurationForm {
     return myRebarVersionText.getText().startsWith("rebar");
   }
 
+  // Each change of the path starts a new check; the version of the previous path is cleared, and the result of
+  // an earlier check that ends later is dropped.
+  private void checkPath() {
+    int check = ++myCheckCount;
+    myRebarVersionText.setText("");
+    validateRebarPath(myRebarPathSelector.getText(), myProject, s -> {
+      if (check == myCheckCount) {
+        myRebarVersionText.setText(s);
+      }
+    });
+  }
+
   @VisibleForTesting
   static void validateRebarPath(String rebarPath, @Nullable Project project, Consumer<String> consumer) {
     ApplicationManager.getApplication().executeOnPooledThread(
       () -> {
         File rebarFile = new File(rebarPath);
         if (!rebarFile.exists()) {
-          consumer.accept("File " + rebarPath + " not found");
+          updateUI(consumer, "File " + rebarPath + " not found");
           return;
         }
 
@@ -131,7 +144,10 @@ public class RebarConfigurationForm {
         String escriptErr = escript.getStdErr();
         if (StringUtil.isNotEmpty(escriptErr)) {
           updateUI(consumer, "Escript Error: " + escriptErr);
+          return;
         }
+
+        updateUI(consumer, "No version output from " + rebarPath);
       });
   }
 
@@ -172,7 +188,7 @@ public class RebarConfigurationForm {
             if (path != null) {
               FileUtil.setExecutable(new File(path));
               myRebarPathSelector.setText(path);
-              validateRebarPath(RebarConfigurationForm.this.myRebarPathSelector.getText(), myProject, s -> myRebarVersionText.setText(s));
+              checkPath();
             }
           }
           catch (Exception ignore) {

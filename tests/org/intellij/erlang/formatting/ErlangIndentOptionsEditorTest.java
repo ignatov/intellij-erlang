@@ -52,6 +52,13 @@ public class ErlangIndentOptionsEditorTest extends ErlangLightPlatformCodeInsigh
     assertEquals(-1, guardIndent(target));
   }
 
+  public void testDefaultIndentOptions() {
+    CommonCodeStyleSettings.IndentOptions indentOptions = indentOptions(CodeStyle.createTestSettings());
+    assertEquals(2, indentOptions.INDENT_SIZE);
+    assertEquals(4, indentOptions.CONTINUATION_INDENT_SIZE);
+    assertEquals(2, indentOptions.TAB_SIZE);
+  }
+
   public void testSettingsPageUsesErlangEditor() {
     LanguageCodeStyleSettingsProvider provider = LanguageCodeStyleSettingsProvider.forLanguage(ErlangLanguage.INSTANCE);
     assertNotNull(provider);
