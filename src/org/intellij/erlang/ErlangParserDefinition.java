@@ -18,6 +18,7 @@ package org.intellij.erlang;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.ParserDefinition;
+import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.project.Project;
@@ -30,6 +31,7 @@ import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.ErlangParser;
+import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.ErlangTokenType;
 import org.intellij.erlang.psi.impl.ErlangFileImpl;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
@@ -53,7 +55,12 @@ public class ErlangParserDefinition implements ParserDefinition {
 
   @Override
   public @NotNull PsiParser createParser(Project project) {
-    return new ErlangParser();
+    return new ErlangParser() {
+      @Override
+      public void parseLight(IElementType root, PsiBuilder builder) {
+        ErlangParserUtil.parseLight(root, builder, super::parseLight);
+      }
+    };
   }
 
   @Override

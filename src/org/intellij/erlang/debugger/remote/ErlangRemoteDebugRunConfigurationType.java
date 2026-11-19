@@ -35,6 +35,12 @@ public class ErlangRemoteDebugRunConfigurationType extends ConfigurationTypeBase
     addFactory(new ConfigurationFactory(this) {
       @NotNull
       @Override
+      public String getId() {
+        return "Erlang Remote Node";
+      }
+
+      @NotNull
+      @Override
       public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
         return new ErlangRemoteDebugRunConfiguration(project, "Erlang remote node");
       }

@@ -42,6 +42,9 @@ public final class ErlangStubChanges {
     "#1114 EEP 64 triple-quoted string lexing changes file stubs",
     "#1063 quoted atoms as attribute names",
     "#1119 a macro followed by a string literal parses as one string",
+    "#1082 -if(Expr). attribute ends an unterminated -if( at the error",
+    "#1120 {Name, Arity} tuples in -optional_callbacks as callback function stubs",
+    "#1296 the index parses broken files again in full, as the editor does",
   };
 
   private ErlangStubChanges() {

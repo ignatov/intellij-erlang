@@ -84,7 +84,7 @@ import java.util.regex.Pattern;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
-  public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
     "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
@@ -350,9 +350,9 @@ public class ErlangPsiImplUtil {
 
                ErlangFile file = (ErlangFile) myElement.getContainingFile();
                VirtualFile virtualFile = file.getVirtualFile();
-               File ioFile = VfsUtilCore.virtualToIoFile(virtualFile);
+               File ioDir = VfsUtilCore.virtualToIoFile(virtualFile.getParent());
 
-               String relativePath = FileUtilRt.getRelativePath(ioFile, newHeaderIoFile);
+               String relativePath = FileUtilRt.getRelativePath(ioDir, newHeaderIoFile);
 
                Module module = ModuleUtilCore.findModuleForPsiElement(file);
                for (VirtualFile includeDir : ErlangIncludeDirectoryUtil.getIncludeDirectories(module)) {
@@ -533,7 +533,7 @@ public class ErlangPsiImplUtil {
   }
 
   public static boolean inAtomAttribute(PsiElement psiElement) {
-    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangTypeDefinition.class) != null;
+    return PsiTreeUtil.getParentOfType(psiElement, ErlangAtomAttribute.class, ErlangIfAtomAttribute.class, ErlangTypeDefinition.class) != null;
   }
 
   public static boolean inSpecification(PsiElement psiElement) {
@@ -710,6 +710,11 @@ public class ErlangPsiImplUtil {
         Editor editor = context.getEditor();
         Document document = editor.getDocument();
         context.commitDocument();
+        ErlangCallbackFunction callback = PsiTreeUtil.getParentOfType(context.getFile().findElementAt(context.getStartOffset()), ErlangCallbackFunction.class);
+        if (callback != null && callback.getCurlyLeft() != null) {
+          insertTupleArity(callback, context);
+          return;
+        }
         PsiElement next = findNextToken(context);
         ASTNode intNode = FormatterUtil.getNextNonWhitespaceSibling(next != null ? next.getNode() : null);
 
@@ -722,6 +727,16 @@ public class ErlangPsiImplUtil {
         PsiDocumentManager.getInstance(context.getProject()).doPostponedOperationsAndUnblockDocument(document);
         document.insertString(context.getTailOffset(), "/" + arity);
         editor.getCaretModel().moveToOffset(context.getTailOffset());
+      }
+
+      private void insertTupleArity(@NotNull ErlangCallbackFunction callback, @NotNull InsertionContext context) {
+        Document document = context.getDocument();
+        PsiElement comma = callback.getComma();
+        PsiElement integer = callback.getInteger();
+        int start = comma != null ? comma.getTextRange().getStartOffset() : context.getTailOffset();
+        int end = integer != null ? integer.getTextRange().getEndOffset() : comma != null ? comma.getTextRange().getEndOffset() : start;
+        document.replaceString(start, end, ", " + arity);
+        context.getEditor().getCaretModel().moveToOffset(start + 2 + String.valueOf(arity).length());
       }
 
       @Nullable
@@ -1103,6 +1118,8 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangCaseExpression o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    ErlangExpression head = o.getExpression();
+    if (head != null && head != lastParent && !processDeclarationRecursive(head, processor, state, true)) return false;
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
@@ -1118,10 +1135,15 @@ public class ErlangPsiImplUtil {
   }
 
   private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state) {
+    return processDeclarationRecursive(o, processor, state, false);
+  }
+
+  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
       ErlangCompositeElement top = queue.remove();
+      if (skipFunExpressions && top instanceof ErlangFunExpression) continue;
       if (!processor.execute(top, state)) return false;
       queue.addAll(PsiTreeUtil.getChildrenOfTypeAsList(top, ErlangCompositeElement.class));
     }

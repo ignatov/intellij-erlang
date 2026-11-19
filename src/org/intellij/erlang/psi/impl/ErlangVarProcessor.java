@@ -19,6 +19,8 @@ package org.intellij.erlang.psi.impl;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -54,6 +56,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
+    if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
       if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
@@ -84,11 +87,33 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
       // put all possible variables to list
-      myVarList.add((ErlangQVar) psiElement);
+      myVarList.addAll(getEarlierBindings((ErlangQVar) psiElement, myOrigin));
       return false;
     }
 
     return true;
+  }
+
+  // a variable that matches an earlier binding, like X in `X = 1, case X = g() of ...`, is not a binding itself.
+  // Only earlier variables are followed, so the nested resolve always starts before the origin and terminates.
+  @NotNull
+  private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull PsiElement origin) {
+    int offset = var.getTextOffset();
+    if (offset >= origin.getTextOffset() || !(var.getReference() instanceof PsiPolyVariantReference reference)) return List.of(var);
+    List<ErlangQVar> result = new SmartList<>();
+    for (ResolveResult r : reference.multiResolve(false)) {
+      if (r.getElement() instanceof ErlangQVar target && target.getTextOffset() < offset) result.add(target);
+    }
+    return result.isEmpty() ? List.of(var) : result;
+  }
+
+  // the name in the first clause of a named fun declares a new variable that shadows any outer one
+  private static boolean isNamedFunDeclaration(@NotNull PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return definition != null
+           && definition.getParent() instanceof ErlangFunClause clause
+           && clause.getArgumentDefinition() == definition
+           && PsiTreeUtil.getPrevSiblingOfType(clause, ErlangFunClause.class) == null;
   }
 
   private static boolean inFunArgList(PsiElement psiElement) {

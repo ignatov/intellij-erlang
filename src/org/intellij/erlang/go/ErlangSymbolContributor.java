@@ -16,9 +16,11 @@
 
 package org.intellij.erlang.go;
 
-import com.intellij.navigation.ChooseByNameContributor;
+import com.intellij.navigation.GotoClassContributor;
 import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.io.FileUtilRt;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.stubs.StubIndex;
 import com.intellij.util.ArrayUtil;
@@ -26,12 +28,15 @@ import org.intellij.erlang.ErlangStructureViewFactory;
 import org.intellij.erlang.psi.ErlangNamedElement;
 import org.intellij.erlang.stubs.index.ErlangAllNameIndex;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ErlangSymbolContributor implements ChooseByNameContributor {
+public class ErlangSymbolContributor implements GotoClassContributor {
+  private static final String SEPARATOR = ":";
+
   @NotNull
   @Override
   public String @NotNull [] getNames(Project project, boolean includeNonProjectItems) {
@@ -45,13 +50,38 @@ public class ErlangSymbolContributor implements ChooseByNameContributor {
     Collection<ErlangNamedElement> result = StubIndex.getElements(ErlangAllNameIndex.KEY, name, project, scope, ErlangNamedElement.class);
     List<NavigationItem> items = new ArrayList<>(result.size());
     for (ErlangNamedElement element : result) {
-      items.add(new ErlangStructureViewFactory.Element(element) {
-        @Override
-        public String getLocationString() {
-          return "(in " + element.getContainingFile().getName() + ")";
-        }
-      });
+      items.add(new ErlangSymbolNavigationItem(element));
     }
     return items.toArray(new NavigationItem[0]);
+  }
+
+  @Nullable
+  @Override
+  public String getQualifiedName(@NotNull NavigationItem item) {
+    if (!(item instanceof ErlangSymbolNavigationItem symbol)) return null;
+    String name = symbol.getName();
+    PsiFile file = symbol.myElement.getContainingFile();
+    if (name == null || file == null) return null;
+    return FileUtilRt.getNameWithoutExtension(file.getName()) + SEPARATOR + name;
+  }
+
+  @NotNull
+  @Override
+  public String getQualifiedNameSeparator() {
+    return SEPARATOR;
+  }
+
+  private static class ErlangSymbolNavigationItem extends ErlangStructureViewFactory.Element {
+    private final ErlangNamedElement myElement;
+
+    ErlangSymbolNavigationItem(@NotNull ErlangNamedElement element) {
+      super(element);
+      myElement = element;
+    }
+
+    @Override
+    public String getLocationString() {
+      return "(in " + myElement.getContainingFile().getName() + ")";
+    }
   }
 }

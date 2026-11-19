@@ -175,6 +175,7 @@ attribute ::= '-' (
   | behaviour
   | on_load
   | ifdef_ifndef_undef_attribute
+  | if_atom_attribute
   | else_atom_attribute <<enterMode "ELSE">>
   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   ) {pin=1}
@@ -229,6 +230,7 @@ type_ref ::= q_atom {
 }
 
 ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')' {pin=2 elementType=atom_attribute}
+if_atom_attribute ::= 'if' '(' expression ')' {pin=1}
 else_atom_attribute ::= 'else' {pin=1}
 on_load ::= &'on_load' atom_name '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
 atom_attribute ::= (atom_name | single_quote atom_name single_quote) ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
@@ -261,8 +263,8 @@ unqualified_record_ref ::= q_atom {
 
 optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
 private callback_function_list ::= callback_function (',' callback_function)*
-callback_function ::= q_atom '/' integer {
-  pin = 1
+callback_function ::= q_atom '/' integer | '{' q_atom ',' integer '}' {
+  pin(".*") = "q_atom"
   methods = [getReference]
   stubClass="org.intellij.erlang.stubs.ErlangCallbackFunctionStub"
 }
@@ -370,14 +372,13 @@ app_parameter ::= '{'
   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   | <<app_atom_named ('mod')>> ',' app_mod
   | <<app_atom_named ('start_phases')>> ',' config_expression
-  | <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
+  | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
   | config_exprs)
   '}' {elementType=tuple_expression}
 app_module_expression ::= module_ref {elementType=config_expression}
 app_integer ::= &integer atomic {elementType=config_expression}
 app_env_expression ::= '{' app_atom ',' config_expression '}' {elementType=tuple_expression}
 app_mod ::= '{' app_module_expression ',' config_expression '}' {elementType=tuple_expression}
-app_runtime_deps ::= '[' string_literal? ']' {elementType=list_expression}
 
 config_expression ::=
     config_tuple_expression

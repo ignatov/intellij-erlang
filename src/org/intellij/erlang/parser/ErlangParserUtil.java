@@ -19,8 +19,11 @@ package org.intellij.erlang.parser;
 import com.intellij.lang.LighterASTNode;
 import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
+import com.intellij.lang.SyntaxTreeBuilder;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -36,6 +39,12 @@ import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
+
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.BiConsumer;
 
 public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static boolean isApplicationLanguage(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
@@ -110,29 +119,108 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
     ErrorState state = new ErrorState();
     ErrorState.initState(state, builder, root, ArrayUtil.mergeArrays(tokenSets, ErlangParser.EXTENDS_SETS_));
-    PsiFile file = builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
-    VirtualFile data = file != null ? file.getUserData(IndexingDataKeys.VIRTUAL_FILE) : null;
-    PsiBuilder result = new MyBuilder(builder, state, parser, data != null);
+    FastParse fastParse = builder.getUserData(FAST_PARSE_KEY);
+    BiConsumer<PsiFile, Boolean> listener = ourParseListener;
+    if (listener != null) listener.accept(builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY), fastParse != null);
+    PsiBuilder result = new MyBuilder(builder, state, parser, fastParse);
     ErrorState errorState = ErrorState.get(result);
     errorState.altMode = true;
     errorState.braces = ErlangBraceMatcher.PAIRS;
     return result;
   }
 
-  private static class MyBuilder extends Builder {
-    private final boolean indexing;
+  /**
+   * State of a fast parse for the index. It records no expected-token variants, only the position of the furthest
+   * token check of each frame ({@link Frame#lastVariantAt}), which is what the error recovery reads, and never less
+   * than a full parse would record there. On valid code it builds the tree of a full parse. A pinned section that
+   * fails marks an error, which stays unless an enclosing alternative is rolled back. When the tree has an error the
+   * variants it lacks can change the tree, so {@link #parseLight} parses the file again in full.
+   */
+  private static final class FastParse {
+    private final TreeMap<Integer, IElementType> remappedTokens = new TreeMap<>();
+  }
 
-    private MyBuilder(PsiBuilder builder, ErrorState state, PsiParser parser, boolean indexing) {
-      super(builder, state, parser);
-      this.indexing = indexing;
+  private static final Key<FastParse> FAST_PARSE_KEY = Key.create("Erlang.FAST_PARSE");
+
+  private static volatile @Nullable BiConsumer<PsiFile, Boolean> ourParseListener;
+
+  /**
+   * Calls {@code listener} each time the generated parser starts, with the file being parsed and whether the parse
+   * runs in the fast mode, until {@code parentDisposable} is disposed.
+   */
+  @TestOnly
+  public static void setParseListener(@NotNull BiConsumer<PsiFile, Boolean> listener, @NotNull Disposable parentDisposable) {
+    ourParseListener = listener;
+    Disposer.register(parentDisposable, () -> ourParseListener = null);
+  }
+
+  public static void parseLight(IElementType root, PsiBuilder builder, BiConsumer<IElementType, PsiBuilder> parser) {
+    PsiFile file = builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
+    VirtualFile data = file != null ? file.getUserData(IndexingDataKeys.VIRTUAL_FILE) : null;
+    if (data == null) {
+      parser.accept(root, builder);
+      return;
     }
+    FastParse fastParse = new FastParse();
+    builder.putUserData(FAST_PARSE_KEY, fastParse);
+    try {
+      parser.accept(root, builder);
+    }
+    finally {
+      builder.putUserData(FAST_PARSE_KEY, null);
+    }
+    if (!hasErrors(builder)) return;
+    // the root marker is the first production; a marker made before the parse would move it past leading comments
+    ((PsiBuilder.Marker)builder.getProductions().get(0)).precede().rollbackTo();
+    restoreRemappedTokens(builder, fastParse);
+    builder.putUserData(MODES_KEY, null);
+    builder.putUserData(IS_COMPREHENSION_KEY, null);
+    parser.accept(root, builder);
+  }
+
+  // a rollback keeps the token types that eofOrSpace remapped
+  private static void restoreRemappedTokens(PsiBuilder builder, FastParse fastParse) {
+    if (fastParse.remappedTokens.isEmpty()) return;
+    PsiBuilder.Marker start = builder.mark();
+    for (Map.Entry<Integer, IElementType> token : fastParse.remappedTokens.entrySet()) {
+      while (!builder.eof() && builder.rawTokenIndex() < token.getKey()) builder.advanceLexer(); // eof() skips whitespaces
+      if (builder.rawTokenIndex() == token.getKey()) builder.remapCurrentToken(token.getValue());
+    }
+    start.rollbackTo();
+  }
+
+  private static boolean hasErrors(PsiBuilder builder) {
+    for (SyntaxTreeBuilder.Production production : builder.getProductions()) {
+      if (production.getTokenType() == TokenType.ERROR_ELEMENT) return true;
+    }
+    return false;
+  }
+
+  private static class MyBuilder extends Builder {
+    private final @Nullable FastParse fastParse;
+
+    private MyBuilder(PsiBuilder builder, ErrorState state, PsiParser parser, @Nullable FastParse fastParse) {
+      super(builder, state, parser);
+      this.fastParse = fastParse;
+    }
+  }
+
+  private static @Nullable FastParse fastParse(PsiBuilder builder) {
+    return builder instanceof MyBuilder ? ((MyBuilder)builder).fastParse : null;
+  }
+
+  private static void markTokenCheck(PsiBuilder builder) {
+    builder.eof(); // skip whitespaces
+    Frame frame = ErrorState.get(builder).currentFrame;
+    int position = builder.rawTokenIndex();
+    if (frame != null && frame.lastVariantAt < position) frame.lastVariantAt = position;
   }
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static boolean consumeToken(PsiBuilder builder, IElementType token) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    if (!indexing) return GeneratedParserUtilBase.consumeToken(builder, token);
+    if (fastParse(builder) == null) return GeneratedParserUtilBase.consumeToken(builder, token);
 
+    markTokenCheck(builder);
     if (nextTokenIsFast(builder, token)) {
       builder.advanceLexer();
       return true;
@@ -142,21 +230,48 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static boolean nextTokenIs(PsiBuilder builder, IElementType token) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    return indexing ? nextTokenIsFast(builder, token) : GeneratedParserUtilBase.nextTokenIs(builder, token);
+    if (fastParse(builder) == null) return GeneratedParserUtilBase.nextTokenIs(builder, token);
+    markTokenCheck(builder);
+    return nextTokenIsFast(builder, token);
   }
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static boolean nextTokenIs(PsiBuilder builder, String frameName, IElementType... tokens) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    return indexing ? nextTokenIsFast(builder, tokens) : GeneratedParserUtilBase.nextTokenIs(builder, frameName, tokens);
+    if (fastParse(builder) == null) return GeneratedParserUtilBase.nextTokenIs(builder, frameName, tokens);
+    markTokenCheck(builder);
+    return nextTokenIsFast(builder, tokens);
   }
 
   @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
   public static void addVariant(PsiBuilder builder, String text) {
-    boolean indexing = builder instanceof MyBuilder && ((MyBuilder)builder).indexing;
-    if (indexing) return;
-    GeneratedParserUtilBase.addVariant(builder, text);
+    if (fastParse(builder) == null) {
+      GeneratedParserUtilBase.addVariant(builder, text);
+      return;
+    }
+    markTokenCheck(builder);
+  }
+
+  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
+  public static void exit_section_(PsiBuilder builder, int level, PsiBuilder.Marker marker,
+                                   boolean result, boolean pinned, @Nullable Parser eatMore) {
+    exit_section_(builder, level, marker, null, result, pinned, eatMore);
+  }
+
+  @SuppressWarnings("MethodOverridesStaticMethodOfSuperclass")
+  public static void exit_section_(PsiBuilder builder, int level, PsiBuilder.Marker marker, @Nullable IElementType elementType,
+                                   boolean result, boolean pinned, @Nullable Parser eatMore) {
+    FastParse fastParse = fastParse(builder);
+    Frame frame = ErrorState.get(builder).currentFrame;
+    if (fastParse != null && frame != null) {
+      // a full parse reports a syntax error here from its variants, unless an enclosing alternative is rolled back
+      if (!result && pinned) builder.error("fast parse error");
+      // a full parse sets this for a predicate that consumed tokens and recorded no variants
+      int position = builder.rawTokenIndex();
+      if ((frame.modifiers & (_AND_ | _NOT_)) != 0 && frame.position < position && frame.lastVariantAt < position) {
+        frame.lastVariantAt = position;
+      }
+    }
+    GeneratedParserUtilBase.exit_section_(builder, level, marker, elementType, result, pinned, eatMore);
   }
 
   @SuppressWarnings("UnusedParameters")
@@ -165,6 +280,8 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     IElementType one = builder_.rawLookup(1);
     IElementType two = builder_.rawLookup(2);
     if (one == TokenType.WHITE_SPACE && (two == ErlangTypes.ERL_DOT || two == null) || one == null && builder_.getTokenType() == ErlangTypes.ERL_DOT) {
+      FastParse fastParse = fastParse(builder_);
+      if (fastParse != null) fastParse.remappedTokens.putIfAbsent(builder_.rawTokenIndex(), builder_.getTokenType());
       builder_.remapCurrentToken(TokenType.ERROR_ELEMENT);
       return true;
     }
