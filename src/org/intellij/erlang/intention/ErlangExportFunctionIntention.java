@@ -17,7 +17,9 @@
 package org.intellij.erlang.intention;
 
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
+import com.intellij.codeInsight.daemon.impl.analysis.HighlightingLevelManager;
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
+import com.intellij.ide.PowerSaveMode;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
@@ -47,8 +49,12 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
     return false;
   }
 
-  // The intention is available on the function name only, where the quick fix of the unused function inspection is offered too
+  // The intention is available on the function name only, where the quick fix of the unused function inspection is offered too,
+  // provided that inspections run for the file
   private static boolean isOfferedByUnusedFunctionInspection(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    if (PowerSaveMode.isEnabled()) return false;
+    HighlightingLevelManager levelManager = HighlightingLevelManager.getInstance(file.getProject());
+    if (!levelManager.shouldInspect(file) || levelManager.runEssentialHighlightingOnly(file)) return false;
     HighlightDisplayKey key = HighlightDisplayKey.find(ErlangUnusedFunctionInspection.SHORT_NAME);
     return key != null &&
            InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile().isToolEnabled(key, file) &&
