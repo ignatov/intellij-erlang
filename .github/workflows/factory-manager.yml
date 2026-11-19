@@ -427,12 +427,24 @@ jobs:
           tar -xzf "$RUNNER_TEMP/copilot.tar.gz" -C "$bin"
           # The first start unpacks the CLI's package under the cache of the HOME the model's run uses, with the
           # ripgrep that its grep and glob run. The sandbox mounts nothing of that HOME, so without a read-only grant
-          # of that one directory every search fails with "rg: not found" (as in the first rehearsal).
-          env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" COPILOT_HOME="$MANAGER_ROOT/copilot-home" \
+          # of that one directory every search fails with "rg: not found" (as in the first rehearsal). This start
+          # gets a throwaway CLI home, so that it leaves nothing in the real one before settings.json is written.
+          mkdir -p "$RUNNER_TEMP/copilot-home-install"
+          env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" COPILOT_HOME="$RUNNER_TEMP/copilot-home-install" \
               COPILOT_AUTO_UPDATE=false "$bin/copilot" --version > "$RUNNER_TEMP/copilot-version.txt"
           head -n 1 "$RUNNER_TEMP/copilot-version.txt"
           ripgrep=("$MANAGER_ROOT"/home/.cache/copilot/pkg/linux-x64/*/ripgrep)
-          if [ "${#ripgrep[@]}" != 1 ] || [ ! -x "${ripgrep[0]}/bin/linux-x64/rg" ]; then
+          # Exactly one directory, no symlink on the way, inside the HOME of the run, with an executable rg that is
+          # no symlink either: the grant is of that directory and nothing else.
+          if [ "${#ripgrep[@]}" != 1 ] || ! python3 -I - "${ripgrep[0]}" "$MANAGER_ROOT/home" <<'PY'
+          import os, sys
+          d, home = os.path.abspath(sys.argv[1]), os.path.realpath(sys.argv[2])
+          rg = os.path.join(d, "bin", "linux-x64", "rg")
+          ok = (os.path.realpath(d) == d and d.startswith(home + os.sep) and os.path.isdir(d)
+                and os.path.realpath(rg) == rg and os.path.isfile(rg) and os.access(rg, os.X_OK))
+          sys.exit(0 if ok else 1)
+          PY
+          then
             echo "::error::The CLI's bundled ripgrep is not where the sandbox grant expects it; the model does not run."
             exit 1
           fi
@@ -547,15 +559,29 @@ jobs:
           # of the run, by the desk's manager.py at the commit the plan read.
           python3 -E -s -B "$work/desk/dispatcher/manager.py" message --events "$think/events.jsonl" \
               --summary "$think/events-summary.json" > "$think/message.txt" 2>> "$think/cli.err" || true
-          # Counts only: the tool calls by name, ok and failed.
-          python3 -I - "$think/events-summary.json" <<'PY' || echo "Tools: no summary of the run."
-          import json, re, sys
-          s = json.load(open(sys.argv[1], encoding="utf-8"))
+          # Counts only: the calls of view, grep and glob, ok and failed, and of anything else as one number (no
+          # name from the events reaches this log). A tool outside the three makes the run unusable.
+          others=$(python3 -I - "$think/events-summary.json" "$think/tools-line.txt" <<'PY'
+          import json, sys
+          try:
+              s = json.load(open(sys.argv[1], encoding="utf-8"))
+          except (OSError, ValueError):
+              s = {}
           tools = s.get("tools") if isinstance(s.get("tools"), dict) else {}
-          parts = ["%s %d ok %d failed" % (n, int(c.get("ok") or 0), int(c.get("failed") or 0))
-                   for n, c in sorted(tools.items()) if re.match(r"^[a-z_]{1,40}$", n) and isinstance(c, dict)]
-          print("Tools: %s; session errors: %d." % (", ".join(parts) or "none", int(s.get("session_errors") or 0)))
+          def count(c, k):
+              v = c.get(k) if isinstance(c, dict) else 0
+              return v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0
+          parts = ["%s %d ok %d failed" % (n, count(tools.get(n), "ok"), count(tools.get(n), "failed"))
+                   for n in ("view", "grep", "glob")]
+          other = sum(count(c, "ok") + count(c, "failed") for n, c in tools.items() if n not in ("view", "grep", "glob"))
+          errors = s.get("session_errors")
+          errors = errors if isinstance(errors, int) and not isinstance(errors, bool) and errors >= 0 else 0
+          with open(sys.argv[2], "w", encoding="utf-8") as f:
+              f.write("Tools: %s, other %d; session errors: %d.\n" % (", ".join(parts), other, errors))
+          print(other if s else "unknown")
           PY
+          ) || others=unknown
+          cat "$think/tools-line.txt" 2> /dev/null || echo "Tools: no summary of the run."
           closings=$(grep -cE '^[*>_ ]*\[\[\[END MANAGER\]\]\]' "$think/message.txt") || closings=0
           # The model of the run, from the usage the CLI wrote: any key or text of the JSON that is the model id.
           model_used=$(python3 -I - "$think/usage.json" "$MODEL" <<'PY'
@@ -583,12 +609,12 @@ jobs:
           echo "Message: $(wc -c < "$think/message.txt") bytes, $closings closing line(s) of the envelope."
           echo "Usage names the model $MODEL: $model_used."
           ok=false
-          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ]; then
+          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ] && [ "$others" = 0 ]; then
             ok=true
           fi
           echo "$ok" > "$think/ok"
           if [ "$ok" != true ]; then
-            echo "::error::The model's run is not usable (exit status, envelope or model); finish records a failed run."
+            echo "::error::The model's run is not usable (exit status, envelope, model or a tool outside view, grep and glob); finish records a failed run."
             exit 1
           fi
 
