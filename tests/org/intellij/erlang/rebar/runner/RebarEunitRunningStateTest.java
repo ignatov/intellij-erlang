@@ -23,12 +23,16 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.eunit.ErlangEunitReporterModule;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -51,6 +55,30 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
   protected void setUp() throws Exception {
     super.setUp();
     setUpProjectSdk();
+  }
+
+  public void testRebar3CommandSelectsModuleAndTest() {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    try {
+      rebarSettings.setRebarPath("/opt/rebar/rebar3");
+      ErlangFile file = (ErlangFile) myFixture.configureByText("b.erl", "-module(b).\nb_test() -> ok.\nb2_test() -> ok.\n");
+      ErlangFunction function = file.getFunction("b_test", 0);
+      assertNotNull(function);
+
+      RebarEunitRunConfiguration configuration = new RebarEunitRunConfiguration(getProject(), "b:b_test");
+      configuration.setCommand(RebarEunitConfigurationUtil.createDefaultRebarCommand(List.of(file), List.of(function), true));
+      List<String> parameters =
+        RebarEunitRunningState.getCommandLine(configuration, new File(FileUtil.getTempDirectory(), "eunit")).getParametersList().getList();
+
+      assertFalse(parameters.toString(), parameters.contains("suites=b"));
+      assertFalse(parameters.toString(), parameters.contains("tests=b_test"));
+      assertTrue(parameters.toString(), parameters.contains("--test=b:b_test") ||
+                                        parameters.indexOf("--test") >= 0 && parameters.contains("b:b_test"));
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+    }
   }
 
   public void testErlFlagsQuoteReportsDirectoryWithSpace() {
