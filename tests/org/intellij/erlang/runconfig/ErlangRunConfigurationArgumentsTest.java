@@ -62,8 +62,9 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
 
     ErlangRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
     List<String> parameters = state.getCommand().getParametersList().getList();
-    // The erl flags are the last parameters of the command line.
-    assertEquals(List.of(expected), parameters.subList(parameters.size() - expected.length, parameters.size()));
-    assertEquals("-noshell", parameters.get(parameters.size() - expected.length - 1));
+    // The erl flags come right before the entry point (#616).
+    int eval = parameters.indexOf("-eval");
+    assertTrue(parameters.toString(), eval >= expected.length);
+    assertEquals(List.of(expected), parameters.subList(eval - expected.length, eval));
   }
 }

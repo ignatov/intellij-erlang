@@ -17,15 +17,27 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.testFramework.LoggedErrorProcessor;
+import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final int TIMEOUT_SECONDS = 10;
@@ -61,6 +73,196 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     }
   }
 
+  // #1289: a peer that declares a frame of 0x7FFFFFFF bytes must not make the node allocate it. HotSpot always rejects
+  // new byte[Integer.MAX_VALUE] with "OutOfMemoryError: Requested array size exceeds VM limit".
+  public void testHugeFrameLengthDoesNotAllocate() throws Throwable {
+    List<Throwable> logged = Collections.synchronizedList(new ArrayList<>());
+    CountDownLatch errorLogged = new CountDownLatch(1);
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public @NotNull Set<Action> processError(@NotNull String category, @NotNull String message, String @NotNull [] details,
+                                               @Nullable Throwable t) {
+        logged.add(t != null ? t : new Throwable(message));
+        errorLogged.countDown();
+        return EnumSet.noneOf(Action.class);
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0x7FFFFFFF);
+        out.flush();
+        stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        // The pooled thread logs an escaping Error after debuggerStopped() has run in the finally block.
+        errorLogged.await(2, TimeUnit.SECONDS);
+      }
+      finally {
+        node.stop();
+      }
+    });
+    for (Throwable t : logged) {
+      for (Throwable c = t; c != null; c = c.getCause()) {
+        if (c instanceof OutOfMemoryError) throw new AssertionError("The node allocated the declared frame length: " + c, t);
+      }
+    }
+  }
+
+  // #1289: a negative frame length ends the session with a warning instead of a NegativeArraySizeException.
+  public void testNegativeFrameLengthIsReported() throws Throwable {
+    List<String> warnings = Collections.synchronizedList(new ArrayList<>());
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public boolean processWarn(@NotNull String category, @NotNull String message, @Nullable Throwable t) {
+        warnings.add(message);
+        return false;
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0xFFFFFFFE);
+        out.flush();
+        assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      }
+      finally {
+        node.stop();
+      }
+    });
+    assertTrue(String.valueOf(warnings), warnings.stream().anyMatch(w -> w.contains("Invalid debugger message size: -2 bytes")));
+  }
+
+  // #1289: a breakpoint snapshot sends the bindings of every frame, so a real one can be well above 64 MiB.
+  public void testFrameAbove64MiBIsDelivered() throws Exception {
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      OtpErlangTuple frame = tuple(new OtpErlangLong(1), tuple(atom("t"), atom("main"), list()),
+                                   list(tuple(atom("B"), new OtpErlangBinary(new byte[65 * 1024 * 1024]))));
+      OtpErlangTuple snapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                      tuple(atom("t"), new OtpErlangLong(3)), list(frame));
+      send(peer, tuple(atom("breakpoint_reached"), pid, list(snapshot)));
+
+      List<ErlangProcessSnapshot> snapshots = snapshotsFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      assertEquals(1, snapshots.get(0).getStack().size());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: a declared length is not allocated up front, so a huge one without a payload only times out the read
+  // (which ends the session since #1305) instead of running out of memory.
+  public void testHugeFrameLengthWithoutPayloadOnlyTimesOut() throws Exception {
+    CountDownLatch stopped = new CountDownLatch(1);
+    CompletableFuture<String> error = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+      @Override public void failedToReceiveMessage(String message) { error.complete(message); }
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0x7FFFFFF7);
+      out.flush();
+      // The node gives up on the payload after RETRIES_ON_TIMEOUT * RECEIVE_TIMEOUT = 500 ms.
+      assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertFalse("The message was rejected: " + error.getNow(null), error.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: FF FF FF FF is a length of -1, not "nothing read"; it ends the session and the session is told why.
+  public void testAllOnesFrameLengthIsReportedToTheSession() throws Exception {
+    CountDownLatch stopped = new CountDownLatch(1);
+    CompletableFuture<String> error = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+      @Override public void failedToReceiveMessage(String message) { error.complete(message); }
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0xFFFFFFFF);
+      out.flush();
+      assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertTrue(error.getNow("no error reported"), error.getNow("").contains("Invalid debugger message size: -1 bytes"));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1305: a message that stalls after its length and part of its body must end the session (readBytes promises a
+  // SocketException once the retries on timeout are used up), not be dropped so that its rest is read as a new message.
+  public void testStalledFrameEndsTheSession() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    CompletableFuture<OtpErlangObject> evaluationFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new StallListener(stoppedFuture, evaluationFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      byte[] inner = new OtpOutputStream(tuple(atom("evaluate_response"), atom("desync"))).toByteArray();
+      int innerSize = 1 + inner.length;
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(4 + 4 + innerSize);
+      out.write(new byte[4]);
+      out.flush();
+
+      peer.setSoTimeout(5000);
+      int read;
+      try {
+        read = peer.getInputStream().read();
+      }
+      catch (SocketTimeoutException e) {
+        out.writeInt(innerSize);
+        out.write(OtpExternal.versionTag);
+        out.write(inner);
+        out.flush();
+        OtpErlangObject response = evaluationFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        fail("The node kept the session open after a stalled message and parsed the rest of its body as a new message: " +
+             "handleEvaluationResponse(" + response + ")");
+        return;
+      }
+      assertEquals("The node should close the connection", -1, read);
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1288: a session stopped before erl connects back must close the debugger port and end the server thread.
+  public void testStopBeforeDebuggerConnectsReleasesThePort() throws Exception {
+    CompletableFuture<Void> stoppedFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>(), stoppedFuture));
+    node.stop();
+
+    boolean stopped;
+    try {
+      stoppedFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      stopped = true;
+    }
+    catch (TimeoutException e) {
+      stopped = false;
+    }
+    boolean portOpen;
+    try (Socket ignored = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      portOpen = true; // this connect also unblocks accept(), so the server thread ends
+    }
+    catch (ConnectException e) {
+      portOpen = false;
+    }
+    assertFalse("debugger port " + node.getLocalDebuggerPort() + " still accepts connections after stop()", portOpen);
+    assertTrue("debuggerStopped() was not called within " + TIMEOUT_SECONDS + "s after stop()", stopped);
+  }
+
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
     byte[] bytes = new OtpOutputStream(message).toByteArray();
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -91,19 +293,47 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
 
   private static class RecordingListener implements ErlangDebuggerEventListener {
     private final CompletableFuture<List<ErlangProcessSnapshot>> mySnapshots;
+    private final CompletableFuture<Void> myStopped;
 
     RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots) {
+      this(snapshots, new CompletableFuture<>());
+    }
+
+    RecordingListener(CompletableFuture<List<ErlangProcessSnapshot>> snapshots, CompletableFuture<Void> stopped) {
       mySnapshots = snapshots;
+      myStopped = stopped;
     }
 
     @Override public void debuggerStarted() { }
     @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
     @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
     @Override public void unknownMessage(String messageText) { mySnapshots.completeExceptionally(new AssertionError(messageText)); }
+    @Override public void failedToReceiveMessage(String error) { mySnapshots.completeExceptionally(new AssertionError(error)); }
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
-    @Override public void debuggerStopped() { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { }
+  }
+
+  private static class StallListener implements ErlangDebuggerEventListener {
+    private final CompletableFuture<Void> myStopped;
+    private final CompletableFuture<OtpErlangObject> myEvaluationResponse;
+
+    StallListener(CompletableFuture<Void> stopped, CompletableFuture<OtpErlangObject> evaluationResponse) {
+      myStopped = stopped;
+      myEvaluationResponse = evaluationResponse;
+    }
+
+    @Override public void debuggerStarted() { }
+    @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
+    @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
+    @Override public void unknownMessage(String messageText) { }
+    @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
+    @Override public void breakpointIsSet(String module, int line) { }
+    @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { }
+    @Override public void debuggerStopped() { myStopped.complete(null); }
+    @Override public void handleEvaluationResponse(OtpErlangObject response) { myEvaluationResponse.complete(response); }
+    @Override public void failedToReceiveMessage(String error) { }
   }
 }

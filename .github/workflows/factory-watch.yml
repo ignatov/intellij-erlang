@@ -1,0 +1,264 @@
+name: Factory watch
+
+# A watchdog of the project's automation, without a model: it tells the maintainer when the factory stalls. The
+# dispatcher (factory-tick.yml, which runs dispatcher/dispatch.py of the private repository
+# ignatov/intellij-erlang-triage) can stop without anyone noticing: a tick that could not push its state halts the
+# chain, a merge decision waits for hours, master CI is red, the timer chain dies. This workflow runs
+# dispatcher/watch.py of the private repository, which reads what the tick leaves behind (state, config, the last
+# tick log, the branch list) and the public Actions runs, and announces each new alert, and each recovery, in one
+# comment on a standing issue of this repository (the variable FACTORY_WATCH_ISSUE), with a mention of the owner.
+#
+# It must not depend on the tick, because the tick is what dies. Its own clock:
+#   1. a loop of its own: each run ends by starting the next one with workflow_dispatch and wait=true; that run
+#      first waits in the environment of a wait timer (factory-timer-idle, 15 minutes, unless
+#      FACTORY_WATCH_TIMER_ENVIRONMENT names another one), using no runner while it waits. The next run is started
+#      also when the check failed, so a red check does not end the loop, and not when the check did not run.
+#      An environment that does not exist is created by GitHub without a wait timer (a typo in the variable, a
+#      deleted environment), so a run with wait=true that reaches the job rearm in less than 10 minutes stops the
+#      loop with an error instead of starting the next one.
+#   2. the timer of the tick (factory-timer.yml) starts this workflow whenever it has no run that is queued,
+#      waiting or running, so each live chain restarts the other one;
+#   3. a schedule twice an hour, the last backstop (GitHub drops most scheduled runs of this repository, so it is
+#      no clock by itself).
+# The concurrency is per job. The job wait has a group of its own that cancels a waiting one, so there is one loop:
+# a run started by the schedule or the tick's timer replaces the wait of the loop and carries it on. The job check
+# has a group that queues, so two checks never post at once. The workflow has no group: a run's own rearm must not
+# cancel it, or a red scheduled run would end as cancelled and GitHub would mail nobody. A check cancelled halfway
+# loses nothing: the record of what was announced is the bot's comments on the issue (each line carries
+# <!-- factory:watch:<key> --> or <!-- factory:watch-clear:<key> -->), so a comment that was posted is recorded and
+# one that was not is posted by the next run.
+#
+# Who is told: the comments are written with GITHUB_TOKEN, so they are by github-actions[bot] and not by the owner,
+# whose own actions GitHub does not notify him of; a comment with a new alert mentions him. A scheduled run that
+# finds a critical alert open fails, and GitHub mails a failed scheduled run to whoever last changed its cron. A
+# run that cannot read the private repository or post its comment fails too.
+#
+# What keeps the secrets in, as in factory-tick.yml:
+#   - The token for the private repository is a secret of the environment factory-watch (FACTORY_WATCH_ENVIRONMENT
+#     may name another one), whose deployment branches are master only. There is no pull_request trigger.
+#   - No "uses:" step, and nothing from this repository's tree runs. The private repository is fetched with plain
+#     git, the token coming from an askpass script that reads it from the environment. That token reaches only the
+#     git steps; watch.py gets only GITHUB_TOKEN.
+#   - The log of a public run is public: it shows only counts. What watch.py writes on the issue names only pull
+#     request, issue and run numbers and fixed phrases.
+#
+# Repository variables: FACTORY_WATCH ("true" turns the workflow on), FACTORY_WATCH_ISSUE (the number of the
+# standing issue), and optionally FACTORY_WATCH_ENVIRONMENT, FACTORY_WATCH_TIMER_ENVIRONMENT, FACTORY_WATCH_TIMER
+# ("false" stops the loop; the schedule still runs), FACTORY_MANAGER ("true": a check that announced a new alert
+# starts factory-manager.yml, which diagnoses it). FACTORY_TICK_LIVE and FACTORY_TIMER are read, so a factory
+# that the maintainer stopped is not reported as dead.
+# Secret of the environment: FACTORY_WATCH_TOKEN, a token that can read the private repository (Contents: read).
+# Without it FACTORY_DESK_TOKEN and then FACTORY_TOKEN are used, which exist only in factory-dispatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      wait:
+        description: Wait in the environment of the wait timer before the check (the loop sets this)
+        type: boolean
+        default: false
+  schedule:
+    - cron: '7,37 * * * *'
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  wait:
+    if: vars.FACTORY_WATCH == 'true' && inputs.wait
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    concurrency:
+      group: factory-watch-wait
+      cancel-in-progress: true
+    environment:
+      name: ${{ vars.FACTORY_WATCH_TIMER_ENVIRONMENT || 'factory-timer-idle' }}
+      # The environment is used for its wait timer only; this is not a deployment.
+      deployment: false
+    steps:
+      - run: echo "The wait is over."
+
+  check:
+    needs: wait
+    if: >-
+      !cancelled() && vars.FACTORY_WATCH == 'true'
+      && (needs.wait.result == 'success' || needs.wait.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: factory-watch-check
+      cancel-in-progress: false
+    permissions:
+      actions: read
+      issues: write
+    outputs:
+      new: ${{ steps.watch.outputs.new }}
+    environment:
+      name: ${{ vars.FACTORY_WATCH_ENVIRONMENT || 'factory-watch' }}
+      # The environment is used for its secret and its branch policy only; this is not a deployment.
+      deployment: false
+    env:
+      DESK_REPO: ignatov/intellij-erlang-triage
+      ISSUE: ${{ vars.FACTORY_WATCH_ISSUE }}
+      GIT_TERMINAL_PROMPT: '0'
+      GIT_CONFIG_NOSYSTEM: '1'
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: credential.helper
+      GIT_CONFIG_VALUE_0: ''
+    steps:
+      - name: Check the setup
+        run: |
+          if ! [[ "$ISSUE" =~ ^[0-9]+$ ]]; then
+            echo "::error::The repository variable FACTORY_WATCH_ISSUE is not the number of the standing issue."
+            exit 1
+          fi
+          echo "Standing issue: #$ISSUE."
+
+      - name: Fetch the private repository
+        id: desk
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_WATCH_TOKEN || secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+        run: |
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          ok=true
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::warning::No token for the private repository in the environment of this job."
+            ok=false
+          elif ! git clone --quiet --depth 1 --single-branch --branch main "https://github.com/$DESK_REPO.git" "$desk" \
+              > "$RUNNER_TEMP/clone.log" 2>&1; then
+            echo "::warning::The private repository could not be fetched."
+            ok=false
+          elif ! git -C "$desk" ls-remote --heads origin 'refs/heads/tick-state-failed/*' \
+              > "$RUNNER_TEMP/branches.txt" 2> /dev/null; then
+            echo "::warning::The branches of the private repository could not be listed."
+            ok=false
+          fi
+          if [ "$ok" = true ]; then
+            # The last tick log; without it watch.py reports that it is blind to it.
+            if git -C "$desk" fetch --quiet --depth 1 origin refs/heads/tick-log > /dev/null 2>&1; then
+              git -C "$desk" show FETCH_HEAD:last-tick.log > "$RUNNER_TEMP/last-tick.log" 2> /dev/null \
+                || rm -f "$RUNNER_TEMP/last-tick.log"
+            fi
+            echo "Fetched the private repository; $(wc -l < "$RUNNER_TEMP/branches.txt") branch(es) tick-state-failed/*."
+          fi
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+
+      - name: Watch
+        id: watch
+        if: steps.desk.outputs.ok == 'true'
+        env:
+          WATCH_TOKEN: ${{ github.token }}
+          TICK_LIVE: ${{ vars.FACTORY_TICK_LIVE }}
+          TIMER: ${{ vars.FACTORY_TIMER }}
+          FAIL_ON_CRITICAL: ${{ github.event_name == 'schedule' && 'true' || 'false' }}
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          args=(--state "$desk/dispatcher/state.json" --config "$desk/dispatcher/config.json"
+                --branches "$RUNNER_TEMP/branches.txt" --tick-live "${TICK_LIVE:-false}" --timer "${TIMER:-false}"
+                --notify "$ISSUE" --live)
+          if [ -s "$RUNNER_TEMP/last-tick.log" ]; then
+            args+=(--tick-log "$RUNNER_TEMP/last-tick.log")
+          fi
+          if [ "$FAIL_ON_CRITICAL" = true ]; then
+            args+=(--fail-on-critical)
+          fi
+          # watch.py prints only counts with --notify. The number of new alerts starts the manager (job manager).
+          # tee, not a file printed afterwards, so that a run cut by its timeout still shows what watch.py printed.
+          status=0
+          python3 -I "$desk/dispatcher/watch.py" "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/watch.out" || status=$?
+          new=$(sed -nE 's/^alerts: .*; new ([0-9]+), cleared [0-9]+, open before [0-9]+$/\1/p' "$RUNNER_TEMP/watch.out" \
+            | tail -n 1)
+          echo "new=${new:-0}" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Report that the private repository cannot be read
+        if: steps.desk.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          mark='<!-- factory:watch:watch-desk-unreadable -->'
+          last=$(gh api "repos/$REPO/issues/$ISSUE/comments?per_page=100" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | .body' \
+            | grep -oE '<!-- factory:watch(-clear)?:watch-desk-unreadable -->' | tail -n 1) || last=""
+          if [ "$last" != "$mark" ]; then
+            now=$(date -u '+%Y-%m-%d %H:%M UTC')
+            body=$(printf 'Factory watch, %s.\n\nNew:\n- **CRITICAL** The watch cannot read the private repository of the dispatcher. Its token may be missing, expired or without access, so no check ran. %s\n\n@%s\n' \
+              "$now" "$mark" "$OWNER")
+            gh api -X POST "repos/$REPO/issues/$ISSUE/comments" -f body="$body" > /dev/null
+            echo "Announced on #$ISSUE."
+          else
+            echo "Already announced on #$ISSUE."
+          fi
+          exit 1
+
+  manager:
+    needs: check
+    # A check that announced a new alert starts the factory manager (factory-manager.yml), also a check that failed
+    # on a critical alert. Off unless FACTORY_MANAGER is "true"; the manager's daily schedule is its backstop.
+    if: >-
+      !cancelled() && vars.FACTORY_MANAGER == 'true'
+      && needs.check.outputs.new != '' && needs.check.outputs.new != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start the factory manager
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-manager.yml -R "$REPO" --ref master; then
+            echo "::warning::The factory manager could not be started; its schedule is the backstop."
+          fi
+
+  rearm:
+    needs: check
+    # Only after a check that ran, red or green: a wait or a check that could not start ends the loop here, and
+    # the schedule starts it again.
+    if: >-
+      !cancelled() && vars.FACTORY_WATCH == 'true' && vars.FACTORY_WATCH_TIMER != 'false'
+      && (needs.check.result == 'success' || needs.check.result == 'failure')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Start the next check after the wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          WAITED: ${{ inputs.wait == true }}
+        run: |
+          if [ "$WAITED" = true ]; then
+            # A wait timer that did not wait (an environment without one) would make a loop every two minutes.
+            started=$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq .run_started_at) || started=""
+            elapsed=$(( $(date -u +%s) - $(date -u -d "$started" +%s 2> /dev/null || echo 0) ))
+            if [ -z "$started" ] || [ "$elapsed" -lt 600 ]; then
+              echo "::error::This run waited less than 10 minutes (or its start could not be read): the environment of the wait has no wait timer. The loop stops; fix FACTORY_WATCH_TIMER_ENVIRONMENT or the environment."
+              exit 1
+            fi
+          fi
+          for attempt in 1 2 3; do
+            if gh workflow run factory-watch.yml -R "$REPO" --ref master -f wait=true; then
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          echo "::error::The next check could not be started; the schedule starts the loop again."
+          exit 1

@@ -54,6 +54,7 @@ public class ErlangBehaviourInspectionsTest extends ErlangLightPlatformCodeInsig
   public void testParenthesizedOptionalCallback()          { doHighlightingTest("testParensOptional.erl", "bParens.erl"); }
   public void testParenthesizedCallbackIsExported()        { doCallbacksFixTest("testImplementedParens.erl", "bParens.erl"); }
   public void testParenthesizedCallbackIsCreated()         { doCallbacksFixTest("testCreatedParens.erl", "bParens.erl"); }
+  public void testTupleOptionalCallbacks()                 { doHighlightingTest("testTupleOptional.erl", "bTuple.erl"); }
 
   public void testRemoveDuplicate() {
     myFixture.configureByFiles("testRemoveDuplicate.erl", "b1.erl", "b2.erl");

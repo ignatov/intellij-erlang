@@ -550,6 +550,7 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testNamedFunExpr()   throws Exception { doTest(); }
 
   public void testComprehensions() throws Exception { doTest(); }
+  public void testIfAttribute()    throws Exception { doTest(); }
 
   public void testSpecArgumentTypeUnion()        throws Exception { doTest(); }
   public void testSpecArgumentTypeUnionAligned() throws Exception { alignBlocks(); doTest(); }

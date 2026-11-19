@@ -1,0 +1,2 @@
+Opts = proplists:get_value(erl_opts, CONFIG, []),
+lists:keystore(erl_opts, 1, CONFIG, {erl_opts, [{d, 'FROM_SCRIPT'} | Opts]}).
