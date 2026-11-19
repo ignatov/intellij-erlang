@@ -115,6 +115,26 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < 10000);
   }
 
+  // A command that writes without stopping, such as `yes` given as the rebar path, is stopped once its output passes the
+  // limit, long before the timeout, and the first line is still returned.
+  public void testEndlessOutputIsCutOff() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("endless", null, true);
+    File pidFile = new File(directory, "pid");
+    File command = new File(directory, "endless.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\necho $$ > '" + pidFile.getPath() + "'\n" +
+                                        "while :; do echo 0123456789012345678901234567890123456789; done\n", StandardCharsets.UTF_8);
+
+    long start = System.nanoTime();
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(20000, "/bin/sh", command.getPath());
+    long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+    boolean alive = killIfAlive(pidFile);
+    assertEquals("0123456789012345678901234567890123456789", output.getStdOut());
+    assertTrue("the call took " + elapsed + " ms", elapsed < 10000);
+    assertFalse("the command is still running after execAndGetFirstLine returned", alive);
+  }
+
   // A process outside the tree of the command, here one that the command detached, can keep stdout open after the command
   // exits. The call must neither wait for it nor leave threads of its own behind.
   public void testDetachedProcessHoldingOutputLeavesNoThreads() throws Exception {
@@ -186,16 +206,19 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     assertTrue(directory.isDirectory());
   }
 
-  // Commands that still run when the application is disposed (IDE exit, plugin unload) are killed, and the JVM shutdown
+  // Commands that still run when the application is disposed (IDE exit, plugin unload) are killed and their directories
+  // deleted, as the thread that runs them may not get to it. The JVM shutdown
   // hook, which covers a JVM that exits without disposing the application, is removed so that it does not keep the plugin.
   public void testDisposeKillsRunningCommandsAndRemovesShutdownHook() throws Exception {
     Assume.assumeFalse("the command is sleep", SystemInfo.isWindows);
     ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
-    Process process = new ProcessBuilder("sleep", "60").start();
+    File directory = FileUtil.createTempDirectory("disposed", null, false);
+    Process process = new ProcessBuilder("sleep", "60").directory(directory).start();
     try {
-      commands.myProcesses.add(process);
+      commands.myCommands.put(process, directory);
       commands.dispose();
       assertTrue("the command is still running after dispose", process.waitFor(5, TimeUnit.SECONDS));
+      assertFalse("the working directory of the command is still there after dispose", directory.exists());
       assertFalse("the shutdown hook is still registered after dispose", Runtime.getRuntime().removeShutdownHook(commands.myShutdownHook));
     }
     finally {
