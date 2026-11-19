@@ -60,7 +60,6 @@ import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
-import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
@@ -539,9 +538,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   private @NotNull String resolveBeamDirectory() {
-    ErlangSdkRelease release = ErlangSdkType.getRelease(myRunningState.getModule());
-    if (release.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)) return "otp_27_plus";
-    return "otp_pre_27";
+    return ErlangSdkType.getRelease(myRunningState.getModule()).getBundledBeamDirectory();
   }
 
   private static void copyBeamTo(String prefix, String beamName, File directory) throws IOException {

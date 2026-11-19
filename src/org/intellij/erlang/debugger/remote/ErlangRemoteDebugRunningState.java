@@ -86,7 +86,7 @@ public class ErlangRemoteDebugRunningState extends ErlangRunningState {
   @Override
   protected List<String> getErlFlags() {
     List<String> nodeNameArgs = getNodeNameArgs();
-    List<String> additionalArgs = ParametersListUtil.parse(myConfiguration.getDebugNodeArgs());
+    List<String> additionalArgs = ParametersListUtil.parse(StringUtil.notNullize(myConfiguration.getDebugNodeArgs()));
     return ContainerUtil.concat(nodeNameArgs, additionalArgs);
   }
 

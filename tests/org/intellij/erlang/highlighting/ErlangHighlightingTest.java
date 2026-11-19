@@ -45,6 +45,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIoFormat()          { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
+  public void testBinaryComprehensionTemplate() { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void testIfConditionalCompilation() { doTest(); }
@@ -106,6 +107,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport8()     { doTest(); }
   public void test605()               { doTest(); }
   public void test821()               { doTest(); }
+  public void test933()               { doTest(); }
   public void testFunVarArityInMacroArguments() { doTest(); }
   public void testFunVarArityInConstantMacroArguments() { doTest(); }
   public void testFunVarArityInMacroArgumentsInTypes() { doTest(); }
@@ -226,6 +228,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testUnresolvedMacrosQuotedInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosOtpRelease() {
     enableUnresolvedMacroInspection();
     doTest();
   }

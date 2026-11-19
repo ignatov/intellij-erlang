@@ -17,8 +17,10 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configuration.EnvironmentVariablesData;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -29,6 +31,9 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Map;
 
 public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -113,6 +118,33 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     String config = doWriteModifiedConfig(null);
     assertTrue(config, config.contains(REPORT_OPTION));
     assertTrue(config, config.contains(NO_TTY_OPTION));
+  }
+
+  // Without a project SDK the release is unknown, so the run gets the reporter that OTP 26 and later load.
+  public void testReporterModuleWithoutProjectSdk() throws Exception {
+    Sdk sdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+    WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
+    try {
+      assertReporterModule("otp_27_plus");
+    }
+    finally {
+      WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk));
+    }
+  }
+
+  public void testReporterModuleOfOlderProjectSdk() throws Exception {
+    assertReporterModule("otp_pre_27");
+  }
+
+  private void assertReporterModule(String beamDirectory) throws Exception {
+    File projectDirectory = FileUtil.createTempDirectory("rebar_project", null);
+    File reportsRoot = RebarEunitRunningState.createEunitReportsEnvironment(getProject(), projectDirectory.getPath());
+    FileDocumentManager.getInstance().saveAllDocuments();
+    byte[] actual = Files.readAllBytes(new File(reportsRoot, ErlangEunitReporterModule.MODULE_NAME + ".beam").toPath());
+    try (InputStream expected = getClass().getResourceAsStream("/eunit/beams/" + beamDirectory + "/eunit_teamcity.beam")) {
+      assertNotNull(expected);
+      assertTrue(beamDirectory, Arrays.equals(expected.readAllBytes(), actual));
+    }
   }
 
   private String getErlFlags(String userErlFlags, File reportsRoot) {

@@ -1195,6 +1195,50 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // &(macros '(') generic_function_call_expression | bin_expression
+  static boolean bin_comprehension_template(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_comprehension_template")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NONE_, null, "<expression>");
+    r = bin_comprehension_template_0(b, l + 1);
+    if (!r) r = bin_expression(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // &(macros '(') generic_function_call_expression
+  private static boolean bin_comprehension_template_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_comprehension_template_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = bin_comprehension_template_0_0(b, l + 1);
+    r = r && generic_function_call_expression(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &(macros '(')
+  private static boolean bin_comprehension_template_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_comprehension_template_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = bin_comprehension_template_0_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // macros '('
+  private static boolean bin_comprehension_template_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "bin_comprehension_template_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = macros(b, l + 1);
+    r = r && consumeToken(b, ERL_PAR_LEFT);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // generic_function_call_expression
   //   | prefix_op? bin_expression [':' bin_expression] opt_bit_type_list?
   public static boolean bin_element(PsiBuilder b, int l) {
@@ -1317,16 +1361,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>'
+  // '<<' <<isBinaryComprehension>> <<comprehension_element bin_comprehension_template>> '||' lc_exprs '>>'
   public static boolean binary_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "binary_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_BIN_START)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeToken(b, ERL_BIN_START);
-    r = r && comprehension_element(b, l + 1, ErlangParser::binary_expression);
+    r = r && isBinaryComprehension(b, l + 1);
+    r = r && comprehension_element(b, l + 1, ErlangParser::bin_comprehension_template);
     r = r && consumeToken(b, ERL_OR_OR);
-    p = r; // pin = 3
+    p = r; // pin = 4
     r = r && report_error_(b, lc_exprs(b, l + 1));
     r = p && consumeToken(b, ERL_BIN_END) && r;
     exit_section_(b, l, m, r, p, null);
@@ -4014,12 +4059,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<consumeMacroBody>>
+  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
   public static boolean macros_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MACROS_BODY, "<macros body>");
     r = macros_body_0(b, l + 1);
+    if (!r) r = withoutErrors(b, l + 1, ErlangParser::macros_typed_body);
     if (!r) r = consumeMacroBody(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
@@ -4148,6 +4194,28 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_MACROS_NAME, "<macros name>");
     r = atom(b, l + 1);
     if (!r) r = consumeToken(b, ERL_VAR);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  /* ********************************************************** */
+  // typed_exprs &properly_parsed
+  static boolean macros_typed_body(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_typed_body")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = typed_exprs(b, l + 1);
+    r = r && macros_typed_body_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &properly_parsed
+  private static boolean macros_typed_body_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_typed_body_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = properly_parsed(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
