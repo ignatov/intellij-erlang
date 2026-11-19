@@ -29,4 +29,5 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
   public void test254()                   { doTest(true);  }
   public void testVsnGit()                { doTest(false); }
   public void testVsnCmd()                { doTest(false); }
+  public void testRuntimeDependencies()   { doTest(false); }
 }
