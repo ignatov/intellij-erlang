@@ -201,25 +201,26 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           due=false
-          # The digest hour, or "off" while manager.enabled is not true (then the manager would plan nothing).
-          hour=$(python3 -I - "$RUNNER_TEMP/desk/dispatcher/config.json" <<'PY'
+          # The digest hour, or "off" while manager.enabled is not true (then the manager would plan nothing) or
+          # while manager.watch_issue is not this issue (then its notice never lands where this step looks). The
+          # three cases print the same phrase, so the public log shows nothing of the desk's config.
+          hour=$(python3 -I - "$RUNNER_TEMP/desk/dispatcher/config.json" "$ISSUE" <<'PY'
           import json, sys
           try:
               m = json.load(open(sys.argv[1], encoding="utf-8"))["manager"]
           except (OSError, ValueError, KeyError, TypeError):
               m = {}
-          v = m.get("digest_hour_utc", 6) if isinstance(m, dict) else 6
+          m = m if isinstance(m, dict) else {}
+          v = m.get("digest_hour_utc", 6)
           v = v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 23 else 6
-          print(v if isinstance(m, dict) and m.get("enabled") is True else "off")
+          on = m.get("enabled") is True and str(m.get("watch_issue")) == sys.argv[2]
+          print(v if on else "off")
           PY
           ) || hour=off
-          now=$(date -u +%H)
-          day=$(date -u +%Y-%m-%d)
-          stamp=$(date -u +%Y%m%d)
-          if [ "$hour" = off ]; then
-            echo "The manager is off in the desk's config."
-          elif [ $((10#$now)) -lt "$hour" ]; then
-            echo "Before the digest hour."
+          # One reading of the clock, so that the hour and the day agree across midnight.
+          read -r now day stamp <<< "$(date -u '+%H %Y-%m-%d %Y%m%d')"
+          if [ "$hour" = off ] || [ $((10#$now)) -lt "$hour" ]; then
+            echo "Not due."
           else
             since=$(printf '%sT%02d:00:00Z' "$day" "$hour")
             runs=$(gh api "repos/$REPO/actions/workflows/factory-manager.yml/runs?created=%3E%3D$since&per_page=20" \
