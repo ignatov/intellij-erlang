@@ -17,8 +17,15 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configuration.EnvironmentVariablesData;
+import com.intellij.execution.testframework.sm.runner.SMTestProxy;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.intellij.erlang.eunit.ErlangTestLocationProvider;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
@@ -34,5 +41,79 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
     assertEquals(getModule(), rerun.getConfigurationModule().getModule());
     assertEquals("eunit --module=sample_tests", rerun.getCommand());
     assertTrue(rerun.isSkipDependencies());
+  }
+
+  private static final String A = "-module(a).\n-include_lib(\"eunit/include/eunit.hrl\").\na1_test() -> ok.\na2_test() -> ?assert(false).\n";
+  private static final String C = """
+    -module(c).
+    -include_lib("eunit/include/eunit.hrl").
+    c4_test_() -> [fun fhelper/0, {with, 1, [fun with1/1]}, ?_assert(false)].
+    fhelper() -> error(bad).
+    with1(_) -> error(bad).
+    """;
+
+  public void testRebar3RerunsModuleOfFailedFunctionThatIsNotATest() {
+    useRebar("rebar3");
+    myFixture.addFileToProject("a.erl", A);
+    myFixture.addFileToProject("c.erl", C);
+    List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
+    String command = createRerunCommand(failedGeneratedTests, "eunit://c:fhelper:-1", "eunit://c:with1:-1", "eunit://a:a2_test");
+    assertEquals("eunit --module=c --test=a:a2_test", command);
+    assertEquals(List.of("with1"), List.of(failedGeneratedTests.getFirst().getName()));
+  }
+
+  public void testRebar3RerunsModuleOfFailedFunOfGenerator() {
+    useRebar("rebar3");
+    myFixture.addFileToProject("a.erl", A);
+    myFixture.addFileToProject("c.erl", C);
+    assertEquals("eunit --module=c --test=a:a2_test",
+                 createRerunCommand(new ArrayList<>(), "eunit://c:-c4_test_/0-fun-2-:3", "eunit://a:a2_test"));
+  }
+
+  public void testRebar3RerunsFailedTestNotItsSuite() {
+    useRebar("rebar3");
+    myFixture.addFileToProject("a.erl", A);
+    myFixture.addFileToProject("b.erl", "-module(b).\nb_test() -> ok.\n");
+    SMTestProxy suiteA = createSuite("eunit://a", "eunit://a:a2_test");
+    SMTestProxy suiteB = createSuite("eunit://b", "eunit://b:b_test");
+    List<SMTestProxy> failed = List.of(suiteA, suiteA.getChildren().getFirst(), suiteB, suiteB.getChildren().getFirst());
+    assertEquals("eunit --test=a:a2_test,b:b_test",
+                 RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), failed, new ArrayList<>()));
+  }
+
+  private static SMTestProxy createSuite(String suiteUrl, String failedTestUrl) {
+    SMTestProxy suite = new SMTestProxy(suiteUrl, true, suiteUrl);
+    suite.setLocator(ErlangTestLocationProvider.INSTANCE);
+    SMTestProxy test = new SMTestProxy(failedTestUrl, false, failedTestUrl);
+    test.setLocator(ErlangTestLocationProvider.INSTANCE);
+    suite.addChild(test);
+    suite.setStarted();
+    test.setStarted();
+    test.setTestFailed("failed", null, false);
+    suite.setFinished();
+    return suite;
+  }
+
+  public void testRebar2RerunCommandUnchanged() {
+    useRebar("rebar");
+    myFixture.addFileToProject("a.erl", A);
+    assertEquals("eunit suites=a tests=a2_test", createRerunCommand(new ArrayList<>(), "eunit://a:a2_test"));
+  }
+
+  private String createRerunCommand(List<ErlangFunction> failedGeneratedTests, String... locationUrls) {
+    List<SMTestProxy> proxies = new ArrayList<>();
+    for (String url : locationUrls) {
+      SMTestProxy proxy = new SMTestProxy(url, false, url);
+      proxy.setLocator(ErlangTestLocationProvider.INSTANCE);
+      proxies.add(proxy);
+    }
+    return RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), proxies, failedGeneratedTests);
+  }
+
+  private void useRebar(String rebarName) {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    rebarSettings.setRebarPath("/opt/rebar/" + rebarName);
+    Disposer.register(getTestRootDisposable(), () -> rebarSettings.setRebarPath(oldRebarPath));
   }
 }
