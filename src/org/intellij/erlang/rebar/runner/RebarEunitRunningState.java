@@ -139,6 +139,7 @@ public class RebarEunitRunningState extends CommandLineState {
 
   // rebar evaluates the rebar.config.script next to the configuration it is given, so the project's script is called
   // from a script in the temporary directory, which then adds the reporter options. rebar runs in the working directory.
+  // The script in the temporary directory also compiles and loads the reporter in the Erlang that runs rebar.
   @VisibleForTesting
   @NotNull
   public static File createEunitReportsEnvironment(@NotNull Project project, @NotNull String workingDirectory) throws ExecutionException {
@@ -148,15 +149,18 @@ public class RebarEunitRunningState extends CommandLineState {
       File projectConfig = new File(workingDirectory, CONFIG_FILE_NAME);
       File projectScript = new File(workingDirectory, CONFIG_SCRIPT_FILE_NAME);
 
+      String script = ErlangEunitReporterModule.LOAD_EXPRESSION + ",\n";
       if (projectScript.isFile()) {
         if (projectConfig.isFile()) {
           FileUtil.copy(projectConfig, configFile);
         }
-        FileUtil.writeToFile(new File(tempDirectory, CONFIG_SCRIPT_FILE_NAME), createConfigScript());
+        script += createConfigScript();
       }
       else {
         writeModifiedConfig(project, projectConfig, configFile);
+        script += "CONFIG.\n";
       }
+      FileUtil.writeToFile(new File(tempDirectory, CONFIG_SCRIPT_FILE_NAME), script);
       ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
 
       return tempDirectory;

@@ -57,7 +57,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @Override
   public List<String> getCodePath() throws ExecutionException {
     try {
-      List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory());
+      // The node compiles and loads the reporter before it runs the tests (also when the debugger node runs them).
+      List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory(),
+                                                          "-eval", ErlangEunitReporterModule.LOAD_EXPRESSION + ".");
       return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
     }
     catch (IOException e) {

@@ -1,3 +1,8 @@
+%% No compiled eunit_teamcity.beam is bundled with the plugin. A run copies this file and eunit_teamcity.hrl to a
+%% temporary directory, and the Erlang node that runs the tests compiles and loads them before the tests start
+%% (ErlangEunitReporterModule.LOAD_EXPRESSION), so the .beam is built by the Erlang/OTP release that loads it.
+%% Keep this module compilable by every Erlang/OTP release the plugin supports.
+
 -module(eunit_teamcity).
 -behaviour(eunit_listener).
 

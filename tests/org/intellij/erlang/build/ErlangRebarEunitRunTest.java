@@ -65,6 +65,26 @@ public class ErlangRebarEunitRunTest extends ErlangCompilationTestBase {
                  "script", evaluate(ebin, "io:put_chars(atom_to_list(p:v()))"));
   }
 
+  // The reporter is loaded by the Erlang that runs rebar3. The .beam that used to be bundled was compiled with OTP 22,
+  // and OTP 27 and later refuse to load it, so eunit failed with undef on eunit_teamcity:start/1.
+  public void testReporterReportsPassedAndFailedTests() throws Exception {
+    setUpRebarProject("eunitReporter");
+    assertReportsPassedAndFailedTests(runRebarEunit());
+  }
+
+  // The same with rebar.config.script, for which the reporter options are added by another script.
+  public void testReporterReportsPassedAndFailedTestsWithRebarConfigScript() throws Exception {
+    File projectDirectory = setUpRebarProject("eunitReporter");
+    FileUtil.copy(new File("testData/rebar/eunitConfigScript/rebar.config.script"), new File(projectDirectory, "rebar.config.script"));
+    assertReportsPassedAndFailedTests(runRebarEunit());
+  }
+
+  private static void assertReportsPassedAndFailedTests(String output) {
+    assertTrue(output, output.contains("##teamcity[testFinished name='passing_test'"));
+    assertTrue(output, output.contains("##teamcity[testFailed name='failing_test'"));
+    assertFalse(output, output.contains("##teamcity[testFailed name='passing_test'"));
+  }
+
   // #1333: a project with only rebar.config.script, which reads a file next to itself and sets eunit_opts.
   public void testRebarConfigScriptWithoutRebarConfigIsApplied() throws Exception {
     File projectDirectory = setUpRebarProject("eunitConfigScriptOnly");

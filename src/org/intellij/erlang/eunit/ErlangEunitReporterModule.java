@@ -29,17 +29,29 @@ public class ErlangEunitReporterModule {
   }
 
   public static final String MODULE_NAME = "eunit_teamcity";
-  private static final String MODULE_BEAM = MODULE_NAME + ".beam";
+  private static final String MODULE_SOURCE = MODULE_NAME + ".erl";
+  private static final String[] SOURCE_FILES = {MODULE_SOURCE, MODULE_NAME + ".hrl"};
+
+  // The reporter is bundled as source and compiled by the Erlang that runs the tests: a .beam compiled by one
+  // Erlang/OTP release is refused by releases some years older or newer (OTP 27 and later refuse one compiled by
+  // OTP 22). The expression finds the source on the code path, where the directory of putReporterModuleTo is put,
+  // writes the .beam next to it and loads it.
+  public static final String LOAD_EXPRESSION =
+    "ReporterSource = code:where_is_file(\"" + MODULE_SOURCE + "\"), " +
+    "{ok, " + MODULE_NAME + "} = compile:file(ReporterSource, [{outdir, filename:dirname(ReporterSource)}, report_errors]), " +
+    "{module, " + MODULE_NAME + "} = code:load_abs(filename:rootname(ReporterSource))";
 
   public static void putReporterModuleTo(@NotNull File directory) throws IOException {
-    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(), "/eunit", MODULE_BEAM);
-    if (moduleUrl == null) {
-      throw new IOException("Failed to locate eunit reporter module.");
-    }
+    for (String fileName : SOURCE_FILES) {
+      URL url = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(), "/eunit/src", fileName);
+      if (url == null) {
+        throw new IOException("Failed to locate eunit reporter module.");
+      }
 
-    try (BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(moduleUrl))) {
-      try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, MODULE_BEAM)))) {
-        FileUtil.copy(inputStream, outputStream);
+      try (BufferedInputStream inputStream = new BufferedInputStream(URLUtil.openStream(url))) {
+        try (BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(directory, fileName)))) {
+          FileUtil.copy(inputStream, outputStream);
+        }
       }
     }
   }
