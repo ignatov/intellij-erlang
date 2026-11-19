@@ -27,7 +27,6 @@ import com.intellij.psi.stubs.StubIndex;
 import com.intellij.util.Processor;
 import com.intellij.util.indexing.FindSymbolParameters;
 import com.intellij.util.indexing.IdFilter;
-import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangStructureViewFactory;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangNamedElement;
@@ -56,7 +55,8 @@ public class ErlangSymbolContributor implements GotoClassContributor, ChooseByNa
       });
   }
 
-  // "module:name", where module is the exact name of a module in the scope, lists only the symbols of that module.
+  // "module:name", where module is the exact name of a module in the scope, lists only the symbols of that module
+  // and of the headers with the same name, the files that getQualifiedName gives the qualifier "module".
   // Any other qualifier is left to the fuzzy matching of the qualified name.
   @Nullable
   private static String getExactModuleQualifier(@NotNull FindSymbolParameters parameters, @NotNull GlobalSearchScope scope) {
@@ -71,8 +71,7 @@ public class ErlangSymbolContributor implements GotoClassContributor, ChooseByNa
 
   private static boolean isInModule(@NotNull ErlangNamedElement element, @NotNull String module) {
     PsiFile file = element.getContainingFile();
-    return file != null && file.getFileType() == ErlangFileType.MODULE &&
-           module.equals(FileUtilRt.getNameWithoutExtension(file.getName()));
+    return file != null && module.equals(FileUtilRt.getNameWithoutExtension(file.getName()));
   }
 
   @Nullable
