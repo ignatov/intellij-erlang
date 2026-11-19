@@ -29,6 +29,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
+import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangApplicationConfiguration> {
@@ -56,10 +57,10 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
     if (vFile == null) return false;
 
     String moduleName = vFile.getNameWithoutExtension();
-    String functionName = function.getName();
+    String functionName = functionName(function);
 
     configuration.setModuleAndFunction(moduleNameAndFunction(moduleName, functionName));
-    configuration.setName(moduleName + "." + functionName);
+    configuration.setName(moduleName + "." + function.getName());
     configuration.setModule(module);
     configuration.setUseTestCodePath(module != null && module.getModuleTestsWithDependentsScope().contains(vFile));
 
@@ -76,11 +77,16 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
     if (function == null || vFile == null) return false;
 
     return StringUtil.equals(configuration.getModuleAndFunction(),
-      moduleNameAndFunction(vFile.getNameWithoutExtension(), function.getName()));
+      moduleNameAndFunction(vFile.getNameWithoutExtension(), functionName(function)));
+  }
+
+  @NotNull
+  public static String functionName(@NotNull ErlangFunction function) {
+    return ErlangRunningState.atomName(function.getName());
   }
 
   @NotNull
   private static String moduleNameAndFunction(@NotNull String moduleName, @NotNull String functionName) {
-    return moduleName + " " + functionName;
+    return ErlangRunningState.toAtom(moduleName) + " " + ErlangRunningState.toAtom(functionName);
   }
 }

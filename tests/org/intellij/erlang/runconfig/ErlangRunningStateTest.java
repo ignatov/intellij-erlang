@@ -38,6 +38,27 @@ public class ErlangRunningStateTest extends TestCase {
     assertArguments("{ok, \"hello world\"} ~s/foo bar/", "{ok, \"hello world\"}", "~s/foo bar/");
   }
 
+  public void testQuotedModuleAndFunctionNames() {
+    ErlangRunningState.ErlangEntryPoint entryPoint =
+      ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("'my mod'  'hello world'", "");
+
+    assertNotNull(entryPoint);
+    assertEquals("my mod", entryPoint.getModuleName());
+    assertEquals("hello world", entryPoint.getFunctionName());
+  }
+
+  public void testControlQuestionMarkEscape() {
+    ErlangRunningState.ErlangEntryPoint entryPoint =
+      ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("m '\\^?'", "");
+
+    assertNotNull(entryPoint);
+    assertEquals("\u007f", entryPoint.getFunctionName());
+  }
+
+  public void testUnterminatedQuotedFunctionName() {
+    assertNull(ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("m 'hello world", ""));
+  }
+
   private static void assertArguments(String params, String... expected) {
     ErlangRunningState.ErlangEntryPoint entryPoint =
       ErlangRunningState.ErlangEntryPoint.fromModuleAndFunction("sample start", params);
