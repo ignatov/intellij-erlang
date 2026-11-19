@@ -44,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.io.File;
 import java.util.List;
 
 import static org.intellij.erlang.ErlangTypes.ERL_BIN_END;
@@ -87,8 +88,19 @@ public abstract class ErlangRunningState extends CommandLineState {
     return commandLine;
   }
 
-  public List<String> getCodePath() throws ExecutionException {
+  protected List<String> getCodePath() throws ExecutionException {
+    return getModulesCodePath();
+  }
+
+  // the code path from the project model, without the directories of createCodePathDirectories; read it in a read action
+  public final List<String> getModulesCodePath() {
     return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
+  }
+
+  // makes the directories of one run that come first on the code path; file I/O, so not on the EDT or in a read action
+  @NotNull
+  public List<File> createCodePathDirectories() throws ExecutionException {
+    return List.of();
   }
 
   public Module getModule() {

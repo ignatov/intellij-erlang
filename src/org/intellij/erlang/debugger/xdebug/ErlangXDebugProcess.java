@@ -28,6 +28,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -324,16 +325,38 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   static SetUp prepare(@NotNull ExecutionEnvironment environment, @NotNull ErlangRunningState runningState) throws ExecutionException {
     ThreadingAssertions.assertBackgroundThread();
     ErlangRunConfigurationBase<?> runConfiguration = (ErlangRunConfigurationBase<?>) environment.getRunProfile();
-    List<String> moduleSourcePaths = ReadAction.computeBlocking(() -> getModulesToInterpret(environment.getProject(), runConfiguration));
-    List<String> codePath = ReadAction.computeBlocking(runningState::getCodePath);
+    // a write action cancels a non-blocking read action, which then starts again, instead of waiting for it
+    List<String> moduleSourcePaths =
+      ReadAction.nonBlocking(() -> getModulesToInterpret(environment.getProject(), runConfiguration)).executeSynchronously();
+    List<String> modulesCodePath = ReadAction.computeBlocking(runningState::getModulesCodePath);
     String beamSubdir = ReadAction.computeBlocking(() -> resolveBeamDirectory(runningState.getModule()));
-    return new SetUp(setUpErlangDebuggerCodePath(beamSubdir), codePath, moduleSourcePaths);
+    File beamsDirectory = setUpErlangDebuggerCodePath(beamSubdir);
+    List<File> codePathDirectories;
+    try {
+      codePathDirectories = runningState.createCodePathDirectories();
+    }
+    catch (ExecutionException | RuntimeException e) {
+      FileUtil.delete(beamsDirectory);
+      throw e;
+    }
+    List<String> codePath = new ArrayList<>();
+    for (File directory : codePathDirectories) {
+      codePath.add("-pa");
+      codePath.add(PathUtil.toSystemIndependentName(directory.getPath()));
+    }
+    codePath.addAll(modulesCodePath);
+    return new SetUp(beamsDirectory, codePathDirectories, codePath, moduleSourcePaths);
   }
 
-  // what prepare() made for one session; the session owns the beams directory once it is started
-  record SetUp(@NotNull File beamsDirectory, @NotNull List<String> codePath, @NotNull List<String> moduleSourcePaths) {
-    void deleteBeams() {
+  // what prepare() made for one session; the session owns the directories once it is started
+  record SetUp(@NotNull File beamsDirectory,
+               @NotNull List<File> codePathDirectories,
+               @NotNull List<String> codePath,
+               @NotNull List<String> moduleSourcePaths) {
+    void deleteDirectories() {
+      ThreadingAssertions.assertBackgroundThread();
       FileUtil.delete(beamsDirectory);
+      codePathDirectories.forEach(FileUtil::delete);
     }
   }
 
@@ -547,7 +570,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     processHandler.addProcessListener(new ProcessListener() {
       @Override
       public void processTerminated(@NotNull ProcessEvent event) {
-        setUp.deleteBeams();
+        // the listeners of the session and the console come after this one
+        ApplicationManager.getApplication().executeOnPooledThread(setUp::deleteDirectories);
       }
     });
   }

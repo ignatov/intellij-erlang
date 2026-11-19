@@ -68,7 +68,7 @@ public class ErlangDebugRunner extends AsyncProgramRunner<RunnerSettings> {
           result.setResult(startSession(environment, setUp));
         }
         catch (Throwable e) {
-          application.executeOnPooledThread(setUp::deleteBeams);
+          application.executeOnPooledThread(setUp::deleteDirectories);
           result.setError(e);
         }
       }, modalityState);

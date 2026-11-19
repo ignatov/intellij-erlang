@@ -65,6 +65,17 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     }
   }
 
+  @NotNull
+  @Override
+  public List<File> createCodePathDirectories() throws ExecutionException {
+    try {
+      return List.of(new File(createReporterModuleDirectory()));
+    }
+    catch (IOException e) {
+      throw new ExecutionException("Failed to setup eunit reports environment", e);
+    }
+  }
+
   @Override
   protected boolean useTestCodePath() {
     return true;
