@@ -28,9 +28,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 @RunWith(JUnit38AssumeSupportRunner.class)
 public class ExtProcessUtilTest extends BasePlatformTestCase {
@@ -44,6 +48,10 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File directory = new File(workingDirectory).getCanonicalFile();
     assertEquals(new File(System.getProperty("java.io.tmpdir")).getCanonicalPath(), directory.getParent());
     assertFalse(directory.getPath(), directory.exists());
+    // Each call has a directory of its own, so a check that still runs never shares it with a later one.
+    String nextWorkingDirectory = ExtProcessUtil.execAndGetFirstLine(10000, printWorkingDirectory).getStdOut();
+    assertFalse(nextWorkingDirectory.isEmpty());
+    assertFalse(directory.getPath(), directory.equals(new File(nextWorkingDirectory).getCanonicalFile()));
   }
 
   // A command that does not stop on SIGTERM, here a shell that ignores it and its child, which inherits that, must not
@@ -58,7 +66,7 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
                                         "echo $$ > '" + pidFile.getPath() + "'\nwait\nsleep 60\n", StandardCharsets.UTF_8);
     assertTrue(command.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(2000, command.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
 
     boolean commandAlive = killIfAlive(pidFile);
     boolean childAlive = killIfAlive(childPidFile);
@@ -83,6 +91,117 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < 10000);
   }
 
+  // A process outside the tree of the command, here one that the command detached, can keep stdout open after the command
+  // exits. The call must neither wait for it nor leave threads of its own behind.
+  public void testDetachedProcessHoldingOutputLeavesNoThreads() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("detached", null, true);
+    File pidFile = new File(directory, "pid");
+    File command = new File(directory, "detaches.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\necho v1\n(sleep 60 & echo $! > '" + pidFile.getPath() + "')\nexit 0\n",
+                      StandardCharsets.UTF_8);
+    assertTrue(command.setExecutable(true));
+    try {
+      long start = System.nanoTime();
+      assertEquals("v1", ExtProcessUtil.execAndGetFirstLine(10000, command.getPath()).getStdOut());
+      assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < 30000);
+      long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+      while (!ourThreads().isEmpty() && System.nanoTime() < deadline) {
+        //noinspection BusyWait
+        Thread.sleep(50);
+      }
+      assertEquals(List.of(), ourThreads());
+    }
+    finally {
+      killIfAlive(pidFile);
+    }
+  }
+
+  // The timeout reaches a grandchild of the command, a child of its child, that ignores SIGTERM as well.
+  public void testTimeoutKillsGrandchildOfCommand() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("grandchild", null, true);
+    File childPidFile = new File(directory, "child");
+    File grandchildPidFile = new File(directory, "grandchild");
+    File command = new File(directory, "grandchild.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\n" +
+                                        "sh -c 'sleep 60 & echo $! > \"" + grandchildPidFile.getPath() + "\"; wait' &\n" +
+                                        "echo $! > '" + childPidFile.getPath() + "'\nwait\nsleep 60\n", StandardCharsets.UTF_8);
+    assertTrue(command.setExecutable(true));
+
+    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
+
+    boolean childAlive = killIfAlive(childPidFile);
+    boolean grandchildAlive = killIfAlive(grandchildPidFile);
+    assertFalse("the child of the command is still running after execAndGetFirstLine returned", childAlive);
+    assertFalse("the grandchild of the command is still running after execAndGetFirstLine returned", grandchildAlive);
+  }
+
+  // A command that starts its child again when the child dies must not leave a new child behind: it is killed first.
+  public void testTimeoutKillsCommandThatRestartsItsChild() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("restarts", null, true);
+    File pidsFile = new File(directory, "pids");
+    File command = new File(directory, "restarts.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\nwhile :; do sleep 60 & echo $! >> '" + pidsFile.getPath() + "'; wait $!; done\n",
+                      StandardCharsets.UTF_8);
+    assertTrue(command.setExecutable(true));
+
+    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
+
+    List<ProcessHandle> alive = new ArrayList<>();
+    for (String pid : Files.readAllLines(pidsFile.toPath())) {
+      ProcessHandle.of(Long.parseLong(pid.trim())).filter(ProcessHandle::isAlive).ifPresent(alive::add);
+    }
+    alive.forEach(ProcessHandle::destroyForcibly);
+    assertEquals("children still running after execAndGetFirstLine returned", List.of(), alive);
+  }
+
+  // When the command is not known to be gone after the kill, its working directory stays: a BEAM whose working
+  // directory is deleted under a large temp directory hangs in getcwd().
+  public void testWorkingDirectoryStaysWhileCommandIsAlive() throws Exception {
+    File directory = FileUtil.createTempDirectory("kept", null, true);
+    ExtProcessUtil.destroyAndCleanUp(new UnkillableProcess(), directory);
+    assertTrue(directory.isDirectory());
+  }
+
+  // Commands that still run when the application is disposed (IDE exit, plugin unload) are killed, and the JVM shutdown
+  // hook, which covers a JVM that exits without disposing the application, is removed so that it does not keep the plugin.
+  public void testDisposeKillsRunningCommandsAndRemovesShutdownHook() throws Exception {
+    Assume.assumeFalse("the command is sleep", SystemInfo.isWindows);
+    ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
+    Process process = new ProcessBuilder("sleep", "60").start();
+    try {
+      commands.myProcesses.add(process);
+      commands.dispose();
+      assertTrue("the command is still running after dispose", process.waitFor(5, TimeUnit.SECONDS));
+      assertFalse("the shutdown hook is still registered after dispose", Runtime.getRuntime().removeShutdownHook(commands.myShutdownHook));
+    }
+    finally {
+      process.destroyForcibly();
+    }
+  }
+
+  @NotNull
+  private static List<String> ourThreads() {
+    return Thread.getAllStackTraces().keySet().stream().filter(Thread::isAlive).map(Thread::getName)
+      .filter(name -> name.startsWith("ExtProcessUtil")).toList();
+  }
+
+  private static final class UnkillableProcess implements ProcessHandle {
+    @Override public long pid() { return Long.MAX_VALUE; }
+    @Override public Optional<ProcessHandle> parent() { return Optional.empty(); }
+    @Override public Stream<ProcessHandle> children() { return Stream.empty(); }
+    @Override public Stream<ProcessHandle> descendants() { return Stream.empty(); }
+    @Override public Info info() { return ProcessHandle.current().info(); }
+    @Override public CompletableFuture<ProcessHandle> onExit() { return new CompletableFuture<>(); }
+    @Override public boolean supportsNormalTermination() { return true; }
+    @Override public boolean destroy() { return true; }
+    @Override public boolean destroyForcibly() { return true; }
+    @Override public boolean isAlive() { return true; }
+    @Override public int compareTo(@NotNull ProcessHandle other) { return Long.compare(pid(), other.pid()); }
+  }
+
   private static boolean killIfAlive(@NotNull File pidFile) throws IOException {
     assertTrue(pidFile.getName() + " was not written", pidFile.exists());
     Optional<ProcessHandle> process = ProcessHandle.of(Long.parseLong(Files.readString(pidFile.toPath()).trim()));
@@ -101,7 +220,7 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
                       StandardCharsets.UTF_8);
     assertTrue(wrapper.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(1000, wrapper.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, wrapper.getPath());
 
     long childPid = Long.parseLong(Files.readString(pidFile.toPath()).trim());
     Optional<ProcessHandle> child = ProcessHandle.of(childPid);

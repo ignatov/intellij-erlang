@@ -18,23 +18,26 @@ package org.intellij.erlang.utils;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.ConcurrencyUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -42,17 +45,9 @@ public final class ExtProcessUtil {
   private ExtProcessUtil() {
   }
 
+  private static final Logger LOG = Logger.getInstance(ExtProcessUtil.class);
   private static final long GRACE_PERIOD_MS = 1000;
   private static final long KILL_WAIT_MS = 5000;
-  // Commands that are still running when the IDE or the test JVM exits, before their timeout, are killed then.
-  private static final Set<Process> ourRunning = ConcurrentHashMap.newKeySet();
-
-  static {
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> ourRunning.forEach(process -> {
-      process.descendants().forEach(ProcessHandle::destroyForcibly);
-      process.destroyForcibly();
-    }), "ExtProcessUtil shutdown"));
-  }
 
   // Returns only after the command and the descendants it still has are gone: on timeout they get SIGTERM and then
   // SIGKILL, because a BEAM stuck in a dirty NIF does not stop on SIGTERM.
@@ -60,70 +55,68 @@ public final class ExtProcessUtil {
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     File workDirectory = null;
     Process process = null;
-    ExecutorService readers = Executors.newFixedThreadPool(2, ConcurrencyUtil.newNamedThreadFactory("ExtProcessUtil output reader", true, Thread.NORM_PRIORITY));
+    boolean interrupted = false;
+    RunningCommands running = RunningCommands.getInstance();
     try {
-      // A private empty directory: a crash dump of the command does not land in the IDE's directory (#1239), the start is
-      // not slowed down by a large shared temp directory, and the directory is not deleted while the command runs, as the
-      // temp directory of a test is at its end. With a deleted working directory under a large parent, the BEAM of rebar3
-      // hangs in getcwd() while booting.
-      workDirectory = FileUtil.createTempDirectory(new File(System.getProperty("java.io.tmpdir")), "erlang-ext-process", null, false);
-      process = new GeneralCommandLine(withAbsoluteExecutable(command)).withWorkDirectory(workDirectory).createProcess();
-      ourRunning.add(process);
+      // A private directory: a crash dump does not land in the IDE's directory (#1239), a large shared temp directory does
+      // not slow the start, and the directory is not deleted under a running command (then a BEAM hangs in getcwd()).
+      workDirectory = Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")), "erlang-ext-process-").toFile();
+      // Output to files, not pipes: a command that writes a lot is not blocked, and a process that the command detached
+      // cannot keep a pipe and a reader thread busy after the call.
+      File stdOut = new File(workDirectory, "stdout");
+      File stdErr = new File(workDirectory, "stderr");
+      ProcessBuilder builder = new GeneralCommandLine(withAbsoluteExecutable(command)).withWorkDirectory(workDirectory).toProcessBuilder();
+      process = builder.redirectOutput(stdOut).redirectError(stdErr).start();
+      if (running != null) running.myProcesses.add(process);
       process.getOutputStream().close();
-      // Both streams are read while the command runs, so a command that writes more than a pipe buffer is not blocked.
-      Future<String> stdOut = readFirstLine(readers, process.getInputStream());
-      Future<String> stdErr = readFirstLine(readers, process.getErrorStream());
       if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
-        return new ExtProcessOutput(firstLine(stdOut), firstLine(stdErr));
+        return new ExtProcessOutput(readLine(stdOut), readLine(stdErr));
       }
     }
     catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      interrupted = true; // set again only after the kill below, which is waited for
     }
     catch (ExecutionException | IOException ignored) {
     }
     finally {
       if (process != null) {
-        destroyProcessTree(process);
-        ourRunning.remove(process);
+        destroyAndCleanUp(process.toHandle(), workDirectory);
+        if (running != null) running.myProcesses.remove(process);
       }
-      readers.shutdown();
-      if (workDirectory != null) FileUtil.delete(workDirectory);
+      else if (workDirectory != null) FileUtil.delete(workDirectory);
+      if (interrupted) Thread.currentThread().interrupt();
     }
     return new ExtProcessOutput("", "");
   }
 
-  // A stream ends when the process exits, unless a descendant of the process still holds it.
-  @NotNull
-  private static String firstLine(@NotNull Future<String> line) throws InterruptedException {
-    try {
-      return line.get(GRACE_PERIOD_MS, TimeUnit.MILLISECONDS);
-    }
-    catch (java.util.concurrent.ExecutionException | TimeoutException e) {
-      return "";
-    }
+  // The working directory is deleted only when the command and its descendants are known to be gone.
+  static void destroyAndCleanUp(@NotNull ProcessHandle process, @NotNull File workDirectory) {
+    if (destroyProcessTree(process)) FileUtil.delete(workDirectory);
+    else LOG.debug("Process " + process.pid() + " or a descendant still runs; its working directory " + workDirectory + " is kept");
   }
 
-  private static long remainingMs(long deadline) {
-    return Math.max(0, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime()));
-  }
-
-  private static void destroyProcessTree(@NotNull Process process) {
-    // The descendants are collected while the process is alive: once it is gone they are no longer its descendants.
-    Set<ProcessHandle> tree = new LinkedHashSet<>(process.descendants().toList());
-    tree.add(process.toHandle());
+  // The process is killed before its descendants, so that it cannot start new ones in their place. The descendants are
+  // collected while the process is alive: once it is gone they are no longer its descendants.
+  private static boolean destroyProcessTree(@NotNull ProcessHandle process) {
+    Set<ProcessHandle> tree = new LinkedHashSet<>();
+    tree.add(process);
+    tree.addAll(process.descendants().toList());
+    process.destroy();
+    tree.addAll(process.descendants().toList());
     tree.forEach(ProcessHandle::destroy);
-    if (waitForExit(tree, GRACE_PERIOD_MS)) return;
-    if (process.isAlive()) tree.addAll(process.descendants().toList());
+    if (waitForExit(tree, GRACE_PERIOD_MS)) return true;
+    tree.addAll(process.descendants().toList());
+    process.destroyForcibly();
+    tree.addAll(process.descendants().toList());
     tree.forEach(ProcessHandle::destroyForcibly);
-    waitForExit(tree, KILL_WAIT_MS);
+    return waitForExit(tree, KILL_WAIT_MS);
   }
 
   private static boolean waitForExit(@NotNull Set<ProcessHandle> processes, long timeoutMs) {
     long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
     for (ProcessHandle handle : processes) {
       try {
-        handle.onExit().get(remainingMs(deadline), TimeUnit.MILLISECONDS);
+        handle.onExit().get(Math.max(0, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);
       }
       catch (InterruptedException e) {
         Thread.currentThread().interrupt();
@@ -148,23 +141,47 @@ public final class ExtProcessUtil {
     return result;
   }
 
-  // The first line is available as soon as it is read; the rest of the output is read and dropped until the end of the stream.
   @NotNull
-  private static Future<String> readFirstLine(@NotNull ExecutorService executor, @NotNull InputStream stream) {
-    CompletableFuture<String> firstLine = new CompletableFuture<>();
-    executor.execute(() -> {
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-        firstLine.complete(StringUtil.notNullize(reader.readLine()));
-        char[] buffer = new char[8192];
-        //noinspection StatementWithEmptyBody
-        while (reader.read(buffer) >= 0) {
-        }
+  private static String readLine(@NotNull File file) {
+    try (BufferedReader errReader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+      return StringUtil.notNullize(errReader.readLine());
+    }
+    catch (IOException ignore) {
+      return "";
+    }
+  }
+
+  // Kills the commands still running on IDE exit or plugin unload, and through a JVM shutdown hook on an exit without that,
+  // as in a test JVM. Dispose removes the hook, so it does not keep the plugin's class loader after an unload.
+  @Service(Service.Level.APP)
+  static final class RunningCommands implements Disposable {
+    final Set<Process> myProcesses = ConcurrentHashMap.newKeySet();
+    @VisibleForTesting final Thread myShutdownHook = new Thread(this::dispose, "ExtProcessUtil shutdown");
+
+    RunningCommands() {
+      Runtime.getRuntime().addShutdownHook(myShutdownHook);
+    }
+
+    @Nullable
+    static RunningCommands getInstance() {
+      var application = ApplicationManager.getApplication();
+      return application == null || application.isDisposed() ? null : application.getService(RunningCommands.class);
+    }
+
+    @Override
+    public void dispose() {
+      for (Process process : myProcesses) {
+        var descendants = process.descendants().toList();
+        process.destroyForcibly();
+        descendants.forEach(ProcessHandle::destroyForcibly);
       }
-      catch (IOException ignore) {
-        firstLine.complete("");
+      try {
+        Runtime.getRuntime().removeShutdownHook(myShutdownHook);
       }
-    });
-    return firstLine;
+      catch (IllegalStateException ignored) {
+        // The JVM is exiting: this is the hook.
+      }
+    }
   }
 
   public static class ExtProcessOutput {
