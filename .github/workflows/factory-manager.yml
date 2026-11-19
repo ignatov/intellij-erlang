@@ -37,8 +37,10 @@ name: Factory manager
 # What the model's job can do, and what is left. It runs `copilot --prompt` (non-interactive: a tool request that
 # would prompt is denied) with only the read tools view, grep and glob: no shell, no writes, no URLs, no memory, no
 # MCP servers, no custom instructions, file access limited to the checkouts, a cap of AI credits, and the CLI's OS
-# sandbox (no network, the checkouts read-only, the runner's home denied) for what the CLI starts. The process
-# starts from an empty environment with only the Copilot token, which --secret-env-vars keeps from what it starts.
+# sandbox (no network, the checkouts and the CLI's own ripgrep read-only, the runner's home denied) for what the
+# CLI starts. The final message is read from the CLI's JSON events (manager.py message), not from its text output.
+# The process starts from an empty environment with only the Copilot token, which --secret-env-vars keeps from what
+# it starts.
 # When the sandbox cannot start, the model does not run; there is no switch to run without it. A hosted runner has
 # no egress filter of its own: the CLI process itself talks to the Copilot API, and anything it can read it could
 # send elsewhere if a prompt injection found a way past these rules. The maintainer accepted that risk; there is no
@@ -423,8 +425,30 @@ jobs:
             exit 1
           fi
           tar -xzf "$RUNNER_TEMP/copilot.tar.gz" -C "$bin"
-          COPILOT_AUTO_UPDATE=false "$bin/copilot" --version > "$RUNNER_TEMP/copilot-version.txt"
+          # The first start unpacks the CLI's package under the cache of the HOME the model's run uses, with the
+          # ripgrep that its grep and glob run. The sandbox mounts nothing of that HOME, so without a read-only grant
+          # of that one directory every search fails with "rg: not found" (as in the first rehearsal). This start
+          # gets a throwaway CLI home, so that it leaves nothing in the real one before settings.json is written.
+          mkdir -p "$RUNNER_TEMP/copilot-home-install"
+          env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" COPILOT_HOME="$RUNNER_TEMP/copilot-home-install" \
+              COPILOT_AUTO_UPDATE=false "$bin/copilot" --version > "$RUNNER_TEMP/copilot-version.txt"
           head -n 1 "$RUNNER_TEMP/copilot-version.txt"
+          ripgrep=("$MANAGER_ROOT"/home/.cache/copilot/pkg/linux-x64/*/ripgrep)
+          # Exactly one directory, no symlink on the way, inside the HOME of the run, with an executable rg that is
+          # no symlink either: the grant is of that directory and nothing else.
+          if [ "${#ripgrep[@]}" != 1 ] || ! python3 -I - "${ripgrep[0]}" "$MANAGER_ROOT/home" <<'PY'
+          import os, sys
+          d, home = os.path.abspath(sys.argv[1]), os.path.realpath(sys.argv[2])
+          rg = os.path.join(d, "bin", "linux-x64", "rg")
+          ok = (os.path.realpath(d) == d and d.startswith(home + os.sep) and os.path.isdir(d)
+                and os.path.realpath(rg) == rg and os.path.isfile(rg) and os.access(rg, os.X_OK))
+          sys.exit(0 if ok else 1)
+          PY
+          then
+            echo "::error::The CLI's bundled ripgrep is not where the sandbox grant expects it; the model does not run."
+            exit 1
+          fi
+          echo "${ripgrep[0]}" > "$RUNNER_TEMP/ripgrep-dir"
           # The sandbox of the CLI on Linux: bubblewrap 0.5+, and for its private network namespace slirp4netns,
           # util-linux 2.35+, iptables and /dev/net/tun (copilot help sandbox). Ubuntu 24.04 restricts the user
           # namespaces that bubblewrap needs; the runner's sudo lifts that for this machine. There is no way to
@@ -477,11 +501,13 @@ jobs:
           fi
           # The sandbox: no network, no bypass, no git or gh credentials injected, no grant of the working
           # directory, the profile or the dev-tool caches; the checkouts read-only; the runner's home (its
-          # workspace, temp directory, command files and the sealed parts) and the CLI's home denied.
-          python3 -I - "$home/settings.json" "$work" "$home" "$HOME" "$RUNNER_TEMP" <<'PY'
+          # workspace, temp directory, command files and the sealed parts) and the CLI's home denied. The one
+          # grant beyond the checkouts is the CLI's own ripgrep, read-only.
+          ripgrep=$(cat "$RUNNER_TEMP/ripgrep-dir")
+          python3 -I - "$home/settings.json" "$work" "$ripgrep" "$home" "$HOME" "$RUNNER_TEMP" <<'PY'
           import json, os, sys
-          path, work, home = sys.argv[1], os.path.realpath(sys.argv[2]), sys.argv[3]
-          for denied in [home] + sys.argv[4:]:
+          path, work, ripgrep, home = sys.argv[1], os.path.realpath(sys.argv[2]), sys.argv[3], sys.argv[4]
+          for denied in [home] + sys.argv[5:]:
               if (work + os.sep).startswith(os.path.realpath(denied) + os.sep):
                   sys.exit("the checkouts lie inside a denied path: %s" % denied)
           json.dump({"autoUpdate": False, "sandbox": {
@@ -489,14 +515,17 @@ jobs:
               "addCurrentWorkingDirectory": False, "allowDevToolAccess": False,
               "sandboxMcpServers": True, "sandboxLspServers": True, "sandboxExtensions": True,
               "userPolicy": {"network": {"allowOutbound": False, "allowLocalNetwork": False},
-                             "filesystem": {"readonlyPaths": [os.path.join(work, "desk"), os.path.join(work, "public")],
-                                            "readwritePaths": [], "deniedPaths": [home] + sys.argv[4:]}}}},
+                             "filesystem": {"readonlyPaths": [os.path.join(work, "desk"), os.path.join(work, "public"),
+                                                             ripgrep],
+                                            "readwritePaths": [], "deniedPaths": [home] + sys.argv[5:]}}}},
               open(path, "w"), indent=1)
           PY
           # No shell for the model: the desk is a checkout of depth 1, so git history gives nothing, and the read
           # tools (view, grep, glob) cover the files. One flag per tool, so that no list depends on how the CLI
           # splits a comma-separated value.
-          args=(--model="$MODEL" --silent --no-color --stream=off --no-ask-user --no-auto-update
+          # --output-format=json: one event per line, the final message whole; the text of --silent is hard-wrapped
+          # at 100 columns, which broke the JSON of the first rehearsal's digest.
+          args=(--model="$MODEL" --output-format=json --no-color --stream=off --no-ask-user --no-auto-update
                 --no-custom-instructions --disable-builtin-mcps --disable-client-telemetry --sync-session=off
                 --disallow-temp-dir --sandbox --max-ai-credits="$credits"
                 --log-level=warning --log-dir="$think/logs" --usage-output-file="$think/usage.json"
@@ -504,7 +533,7 @@ jobs:
           for tool in view grep glob; do
             args+=(--available-tools="$tool")
           done
-          for tool in bash read_bash write_bash stop_bash list_bash create edit apply_patch web_fetch task \
+          for tool in bash read_bash stop_bash list_bash create edit apply_patch web_fetch task \
               read_agent write_agent list_agents skill ask_user; do
             args+=(--excluded-tools="$tool")
           done
@@ -519,13 +548,40 @@ jobs:
           status=0
           # The model's process starts from an empty environment: a short PATH, its own HOME and CLI home, and the
           # Copilot token, which --secret-env-vars keeps out of the environments of the tools it starts. Its stdout
-          # is the final message (--silent), and nothing of it reaches this log.
+          # is the run's events (the prompt, the tool results, the replies); nothing of it reaches this log.
           (cd "$work/desk" && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME="$MANAGER_ROOT/home" LANG=C.UTF-8 \
               TERM=dumb NO_COLOR=1 CI=true COPILOT_HOME="$home" COPILOT_AUTO_UPDATE=false \
               COPILOT_DISABLE_LOGIN_SHELL_ENV=1 COPILOT_TASK_WAIT_TIMEOUT_SECONDS=60 \
               COPILOT_GITHUB_TOKEN="$COPILOT_GITHUB_TOKEN" \
               "$timeout_bin" --kill-after=30s 35m "$MANAGER_ROOT/bin/copilot" --prompt="$prompt" "${args[@]}") \
-              < /dev/null > "$think/message.txt" 2> "$think/cli.err" || status=$?
+              < /dev/null > "$think/events.jsonl" 2> "$think/cli.err" || status=$?
+          # The final message (the last assistant.message, none if it still asks for tools) and a private summary
+          # of the run, by the desk's manager.py at the commit the plan read.
+          python3 -E -s -B "$work/desk/dispatcher/manager.py" message --events "$think/events.jsonl" \
+              --summary "$think/events-summary.json" > "$think/message.txt" 2>> "$think/cli.err" || true
+          # Counts only: the calls of view, grep and glob, ok and failed, and of anything else as one number (no
+          # name from the events reaches this log). A tool outside the three makes the run unusable.
+          others=$(python3 -I - "$think/events-summary.json" "$think/tools-line.txt" <<'PY'
+          import json, sys
+          try:
+              s = json.load(open(sys.argv[1], encoding="utf-8"))
+          except (OSError, ValueError):
+              s = {}
+          tools = s.get("tools") if isinstance(s.get("tools"), dict) else {}
+          def count(c, k):
+              v = c.get(k) if isinstance(c, dict) else 0
+              return v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0
+          parts = ["%s %d ok %d failed" % (n, count(tools.get(n), "ok"), count(tools.get(n), "failed"))
+                   for n in ("view", "grep", "glob")]
+          other = sum(count(c, "ok") + count(c, "failed") for n, c in tools.items() if n not in ("view", "grep", "glob"))
+          errors = s.get("session_errors")
+          errors = errors if isinstance(errors, int) and not isinstance(errors, bool) and errors >= 0 else 0
+          with open(sys.argv[2], "w", encoding="utf-8") as f:
+              f.write("Tools: %s, other %d; session errors: %d.\n" % (", ".join(parts), other, errors))
+          print(other if s else "unknown")
+          PY
+          ) || others=unknown
+          cat "$think/tools-line.txt" 2> /dev/null || echo "Tools: no summary of the run."
           closings=$(grep -cE '^[*>_ ]*\[\[\[END MANAGER\]\]\]' "$think/message.txt") || closings=0
           # The model of the run, from the usage the CLI wrote: any key or text of the JSON that is the model id.
           model_used=$(python3 -I - "$think/usage.json" "$MODEL" <<'PY'
@@ -553,12 +609,12 @@ jobs:
           echo "Message: $(wc -c < "$think/message.txt") bytes, $closings closing line(s) of the envelope."
           echo "Usage names the model $MODEL: $model_used."
           ok=false
-          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ]; then
+          if [ "$status" = 0 ] && [ "$closings" -gt 0 ] && [ "$model_used" = yes ] && [ "$others" = 0 ]; then
             ok=true
           fi
           echo "$ok" > "$think/ok"
           if [ "$ok" != true ]; then
-            echo "::error::The model's run is not usable (exit status, envelope or model); finish records a failed run."
+            echo "::error::The model's run is not usable (exit status, envelope, model or a tool outside view, grep and glob); finish records a failed run."
             exit 1
           fi
 
@@ -597,7 +653,8 @@ jobs:
               message, note = "", "the sealed message was too large for a job output"
           logs = "".join(text(p, 4000) for p in sorted(glob.glob(os.path.join(d, "logs", "*.log"))))
           json.dump({"ok": with_message and text("ok").strip() == "true", "message": message, "note": note,
-                     "stderr": text("cli.err", 4000), "usage": text("usage.json", 2000), "logs": logs[-8000:]},
+                     "stderr": text("cli.err", 4000), "usage": text("usage.json", 2000), "logs": logs[-8000:],
+                     "events": text("events-summary.json", 4000)},
                     sys.stdout, ensure_ascii=False)
           PY
             gzip -9 -c "$think/sealed.json" \
@@ -723,7 +780,9 @@ jobs:
           out = sys.argv[2]
           with open(os.path.join(out, "think.log"), "w", encoding="utf-8") as f:
               f.write("--- think: %s, ok %s %s\n--- stderr of the CLI\n%s\n--- usage\n%s\n--- logs of the CLI\n%s\n" % (
-                  sys.argv[3], sealed.get("ok"), sealed.get("note") or "", sealed.get("stderr") or "", sealed.get("usage") or "",
+                  sys.argv[3], sealed.get("ok"), sealed.get("note") or "",
+                  (sealed.get("stderr") or "") + "\n--- summary of the run's events\n" + (sealed.get("events") or ""),
+                  sealed.get("usage") or "",
                   sealed.get("logs") or ""))
           # The message reaches collect only from a run that think judged usable.
           if sealed.get("ok") is True and sys.argv[3] == "success" and isinstance(sealed.get("message"), str):

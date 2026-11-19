@@ -65,6 +65,7 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.*;
 import java.util.*;
@@ -83,7 +84,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
-  private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
+  // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
+  // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
+  private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -117,6 +120,19 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                                          runConfig.isUseTestCodePath());
   }
 
+  @TestOnly
+  ErlangXDebugProcess(@NotNull XDebugSession session,
+                      @NotNull ErlangDebuggerNode debuggerNode,
+                      @NotNull ErlangDebugLocationResolver locationResolver) {
+    super(session);
+    mySession = session;
+    myExecutionEnvironment = null;
+    myRunningState = null;
+    myDebuggerNode = debuggerNode;
+    myErlangProcessHandler = null;
+    myLocationResolver = locationResolver;
+  }
+
   @NotNull
   public ErlangDebugLocationResolver getLocationResolver() {
     return myLocationResolver;
@@ -127,15 +143,101 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                               @NotNull ErlangTraceElement traceElement) {
     // need to pause the debugging session otherwise the callback might get invalidated
     mySession.pause();
-    myEvalCallback = callback;
-    myDebuggerNode.evaluate(expression, traceElement);
+    PendingEvaluation evaluation = new PendingEvaluation(myDebuggerNode.getLastSuspendedPid(), expression, callback, traceElement);
+    myEvaluations.addLast(evaluation);
+    if (myEvaluations.size() == 1) {
+      send(evaluation);
+    }
   }
 
   @Override
   public synchronized void handleEvaluationResponse(OtpErlangObject response) {
-    if (myEvalCallback != null) {
-      myEvalCallback.evaluated(ErlangXValueFactory.create(response));
-      mySession.resume();
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        send(next);
+      }
+      // the evaluation is already off the queue: an overflow must fail it here, not take the next one
+      try {
+        evaluation.callback().evaluated(ErlangXValueFactory.create(response));
+      }
+      catch (StackOverflowError e) {
+        evaluation.callback().errorOccurred("The result is nested too deeply to show");
+      }
+      // resuming before the queued evaluations are answered would let them reach a running process
+      if (next == null) {
+        mySession.resume();
+      }
+    }
+  }
+
+  // An evaluation for a process that is no longer at a breakpoint gets no answer, so it must not keep the queue.
+  // A process that is evaluating an expression at its breakpoint is reported as running, or as waiting in a receive
+  // of interpreted code; its answer is on the way.
+  @NotNull
+  private synchronized List<PendingEvaluation> dropEvaluationsOfProcessesNotAtBreak(@NotNull List<ErlangProcessSnapshot> snapshots) {
+    PendingEvaluation sent = myEvaluations.peekFirst();
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+      PendingEvaluation evaluation = iterator.next();
+      boolean atBreak = ContainerUtil.exists(snapshots, snapshot -> snapshot.getPid().equals(evaluation.pid()) &&
+                                                                   ("break".equals(snapshot.getStatus()) ||
+                                                                    "running".equals(snapshot.getStatus()) ||
+                                                                    "waiting".equals(snapshot.getStatus())));
+      if (!atBreak) {
+        iterator.remove();
+        dropped.add(evaluation);
+      }
+    }
+    PendingEvaluation head = myEvaluations.peekFirst();
+    if (head != null && head != sent) {
+      send(head);
+    }
+    return dropped;
+  }
+
+  // An evaluation that is queued but not sent would reach the process after it has been resumed or stepped, and kill it.
+  private void failUnsentEvaluationsOfLastSuspendedProcess() {
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    synchronized (this) {
+      OtpErlangPid pid = myDebuggerNode.getLastSuspendedPid();
+      PendingEvaluation sent = myEvaluations.peekFirst();
+      for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+        PendingEvaluation evaluation = iterator.next();
+        if (evaluation != sent && evaluation.pid().equals(pid)) {
+          iterator.remove();
+          dropped.add(evaluation);
+        }
+      }
+    }
+    for (PendingEvaluation evaluation : dropped) {
+      evaluation.callback().errorOccurred("The process has been resumed");
+    }
+  }
+
+  private void send(@NotNull PendingEvaluation evaluation) {
+    myDebuggerNode.evaluate(evaluation.pid(), evaluation.expression(), evaluation.traceElement());
+  }
+
+  private record PendingEvaluation(@NotNull OtpErlangPid pid,
+                                   @NotNull String expression,
+                                   @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
+                                   @NotNull ErlangTraceElement traceElement) {
+  }
+
+  @Override
+  public synchronized void evaluationFailed(String errorMessage) {
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        send(next);
+      }
+      evaluation.callback().errorOccurred(errorMessage);
+      if (next == null) {
+        mySession.resume();
+      }
     }
   }
 
@@ -165,6 +267,11 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @Override
+  public void failedToReceiveMessage(String error) {
+    getSession().reportMessage("Failed to receive a message from the debugger. Details: " + error, MessageType.ERROR);
+  }
+
+  @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
@@ -179,6 +286,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+    for (PendingEvaluation evaluation : dropEvaluationsOfProcessesNotAtBreak(snapshots)) {
+      evaluation.callback().errorOccurred("The process is no longer at a breakpoint");
+    }
     ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, erlangProcessSnapshot -> erlangProcessSnapshot.getPid().equals(pid));
     assert processInBreakpoint != null;
     ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);
@@ -269,26 +379,38 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.stepOut();
   }
 
   @Override
   public void stop() {
     myDebuggerNode.stop();
+    List<PendingEvaluation> pending;
+    synchronized (this) {
+      pending = new ArrayList<>(myEvaluations);
+      myEvaluations.clear();
+    }
+    for (PendingEvaluation evaluation : pending) {
+      evaluation.callback().errorOccurred("The debug session has stopped");
+    }
   }
 
   @Override
   public void resume(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.resume();
   }
 

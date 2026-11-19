@@ -51,7 +51,7 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
 
   @Override
   protected boolean isStopErlang() {
-    return myConfiguration.stopErlang();
+    return myConfiguration.isStopErlang();
   }
 
   @Override

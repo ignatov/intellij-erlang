@@ -28,6 +28,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 
 class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
+  static final String TOO_DEEPLY_NESTED = "<nested too deeply to show>";
+
   private final T myValue;
   private final int myChildrenCount;
   private int myNextChildIdxToCompute;
@@ -67,7 +69,13 @@ class ErlangXValueBase<T extends OtpErlangObject> extends XValue {
       node.setPresentation(getIcon(), presentation, hasChildren());
     }
     else {
-      String repr = getStringRepr();
+      String repr;
+      try {
+        repr = getStringRepr();
+      }
+      catch (StackOverflowError e) {
+        repr = TOO_DEEPLY_NESTED;
+      }
       if (repr.length() > XValueNode.MAX_VALUE_LENGTH) {
         node.setFullValueEvaluator(new ImmediateFullValueEvaluator(repr));
         repr = repr.substring(0, XValueNode.MAX_VALUE_LENGTH - 3) + "...";
