@@ -22,6 +22,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
+import javax.swing.*;
 import javax.swing.text.Document;
 import java.io.File;
 import java.io.IOException;
@@ -97,6 +98,45 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     }
     finally {
       FileUtil.delete(directory);
+    }
+  }
+
+  // #1325: the check of an earlier path that ends after the check of the current path must not show its version.
+  public void testVersionOfEarlierPathDoesNotOverwriteCurrent() throws Exception {
+    File directory = FileUtil.createTempDirectory("rebarVersionOrder", null, true);
+    try {
+      String extension = SystemInfo.isWindows ? ".cmd" : "";
+      File slow = new File(directory, "slow" + extension);
+      Files.writeString(slow.toPath(), SystemInfo.isWindows ? "@ping -n 2 127.0.0.1 >nul\r\n@echo rebar 1.0.0\r\n"
+                                                           : "#!/bin/sh\nsleep 1\necho rebar 1.0.0\n", StandardCharsets.UTF_8);
+      assertTrue(slow.setExecutable(true));
+      File fast = new File(directory, "fast" + extension);
+      Files.writeString(fast.toPath(), SystemInfo.isWindows ? "@echo rebar 2.0.0\r\n" : "#!/bin/sh\necho rebar 2.0.0\n",
+                        StandardCharsets.UTF_8);
+      assertTrue(fast.setExecutable(true));
+
+      RebarConfigurationForm form = new RebarConfigurationForm();
+      // Let the form's own lookup of the default rebar path end before the paths are set.
+      dispatchEventsFor(1000);
+      form.setPath(slow.getPath());
+      form.setPath(fast.getPath());
+      dispatchEventsFor(4000);
+
+      Field versionField = RebarConfigurationForm.class.getDeclaredField("myRebarVersionText");
+      versionField.setAccessible(true);
+      assertEquals(fast.getPath(), form.getPath());
+      assertEquals("rebar 2.0.0", ((JTextField)versionField.get(form)).getText());
+    }
+    finally {
+      FileUtil.delete(directory);
+    }
+  }
+
+  private static void dispatchEventsFor(long millis) {
+    long end = System.currentTimeMillis() + millis;
+    while (System.currentTimeMillis() < end) {
+      PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+      PlatformTestUtil.waitForAlarm(10);
     }
   }
 }
