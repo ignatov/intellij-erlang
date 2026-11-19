@@ -138,7 +138,7 @@ public class RebarEunitRunningState extends CommandLineState {
   }
 
   // rebar evaluates the rebar.config.script next to the configuration it is given, so the project's script is called
-  // from a script in the temporary directory, which then adds the reporter options.
+  // from a script in the temporary directory, which then adds the reporter options. rebar runs in the working directory.
   @VisibleForTesting
   @NotNull
   public static File createEunitReportsEnvironment(@NotNull Project project, @NotNull String workingDirectory) throws ExecutionException {
@@ -152,7 +152,7 @@ public class RebarEunitRunningState extends CommandLineState {
         if (projectConfig.isFile()) {
           FileUtil.copy(projectConfig, configFile);
         }
-        FileUtil.writeToFile(new File(tempDirectory, CONFIG_SCRIPT_FILE_NAME), createConfigScript(projectScript));
+        FileUtil.writeToFile(new File(tempDirectory, CONFIG_SCRIPT_FILE_NAME), createConfigScript());
       }
       else {
         writeModifiedConfig(project, projectConfig, configFile);
@@ -165,19 +165,29 @@ public class RebarEunitRunningState extends CommandLineState {
     }
   }
 
+  // The project's script is named relative to the working directory, as plain rebar names it: an absolute name with
+  // non-ASCII characters is not found when Erlang uses Latin-1 file names. rebar3 uses the last eunit_opts entry and
+  // rebar 2 the first one, so the reporter options go into every entry.
   @NotNull
-  private static String createConfigScript(@NotNull File projectScript) {
-    String path = PathUtil.toSystemIndependentName(projectScript.getAbsolutePath()).replace("\\", "\\\\").replace("\"", "\\\"");
-    return "ProjectScript = \"" + path + "\",\n" +
+  private static String createConfigScript() {
+    return "ProjectScript = \"" + CONFIG_SCRIPT_FILE_NAME + "\",\n" +
            "ProjectBindings = erl_eval:add_binding('CONFIG', CONFIG, erl_eval:add_binding('SCRIPT', ProjectScript, erl_eval:new_bindings())),\n" +
            "ProjectTerms = case file:script(ProjectScript, ProjectBindings) of\n" +
            "  {ok, Terms} when is_list(Terms) -> Terms;\n" +
            "  {ok, Term} -> [Term];\n" +
-           "  {error, Reason} -> erlang:error({ProjectScript, Reason})\n" +
+           "  {error, Reason} -> erlang:error({filename:absname(ProjectScript), Reason})\n" +
            "end,\n" +
+           "ReporterOptions = [" + EUNIT_TEAMCITY_REPORTER + ", " + EUNIT_NO_TTY_OPTION + "],\n" +
            "IsReportOption = fun({report, _}) -> true; ({no_tty, _}) -> true; (_) -> false end,\n" +
-           "EunitOpts = [Opt || Opt <- proplists:get_value(eunit_opts, ProjectTerms, []), not IsReportOption(Opt)],\n" +
-           "lists:keystore(eunit_opts, 1, ProjectTerms, {eunit_opts, EunitOpts ++ [" + EUNIT_TEAMCITY_REPORTER + ", " + EUNIT_NO_TTY_OPTION + "]}).\n";
+           "case lists:keymember(eunit_opts, 1, ProjectTerms) of\n" +
+           "  true ->\n" +
+           "    [case Entry of\n" +
+           "       {eunit_opts, EntryOptions} when is_list(EntryOptions) ->\n" +
+           "         {eunit_opts, [Option || Option <- EntryOptions, not IsReportOption(Option)] ++ ReporterOptions};\n" +
+           "       _ -> Entry\n" +
+           "     end || Entry <- ProjectTerms];\n" +
+           "  false -> ProjectTerms ++ [{eunit_opts, ReporterOptions}]\n" +
+           "end.\n";
   }
 
   @VisibleForTesting

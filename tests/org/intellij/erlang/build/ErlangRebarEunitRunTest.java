@@ -79,18 +79,41 @@ public class ErlangRebarEunitRunTest extends ErlangCompilationTestBase {
   // #1333: the reporter options replace the report options that rebar.config.script sets in eunit_opts.
   public void testReporterOptionsAreAddedToEunitOptsOfRebarConfigScript() throws Exception {
     File projectDirectory = setUpRebarProject("eunitConfigScriptOnly");
+    assertEquals("[debug_info,{d,'FROM_SCRIPT'}]\n[[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]]",
+                 evaluateEunitConfiguration(projectDirectory));
+  }
+
+  // #1333: rebar3 uses the last eunit_opts entry, here the one the script appends after those of rebar.config.
+  public void testReporterOptionsAreAddedToEveryEunitOptsOfRebarConfigScript() throws Exception {
+    File projectDirectory = setUpRebarProject("eunitConfigScriptEunitOpts");
+    assertEquals("[debug_info]\n[[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]," +
+                 "[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]]",
+                 evaluateEunitConfiguration(projectDirectory));
+  }
+
+  // #1333: a project path with non-ASCII characters, with Erlang using Latin-1 file names (+fnl), as in the C locale.
+  public void testRebarConfigScriptInNonAsciiPathWithLatin1FileNames() throws Exception {
+    File contentRoot = setUpRebarProject("eunitConfigScriptOnly");
+    File projectDirectory = new File(contentRoot, "uni \u00e9");
+    FileUtil.copyDir(new File("testData/rebar/eunitConfigScriptOnly"), projectDirectory);
+    Assume.assumeTrue("The file system cannot store the name " + projectDirectory, projectDirectory.isDirectory());
+    assertEquals("[debug_info,{d,'FROM_SCRIPT'}]\n[[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]]",
+                 evaluateEunitConfiguration(projectDirectory, "+fnl"));
+  }
+
+  // Evaluates the configuration in the project directory as rebar does for the file named by REBAR_CONFIG
+  // (rebar_config:consult_file/1) and prints erl_opts and all eunit_opts entries.
+  private String evaluateEunitConfiguration(File projectDirectory, String... erlFlags) throws Exception {
     File reportsRoot = RebarEunitRunningState.createEunitReportsEnvironment(myProject, projectDirectory.getPath());
     String reportsPath = FileUtil.toSystemIndependentName(reportsRoot.getPath());
-
-    // Evaluate the configuration as rebar does for the file named by REBAR_CONFIG (rebar_config:consult_file/1).
-    String eunitOpts = evaluate(reportsRoot,
+    return evaluate(projectDirectory, reportsRoot,
       "Config = filename:join(\"" + reportsPath + "\", \"rebar.config\"), " +
       "Script = Config ++ \".script\", " +
       "Terms = case file:consult(Config) of {ok, T} -> T; {error, enoent} -> [] end, " +
       "Bindings = erl_eval:add_binding('CONFIG', Terms, erl_eval:add_binding('SCRIPT', Script, erl_eval:new_bindings())), " +
       "{ok, Result} = file:script(Script, Bindings), " +
-      "io:format(\"~w~n~w\", [proplists:get_value(erl_opts, Result), proplists:get_value(eunit_opts, Result)])");
-    assertEquals("[debug_info,{d,'FROM_SCRIPT'}]\n[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]", eunitOpts);
+      "io:format(\"~w~n~w\", [proplists:get_value(erl_opts, Result), proplists:get_all_values(eunit_opts, Result)])",
+      erlFlags);
   }
 
   private File setUpRebarProject(String testDataDirectory) throws Exception {
@@ -141,9 +164,14 @@ public class ErlangRebarEunitRunTest extends ErlangCompilationTestBase {
   }
 
   private static String evaluate(File codePath, String expression) throws Exception {
+    return evaluate(null, codePath, expression);
+  }
+
+  private static String evaluate(File workDirectory, File codePath, String expression, String... erlFlags) throws Exception {
     String erl = JpsErlangSdkType.getByteCodeInterpreterExecutable(JpsErlangSdkType.getTestsSdkPath()).getAbsolutePath();
-    GeneralCommandLine commandLine = new GeneralCommandLine(erl, "-noshell", "-pa", codePath.getPath(),
-                                                            "-eval", expression + ", halt().");
+    GeneralCommandLine commandLine = new GeneralCommandLine(erl).withParameters(erlFlags)
+      .withParameters("-noshell", "-pa", codePath.getPath(), "-eval", expression + ", halt().")
+      .withWorkDirectory(workDirectory);
     ProcessOutput output = new CapturingProcessHandler(commandLine).runProcess((int)TIMEOUT_MS);
     assertEquals(output.getStderr(), 0, output.getExitCode());
     return output.getStdout();
