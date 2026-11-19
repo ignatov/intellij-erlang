@@ -115,6 +115,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
@@ -195,6 +196,32 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testBinaryTypeSizeMacros() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInConditionalBranches() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInIfInsideIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosUndefInInclude() {
+    enableUnresolvedMacroInspection();
+    myFixture.configureByText("undef_m.hrl", "-undef(M).");
+    doTest();
+  }
+
+  public void testUnresolvedMacrosQuotedInIfdef() {
     enableUnresolvedMacroInspection();
     doTest();
   }

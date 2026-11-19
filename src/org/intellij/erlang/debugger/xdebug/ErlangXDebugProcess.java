@@ -21,7 +21,9 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ExecutionConsole;
@@ -342,17 +344,14 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       myRunningState.setWorkDirectory(commandLine);
       myRunningState.setEnvironment(commandLine);
       setUpErlangDebuggerCodePath(commandLine);
-      myRunningState.setCodePath(commandLine);
-      commandLine.addParameters("-run", "debugnode", "main", String.valueOf(myDebuggerNode.getLocalDebuggerPort()));
-      myRunningState.setErlangFlags(commandLine);
-      myRunningState.setNoShellMode(commandLine);
-      myRunningState.setStopErlang(commandLine);
+      addDebugTargetParameters(commandLine, myRunningState, myDebuggerNode.getLocalDebuggerPort());
 
       LOG.debug("Running debugger process. Command line (platform-independent): ");
       LOG.debug(commandLine.getCommandLineString());
 
       Process process = commandLine.createProcess();
       erlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
+      stopDebuggerNodeOnTermination(erlangProcessHandler, myDebuggerNode);
 
       LOG.debug("Debugger process started.");
 
@@ -380,6 +379,27 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
     LOG.debug("Debug target should now be running.");
     return erlangProcessHandler;
+  }
+
+  static void addDebugTargetParameters(@NotNull GeneralCommandLine commandLine,
+                                       @NotNull ErlangRunningState runningState,
+                                       int debuggerPort) throws ExecutionException {
+    runningState.setCodePath(commandLine);
+    runningState.setErlangFlags(commandLine);
+    commandLine.addParameters("-run", "debugnode", "main", String.valueOf(debuggerPort));
+    runningState.setNoShellMode(commandLine);
+    runningState.setStopErlang(commandLine);
+    runningState.setExtraArguments(commandLine);
+  }
+
+  // a debug target that exits before connecting (e.g. a user flag fails at boot) must not leave the debugger node waiting
+  static void stopDebuggerNodeOnTermination(@NotNull ProcessHandler processHandler, @NotNull ErlangDebuggerNode debuggerNode) {
+    processHandler.addProcessListener(new ProcessListener() {
+      @Override
+      public void processTerminated(@NotNull ProcessEvent event) {
+        debuggerNode.stop();
+      }
+    });
   }
 
   private void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {

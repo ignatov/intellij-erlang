@@ -263,8 +263,8 @@ unqualified_record_ref ::= q_atom {
 
 optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
 private callback_function_list ::= callback_function (',' callback_function)*
-callback_function ::= q_atom '/' integer {
-  pin = 1
+callback_function ::= q_atom '/' integer | '{' q_atom ',' integer '}' {
+  pin(".*") = "q_atom"
   methods = [getReference]
   stubClass="org.intellij.erlang.stubs.ErlangCallbackFunctionStub"
 }

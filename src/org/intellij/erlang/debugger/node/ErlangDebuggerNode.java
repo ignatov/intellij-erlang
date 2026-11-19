@@ -342,7 +342,10 @@ public class ErlangDebuggerNode {
             return null;
           }
           if (++attemptsMade >= RETRIES_ON_TIMEOUT) {
-            throw e;
+            SocketException socketException = new SocketException("Timed out reading " + size + " bytes, " +
+                                                                  bytesReadTotal + " read.");
+            socketException.initCause(e);
+            throw socketException;
           }
         }
       }

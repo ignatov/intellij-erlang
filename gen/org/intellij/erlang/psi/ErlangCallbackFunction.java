@@ -14,6 +14,15 @@ public interface ErlangCallbackFunction extends ErlangCompositeElement, StubBase
   ErlangQAtom getQAtom();
 
   @Nullable
+  PsiElement getComma();
+
+  @Nullable
+  PsiElement getCurlyLeft();
+
+  @Nullable
+  PsiElement getCurlyRight();
+
+  @Nullable
   PsiElement getOpArDiv();
 
   @Nullable
