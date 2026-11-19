@@ -16,11 +16,14 @@
 
 package org.intellij.erlang.intention;
 
+import com.intellij.codeInsight.daemon.HighlightDisplayKey;
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
@@ -38,9 +41,18 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null && file instanceof ErlangFile) {
       return !((ErlangFile) file).getExportedFunctions().contains(function) &&
-             ErlangExportFunctionFix.canBeExported((ErlangFile) file, function);
+             ErlangExportFunctionFix.canBeExported((ErlangFile) file, function) &&
+             !isOfferedByUnusedFunctionInspection((ErlangFile) file, function);
     }
     return false;
+  }
+
+  // The intention is available on the function name only, where the quick fix of the unused function inspection is offered too
+  private static boolean isOfferedByUnusedFunctionInspection(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    HighlightDisplayKey key = HighlightDisplayKey.find(ErlangUnusedFunctionInspection.SHORT_NAME);
+    return key != null &&
+           InspectionProjectProfileManager.getInstance(file.getProject()).getCurrentProfile().isToolEnabled(key, file) &&
+           new ErlangUnusedFunctionInspection().isReported(file, function);
   }
 
   @Override

@@ -72,6 +72,22 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertEquals("one \"Export function\" action on an unused function: " + actions, 1, actions.size());
   }
 
+  public void testExportOfferedOnceWhenInspectionDisabled() {
+    myFixture.disableInspections(new ErlangUnusedFunctionInspection());
+    assertExportOfferedOnce("exportOfferedOnce.erl");
+  }
+
+  public void testExportOfferedOnceWhenSuppressed()   { assertExportOfferedOnce("exportOfferedOnceWhenSuppressed.erl"); }
+  public void testExportOfferedOnceOnUsedFunction()   { assertExportOfferedOnce("exportOfferedOnceOnUsedFunction.erl"); }
+
+  private void assertExportOfferedOnce(String fileName) {
+    myFixture.configureByFile(fileName);
+    var actions = myFixture.filterAvailableIntentions("Export function");
+    assertEquals(String.valueOf(actions), 1, actions.size());
+    myFixture.launchAction(actions.getFirst());
+    assertEquals(myFixture.getFile().getText(), 2, ((ErlangFile) myFixture.getFile()).getExportedFunctions().size());
+  }
+
   public void testQuotedAtomWithExport() { doTest("Export function"); }
   public void testQuotedAtomWithout()    { doTest("Export function"); }
 
