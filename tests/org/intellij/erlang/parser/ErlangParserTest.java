@@ -16,9 +16,15 @@
 
 package org.intellij.erlang.parser;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangStringLiteral;
+
+import java.io.IOException;
+import java.util.Collection;
 
 public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
@@ -102,6 +108,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testNewNumbers()                          { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
+  public void testTripleQuotesMoreThanThree()           { doTest(false); }
   public void testOtp28Generators()                     { doTest(false); }
   public void testBasedFloats()                         { doTest(false); }
   public void testNominalTypes()                        { doTest(false); }
@@ -131,4 +138,76 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertFalse("PsiFile contains error elements", hasErrors);
     assertTrue("Parsing took " + millis + " ms", millis < 5000);
   }
+
+  public void testIfElifConditionalCompilation()        { doTest(false); }
+  public void testQuotedAttributeNames()                { doTest(false); }
+
+  public void testSixQuoteMultilineStringAndSigil() {
+    PsiFile file = parseText("-module(six_quotes).\n" +
+                             "plain() -> \"\"\"\"\"\"\n  hello\n  \"\"\"\"\"\".\n" +
+                             "sigil() -> ~\"\"\"\"\"\"\n  world\n  \"\"\"\"\"\".\n" +
+                             "plain_with_space() -> \"\"\"\"\"\" \n  hello\n  \"\"\"\"\"\".\n" +
+                             "sigil_with_space() -> ~\"\"\"\"\"\" \n  world\n  \"\"\"\"\"\".\n" +
+                             "sigil_with_prefix_and_tab() -> ~s\"\"\"\"\"\"\t\n  text\n  \"\"\"\"\"\".\n");
+    assertFalse(PsiTreeUtil.hasErrorElements(file));
+    assertEquals(5, PsiTreeUtil.findChildrenOfType(file, ErlangStringLiteral.class).size());
+  }
+
+  public void testTripleQuotedDocStringDoesNotExposeFunctionAsStub() {
+    PsiFile file = parseText("-module(triple_quoted_doc_string_stub).\n" +
+                             "-moduledoc \"\"\"\"\n" +
+                             "  -doc \"\"\".\n" +
+                             "  example() -> ok.\n" +
+                             "  \"\"\"\".\n" +
+                             "-export([visible/0]).\n" +
+                             "visible() -> ok.\n");
+    assertFalse(PsiTreeUtil.hasErrorElements(file));
+    Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
+    assertEquals(1, functions.size());
+    assertEquals("visible", functions.iterator().next().getName());
+  }
+
+  private PsiFile parseText(String text) {
+    return createPsiFile("test.erl", text);
+  }
+
+  public void testUnterminatedLongQuoteRunScalesLinearly() throws IOException {
+    int smallRunReads = charactersReadForUnterminatedQuoteRun(10_000);
+    int largeRunReads = charactersReadForUnterminatedQuoteRun(40_000);
+    assertTrue("Long quote run read " + largeRunReads + " characters after " + smallRunReads + " for one quarter the input",
+               largeRunReads < smallRunReads * 8);
+  }
+
+  // #1318: the lexer reads each quote once, so the verdict of the check above must not change between runs.
+  public void testUnterminatedLongQuoteRunTimingCheckIsStable() throws IOException {
+    for (int round = 0; round < 20; round++) {
+      assertEquals(10_000, charactersReadForUnterminatedQuoteRun(10_000));
+      assertEquals(40_000, charactersReadForUnterminatedQuoteRun(40_000));
+    }
+  }
+
+  private static int charactersReadForUnterminatedQuoteRun(int quoteCount) throws IOException {
+    ReadCountingSequence input = new ReadCountingSequence("\"".repeat(quoteCount));
+    _ErlangLexer lexer = new _ErlangLexer((Project) null);
+    lexer.reset(input, 0, input.length(), _ErlangLexer.YYINITIAL);
+    int tokens = 0;
+    while (lexer.advance() != null) tokens++;
+    assertEquals(1, tokens);
+    return input.reads;
+  }
+
+  private static final class ReadCountingSequence implements CharSequence {
+    private final String text;
+    private int reads;
+
+    ReadCountingSequence(String text) { this.text = text; }
+
+    @Override public int length() { return text.length(); }
+
+    @Override public char charAt(int index) { reads++; return text.charAt(index); }
+
+    @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
+
+    @Override public String toString() { return text; }
+    }
 }

@@ -12,7 +12,7 @@ apply plugin: 'org.jetbrains.intellij.platform'
 // The oldest supported IDE: the released archive is built against it and serves every IDE up to supportedUntilBuild.
 // -PplatformVersion selects another IDE to compile, test and verify against.
 def platformVersionOverride = providers.gradleProperty('platformVersion').orNull
-def platformVersion = platformVersionOverride ?: '2026.1'
+def platformVersion = platformVersionOverride ?: '2026.2'
 // The newest IDE branch CI tests the sources and verifies the archive against. Raise it only together with the
 // IDE list of the other-ides job in .github/workflows/gradle.yml and of release.yml.
 def supportedUntilBuild = '263.*'
@@ -89,12 +89,8 @@ allprojects {
       }
 
       ijp.bundledPlugins("com.intellij.copyright", "com.intellij.java", "tanvd.grazi")
-      // The test runner and the structure view are part of the platform in 2026.1 and separate plugins of the IDE
-      // from 2026.2 on, under other ids in 2026.2 than later. plugin.xml depends on them optionally.
-      if (platformVersion ==~ /(2026\.1|261)([.-].*)?/) {
-        // Nothing to add.
-      }
-      else if (platformVersion ==~ /(2026\.2|262)([.-].*)?/) {
+      // The test runner and the structure view are separate plugins of the IDE, under other ids in 2026.2 than later.
+      if (platformVersion ==~ /(2026\.2|262)([.-].*)?/) {
         ijp.bundledPlugins("intellij.testRunner.plugin", "intellij.structureView.plugin")
       }
       else {

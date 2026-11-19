@@ -33,6 +33,7 @@ public class ErlangCodeStyleSettings extends CustomCodeStyleSettings {
   public boolean ALIGN_FUNCTION_CLAUSES = false;
   public boolean ALIGN_GUARDS = false;
   public boolean INDENT_RELATIVE = true;
+  public int GUARD_INDENT_SIZE = -1;
   public boolean NEW_LINE_BEFORE_COMMA = false;
   public int NEW_LINE_AFTER_ARROW = NewLineAfterArrow.DO_NOT_FORCE;
   public boolean SPACE_AROUND_SEND = true;
