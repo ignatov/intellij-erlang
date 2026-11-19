@@ -406,6 +406,7 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
     @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
     @Override public void unknownMessage(String messageText) { }
+    @Override public void failedToReceiveMessage(String error) { }
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { }
