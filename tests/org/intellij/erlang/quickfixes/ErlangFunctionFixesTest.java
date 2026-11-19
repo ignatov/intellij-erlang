@@ -66,6 +66,12 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertNoIntentionsAvailable("Export function", "no -export can be placed below the -define and above the functions");
   }
 
+  public void testExportOfferedOnce() {
+    myFixture.configureByFile("exportOfferedOnce.erl");
+    var actions = myFixture.filterAvailableIntentions("Export function");
+    assertEquals("one \"Export function\" action on an unused function: " + actions, 1, actions.size());
+  }
+
   public void testQuotedAtomWithExport() { doTest("Export function"); }
   public void testQuotedAtomWithout()    { doTest("Export function"); }
 
