@@ -74,7 +74,7 @@ public final class ErlangSdkRelease {
   }
 
   // The directory of the plugin's precompiled .beam files (debugger, EUnit reporter) that this release can load.
-  // OTP 27.0 has erts 15.0, so the boundary is erts 15.0 rather than the erts version of V_27_0.
+  // The boundary is OTP 27.0, erts 15.0, as in V_27_0.
   @NotNull
   public String getBundledBeamDirectory() {
     return VersionComparatorUtil.compare(myErtsVersion, "15.0") >= 0 ? "otp_27_plus" : "otp_pre_27";

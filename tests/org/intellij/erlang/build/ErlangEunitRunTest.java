@@ -18,6 +18,7 @@ package org.intellij.erlang.build;
 
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessAdapter;
 import com.intellij.execution.process.ProcessEvent;
@@ -43,6 +44,8 @@ import java.util.Set;
  * Runs EUnit through the plugin with the real Erlang SDK: the precompiled reporter module must load in it.
  */
 public class ErlangEunitRunTest extends ErlangCompilationTestBase {
+  private static final long TIMEOUT_MS = 120_000;
+
   public void testPassingTestIsReported() throws Exception {
     addTestFile(myModule, "demo_tests.erl", """
       -module(demo_tests).
@@ -88,5 +91,58 @@ public class ErlangEunitRunTest extends ErlangCompilationTestBase {
     List<? extends SMTestProxy> tests = ContainerUtil.filter(root.getAllTests(), SMTestProxy::isLeaf);
     assertEquals(text, List.of("add_test"), ContainerUtil.map(tests, SMTestProxy::getName));
     assertTrue(text, tests.get(0).isPassed());
+  }
+
+  // The reporter for older releases was compiled with OTP 22, and OTP 27 and later refuse to load it, so eunit failed
+  // with undef on eunit_teamcity:start/1.
+  public void testReporterReportsPassedAndFailedTests() throws Exception {
+    addTestFile(myModule, "sample_tests.erl",
+                "-module(sample_tests).\n" +
+                "-include_lib(\"eunit/include/eunit.hrl\").\n" +
+                "passing_test() -> ?assertEqual(2, 1 + 1).\n" +
+                "failing_test() -> ?assertEqual(3, list_to_integer(\"2\")).\n");
+    compileAndAssertOutput(true);
+
+    String output = runEunit("sample_tests");
+    assertTrue(output, output.contains("##teamcity[testSuiteStarted name='sample_tests'"));
+    assertTrue(output, output.contains("##teamcity[testFinished name='passing_test'"));
+    assertTrue(output, output.contains("##teamcity[testFailed name='failing_test'"));
+    assertFalse(output, output.contains("##teamcity[testFailed name='passing_test'"));
+  }
+
+  private String runEunit(String moduleName) throws Exception {
+    ErlangUnitRunConfigurationType type = ErlangUnitRunConfigurationType.getInstance();
+    ErlangUnitRunConfiguration configuration = new ErlangUnitRunConfiguration(myProject, "eunit", type);
+    configuration.setModule(myModule);
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
+    configuration.getConfigData().setModuleNames(Set.of(moduleName));
+
+    Executor executor = DefaultRunExecutor.getRunExecutorInstance();
+    ProgramRunner<?> runner = ProgramRunner.findRunnerById("ErlangRunner");
+    assertNotNull(runner);
+    ExecutionEnvironment environment = ExecutionEnvironmentBuilder.create(myProject, executor, configuration).runner(runner).build();
+    RunProfileState state = configuration.getState(executor, environment);
+    assertNotNull(state);
+    ExecutionResult result = state.execute(executor, runner);
+    assertNotNull(result);
+    if (result.getExecutionConsole() != null) {
+      Disposer.register(getTestRootDisposable(), result.getExecutionConsole());
+    }
+
+    ProcessHandler processHandler = result.getProcessHandler();
+    StringBuilder output = new StringBuilder();
+    processHandler.addProcessListener(new ProcessAdapter() {
+      @Override
+      public void onTextAvailable(ProcessEvent event, Key outputType) {
+        synchronized (output) {
+          output.append(event.getText());
+        }
+      }
+    });
+    processHandler.startNotify();
+    assertTrue("eunit did not finish in time", processHandler.waitFor(TIMEOUT_MS));
+    synchronized (output) {
+      return output.toString();
+    }
   }
 }

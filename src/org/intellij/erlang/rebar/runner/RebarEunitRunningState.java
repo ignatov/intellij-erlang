@@ -158,7 +158,7 @@ public class RebarEunitRunningState extends CommandLineState {
       else {
         writeModifiedConfig(project, projectConfig, configFile);
       }
-      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(project));
+      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getProjectSdkRelease(project));
 
       return tempDirectory;
     } catch (IOException e) {
