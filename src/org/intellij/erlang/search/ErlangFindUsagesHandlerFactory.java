@@ -20,6 +20,7 @@ import com.intellij.find.findUsages.AbstractFindUsagesDialog;
 import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.ide.DataManager;
+import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.psi.PsiElement;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
         public AbstractFindUsagesDialog getFindUsagesDialog(boolean isSingleFile,
                                                             boolean toShowInNewTab,
                                                             boolean mustOpenInNewTab) {
-          return new CommonFindUsagesDialog(element, getProject(), getFindUsagesOptions(DataManager.getInstance().getDataContext()), toShowInNewTab, mustOpenInNewTab, isSingleFile, this);
+          return new CommonFindUsagesDialog(element, getProject(), getFindUsagesOptions(DataManager.getInstance().getDataContext(IdeFocusManager.getInstance(getProject()).getFocusOwner())), toShowInNewTab, mustOpenInNewTab, isSingleFile, this);
         }
       };
     }

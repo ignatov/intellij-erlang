@@ -76,16 +76,19 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         ErlangStringLiteral formatLiteral = ObjectUtils.tryCast(reverse.get(1), ErlangStringLiteral.class);
         int formatStart = formatLiteral != null ? getFormatStringStart(formatLiteral) : -1;
         if (formatStart < 0) return;
-        String formatString = formatLiteral.getText().substring(formatStart);
-        if (formatString.length() < 2) return;
-        Pattern pattern = formatLiteral.getText().startsWith("~S") ? VERBATIM_CONTROL_SEQUENCE_PATTERN : CONTROL_SEQUENCE_PATTERN;
+        String literalText = formatLiteral.getText();
+        if (literalText.length() - formatStart < 2) return;
+        // the text between the opening and the closing delimiter
+        formatStart++;
+        String formatString = literalText.substring(formatStart, literalText.length() - 1);
+        Pattern pattern = literalText.startsWith("~S") ? VERBATIM_CONTROL_SEQUENCE_PATTERN : CONTROL_SEQUENCE_PATTERN;
 
         int expectedArgumentsCount;
         try {
           expectedArgumentsCount = getExpectedFormatArgsCount(formatString, pattern);
         } catch (InvalidControlSequenceException e) {
           registerProblem(holder, formatLiteral, "Invalid control sequence",
-            TextRange.create(formatStart + e.getInvalidSequenceStartIdx(), formatStart + formatString.length() - 1), null);
+            TextRange.create(formatStart + e.getInvalidSequenceStartIdx(), formatStart + formatString.length()), null);
           return;
         }
 

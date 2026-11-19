@@ -1,0 +1,4 @@
+-<info descr="null"><info descr="null">if</info></info>(<info descr="null"><info descr="null">true</info></info>).
+-<info descr="null"><info descr="null">elif</info></info>(<info descr="null"><info descr="null">false</info></info>).
+-<info descr="null"><info descr="null">else</info></info>.
+-<info descr="null"><info descr="null">endif</info></info>.

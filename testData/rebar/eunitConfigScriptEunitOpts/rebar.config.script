@@ -1,0 +1,1 @@
+CONFIG ++ [{erl_opts, [{d, 'FROM_SCRIPT'}]}, {eunit_opts, [verbose, {report, {eunit_progress, []}}]}].

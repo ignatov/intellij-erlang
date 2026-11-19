@@ -29,7 +29,12 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,6 +68,23 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
       return elementDocProvider.getDocText();
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getQuickNavigateInfo(PsiElement element, PsiElement originalElement) {
+    if (!(element instanceof ErlangFunction function)) return null;
+    String info = ErlangPsiImplUtil.createFunctionPresentation(function);
+    ErlangModule module = function.getContainingFile() instanceof ErlangFile file ? file.getModule() : null;
+    if (module != null) {
+      info = ErlangPsiImplUtil.toAtomName(module.getName()) + ":" + info;
+    }
+    ErlangSpecification spec = function.findSpecification();
+    if (spec != null) {
+      PsiElement specAttribute = spec.getParent() instanceof ErlangAttribute attribute ? attribute : spec;
+      info += "\n" + specAttribute.getText();
+    }
+    return StringUtil.escapeXmlEntities(info).replace("\n", "<br/>");
   }
 
   @Nullable

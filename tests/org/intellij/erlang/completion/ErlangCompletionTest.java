@@ -20,11 +20,14 @@ import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -117,6 +120,8 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     }
   }
 
+  public void testVariablesFromCaseHead() { doTestInclude("foo() -> case V = 1 of _ -> <caret> end.", "V"); }
+  public void testNoFunVariablesFromCaseHead() { doTestVariants("foo() -> case (fun(Yy) -> Zz = Yy end)(1) of _ -> <caret> end.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "Yy", "Zz"); }
   public void testFunctions() {
     doTestInclude(
       """
@@ -470,6 +475,18 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-export([f<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.");
   }
 
+  public void testOptionalCallbackTupleFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\nfoobar(X) -> X.", "-optional_callbacks([{foobar, 1<caret>}]).\nfoobar(X) -> X.");
+  }
+
+  public void testOptionalCallbackTupleQuotedFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\n'foo bar'(X) -> X.", "-optional_callbacks([{'foo bar', 1<caret>}]).\n'foo bar'(X) -> X.");
+  }
+
+  public void testOptionalCallbackSlashFunction() {
+    doCheckResult("-optional_callbacks([fo<caret>]).\nfoobar(X) -> X.", "-optional_callbacks([foobar/1<caret>]).\nfoobar(X) -> X.");
+  }
+
   public void testLager() {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }
@@ -583,6 +600,15 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testModuleCompletionWithColon() {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
+  }
+
+  public void testNoDeletedModulesInModuleCompletion() {
+    PsiFile deleted = myFixture.addFileToProject("deleted_module_1262.erl", "-module(deleted_module_1262).");
+    assertTrue(ErlangModuleIndex.getNames(getProject()).contains("deleted_module_1262"));
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> deleted.delete());
+    myFixture.configureByText("a.erl", "foo() -> deleted_mod<caret>");
+    myFixture.completeBasic();
+    assertEquals("foo() -> deleted_mod", myFixture.getEditor().getDocument().getText());
   }
 
   public void testModuleCompletionWithoutColon() {

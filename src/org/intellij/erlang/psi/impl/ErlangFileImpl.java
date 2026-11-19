@@ -32,6 +32,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.*;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.containers.MultiMap;
@@ -291,7 +292,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
         // todo: use module with dependencies scope
         if (!DumbService.isDumb(getProject())) {
           Query<PsiReference> search = ReferencesSearch.search(module, GlobalSearchScope.allScope(module.getProject()));
-          for (PsiReference psiReference : search) {
+          for (PsiReference psiReference : search.findAll()) {
             psiReference.handleElementRename(nameWithoutExtension);
           }
         }
@@ -818,7 +819,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       @Override
       public boolean process(PsiElement psiElement) {
         for (PsiElement child = psiElement.getFirstChild(); child != null; child = child.getNextSibling()) {
-          if (child instanceof ErlangParserUtil.DummyBlock) {
+          if (PsiUtilCore.getElementType(child) == ErlangParserUtil.DUMMY_BLOCK) {
             if (!process(child)) return false;
           }
           else if (!processor.process(child)) return false;
