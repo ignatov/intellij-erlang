@@ -45,7 +45,8 @@ name: Factory watch
 # Repository variables: FACTORY_WATCH ("true" turns the workflow on), FACTORY_WATCH_ISSUE (the number of the
 # standing issue), and optionally FACTORY_WATCH_ENVIRONMENT, FACTORY_WATCH_TIMER_ENVIRONMENT, FACTORY_WATCH_TIMER
 # ("false" stops the loop; the schedule still runs), FACTORY_MANAGER ("true": a check that announced a new alert
-# starts factory-manager.yml, which diagnoses it). FACTORY_TICK_LIVE and FACTORY_TIMER are read, so a factory
+# starts factory-manager.yml, which diagnoses it, and so does a check that finds today's digest of the manager due
+# and not written; see the step "Decide whether the manager's digest is due"). FACTORY_TICK_LIVE and FACTORY_TIMER are read, so a factory
 # that the maintainer stopped is not reported as dead.
 # Secret of the environment: FACTORY_WATCH_TOKEN, a token that can read the private repository (Contents: read).
 # Without it FACTORY_DESK_TOKEN and then FACTORY_TOKEN are used, which exist only in factory-dispatch.
@@ -96,6 +97,7 @@ jobs:
       issues: write
     outputs:
       new: ${{ steps.watch.outputs.new }}
+      digest: ${{ steps.digest.outputs.due }}
     environment:
       name: ${{ vars.FACTORY_WATCH_ENVIRONMENT || 'factory-watch' }}
       # The environment is used for its secret and its branch policy only; this is not a deployment.
@@ -183,6 +185,71 @@ jobs:
           echo "new=${new:-0}" >> "$GITHUB_OUTPUT"
           exit "$status"
 
+      - name: Decide whether the manager's digest is due
+        id: digest
+        # GitHub drops many scheduled runs of this repository, so the two daily schedules of factory-manager.yml may
+        # both miss the manager's daily digest. From manager.digest_hour_utc of the desk's config until the manager's
+        # public notice of a run of today that brought a digest is on the standing issue, a check asks the job
+        # manager to start the manager. Bounded: never while a run of the manager is queued or running, and no more
+        # once 3 runs of it were created since the digest hour of this UTC day (whatever started them). The
+        # manager's plan decides whether to think; a run with nothing due is its plan job only. Live mode only, and
+        # also after a check that failed on a critical alert. Prints fixed phrases and counts only.
+        if: >-
+          !cancelled() && steps.desk.outputs.ok == 'true' && vars.FACTORY_MANAGER == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          due=false
+          # The digest hour, or "off" while manager.enabled is not true (then the manager would plan nothing).
+          hour=$(python3 -I - "$RUNNER_TEMP/desk/dispatcher/config.json" <<'PY'
+          import json, sys
+          try:
+              m = json.load(open(sys.argv[1], encoding="utf-8"))["manager"]
+          except (OSError, ValueError, KeyError, TypeError):
+              m = {}
+          v = m.get("digest_hour_utc", 6) if isinstance(m, dict) else 6
+          v = v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 23 else 6
+          print(v if isinstance(m, dict) and m.get("enabled") is True else "off")
+          PY
+          ) || hour=off
+          now=$(date -u +%H)
+          day=$(date -u +%Y-%m-%d)
+          stamp=$(date -u +%Y%m%d)
+          if [ "$hour" = off ]; then
+            echo "The manager is off in the desk's config."
+          elif [ $((10#$now)) -lt "$hour" ]; then
+            echo "Before the digest hour."
+          else
+            since=$(printf '%sT%02d:00:00Z' "$day" "$hour")
+            runs=$(gh api "repos/$REPO/actions/workflows/factory-manager.yml/runs?created=%3E%3D$since&per_page=20" \
+              --jq '"\(.workflow_runs | length) \([.workflow_runs[] | select(.status != "completed")] | length)"') || runs=""
+            total=${runs% *}
+            busy=${runs#* }
+            if ! [[ "$total" =~ ^[0-9]+$ && "$busy" =~ ^[0-9]+$ ]]; then
+              echo "The runs of the manager could not be read."
+            elif [ "$busy" -gt 0 ]; then
+              echo "A run of the manager is queued or running."
+            elif [ "$total" -ge 3 ]; then
+              echo "3 runs of the manager since the digest hour today; no more for the digest."
+            else
+              # The manager's notice: "Factory manager, run M-<today>-HHMM: ..., 1 digest, ... in the desk, ...".
+              written=$(gh api "repos/$REPO/issues/$ISSUE/comments?since=${day}T00:00:00Z&per_page=100" --paginate \
+                --jq ".[] | select(.user.login == \"github-actions[bot]\") | .body
+                       | select(contains(\"<!-- factory:manager-notice:run:M-$stamp-\"))
+                       | select(test(\"[0-9]+ digests?(,| in the desk)\")) | 1" | awk 'END { print NR }') || written=""
+              if ! [[ "$written" =~ ^[0-9]+$ ]]; then
+                echo "The notices of the manager could not be read."
+              elif [ "$written" -gt 0 ]; then
+                echo "Today's digest is written."
+              else
+                echo "Today's digest is due: $total run(s) of the manager since the digest hour."
+                due=true
+              fi
+            fi
+          fi
+          echo "due=$due" >> "$GITHUB_OUTPUT"
+
       - name: Report that the private repository cannot be read
         if: steps.desk.outputs.ok != 'true'
         env:
@@ -208,10 +275,10 @@ jobs:
   manager:
     needs: check
     # A check that announced a new alert starts the factory manager (factory-manager.yml), also a check that failed
-    # on a critical alert. Off unless FACTORY_MANAGER is "true"; the manager's daily schedule is its backstop.
+    # on a critical alert, and so does a check that found today's digest due. Off unless FACTORY_MANAGER is "true".
     if: >-
       !cancelled() && vars.FACTORY_MANAGER == 'true'
-      && needs.check.outputs.new != '' && needs.check.outputs.new != '0'
+      && ((needs.check.outputs.new != '' && needs.check.outputs.new != '0') || needs.check.outputs.digest == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -223,7 +290,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           if ! gh workflow run factory-manager.yml -R "$REPO" --ref master; then
-            echo "::warning::The factory manager could not be started; its schedule is the backstop."
+            echo "::warning::The factory manager could not be started; the next check or its schedule starts it."
           fi
 
   rearm:
