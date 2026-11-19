@@ -241,7 +241,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   //   | config_exprs)
   //   '}'
   public static boolean app_parameter(PsiBuilder b, int l) {
@@ -269,7 +269,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   //   | config_exprs
   private static boolean app_parameter_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1")) return false;
@@ -578,7 +578,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  // <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   private static boolean app_parameter_1_12(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_12")) return false;
     boolean r, p;
@@ -586,7 +586,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = app_atom_named(b, l + 1, ErlangParser::app_parameter_1_12_0_0);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_of(b, l + 1, ErlangParser::string_literal) && r;
+    r = p && list_of(b, l + 1, ErlangParser::runtime_dependency) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -5494,6 +5494,39 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "rule_clause_2")) return false;
     clause_guard(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // string_literal !string_literal | config_expression
+  static boolean runtime_dependency(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = runtime_dependency_0(b, l + 1);
+    if (!r) r = config_expression(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal !string_literal
+  private static boolean runtime_dependency_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = string_literal(b, l + 1);
+    r = r && runtime_dependency_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !string_literal
+  private static boolean runtime_dependency_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !string_literal(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */

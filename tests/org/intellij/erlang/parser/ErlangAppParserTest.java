@@ -33,4 +33,5 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
   public void testRuntimeDependenciesAdjacentStrings() { doTest(false); }
   public void testRuntimeDependenciesAtomFirst()       { doTest(false); }
   public void testRuntimeDependenciesAtomLast()        { doTest(false); }
+  public void testRuntimeDependenciesTrailingComma()   { doTest(true);  }
 }

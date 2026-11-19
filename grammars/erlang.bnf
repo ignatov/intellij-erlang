@@ -372,9 +372,10 @@ app_parameter ::= '{'
   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   | <<app_atom_named ('mod')>> ',' app_mod
   | <<app_atom_named ('start_phases')>> ',' config_expression
-  | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   | config_exprs)
   '}' {elementType=tuple_expression}
+private runtime_dependency ::= string_literal !string_literal | config_expression
 app_module_expression ::= module_ref {elementType=config_expression}
 app_integer ::= &integer atomic {elementType=config_expression}
 app_env_expression ::= '{' app_atom ',' config_expression '}' {elementType=tuple_expression}

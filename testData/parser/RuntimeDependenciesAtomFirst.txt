@@ -33,13 +33,15 @@ ERL_FILE
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
-          PsiErrorElement:',', <expression> or ']' expected, got 'kernel'
-            <empty list>
-  PsiElement(atom_name)('kernel')
-  PsiElement(,)(',')
-  PsiElement(string)('"a"')
-  PsiElement(])(']')
-  PsiElement(})('}')
-  PsiElement(])(']')
-  PsiElement(})('}')
-  PsiElement(.)('.')
+          ERL_CONFIG_EXPRESSION
+            ERL_Q_ATOM
+              ERL_ATOM
+                PsiElement(atom_name)('kernel')
+          PsiElement(,)(',')
+          ERL_STRING_LITERAL
+            PsiElement(string)('"a"')
+          PsiElement(])(']')
+        PsiElement(})('}')
+      PsiElement(])(']')
+    PsiElement(})('}')
+    PsiElement(.)('.')

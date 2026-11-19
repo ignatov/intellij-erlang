@@ -33,15 +33,16 @@ ERL_FILE
         PsiElement(,)(',')
         ERL_LIST_EXPRESSION
           PsiElement([)('[')
+          ERL_CONFIG_EXPRESSION
+            ERL_STRING_LITERAL
+              PsiElement(string)('"a"')
+            ERL_STRING_LITERAL
+              PsiElement(string)('"b"')
+          PsiElement(,)(',')
           ERL_STRING_LITERAL
-            PsiElement(string)('"a"')
-          PsiErrorElement:',' or ']' expected, got '"b"'
-            <empty list>
-  PsiElement(string)('"b"')
-  PsiElement(,)(',')
-  PsiElement(string)('"c"')
-  PsiElement(])(']')
-  PsiElement(})('}')
-  PsiElement(])(']')
-  PsiElement(})('}')
-  PsiElement(.)('.')
+            PsiElement(string)('"c"')
+          PsiElement(])(']')
+        PsiElement(})('}')
+      PsiElement(])(']')
+    PsiElement(})('}')
+    PsiElement(.)('.')
