@@ -86,7 +86,7 @@ class BreakpointReachedEvent extends ErlangDebuggerEvent {
     List<ErlangTraceElement> stack = new ArrayList<>(traceElementsList.arity());
     for (OtpErlangObject traceElementObject : traceElementsList) {
       OtpErlangTuple traceElementTuple = getTupleValue(traceElementObject);
-      OtpErlangObject stackPointer = getTupleValue(elementAt(traceElementTuple, 0));
+      OtpErlangObject stackPointer = elementAt(traceElementTuple, 0);
       OtpErlangTuple moduleFunctionArgsTuple = getTupleValue(elementAt(traceElementTuple, 1));
       OtpErlangList bindingsList = getListValue(elementAt(traceElementTuple, 2));
       ErlangTraceElement traceElement = getTraceElement(moduleFunctionArgsTuple, stackPointer, bindingsList);

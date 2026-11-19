@@ -18,10 +18,12 @@ package org.intellij.erlang.utils;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,7 +39,7 @@ public final class ExtProcessUtil {
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
     try {
-      Process cmdRunner = new GeneralCommandLine(command).createProcess();
+      Process cmdRunner = new GeneralCommandLine(withAbsoluteExecutable(command)).withWorkDirectory(FileUtil.getTempDirectory()).createProcess();
       ExecutorService singleTreadExecutor = Executors.newSingleThreadExecutor();
       try {
         Future<ExtProcessOutput> cmdRunnerFuture = singleTreadExecutor.submit(() -> {
@@ -53,6 +55,8 @@ public final class ExtProcessUtil {
         catch (Exception ignored) {
         }
         cmdRunnerFuture.cancel(true);
+        cmdRunner.descendants().forEach(ProcessHandle::destroy);
+        cmdRunner.destroy();
       }
       finally {
         singleTreadExecutor.shutdown();
@@ -61,6 +65,19 @@ public final class ExtProcessUtil {
     catch (ExecutionException ignored) {
     }
     return new ExtProcessOutput("", "");
+  }
+
+  // The command runs in the temp directory, so an executable path relative to the IDE's directory is made absolute.
+  // A bare name without a separator is still looked up on PATH.
+  @NotNull
+  private static String[] withAbsoluteExecutable(@NotNull String[] command) {
+    if (command.length == 0) return command;
+    String executable = command[0];
+    boolean hasSeparator = executable.indexOf('/') >= 0 || executable.indexOf(File.separatorChar) >= 0;
+    if (!hasSeparator || new File(executable).isAbsolute()) return command;
+    String[] result = command.clone();
+    result[0] = new File(executable).getAbsolutePath();
+    return result;
   }
 
   @NotNull

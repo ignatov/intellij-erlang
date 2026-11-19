@@ -17,6 +17,7 @@
 package org.intellij.erlang.eunit;
 
 import com.intellij.execution.actions.ConfigurationContext;
+import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
@@ -30,8 +31,10 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 
 public class ErlangUnitRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangUnitRunConfiguration> {
-  public ErlangUnitRunConfigurationProducer() {
-    super(ErlangUnitRunConfigurationType.getInstance());
+  @NotNull
+  @Override
+  public ConfigurationFactory getConfigurationFactory() {
+    return ErlangUnitRunConfigurationType.getInstance().getConfigurationFactories()[0];
   }
 
   @Override

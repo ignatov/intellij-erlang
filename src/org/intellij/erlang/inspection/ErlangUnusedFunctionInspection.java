@@ -37,6 +37,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
+  public static final String SHORT_NAME = "ErlangUnusedFunction";
+
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
     return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension()) && !file.isExportedAll();
@@ -53,6 +55,10 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
       holder.registerProblem(identifier, message, ProblemHighlightType.LIKE_UNUSED_SYMBOL, fixes);
     }
+  }
+
+  public boolean isReported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    return canRunOn(file) && !isSuppressedFor(function.getNameIdentifier()) && isUnusedFunction(file, function);
   }
 
   private static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {

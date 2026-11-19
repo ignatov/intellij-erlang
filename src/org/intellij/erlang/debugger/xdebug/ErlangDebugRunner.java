@@ -41,13 +41,13 @@ public class ErlangDebugRunner extends GenericProgramRunner {
   protected RunContentDescriptor doExecute(@NotNull RunProfileState state,
                                            @NotNull final ExecutionEnvironment environment) throws ExecutionException {
     XDebuggerManager xDebuggerManager = XDebuggerManager.getInstance(environment.getProject());
-    return xDebuggerManager.startSession(environment, new XDebugProcessStarter() {
+    return xDebuggerManager.newSessionBuilder(new XDebugProcessStarter() {
       @NotNull
       @Override
       public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
         return new ErlangXDebugProcess(session, environment);
       }
-    }).getRunContentDescriptor();
+    }).environment(environment).startSession().getRunContentDescriptor();
   }
 
   @NotNull

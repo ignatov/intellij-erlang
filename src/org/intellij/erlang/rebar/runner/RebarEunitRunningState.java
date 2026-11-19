@@ -62,6 +62,7 @@ import java.util.List;
 
 public class RebarEunitRunningState extends CommandLineState {
   private static final String CONFIG_FILE_NAME = "rebar.config";
+  private static final String CONFIG_SCRIPT_FILE_NAME = CONFIG_FILE_NAME + ".script";
   private static final String ERL_FLAGS = "ERL_FLAGS";
   private static final String EUNIT_NO_TTY_OPTION = "{no_tty, true}";
   private static final String EUNIT_TEAMCITY_REPORTER = "{report,{" + ErlangEunitReporterModule.MODULE_NAME + ", []}}";
@@ -105,7 +106,8 @@ public class RebarEunitRunningState extends CommandLineState {
   @NotNull
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
-    GeneralCommandLine commandLine = getCommandLine(myConfiguration, createEunitReportsEnvironment());
+    GeneralCommandLine commandLine = getCommandLine(myConfiguration, createEunitReportsEnvironment(
+      myConfiguration.getProject(), RebarRunningStateUtil.getWorkingDirectory(myConfiguration)));
     return RebarRunningStateUtil.runRebar(myConfiguration.getProject(), commandLine);
   }
 
@@ -136,14 +138,27 @@ public class RebarEunitRunningState extends CommandLineState {
     return "\"" + argument.replace("\"", "\"\\\"\"") + "\"";
   }
 
-  private File createEunitReportsEnvironment() throws ExecutionException {
+  // rebar evaluates the rebar.config.script next to the configuration it is given, so the project's script is called
+  // from a script in the temporary directory, which then adds the reporter options. rebar runs in the working directory.
+  @VisibleForTesting
+  @NotNull
+  public static File createEunitReportsEnvironment(@NotNull Project project, @NotNull String workingDirectory) throws ExecutionException {
     try {
-      String workingDirectory = RebarRunningStateUtil.getWorkingDirectory(myConfiguration);
       File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
       File configFile = new File(tempDirectory, CONFIG_FILE_NAME);
+      File projectConfig = new File(workingDirectory, CONFIG_FILE_NAME);
+      File projectScript = new File(workingDirectory, CONFIG_SCRIPT_FILE_NAME);
 
-      writeModifiedConfig(myConfiguration.getProject(), new File(workingDirectory, CONFIG_FILE_NAME), configFile);
-      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(myConfiguration.getProject()));
+      if (projectScript.isFile()) {
+        if (projectConfig.isFile()) {
+          FileUtil.copy(projectConfig, configFile);
+        }
+        FileUtil.writeToFile(new File(tempDirectory, CONFIG_SCRIPT_FILE_NAME), createConfigScript());
+      }
+      else {
+        writeModifiedConfig(project, projectConfig, configFile);
+      }
+      ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(project));
 
       return tempDirectory;
     } catch (IOException e) {
@@ -151,12 +166,37 @@ public class RebarEunitRunningState extends CommandLineState {
     }
   }
 
+  // The project's script is named relative to the working directory, as plain rebar names it: an absolute name with
+  // non-ASCII characters is not found when Erlang uses Latin-1 file names. rebar3 uses the last eunit_opts entry and
+  // rebar 2 the first one, so the reporter options go into every entry.
+  @NotNull
+  private static String createConfigScript() {
+    return "ProjectScript = \"" + CONFIG_SCRIPT_FILE_NAME + "\",\n" +
+           "ProjectBindings = erl_eval:add_binding('CONFIG', CONFIG, erl_eval:add_binding('SCRIPT', ProjectScript, erl_eval:new_bindings())),\n" +
+           "ProjectTerms = case file:script(ProjectScript, ProjectBindings) of\n" +
+           "  {ok, Terms} when is_list(Terms) -> Terms;\n" +
+           "  {ok, Term} -> [Term];\n" +
+           "  {error, Reason} -> erlang:error({filename:absname(ProjectScript), Reason})\n" +
+           "end,\n" +
+           "ReporterOptions = [" + EUNIT_TEAMCITY_REPORTER + ", " + EUNIT_NO_TTY_OPTION + "],\n" +
+           "IsReportOption = fun({report, _}) -> true; ({no_tty, _}) -> true; (_) -> false end,\n" +
+           "case lists:keymember(eunit_opts, 1, ProjectTerms) of\n" +
+           "  true ->\n" +
+           "    [case Entry of\n" +
+           "       {eunit_opts, EntryOptions} when is_list(EntryOptions) ->\n" +
+           "         {eunit_opts, [Option || Option <- EntryOptions, not IsReportOption(Option)] ++ ReporterOptions};\n" +
+           "       _ -> Entry\n" +
+           "     end || Entry <- ProjectTerms];\n" +
+           "  false -> ProjectTerms ++ [{eunit_opts, ReporterOptions}]\n" +
+           "end.\n";
+  }
+
   @VisibleForTesting
   static void writeModifiedConfig(@NotNull Project project, @NotNull File oldConfig, @NotNull File newConfig) throws IOException {
     PsiFile configPsi = createModifiedConfigPsi(project, oldConfig);
     // Write the text as is, with the \n line separators of PSI. Adding the file to a PsiDirectory would save it with
     // the line separator of the code style, which is the one of the OS (\r\n on Windows) for a new file.
-    String text = ReadAction.compute(configPsi::getText);
+    String text = ReadAction.computeBlocking(configPsi::getText);
     FileUtil.writeToFile(newConfig, text);
   }
 
