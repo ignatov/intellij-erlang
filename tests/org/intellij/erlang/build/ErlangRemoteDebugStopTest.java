@@ -236,5 +236,9 @@ public class ErlangRemoteDebugStopTest extends BasePlatformTestCase {
     @Override
     public void handleEvaluationResponse(OtpErlangObject response) {
     }
+
+    @Override
+    public void evaluationFailed(String errorMessage) {
+    }
   }
 }

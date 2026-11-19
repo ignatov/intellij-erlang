@@ -137,5 +137,9 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     @Override
     public void handleEvaluationResponse(OtpErlangObject response) {
     }
+
+    @Override
+    public void evaluationFailed(String errorMessage) {
+    }
   }
 }

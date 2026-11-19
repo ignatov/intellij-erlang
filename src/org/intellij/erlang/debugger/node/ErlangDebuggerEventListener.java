@@ -32,4 +32,5 @@ public interface ErlangDebuggerEventListener {
   void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots);
   void debuggerStopped();
   void handleEvaluationResponse(OtpErlangObject response);
+  void evaluationFailed(String errorMessage);
 }

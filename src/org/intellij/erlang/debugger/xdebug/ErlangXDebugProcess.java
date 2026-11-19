@@ -158,7 +158,13 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       if (next != null) {
         send(next);
       }
-      evaluation.callback().evaluated(ErlangXValueFactory.create(response));
+      // the evaluation is already off the queue: an overflow must fail it here, not take the next one
+      try {
+        evaluation.callback().evaluated(ErlangXValueFactory.create(response));
+      }
+      catch (StackOverflowError e) {
+        evaluation.callback().errorOccurred("The result is nested too deeply to show");
+      }
       // resuming before the queued evaluations are answered would let them reach a running process
       if (next == null) {
         mySession.resume();
@@ -218,6 +224,21 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                    @NotNull String expression,
                                    @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
                                    @NotNull ErlangTraceElement traceElement) {
+  }
+
+  @Override
+  public synchronized void evaluationFailed(String errorMessage) {
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        send(next);
+      }
+      evaluation.callback().errorOccurred(errorMessage);
+      if (next == null) {
+        mySession.resume();
+      }
+    }
   }
 
   @Override

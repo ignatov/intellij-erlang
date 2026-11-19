@@ -28,6 +28,7 @@ import org.intellij.erlang.debugger.node.ErlangTraceElement;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.lang.reflect.Method;
@@ -326,6 +327,120 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
+  // #1309: an answer too deeply nested to decode fails its own evaluation; the next queued one is still sent and answered,
+  // and the session resumes once, after the last answer.
+  public void testTooDeeplyNestedAnswerFailsOnlyItsOwnEvaluation() throws Exception {
+    CountDownLatch responses = new CountDownLatch(2);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      List<String> sessionCalls = new CopyOnWriteArrayList<>();
+      ErlangXDebugProcess process = createProcessWithoutTarget(node, sessionCalls);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      RecordingCallback watchA = new RecordingCallback();
+      RecordingCallback watchB = new RecordingCallback();
+      process.evaluateExpression("T", watchA, frame);
+      process.evaluateExpression("B", watchB, frame);
+
+      assertEquals(new OtpErlangList("T"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      sendBytes(peer, tooDeeplyNestedEvaluateResponse(20000));
+      assertEquals(new OtpErlangList("B"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("b")}));
+      assertTrue("the node did not deliver both answers", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+      assertEquals(List.of(new OtpErlangString("error: The result is nested too deeply to show")), watchA.myValues);
+      assertEquals(List.of(atom("b")), watchB.myValues);
+      assertEquals(1, ContainerUtil.count(sessionCalls, "resume"::equals));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1309: an answer that decodes but overflows the stack while its watch renders it fails only its own evaluation.
+  // handleEvaluationResponse has already taken it off the queue, so the next queued evaluation must keep its answer.
+  public void testOverflowWhileDeliveringAnAnswerFailsOnlyItsOwnEvaluation() throws Exception {
+    CountDownLatch responses = new CountDownLatch(2);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      List<String> sessionCalls = new CopyOnWriteArrayList<>();
+      ErlangXDebugProcess process = createProcessWithoutTarget(node, sessionCalls);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      RecordingCallback watchA = new OverflowingCallback();
+      RecordingCallback watchB = new RecordingCallback();
+      process.evaluateExpression("T", watchA, frame);
+      process.evaluateExpression("B", watchB, frame);
+
+      assertEquals(new OtpErlangList("T"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("t")}));
+      assertEquals(new OtpErlangList("B"), ((OtpErlangTuple)receive(peer)).elementAt(2));
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("b")}));
+      assertTrue("the node did not deliver both answers", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+      assertEquals(List.of(new OtpErlangString("error: The result is nested too deeply to show")), watchA.myValues);
+      assertEquals(List.of(atom("b")), watchB.myValues);
+      assertEquals(List.of("pause", "pause", "resume"), sessionCalls);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // The same with a single evaluation: it fails, and the session paused for it resumes.
+  public void testOverflowWhileDeliveringTheOnlyAnswerResumesTheSession() throws Exception {
+    CountDownLatch responses = new CountDownLatch(1);
+    ErlangXDebugProcess[] processHolder = new ErlangXDebugProcess[1];
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(processHolder, responses));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      List<String> sessionCalls = new CopyOnWriteArrayList<>();
+      ErlangXDebugProcess process = createProcessWithoutTarget(node, sessionCalls);
+      processHolder[0] = process;
+
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+      ErlangTraceElement frame = new ErlangTraceElement(new OtpErlangLong(1), "t", "main", new OtpErlangList(),
+                                                        Collections.emptyList());
+      RecordingCallback watch = new OverflowingCallback();
+      process.evaluateExpression("T", watch, frame);
+
+      receive(peer);
+      send(peer, new OtpErlangTuple(new OtpErlangObject[]{atom("evaluate_response"), atom("t")}));
+      assertTrue("the node did not deliver the answer", responses.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+
+      assertEquals(List.of(new OtpErlangString("error: The result is nested too deeply to show")), watch.myValues);
+      assertEquals(List.of("pause", "resume"), sessionCalls);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // {evaluate_response, {{...{[]}...}}} with depth one-element tuples
+  private static byte[] tooDeeplyNestedEvaluateResponse(int depth) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    bytes.write(OtpExternal.smallTupleTag);
+    bytes.write(2);
+    byte[] name = new OtpOutputStream(atom("evaluate_response")).toByteArray();
+    bytes.write(name, 0, name.length);
+    for (int i = 0; i < depth; i++) {
+      bytes.write(OtpExternal.smallTupleTag);
+      bytes.write(1);
+    }
+    bytes.write(OtpExternal.nilTag);
+    return bytes.toByteArray();
+  }
+
   @NotNull
   private ErlangXDebugProcess createProcessWithoutTarget(@NotNull ErlangDebuggerNode node) {
     return createProcessWithoutTarget(node, new CopyOnWriteArrayList<>());
@@ -342,7 +457,10 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
   }
 
   private static void send(Socket socket, OtpErlangObject message) throws Exception {
-    byte[] bytes = new OtpOutputStream(message).toByteArray();
+    sendBytes(socket, new OtpOutputStream(message).toByteArray());
+  }
+
+  private static void sendBytes(Socket socket, byte[] bytes) throws Exception {
     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
     out.writeInt(1 + bytes.length);
     out.write(OtpExternal.versionTag);
@@ -383,6 +501,14 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
+  // stands in for a watch whose rendering of a decoded value overflows the stack
+  private static class OverflowingCallback extends RecordingCallback {
+    @Override
+    public void evaluated(@NotNull XValue result) {
+      throw new StackOverflowError();
+    }
+  }
+
   private static class ResponseForwardingListener implements ErlangDebuggerEventListener {
     private final ErlangXDebugProcess[] myProcess;
     private final CountDownLatch myResponses;
@@ -396,6 +522,16 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     public void handleEvaluationResponse(OtpErlangObject response) {
       try {
         myProcess[0].handleEvaluationResponse(response);
+      }
+      finally {
+        myResponses.countDown();
+      }
+    }
+
+    @Override
+    public void evaluationFailed(String errorMessage) {
+      try {
+        myProcess[0].evaluationFailed(errorMessage);
       }
       finally {
         myResponses.countDown();
