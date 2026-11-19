@@ -31,6 +31,19 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testDuplicate()         { doTest(); }
+  public void testIfdefElseFunction() { doTest(); }
+  public void testIfdefNestedFunction() { doTest(); }
+  public void testIfdefRecursiveFunction() { doTest(); }
+  public void testIfdefBranchUse()    { doTest(); }
+  public void testIfElseFunction() {
+    myFixture.configureByFile(getTestName(false) + ".erl");
+    setUpInspections(myFixture);
+    for (var info : myFixture.doHighlighting()) {
+      String description = info.getDescription();
+      assertFalse(description, "Duplicate function 'f/0'".equals(description));
+      assertFalse(description, "Unused function 'f/0'".equals(description));
+    }
+  }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
