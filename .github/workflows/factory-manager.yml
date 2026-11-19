@@ -9,10 +9,11 @@ name: Factory manager
 #
 # Three jobs:
 #   plan    (MANAGER_DESK_TOKEN, GITHUB_TOKEN) runs "manager.py plan" on a fresh clone of the desk and the ledger of
-#           the branch manager-log. A live run pushes the ledger with the reservation of the model run to manager-log
-#           before the model runs, so a run that dies later still counts for the caps and the breaker. Then it
-#           pushes the "box", a commit of its own on the desk branch manager-box (force-pushed, one per run): the
-#           prompt, plan.json, the ledger after the plan, the plan's log and a random key of this run.
+#           the branch manager-log. When the plan has work, it pushes the "box", a commit of its own on the desk
+#           branch manager-box (force-pushed, one per run): the prompt, plan.json, the ledger after the plan, the
+#           plan's log and a random key of this run. Then a live run pushes the ledger with the reservation of the
+#           model run to manager-log before the model runs, so a run that dies later still counts for the caps and
+#           the breaker.
 #   think   (MANAGER_READ_TOKEN, COPILOT_GITHUB_TOKEN; environment factory-manager-think) fetches the desk at the
 #           commit the plan read and the prompt from the box, with a read-only token that only the fetch step holds,
 #           then removes the remote, makes the checkout read-only and runs GitHub Copilot CLI with only the Copilot
@@ -270,6 +271,7 @@ jobs:
           MODE: ${{ steps.mode.outputs.mode }}
           PLANNED: ${{ steps.plan.outcome }}
           RUN: ${{ steps.plan.outputs.run }}
+          WORK: ${{ steps.plan.outputs.work }}
           PARENT: ${{ steps.desk.outputs.parent }}
           RUN_ID: ${{ github.run_id }}
         run: |
@@ -294,6 +296,30 @@ jobs:
               || echo "::warning::The log of the plan could not be pushed to the branch manager-box."
             exit 0
           fi
+          if [ "$WORK" = "true" ]; then
+            # The box before the ledger: a box that cannot be pushed leaves no reservation and no read answers on
+            # manager-log. One more try after a short wait. The remote URL holds no token (the askpass script answers);
+            # only git's error lines are printed, with the token and any credentials of a URL cut out all the same.
+            openssl rand -hex 32 > "$box/key"
+            cp -R "$RUNNER_TEMP/ledger" "$box/ledger"
+            handed=$(git -C "$desk" commit-tree "$(tree_of "$box")" -m "Hand on manager run $RUN [skip ci]" -m "Run $RUN_ID, $MODE.")
+            push_box() {
+              git -C "$desk" push --quiet --force origin "$handed:refs/heads/manager-box" > "$RUNNER_TEMP/box-push.log" 2>&1
+            }
+            if ! push_box; then
+              echo "The box could not be pushed; one more try in 10 seconds."
+              sleep 10
+              if ! push_box; then
+                err=$(grep -E '^(fatal|error): |^ ! ' "$RUNNER_TEMP/box-push.log" | tail -n 3 | awk '{
+                  t = ENVIRON["DESK_TOKEN"]
+                  while (t != "" && (i = index($0, t)) > 0) $0 = substr($0, 1, i - 1) "***" substr($0, i + length(t))
+                  gsub("://[^/@ ]+@", "://***@"); print }') || err=""
+                echo "${err:-(git printed no error line)}"
+                echo "::error::The plan could not be pushed to the branch manager-box; the model does not run."
+                exit 1
+              fi
+            fi
+          fi
           ledger="$PARENT"
           if [ "$MODE" = "live" ]; then
             # The reservation of the model run, the owner's answers and the expired questions, before the model runs.
@@ -307,15 +333,12 @@ jobs:
               ledger="$commit"
             fi
           fi
-          openssl rand -hex 32 > "$box/key"
-          cp -R "$RUNNER_TEMP/ledger" "$box/ledger"
-          commit=$(git -C "$desk" commit-tree "$(tree_of "$box")" -m "Hand on manager run $RUN [skip ci]" -m "Run $RUN_ID, $MODE.")
-          if ! git -C "$desk" push --quiet --force origin "$commit:refs/heads/manager-box" > /dev/null 2>&1; then
-            echo "::error::The plan could not be pushed to the branch manager-box; the model does not run."
-            exit 1
+          if [ "$WORK" != "true" ]; then
+            echo "Plan $RUN has no work; no box."
+            exit 0
           fi
-          echo "Plan $RUN handed on: box $commit, ledger $ledger."
-          echo "box=$commit" >> "$GITHUB_OUTPUT"
+          echo "Plan $RUN handed on: box $handed, ledger $ledger."
+          echo "box=$handed" >> "$GITHUB_OUTPUT"
           echo "ledger=$ledger" >> "$GITHUB_OUTPUT"
 
   think:

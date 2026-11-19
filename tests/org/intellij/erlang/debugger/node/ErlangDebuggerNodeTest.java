@@ -44,6 +44,10 @@ import java.util.concurrent.TimeoutException;
 
 public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final int TIMEOUT_SECONDS = 10;
+  // #1362: a nesting depth that overflows the stack of any thread that decodes it. Nothing sets the stack size of the
+  // debugger server thread, and 20000 levels did not always overflow the default one; on a 64 MB stack, decoding
+  // overflowed at about 840000 levels of {1, ...}, and a default stack of 1 MB at about 6000.
+  public static final int TOO_DEEP_TO_DECODE = 4_000_000;
 
   // The stack as remote_debugger_notifier sends it: int:meta(Meta, backtrace, all) gives integer call levels,
   // top frame first (observed with OTP 27: [{3,{t,f,[1]}},{2,{t,main,[]}}]).
@@ -343,7 +347,7 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
       peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
       OtpErlangAtom placeholder = atom("deep_term_placeholder");
       byte[] message = new OtpOutputStream(tuple(atom("evaluate_response"), placeholder)).toByteArray();
-      sendBytes(peer, replace(message, new OtpOutputStream(placeholder).toByteArray(), nestedTuples(20000)));
+      sendBytes(peer, replace(message, new OtpOutputStream(placeholder).toByteArray(), nestedTuples(TOO_DEEP_TO_DECODE)));
 
       assertEquals("The result is nested too deeply to show", evaluationErrorFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
       assertFalse("the debugger session was stopped", stoppedFuture.isDone());
@@ -351,6 +355,28 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     finally {
       node.stop();
     }
+  }
+
+  // #1362: testTooDeeplyNestedEvaluateResponseFailsTheEvaluation (and ErlangXDebugProcessTest's
+  // testTooDeeplyNestedAnswerFailsOnlyItsOwnEvaluation) assume that TOO_DEEP_TO_DECODE nested tuples overflow the stack
+  // of the thread that decodes them. Nothing sets that stack size, so the assumption must hold for a larger stack too.
+  public void testTooDeeplyNestedTuplesOverflowDecodingOnALargerStack() throws Exception {
+    byte[] message = new OtpOutputStream(tuple(atom("evaluate_response"), atom("deep_term_placeholder"))).toByteArray();
+    byte[] bytes = replace(message, new OtpOutputStream(atom("deep_term_placeholder")).toByteArray(),
+                           nestedTuples(TOO_DEEP_TO_DECODE));
+    CompletableFuture<Throwable> outcome = new CompletableFuture<>();
+    Thread thread = new Thread(null, () -> {
+      try {
+        new OtpInputStream(bytes).read_any();
+        outcome.complete(null);
+      }
+      catch (Throwable t) {
+        outcome.complete(t);
+      }
+    }, "decoder with a 64 MB stack", 64L * 1024 * 1024);
+    thread.start();
+    Throwable thrown = outcome.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    assertTrue(TOO_DEEP_TO_DECODE + " nested tuples decoded without a StackOverflowError: " + thrown, thrown instanceof StackOverflowError);
   }
 
   // With debug logging on (as under the test framework), a decoded term too deep for toString() in the

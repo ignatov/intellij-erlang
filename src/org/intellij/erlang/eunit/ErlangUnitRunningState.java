@@ -38,6 +38,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -195,9 +196,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return result;
   }
 
-  private static String createReporterModuleDirectory() throws IOException {
+  private String createReporterModuleDirectory() throws IOException {
     File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
-    ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
+    ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(getModule()));
     return PathUtil.toSystemIndependentName(tempDirectory.getPath());
   }
 }

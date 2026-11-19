@@ -147,7 +147,8 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
   methods = [getName setName getNameIdentifier getTextOffset]
   stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
-macros_body ::= (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<consumeMacroBody>>
+macros_body ::= (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
+private macros_typed_body ::= typed_exprs &properly_parsed
 private properly_parsed ::= ')''.' | <<isInCompletion>> | <<eof>>
 
 include ::= '-' 'include' '(' include_string ')' {
@@ -502,10 +503,11 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
-  pin=3
+binary_comprehension ::= '<<' <<isBinaryComprehension>> <<comprehension_element bin_comprehension_template>> '||' lc_exprs '>>' {
+  pin=4
   elementType=list_comprehension
 }
+private bin_comprehension_template ::= &(macros '(') generic_function_call_expression | bin_expression {name="expression"}
 
 tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
