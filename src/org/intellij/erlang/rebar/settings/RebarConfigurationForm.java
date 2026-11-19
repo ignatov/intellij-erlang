@@ -48,6 +48,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class RebarConfigurationForm {
+  // As long as the check of the Erlang SDK version: a cold start of rebar on a busy Windows machine can take more than 3 seconds.
+  private static final int VERSION_CHECK_TIMEOUT = 10 * 1000;
+
   private JPanel myPanel;
   private TextFieldWithBrowseButton myRebarPathSelector;
   private JTextField myRebarVersionText;
@@ -118,7 +121,7 @@ public class RebarConfigurationForm {
 
         // The check runs in the temp directory, so a path relative to the IDE's directory must be made absolute.
         String absoluteRebarPath = rebarFile.getAbsolutePath();
-        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(3000, absoluteRebarPath, "--version");
+        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(VERSION_CHECK_TIMEOUT, absoluteRebarPath, "--version");
         String version = rebar.getStdOut();
 
         if (version.startsWith("rebar")) {
@@ -127,7 +130,8 @@ public class RebarConfigurationForm {
         }
 
         String escriptPath = RebarRunningStateUtil.findEscriptExecutable(project);
-        ExtProcessUtil.ExtProcessOutput escript = ExtProcessUtil.execAndGetFirstLine(3000, escriptPath, absoluteRebarPath, "--version");
+        ExtProcessUtil.ExtProcessOutput escript =
+          ExtProcessUtil.execAndGetFirstLine(VERSION_CHECK_TIMEOUT, escriptPath, absoluteRebarPath, "--version");
         String versionWithEscript = escript.getStdOut();
 
         if (versionWithEscript.startsWith("rebar")) {

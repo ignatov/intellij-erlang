@@ -58,6 +58,30 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     }
   }
 
+  // A rebar that needs more than 3 seconds to print its version, as a cold start on a busy Windows machine can,
+  // must still be recognized.
+  public void testVersionOfSlowRebar() throws IOException {
+    File directory = FileUtil.createTempDirectory("slowRebar", null, true);
+    try {
+      File rebar = new File(directory, SystemInfo.isWindows ? "rebar.cmd" : "rebar");
+      Files.writeString(rebar.toPath(), SystemInfo.isWindows ? "@ping -n 5 127.0.0.1 >nul\r\n@echo rebar 9.9.9\r\n"
+                                                            : "#!/bin/sh\nsleep 4\necho rebar 9.9.9\n", StandardCharsets.UTF_8);
+      assertTrue(rebar.setExecutable(true));
+
+      AtomicReference<String> version = new AtomicReference<>();
+      RebarConfigurationForm.validateRebarPath(rebar.getPath(), null, version::set);
+      long deadline = System.currentTimeMillis() + 30000;
+      while (version.get() == null && System.currentTimeMillis() < deadline) {
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+        PlatformTestUtil.waitForAlarm(10);
+      }
+      assertEquals("rebar 9.9.9", version.get());
+    }
+    finally {
+      FileUtil.delete(directory);
+    }
+  }
+
   // #1325: when neither probe of the new path prints anything, the version of the previous path must not stay,
   // or the new path counts as a valid rebar. The new path is typed as one character after the old one, so the
   // document gets one insert and no other path is checked in between.
