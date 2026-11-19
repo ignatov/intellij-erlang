@@ -30,4 +30,7 @@ public class ErlangAppParserTest extends ErlangParserTestBase {
   public void testVsnGit()                { doTest(false); }
   public void testVsnCmd()                { doTest(false); }
   public void testRuntimeDependencies()   { doTest(false); }
+  public void testRuntimeDependenciesAdjacentStrings() { doTest(false); }
+  public void testRuntimeDependenciesAtomFirst()       { doTest(false); }
+  public void testRuntimeDependenciesAtomLast()        { doTest(false); }
 }
