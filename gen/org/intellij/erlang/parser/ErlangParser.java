@@ -241,7 +241,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
   //   | config_exprs)
   //   '}'
   public static boolean app_parameter(PsiBuilder b, int l) {
@@ -269,7 +269,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
   //   | config_exprs
   private static boolean app_parameter_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1")) return false;
@@ -578,7 +578,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
+  // <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
   private static boolean app_parameter_1_12(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_12")) return false;
     boolean r, p;
@@ -586,7 +586,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = app_atom_named(b, l + 1, ErlangParser::app_parameter_1_12_0_0);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && app_runtime_deps(b, l + 1) && r;
+    r = p && list_of(b, l + 1, ErlangParser::string_literal) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -599,28 +599,6 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = consumeToken(b, "runtime_dependencies");
     exit_section_(b, m, null, r);
     return r;
-  }
-
-  /* ********************************************************** */
-  // '[' string_literal? ']'
-  public static boolean app_runtime_deps(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_runtime_deps")) return false;
-    if (!nextTokenIs(b, ERL_BRACKET_LEFT)) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, ERL_LIST_EXPRESSION, null);
-    r = consumeToken(b, ERL_BRACKET_LEFT);
-    p = r; // pin = 1
-    r = r && report_error_(b, app_runtime_deps_1(b, l + 1));
-    r = p && consumeToken(b, ERL_BRACKET_RIGHT) && r;
-    exit_section_(b, l, m, r, p, null);
-    return r || p;
-  }
-
-  // string_literal?
-  private static boolean app_runtime_deps_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "app_runtime_deps_1")) return false;
-    string_literal(b, l + 1);
-    return true;
   }
 
   /* ********************************************************** */
