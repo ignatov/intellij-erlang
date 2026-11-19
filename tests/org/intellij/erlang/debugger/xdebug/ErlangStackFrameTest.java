@@ -43,19 +43,28 @@ public class ErlangStackFrameTest extends ErlangLightPlatformCodeInsightFixtureT
   // #1347: the 2026.x debugger computes the frame title on a background coroutine thread, outside a read action.
   public void testPresentationComputedOutsideReadAction() throws Exception {
     myFixture.configureByFile("dbg_smoke.erl");
+    assertEquals("dbg_smoke:inner", presentationOnPooledThread("dbg_smoke", "inner", new OtpErlangList(new OtpErlangLong(20))));
+  }
+
+  public void testFunExpressionPresentationComputedOutsideReadAction() throws Exception {
+    myFixture.configureByFile("dbg_fun.erl");
+    assertEquals("dbg_fun:run: fun at line 5", presentationOnPooledThread("dbg_fun", "-run/0-fun-0-", new OtpErlangList(new OtpErlangLong(1))));
+  }
+
+  @NotNull
+  private String presentationOnPooledThread(@NotNull String module, @NotNull String function, @NotNull OtpErlangList args) throws Exception {
     ErlangDebuggerNode node = new ErlangDebuggerNode(proxy(ErlangDebuggerEventListener.class));
     try {
       ErlangXDebugProcess process = new ErlangXDebugProcess(proxy(XDebugSession.class), node,
                                                             new ErlangDebugLocationResolver(getProject(), null, false));
-      ErlangTraceElement trace = new ErlangTraceElement(new OtpErlangLong(1), "dbg_smoke", "inner",
-                                                        new OtpErlangList(new OtpErlangLong(20)), Collections.emptyList());
+      ErlangTraceElement trace = new ErlangTraceElement(new OtpErlangLong(1), module, function, args, Collections.emptyList());
       ErlangStackFrame frame = new ErlangStackFrame(process, trace);
       assertNotNull(frame.getSourcePosition());
 
       StringBuilder title = new StringBuilder();
       Future<?> future = ApplicationManager.getApplication().executeOnPooledThread(() -> frame.customizePresentation(new TextContainer(title)));
       future.get(10, TimeUnit.SECONDS);
-      assertEquals("dbg_smoke:inner", title.toString());
+      return title.toString();
     }
     finally {
       node.stop();

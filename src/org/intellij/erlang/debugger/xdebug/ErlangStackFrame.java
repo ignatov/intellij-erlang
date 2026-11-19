@@ -18,6 +18,7 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
@@ -77,23 +78,29 @@ public class ErlangStackFrame extends XStackFrame {
 
   @Override
   public void customizePresentation(@NotNull ColoredTextContainer component) {
-    String functionName = mySourcePosition != null ? mySourcePosition.getFunctionName() : null;
-    if (functionName != null) {
-      ErlangFile module = myDebugProcess.getLocationResolver().findPsi(mySourcePosition.getSourcePosition().getFile());
-      ErlangFunction function = module != null ? module.getFunction(functionName, mySourcePosition.getFunctionArity()) : null;
-      if (function != null) {
-        String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);
-        ErlangFunExpression funExpression = ErlangPsiImplUtil.findFunExpression(function, mySourcePosition.getFunExpressionArity());
-        if (funExpression != null) {
-          int line = 1 + StringUtil.offsetToLineNumber(funExpression.getContainingFile().getText(), funExpression.getTextOffset());
-          title += ": " + mySourcePosition.getFunExpressionName() + " at line " + line;
-        }
-        component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
-        component.setIcon(AllIcons.Debugger.Frame);
-        return;
-      }
+    String title = ReadAction.compute(this::computeTitle);
+    if (title != null) {
+      component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
+      component.setIcon(AllIcons.Debugger.Frame);
+      return;
     }
     super.customizePresentation(component);
+  }
+
+  @Nullable
+  private String computeTitle() {
+    String functionName = mySourcePosition != null ? mySourcePosition.getFunctionName() : null;
+    if (functionName == null) return null;
+    ErlangFile module = myDebugProcess.getLocationResolver().findPsi(mySourcePosition.getSourcePosition().getFile());
+    ErlangFunction function = module != null ? module.getFunction(functionName, mySourcePosition.getFunctionArity()) : null;
+    if (function == null) return null;
+    String title = ErlangPsiImplUtil.getQualifiedFunctionName(function);
+    ErlangFunExpression funExpression = ErlangPsiImplUtil.findFunExpression(function, mySourcePosition.getFunExpressionArity());
+    if (funExpression != null) {
+      int line = 1 + StringUtil.offsetToLineNumber(funExpression.getContainingFile().getText(), funExpression.getTextOffset());
+      title += ": " + mySourcePosition.getFunExpressionName() + " at line " + line;
+    }
+    return title;
   }
 
   @Override
