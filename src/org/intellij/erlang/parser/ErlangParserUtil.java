@@ -21,7 +21,9 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiParser;
 import com.intellij.lang.SyntaxTreeBuilder;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -38,6 +40,7 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -116,7 +119,10 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   public static PsiBuilder adapt_builder_(IElementType root, PsiBuilder builder, PsiParser parser, TokenSet[] tokenSets) {
     ErrorState state = new ErrorState();
     ErrorState.initState(state, builder, root, ArrayUtil.mergeArrays(tokenSets, ErlangParser.EXTENDS_SETS_));
-    PsiBuilder result = new MyBuilder(builder, state, parser, builder.getUserData(FAST_PARSE_KEY));
+    FastParse fastParse = builder.getUserData(FAST_PARSE_KEY);
+    BiConsumer<PsiFile, Boolean> listener = ourParseListener;
+    if (listener != null) listener.accept(builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY), fastParse != null);
+    PsiBuilder result = new MyBuilder(builder, state, parser, fastParse);
     ErrorState errorState = ErrorState.get(result);
     errorState.altMode = true;
     errorState.braces = ErlangBraceMatcher.PAIRS;
@@ -135,6 +141,18 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
   }
 
   private static final Key<FastParse> FAST_PARSE_KEY = Key.create("Erlang.FAST_PARSE");
+
+  private static volatile @Nullable BiConsumer<PsiFile, Boolean> ourParseListener;
+
+  /**
+   * Calls {@code listener} each time the generated parser starts, with the file being parsed and whether the parse
+   * runs in the fast mode, until {@code parentDisposable} is disposed.
+   */
+  @TestOnly
+  public static void setParseListener(@NotNull BiConsumer<PsiFile, Boolean> listener, @NotNull Disposable parentDisposable) {
+    ourParseListener = listener;
+    Disposer.register(parentDisposable, () -> ourParseListener = null);
+  }
 
   public static void parseLight(IElementType root, PsiBuilder builder, BiConsumer<IElementType, PsiBuilder> parser) {
     PsiFile file = builder.getUserData(FileContextUtil.CONTAINING_FILE_KEY);
