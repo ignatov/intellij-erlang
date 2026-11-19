@@ -80,6 +80,22 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
     assertEquals("m:'my-func'().", parameters.get(eval + 1));
   }
 
+  public void testEntryPointWithSpaceInFunctionName() throws Exception {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['hello world'/0]).
+      'hello w<caret>orld'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+    configuration.checkConfiguration();
+
+    ErlangRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
+    List<String> parameters = state.getCommand().getParametersList().getList();
+    int eval = parameters.indexOf("-eval");
+    assertTrue(parameters.toString(), eval >= 0 && eval + 1 < parameters.size());
+    assertEquals("m:'hello world'().", parameters.get(eval + 1));
+  }
+
   private ErlangApplicationConfiguration createConfigurationAtCaret() {
     PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
     assertNotNull(element);

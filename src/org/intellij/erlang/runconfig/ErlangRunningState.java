@@ -40,6 +40,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -152,8 +153,13 @@ public abstract class ErlangRunningState extends CommandLineState {
   private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
     commandLine.addParameters("-eval",
-      entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
+      toAtom(entryPoint.getModuleName()) + ":" + toAtom(entryPoint.getFunctionName()) +
         "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ").");
+  }
+
+  @NotNull
+  public static String toAtom(@NotNull String name) {
+    return ObjectUtils.notNull(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
   public final void setErlangFlags(GeneralCommandLine commandLine) {
@@ -197,14 +203,43 @@ public abstract class ErlangRunningState extends CommandLineState {
 
     @Nullable
     public static ErlangEntryPoint fromModuleAndFunction(@NotNull String moduleAndFunction, @NotNull String params) {
-      List<String> split = StringUtil.split(moduleAndFunction, " ");
-      if (split.size() != 2) return null;
+      List<String> split = splitAtoms(moduleAndFunction);
+      if (split == null || split.size() != 2) return null;
       String module = split.get(0);
       String function = split.get(1);
 
       List<String> args = parseArguments(params);
       
       return new ErlangEntryPoint(module, function, args);
+    }
+
+    // the names are atoms, plain or in quotes; a quoted one may contain spaces and is returned without the quotes
+    @Nullable
+    private static List<String> splitAtoms(@NotNull String moduleAndFunction) {
+      List<String> atoms = new SmartList<>();
+      int length = moduleAndFunction.length();
+      int i = 0;
+      while (i < length) {
+        char c = moduleAndFunction.charAt(i);
+        if (Character.isWhitespace(c)) {
+          i++;
+        }
+        else if (c == '\'') {
+          int start = ++i;
+          while (i < length && moduleAndFunction.charAt(i) != '\'') {
+            i += moduleAndFunction.charAt(i) == '\\' ? 2 : 1;
+          }
+          if (i >= length) return null;
+          atoms.add(moduleAndFunction.substring(start, i++));
+          if (i < length && !Character.isWhitespace(moduleAndFunction.charAt(i))) return null;
+        }
+        else {
+          int start = i;
+          while (i < length && !Character.isWhitespace(moduleAndFunction.charAt(i))) i++;
+          atoms.add(moduleAndFunction.substring(start, i));
+        }
+      }
+      return atoms;
     }
 
     @NotNull

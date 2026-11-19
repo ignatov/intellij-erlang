@@ -29,6 +29,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
+import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangApplicationConfiguration> {
@@ -81,6 +82,6 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
 
   @NotNull
   private static String moduleNameAndFunction(@NotNull String moduleName, @NotNull String functionName) {
-    return moduleName + " " + functionName;
+    return ErlangRunningState.toAtom(moduleName) + " " + ErlangRunningState.toAtom(functionName);
   }
 }
