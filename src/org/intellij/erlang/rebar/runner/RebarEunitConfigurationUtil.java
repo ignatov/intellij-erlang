@@ -100,13 +100,27 @@ class RebarEunitConfigurationUtil {
       ContainerUtil.addIfNotNull(modules, getModuleName(suite));
     }
     if (modules.isEmpty() && failIfNoSuitesSpecified) return "";
-    Set<String> tests = new LinkedHashSet<>();
+    List<String> tests = new ArrayList<>();
     for (ErlangFunction function : functions) {
       String module = getModuleName(function.getContainingFile());
       if (module != null) tests.add(module + ":" + function.getName());
     }
-    if (!tests.isEmpty()) return "eunit --test=" + StringUtil.join(tests, ",");
+    if (!tests.isEmpty()) return "eunit " + StringUtil.join(getRebar3TestOptions(tests), " ");
     return modules.isEmpty() ? "eunit" : "eunit --module=" + StringUtil.join(modules, ",");
+  }
+
+  // --test=M:F runs M:F() as one test, so a generator (a name ending in _test_) is passed with --generator=M:F.
+  @NotNull
+  private static List<String> getRebar3TestOptions(@NotNull Collection<String> tests) {
+    Set<String> simpleTests = new LinkedHashSet<>();
+    Set<String> generators = new LinkedHashSet<>();
+    for (String test : tests) {
+      (test.endsWith("_test_") ? generators : simpleTests).add(test);
+    }
+    List<String> options = new ArrayList<>();
+    if (!simpleTests.isEmpty()) options.add("--test=" + StringUtil.join(simpleTests, ","));
+    if (!generators.isEmpty()) options.add("--generator=" + StringUtil.join(generators, ","));
+    return options;
   }
 
   @Nullable
@@ -133,7 +147,7 @@ class RebarEunitConfigurationUtil {
       if (argument.startsWith(SUITES)) {
         List<String> testNames = tests != null ? StringUtil.split(tests, ",") : List.of();
         if (modules.size() == 1 && !testNames.isEmpty()) {
-          result.add("--test=" + StringUtil.join(testNames, name -> modules.getFirst() + ":" + name, ","));
+          result.addAll(getRebar3TestOptions(ContainerUtil.map(testNames, name -> modules.getFirst() + ":" + name)));
         }
         else if (!modules.isEmpty()) {
           result.add("--module=" + suites);
