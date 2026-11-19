@@ -78,7 +78,7 @@ public class ErlangStackFrame extends XStackFrame {
 
   @Override
   public void customizePresentation(@NotNull ColoredTextContainer component) {
-    String title = ReadAction.compute(this::computeTitle);
+    String title = ReadAction.computeBlocking(this::computeTitle);
     if (title != null) {
       component.append(title, SimpleTextAttributes.REGULAR_ATTRIBUTES);
       component.setIcon(AllIcons.Debugger.Frame);
