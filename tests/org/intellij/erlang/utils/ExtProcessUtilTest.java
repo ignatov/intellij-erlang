@@ -18,7 +18,11 @@ package org.intellij.erlang.utils;
 
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.junit.Assume;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,14 +32,63 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@RunWith(JUnit38AssumeSupportRunner.class)
 public class ExtProcessUtilTest extends BasePlatformTestCase {
   // The rebar version check runs through execAndGetFirstLine; a rebar3 that loses its stdout
   // writes rebar3.crashdump into its working directory, so that must not be the IDE's one.
-  public void testCommandRunsInTempDirectory() throws IOException {
+  // It is a fresh directory in the temp directory, which is not deleted while the command runs and is removed after it.
+  public void testCommandRunsInPrivateTempDirectory() throws IOException {
     String[] printWorkingDirectory = SystemInfo.isWindows ? new String[]{"cmd", "/c", "cd"} : new String[]{"pwd"};
     String workingDirectory = ExtProcessUtil.execAndGetFirstLine(10000, printWorkingDirectory).getStdOut();
     assertFalse("no output from " + String.join(" ", printWorkingDirectory), workingDirectory.isEmpty());
-    assertEquals(new File(FileUtil.getTempDirectory()).getCanonicalPath(), new File(workingDirectory).getCanonicalPath());
+    File directory = new File(workingDirectory).getCanonicalFile();
+    assertEquals(new File(System.getProperty("java.io.tmpdir")).getCanonicalPath(), directory.getParent());
+    assertFalse(directory.getPath(), directory.exists());
+  }
+
+  // A command that does not stop on SIGTERM, here a shell that ignores it and its child, which inherits that, must not
+  // outlive the timeout: rebar3 whose BEAM hangs in getcwd() in a deleted working directory ignores SIGTERM as well.
+  public void testTimeoutKillsCommandAndChildThatIgnoreSigterm() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("ignoresTerm", null, true);
+    File pidFile = new File(directory, "pid");
+    File childPidFile = new File(directory, "child");
+    File command = new File(directory, "ignores-term.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho $! > '" + childPidFile.getPath() + "'\n" +
+                                        "echo $$ > '" + pidFile.getPath() + "'\nwait\nsleep 60\n", StandardCharsets.UTF_8);
+    assertTrue(command.setExecutable(true));
+
+    ExtProcessUtil.execAndGetFirstLine(2000, command.getPath());
+
+    boolean commandAlive = killIfAlive(pidFile);
+    boolean childAlive = killIfAlive(childPidFile);
+    assertFalse("the command is still running after execAndGetFirstLine returned", commandAlive);
+    assertFalse("the child of the command is still running after execAndGetFirstLine returned", childAlive);
+  }
+
+  // The output is read while the command runs: a command that writes more than a pipe buffer is not blocked until the timeout.
+  public void testCommandWithLongOutputDoesNotHang() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("longOutput", null, true);
+    File command = new File(directory, "long-output.sh");
+    Files.writeString(command.toPath(), "#!/bin/sh\necho first\nyes 0123456789012345678901234567890123456789 | head -n 5000\n" +
+                                        "yes error | head -n 20000 >&2\n", StandardCharsets.UTF_8);
+    assertTrue(command.setExecutable(true));
+
+    long start = System.nanoTime();
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(10000, command.getPath());
+
+    assertEquals("first", output.getStdOut());
+    assertEquals("error", output.getStdErr());
+    assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < 10000);
+  }
+
+  private static boolean killIfAlive(@NotNull File pidFile) throws IOException {
+    assertTrue(pidFile.getName() + " was not written", pidFile.exists());
+    Optional<ProcessHandle> process = ProcessHandle.of(Long.parseLong(Files.readString(pidFile.toPath()).trim()));
+    if (process.isEmpty() || !process.get().isAlive()) return false;
+    process.get().destroyForcibly();
+    return true;
   }
 
   // A rebar behind a wrapper script runs as a child of the wrapper; the timeout must stop that child too.
