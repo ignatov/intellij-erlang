@@ -52,8 +52,29 @@ public class ErlangGotoSymbolTest extends BasePlatformTestCase {
     assertSameElements(gotoSymbol("module2:rec"), "module2.erl:rec");
   }
 
+  public void testExactModuleQualifier() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("module1:test"), "module1.erl:test/0");
+    assertSameElements(gotoSymbol("module1:te"), "module1.erl:test/0");
+  }
+
+  public void testExactModuleQualifierOfLongerName() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("my_module1:test"), "my_module1.erl:test/0");
+  }
+
+  public void testInexactModuleQualifier() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("odule1:test"), "module1.erl:test/0", "module10.erl:test/0", "my_module1.erl:test/0");
+  }
+
   public void testUnknownModule() {
     assertEmpty(gotoSymbol("module3:test"));
+  }
+
+  private void addModulesNamedLikeModule1() {
+    myFixture.addFileToProject("module10.erl", "-module(module10).\ntest() -> ok.\n");
+    myFixture.addFileToProject("my_module1.erl", "-module(my_module1).\ntest() -> ok.\n");
   }
 
   private List<String> gotoSymbol(String pattern) {
