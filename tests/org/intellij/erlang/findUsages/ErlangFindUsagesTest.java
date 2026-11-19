@@ -34,6 +34,10 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapKeyInFunHeadBody()               { doTest(2); }
   public void testMapKeyInFunHeadGuard()              { doTest(2); }
   public void testMapKeyInNestedFunHeads()            { doTest(2); }
+  public void testTypedMacroRecordFieldUsages()       { doTest(1); }
+  public void testTypedMacroRecordFieldUsagesFromUsage() { doTest(2); }
+  public void testMacroNamedTypedRecordField()         { doTest(2); }
+  public void testMacroNamedTypedRecordFieldInTypedBody() { doTest(2); }
   public void testCaseHeadVariable()                  { doTest(3); }
   public void testCaseHeadRematch()                   { doTest(2); }
   public void testCaseHeadRematchArgument()           { doTest(3); }
