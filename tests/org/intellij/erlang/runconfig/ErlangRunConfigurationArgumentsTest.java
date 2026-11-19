@@ -17,10 +17,20 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.Location;
+import com.intellij.execution.PsiLocation;
+import com.intellij.execution.actions.ConfigurationContext;
+import com.intellij.execution.actions.ConfigurationFromContext;
+import com.intellij.execution.actions.RunConfigurationProducer;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiElement;
+import com.intellij.testFramework.MapDataContext;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
+import org.intellij.erlang.application.ErlangApplicationRunConfigurationProducer;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
 import org.intellij.erlang.application.ErlangApplicationRunningState;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -52,6 +62,38 @@ public class ErlangRunConfigurationArgumentsTest extends ErlangLightPlatformCode
 
   public void testApplicationErlFlagsAreSplitOnSpaces() throws ExecutionException {
     assertErlFlags("+P 1000  -sname node", "+P", "1000", "-sname", "node");
+  }
+
+  // #1334: a function whose name needs quotes must be called by its quoted atom in -eval.
+  public void testEntryPointWithQuotedFunctionName() throws ExecutionException {
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export(['my-func'/0]).
+      'my-f<caret>unc'() -> ok.
+      """);
+    ErlangApplicationConfiguration configuration = createConfigurationAtCaret();
+
+    ErlangRunningState state = new ErlangApplicationRunningState(null, getModule(), configuration);
+    List<String> parameters = state.getCommand().getParametersList().getList();
+    int eval = parameters.indexOf("-eval");
+    assertTrue(parameters.toString(), eval >= 0 && eval + 1 < parameters.size());
+    assertEquals("m:'my-func'().", parameters.get(eval + 1));
+  }
+
+  private ErlangApplicationConfiguration createConfigurationAtCaret() {
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    assertNotNull(element);
+    MapDataContext dataContext = new MapDataContext();
+    dataContext.put(CommonDataKeys.PROJECT, getProject());
+    dataContext.put(PlatformCoreDataKeys.MODULE, getModule());
+    dataContext.put(CommonDataKeys.PSI_ELEMENT, element);
+    dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(element));
+    ConfigurationContext context = ConfigurationContext.getFromContext(dataContext, null);
+    ConfigurationFromContext fromContext =
+      RunConfigurationProducer.getInstance(ErlangApplicationRunConfigurationProducer.class).createConfigurationFromContext(context);
+    assertNotNull(fromContext);
+    assertInstanceOf(fromContext.getConfiguration(), ErlangApplicationConfiguration.class);
+    return (ErlangApplicationConfiguration) fromContext.getConfiguration();
   }
 
   private void assertErlFlags(String erlFlags, String... expected) throws ExecutionException {
