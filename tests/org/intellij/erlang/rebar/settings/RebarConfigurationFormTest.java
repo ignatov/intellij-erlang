@@ -82,6 +82,43 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     }
   }
 
+  // #1349: rebar3 looks up every module it loads in its working directory first ("." is on its code path), and on
+  // macOS it starts in seconds instead of 0.3 s when that directory has very many entries. The fake rebar below is
+  // slow in the same case. Its version must be recognized whatever the shared system temp directory contains.
+  public void testVersionOfRebarWhenTempDirectoryIsLarge() throws IOException {
+    if (SystemInfo.isWindows) return;
+    File tempDirectory = new File(FileUtil.getTempDirectory());
+    String[] entries = tempDirectory.list();
+    assertNotNull(entries);
+    int threshold = entries.length + 500;
+    File directory = FileUtil.createTempDirectory("largeTempRebar", null, true);
+    File crowd = new File(tempDirectory, "largeTempCrowd" + System.nanoTime());
+    try {
+      File rebar = new File(directory, "rebar");
+      Files.writeString(rebar.toPath(), "#!/bin/sh\nif [ \"$(ls -A | wc -l)\" -gt " + threshold + " ]; then sleep 60; fi\n" +
+                                        "echo rebar 9.9.9\n", StandardCharsets.UTF_8);
+      assertTrue(rebar.setExecutable(true));
+      for (int i = 0; i < 1000; i++) {
+        assertTrue(new File(crowd.getPath() + "-" + i).createNewFile());
+      }
+
+      AtomicReference<String> version = new AtomicReference<>();
+      RebarConfigurationForm.validateRebarPath(rebar.getPath(), null, version::set);
+      long deadline = System.currentTimeMillis() + 30000;
+      while (version.get() == null && System.currentTimeMillis() < deadline) {
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+        PlatformTestUtil.waitForAlarm(10);
+      }
+      assertEquals("rebar 9.9.9", version.get());
+    }
+    finally {
+      for (int i = 0; i < 1000; i++) {
+        FileUtil.delete(new File(crowd.getPath() + "-" + i));
+      }
+      FileUtil.delete(directory);
+    }
+  }
+
   // #1325: when neither probe of the new path prints anything, the version of the previous path must not stay,
   // or the new path counts as a valid rebar. The new path is typed as one character after the old one, so the
   // document gets one insert and no other path is checked in between.
