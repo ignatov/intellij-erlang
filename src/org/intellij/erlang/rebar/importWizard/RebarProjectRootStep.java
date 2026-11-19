@@ -25,6 +25,7 @@ import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.process.ProcessTerminatedListener;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -71,7 +72,7 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
     myGetDepsCheckbox.setVisible(ourEnabled);
     BackgroundTaskUtil.executeOnPooledThread(myProjectRootComponent, () -> {
       var path = RebarRunningStateUtil.getRebarPath(projectFileDirectory);
-      ApplicationManager.getApplication().invokeLater(() -> myRebarConfigurationForm.setPath(path));
+      ApplicationManager.getApplication().invokeLater(() -> myRebarConfigurationForm.setPath(path), ModalityState.any());
     });
   }
 
