@@ -51,6 +51,9 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }
+  public void testTypedMacroRecordField() { doTest("uid"); }
+  public void testTypedMacroRecordFieldFromUsage() { doTest("uid"); }
+  public void testMacroNamedTypedRecordFieldFromUsage() { doTest("uid"); }
   public void testCaseHeadVariable()  { doTest("Renamed"); }
   public void testCaseHeadRematch()            { doTest("New"); }
   public void testCaseHeadRematchArgument()    { doTest("New"); }
