@@ -36,11 +36,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
+// The scripts run as `/bin/sh <script>`: macOS can take seconds to start a freshly written executable on a loaded machine.
 @RunWith(JUnit38AssumeSupportRunner.class)
 public class ExtProcessUtilTest extends BasePlatformTestCase {
   // The rebar version check runs through execAndGetFirstLine; a rebar3 that loses its stdout
   // writes rebar3.crashdump into its working directory, so that must not be the IDE's one.
-  // It is a fresh directory in the temp directory, which is not deleted while the command runs and is removed after it.
+  // It is a private directory instead of the shared temp directory, because `rebar3 --version` evaluates rebar.config.script
+  // from its working directory. The directory is new for each call and is removed after it.
   public void testCommandRunsInPrivateTempDirectory() throws IOException {
     String[] printWorkingDirectory = SystemInfo.isWindows ? new String[]{"cmd", "/c", "cd"} : new String[]{"pwd"};
     String workingDirectory = ExtProcessUtil.execAndGetFirstLine(10000, printWorkingDirectory).getStdOut();
@@ -54,6 +56,30 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     assertFalse(directory.getPath(), directory.equals(new File(nextWorkingDirectory).getCanonicalFile()));
   }
 
+  // The directory is created with owner-only permissions, so another local user cannot put a rebar.config.script into it.
+  public void testPrivateTempDirectoryIsOwnerOnly() {
+    Assume.assumeFalse("POSIX permissions", SystemInfo.isWindows);
+    String permissions = ExtProcessUtil.execAndGetFirstLine(10000, "/bin/sh", "-c", "ls -ld \"$PWD\" | cut -c1-10").getStdOut();
+    assertEquals("drwx------", permissions);
+  }
+
+  // A directory that already exists under a predictable name, which another user could have made, is never used.
+  public void testExistingDirectoryWithPredictableNameIsNotUsed() throws IOException {
+    String[] printWorkingDirectory = SystemInfo.isWindows ? new String[]{"cmd", "/c", "cd"} : new String[]{"pwd"};
+    File existing = new File(System.getProperty("java.io.tmpdir"), "erlang-ext-process");
+    boolean created = existing.mkdir();
+    try {
+      Files.writeString(new File(existing, "rebar.config.script").toPath(), "marker.\n", StandardCharsets.UTF_8);
+      String workingDirectory = ExtProcessUtil.execAndGetFirstLine(10000, printWorkingDirectory).getStdOut();
+      assertFalse(workingDirectory.isEmpty());
+      assertFalse(existing.getCanonicalFile().equals(new File(workingDirectory).getCanonicalFile()));
+    }
+    finally {
+      if (created) FileUtil.delete(existing);
+      else FileUtil.delete(new File(existing, "rebar.config.script"));
+    }
+  }
+
   // A command that does not stop on SIGTERM, here a shell that ignores it and its child, which inherits that, must not
   // outlive the timeout: rebar3 whose BEAM hangs in getcwd() in a deleted working directory ignores SIGTERM as well.
   public void testTimeoutKillsCommandAndChildThatIgnoreSigterm() throws Exception {
@@ -64,9 +90,8 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File command = new File(directory, "ignores-term.sh");
     Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho $! > '" + childPidFile.getPath() + "'\n" +
                                         "echo $$ > '" + pidFile.getPath() + "'\nwait\nsleep 60\n", StandardCharsets.UTF_8);
-    assertTrue(command.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, "/bin/sh", command.getPath());
 
     boolean commandAlive = killIfAlive(pidFile);
     boolean childAlive = killIfAlive(childPidFile);
@@ -81,10 +106,9 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File command = new File(directory, "long-output.sh");
     Files.writeString(command.toPath(), "#!/bin/sh\necho first\nyes 0123456789012345678901234567890123456789 | head -n 5000\n" +
                                         "yes error | head -n 20000 >&2\n", StandardCharsets.UTF_8);
-    assertTrue(command.setExecutable(true));
 
     long start = System.nanoTime();
-    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(10000, command.getPath());
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(10000, "/bin/sh", command.getPath());
 
     assertEquals("first", output.getStdOut());
     assertEquals("error", output.getStdErr());
@@ -100,10 +124,9 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File command = new File(directory, "detaches.sh");
     Files.writeString(command.toPath(), "#!/bin/sh\necho v1\n(sleep 60 & echo $! > '" + pidFile.getPath() + "')\nexit 0\n",
                       StandardCharsets.UTF_8);
-    assertTrue(command.setExecutable(true));
     try {
       long start = System.nanoTime();
-      assertEquals("v1", ExtProcessUtil.execAndGetFirstLine(10000, command.getPath()).getStdOut());
+      assertEquals("v1", ExtProcessUtil.execAndGetFirstLine(10000, "/bin/sh", command.getPath()).getStdOut());
       assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < 30000);
       long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
       while (!ourThreads().isEmpty() && System.nanoTime() < deadline) {
@@ -127,9 +150,8 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\n" +
                                         "sh -c 'sleep 60 & echo $! > \"" + grandchildPidFile.getPath() + "\"; wait' &\n" +
                                         "echo $! > '" + childPidFile.getPath() + "'\nwait\nsleep 60\n", StandardCharsets.UTF_8);
-    assertTrue(command.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, "/bin/sh", command.getPath());
 
     boolean childAlive = killIfAlive(childPidFile);
     boolean grandchildAlive = killIfAlive(grandchildPidFile);
@@ -145,9 +167,8 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File command = new File(directory, "restarts.sh");
     Files.writeString(command.toPath(), "#!/bin/sh\ntrap '' TERM\nwhile :; do sleep 60 & echo $! >> '" + pidsFile.getPath() + "'; wait $!; done\n",
                       StandardCharsets.UTF_8);
-    assertTrue(command.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(5000, command.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, "/bin/sh", command.getPath());
 
     List<ProcessHandle> alive = new ArrayList<>();
     for (String pid : Files.readAllLines(pidsFile.toPath())) {
@@ -218,9 +239,8 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     File wrapper = new File(directory, "wrapper.sh");
     Files.writeString(wrapper.toPath(), "#!/bin/sh\nsleep 60 &\necho $! > '" + pidFile.getPath() + "'\nwait\n",
                       StandardCharsets.UTF_8);
-    assertTrue(wrapper.setExecutable(true));
 
-    ExtProcessUtil.execAndGetFirstLine(5000, wrapper.getPath());
+    ExtProcessUtil.execAndGetFirstLine(5000, "/bin/sh", wrapper.getPath());
 
     long childPid = Long.parseLong(Files.readString(pidFile.toPath()).trim());
     Optional<ProcessHandle> child = ProcessHandle.of(childPid);

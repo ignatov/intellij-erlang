@@ -58,8 +58,8 @@ public final class ExtProcessUtil {
     boolean interrupted = false;
     RunningCommands running = RunningCommands.getInstance();
     try {
-      // A private directory: a crash dump does not land in the IDE's directory (#1239), a large shared temp directory does
-      // not slow the start, and the directory is not deleted under a running command (then a BEAM hangs in getcwd()).
+      // A new directory, random name and owner-only: rebar3 evaluates rebar.config.script from its working directory, a crash
+      // dump stays out of the IDE's directory (#1239), and it is not deleted under a running command (a BEAM hangs in getcwd()).
       workDirectory = Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")), "erlang-ext-process-").toFile();
       // Output to files, not pipes: a command that writes a lot is not blocked, and a process that the command detached
       // cannot keep a pipe and a reader thread busy after the call.
