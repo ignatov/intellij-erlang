@@ -303,6 +303,27 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return false;
   }
 
+  /**
+   * Parses with the given parser, but fails and rolls back if the parser reported a syntax error,
+   * so that the next alternative gets a chance (an incomplete typed field in a macro body, #933).
+   */
+  public static boolean withoutErrors(PsiBuilder builder_, int level_, Parser parser) {
+    Frame frame = ErrorState.get(builder_).currentFrame;
+    if (frame == null) return parser.parse(builder_, level_ + 1);
+    int errorReportedAt = frame.errorReportedAt;
+    frame.errorReportedAt = -1;
+    PsiBuilder.Marker m = builder_.mark();
+    boolean result = parser.parse(builder_, level_ + 1);
+    boolean errorReported = frame.errorReportedAt != -1;
+    frame.errorReportedAt = errorReportedAt;
+    if (result && !errorReported) {
+      m.drop();
+      return true;
+    }
+    m.rollbackTo();
+    return false;
+  }
+
   public static boolean isInCompletion(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
     return ErrorState.get(builder_).completionState != null;
   }

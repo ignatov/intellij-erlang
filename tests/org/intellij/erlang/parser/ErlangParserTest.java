@@ -139,6 +139,8 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertTrue("Parsing took " + millis + " ms", millis < 5000);
   }
 
+  public void testTypedMacroBody()                      { doTest(false); }
+  public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
 
