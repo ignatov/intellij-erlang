@@ -57,17 +57,40 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
   private static final Key<Set<String>> TIMED_OUT_FILES = Key.create("Erlang.DIALYZER_TIMED_OUT_FILES");
 
-  @Nullable
-  private static Problem parseProblem(String input) {
-    List<String> split = StringUtil.split(input, ":");
-    if (split.size() < 3) return null;
-    int line = StringUtil.parseInt(split.get(1), 0);
-    return new Problem(line, StringUtil.join(split.subList(2, split.size()), ":"));
+  // file:line: message (before OTP 24) or file:line:column: message
+  private static final Pattern WARNING = Pattern.compile("(.+?):(\\d+)(?::\\d+)?: (.*)");
+  // Dialyzer wraps long warnings onto indented lines; " done in 0m0.09s" is its timing line, not a continuation
+  private static final Pattern TIMING = Pattern.compile("\\s*done in \\d+m[\\d.]+s\\s*");
+
+  @NotNull
+  static List<Problem> parseProblems(@NotNull List<String> lines) {
+    List<Problem> problems = new ArrayList<>();
+    int problemLine = 0;
+    StringBuilder description = null;
+    for (String line : lines) {
+      LOG.debug(line);
+      boolean continuation = !line.isEmpty() && Character.isWhitespace(line.charAt(0)) && !TIMING.matcher(line).matches();
+      if (description != null && continuation) {
+        description.append(StringUtil.trimLeading(line));
+        continue;
+      }
+      if (description != null) problems.add(new Problem(problemLine, description.toString().trim()));
+      description = null;
+      Matcher matcher = WARNING.matcher(line);
+      if (matcher.matches()) {
+        problemLine = StringUtil.parseInt(matcher.group(2), 0);
+        description = new StringBuilder(matcher.group(3));
+      }
+    }
+    if (description != null) problems.add(new Problem(problemLine, description.toString().trim()));
+    return problems;
   }
 
   @Nullable
@@ -129,15 +152,13 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (output != null) {
       timedOutFiles(state.myProject).remove(state.myFilePath);
       if (output.getStderrLines().isEmpty()) {
-        for (String line : output.getStdoutLines()) {
-          LOG.debug(line);
-          if (line.startsWith("dialyzer: ")) {
-            new Notification("Dialyzer-based inspections", line, NotificationType.WARNING).notify(state.myProject);
-            return state;
-          }
-          Problem problem = parseProblem(line);
-          LOG.debug(problem != null ? problem.toString() : null);
-          ContainerUtil.addAllNotNull(state.problems, problem);
+        List<String> lines = output.getStdoutLines();
+        int error = ContainerUtil.indexOf(lines, line -> line.startsWith("dialyzer: "));
+        List<Problem> problems = parseProblems(error == -1 ? lines : lines.subList(0, error));
+        LOG.debug(problems.toString());
+        state.problems.addAll(problems);
+        if (error != -1) {
+          new Notification("Dialyzer-based inspections", lines.get(error), NotificationType.WARNING).notify(state.myProject);
         }
       }
     }

@@ -46,4 +46,24 @@ public class ErlangDialyzerOutputParsingTest extends ErlangLightPlatformCodeInsi
                  "Problem{myLine=6, myDescription='Guard test is_atom(X :: 1) can never succeed'}",
                  StringUtil.join(result.problems, Object::toString, "\n"));
   }
+
+  // Before OTP 24 there is no column; the "Unknown functions" list after the warnings is not part of them.
+  public void testLineOnlyWarningsAndUnknownFunctions() {
+    String stdout = "  Proceeding with analysis...\n" +
+                    "dz_smoke.erl:4: Function f/0 has no local return\n" +
+                    "dz_smoke.erl:6: Call to missing or unexported function foo:bar/1\n" +
+                    " done in 0m0.09s\n" +
+                    "Unknown functions:\n" +
+                    "  foo:bar/1 (dz_smoke.erl:6:3)\n" +
+                    "done (warnings were emitted)\n";
+    ProcessOutput output = new ProcessOutput();
+    output.appendStdout(stdout);
+    ErlangDialyzerExternalAnnotator.State state = new ErlangDialyzerExternalAnnotator.State(
+      getProject(), "/sdk/bin/dialyzer", null, "/project/src/dz_smoke.erl", "/project");
+    ErlangDialyzerExternalAnnotator.State result = new ErlangDialyzerExternalAnnotator().doAnnotate(state, s -> output);
+    assertNotNull(result);
+    assertEquals("Problem{myLine=4, myDescription='Function f/0 has no local return'}\n" +
+                 "Problem{myLine=6, myDescription='Call to missing or unexported function foo:bar/1'}",
+                 StringUtil.join(result.problems, Object::toString, "\n"));
+  }
 }
