@@ -74,6 +74,28 @@ public class ErlangRunConfigurationEnvironmentTest extends ErlangLightPlatformCo
     assertEquals("+P 1000", restored.getErlFlags());
   }
 
+  public void testStopErlangIsSerialized() {
+    ErlangApplicationConfiguration configuration = createApplicationConfiguration();
+    configuration.setStopErlang(false);
+
+    ErlangApplicationConfiguration restored = createApplicationConfiguration();
+    restored.readExternal(writeExternal(configuration));
+
+    assertFalse(restored.stopErlang());
+  }
+
+  public void testStopErlangIsKeptByCopy() throws ExecutionException {
+    ErlangApplicationConfiguration configuration = createApplicationConfiguration();
+    configuration.setModuleAndFunction("sample start");
+    configuration.setStopErlang(false);
+
+    ErlangApplicationConfiguration copy = (ErlangApplicationConfiguration)configuration.clone();
+
+    assertFalse(copy.stopErlang());
+    GeneralCommandLine commandLine = getCommand(new ErlangApplicationRunningState(null, getModule(), copy));
+    assertFalse(commandLine.getCommandLineString(), commandLine.getParametersList().getList().contains("stop"));
+  }
+
   public void testUnitEnvironmentIsSerialized() {
     ErlangUnitRunConfiguration configuration = createUnitConfiguration();
     configuration.getConfigData().setModuleNames(Set.of("sample_tests"));
