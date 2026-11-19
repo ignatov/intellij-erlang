@@ -102,17 +102,23 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
 
     try {
-      //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
       myDebuggerNode = new ErlangDebuggerNode(this);
     }
     catch (ErlangDebuggerNodeException e) {
       throw new ExecutionException(e);
     }
 
-    // it's important to set modules to interpret before running the debug target
-    SlowOperations.allowSlowOperations(this::setModulesToInterpret);
-    //TODO split running debug target and debugger process spawning
-    myErlangProcessHandler = runDebugTarget();
+    try {
+      // it's important to set modules to interpret before running the debug target
+      SlowOperations.allowSlowOperations(this::setModulesToInterpret);
+      //TODO split running debug target and debugger process spawning
+      myErlangProcessHandler = runDebugTarget();
+    }
+    catch (ExecutionException | RuntimeException | Error e) {
+      // the session is not created, so nothing else would stop the debugger node
+      myDebuggerNode.stop();
+      throw e;
+    }
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
@@ -453,7 +459,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @NotNull
   private OSProcessHandler runDebugTarget() throws ExecutionException {
-    OSProcessHandler erlangProcessHandler;
+    OSProcessHandler erlangProcessHandler = null;
     LOG.debug("Preparing to run debug target.");
     try {
       GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -490,8 +496,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
       }
     }
-    catch (ExecutionException e) {
+    catch (ExecutionException | RuntimeException | Error e) {
       LOG.debug("Failed to run debug target.", e);
+      if (erlangProcessHandler != null) {
+        // the handler is not start-notified yet, so destroyProcess() would not kill it
+        erlangProcessHandler.getProcess().destroy();
+      }
       throw e;
     }
     LOG.debug("Debug target should now be running.");
