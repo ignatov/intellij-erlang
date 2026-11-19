@@ -214,6 +214,10 @@ public class ErlangRemoteDebugStopTest extends BasePlatformTestCase {
     }
 
     @Override
+    public void failedToReceiveMessage(String error) {
+    }
+
+    @Override
     public void failedToSetBreakpoint(String module, int line, String errorMessage) {
     }
 

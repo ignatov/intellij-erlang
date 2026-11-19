@@ -165,6 +165,11 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @Override
+  public void failedToReceiveMessage(String error) {
+    getSession().reportMessage("Failed to receive a message from the debugger. Details: " + error, MessageType.ERROR);
+  }
+
+  @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);

@@ -107,6 +107,10 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     }
 
     @Override
+    public void failedToReceiveMessage(String error) {
+    }
+
+    @Override
     public void failedToInterpretModules(String nodeName, List<String> modules) {
     }
 

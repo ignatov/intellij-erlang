@@ -17,7 +17,11 @@
 package org.intellij.erlang.debugger.node;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.testFramework.LoggedErrorProcessor;
+import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -25,8 +29,13 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -58,6 +67,134 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
       assertEquals(atom("evaluate"), evaluate.elementAt(0));
       assertEquals(pid, evaluate.elementAt(1));
       assertEquals(new OtpErlangLong(2), evaluate.elementAt(3));
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: a peer that declares a frame of 0x7FFFFFFF bytes must not make the node allocate it. HotSpot always rejects
+  // new byte[Integer.MAX_VALUE] with "OutOfMemoryError: Requested array size exceeds VM limit".
+  public void testHugeFrameLengthDoesNotAllocate() throws Throwable {
+    List<Throwable> logged = Collections.synchronizedList(new ArrayList<>());
+    CountDownLatch errorLogged = new CountDownLatch(1);
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public @NotNull Set<Action> processError(@NotNull String category, @NotNull String message, String @NotNull [] details,
+                                               @Nullable Throwable t) {
+        logged.add(t != null ? t : new Throwable(message));
+        errorLogged.countDown();
+        return EnumSet.noneOf(Action.class);
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0x7FFFFFFF);
+        out.flush();
+        stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        // The pooled thread logs an escaping Error after debuggerStopped() has run in the finally block.
+        errorLogged.await(2, TimeUnit.SECONDS);
+      }
+      finally {
+        node.stop();
+      }
+    });
+    for (Throwable t : logged) {
+      for (Throwable c = t; c != null; c = c.getCause()) {
+        if (c instanceof OutOfMemoryError) throw new AssertionError("The node allocated the declared frame length: " + c, t);
+      }
+    }
+  }
+
+  // #1289: a negative frame length ends the session with a warning instead of a NegativeArraySizeException.
+  public void testNegativeFrameLengthIsReported() throws Throwable {
+    List<String> warnings = Collections.synchronizedList(new ArrayList<>());
+    LoggedErrorProcessor processor = new LoggedErrorProcessor() {
+      @Override
+      public boolean processWarn(@NotNull String category, @NotNull String message, @Nullable Throwable t) {
+        warnings.add(message);
+        return false;
+      }
+    };
+    LoggedErrorProcessor.executeWith(processor, (ThrowableRunnable<Throwable>)() -> {
+      CountDownLatch stopped = new CountDownLatch(1);
+      ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+        @Override public void debuggerStopped() { stopped.countDown(); }
+      });
+      try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+        DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+        out.writeInt(0xFFFFFFFE);
+        out.flush();
+        assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      }
+      finally {
+        node.stop();
+      }
+    });
+    assertTrue(String.valueOf(warnings), warnings.stream().anyMatch(w -> w.contains("Invalid debugger message size: -2 bytes")));
+  }
+
+  // #1289: a breakpoint snapshot sends the bindings of every frame, so a real one can be well above 64 MiB.
+  public void testFrameAbove64MiBIsDelivered() throws Exception {
+    CompletableFuture<List<ErlangProcessSnapshot>> snapshotsFuture = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(snapshotsFuture));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      OtpErlangTuple frame = tuple(new OtpErlangLong(1), tuple(atom("t"), atom("main"), list()),
+                                   list(tuple(atom("B"), new OtpErlangBinary(new byte[65 * 1024 * 1024]))));
+      OtpErlangTuple snapshot = tuple(pid, tuple(atom("t"), atom("main"), list()), atom("break"),
+                                      tuple(atom("t"), new OtpErlangLong(3)), list(frame));
+      send(peer, tuple(atom("breakpoint_reached"), pid, list(snapshot)));
+
+      List<ErlangProcessSnapshot> snapshots = snapshotsFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      assertEquals(1, snapshots.get(0).getStack().size());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: a declared length is not allocated up front, so a huge one without a payload only times out the read
+  // (which ends the session since #1305) instead of running out of memory.
+  public void testHugeFrameLengthWithoutPayloadOnlyTimesOut() throws Exception {
+    CountDownLatch stopped = new CountDownLatch(1);
+    CompletableFuture<String> error = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+      @Override public void failedToReceiveMessage(String message) { error.complete(message); }
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0x7FFFFFF7);
+      out.flush();
+      // The node gives up on the payload after RETRIES_ON_TIMEOUT * RECEIVE_TIMEOUT = 500 ms.
+      assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertFalse("The message was rejected: " + error.getNow(null), error.isDone());
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1289: FF FF FF FF is a length of -1, not "nothing read"; it ends the session and the session is told why.
+  public void testAllOnesFrameLengthIsReportedToTheSession() throws Exception {
+    CountDownLatch stopped = new CountDownLatch(1);
+    CompletableFuture<String> error = new CompletableFuture<>();
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new RecordingListener(new CompletableFuture<>()) {
+      @Override public void failedToReceiveMessage(String message) { error.complete(message); }
+      @Override public void debuggerStopped() { stopped.countDown(); }
+    });
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      DataOutputStream out = new DataOutputStream(peer.getOutputStream());
+      out.writeInt(0xFFFFFFFF);
+      out.flush();
+      assertTrue("The session did not end", stopped.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+      assertTrue(error.getNow("no error reported"), error.getNow("").contains("Invalid debugger message size: -1 bytes"));
     }
     finally {
       node.stop();
@@ -171,6 +308,7 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void failedToInterpretModules(String nodeName, List<String> modules) { }
     @Override public void failedToDebugRemoteNode(String nodeName, String error) { }
     @Override public void unknownMessage(String messageText) { mySnapshots.completeExceptionally(new AssertionError(messageText)); }
+    @Override public void failedToReceiveMessage(String error) { mySnapshots.completeExceptionally(new AssertionError(error)); }
     @Override public void failedToSetBreakpoint(String module, int line, String errorMessage) { }
     @Override public void breakpointIsSet(String module, int line) { }
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { mySnapshots.complete(snapshots); }
@@ -196,5 +334,6 @@ public class ErlangDebuggerNodeTest extends ErlangLightPlatformCodeInsightFixtur
     @Override public void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) { }
     @Override public void debuggerStopped() { myStopped.complete(null); }
     @Override public void handleEvaluationResponse(OtpErlangObject response) { myEvaluationResponse.complete(response); }
+    @Override public void failedToReceiveMessage(String error) { }
   }
 }
