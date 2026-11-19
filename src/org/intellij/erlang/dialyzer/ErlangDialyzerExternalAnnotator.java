@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
@@ -98,16 +99,26 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
   @Nullable
   @Override
   public State doAnnotate(State state) {
-    if (state == null) return null;
+    return doAnnotate(state, ErlangDialyzerExternalAnnotator::runDialyzer);
+  }
 
-    ProcessOutput output = null;
+  @Nullable
+  private static ProcessOutput runDialyzer(@NotNull State state) {
     try {
       String[] params = StringUtil.isEmptyOrSpaces(state.myCurrentPltPath) ? new String[]{state.myFilePath} : new String[]{"--plt", state.myCurrentPltPath, state.myFilePath};
-      output = ErlangSystemUtil.getProcessOutput(state.myWorkingDir, state.myDialyzerPath, params);
+      return ErlangSystemUtil.getProcessOutput(state.myWorkingDir, state.myDialyzerPath, params);
     }
     catch (ExecutionException e) {
       LOG.debug(e);
+      return null;
     }
+  }
+
+  @Nullable
+  State doAnnotate(State state, @NotNull Function<State, ProcessOutput> runner) {
+    if (state == null) return null;
+
+    ProcessOutput output = runner.apply(state);
     if (output != null && output.isTimeout()) {
       if (timedOutFiles(state.myProject).add(state.myFilePath)) {
         String message = "Dialyzer did not finish in time for " + new File(state.myFilePath).getName() + "; its warnings are not shown";
