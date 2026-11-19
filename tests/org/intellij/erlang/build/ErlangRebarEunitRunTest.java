@@ -39,6 +39,7 @@ import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.runner.RebarEunitRunConfiguration;
 import org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationFactory;
+import org.intellij.erlang.rebar.runner.RebarEunitRunningState;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
@@ -62,6 +63,34 @@ public class ErlangRebarEunitRunTest extends ErlangCompilationTestBase {
     assertTrue("rebar3 did not compile p:\n" + output, new File(ebin, "p.beam").isFile());
     assertEquals("p was compiled without the options of rebar.config.script; rebar3 output:\n" + output,
                  "script", evaluate(ebin, "io:put_chars(atom_to_list(p:v()))"));
+  }
+
+  // #1333: a project with only rebar.config.script, which reads a file next to itself and sets eunit_opts.
+  public void testRebarConfigScriptWithoutRebarConfigIsApplied() throws Exception {
+    File projectDirectory = setUpRebarProject("eunitConfigScriptOnly");
+    String output = runRebarEunit();
+
+    File ebin = new File(projectDirectory, "_build/test/lib/p/ebin");
+    assertTrue("rebar3 did not compile p:\n" + output, new File(ebin, "p.beam").isFile());
+    assertEquals("p was compiled without the options of rebar.config.script; rebar3 output:\n" + output,
+                 "script", evaluate(ebin, "io:put_chars(atom_to_list(p:v()))"));
+  }
+
+  // #1333: the reporter options replace the report options that rebar.config.script sets in eunit_opts.
+  public void testReporterOptionsAreAddedToEunitOptsOfRebarConfigScript() throws Exception {
+    File projectDirectory = setUpRebarProject("eunitConfigScriptOnly");
+    File reportsRoot = RebarEunitRunningState.createEunitReportsEnvironment(myProject, projectDirectory.getPath());
+    String reportsPath = FileUtil.toSystemIndependentName(reportsRoot.getPath());
+
+    // Evaluate the configuration as rebar does for the file named by REBAR_CONFIG (rebar_config:consult_file/1).
+    String eunitOpts = evaluate(reportsRoot,
+      "Config = filename:join(\"" + reportsPath + "\", \"rebar.config\"), " +
+      "Script = Config ++ \".script\", " +
+      "Terms = case file:consult(Config) of {ok, T} -> T; {error, enoent} -> [] end, " +
+      "Bindings = erl_eval:add_binding('CONFIG', Terms, erl_eval:add_binding('SCRIPT', Script, erl_eval:new_bindings())), " +
+      "{ok, Result} = file:script(Script, Bindings), " +
+      "io:format(\"~w~n~w\", [proplists:get_value(erl_opts, Result), proplists:get_value(eunit_opts, Result)])");
+    assertEquals("[debug_info,{d,'FROM_SCRIPT'}]\n[verbose,{report,{eunit_teamcity,[]}},{no_tty,true}]", eunitOpts);
   }
 
   private File setUpRebarProject(String testDataDirectory) throws Exception {
