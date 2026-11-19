@@ -163,7 +163,8 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       if (function != null && function.getArity() != 0) {
         failedGeneratedTests.add(function);
       }
-      if (function == null) {
+      // A suite (eunit://m) is a defect when one of its tests failed; those tests are rerun by themselves.
+      if (function == null && !ContainerUtil.exists(testProxy.getChildren(), child -> child.isDefect() || child.isInterrupted())) {
         ContainerUtil.addIfNotNull(otherModules, getModuleName(psiElement, testProxy.getLocationUrl()));
       }
       return function;

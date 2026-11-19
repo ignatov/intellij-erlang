@@ -70,6 +70,30 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
                  createRerunCommand(new ArrayList<>(), "eunit://c:-c4_test_/0-fun-2-:3", "eunit://a:a2_test"));
   }
 
+  public void testRebar3RerunsFailedTestNotItsSuite() {
+    useRebar("rebar3");
+    myFixture.addFileToProject("a.erl", A);
+    myFixture.addFileToProject("b.erl", "-module(b).\nb_test() -> ok.\n");
+    SMTestProxy suiteA = createSuite("eunit://a", "eunit://a:a2_test");
+    SMTestProxy suiteB = createSuite("eunit://b", "eunit://b:b_test");
+    List<SMTestProxy> failed = List.of(suiteA, suiteA.getChildren().getFirst(), suiteB, suiteB.getChildren().getFirst());
+    assertEquals("eunit --test=a:a2_test,b:b_test",
+                 RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), failed, new ArrayList<>()));
+  }
+
+  private static SMTestProxy createSuite(String suiteUrl, String failedTestUrl) {
+    SMTestProxy suite = new SMTestProxy(suiteUrl, true, suiteUrl);
+    suite.setLocator(ErlangTestLocationProvider.INSTANCE);
+    SMTestProxy test = new SMTestProxy(failedTestUrl, false, failedTestUrl);
+    test.setLocator(ErlangTestLocationProvider.INSTANCE);
+    suite.addChild(test);
+    suite.setStarted();
+    test.setStarted();
+    test.setTestFailed("failed", null, false);
+    suite.setFinished();
+    return suite;
+  }
+
   public void testRebar2RerunCommandUnchanged() {
     useRebar("rebar");
     myFixture.addFileToProject("a.erl", A);
