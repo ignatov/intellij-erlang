@@ -15,6 +15,8 @@ bad(<error>[?MODULE_STRING] ++ Rest</error>) -> Rest;
 bad(<error>[?FILE] ++ Rest</error>) -> Rest;
 bad(<error>[$a | ?MODULE] ++ Rest</error>) -> Rest;
 bad(<error>[$a | ?LINE] ++ Rest</error>) -> Rest;
+bad(<error>?OTP_RELEASE ++ Rest</error>) -> Rest;
+bad(<error>[$a | ?OTP_RELEASE] ++ Rest</error>) -> Rest;
 bad(X) -> <error>?MODULE ++ R</error> = X, R.
 
 ok(?MODULE_STRING ++ Rest) -> Rest;
@@ -22,6 +24,7 @@ ok(?FILE ++ Rest) -> Rest;
 ok("a" ?MODULE_STRING ++ Rest) -> Rest;
 ok([?LINE] ++ Rest) -> Rest;
 ok([?FUNCTION_ARITY] ++ Rest) -> Rest;
+ok([?OTP_RELEASE] ++ Rest) -> Rest;
 ok([$a | ?FILE] ++ Rest) -> Rest.
 
 % Known limitation: user macros are not expanded, so these are not reported although erlc rejects them

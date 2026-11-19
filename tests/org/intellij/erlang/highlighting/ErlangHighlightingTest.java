@@ -226,6 +226,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testUnresolvedMacrosOtpRelease() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testMacroThenStringLiteral() {
     enableUnresolvedMacroInspection();
     doTest();

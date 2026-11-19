@@ -84,7 +84,7 @@ import java.util.regex.Pattern;
 import static com.intellij.patterns.PlatformPatterns.psiElement;
 
 public class ErlangPsiImplUtil {
-  public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY");
+  public static final Set<String> KNOWN_MACROS = Set.of("MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   private static final Set<String> PREDEFINED_MACROS_WITHOUT_PARAMETERS = Set.of(
     "MODULE", "MODULE_STRING", "FILE", "LINE", "MACHINE", "FUNCTION_NAME", "FUNCTION_ARITY", "OTP_RELEASE");
   public static final Set<String> BUILT_IN_TYPES = Set.of(
