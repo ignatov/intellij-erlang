@@ -33,7 +33,7 @@ import java.util.Set;
 public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
   private static final Set<String> STRING_MACROS = Set.of("MODULE_STRING", "FILE");
-  private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY");
+  private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY", "OTP_RELEASE");
   private static final Set<String> FUNCTION_MACROS = Set.of("FUNCTION_NAME", "FUNCTION_ARITY");
 
   @Override
