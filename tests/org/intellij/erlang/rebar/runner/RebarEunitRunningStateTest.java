@@ -88,6 +88,17 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     assertEquals(MODIFIED_CONFIG, config);
   }
 
+  public void testWriteModifiedConfigRemovesReportBetweenOtherOptions() throws Exception {
+    String config = doWriteModifiedConfig(
+      "{eunit_opts, [verbose, {report, {eunit_surefire, [{dir, \".\"}]}}, {print_depth, 10}]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",verbose, {print_depth, 10}]}.\n", config);
+  }
+
+  public void testWriteModifiedConfigRemovesNoTtyBetweenOtherOptions() throws Exception {
+    String config = doWriteModifiedConfig("{eunit_opts, [verbose, {no_tty, false}, {print_depth, 10}]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",verbose, {print_depth, 10}]}.\n", config);
+  }
+
   public void testWriteModifiedConfigWithoutOldConfig() throws Exception {
     String config = doWriteModifiedConfig(null);
     assertTrue(config, config.contains(REPORT_OPTION));
