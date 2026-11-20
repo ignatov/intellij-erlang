@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
 public enum ErlangUsageProperty {
   PLUGIN_VERSION(Kind.TEXT, "\\d{1,4}(\\.\\d{1,6}){0,3}"),
   IDE_PRODUCT(Kind.TEXT, "[A-Z]{2,4}"),
-  IDE_BASELINE(Kind.NUMBER, "\\d{3}"),
+  // a JSON number: no leading zero
+  IDE_BASELINE(Kind.NUMBER, "[1-9]\\d{2}"),
   SMALL_IDE(Kind.BOOLEAN, "true|false"),
   OS(Kind.TEXT, "mac|windows|linux|other"),
   // the OTP major release of the SDK of each Erlang project opened that day
