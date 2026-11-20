@@ -508,6 +508,7 @@ class RedactionTest(unittest.TestCase):
         trace = ea.redact_trace(TRACE)
         self.assertEqual('\n'.join([
             'com.intellij.openapi.util.InvalidDataException: <message removed>',
+            '<1 line removed>',
             '\tat org.intellij.erlang.psi.impl.ErlangPsiImplUtil.resolve(ErlangPsiImplUtil.java:812)',
             'Caused by: java.io.IOException: <message removed>',
             '\tat java.base/java.io.FileInputStream.open0(Native Method)',
@@ -549,6 +550,7 @@ class RedactionTest(unittest.TestCase):
         ]
         self.assertEqual('\n'.join([
             'java.lang.IllegalStateException: <message removed>',
+            '<8 lines removed>',
             '\tat a.B.c(B.java:1)',
             '\tat app//com.foo.Bar.<init>(Bar.kt:7)',
             '\tat java.base@\u200b21.0.1/java.lang.Thread.run(Thread.java:1583)',
@@ -577,7 +579,8 @@ class RedactionTest(unittest.TestCase):
         trace = ea.redact_trace('a.E: ' + 'x' * 200000 + '\n\tat a.B.c(B.java:1)\n\tat ' + 'a' * 200000 + '.B.c(B.java:1)\n'
                                 + '\tat a.B.c(B.java:1)\n' * 200000 + ('a' * 5000 + '@') * 100)
         self.assertLess(time.monotonic() - start, 10)
-        self.assertTrue(trace.startswith('a.E: <message removed>\n\tat a.B.c(B.java:1)\n\tat a.B.c(B.java:1)'))
+        self.assertTrue(trace.startswith('a.E: <message removed>\n\tat a.B.c(B.java:1)\n<1 line removed>\n'
+                                         '\tat a.B.c(B.java:1)'), trace[:200])
 
     def test_paths(self):
         self.assertEqual('/Users/<user>/x /home/<user>/y C:\\Users/<user>\\z c:/Users/<user>/w',
@@ -667,6 +670,169 @@ class RedactionTest(unittest.TestCase):
                         '<!-- marketplace-ea: 000000000000'):
             self.assertNotIn(private, text)
         self.assertEqual(2, text.count('```'))
+
+
+class TraceFormatTest(unittest.TestCase):
+    """The variants of the stack trace format that a real report can have."""
+
+    def frames(self, *lines):
+        trace, count = ea.analyse_trace('java.lang.IllegalStateException: m\n' + '\n'.join(lines))
+        return trace.split('\n')[1:], count
+
+    def test_frame_variants_are_kept(self):
+        variants = {
+            'com.foo.Bar.baz(Bar.java:12)': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '    at com.foo.Bar.baz(Bar.java:12)': '    at com.foo.Bar.baz(Bar.java:12)',
+            '\t\tat com.foo.Bar.baz(Bar.java:12)': '\t\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12) ~[app.jar:263.1]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12) [idea.jar:?]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12)~[util-8.jar:263.1]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Unknown Source)': '\tat com.foo.Bar.baz(Unknown Source)',
+            '\tat java.base/jdk.internal.misc.Unsafe.park(Native Method)':
+                '\tat java.base/jdk.internal.misc.Unsafe.park(Native Method)',
+            '\tat com.foo.Bar.baz(Bar.java)': '\tat com.foo.Bar.baz(Bar.java)',
+            '\tat com.foo.Bar.baz(SourceFile:3)': '\tat com.foo.Bar.baz(SourceFile:3)',
+            '\tat com.foo.BarKt.baz(Bar.kt:7)': '\tat com.foo.BarKt.baz(Bar.kt:7)',
+            '\tat com.foo.Bar$Companion$1.invoke(Bar.kt:7)': '\tat com.foo.Bar$Companion$1.invoke(Bar.kt:7)',
+            '\tat com.foo.Bar.<init>(Bar.java:5)': '\tat com.foo.Bar.<init>(Bar.java:5)',
+            '\tat com.foo.Bar.<clinit>(Bar.java:5)': '\tat com.foo.Bar.<clinit>(Bar.java:5)',
+            '\tat com.foo.Bar.lambda$run$0(Bar.java:5)': '\tat com.foo.Bar.lambda$run$0(Bar.java:5)',
+            '\tat com.foo.Bar.access$getX$p(Bar.kt:5)': '\tat com.foo.Bar.access$getX$p(Bar.kt:5)',
+            '\tat com.foo.Bar.invoke-0E7RQCE(Bar.kt:5)': '\tat com.foo.Bar.invoke-0E7RQCE(Bar.kt:5)',
+            '\tat com.foo.Bar$$Lambda/0x00007f3c1c0a1b28.run(Unknown Source)':
+                '\tat com.foo.Bar$$Lambda/0x00007f3c1c0a1b28.run(Unknown Source)',
+            '\tat com.foo.Bar$$Lambda$12/345678.run(Unknown Source)':
+                '\tat com.foo.Bar$$Lambda$12/345678.run(Unknown Source)',
+            '\tat app//com.foo.Bar.baz(Bar.groovy:1)': '\tat app//com.foo.Bar.baz(Bar.groovy:1)',
+            '\tat java.base@21.0.4/java.lang.Thread.run(Thread.java:1583)':
+                '\tat java.base@\u200b21.0.4/java.lang.Thread.run(Thread.java:1583)',
+            '\tat com.foo.Bar.baz(Bar.scala:1)': '\tat com.foo.Bar.baz(Bar.scala:1)',
+            '\tat com.foo.Bar.baz(build.gradle.kts:1)': '\tat com.foo.Bar.baz(build.gradle.kts:1)',
+        }
+        for line, kept in variants.items():
+            self.assertEqual(([kept], 1), self.frames(line), line)
+
+    def test_free_text_is_never_kept(self):
+        for line in ('at foo bar(baz)', 'com.foo.Bar.baz(secret text)', 'com.foo.Bar.baz(Bar.java:12) trailing',
+                     '\tat a/b/c/d.E.f(E.java:1)', '\tat com.foo.Bar.baz(Bar.erl:1)', '\tat Bar.baz(Bar.java:1)',
+                     '\tat com.foo.Bar.baz(Bar.java:12) ~[secret words]', '\tat com.foo.Bar$$Lambda/zz.run(X.java:1)',
+                     '\tat com.foo.Bar.baz(/Users/jdoe/Bar.java:1)', 'com.foo.Bar.baz', 'jdoe(at)example.com(x)',
+                     '\tat com.foo.Bar.baz(Bar.java:12', '\tat com.foo.Bar.ba'):
+            self.assertEqual((['<1 line removed>'], 0), self.frames(line), line)
+
+    def test_one_json_string(self):
+        text = json.dumps('java.lang.IllegalStateException: m\n\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)')
+        self.assertEqual(('java.lang.IllegalStateException: <message removed>\n\tat a.B.c(B.java:1)\n'
+                          '\tat a.B.d(B.java:2)', 2), ea.analyse_trace(text))
+
+    def test_literal_escape_sequences(self):
+        for separator in ('\\n\\t', '\\r\\n\\t', '\\r\\n', '\\n'):
+            text = 'java.lang.IllegalStateException: m' + separator + 'at a.B.c(B.java:1)' + separator + \
+                   'at a.B.d(B.java:2)'
+            trace, frames = ea.analyse_trace(text)
+            self.assertEqual(2, frames, separator)
+            self.assertTrue(trace.startswith('java.lang.IllegalStateException: <message removed>\n'), separator)
+
+    def test_real_line_breaks_of_every_kind(self):
+        for separator in ('\r\n', '\r', '\n'):
+            text = separator.join(['a.E: m', '\tat a.B.c(B.java:1)', '\tat a.B.d(B.java:2)'])
+            self.assertEqual(2, ea.analyse_trace(text)[1], repr(separator))
+
+    def test_truncated_traces(self):
+        self.assertEqual(('\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)', 2),
+                         ea.analyse_trace('\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)'))
+        self.assertEqual(('a.E: <message removed>\n\tat a.B.c(B.java:1)\n<1 line removed>', 1),
+                         ea.analyse_trace('a.E: m\n\tat a.B.c(B.java:1)\n\tat a.B.d(B.ja'))
+
+    def test_runs_of_removed_lines_become_one_line(self):
+        trace = ea.redact_trace('a.E: m\nsecret 1\nsecret 2\n\nsecret 3\n\tat a.B.c(B.java:1)\nsecret 4\n'
+                                '\tat a.B.d(B.java:2)')
+        self.assertEqual('a.E: <message removed>\n<3 lines removed>\n\tat a.B.c(B.java:1)\n<1 line removed>\n'
+                         '\tat a.B.d(B.java:2)', trace)
+        self.assertNotIn('\n\n', trace)
+
+    def test_header_ignores_removed_lines_before_the_frame(self):
+        self.assertTrue(ea.redact_trace('a.E: m\nmore message\n\tat a.B.c(B.java:1)').startswith('a.E: <message'))
+
+    def test_a_trace_without_frames_could_not_be_read(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])], traces={'1': 'a.E: m\nsecret text'})
+        http = FakeHttp(marketplace)
+        run(http)
+        body = http.github.issues[1]['body']
+        self.assertIn('The stack trace could not be read', body)
+        self.assertNotIn('```', body)
+        self.assertNotIn('secret', body)
+
+    def test_an_update_without_frames_keeps_the_old_trace(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])], traces={'1': TRACE, '2': 'a.E: x'})
+        http = FakeHttp(marketplace)
+        run(http)
+        marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1300'), report(2, '0.11.1301')])]).encode()
+        run(http)
+        self.assertIn('ErlangPsiImplUtil.resolve', http.github.issues[1]['body'])
+
+    def test_the_real_trace_of_the_first_dry_run(self):
+        # The shape of the trace in the public log of the first dry run (run 44736078989), message replaced.
+        text = '\n'.join([
+            'com.intellij.diagnostic.PluginException: some message [Plugin: org.jetbrains.erlang]',
+            '\tat com.intellij.diagnostic.PluginProblemReporterImpl.createPluginExceptionByClass('
+            'PluginProblemReporterImpl.java:23)',
+            '\tat com.intellij.diagnostic.PluginException.createByClass(PluginException.java:90)',
+            '\tat com.intellij.execution.impl.TemplateDifferenceHelper.isTemplateModified('
+            'RunConfigurationSchemeManager.kt:145)',
+        ])
+        self.assertEqual(3, ea.analyse_trace(text)[1])
+
+
+class ShapeTest(unittest.TestCase):
+    def test_shape(self):
+        self.assertEqual('\\ta{2} a{3}.a{8}.a{10}(a{9}.a{4}:0{3})',
+                         ea.line_shape('\tat com.intellij.diagnostic(Something.java:123)'))
+        self.assertEqual('\\s{4}a: \'a\' <!-- @a #0', ea.line_shape('    x: `y` <!-- @z #1'))
+        self.assertEqual('\\t\\s{2}a', ea.line_shape('\t  x'))
+
+    def test_no_letter_or_digit_survives(self):
+        text = ('Lorem ipsum /Users/jdoe/secret-project/ C:\\Users\\JDoe 0123456789 \u0416\u0435\u043d\u044f '
+                '\u00e9\u00df\u00f1 \u0663\u0664 \u00bd \u2167 jdoe@example.com https://x.io/?t=ghp_ab12 \u4e2d\u6587 '
+                'Z_z$9')
+        for line in (text, '\t' + text, '  ' + text * 5):
+            shape = ea.line_shape(line)
+            bare = re.sub(r'\{[0-9]+\}', '', shape).replace('\\t', '').replace('\\s', '')
+            bare = re.sub(r'\.\.\.\(\+[0-9]+\)$', '', bare)
+            self.assertEqual(set(), {char for char in bare if char.isalnum()} - {'a', '0'}, shape)
+            for word in ('Lorem', 'jdoe', 'secret', 'example', 'ghp', 'Users', '0123'):
+                self.assertNotIn(word, shape)
+
+    def test_long_lines_are_cut(self):
+        shape = ea.line_shape('x' * 5000)
+        self.assertEqual('a{%d}...(+%d)' % (ea.SHAPE_INPUT_LIMIT, 5000 - ea.SHAPE_INPUT_LIMIT), shape)
+
+    def test_at_most_twelve_shapes_with_counts(self):
+        shapes = ea.Shapes()
+        for i in range(20):
+            for _ in range(i + 1):
+                shapes.add('x' * (i + 1))
+        report = shapes.report().split('\n')
+        self.assertEqual(1 + ea.SHAPE_LIMIT + 1, len([line for line in report if line]))
+        self.assertEqual('    20  a{20}', report[1])
+        self.assertIn('and 8 more shapes', report[-3])
+
+    def test_dry_run_prints_shapes_only_in_the_log(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])],
+                                      traces={'1': 'a.E: secret\nsecret line 1\n\tat a.B.c(B.java:1)\nsecret 2'})
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(FakeHttp(marketplace), '--dry-run', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        self.assertEqual(0, code)
+        self.assertIn('Shapes of the stack trace lines that were not kept', out)
+        self.assertIn('     1  a{6} a{4} 0', out)
+        self.assertIn('     1  a{6} 0', out)
+        self.assertNotIn('secret', out)
+        self.assertNotIn('Shapes', summary)
+        code, out, _ = run(FakeHttp(marketplace))
+        self.assertNotIn('Shapes', out)
 
 
 class PlanTest(unittest.TestCase):

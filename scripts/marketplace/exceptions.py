@@ -40,7 +40,8 @@ Rules:
 
 Modes:
   --probe    only check access: print the HTTP status of /exceptions/resolved and the top-level JSON type and keys.
-  --dry-run  print what a run would do and the body of the first new issue; write nothing.
+  --dry-run  print what a run would do and the body of the first new issue; write nothing. Also print the shapes of
+             the trace lines that were not kept (letters become a, digits 0), so that a new trace format shows up.
   --run      write the issues.
 --fixture DIR reads Marketplace from files instead (exceptions.json, resolved.json, stacktrace/<reportId>.txt, and
 optionally issues.json and releases.json for GitHub); it is for local checks with --dry-run only.
@@ -471,58 +472,159 @@ IDENTIFIER = r'[A-Za-z_$][\w$]*'
 CLASS_NAME = re.compile(r'(?:[a-z_$][\w$]*\.)+[A-Z_$][\w$]*', re.ASCII)
 HEADER = re.compile(r'(?P<cls>[^\s:]+)(?P<rest>:.*)?')
 NESTED = re.compile(r'(?P<indent>[ \t]*)(?P<kind>Caused by|Suppressed): ?(?P<what>.*)')
+# [at ][module/]pkg.Class.method(source) [~][jar:version]. The class can be a hidden lambda class
+# (Foo$$Lambda/0x1f or Foo$$Lambda$12/345); the method can be <init>, <clinit> or a Kotlin name with "-".
 FRAME = re.compile(
-    r'(?P<indent>[ \t]*)at (?P<frame>(?:[\w.$@-]*/){0,2}' + IDENTIFIER + r'(?:\.' + IDENTIFIER + r'){1,}\.'
-    r'(?:' + IDENTIFIER + r'|<init>|<clinit>)'
-    r'\((?:[\w$-]+\.(?:java|kt|kts|groovy|scala):[0-9]+|Unknown Source|Native Method)\))'
-    r'(?: ~\[[\w.:?-]*\])?[ \t]*', re.ASCII)
+    r'(?P<indent>[ \t]*)(?:at[ \t]+)?(?P<frame>(?:[\w.$@-]*/){0,2}(?:' + IDENTIFIER + r'\.)+' + IDENTIFIER +
+    r'(?:\$\$Lambda(?:\$[0-9]+)?/(?:0x[0-9a-f]+|[0-9]+))?'
+    r'\.(?:[A-Za-z_$][\w$-]*|<init>|<clinit>)'
+    r'\((?:[\w$-]+(?:\.[\w$-]+)*\.(?:java|kt|kts|groovy|scala)(?::[0-9]+)?|SourceFile(?::[0-9]+)?|Unknown Source|Native Method)\))'
+    r'(?:[ \t]*~?\[[\w.:?+-]*\])?[ \t]*', re.ASCII)
 MORE = re.compile(r'(?P<indent>[ \t]*)\.\.\. (?P<count>[0-9]{1,6}) (?P<what>more|common frames omitted)[ \t]*')
+SHAPE_INPUT_LIMIT = 200
+SHAPE_LIMIT = 12
+SHAPE_PUNCTUATION = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ')
 
 
-def redact_trace(text):
-    """Keeps the stack frames of a strict shape (at [module/]pkg.Class.method(File.java:N | Unknown Source | Native
-    Method)) and the "... N more" lines. The first line and the "Caused by:" and "Suppressed:" lines keep only a Java
-    class name, and only when the next kept line is a frame; else they become REMOVED. Messages become
-    MESSAGE_REMOVED; every other line is dropped. Only the first TRACE_INPUT_LIMIT characters are read, and lines
-    longer than TRACE_LINE_INPUT_LIMIT are dropped, so that the patterns stay fast."""
-    items = []  # (kind, value): kind is 'header', 'frame' or 'more'
+def unescape_trace(text):
+    """The trace as text: a trace sent as one JSON string is decoded, and literal \n, \r\n and \t sequences become
+    line breaks and tabs when there are more of them than real line breaks."""
+    stripped = text.strip()
+    if len(stripped) >= 2 and stripped[0] == '"' and stripped[-1] == '"':
+        try:
+            value = json.loads(stripped)
+        except (ValueError, RecursionError):
+            value = None
+        if isinstance(value, str):
+            text = value
+    if text.count('\\n') > text.count('\n'):
+        text = text.replace('\\r\\n', '\n').replace('\\n', '\n').replace('\\r', '\n').replace('\\t', '\t')
+    return text
+
+
+def line_shape(line):
+    """The shape of a line, safe to print in a public log: every letter becomes a, every digit 0, other characters
+    than ASCII punctuation and spaces ?, a backtick ', and runs of a, 0 and spaces become X{n}. Leading tabs are \t, leading
+    spaces \s{n}. Only the first SHAPE_INPUT_LIMIT characters are read."""
+    lead = re.match(r'[ \t]*', line).group(0)
+    shape = []
+    for run in re.finditer(r'\t+| +', lead):
+        marker = '\\t' if run.group(0)[0] == '\t' else '\\s'
+        shape.append(marker if len(run.group(0)) == 1 else '%s{%d}' % (marker, len(run.group(0))))
+    rest = line[len(lead):]
+    classes = []
+    for char in rest[:SHAPE_INPUT_LIMIT]:
+        if char.isalpha():
+            classes.append('a')
+        elif char.isdigit() or char.isnumeric():
+            classes.append('0')
+        elif char == '`':
+            classes.append("'")
+        elif char in SHAPE_PUNCTUATION:
+            classes.append(char)
+        else:
+            classes.append('?')
+    for run in re.finditer(r'a+|0+| +|[^a0 ]', ''.join(classes)):
+        text = run.group(0)
+        shape.append(text if len(text) == 1 or text[0] not in 'a0 ' else '%s{%d}' % (text[0], len(text)))
+    if len(rest) > SHAPE_INPUT_LIMIT:
+        shape.append('...(+%d)' % (len(rest) - SHAPE_INPUT_LIMIT))
+    return ''.join(shape)
+
+
+class Shapes:
+    """The shapes of the trace lines that were not kept, with their counts, for the dry run."""
+
+    def __init__(self):
+        self.counts = {}
+
+    def add(self, line):
+        shape = line_shape(line)
+        self.counts[shape] = self.counts.get(shape, 0) + 1
+
+    def report(self):
+        if not self.counts:
+            return 'Every line of the stack traces that were read was kept.\n\n'
+        ranked = sorted(self.counts.items(), key=lambda item: -item[1])
+        lines = ['Shapes of the stack trace lines that were not kept (letters are a, digits 0; at most %d):'
+                 % SHAPE_LIMIT]
+        lines += ['%6d  %s' % (count, shape) for shape, count in ranked[:SHAPE_LIMIT]]
+        if len(ranked) > SHAPE_LIMIT:
+            lines.append('        and %d more shapes' % (len(ranked) - SHAPE_LIMIT))
+        return '\n'.join(lines) + '\n\n'
+
+
+def analyse_trace(text, shapes=None):
+    """The redacted trace and the number of frames in it. Keeps the stack frames of a strict shape ([at ][module/]
+    pkg.Class.method(File.java[:N] | SourceFile[:N] | Unknown Source | Native Method), a jar suffix dropped) and the
+    "... N more" lines. The first line and the "Caused by:" and "Suppressed:" lines keep only a Java class name, and
+    only when the next kept line is a frame; else they become REMOVED. Messages become MESSAGE_REMOVED. Other lines
+    are dropped, and each run of dropped lines becomes one line "<N lines removed>". A trace that starts with a frame
+    (it was cut at the start) has no first line. Only the first TRACE_INPUT_LIMIT characters are read, and only the
+    first TRACE_LINE_INPUT_LIMIT characters of a line, so that the patterns stay fast; a longer line is never a
+    frame. The shapes of the lines that were
+    not kept go to shapes."""
+    items = []  # (kind, value): kind is 'header', 'frame', 'more' or 'removed' (value: the raw line)
     header_seen = False
-    for line in text[:TRACE_INPUT_LIMIT].replace('\r\n', '\n').replace('\r', '\n').split('\n'):
+    text = unescape_trace(text[:2 * TRACE_INPUT_LIMIT])[:TRACE_INPUT_LIMIT]
+    for line in text.replace('\r\n', '\n').replace('\r', '\n').split('\n'):
         line = line.rstrip()
-        if not line.strip() or (header_seen and len(line) > TRACE_LINE_INPUT_LIMIT):
+        if not line.strip():
             continue
+        cut = len(line) > TRACE_LINE_INPUT_LIMIT
+        line = line[:TRACE_LINE_INPUT_LIMIT]
         nested = NESTED.fullmatch(line)
-        frame = FRAME.fullmatch(line)
+        frame = None if cut else FRAME.fullmatch(line)
         more = MORE.fullmatch(line)
-        if not header_seen:
-            items.append(('header', ('', None, line.strip()[:TRACE_LINE_INPUT_LIMIT])))
-            header_seen = True
+        if not header_seen and not frame:
+            items.append(('header', ('', None, line.strip(), line)))
         elif nested:
-            items.append(('header', (nested.group('indent'), nested.group('kind'), nested.group('what'))))
+            items.append(('header', (nested.group('indent'), nested.group('kind'), nested.group('what'), line)))
         elif frame:
-            items.append(('frame', '%sat %s' % (frame.group('indent'), frame.group('frame'))))
+            items.append(('frame', '%sat %s' % (frame.group('indent') or '\t', frame.group('frame'))))
         elif more:
             items.append(('more', '%s... %s %s' % (more.group('indent'), more.group('count'), more.group('what'))))
-    result = []
-    for index, (kind, value) in enumerate(items):
-        if kind != 'header':
-            result.append(value)
         else:
-            indent, prefix, what = value
-            following = items[index + 1][0] if index + 1 < len(items) else None
+            items.append(('removed', line))
+        header_seen = True
+    result = []
+    frames = 0
+    removed = 0
+    for index, (kind, value) in enumerate(items):
+        if kind == 'removed':
+            removed += 1
+            if shapes is not None:
+                shapes.add(value)
+            if index + 1 < len(items) and items[index + 1][0] == 'removed':
+                continue
+            result.append('<%d %s removed>' % (removed, 'line' if removed == 1 else 'lines'))
+            removed = 0
+        elif kind == 'header':
+            indent, prefix, what, raw = value
+            following = next((other for other, _ in items[index + 1:] if other != 'removed'), None)
             match = HEADER.fullmatch(what.strip())
             if following == 'frame' and match and CLASS_NAME.fullmatch(match.group('cls')):
                 shown = match.group('cls') + (': ' + MESSAGE_REMOVED if match.group('rest') is not None else '')
             else:
                 shown = REMOVED
+                if shapes is not None:
+                    shapes.add(raw)
             result.append('%s%s%s' % (indent, prefix + ': ' if prefix else '', shown))
+        else:
+            frames += kind == 'frame'
+            result.append(value)
         if len(result) >= TRACE_LINE_LIMIT:
             result.append('\t... (cut)')
             break
     trace = redact('\n'.join(result))
     if len(trace) > TRACE_CHAR_LIMIT:
         trace = trace[:TRACE_CHAR_LIMIT] + '\n\t... (cut)'
-    return trace
+    return trace, frames
+
+
+def redact_trace(text, shapes=None):
+    """The redacted trace; see analyse_trace."""
+    return analyse_trace(text, shapes)[0]
 
 
 # ---------------------------------------------------------------- issues
@@ -898,17 +1000,20 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
     return actions, counts
 
 
-def trace_section(marketplace, group, old_body=None):
+def trace_section(marketplace, group, old_body=None, shapes=None):
+    """The trace part of the body. A trace that cannot be read, or that has no frame left after the redaction,
+    keeps the trace of the earlier body or says that it could not be read."""
     report = group.newest_report()
     if report is None:
         return 'No report of this group has a stack trace.'
     text = marketplace.stacktrace(report.id)
-    if text is None or not text.strip():
+    trace, frames = analyse_trace(text, shapes) if text and text.strip() else (None, 0)
+    if not frames:
         old = read_trace(old_body)
         if old:
             return old
         return render_trace(report, None)
-    return render_trace(report, redact_trace(text))
+    return render_trace(report, trace)
 
 
 # ---------------------------------------------------------------- main
@@ -918,9 +1023,11 @@ def new_state(group, noted, closed=None):
     return {'count': group.report_count, 'versions': group.state_versions(), 'noted': noted, 'closed': closed}
 
 
-def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_BUDGET, clock=time.monotonic):
+def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_BUDGET, clock=time.monotonic,
+            shapes=None):
     """Carries out the actions (write=True) or prints them. Returns the lines of the summary and the number of
-    actions left for the next run because the time budget ran out."""
+    actions left for the next run because the time budget ran out. The shapes of trace lines that were not kept go
+    to shapes."""
     lines = []
     first_body = None
     labels_ready = False
@@ -933,7 +1040,7 @@ def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_B
         title = code(issue_title(group))
         if action.kind == 'create':
             key = content_key(group.report_count, group.state_versions())
-            body = render_body(group, trace_section(marketplace, group),
+            body = render_body(group, trace_section(marketplace, group, shapes=shapes),
                                new_state(group, {'count': group.report_count, 'key': key}))
             if first_body is None:
                 first_body = body
@@ -970,7 +1077,7 @@ def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_B
         reopen = action.kind == 'reopen'
         comment = update_comment(group, action.state, action.release if reopen else None)
         due = new_state(group, noted_of(action.state))
-        body = render_body(group, trace_section(marketplace, group, issue['body']), due)
+        body = render_body(group, trace_section(marketplace, group, issue['body'], shapes), due)
         key = content_key(due['count'], due['versions'])
         verb = 'reopened' if reopen else 'updated'
         if write:
@@ -1089,7 +1196,11 @@ def run(args, environ, http, out, clock):
     resolved = marketplace.resolved()
     actions, counts = plan(groups, resolved, github.issues(), args.min_version, args.max_new, args.max_updates,
                            github.latest_release)
-    lines, left = execute(marketplace, github, actions, args.mode == 'run', out, args.time_budget, clock)
+    shapes = Shapes() if args.mode == 'dry-run' else None
+    lines, left = execute(marketplace, github, actions, args.mode == 'run', out, args.time_budget, clock, shapes)
+    if shapes is not None:
+        # Only in the log, not in the job summary: the shapes hold no letter or digit of the trace.
+        out.write(shapes.report())
     if left:
         counts['waiting_updates'] += left
         actions = actions[:len(actions) - left]
