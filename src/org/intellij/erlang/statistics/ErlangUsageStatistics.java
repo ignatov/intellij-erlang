@@ -347,6 +347,11 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   @TestOnly
+  void recordProjectForTests(@NotNull Project project, int erlangFiles) {
+    recordProject(project, erlangFiles);
+  }
+
+  @TestOnly
   void tickForTests() {
     tick();
   }
@@ -405,9 +410,17 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     if (today.equals(project.getUserData(SNAPSHOT_DATE))) return;
     project.putUserData(SNAPSHOT_DATE, today);
     myCollector.setProperty(ErlangUsageProperty.PROJECT_SIZE, sizeBucket(erlangFiles));
-    boolean sdkConfigured = ErlangSdkType.getSdkPath(project) != null;
-    myCollector.setProperty(ErlangUsageProperty.SDK_CONFIGURED, String.valueOf(sdkConfigured));
-    myCollector.setProperty(ErlangUsageProperty.OTP, otp(project, sdkConfigured));
+    // the SDK and the roots can change or the project close meanwhile, so both are read together in a read action
+    record SdkState(boolean configured, @NotNull String otp) {
+    }
+    SdkState sdk = ReadAction.computeBlocking(() -> {
+      if (project.isDisposed()) return null;
+      boolean configured = ErlangSdkType.getSdkPath(project) != null;
+      return new SdkState(configured, otp(project, configured));
+    });
+    if (sdk == null) return;
+    myCollector.setProperty(ErlangUsageProperty.SDK_CONFIGURED, String.valueOf(sdk.configured()));
+    myCollector.setProperty(ErlangUsageProperty.OTP, sdk.otp());
     myCollector.setProperty(ErlangUsageProperty.REBAR, ReadAction.computeBlocking(() -> rebar(project)));
     for (String inspection : ReadAction.computeBlocking(() -> changedInspections(project))) {
       myCollector.setProperty(ErlangUsageProperty.CHANGED_INSPECTIONS, inspection);
