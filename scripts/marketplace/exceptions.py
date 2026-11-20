@@ -91,6 +91,8 @@ MESSAGE_REMOVED = '<message removed>'
 REMOVED = '<removed>'
 TRACE_LINE_LIMIT = 80
 TRACE_CHAR_LIMIT = 15000
+TRACE_INPUT_LIMIT = 1000000
+TRACE_LINE_INPUT_LIMIT = 1000
 LIST_LIMIT = 20
 STATE_VERSION_LIMIT = 300
 LIST_KEYS = ('issues', 'exceptions', 'groups', 'items')
@@ -476,18 +478,19 @@ def redact_trace(text):
     """Keeps the stack frames of a strict shape (at [module/]pkg.Class.method(File.java:N | Unknown Source | Native
     Method)) and the "... N more" lines. The first line and the "Caused by:" and "Suppressed:" lines keep only a Java
     class name, and only when the next kept line is a frame; else they become REMOVED. Messages become
-    MESSAGE_REMOVED; every other line is dropped."""
+    MESSAGE_REMOVED; every other line is dropped. Only the first TRACE_INPUT_LIMIT characters are read, and lines
+    longer than TRACE_LINE_INPUT_LIMIT are dropped, so that the patterns stay fast."""
     items = []  # (kind, value): kind is 'header', 'frame' or 'more'
     header_seen = False
-    for line in text.replace('\r\n', '\n').replace('\r', '\n').split('\n'):
+    for line in text[:TRACE_INPUT_LIMIT].replace('\r\n', '\n').replace('\r', '\n').split('\n'):
         line = line.rstrip()
-        if not line.strip():
+        if not line.strip() or (header_seen and len(line) > TRACE_LINE_INPUT_LIMIT):
             continue
         nested = NESTED.fullmatch(line)
         frame = FRAME.fullmatch(line)
         more = MORE.fullmatch(line)
         if not header_seen:
-            items.append(('header', ('', None, line.strip())))
+            items.append(('header', ('', None, line.strip()[:TRACE_LINE_INPUT_LIMIT])))
             header_seen = True
         elif nested:
             items.append(('header', (nested.group('indent'), nested.group('kind'), nested.group('what'))))

@@ -8,6 +8,7 @@ import os
 import re
 import tempfile
 import threading
+import time
 import unittest
 import urllib.parse
 
@@ -546,6 +547,13 @@ class RedactionTest(unittest.TestCase):
         # A class-shaped name in a "Caused by:" line that a frame follows is kept: it is the class of the cause.
         self.assertIn('Caused by: secretcls.inmsg.Thing\n\tat org.intellij.erlang.Foo.bar(Foo.java:1)', trace)
 
+    def test_huge_traces_stay_fast(self):
+        start = time.monotonic()
+        trace = ea.redact_trace('a.E: ' + 'x' * 200000 + '\n\tat a.B.c(B.java:1)\n\tat ' + 'a' * 200000 + '.B.c(B.java:1)\n'
+                                + '\tat a.B.c(B.java:1)\n' * 200000 + ('a' * 5000 + '@') * 100)
+        self.assertLess(time.monotonic() - start, 10)
+        self.assertTrue(trace.startswith('a.E: <message removed>\n\tat a.B.c(B.java:1)\n\tat a.B.c(B.java:1)'))
+
     def test_paths(self):
         self.assertEqual('/Users/<user>/x /home/<user>/y C:\\Users/<user>\\z c:/Users/<user>/w',
                          ea.redact('/Users/jdoe/x /home/j.doe/y C:\\Users\\JDoe\\z c:/Users/jdoe/w'))
@@ -595,7 +603,7 @@ class RedactionTest(unittest.TestCase):
         calls = []
         original = ea.redact
         try:
-            ea.redact = lambda text: calls.append(len(text)) or original(text)
+            ea.redact = lambda text: calls.append(len(text)) or text
             ea.clean_title('a' * 100000)
         finally:
             ea.redact = original
