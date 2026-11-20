@@ -20,6 +20,7 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRemoveTypeFix extends ErlangQuickFixBase {
@@ -31,6 +32,7 @@ public class ErlangRemoveTypeFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(getClass());
     ErlangTypeDefinition type = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangTypeDefinition.class);
     if (type != null) {
       type.delete();

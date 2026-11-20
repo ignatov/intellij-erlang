@@ -28,6 +28,7 @@ import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangModule;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -73,6 +74,7 @@ public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangUsageCounters.countQuickFix(getClass());
       ErlangFile file = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangFile.class);
       if (file == null) return;
 

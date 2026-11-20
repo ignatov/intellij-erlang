@@ -33,6 +33,7 @@ import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -99,6 +100,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangUsageCounters.countQuickFix(getClass());
       PsiElement problemElement = problemDescriptor.getPsiElement();
       PsiFile containingFile = problemElement != null ? problemElement.getContainingFile() : null;
       ErlangFile file = ObjectUtils.tryCast(containingFile, ErlangFile.class);

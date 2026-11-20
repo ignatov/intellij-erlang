@@ -29,6 +29,8 @@ import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,6 +45,7 @@ public class ErlangLineBreakpointType extends XLineBreakpointType<ErlangLineBrea
   @Nullable
   @Override
   public ErlangLineBreakpointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
+    ErlangUsageCounters.count(ErlangUsageKey.BREAKPOINT_ADDED);
     return new ErlangLineBreakpointProperties();
   }
 

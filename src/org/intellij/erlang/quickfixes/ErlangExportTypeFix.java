@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(getClass());
     ErlangTypeDefinition type = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangTypeDefinition.class);
 
     if (type != null) {

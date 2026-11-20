@@ -24,6 +24,7 @@ import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,6 +44,7 @@ public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countIntention(getClass());
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
     assert type != null;
     ErlangExportTypeFix.processType(project, type);

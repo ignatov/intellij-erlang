@@ -319,6 +319,31 @@
         <additionalTextAttributes scheme="Default" file="colorSchemes/ErlangDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ErlangDarcula.xml"/>
     </extensions>
+    <!-- Opt-in usage statistics: one summary of counts a day, see PRIVACY.md -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Erlang Usage Statistics" displayType="STICKY_BALLOON"/>
+        <postStartupActivity implementation="org.intellij.erlang.statistics.ErlangUsageListeners$Startup"/>
+    </extensions>
+    <applicationListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageActionListener"
+                  topic="com.intellij.openapi.actionSystem.ex.AnActionListener"/>
+    </applicationListeners>
+    <projectListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Completion"
+                  topic="com.intellij.codeInsight.lookup.LookupManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Execution"
+                  topic="com.intellij.execution.ExecutionListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Debugger"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Build"
+                  topic="com.intellij.task.ProjectTaskListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$StructureView"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$LiveTemplates"
+                  topic="com.intellij.codeInsight.template.TemplateManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$OpenedFiles"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
                 text="Erlang File" description="Create new Erlang file">

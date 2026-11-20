@@ -24,7 +24,9 @@ import com.intellij.openapi.ui.InputValidatorEx;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDirectory;
+import com.intellij.psi.PsiFile;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,6 +105,13 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
         }
       })
     ;
+  }
+
+  @Override
+  protected PsiFile createFile(String name, String templateName, PsiDirectory dir) {
+    PsiFile file = super.createFile(name, templateName, dir);
+    if (file != null) ErlangUsageCounters.countNewFile(templateName);
+    return file;
   }
 
   @Override

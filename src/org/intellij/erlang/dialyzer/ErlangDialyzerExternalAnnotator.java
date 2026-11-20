@@ -48,6 +48,8 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -161,6 +163,9 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (state == null) return null;
 
     ProcessOutput output = runner.apply(state);
+    boolean ok = output != null && !output.isTimeout() && output.getStderrLines().isEmpty() &&
+                 !ContainerUtil.exists(output.getStdoutLines(), line -> line.startsWith("dialyzer: "));
+    ErlangUsageCounters.count(ok ? ErlangUsageKey.DIALYZER_OK : ErlangUsageKey.DIALYZER_FAILED);
     if (output != null && output.isTimeout()) {
       if (timedOutFiles(state.myProject).add(state.myFilePath)) {
         String message = "Dialyzer did not finish in time for " + new File(state.myFilePath).getName() + "; its warnings are not shown";

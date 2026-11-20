@@ -29,6 +29,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,6 +43,7 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(getClass());
     PsiElement psiElement = descriptor.getPsiElement();
 
     if (!(psiElement instanceof ErlangMacros)) return;

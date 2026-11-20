@@ -26,6 +26,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,6 +42,7 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(getClass());
     String fullName = getSignature(descriptor.getPsiElement());
     if (fullName != null) {
       removeFunctionFromImport(getAttributesForProcessing(descriptor.getPsiElement()), fullName);

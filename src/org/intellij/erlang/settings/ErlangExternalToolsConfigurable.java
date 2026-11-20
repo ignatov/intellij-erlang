@@ -38,6 +38,7 @@ import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkForSmallIdes;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.statistics.ErlangUsageStatisticsPanel;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -64,6 +65,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
   private TextFieldWithBrowseButton mySdkPathSelector;
   private TitledSeparator mySdkTitledSeparator;
   private JLabel mySdkPathLabel;
+  private ErlangUsageStatisticsPanel myUsageStatisticsPanel;
 
   public ErlangExternalToolsConfigurable(@NotNull Project project) {
     myProject = project;
@@ -143,7 +145,8 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
          !myRebarSettings.getRebarPath().equals(myRebarConfigurationForm.getPath())
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
       || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText())
-      || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText());
+      || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText())
+      || myUsageStatisticsPanel.isModified();
   }
 
   @Override
@@ -151,6 +154,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
     myDialyzerSettings.setCurrentPltPath(myPltPathSelector.getText());
+    myUsageStatisticsPanel.apply();
     if (ErlangSystemUtil.isSmallIde()) {
       ErlangSdkForSmallIdes.setUpOrUpdateSdk(myProject, mySdkPathSelector.getText());
     }
@@ -162,7 +166,12 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myEmacsPathSelector.setText(myEmacsSettings.getEmacsPath());
     myPltPathSelector.setText(myDialyzerSettings.getCurrentPltPath());
     mySdkPathSelector.setText(StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)));
+    myUsageStatisticsPanel.reset();
     validateEmacsPath();
+  }
+
+  private void createUIComponents() {
+    myUsageStatisticsPanel = new ErlangUsageStatisticsPanel();
   }
 
   private void validateEmacsPath() {

@@ -26,6 +26,7 @@ import com.intellij.psi.PsiElement;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -117,6 +118,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangUsageCounters.countQuickFix(getClass());
       PsiElement oldHead = descriptor.getPsiElement();
       if (oldHead instanceof ErlangQAtom) {
         ErlangPsiImplUtil.renameQAtom((ErlangQAtom) oldHead, myFunctionName);
@@ -143,6 +145,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangUsageCounters.countQuickFix(getClass());
       ErlangFunClause funClause = (ErlangFunClause) descriptor.getPsiElement();
 
       ErlangArgumentDefinition currentName = funClause.getArgumentDefinition();

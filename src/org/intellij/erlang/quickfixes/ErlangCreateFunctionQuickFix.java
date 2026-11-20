@@ -29,6 +29,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +67,7 @@ public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuick
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countQuickFix(getClass());
     int textOffset = file.getLastChild().getTextRange().getEndOffset();
     TemplateManager templateManager = TemplateManager.getInstance(project);
     Template template = templateManager.createTemplate("", "");
