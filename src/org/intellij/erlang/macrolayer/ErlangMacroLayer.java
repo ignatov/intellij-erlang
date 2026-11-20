@@ -247,6 +247,16 @@ public final class ErlangMacroLayer {
   public static @Nullable Copy getCopy(@NotNull PsiFile file) {
     if (!isEnabled() || !(file instanceof ErlangFile) || file.getUserData(COPY_OF) != null) return null;
     Project project = file.getProject();
+    // highlighting asks from several threads at once; build once per file and let the others wait
+    Object lock = ((com.intellij.openapi.util.UserDataHolderEx)file).putUserDataIfAbsent(LOCK_KEY, new Object());
+    synchronized (lock) {
+      return cachedCopy(file, project);
+    }
+  }
+
+  private static final Key<Object> LOCK_KEY = Key.create("erlang.macro.layer.lock");
+
+  private static @Nullable Copy cachedCopy(@NotNull PsiFile file, @NotNull Project project) {
     return CachedValuesManager.getManager(project).getCachedValue(file, COPY_KEY, () -> {
       Copy copy = build(file);
       return CachedValueProvider.Result.create(copy, file, PsiModificationTracker.getInstance(project));
@@ -324,11 +334,11 @@ public final class ErlangMacroLayer {
     if (occurrence >= offsets.length || copy.copyFile == null) return null;
     int e = offsets[occurrence];
     if (!copy.isClean(copy.expansion.formAtExpanded(e))) return null;
-    String refText = abs.substring(copy.realFile.getText());
+    String refText = abs.subSequence(copy.expansion.sourceText).toString();
     PsiReference candidate = copy.copyFile.findReferenceAt(e);
     if (candidate == null || candidate.getClass() != ref.getClass()) return null;
     TextRange cabs = candidate.getRangeInElement().shiftRight(candidate.getElement().getTextRange().getStartOffset());
-    if (cabs.getStartOffset() != e || !refText.equals(cabs.substring(copy.copyFile.getText()))) return null;
+    if (cabs.getStartOffset() != e || !refText.contentEquals(cabs.subSequence(copy.expansion.text))) return null;
     return candidate;
   }
 
