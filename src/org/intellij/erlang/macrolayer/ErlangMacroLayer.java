@@ -301,6 +301,22 @@ public final class ErlangMacroLayer {
 
   // ------------------------------------------------------------------------------------------------ resolve
 
+  private static boolean isRemoteCall(@NotNull PsiElement element) {
+    return element.getParent() instanceof ErlangGlobalFunctionCallExpression;
+  }
+
+  /** Some top-level form of the main tree starts with '?' or is broken: only such forms can make a function. */
+  private static boolean hasTopLevelMacroForm(@NotNull ErlangFile file) {
+    if (file.getMacroses().isEmpty()) return false;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+      if (c instanceof PsiErrorElement) return true;
+      PsiElement leaf = PsiTreeUtil.firstChild(c);
+      if (leaf != null && "?".equals(leaf.getText())) return true;
+    }
+    return false;
+  }
+
   private static @Nullable PsiReference correspondingReference(@NotNull Copy copy, @NotNull PsiReference ref, int occurrence) {
     PsiElement element = ref.getElement();
     TextRange abs = ref.getRangeInElement().shiftRight(element.getTextRange().getStartOffset());
@@ -326,7 +342,17 @@ public final class ErlangMacroLayer {
       PsiElement remote = remoteFallback(file, element, fr);
       if (remote != null) return remote;
     }
-    if (!mayNeedExpansion(file, element)) return null;
+    boolean formHasUse = mayNeedExpansion(file, element);
+    if (!formHasUse) {
+      // a local function may be made by a macro in another form: the per-file table
+      if (!(ref instanceof ErlangFunctionReference fr) || isRemoteCall(element) || !hasTopLevelMacroForm(file)) return null;
+      FALLBACK_ASKED.incrementAndGet();
+      Copy copy = getCopy(file);
+      if (copy == null) return null;
+      PsiElement real = exit(copy.functionsMadeByMacros().get(fr.getName() + "/" + fr.getArity()), file);
+      if (real != null) FALLBACK_ANSWERED.incrementAndGet();
+      return real;
+    }
     FALLBACK_ASKED.incrementAndGet();
     Copy copy = getCopy(file);
     if (copy == null) return null;
