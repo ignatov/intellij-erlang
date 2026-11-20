@@ -48,6 +48,9 @@ import java.util.*;
 
 public class ErlangUnitRunningState extends ErlangRunningState {
   private static final int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div", "else",
+    "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
   private final ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -151,7 +154,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
     String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ErlangUnitRunningState::toAtom, ", ");
+      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ErlangUnitRunningState::moduleNameToAtom, ", ");
     }
     else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
@@ -182,7 +185,14 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @NotNull
+  private static String moduleNameToAtom(@NotNull String name) {
+    if (name.length() > 1 && name.startsWith("'") && name.endsWith("'")) return name;
+    return toAtom(name.replace("\\", "\\\\").replace("'", "\\'"));
+  }
+
+  @NotNull
   private static String toAtom(@NotNull String name) {
+    if (RESERVED_WORDS.contains(name)) return '\'' + name + '\'';
     return Objects.requireNonNullElse(ErlangPsiImplUtil.toAtomName(name), name);
   }
 

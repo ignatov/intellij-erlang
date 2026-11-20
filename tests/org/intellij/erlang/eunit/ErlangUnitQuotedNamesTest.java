@@ -26,13 +26,16 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.MapDataContext;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -83,6 +86,33 @@ public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFix
     ErlangUnitRunConfiguration configuration = createConfiguration(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "my-mod_tests");
     String debugTests = new ErlangUnitRunningState(null, getModule(), configuration).getDebugEntryPoint().getArgsList().get(0);
     assertEquals("[{timeout, " + Integer.MAX_VALUE + ", ['my-mod_tests']}]", debugTests);
+  }
+
+  public void testReservedWordModuleName() throws ExecutionException {
+    assertEquals("['maybe', 'receive', 'div']",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "maybe", "receive", "div"));
+    assertEquals("[{\"module 'maybe'\", [fun 'maybe':a_test/0]}]",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION, "maybe:a_test"));
+  }
+
+  public void testFileNameWithQuoteOrBackslash() throws ExecutionException {
+    assertEquals("['it\\'s_tests', 'a\\\\b_tests']",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "it's_tests", "a\\b_tests"));
+  }
+
+  public void testLocationOfTestInModuleThatNeedsQuotes() {
+    myFixture.configureByFile("my-mod_tests.erl");
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(getProject());
+    assertInstanceOf(getOnlyLocation("my-mod_tests", scope), ErlangModule.class);
+    assertEquals("a_test", ((ErlangFunction) getOnlyLocation("my-mod_tests:a_test:-1", scope)).getName());
+    assertEquals("my-case_test", ((ErlangFunction) getOnlyLocation("my-mod_tests:my-case_test:-1", scope)).getName());
+  }
+
+  private PsiElement getOnlyLocation(String path, GlobalSearchScope scope) {
+    List<Location> locations =
+      ErlangTestLocationProvider.INSTANCE.getLocation(ErlangUnitRunConfigurationType.PROTOCOL, path, getProject(), scope);
+    assertSize(1, locations);
+    return locations.get(0).getPsiElement();
   }
 
   private String getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, String... names) throws ExecutionException {

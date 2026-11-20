@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 public class ErlangTestLocationProvider implements SMTestLocator {
   public static final ErlangTestLocationProvider INSTANCE = new ErlangTestLocationProvider();
 
-  private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(-?\\d+))?)?$");
+  private static final Pattern LOCATION_PATTERN = Pattern.compile("^([^:]+)(?::([^:]+)(?::(-?\\d+))?)?$");
 
   @NotNull
   @Override
