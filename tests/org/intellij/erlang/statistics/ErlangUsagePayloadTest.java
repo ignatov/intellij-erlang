@@ -67,6 +67,19 @@ public class ErlangUsagePayloadTest extends TestCase {
     assertEquals(1, properties.getAsJsonObject("intentions").get("ErlangGenerateSpecIntention").getAsInt());
   }
 
+  // a number with a leading zero is not valid JSON
+  public void testIdeBaselineWithALeadingZeroIsNotSent() {
+    assertTrue(ErlangUsageProperty.IDE_BASELINE.accepts("263"));
+    assertFalse(ErlangUsageProperty.IDE_BASELINE.accepts("026"));
+    ErlangUsageStatisticsState.Day day = day("2026-11-19");
+    day.counters.put("RENAME", 1L);
+    day.properties.put("IDE_BASELINE", "026");
+    String json = ErlangUsagePayload.build(ID, List.of(day));
+    JsonObject properties = JsonParser.parseString(json).getAsJsonObject().getAsJsonArray("events").get(0).getAsJsonObject()
+      .getAsJsonObject("event_properties");
+    assertFalse(json, properties.has("ide_baseline"));
+  }
+
   public void testOnlyAllowedKeysAndValues() {
     ErlangUsageStatisticsState.Day day = day("2026-11-19");
     day.counters.put("RENAME", 1L);
