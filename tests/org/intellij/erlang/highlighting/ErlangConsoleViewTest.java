@@ -17,6 +17,7 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.codeInsight.daemon.DaemonAnalyzerTestCase;
+import com.intellij.execution.process.ProcessHandler;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
@@ -31,8 +32,11 @@ import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
   private ErlangConsoleView myView;
@@ -63,6 +67,39 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     doDoTest(true, false);
     String testName = getTestName(false);
     assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt"), true), DebugUtil.psiToString(file, false));
+  }
+
+  public void testSentSelectionBindsVariables() {
+    ByteArrayOutputStream processInput = new ByteArrayOutputStream();
+    myView.attachToProcess(new ProcessHandler() {
+      @Override
+      protected void destroyProcessImpl() {
+        notifyProcessTerminated(0);
+      }
+
+      @Override
+      protected void detachProcessImpl() {
+        notifyProcessDetached();
+      }
+
+      @Override
+      public boolean detachIsDefault() {
+        return false;
+      }
+
+      @Override
+      public OutputStream getProcessInput() {
+        return processInput;
+      }
+    });
+
+    myView.append("X = 42.");
+    myView.execute();
+
+    assertEquals("X = 42.\n", processInput.toString());
+    Map<String, ErlangQVar> context = myView.getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    assertNotNull(context);
+    assertTrue("variables bound by the sent text: " + context.keySet(), context.containsKey("X"));
   }
 
   @Override
