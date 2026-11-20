@@ -522,7 +522,7 @@ public class ErlangMacroLayerPerfTest extends ErlangLightPlatformCodeInsightFixt
         }
         for (String x : a) diff.append(hc.header).append(" ADDED ").append(v.getName()).append(' ').append(context(f, x)).append('\n');
         for (Map.Entry<PsiElement, PsiElement> e : layerVars.entrySet()) {
-          if (offVars.get(e.getKey()) != null) continue;
+          if (offVars.get(e.getKey()) != null || e.getValue() == null) continue;
           gainedVars++;
           if (gainedVars <= 4) {
             PsiElement k = e.getKey(), t = e.getValue();

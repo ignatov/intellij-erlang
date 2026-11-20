@@ -686,8 +686,11 @@ public final class ErlangMacroLayer {
   private static @NotNull Set<String> argumentVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
       Set<String> r = new HashSet<>();
-      for (ErlangMacrosCall c : PsiTreeUtil.findChildrenOfType(form, ErlangMacrosCall.class)) {
-        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(c, ErlangQVar.class)) r.add(v.getText());
+      // a macro use with arguments is a call whose callee is the macro: its parent holds the arguments (a superset)
+      for (ErlangMacros m : PsiTreeUtil.findChildrenOfType(form, ErlangMacros.class)) {
+        PsiElement call = m.getParent();
+        if (call == null || call == form) continue;
+        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(call, ErlangQVar.class)) r.add(v.getText());
       }
       return r;
     });
