@@ -26,6 +26,8 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -34,6 +36,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 // The scripts run as `/bin/sh <script>`: macOS can take seconds to start a freshly written executable on a loaded machine.
@@ -202,8 +206,123 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
   // directory is deleted under a large temp directory hangs in getcwd().
   public void testWorkingDirectoryStaysWhileCommandIsAlive() throws Exception {
     File directory = FileUtil.createTempDirectory("kept", null, true);
-    ExtProcessUtil.destroyAndCleanUp(new UnkillableProcess(), directory);
+    assertFalse(ExtProcessUtil.destroyAndCleanUp(new FakeProcess(false, new UnkillableProcess()), directory));
     assertTrue(directory.isDirectory());
+  }
+
+  // Output without a line break, as from `cat /dev/zero`, is stopped when it passes the limit, SIGKILL at once; only the
+  // start of the file is read. Before, the whole file was read as one line until the IDE ran out of memory.
+  public void testEndlessOutputWithoutLineBreakIsCutOff() throws Exception {
+    Assume.assumeFalse("the command is a shell script", SystemInfo.isWindows);
+    File directory = FileUtil.createTempDirectory("zeros", null, true);
+    File pidFile = new File(directory, "pid");
+    File cwdFile = new File(directory, "cwd");
+    String script = "pwd > '" + cwdFile.getPath() + "'; echo $$ > '" + pidFile.getPath() + "'; exec cat /dev/zero";
+    AtomicLong largestOutput = new AtomicLong();
+    AtomicBoolean done = new AtomicBoolean();
+    Thread watcher = new Thread(() -> {
+      while (!done.get()) {
+        try {
+          if (cwdFile.isFile()) largestOutput.accumulateAndGet(new File(Files.readString(cwdFile.toPath()).trim(), "stdout").length(), Math::max);
+        }
+        catch (IOException ignored) {
+        }
+      }
+    });
+    watcher.start();
+    long start = System.nanoTime();
+    ExtProcessUtil.ExtProcessOutput output;
+    try {
+      output = ExtProcessUtil.execAndGetFirstLine(10000, "/bin/sh", "-c", script);
+    }
+    finally {
+      done.set(true);
+      watcher.join();
+    }
+    long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+    boolean alive = killIfAlive(pidFile);
+    assertFalse("the command is still running after execAndGetFirstLine returned", alive);
+    assertTrue("the call took " + elapsed + " ms", elapsed < 5000);
+    assertTrue("the first line has " + output.getStdOut().length() + " characters", output.getStdOut().length() <= 64 * 1024);
+    // `cat /dev/zero` writes gigabytes per second into the page cache, so the file grows by megabytes between two checks.
+    assertTrue("the output file reached " + largestOutput.get() + " bytes", largestOutput.get() < 128 * 1024 * 1024);
+  }
+
+  // A process that has no ProcessHandle, as one that Eel starts on 2026.2, is still killed and cleaned up.
+  public void testCommandWithoutProcessHandleIsCleanedUp() throws Exception {
+    ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
+    try {
+      File directory = FileUtil.createTempDirectory("handleless", null, false);
+      FakeProcess process = new FakeProcess(true, null);
+      assertTrue(commands.register(process, directory));
+      ExtProcessUtil.cleanUp(process, directory, commands);
+      assertFalse(process.isAlive());
+      assertFalse(directory.exists());
+      assertFalse(commands.myCommands.containsKey(process));
+    }
+    finally {
+      commands.dispose();
+    }
+  }
+
+  // A command that could not be killed stays known with its directory, and dispose tries again.
+  public void testKeptDirectoryIsDeletedOnDispose() throws Exception {
+    ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
+    File directory = FileUtil.createTempDirectory("leftover", null, false);
+    FakeProcess process = new FakeProcess(false, null);
+    assertTrue(commands.register(process, directory));
+    ExtProcessUtil.cleanUp(process, directory, commands);
+    assertTrue(directory.isDirectory());
+    assertEquals(directory, commands.myCommands.get(process));
+
+    process.myKillable = true;
+    commands.dispose();
+    assertFalse(directory.exists());
+  }
+
+  // Dispose kills every command, also after one that has no ProcessHandle, waits for all of them at most about 2 s
+  // together, and removes the shutdown hook.
+  public void testDisposeHandlesEveryCommandWithinOneBound() throws Exception {
+    Assume.assumeFalse("the command is sleep", SystemInfo.isWindows);
+    ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
+    File handlelessDirectory = FileUtil.createTempDirectory("handleless", null, false);
+    File sleepDirectory = FileUtil.createTempDirectory("sleep", null, false);
+    Process sleep = new ProcessBuilder("sleep", "60").directory(sleepDirectory).start();
+    try {
+      commands.myCommands.put(new FakeProcess(true, null), handlelessDirectory);
+      commands.myCommands.put(sleep, sleepDirectory);
+      for (int i = 0; i < 3; i++) {
+        commands.myCommands.put(new FakeProcess(false, new UnkillableProcess()), FileUtil.createTempDirectory("unkillable", null, true));
+      }
+      long start = System.nanoTime();
+      commands.dispose();
+      long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+      assertTrue("dispose took " + elapsed + " ms", elapsed < 4000);
+      assertTrue("sleep is still running after dispose", sleep.waitFor(5, TimeUnit.SECONDS));
+      assertFalse(sleepDirectory.exists());
+      assertFalse(handlelessDirectory.exists());
+      assertFalse("the shutdown hook is still registered after dispose", Runtime.getRuntime().removeShutdownHook(commands.myShutdownHook));
+    }
+    finally {
+      sleep.destroyForcibly();
+    }
+  }
+
+  // A command that fails to start with an unexpected exception gives the empty result instead of the exception.
+  public void testUnexpectedStartFailureGivesEmptyResult() {
+    ExtProcessUtil.ExtProcessOutput output = ExtProcessUtil.execAndGetFirstLine(5000, "/bin/echo", null);
+    assertEquals("", output.getStdOut());
+    assertEquals("", output.getStdErr());
+  }
+
+  // A command registered after dispose is refused, so dispose never misses one.
+  public void testCommandAfterDisposeIsRefused() throws Exception {
+    ExtProcessUtil.RunningCommands commands = new ExtProcessUtil.RunningCommands();
+    commands.dispose();
+    assertTrue(commands.isDisposed());
+    assertFalse(commands.register(new FakeProcess(true, null), FileUtil.createTempDirectory("refused", null, true)));
+    assertTrue(commands.myCommands.isEmpty());
   }
 
   // Commands that still run when the application is disposed (IDE exit, plugin unload) are killed and their directories
@@ -230,6 +349,41 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
   private static List<String> ourThreads() {
     return Thread.getAllStackTraces().keySet().stream().filter(Thread::isAlive).map(Thread::getName)
       .filter(name -> name.startsWith("ExtProcessUtil")).toList();
+  }
+
+  // A Process that is alive until it is destroyed, if it is killable. Without a handle, toHandle() fails as it does for a
+  // process that Eel starts on 2026.2.
+  private static final class FakeProcess extends Process {
+    volatile boolean myKillable;
+    private volatile boolean myAlive = true;
+    private final ProcessHandle myHandle;
+
+    FakeProcess(boolean killable, ProcessHandle handle) {
+      myKillable = killable;
+      myHandle = handle;
+    }
+
+    @Override public OutputStream getOutputStream() { return OutputStream.nullOutputStream(); }
+    @Override public InputStream getInputStream() { return InputStream.nullInputStream(); }
+    @Override public InputStream getErrorStream() { return InputStream.nullInputStream(); }
+    @Override public int waitFor() throws InterruptedException { while (myAlive) Thread.sleep(10); return 0; }
+    @Override public int exitValue() { if (myAlive) throw new IllegalThreadStateException(); return 0; }
+    @Override public void destroy() { if (myKillable) myAlive = false; }
+    @Override public Process destroyForcibly() { destroy(); return this; }
+    @Override public boolean isAlive() { return myAlive; }
+
+    @Override
+    public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
+      long deadline = System.nanoTime() + unit.toNanos(timeout);
+      while (myAlive && System.nanoTime() < deadline) Thread.sleep(10);
+      return !myAlive;
+    }
+
+    @Override
+    public ProcessHandle toHandle() {
+      if (myHandle == null) throw new UnsupportedOperationException();
+      return myHandle;
+    }
   }
 
   private static final class UnkillableProcess implements ProcessHandle {
