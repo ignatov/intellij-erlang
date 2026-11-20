@@ -365,6 +365,16 @@ public final class ErlangUsageCollector {
     return ErlangUsagePayload.build(id, List.of(preview));
   }
 
+  // whether today has a counted use, so that sendPending sends its summary on a later day
+  public synchronized boolean hasActivityToday() {
+    flushLocked();
+    String today = myToday.get().toString();
+    for (ErlangUsageStatisticsState.Day day : myState.days) {
+      if (today.equals(day.date) && hasActivity(day)) return true;
+    }
+    return false;
+  }
+
   // state
 
   // a copy, so that the IDE can write it to disk while the counters change
