@@ -6,17 +6,27 @@ name: Marketplace exceptions
 #
 # Modes:
 #   probe    only check access: the HTTP status of /exceptions/resolved and the top-level JSON type and keys.
-#   dry-run  print what a run would do and the body of the first new issue; write nothing.
+#   dry-run  read the reports and print what a run would do: counts, issue titles, comments and the body of the
+#            first new issue. It writes nothing.
 #   run      write the issues.
-# A manual run uses the mode of its input (default dry-run). The scheduled run uses dry-run until the repository
-# variable MARKETPLACE_EXCEPTIONS is "true", then run. A scheduled run without the secret does nothing and says so in
-# the job summary; a manual run without it fails.
+# The log and the job summary of this public repository are public. A dry run prints the same redacted text that a
+# run would put into public issues, and nothing more.
 #
-# Secret: JETBRAINS_MARKETPLACE_TOKEN, a Marketplace permanent token (My Tokens) of a user who can edit the plugin. Only
-# the step "Copy the reports" gets it. The script only reads Marketplace: it never sends a POST there, so it never marks
-# a group resolved. It never prints the temporary storage link that Marketplace can redirect to.
-# Variables: MARKETPLACE_EXCEPTIONS ("true" lets the scheduled run write), MARKETPLACE_EXCEPTIONS_MIN_VERSION
-# (optional; the oldest plugin version whose reports are filed, default 0.11.1300).
+# When the workflow reads Marketplace:
+#   - A scheduled run does nothing at all (no request to Marketplace, one line in the job summary) unless the
+#     repository variable MARKETPLACE_EXCEPTIONS is "true"; then it runs in the mode run.
+#   - A manual run (workflow_dispatch) uses the mode of its input, default dry-run.
+#
+# What keeps the token in:
+#   - The token is the secret MARKETPLACE_EXCEPTIONS_TOKEN of the environment marketplace-exceptions, which the
+#     maintainer restricts to the branch master, so a run from another branch cannot read it. It is not the
+#     publishing token JETBRAINS_MARKETPLACE_TOKEN of release.yml.
+#   - Only the job copy enters the environment, and only its step "Copy the reports" gets the token. The job mode,
+#     which decides whether to run at all, has no secret. There is no pull_request trigger.
+#   - The script sends the token only to plugins.jetbrains.com, never to the storage link that Marketplace may
+#     redirect to, never prints it, and never sends a POST to Marketplace.
+# Variables: MARKETPLACE_EXCEPTIONS ("true" turns the scheduled run on), MARKETPLACE_EXCEPTIONS_MIN_VERSION (optional;
+# the oldest plugin release whose reports are filed, default 0.11.1300).
 
 on:
   schedule:
@@ -24,7 +34,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: probe (check access only), dry-run (print what it would do) or run (write the issues)
+        description: probe (check access only), dry-run (print what it would do; the log is public) or run (write the issues)
         type: choice
         options:
           - probe
@@ -41,49 +51,61 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  copy:
+  mode:
     if: github.repository == 'ignatov/intellij-erlang'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 2
+    permissions: {}
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
     steps:
-    - uses: actions/checkout@v7
-      with:
-        persist-credentials: false
-    - name: Test the script
-      run: python3 -m unittest discover -s scripts/marketplace -p 'test_*.py'
     - name: Choose the mode
       id: mode
       env:
         EVENT: ${{ github.event_name }}
         INPUT_MODE: ${{ inputs.mode }}
         ENABLED: ${{ vars.MARKETPLACE_EXCEPTIONS }}
-        HAS_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN != '' }}
       run: |
         if [[ "$EVENT" == workflow_dispatch ]]; then
           mode="$INPUT_MODE"
         elif [[ "$ENABLED" == true ]]; then
           mode=run
         else
-          mode=dry-run
-        fi
-        case "$mode" in
-          probe|dry-run|run) ;;
-          *) echo "::error::Unknown mode: $mode"; exit 1 ;;
-        esac
-        if [[ "$HAS_TOKEN" != true ]]; then
-          if [[ "$EVENT" == workflow_dispatch ]]; then
-            echo "::error::The secret JETBRAINS_MARKETPLACE_TOKEN is not set"
-            exit 1
-          fi
-          echo "The secret JETBRAINS_MARKETPLACE_TOKEN is not set, so nothing was read." >> "$GITHUB_STEP_SUMMARY"
+          echo "The repository variable MARKETPLACE_EXCEPTIONS is not true, so the scheduled run did nothing." \
+            >> "$GITHUB_STEP_SUMMARY"
           mode=none
         fi
+        case "$mode" in
+          probe|dry-run|run|none) ;;
+          *) echo "::error::Unknown mode: $mode"; exit 1 ;;
+        esac
         echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+  copy:
+    needs: mode
+    if: needs.mode.outputs.mode == 'probe' || needs.mode.outputs.mode == 'dry-run' || needs.mode.outputs.mode == 'run'
+    runs-on: ubuntu-24.04
+    # The script starts no new change after 300 seconds; the requests that are under way take at most a few minutes.
+    timeout-minutes: 15
+    environment:
+      name: marketplace-exceptions
+      # The environment is used for its secret and its branch policy only; this is not a deployment.
+      deployment: false
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Test the script
+      run: python3 -m unittest discover -s scripts/marketplace -p 'test_*.py'
     - name: Copy the reports
-      if: steps.mode.outputs.mode != 'none'
       env:
-        MARKETPLACE_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        MARKETPLACE_TOKEN: ${{ secrets.MARKETPLACE_EXCEPTIONS_TOKEN }}
         GITHUB_TOKEN: ${{ github.token }}
         MARKETPLACE_MIN_VERSION: ${{ vars.MARKETPLACE_EXCEPTIONS_MIN_VERSION }}
-        MODE: ${{ steps.mode.outputs.mode }}
-      run: python3 scripts/marketplace/exceptions.py "--$MODE"
+        MODE: ${{ needs.mode.outputs.mode }}
+      run: |
+        if [[ -z "$MARKETPLACE_TOKEN" ]]; then
+          echo "::error::The secret MARKETPLACE_EXCEPTIONS_TOKEN of the environment marketplace-exceptions is not set."
+          exit 1
+        fi
+        python3 scripts/marketplace/exceptions.py "--$MODE"
