@@ -207,6 +207,23 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  // the focus goes to Yes at the end of the guard only if the user did not move it to another control
+  public void testGuardEndKeepsTheFocusThatTheUserMoved() {
+    ErlangUsageAskDialog moved = new ErlangUsageAskDialog(getProject(), false);
+    ErlangUsageAskDialog untouched = new ErlangUsageAskDialog(getProject(), false);
+    ErlangUsageAskDialog outside = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      assertFalse("the user opened the example during the guard", moved.endGuardForTests(moved.getToggleForTests()));
+      assertTrue(untouched.endGuardForTests(untouched.getContentForTests()));
+      assertTrue("not a control of the content", outside.endGuardForTests(new JButton()));
+    }
+    finally {
+      Disposer.dispose(moved.getDisposable());
+      Disposer.dispose(untouched.getDisposable());
+      Disposer.dispose(outside.getDisposable());
+    }
+  }
+
   public void testButtonTextsAndOrder() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
