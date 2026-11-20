@@ -24,6 +24,7 @@ import com.intellij.psi.stubs.StubElement;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangBehaviourImpl;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -54,5 +55,29 @@ public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTes
     assertEquals(1, behaviours.size());
     assertEquals("gen_server", behaviours.get(0).getName());
     assertFalse(fileImpl.isContentsLoaded());
+  }
+
+  // The name from the stub must equal the name from the tree.
+  public void testBehaviourNameFromStubEqualsNameFromTree() {
+    doTestBehaviourNameFromStubEqualsNameFromTree("q.erl", "-module(q).\n-behaviour('gen_server').\n", "gen_server");
+    doTestBehaviourNameFromStubEqualsNameFromTree("us.erl", "-module(us).\n-behavior(supervisor).\n", "supervisor");
+    doTestBehaviourNameFromStubEqualsNameFromTree("none.erl", "-module(none).\n-behaviour().\n", "");
+  }
+
+  private void doTestBehaviourNameFromStubEqualsNameFromTree(String fileName, String text, String expected) {
+    ErlangFile file = (ErlangFile) myFixture.addFileToProject(fileName, text);
+    PsiFileImpl fileImpl = (PsiFileImpl) file;
+    assertNotNull(fileImpl.getStub());
+    List<ErlangBehaviour> fromStub = file.getBehaviours();
+    assertEquals(1, fromStub.size());
+    String stubName = fromStub.get(0).getName();
+    assertFalse(fileImpl.isContentsLoaded());
+
+    assertNotNull(fileImpl.getNode());
+    List<ErlangBehaviour> fromTree = file.getBehaviours();
+    assertEquals(1, fromTree.size());
+    assertNull(((ErlangBehaviourImpl) fromTree.get(0)).getStub());
+    assertEquals(expected, fromTree.get(0).getName());
+    assertEquals(fromTree.get(0).getName(), stubName);
   }
 }
