@@ -18,6 +18,7 @@ package org.intellij.erlang.statistics;
 
 import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.icons.AllIcons;
+import com.intellij.ide.ui.laf.darcula.ui.DarculaButtonUI;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.DumbService;
@@ -53,7 +54,9 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   public static final String NO = "No, thanks";
   public static final String LATER = "Ask me later";
   public static final String NEVER_SENT = "It never sends code, file names or paths.";
+  // own exit codes: the OK exit code, which Enter or Ctrl+Enter may give, never means yes
   private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE;
+  private static final int YES_EXIT_CODE = NEXT_USER_EXIT_CODE + 1;
   public static final String EXAMPLE_TITLE = "Example of the data that is sent";
   public static final String REAL_SUMMARY = "The real summary of today is in Settings | Erlang External Tools.";
   private static final int TEXT_WIDTH = 440;
@@ -81,13 +84,17 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
 
   private final boolean myReminder;
   private JComponent myExample;
+  private JComponent myContent;
+  private ActionLink myToggle;
+  private Dimension myCollapsedSize;
+  // no action is the default one, so Enter or Space from a user who was typing never gives consent
+  private final Action myYesAction = new DialogWrapperExitAction(YES, YES_EXIT_CODE);
   private final Action myNoAction = new DialogWrapperExitAction(NO, NO_EXIT_CODE);
 
   ErlangUsageAskDialog(@Nullable Project project, boolean reminder) {
     super(project, false);
     myReminder = reminder;
     setTitle(TITLE);
-    setOKButtonText(YES);
     setCancelButtonText(LATER);
     setResizable(false);
     init();
@@ -95,14 +102,51 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
 
   @NotNull
   static ErlangUsageAskUi.Choice choiceOf(int exitCode) {
-    if (exitCode == OK_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
+    if (exitCode == YES_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
     if (exitCode == NO_EXIT_CODE) return ErlangUsageAskUi.Choice.NO;
     return ErlangUsageAskUi.Choice.LATER;
   }
 
   @Override
   protected Action @NotNull [] createActions() {
-    return new Action[]{getOKAction(), myNoAction, getCancelAction()};
+    return new Action[]{myYesAction, myNoAction, getCancelAction()};
+  }
+
+  // the OK action is not shown; Ctrl+Enter, which runs it, does nothing
+  @Override
+  protected void doOKAction() {
+  }
+
+  // "Yes" looks like the primary button, but it is not the default button of the dialog
+  @Override
+  protected @NotNull JButton createJButtonForAction(@NotNull Action action) {
+    JButton button = super.createJButtonForAction(action);
+    if (action == myYesAction) button.putClientProperty(DarculaButtonUI.DEFAULT_STYLE_KEY, Boolean.TRUE);
+    return button;
+  }
+
+  @TestOnly
+  @NotNull
+  List<Action> getActionsForTests() {
+    return List.of(createActions());
+  }
+
+  @TestOnly
+  void pressEnterForTests() {
+    JButton defaultButton = getRootPane() != null ? getRootPane().getDefaultButton() : null;
+    if (defaultButton != null) defaultButton.doClick();
+    else doOKAction();
+  }
+
+  @TestOnly
+  void toggleExampleForTests() {
+    toggleExample();
+  }
+
+  @TestOnly
+  @NotNull
+  Dimension getContentPreferredSizeForTests() {
+    return myContent.getPreferredSize();
   }
 
   @TestOnly
@@ -125,6 +169,9 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   protected @NotNull JComponent createCenterPanel() {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    // the first focus goes here: Space or Enter on a panel does nothing
+    panel.setFocusable(true);
+    myContent = panel;
     String text = myReminder ? ErlangUsageStatistics.REMINDER_TEXT : ErlangUsageStatistics.TEXT;
     panel.add(left(new JBLabel(wrapped(text))));
     panel.add(Box.createVerticalStrut(JBUI.scale(8)));
@@ -156,21 +203,34 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     myExample = content;
     ActionLink toggle = new ActionLink(EXAMPLE_TITLE);
     toggle.setIcon(AllIcons.General.ArrowRight, false);
-    toggle.addActionListener(e -> {
-      boolean expand = !content.isVisible();
-      content.setVisible(expand);
-      toggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, false);
-      pack();
-    });
+    myToggle = toggle;
+    toggle.addActionListener(e -> toggleExample());
     JPanel holder = new JPanel(new BorderLayout(0, JBUI.scale(4)));
     holder.add(toggle, BorderLayout.NORTH);
     holder.add(content, BorderLayout.CENTER);
     return holder;
   }
 
+  // grows the dialog to show the example, and gives it back its first size when the example is hidden again
+  private void toggleExample() {
+    boolean expand = !myExample.isVisible();
+    Window window = SwingUtilities.getWindowAncestor(myContent);
+    if (expand && window != null) myCollapsedSize = window.getSize();
+    myExample.setVisible(expand);
+    myToggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, false);
+    myContent.revalidate();
+    if (!expand && window != null && myCollapsedSize != null) {
+      window.setSize(myCollapsedSize);
+      window.validate();
+    }
+    else {
+      pack();
+    }
+  }
+
   @Override
   public @Nullable JComponent getPreferredFocusedComponent() {
-    return getButton(getOKAction());
+    return myContent;
   }
 
   // HTML with a fixed width, so that the text wraps into a compact block

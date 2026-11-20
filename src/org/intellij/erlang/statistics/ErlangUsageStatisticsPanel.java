@@ -45,10 +45,12 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
 
   public ErlangUsageStatisticsPanel() {
     super(new BorderLayout());
-    JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0));
+    // no gap on the left, so that the button lines up with the text above it
+    JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     JButton show = new JButton("Show what is sent");
     show.addActionListener(e -> showPreview(this));
     actions.add(show);
+    actions.add(Box.createHorizontalStrut(JBUI.scale(12)));
     actions.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
     JPanel form = FormBuilder.createFormBuilder()
       .addComponent(new TitledSeparator("Usage Statistics"))

@@ -140,6 +140,13 @@ public class ErlangUsagePayloadTest extends TestCase {
     assertEquals(realEvent.keySet(), exampleEvent.keySet());
     JsonObject properties = exampleEvent.getAsJsonObject("event_properties");
     assertAllowedKeys(properties);
+    // the example only orders the keys for reading: the same day written for sending has the same keys and values
+    JsonObject sent = ErlangUsageCollectorTest.events(ErlangUsagePayload.build(ID, List.of(ErlangUsagePayload.exampleDay()))).get(0)
+      .getAsJsonObject().getAsJsonObject("event_properties");
+    assertEquals(sent, properties);
+    // the counters come first, so that the visible lines show them
+    assertEquals("completion", properties.keySet().iterator().next());
+    assertEquals("event_properties", exampleEvent.keySet().iterator().next());
     // every environment property and some counters of each kind
     for (ErlangUsageProperty property : ErlangUsageProperty.values()) {
       assertTrue(property.jsonName(), properties.has(property.jsonName()));

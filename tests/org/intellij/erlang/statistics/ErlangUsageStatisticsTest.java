@@ -41,6 +41,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -130,7 +132,8 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
       assertFalse(first.isExampleShownForTests());
       assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
-      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
+      // the OK exit code, which Enter or Ctrl+Enter may give, is not consent
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
       assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));
       // Esc and the close button of the window cancel the dialog
       first.doCancelAction();
@@ -141,6 +144,69 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     finally {
       Disposer.dispose(first.getDisposable());
       Disposer.dispose(reminder.getDisposable());
+    }
+  }
+
+  public void testEnterDoesNotGiveConsent() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      for (Action action : dialog.getActionsForTests()) {
+        assertNull((String)action.getValue(Action.NAME), action.getValue(DialogWrapper.DEFAULT_ACTION));
+      }
+      JComponent focused = dialog.getPreferredFocusedComponent();
+      assertNotNull(focused);
+      assertFalse(focused instanceof AbstractButton);
+      dialog.pressEnterForTests();
+      assertNotSame(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
+      assertEquals(ErlangUsageCollector.Consent.UNSET, collector().getConsent());
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testExampleClosedAgainHasTheFirstSize() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      Dimension collapsed = dialog.getContentPreferredSizeForTests();
+      dialog.toggleExampleForTests();
+      assertTrue(dialog.isExampleShownForTests());
+      assertTrue(dialog.getContentPreferredSizeForTests().height > collapsed.height);
+      dialog.toggleExampleForTests();
+      assertFalse(dialog.isExampleShownForTests());
+      assertEquals(collapsed, dialog.getContentPreferredSizeForTests());
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testAskWaitsAMinuteAfterTheProjectIsReady() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 50_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 61_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testAskWaitsUntilTheUserStopsTyping() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    try {
+      ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 1_000);
+      statistics.ask(getProject());
+      assertEquals(List.of(), ui.asked);
+      ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 6_000);
+      statistics.ask(getProject());
+      assertEquals(List.of(false), ui.asked);
+    }
+    finally {
+      ErlangUsageIdle.setLastInputForTests(0);
     }
   }
 

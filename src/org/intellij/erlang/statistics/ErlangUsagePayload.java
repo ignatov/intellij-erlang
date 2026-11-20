@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -53,6 +54,12 @@ public final class ErlangUsagePayload {
    */
   @NotNull
   public static String example() {
+    return build(EXAMPLE_ID, List.of(exampleDay()), true);
+  }
+
+  // the sample values of the example: every environment property and counters of every area
+  @NotNull
+  static ErlangUsageStatisticsState.Day exampleDay() {
     ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
     day.date = "2026-11-19";
     day.country = "Germany";
@@ -64,86 +71,134 @@ public final class ErlangUsagePayload {
       day.properties.put(property[0], property[1]);
     }
     Object[][] counters = {
-      {ErlangUsageKey.COMPLETION, 42}, {ErlangUsageKey.COMPLETION_FUNCTION, 30}, {ErlangUsageKey.COMPLETION_MODULE, 8},
-      {ErlangUsageKey.COMPLETION_VARIABLE, 4}, {ErlangUsageKey.GO_TO_DECLARATION, 25}, {ErlangUsageKey.FIND_USAGES, 3},
-      {ErlangUsageKey.QUICK_DOCUMENTATION, 5}, {ErlangUsageKey.REFORMAT, 2}, {ErlangUsageKey.RENAME, 1},
-      {ErlangUsageKey.RUN_EUNIT, 4}, {ErlangUsageKey.DEBUG_SESSION, 1}, {ErlangUsageKey.OPENED_ERL, 12},
-      {ErlangUsageKey.OPENED_HRL, 2}};
+      {ErlangUsageKey.COMPLETION, 42}, {ErlangUsageKey.COMPLETION_FUNCTION, 30}, {ErlangUsageKey.COMPLETION_MODULE, 6},
+      {ErlangUsageKey.COMPLETION_VARIABLE, 4}, {ErlangUsageKey.COMPLETION_RECORD, 2},
+      {ErlangUsageKey.GO_TO_DECLARATION, 25}, {ErlangUsageKey.FIND_USAGES, 3}, {ErlangUsageKey.FILE_STRUCTURE_POPUP, 2},
+      {ErlangUsageKey.QUICK_DOCUMENTATION, 5}, {ErlangUsageKey.PARAMETER_INFO, 3}, {ErlangUsageKey.OTP_DOCS_WEB_OK, 2},
+      {ErlangUsageKey.REFORMAT, 2}, {ErlangUsageKey.RENAME, 1}, {ErlangUsageKey.LIVE_TEMPLATE, 3}, {ErlangUsageKey.NEW_FILE_MODULE, 1},
+      {ErlangUsageKey.RUN_EUNIT, 4}, {ErlangUsageKey.RUN_REBAR, 2}, {ErlangUsageKey.DEBUG_APPLICATION, 1},
+      {ErlangUsageKey.DEBUG_SESSION, 1}, {ErlangUsageKey.BREAKPOINT_ADDED, 3}, {ErlangUsageKey.DEBUG_STEP, 12},
+      {ErlangUsageKey.BUILD_REBAR, 2}, {ErlangUsageKey.DIALYZER_OK, 1}, {ErlangUsageKey.CONSOLE_SEND_SELECTION, 1},
+      {ErlangUsageKey.OPENED_ERL, 12}, {ErlangUsageKey.OPENED_HRL, 2}};
     for (Object[] counter : counters) {
       day.counters.put(((ErlangUsageKey)counter[0]).name(), ((Integer)counter[1]).longValue());
     }
     day.counters.put(QUICK_FIX_PREFIX + "ErlangExportFunctionFix", 1L);
-    return build(EXAMPLE_ID, List.of(day)).replace(ErlangAmplitudeSender.API_KEY, "…");
+    day.counters.put(INTENTION_PREFIX + "ErlangGenerateSpecIntention", 1L);
+    return day;
   }
 
   public static final String EXAMPLE_ID = "00000000-0000-4000-8000-000000000000";
+  // what the example shows first, in the lines that are visible without scrolling
+  private static final List<String> EXAMPLE_FIRST = List.of(
+    "completion", "completion_function", "go_to_declaration", "find_usages", "quick_documentation", "run_eunit",
+    "debug_application", "reformat", "otp", "rebar", "project_size");
 
   @NotNull
   public static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days) {
+    return build(deviceId, days, false);
+  }
+
+  // for the example, the counters come first and the envelope last, so that the visible lines show what is counted
+  @NotNull
+  private static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days, boolean example) {
     if (!DEVICE_ID.matcher(deviceId).matches()) throw new IllegalArgumentException("Not an installation id");
     if (days.size() > MAX_EVENTS_PER_REQUEST) throw new IllegalArgumentException("Too many events: " + days.size());
-    StringBuilder json = new StringBuilder();
-    json.append("{\"api_key\":");
-    string(json, ErlangAmplitudeSender.API_KEY);
-    json.append(",\"events\":[");
+    StringBuilder events = new StringBuilder("[");
     boolean first = true;
     for (ErlangUsageStatisticsState.Day day : days) {
       if (day.date == null || !DATE.matcher(day.date).matches()) continue;
-      if (!first) json.append(',');
+      if (!first) events.append(',');
       first = false;
-      event(json, deviceId, day, day.country != null && ErlangUsageCountry.isKnown(day.country) ? day.country : null);
+      event(events, deviceId, day, day.country != null && ErlangUsageCountry.isKnown(day.country) ? day.country : null, example);
     }
-    json.append("]}");
-    return json.toString();
+    events.append(']');
+    StringBuilder json = new StringBuilder("{");
+    if (example) {
+      json.append("\"events\":").append(events).append(",\"api_key\":");
+      string(json, "…");
+    }
+    else {
+      json.append("\"api_key\":");
+      string(json, ErlangAmplitudeSender.API_KEY);
+      json.append(",\"events\":").append(events);
+    }
+    return json.append('}').toString();
   }
 
   private static void event(@NotNull StringBuilder json,
                             @NotNull String deviceId,
                             @NotNull ErlangUsageStatisticsState.Day day,
-                            @Nullable String country) {
+                            @Nullable String country,
+                            boolean example) {
     LocalDate date = LocalDate.parse(day.date);
     Map<ErlangUsageProperty, String> properties = properties(day);
-    json.append("{\"device_id\":");
-    string(json, deviceId);
-    json.append(",\"event_type\":");
-    string(json, EVENT_TYPE);
+
+    StringBuilder envelope = new StringBuilder();
+    envelope.append("\"device_id\":");
+    string(envelope, deviceId);
+    envelope.append(",\"event_type\":");
+    string(envelope, EVENT_TYPE);
     // noon UTC of the day, so that the day is the same in the charts of every time zone setting
-    json.append(",\"time\":").append(date.atTime(LocalTime.NOON).toInstant(ZoneOffset.UTC).toEpochMilli());
-    json.append(",\"insert_id\":");
-    string(json, deviceId + "-" + day.date);
-    optional(json, "app_version", properties.get(ErlangUsageProperty.PLUGIN_VERSION));
-    optional(json, "platform", properties.get(ErlangUsageProperty.IDE_PRODUCT));
-    optional(json, "os_name", properties.get(ErlangUsageProperty.OS));
-    optional(json, "country", country);
-    json.append(",\"event_properties\":{");
-    boolean first = true;
-    for (Map.Entry<ErlangUsageProperty, String> entry : properties.entrySet()) {
-      first = comma(json, first);
-      value(json, entry.getKey(), entry.getValue());
+    envelope.append(",\"time\":").append(date.atTime(LocalTime.NOON).toInstant(ZoneOffset.UTC).toEpochMilli());
+    envelope.append(",\"insert_id\":");
+    string(envelope, deviceId + "-" + day.date);
+    optional(envelope, "app_version", properties.get(ErlangUsageProperty.PLUGIN_VERSION));
+    optional(envelope, "platform", properties.get(ErlangUsageProperty.IDE_PRODUCT));
+    optional(envelope, "os_name", properties.get(ErlangUsageProperty.OS));
+    optional(envelope, "country", country);
+
+    // each value already written as JSON, by its property name
+    Map<String, String> counters = new LinkedHashMap<>();
+    // in the order of the enum, which groups them by area
+    for (ErlangUsageKey counter : ErlangUsageKey.values()) {
+      Long count = day.counters.get(counter.name());
+      if (count != null && count > 0) counters.put(counter.jsonName(), String.valueOf(count.longValue()));
     }
     Map<String, Long> quickFixes = new TreeMap<>();
     Map<String, Long> intentions = new TreeMap<>();
-    for (Map.Entry<String, Long> entry : new TreeMap<>(day.counters).entrySet()) {
+    for (Map.Entry<String, Long> entry : day.counters.entrySet()) {
       String key = entry.getKey();
       Long count = entry.getValue();
       if (key == null || count == null || count <= 0) continue;
-      if (key.startsWith(QUICK_FIX_PREFIX)) {
-        addClassCount(quickFixes, key.substring(QUICK_FIX_PREFIX.length()), count);
-      }
-      else if (key.startsWith(INTENTION_PREFIX)) {
-        addClassCount(intentions, key.substring(INTENTION_PREFIX.length()), count);
-      }
-      else {
-        ErlangUsageKey counter = counterKey(key);
-        if (counter == null) continue;
-        first = comma(json, first);
-        string(json, counter.jsonName());
-        json.append(':').append(count.longValue());
-      }
+      if (key.startsWith(QUICK_FIX_PREFIX)) addClassCount(quickFixes, key.substring(QUICK_FIX_PREFIX.length()), count);
+      else if (key.startsWith(INTENTION_PREFIX)) addClassCount(intentions, key.substring(INTENTION_PREFIX.length()), count);
     }
-    first = classCounts(json, first, "quick_fixes", quickFixes);
-    classCounts(json, first, "intentions", intentions);
-    json.append("}}");
+    if (!quickFixes.isEmpty()) counters.put("quick_fixes", classCounts(quickFixes));
+    if (!intentions.isEmpty()) counters.put("intentions", classCounts(intentions));
+    Map<String, String> environment = new LinkedHashMap<>();
+    for (Map.Entry<ErlangUsageProperty, String> entry : properties.entrySet()) {
+      StringBuilder value = new StringBuilder();
+      value(value, entry.getKey(), entry.getValue());
+      environment.put(entry.getKey().jsonName(), value.toString());
+    }
+    Map<String, String> all = new LinkedHashMap<>();
+    if (example) {
+      Map<String, String> rest = new LinkedHashMap<>(counters);
+      rest.putAll(environment);
+      for (String name : EXAMPLE_FIRST) {
+        String value = rest.remove(name);
+        if (value != null) all.put(name, value);
+      }
+      all.putAll(rest);
+    }
+    else {
+      all.putAll(environment);
+      all.putAll(counters);
+    }
+    StringBuilder eventProperties = new StringBuilder("\"event_properties\":{");
+    boolean first = true;
+    for (Map.Entry<String, String> entry : all.entrySet()) {
+      first = comma(eventProperties, first);
+      string(eventProperties, entry.getKey());
+      eventProperties.append(':').append(entry.getValue());
+    }
+    eventProperties.append('}');
+
+    json.append('{');
+    if (example) json.append(eventProperties).append(',').append(envelope);
+    else json.append(envelope).append(',').append(eventProperties);
+    json.append('}');
   }
 
   // the properties of the day that pass their checks, in a fixed order
@@ -167,8 +222,6 @@ public final class ErlangUsagePayload {
   }
 
   private static void value(@NotNull StringBuilder json, @NotNull ErlangUsageProperty property, @NotNull String value) {
-    string(json, property.jsonName());
-    json.append(':');
     switch (property.kind()) {
       case NUMBER, BOOLEAN -> json.append(value);
       case TEXT -> string(json, value);
@@ -188,19 +241,16 @@ public final class ErlangUsagePayload {
     if (CLASS_NAME.matcher(simpleName).matches()) counts.merge(simpleName, count, Long::sum);
   }
 
-  private static boolean classCounts(@NotNull StringBuilder json, boolean first, @NotNull String name, @NotNull Map<String, Long> counts) {
-    if (counts.isEmpty()) return first;
-    first = comma(json, first);
-    string(json, name);
-    json.append(":{");
-    boolean firstCount = true;
+  @NotNull
+  private static String classCounts(@NotNull Map<String, Long> counts) {
+    StringBuilder json = new StringBuilder("{");
+    boolean first = true;
     for (Map.Entry<String, Long> entry : counts.entrySet()) {
-      firstCount = comma(json, firstCount);
+      first = comma(json, first);
       string(json, entry.getKey());
       json.append(':').append(entry.getValue().longValue());
     }
-    json.append('}');
-    return first;
+    return json.append('}').toString();
   }
 
   @Nullable
