@@ -396,6 +396,22 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(ErlangUsageStatistics.MAX_RETRIES + 1, scheduler.runAll());
   }
 
+  // with two Erlang projects open, the chain asks in the one whose window the user works in
+  public void testChainAsksInAnotherProjectThatCanBeAsked() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.cannotAskIn = getProject();
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    Project other = fakeProject(new boolean[]{false});
+    ErlangUsageStatistics.setErlangProjectForTests(other, true);
+    statistics.setOpenProjectsForTests(() -> new Project[]{getProject(), other});
+    statistics.askLaterForTests(getProject());
+    scheduler.runAll();
+    assertEquals(List.of(other), ui.askedIn);
+  }
+
   public void testChainEndsWhenItsProjectCloses() {
     FakeScheduler scheduler = new FakeScheduler();
     ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
@@ -405,6 +421,8 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     boolean[] disposed = {false};
     Project closing = fakeProject(disposed);
     ErlangUsageStatistics.setErlangProjectForTests(closing, true);
+    // the only open project
+    statistics.setOpenProjectsForTests(() -> new Project[]{closing});
     statistics.askLaterForTests(closing);
     assertTrue(ErlangUsageIdle.isInstalled());
     disposed[0] = true;
@@ -562,13 +580,16 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
 
   private static final class FakeAskUi implements ErlangUsageAskUi {
     final List<Boolean> asked = new ArrayList<>();
+    final List<Project> askedIn = new ArrayList<>();
     boolean canAsk = true;
+    // the user does not work in the window of this project
+    Project cannotAskIn;
     boolean fail;
     Choice choice = Choice.LATER;
 
     @Override
     public boolean canAskNow(@NotNull Project project) {
-      return canAsk;
+      return canAsk && project != cannotAskIn;
     }
 
     @Override
@@ -577,6 +598,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       if (fail) throw new IllegalStateException("no dialog");
       beforeShow.run();
       asked.add(reminder);
+      askedIn.add(project);
       return choice;
     }
   }

@@ -56,12 +56,14 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.lang.ref.WeakReference;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * The opt-in usage statistics of the plugin: one summary of counts per day, sent to Amplitude.
@@ -111,6 +113,8 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private volatile ScheduledFuture<?> myPendingAsk;
   // null: the scheduled executor of the IDE
   private volatile AskScheduler myTestScheduler;
+  // null: the open projects of the IDE
+  private volatile Supplier<Project[]> myTestOpenProjects;
 
   // runs a check of the ask chain after a delay; tests drive the checks themselves
   interface AskScheduler {
@@ -256,7 +260,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   // the next check of the chain: a one-shot task that holds the project only weakly and is cancelled when the plugin is
-  // unloaded; the chain ends when the project closes before the check
+  // unloaded
   private void schedule(@NotNull Project project, long delayMillis) {
     myScheduledForTests++;
     if (myDisposed) {
@@ -270,16 +274,12 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     }
     WeakReference<Project> projectRef = new WeakReference<>(project);
     myPendingAsk = scheduler.schedule(() -> {
-      Project target = projectRef.get();
-      if (target == null || target.isDisposed() || myDisposed) {
+      if (myDisposed) {
         endChain();
         return;
       }
-      ApplicationManager.getApplication().invokeLater(() -> {
-        Project current = projectRef.get();
-        if (current == null || current.isDisposed()) endChain();
-        else ask(current);
-      }, ModalityState.nonModal());
+      // a closed project leaves the check to the other open Erlang projects
+      ApplicationManager.getApplication().invokeLater(() -> ask(projectRef.get()), ModalityState.nonModal());
     }, delayMillis);
   }
 
@@ -301,14 +301,31 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
    * The ask is counted when the dialog is shown.
    */
   @RequiresEdt
-  void ask(@NotNull Project project) {
-    if (myDisposed || myAskedInSession || !myCollector.shouldAsk() || !isErlangProject(project)) {
+  void ask(@Nullable Project project) {
+    if (myDisposed || myAskedInSession || !myCollector.shouldAsk()) {
       endChain();
       return;
     }
-    if (!isQuietTime(project) || !myAskUi.canAskNow(project)) {
+    // the project of the chain first, then the other open Erlang projects: the user may work in the window of another one
+    List<Project> candidates = new ArrayList<>();
+    if (isErlangProject(project)) candidates.add(project);
+    for (Project open : openProjects()) {
+      if (open != project && isErlangProject(open)) candidates.add(open);
+    }
+    if (candidates.isEmpty()) {
+      endChain();
+      return;
+    }
+    Project target = null;
+    for (Project candidate : candidates) {
+      if (isQuietTime(candidate) && myAskUi.canAskNow(candidate)) {
+        target = candidate;
+        break;
+      }
+    }
+    if (target == null) {
       // the user is busy: check again every few seconds for a while; after that, the timer starts a new chain later
-      if (myRetries++ < MAX_RETRIES) schedule(project, RETRY_MS);
+      if (myRetries++ < MAX_RETRIES) schedule(candidates.get(0), RETRY_MS);
       else endChain();
       return;
     }
@@ -316,7 +333,12 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     endChain();
     boolean reminder = myCollector.isReminder();
     // the ask counts only once the dialog exists and is about to be shown
-    answer(myAskUi.ask(project, reminder, myCollector::markAsked));
+    answer(myAskUi.ask(target, reminder, myCollector::markAsked));
+  }
+
+  private Project @NotNull [] openProjects() {
+    Supplier<Project[]> openProjects = myTestOpenProjects;
+    return openProjects != null ? openProjects.get() : ProjectManager.getInstance().getOpenProjects();
   }
 
   void answer(@NotNull ErlangUsageAskUi.Choice choice) {
@@ -340,6 +362,11 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   void setSchedulerForTests(@Nullable AskScheduler scheduler) {
     myTestScheduler = scheduler;
+  }
+
+  @TestOnly
+  void setOpenProjectsForTests(@Nullable Supplier<Project[]> openProjects) {
+    myTestOpenProjects = openProjects;
   }
 
   @TestOnly
@@ -510,6 +537,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     myRetries = 0;
     myScheduledForTests = 0;
     myTestScheduler = null;
+    myTestOpenProjects = null;
     myChainAlive.set(false);
   }
 }
