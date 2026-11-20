@@ -30,6 +30,11 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 
 public class ErlangUsageCollectorTest extends TestCase {
@@ -418,6 +423,32 @@ public class ErlangUsageCollectorTest extends TestCase {
     mySender.status = 200;
     assertEquals(1, myCollector.sendPending());
     assertEquals(ErlangUsageCollector.MAX_FAILED_SENDS_PER_DAY + 1, mySender.bodies.size());
+  }
+
+  // the day changes back and forth while several threads count: no count may land in a batch that was already moved
+  public void testNoCountIsLostAtTheDayChange() throws Exception {
+    AtomicLong calls = new AtomicLong();
+    ErlangUsageCollector collector = new ErlangUsageCollector(() -> DAY.plusDays(calls.incrementAndGet() / 500 % 2),
+                                                              ErlangUsageCollectorTest::appProperties, () -> "Germany", () -> true, mySender);
+    collector.setEnabled(true);
+    int threads = 4;
+    int counts = 100_000;
+    ExecutorService executor = Executors.newFixedThreadPool(threads);
+    try {
+      List<Future<?>> futures = new ArrayList<>();
+      for (int t = 0; t < threads; t++) {
+        futures.add(executor.submit(() -> {
+          for (int i = 0; i < counts; i++) collector.count(ErlangUsageKey.RENAME);
+        }));
+      }
+      for (Future<?> future : futures) future.get(1, TimeUnit.MINUTES);
+    }
+    finally {
+      executor.shutdownNow();
+    }
+    collector.flush();
+    long stored = collector.getState().days.stream().mapToLong(day -> day.counters.getOrDefault("RENAME", 0L)).sum();
+    assertEquals((long)threads * counts, stored);
   }
 
   public void testCountryIsThatOfTheDay() {
