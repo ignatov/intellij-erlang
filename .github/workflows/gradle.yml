@@ -452,8 +452,7 @@ jobs:
     # testData/smoke/smoke_app and a pinned cowboy, and the parser on pinned real sources against
     # scripts/smoke/parser-baseline.txt. Pushes to master only. The release gate requires this job by its name.
     needs: build
-    # TEMPORARY, removed by the next commit: also run on this pull request once, to prove the job.
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     defaults:
