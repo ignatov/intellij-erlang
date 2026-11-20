@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.jetbrains.annotations.NotNull;
@@ -139,6 +140,35 @@ public final class ErlangUsageCollector {
 
   public void count(@NotNull ErlangUsageKey key) {
     add(key.name());
+  }
+
+  public void countQuickFix(@NotNull Class<?> fixClass) {
+    String name = pluginClassName(fixClass);
+    if (name != null) add(ErlangUsagePayload.QUICK_FIX_PREFIX + name);
+  }
+
+  public void countIntention(@NotNull Class<?> intentionClass) {
+    String name = pluginClassName(intentionClass);
+    if (name != null) add(ErlangUsagePayload.INTENTION_PREFIX + name);
+  }
+
+  // the simple name of a named class of this plugin, or null for any other class
+  @Nullable
+  static String pluginClassName(@NotNull Class<?> aClass) {
+    if (!isPluginClass(aClass) || aClass.isAnonymousClass() || aClass.isLocalClass()) return null;
+    String name = aClass.getSimpleName();
+    return ErlangUsagePayload.CLASS_NAME.matcher(name).matches() ? name : null;
+  }
+
+  // the plugin class loader of the IDE decides; without it (tests, a run from sources) the class must come from the
+  // class loader of this plugin and from its package
+  private static boolean isPluginClass(@NotNull Class<?> aClass) {
+    ClassLoader loader = aClass.getClassLoader();
+    if (loader instanceof PluginAwareClassLoader pluginLoader) {
+      return PLUGIN_ID.equals(pluginLoader.getPluginDescriptor().getPluginId().getIdString());
+    }
+    return loader != null && loader == ErlangUsageCollector.class.getClassLoader() &&
+           aClass.getName().startsWith("org.intellij.erlang.");
   }
 
   private void add(@NotNull String key) {

@@ -48,6 +48,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -99,6 +100,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
   public void applyFix(@NotNull Project project,
                        @NotNull ProblemDescriptor problemDescriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
 
     PsiElement problem = problemDescriptor.getPsiElement();
     if (problem == null) return;

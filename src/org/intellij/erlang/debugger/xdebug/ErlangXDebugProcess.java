@@ -64,6 +64,8 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -423,18 +425,21 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOut();
   }
 

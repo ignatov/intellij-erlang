@@ -64,6 +64,7 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertEquals(ErlangUsageCollector.Consent.UNSET, myCollector.getConsent());
     assertFalse(myCollector.isCounting());
     myCollector.count(ErlangUsageKey.COMPLETION);
+    myCollector.countQuickFix(ErlangUsageCollectorTest.class);
     myCollector.setProperty(ErlangUsageProperty.OTP, "27");
     myToday = DAY.plusDays(1);
     assertEquals(0, myCollector.sendPending());
@@ -260,6 +261,16 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertEquals("true", properties.get("SDK_CONFIGURED"));
   }
 
+  public void testOnlyNamedClassesOfThePluginAreCounted() {
+    myCollector.setEnabled(true);
+    myCollector.countQuickFix(String.class);
+    myCollector.countQuickFix(new Object() {}.getClass());
+    myCollector.countIntention(ErlangUsageCollector.class);
+    myCollector.countQuickFix(FakeSender.class);
+    myCollector.flush();
+    assertEquals(Map.of("intention:ErlangUsageCollector", 1L, "quick_fix:FakeSender", 1L), myCollector.getState().days.get(0).counters);
+  }
+
   public void testLoadedStateWithoutConsentIsCleared() {
     ErlangUsageStatisticsState state = new ErlangUsageStatisticsState();
     state.installationId = "8f1c2b0e-1111-4222-8333-444455556666";
@@ -288,6 +299,7 @@ public class ErlangUsageCollectorTest extends TestCase {
 
   public void testCountsBeforeConsentAreNeverKept() {
     myCollector.count(ErlangUsageKey.RENAME);
+    myCollector.countQuickFix(FakeSender.class);
     assertEquals(0, myCollector.countsInMemory());
     myCollector.setEnabled(true);
     myCollector.flush();

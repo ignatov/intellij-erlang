@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -128,6 +129,15 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  public void testOnlyClassesOfThisPluginCount() {
+    collector().setEnabled(true);
+    ErlangUsageCounters.countQuickFix(getProject(), LocalQuickFix.class);
+    ErlangUsageCounters.countIntention(getProject(), String.class);
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollector.class);
+    collector().flush();
+    assertEquals(Map.of("quick_fix:ErlangUsageCollector", 1L), collector().getState().days.get(0).counters);
+  }
+
   // hostile values through every setter and through a changed state file never reach the JSON
   public void testHostileValuesInTheStateFile() throws Exception {
     ErlangUsageCollectorTest.FakeSender sender = new ErlangUsageCollectorTest.FakeSender();
@@ -168,6 +178,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
   public void testStateIsStoredAndRead() {
     collector().setEnabled(true);
     ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollectorTest.FakeSender.class);
     collector().setProperty(ErlangUsageProperty.OTP, "27");
     collector().markAsked();
     ErlangUsageStatisticsState state = ErlangUsageStatistics.getInstance().getState();
@@ -178,7 +189,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(state.installationId, read.installationId);
     assertEquals(1, read.days.size());
     assertEquals(state.days.get(0).date, read.days.get(0).date);
-    assertEquals(Map.of("RENAME", 1L), read.days.get(0).counters);
+    assertEquals(Map.of("RENAME", 1L, "quick_fix:FakeSender", 1L), read.days.get(0).counters);
     assertEquals("27", read.days.get(0).properties.get("OTP"));
   }
 

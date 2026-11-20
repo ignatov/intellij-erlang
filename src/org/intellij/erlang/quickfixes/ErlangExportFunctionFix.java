@@ -44,6 +44,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,6 +79,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                      @Nullable Editor editor,
                      @NotNull PsiElement startElement,
                      @Nullable PsiElement endElement) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     if (startElement instanceof ErlangFunction) {
       processFunction(project, (ErlangFunction) startElement, editor);
     }
