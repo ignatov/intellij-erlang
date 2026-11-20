@@ -6,14 +6,18 @@
 #   inputs     download the pinned inputs (inputs.sh)
 #   build      build the plugin archive with ./gradlew buildPlugin; only when SMOKE_ZIP is not set
 #   archive    check the contents of the archive
-#   inspect    for each IDE in SMOKE_IDES and project in SMOKE_PROJECTS: install the archive in a fresh sandbox of the
-#              IDE and run the headless inspections on a fresh copy of the project; the IDEs run at the same time
+#   inspect    for each IDE in SMOKE_IDES: check that the IDE declares every extension point the plugin uses; then for
+#              each project in SMOKE_PROJECTS install the archive in a fresh sandbox of the IDE, run the headless
+#              inspections on a fresh copy of the project and compare the problems with
+#              scripts/smoke/expected-<project>.txt; the IDEs run at the same time
 #   parser     parse the corpus with ErlangCorpusParsingTest and compare it with scripts/smoke/parser-baseline.txt
 #   report     print the summary, and add it to the job summary on GitHub Actions
 # Without a phase, all of them run; a failed phase does not stop the next ones, and the exit code is 1 if one failed.
-# Another phase, not in the default list:
+# Other phases, not in the default list; each writes a committed file that the checks compare with:
 #   parser-baseline   parse the corpus and write scripts/smoke/parser-baseline.txt (needs the inputs phase first):
 #                     scripts/smoke/run.sh inputs parser-baseline
+#   inspect-baseline  run the inspect phase and write scripts/smoke/expected-<project>.txt from its problems (needs the
+#                     inputs phase and an archive first): scripts/smoke/run.sh inputs build inspect-baseline
 # Environment:
 #   JAVA_HOME           JDK 25; on macOS, when it is not set, /usr/libexec/java_home -v 25
 #   SMOKE_WORK          the work directory, default build/smoke
@@ -83,11 +87,13 @@ phase_inspect() {
       rc=1
       continue
     fi
+    smoke extensions --ide "$work/ide-$ide.json" --zip "$zip" --result "$work/results/extensions-$ide.json" || rc=1
     (
       code=0
       for project in $projects; do
         smoke inspect --ide "$work/ide-$ide.json" --ide-version "$ide" --zip "$zip" --sdk "$work/inputs/otp" \
-          --project "$project" --source "$(project_source "$project")" --out "$work/insp/$ide-$project" \
+          --project "$project" --source "$(project_source "$project")" --expected "$here/expected-$project.txt" \
+          --inputs-id "$(cat "$work/inputs/corpus-id")" --out "$work/insp/$ide-$project" \
           --timeout "${SMOKE_TIMEOUT:-600}" --result "$work/results/inspect-$ide-$project.json" || code=1
       done
       exit $code
@@ -122,6 +128,16 @@ phase_parser() {
 
 phase_parser-baseline() {
   parse_corpus --update
+}
+
+phase_inspect-baseline() {
+  local project rc=0
+  phase_inspect
+  for project in $projects; do
+    smoke expectations "$work" --project "$project" --file "$here/expected-$project.txt" \
+      --inputs-id "$(cat "$work/inputs/corpus-id")" || rc=1
+  done
+  return $rc
 }
 
 phase_report() {

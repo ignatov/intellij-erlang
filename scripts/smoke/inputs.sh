@@ -57,7 +57,15 @@ if [[ "$(git -C "$cowboy" rev-parse HEAD 2> /dev/null)" != "$COWBOY_COMMIT" ]] \
   [[ ! -e "$cowboy" ]] || mv "$cowboy" "$dir/cowboy.old.$(date +%s)"
   tmp="$dir/cowboy.tmp.$$"
   git init -q "$tmp"
-  git -C "$tmp" fetch -q --depth 1 "$COWBOY_URL" "$COWBOY_COMMIT"
+  # Three tries: a host that stays down still fails the step.
+  for try in 1 2 3; do
+    git -C "$tmp" fetch -q --depth 1 "$COWBOY_URL" "$COWBOY_COMMIT" && break
+    if (( try == 3 )); then
+      echo "::error::Cannot fetch $COWBOY_URL $COWBOY_COMMIT"
+      exit 1
+    fi
+    sleep $(( try * 10 ))
+  done
   git -C "$tmp" -c advice.detachedHead=false checkout -q FETCH_HEAD
   mv "$tmp" "$cowboy"
 fi

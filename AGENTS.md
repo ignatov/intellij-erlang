@@ -35,6 +35,7 @@ The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts
 | Release smoke, machine half (CI job `release-smoke`, JDK 25) | `scripts/smoke/run.sh` (phases and settings in its header) |
 | Unit tests of the release smoke scripts | `python3 -m unittest discover -s scripts/smoke -p 'test_*.py' -v` |
 | Refresh the parser baseline of the release smoke | `scripts/smoke/run.sh inputs parser-baseline` |
+| Refresh the expected inspection problems of the release smoke | `scripts/smoke/run.sh inputs build inspect-baseline` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.

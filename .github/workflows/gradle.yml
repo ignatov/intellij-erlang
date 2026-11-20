@@ -173,7 +173,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
-      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml and scripts/smoke/inputs.sh (the release
+      # smoke); change the pins together in all three.
       env:
         OTP_VERSION: '27.3.4.9'
       run: |
@@ -335,8 +336,9 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
-      # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
-      # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 comes from the list of builds of
+      # erlef/otp_builds.
       if: runner.os == 'macOS'
       env:
         OTP_VERSION: '27.3.4.9'
@@ -360,9 +362,9 @@ jobs:
         tar -xzf "$archive" -C "$root"
         echo "$root/bin" >> "$GITHUB_PATH"
     - name: Install Erlang/OTP on Windows
-      # The official archive of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change the pins
-      # together in all three. The sha256 is the one GitHub publishes for the release asset; SHA256.txt of the release
-      # does not list the Windows builds.
+      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 is the one GitHub publishes for the
+      # release asset; SHA256.txt of the release does not list the Windows builds.
       if: runner.os == 'Windows'
       env:
         OTP_VERSION: '27.3.4.9'
@@ -450,7 +452,8 @@ jobs:
     # The machine half of the release smoke, scripts/smoke/run.sh, on the archive of the build job: the contents of the
     # archive, the headless inspections with the archive installed in IntelliJ IDEA 2026.2 and 2026.3 on
     # testData/smoke/smoke_app and a pinned cowboy, and the parser on pinned real sources against
-    # scripts/smoke/parser-baseline.txt. Pushes to master only. The release gate requires this job by its name.
+    # scripts/smoke/parser-baseline.txt. Pushes to master only. The release gate requires this job by its name; a
+    # skipped run of it is not a pass.
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
@@ -494,6 +497,14 @@ jobs:
           echo "SMOKE_BUILD_NUMBER=$BUILD_NUMBER"
           echo "SMOKE_WORK=$RUNNER_TEMP/smoke"
         } >> "$GITHUB_ENV"
+    - name: Cache the pinned inputs
+      # inputs.sh takes the cached Erlang/OTP only with its marker of the pinned version and sha256, and the cached
+      # cowboy only at the pinned commit, and downloads again what does not match. Without a cache entry and without
+      # the hosts the next step fails.
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/smoke/inputs
+        key: release-smoke-inputs-${{ hashFiles('scripts/smoke/inputs.sh') }}
     - name: Download the pinned inputs
       run: scripts/smoke/run.sh inputs
     - name: Check the archive
