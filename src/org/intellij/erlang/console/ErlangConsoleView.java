@@ -110,6 +110,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
       });
     }
 
+    ErlangConsoleViewDirectory.getInstance().markUsed(this);
     addToHistoryInner(new TextRange(0, text.length()), consoleEditor, true, true);
     myHistoryController.addToHistory(text);
     for (String line : text.split("\n")) {

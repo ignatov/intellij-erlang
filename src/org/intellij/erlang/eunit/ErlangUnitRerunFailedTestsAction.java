@@ -151,6 +151,7 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     ErlangUnitRunConfiguration configuration =
       new ErlangUnitRunConfiguration(original.getProject(), "", ErlangUnitRunConfigurationType.getInstance());
     configuration.setEnvData(original.getEnvData());
+    configuration.setWorkDirectory(original.getWorkDirectory());
     configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
     configuration.getConfigData().setFunctionNames(functionNames);
     return configuration;
