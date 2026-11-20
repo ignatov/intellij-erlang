@@ -16,6 +16,12 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.util.xmlb.annotations.Attribute;
+import com.intellij.util.xmlb.annotations.Tag;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 /**
  * The stored state of the usage statistics. It is application-level and is kept in a file that does not roam.
  */
@@ -28,4 +34,18 @@ public class ErlangUsageStatisticsState {
   public String lastAskDate;
   // a random UUID; it exists only while the user allows the statistics
   public String installationId;
+
+  @Tag("day")
+  public static class Day {
+    // the local date, yyyy-MM-dd
+    @Attribute("date")
+    public String date;
+    // the country of the day, guessed from the time zone; null when the time zone is not in the table
+    @Attribute("country")
+    public String country;
+    // the names of ErlangUsageKey constants, or "quick_fix:" or "intention:" and the simple name of a class of this plugin
+    public Map<String, Long> counters = new TreeMap<>();
+    // the names of ErlangUsageProperty constants; a LIST value is a sorted, comma-separated set
+    public Map<String, String> properties = new TreeMap<>();
+  }
 }
