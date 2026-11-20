@@ -16,14 +16,21 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.codeInsight.hints.declarative.DeclarativeInlayHintsSettings;
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
+import com.intellij.openapi.util.SystemInfo;
+import org.intellij.erlang.hints.ErlangParameterHintsProvider;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
 import java.time.LocalDate;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * The opt-in usage statistics of the plugin: one summary of counts per day, sent to Amplitude.
@@ -34,7 +41,8 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
   private static volatile Boolean ourAllowed;
 
-  private final ErlangUsageCollector myCollector = new ErlangUsageCollector(LocalDate::now, ErlangUsageStatistics::isAllowed);
+  private final ErlangUsageCollector myCollector = new ErlangUsageCollector(
+    LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed);
 
   @NotNull
   public static ErlangUsageStatistics getInstance() {
@@ -89,6 +97,26 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   public static void setAllowedForTests(@Nullable Boolean allowed) {
     ourAllowed = allowed;
+  }
+
+  @NotNull
+  private static Map<ErlangUsageProperty, String> appProperties() {
+    Map<ErlangUsageProperty, String> properties = new EnumMap<>(ErlangUsageProperty.class);
+    String version = pluginVersion();
+    if (version != null) properties.put(ErlangUsageProperty.PLUGIN_VERSION, version);
+    var build = ApplicationInfo.getInstance().getBuild();
+    properties.put(ErlangUsageProperty.IDE_PRODUCT, build.getProductCode());
+    properties.put(ErlangUsageProperty.IDE_BASELINE, String.valueOf(build.getBaselineVersion()));
+    properties.put(ErlangUsageProperty.SMALL_IDE, String.valueOf(ErlangSystemUtil.isSmallIde()));
+    properties.put(ErlangUsageProperty.OS, SystemInfo.isMac ? "mac" : SystemInfo.isWindows ? "windows" : SystemInfo.isLinux ? "linux" : "other");
+    properties.put(ErlangUsageProperty.INLAY_PARAMETER_HINTS, String.valueOf(parameterHintsEnabled()));
+    return properties;
+  }
+
+  private static boolean parameterHintsEnabled() {
+    // null when the user never changed it; the provider is on by default
+    Boolean enabled = DeclarativeInlayHintsSettings.Companion.getInstance().isProviderEnabled(ErlangParameterHintsProvider.PROVIDER_ID);
+    return enabled == null || enabled;
   }
 
   @Nullable
