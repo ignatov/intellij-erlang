@@ -96,6 +96,7 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
     StringBuilder problemsJson = new StringBuilder();
     int filesWithErrors = 0;
     int totalErrors = 0;
+    int visibleErrors = 0;
     long start = System.currentTimeMillis();
     for (Path file : files) {
       String rel = root.relativize(file).toString();
@@ -121,6 +122,7 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
       if (!errors.isEmpty()) {
         filesWithErrors++;
         totalErrors += errors.size();
+        for (String err : errors) if (err.contains("\"visible\": true")) visibleErrors++;
         for (String err : errors) {
           if (!errorsJson.isEmpty()) errorsJson.append(",\n");
           errorsJson.append("    ").append(err);
@@ -133,6 +135,7 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
                   "  \"files\": " + files.size() + ",\n" +
                   "  \"filesWithErrors\": " + filesWithErrors + ",\n" +
                   "  \"errors\": " + totalErrors + ",\n" +
+                  "  \"visibleErrors\": " + visibleErrors + ",\n" +
                   "  \"totalMs\": " + totalMs + ",\n" +
                   "  \"problems\": [\n" + problemsJson + "\n  ],\n" +
                   "  \"errorElements\": [\n" + errorsJson + "\n  ]\n" +
@@ -140,7 +143,7 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
     if (out.getParent() != null) Files.createDirectories(out.getParent());
     Files.writeString(out, json);
     System.out.println("CORPUS " + corpusName + ": files=" + files.size() + " filesWithErrors=" + filesWithErrors +
-                       " errors=" + totalErrors + " totalMs=" + totalMs + " report=" + out.toAbsolutePath());
+                       " errors=" + totalErrors + " visibleErrors=" + visibleErrors + " totalMs=" + totalMs + " report=" + out.toAbsolutePath());
   }
 
   private List<String> collectErrors(String name, String text, String rel) {
@@ -149,6 +152,12 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
       Collection<PsiErrorElement> errors = PsiTreeUtil.collectElementsOfType(psi, PsiErrorElement.class);
       List<String> result = new ArrayList<>();
       for (PsiErrorElement e : errors) {
+        // spike 3 adaptation: an error is visible when every error filter lets it through (the layer's filter hides some)
+        boolean visible = true;
+        for (com.intellij.codeInsight.highlighting.HighlightErrorFilter filter :
+          com.intellij.codeInsight.highlighting.HighlightErrorFilter.EP_NAME.getExtensions(getProject())) {
+          if (!filter.shouldHighlightErrorElement(e)) visible = false;
+        }
         int offset = e.getTextRange().getStartOffset();
         int line = 0;
         int lineStart = 0;
@@ -164,7 +173,8 @@ public class ErlangSpikeCorpusTest extends ErlangLightPlatformCodeInsightFixture
                    ", \"line\": " + (line + 1) +
                    ", \"column\": " + (offset - lineStart + 1) +
                    ", \"description\": " + q(e.getErrorDescription()) +
-                   ", \"sourceLine\": " + q(sourceLine) + "}");
+                   ", \"sourceLine\": " + q(sourceLine) +
+                   ", \"visible\": " + visible + "}");
       }
       return result;
     });

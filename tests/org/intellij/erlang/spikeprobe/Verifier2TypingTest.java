@@ -5,7 +5,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.testFramework.LightProjectDescriptor;
-import org.intellij.erlang.parser.macro.ErlangMacroSubstitution;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.nio.file.Files;
@@ -54,7 +54,7 @@ public class Verifier2TypingTest extends ErlangLightPlatformCodeInsightFixtureTe
     String[][] files = {
       {OTP + "dialyzer-6.0.3/src/erl_types.erl", "t_inf_lists_strict(L1, L2) ->\n"},
       {OTP + "xmerl-2.2/src/xmerl_scan.erl", "    ets:delete(Rules),\n"}};
-    ErlangMacroSubstitution.Mode[] modes = {ErlangMacroSubstitution.Mode.OFF, ErlangMacroSubstitution.Mode.FRAGMENTS};
+    ErlangMacroLayer.Mode[] modes = {ErlangMacroLayer.Mode.OFF, ErlangMacroLayer.Mode.LAYER};
     int n = 0;
     for (String[] f : files) {
       String text = read(Paths.get(f[0]));
@@ -62,9 +62,9 @@ public class Verifier2TypingTest extends ErlangLightPlatformCodeInsightFixtureTe
       Map<String, List<Long>> res = new LinkedHashMap<>();
       for (int rep = 0; rep < 5; rep++) {
         for (int k = 0; k < 2; k++) {
-          ErlangMacroSubstitution.Mode mode = modes[(rep + k) % 2];
+          ErlangMacroLayer.Mode mode = modes[(rep + k) % 2];
           com.intellij.openapi.Disposable disp = Disposer.newDisposable();
-          ErlangMacroSubstitution.setModeForTests(mode, disp);
+          ErlangMacroLayer.setModeForTests(mode, disp);
           try {
             myFixture.configureByText("t" + (n++) + "_" + Paths.get(f[0]).getFileName(), text);
             int[] c0 = treeCounts(myFixture.getFile());

@@ -8,7 +8,7 @@ import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.stubs.StubTree;
 import com.intellij.testFramework.LightProjectDescriptor;
-import org.intellij.erlang.parser.macro.ErlangMacroSubstitution;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -34,11 +34,11 @@ public class MacroSpikeModeSwitchProbeTest extends ErlangLightPlatformCodeInsigh
     if (out == null) return;
     StringBuilder log = new StringBuilder();
     String text = read(Paths.get("testData/macroSpikeProbes/def.erl"));
-    for (ErlangMacroSubstitution.Mode[] pair : new ErlangMacroSubstitution.Mode[][]{
-      {ErlangMacroSubstitution.Mode.OFF, ErlangMacroSubstitution.Mode.FRAGMENTS},
-      {ErlangMacroSubstitution.Mode.FRAGMENTS, ErlangMacroSubstitution.Mode.OFF}}) {
+    for (ErlangMacroLayer.Mode[] pair : new ErlangMacroLayer.Mode[][]{
+      {ErlangMacroLayer.Mode.OFF, ErlangMacroLayer.Mode.LAYER},
+      {ErlangMacroLayer.Mode.LAYER, ErlangMacroLayer.Mode.OFF}}) {
       com.intellij.openapi.Disposable d1 = Disposer.newDisposable();
-      ErlangMacroSubstitution.setModeForTests(pair[0], d1);
+      ErlangMacroLayer.setModeForTests(pair[0], d1);
       PsiFile file = myFixture.addFileToProject("switch-" + pair[0] + "/def.erl", text);
       String[] stub = new String[1];
       ReadAction.run(() -> {
@@ -49,7 +49,7 @@ public class MacroSpikeModeSwitchProbeTest extends ErlangLightPlatformCodeInsigh
       });
       Disposer.dispose(d1);
       com.intellij.openapi.Disposable d2 = Disposer.newDisposable();
-      ErlangMacroSubstitution.setModeForTests(pair[1], d2);
+      ErlangMacroLayer.setModeForTests(pair[1], d2);
       log.append("index built in ").append(pair[0]).append(", AST loaded in ").append(pair[1]).append('\n');
       log.append("  stub from index: ").append(stub[0].replace('\n', ' ')).append('\n');
       List<Failure> f = guarded(() -> ReadAction.run(() -> {
