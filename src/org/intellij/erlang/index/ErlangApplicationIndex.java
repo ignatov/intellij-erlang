@@ -30,6 +30,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.*;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
+import com.intellij.util.text.VersionComparatorUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -199,8 +200,16 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
         return true;
       }
       if (appName.equals(myPath.getName())) return true;
-      myPath = myPath.getName().compareTo(libDir.getName()) < 0 ? libDir : myPath;
+      myPath = compareLibraryDirectoryNames(appName, myPath.getName(), libDir.getName()) < 0 ? libDir : myPath;
       return true;
+    }
+
+    private static int compareLibraryDirectoryNames(@NotNull String appName, @NotNull String name1, @NotNull String name2) {
+      String prefix = appName + "-";
+      if (name1.startsWith(prefix) && name2.startsWith(prefix)) {
+        return VersionComparatorUtil.compare(name1.substring(prefix.length()), name2.substring(prefix.length()));
+      }
+      return name1.compareTo(name2);
     }
 
     public VirtualFile getApplicationPath() {
