@@ -27,6 +27,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.*;
+import com.intellij.openapi.diagnostic.ControlFlowException;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
@@ -384,9 +385,9 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
       }
       if (myCollector.isCounting()) myCollector.sendPending();
     }
-    catch (Exception e) {
-      // an exception would stop the timer
-      LOG.debug("Erlang usage statistics", e);
+    catch (Throwable e) {
+      // anything thrown, also an Error, would stop the timer for the rest of the session
+      if (!(e instanceof ControlFlowException)) LOG.debug("Erlang usage statistics", e);
     }
   }
 

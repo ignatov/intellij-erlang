@@ -439,6 +439,24 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertTrue(ErlangUsageStatistics.isErlangProject(getProject()));
   }
 
+  // review point 8: an Error, not only an Exception, would end the timer for the rest of the session
+  public void testTimerSurvivesAnError() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    collector().setEnabled(true);
+    collector().setSender(json -> {
+      throw new AssertionError("a broken sender");
+    });
+    ErlangUsageStatisticsState state = collector().getState();
+    ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
+    day.date = LocalDate.now().minusDays(1).toString();
+    day.counters.put(ErlangUsageKey.RENAME.name(), 1L);
+    state.days.add(day);
+    collector().loadState(state);
+    statistics.tickForTests();
+    // the tick also checks the project, which has no Erlang files
+    PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+  }
+
   public void testEscIsLaterAlsoDuringTheGuard() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
