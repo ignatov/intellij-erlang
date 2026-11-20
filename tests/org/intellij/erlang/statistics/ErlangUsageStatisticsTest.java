@@ -326,10 +326,10 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     FakeAskUi ui = new FakeAskUi();
     ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
     statistics.setAskUiForTests(ui);
-    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 50_000);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - ErlangUsageStatistics.ASK_DELAY_MS / 2);
     statistics.ask(getProject());
     assertEquals(List.of(), ui.asked);
-    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 61_000);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - ErlangUsageStatistics.ASK_DELAY_MS - 1_000);
     statistics.ask(getProject());
     assertEquals(List.of(false), ui.asked);
   }
