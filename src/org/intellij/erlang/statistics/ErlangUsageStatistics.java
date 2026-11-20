@@ -72,12 +72,17 @@ import java.util.concurrent.TimeUnit;
 public final class ErlangUsageStatistics implements PersistentStateComponent<ErlangUsageStatisticsState>, Disposable {
   public static final String PRIVACY_URL = "https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md";
   public static final String TITLE = "Help improve the Erlang plugin";
-  public static final String TEXT = "Hi, this is Sergey, the author of the Erlang plugin. " +
-                                    "I want to make the plugin better, and for that I need to know which features people use. " +
-                                    "May the plugin send anonymous usage counts once a day?";
-  public static final String REMINDER_TEXT = "Hi, it's Sergey again, the author of the Erlang plugin. " +
-                                             "I still want to make the plugin better, and it would help a lot to know which features people use. " +
-                                             "May the plugin send anonymous usage counts once a day?";
+  // HTML: three paragraphs, who asks, what for, and the question
+  public static final String TEXT = "Hi, this is Sergey, the author of the Erlang plugin. Thank you for using it." +
+                                    "<br><br>" +
+                                    "To make it better, I need to know which features people use." +
+                                    "<br><br>" +
+                                    "May the plugin send anonymous usage statistics?";
+  public static final String REMINDER_TEXT = "Hi, it's Sergey again, the author of the Erlang plugin. Thank you for using it." +
+                                             "<br><br>" +
+                                             "It would help a lot to know which features people use." +
+                                             "<br><br>" +
+                                             "May the plugin send anonymous usage statistics?";
   public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
   private static final Logger LOG = Logger.getInstance(ErlangUsageStatistics.class);
   private static final long TIMER_MINUTES = 45;
