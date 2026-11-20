@@ -35,7 +35,6 @@ public class ErlangUnitRunningStateTest extends BasePlatformTestCase {
     assertInvalidName("my_test", false);
     assertInvalidName("my_tests:", false);
     assertInvalidName(":my_test", false);
-    assertInvalidName("a:b:my_test", false);
   }
 
   public void testMalformedFunctionNameIsReportedInDebug() {
@@ -48,6 +47,13 @@ public class ErlangUnitRunningStateTest extends BasePlatformTestCase {
     assertTrue(tests, tests.startsWith("[{\"module 'my_tests'\", ["));
     assertTrue(tests, tests.contains("fun my_tests:my_test/0"));
     assertTrue(tests, tests.contains("{generator, fun my_tests:gen_test_/0}"));
+  }
+
+  // a quoted function name may contain a colon: -module(m). 'a:b_test'() -> ok.
+  public void testFunctionNameWithColon() throws ExecutionException {
+    String tests = createState(Set.of("m:a:b_test", "m:ok_test")).getEntryPoint().getArgsList().get(0);
+    assertTrue(tests, tests.contains("fun m:'a:b_test'/0"));
+    assertTrue(tests, tests.contains("fun m:ok_test/0"));
   }
 
   private void assertInvalidName(String functionName, boolean debug) {

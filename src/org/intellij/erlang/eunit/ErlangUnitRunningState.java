@@ -33,6 +33,7 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
@@ -69,6 +70,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @NotNull
   @Override
   public List<File> createCodePathDirectories() throws ExecutionException {
+    // the debugger reads the tests only after it has started the debug target, so a bad test name must fail here
+    getDebugEntryPoint();
     try {
       return List.of(new File(createReporterModuleDirectory()));
     }
@@ -163,7 +166,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append("fun ").append(moduleName).append(':').append(ObjectUtils.notNull(ErlangPsiImplUtil.toAtomName(function), function)).append("/0")
                 .append(isGenerator ? "}" : "")
                 .append(", ");
         }
@@ -184,7 +187,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) throws ExecutionException {
     Map<String, List<String>> result = new HashMap<>(qualifiedFunctionNames.size());
     for (String qualifiedFunctionName : qualifiedFunctionNames) {
-      String[] moduleAndFunction = qualifiedFunctionName.split(":", -1);
+      // a quoted function name may contain a colon, a module name of a test does not
+      String[] moduleAndFunction = qualifiedFunctionName.split(":", 2);
       if (moduleAndFunction.length != 2 || moduleAndFunction[0].isEmpty() || moduleAndFunction[1].isEmpty()) {
         throw new ExecutionException("Invalid test function name '" + qualifiedFunctionName + "': expected module:function");
       }
