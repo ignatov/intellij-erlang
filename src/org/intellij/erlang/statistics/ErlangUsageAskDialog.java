@@ -26,6 +26,7 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.ui.ColorUtil;
 import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
@@ -68,6 +69,8 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   private static final int YES_EXIT_CODE = NEXT_USER_EXIT_CODE;
   private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE + 1;
   private static final int TEXT_WIDTH = 440;
+  // the text inside the box: without the border, the insets, the icon and its gap
+  private static final int BOX_TEXT_WIDTH = TEXT_WIDTH - 50;
   private static final int EXAMPLE_ROWS = 13;
 
   public static final ErlangUsageAskUi UI = new ErlangUsageAskUi() {
@@ -152,7 +155,13 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   // on macOS the default action goes to the right end; elsewhere this order is kept
   @Override
   protected Action @NotNull [] createActions() {
-    return new Action[]{myYesAction, myNoAction, getCancelAction()};
+    return new Action[]{myYesAction, myNoAction};
+  }
+
+  // "Ask me later" stands apart, at the left end
+  @Override
+  protected Action @NotNull [] createLeftSideActions() {
+    return new Action[]{getCancelAction()};
   }
 
   // the OK action is not shown; Ctrl+Enter, which runs it, does nothing
@@ -199,19 +208,56 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     panel.setFocusable(true);
     myContent = panel;
-    String text = myReminder ? ErlangUsageStatistics.REMINDER_TEXT : ErlangUsageStatistics.TEXT;
-    panel.add(left(new JBLabel(wrapped(text))));
+    // the question first and large, then who asks and why
+    JBLabel question = new JBLabel(wrapped(ErlangUsageStatistics.QUESTION));
+    question.setFont(JBUI.Fonts.label().biggerOn(3).asBold());
+    panel.add(left(question));
+    panel.add(Box.createVerticalStrut(JBUI.scale(6)));
+    panel.add(left(new JBLabel(wrapped(myReminder ? ErlangUsageStatistics.REMINDER_TEXT : ErlangUsageStatistics.TEXT))));
+    panel.add(Box.createVerticalStrut(JBUI.scale(14)));
+    panel.add(left(createPromiseBox()));
     panel.add(Box.createVerticalStrut(JBUI.scale(8)));
-    JBLabel neverSent = new JBLabel(wrapped(NEVER_SENT), UIUtil.ComponentStyle.SMALL);
-    neverSent.setForeground(NamedColorUtil.getInactiveTextColor());
-    panel.add(left(neverSent));
-    panel.add(Box.createVerticalStrut(JBUI.scale(8)));
-    JPanel links = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-    links.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
-    panel.add(left(links));
-    panel.add(Box.createVerticalStrut(JBUI.scale(8)));
-    panel.add(left(createExample()));
     return panel;
+  }
+
+  // a rounded, slightly lighter box: what is never sent, the privacy policy and the example
+  @NotNull
+  private JComponent createPromiseBox() {
+    JPanel promise = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    promise.setOpaque(false);
+    promise.add(new JBLabel(NEVER_SENT));
+    promise.add(Box.createHorizontalStrut(JBUI.scale(6)));
+    promise.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
+    JPanel lines = new JPanel();
+    lines.setOpaque(false);
+    lines.setLayout(new BoxLayout(lines, BoxLayout.Y_AXIS));
+    lines.add(left(promise));
+    lines.add(left((JComponent)Box.createVerticalStrut(JBUI.scale(6))));
+    lines.add(left(createExample()));
+    JBLabel icon = new JBLabel(AllIcons.General.InspectionsOK);
+    icon.setVerticalAlignment(SwingConstants.TOP);
+    icon.setBorder(JBUI.Borders.emptyTop(1));
+    JPanel box = new JPanel(new BorderLayout(JBUI.scale(10), 0)) {
+      @Override
+      protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D)g.create();
+        try {
+          g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+          // the same in a light and in a dark theme: the background of the dialog with a little of the text colour
+          g2.setColor(ColorUtil.mix(UIUtil.getPanelBackground(), UIUtil.getLabelForeground(), 0.07));
+          int arc = JBUI.scale(12);
+          g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+        }
+        finally {
+          g2.dispose();
+        }
+      }
+    };
+    box.setOpaque(false);
+    box.add(icon, BorderLayout.WEST);
+    box.add(lines, BorderLayout.CENTER);
+    box.setBorder(JBUI.Borders.empty(10, 12));
+    return box;
   }
 
   @NotNull
@@ -228,18 +274,25 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     myExampleText.setWrapStyleWord(true);
     myExampleText.setFont(JBUI.Fonts.create(Font.MONOSPACED, myExampleText.getFont().getSize()));
     myExampleText.setCaretPosition(0);
-    JPanel content = new JPanel(new BorderLayout(0, JBUI.scale(4)));
-    content.add(new JBScrollPane(myExampleText), BorderLayout.CENTER);
-    JBLabel where = new JBLabel(wrapped(REAL_SUMMARY), UIUtil.ComponentStyle.SMALL);
+    JPanel content = new JPanel(new BorderLayout(0, JBUI.scale(6)));
+    // no frame: the example is a darker field inside the box, with its own margins
+    myExampleText.setBackground(UIUtil.getPanelBackground());
+    myExampleText.setBorder(JBUI.Borders.empty(6, 8));
+    JBScrollPane scroll = new JBScrollPane(myExampleText);
+    scroll.setBorder(JBUI.Borders.empty());
+    content.add(scroll, BorderLayout.CENTER);
+    JBLabel where = new JBLabel(wrapped(REAL_SUMMARY, BOX_TEXT_WIDTH), UIUtil.ComponentStyle.SMALL);
     where.setForeground(NamedColorUtil.getInactiveTextColor());
     content.add(where, BorderLayout.SOUTH);
-    content.setBorder(JBUI.Borders.emptyTop(4));
+    content.setBorder(JBUI.Borders.empty(6, 2, 0, 0));
     myExample = content;
     myToggle = new ActionLink(EXAMPLE_TITLE);
-    myToggle.setIcon(AllIcons.General.ArrowRight, false);
+    myToggle.setIcon(AllIcons.General.ArrowRight, true);
     myToggle.addActionListener(e -> toggleExample());
     // the example is not in the panel while it is closed, so the closed layout is exactly the first one
     myExampleHolder = new JPanel(new BorderLayout());
+    myExampleHolder.setOpaque(false);
+    content.setOpaque(false);
     myExampleHolder.add(myToggle, BorderLayout.NORTH);
     return myExampleHolder;
   }
@@ -250,10 +303,12 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     if (expand && window != null && myCollapsedSize == null) myCollapsedSize = window.getSize();
     if (expand) myExampleHolder.add(myExample, BorderLayout.CENTER);
     else myExampleHolder.remove(myExample);
-    myToggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, false);
-    // BoxLayout keeps the sizes of its children until its container is invalidated itself
-    myExampleHolder.invalidate();
-    myContent.invalidate();
+    myToggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, true);
+    // BoxLayout keeps the sizes of its children until its container is invalidated itself, and a container that is
+    // already invalid does not pass the call on to its parent
+    for (Container c = myExampleHolder; c != null; c = c == myContent ? null : c.getParent()) {
+      c.invalidate();
+    }
     myContent.revalidate();
     if (window == null) return;
     if (expand) {
@@ -275,7 +330,12 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   // HTML with a fixed width, so that the text wraps into a compact block
   @NotNull
   static String wrapped(@NotNull String text) {
-    return "<html><div style='width:" + JBUI.scale(TEXT_WIDTH) + "px'>" + text + "</div></html>";
+    return wrapped(text, TEXT_WIDTH);
+  }
+
+  @NotNull
+  private static String wrapped(@NotNull String text, int width) {
+    return "<html><div style='width:" + JBUI.scale(width) + "px'>" + text + "</div></html>";
   }
 
   @NotNull
@@ -295,15 +355,17 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   @TestOnly
   @NotNull
   List<String> getMacOrderForTests() {
-    List<Action> actions = new java.util.ArrayList<>(List.of(createActions()));
-    sortActionsOnMac(actions);
+    List<Action> right = new java.util.ArrayList<>(List.of(createActions()));
+    sortActionsOnMac(right);
+    List<Action> actions = new java.util.ArrayList<>(List.of(createLeftSideActions()));
+    actions.addAll(right);
     return actions.stream().map(action -> (String)action.getValue(Action.NAME)).toList();
   }
 
   @TestOnly
   @NotNull
   List<String> getButtonTextsForTests() {
-    return Arrays.stream(createActions()).map(action -> (String)action.getValue(Action.NAME)).toList();
+    return java.util.stream.Stream.concat(Arrays.stream(createActions()), Arrays.stream(createLeftSideActions())).map(action -> (String)action.getValue(Action.NAME)).toList();
   }
 
   @TestOnly
