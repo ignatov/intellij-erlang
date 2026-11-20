@@ -24,7 +24,11 @@ import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.JDOMUtil;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.application.ErlangApplicationConfiguration;
+import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -32,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.Map;
 
 public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private final ErlangUsageCollectorTest.FakeSender mySender = new ErlangUsageCollectorTest.FakeSender();
@@ -64,6 +69,10 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
   public void testNothingIsAllowedInTestsByDefault() {
     ErlangUsageStatistics.setAllowedForTests(null);
     assertFalse(ErlangUsageStatistics.isAllowed());
+    collector().setEnabled(true);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    assertFalse(ErlangUsageCounters.isCounting());
+    assertTrue(collector().getState().days.isEmpty());
   }
 
   public void testEnvironmentSwitches() {
@@ -154,6 +163,40 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     String json = String.join("\n", sender.bodies);
     assertFalse(json, json.contains("hostile") || json.contains("Hostile") || json.contains("/Users") || json.contains("\"ip\""));
     assertTrue(json, json.contains("\"otp\":[\"27\",\"R16\"]"));
+  }
+
+  public void testStateIsStoredAndRead() {
+    collector().setEnabled(true);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    collector().setProperty(ErlangUsageProperty.OTP, "27");
+    collector().markAsked();
+    ErlangUsageStatisticsState state = ErlangUsageStatistics.getInstance().getState();
+    ErlangUsageStatisticsState read = XmlSerializer.deserialize(XmlSerializer.serialize(state), ErlangUsageStatisticsState.class);
+    assertEquals("YES", read.consent);
+    assertEquals(1, read.askCount);
+    assertEquals(state.lastAskDate, read.lastAskDate);
+    assertEquals(state.installationId, read.installationId);
+    assertEquals(1, read.days.size());
+    assertEquals(state.days.get(0).date, read.days.get(0).date);
+    assertEquals(Map.of("RENAME", 1L), read.days.get(0).counters);
+    assertEquals("27", read.days.get(0).properties.get("OTP"));
+  }
+
+  public void testRunConfigurationKinds() {
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "hostile_run", ErlangApplicationRunConfigurationType.getInstance());
+    assertEquals(ErlangUsageKey.RUN_APPLICATION, ErlangUsageListeners.runKey("Run", configuration));
+    assertEquals(ErlangUsageKey.DEBUG_APPLICATION, ErlangUsageListeners.runKey("Debug", configuration));
+    assertNull(ErlangUsageListeners.runKey("Coverage", configuration));
+    assertNull(ErlangUsageListeners.runKey("Run", null));
+  }
+
+  public void testOpenedFileKinds() {
+    assertEquals(ErlangUsageKey.OPENED_ERL, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.erl")));
+    assertEquals(ErlangUsageKey.OPENED_HRL, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.hrl")));
+    assertEquals(ErlangUsageKey.OPENED_APP, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.app.src")));
+    assertEquals(ErlangUsageKey.OPENED_CONFIG, ErlangUsageListeners.openedFileKey(new LightVirtualFile("sys.config")));
+    assertNull(ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.txt")));
   }
 
   @NotNull
