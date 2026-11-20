@@ -98,7 +98,7 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertTrue(myCollector.shouldAsk());
     assertFalse(myCollector.isReminder());
     myCollector.markAsked();
-    // "Later", or the notification closed without an answer: the consent stays unset
+    // "Ask me later", Esc or the dialog closed without an answer: the consent stays unset
     assertFalse(myCollector.shouldAsk());
     myToday = DAY.plusDays(29);
     assertFalse(myCollector.shouldAsk());

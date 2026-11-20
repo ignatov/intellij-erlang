@@ -20,7 +20,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInspection.LocalQuickFix;
-import com.intellij.notification.Notification;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -41,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -65,8 +68,6 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
   @Override
   protected void tearDown() throws Exception {
     try {
-      Notification notification = ErlangUsageStatistics.getInstance().getNotificationForTests();
-      if (notification != null) notification.expire();
       ErlangUsageStatistics.getInstance().resetForTests();
       collector().setSender(new ErlangAmplitudeSender());
       ErlangUsageStatistics.setAllowedForTests(null);
@@ -122,29 +123,87 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertNull(collector().getInstallationId());
   }
 
-  public void testAskActionsAndTexts() {
-    Notification first = ErlangUsageStatistics.createAsk(false);
-    assertEquals(ErlangUsageStatistics.TEXT, first.getContent());
-    assertEquals(ErlangUsageStatistics.TITLE, first.getTitle());
-    assertEquals(List.of(ErlangUsageStatistics.YES, ErlangUsageStatistics.LATER, ErlangUsageStatistics.NO, ErlangUsageStatistics.WHAT_IS_SENT),
-                 ContainerUtil.map(first.getActions(), action -> action.getTemplateText()));
-    assertEquals(ErlangUsageStatistics.REMINDER_TEXT, ErlangUsageStatistics.createAsk(true).getContent());
-    assertFalse(first.getContent().contains("<a"));
+  public void testAskDialogButtonsAndChoices() {
+    ErlangUsageAskDialog first = new ErlangUsageAskDialog(getProject(), false);
+    ErlangUsageAskDialog reminder = new ErlangUsageAskDialog(getProject(), true);
+    try {
+      assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
+      assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
+      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));
+      // Esc and the close button of the window cancel the dialog
+      first.doCancelAction();
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(first.getExitCode()));
+      reminder.clickNoForTests();
+      assertEquals(ErlangUsageAskUi.Choice.NO, ErlangUsageAskDialog.choiceOf(reminder.getExitCode()));
+    }
+    finally {
+      Disposer.dispose(first.getDisposable());
+      Disposer.dispose(reminder.getDisposable());
+    }
   }
 
-  public void testReminderExpiresTheOldAsk() {
+  public void testAskWaitsUntilTheUserIsNotBusyAndAsksOncePerSession() {
+    FakeAskUi ui = new FakeAskUi();
     ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
-    statistics.showAskForTests(false);
-    Notification first = statistics.getNotificationForTests();
-    assertNotNull(first);
-    statistics.showAskForTests(true);
-    Notification reminder = statistics.getNotificationForTests();
-    assertTrue(first.isExpired());
-    assertNotSame(first, reminder);
-    assertEquals(ErlangUsageStatistics.REMINDER_TEXT, reminder.getContent());
-    assertEquals(2, collector().getState().askCount);
-    reminder.expire();
-    assertNull(statistics.getNotificationForTests());
+    statistics.setAskUiForTests(ui);
+    ui.canAsk = false;
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    assertEquals(0, collector().getState().askCount);
+
+    ui.canAsk = true;
+    ui.choice = ErlangUsageAskUi.Choice.LATER;
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+    assertEquals(1, collector().getState().askCount);
+    assertEquals(ErlangUsageCollector.Consent.UNSET, collector().getConsent());
+
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testAskOnlyInErlangProjects() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(List.of(), ui.asked);
+  }
+
+  public void testYesFromTheDialog() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.choice = ErlangUsageAskUi.Choice.YES;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+    assertNotNull(collector().getInstallationId());
+  }
+
+  public void testNoFromTheDialog() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.choice = ErlangUsageAskUi.Choice.NO;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(ErlangUsageCollector.Consent.NO, collector().getConsent());
+    assertFalse(collector().shouldAsk());
+  }
+
+  private static final class FakeAskUi implements ErlangUsageAskUi {
+    final List<Boolean> asked = new ArrayList<>();
+    boolean canAsk = true;
+    Choice choice = Choice.LATER;
+
+    @Override
+    public boolean canAskNow(@NotNull Project project) {
+      return canAsk;
+    }
+
+    @Override
+    public @NotNull Choice ask(@NotNull Project project, boolean reminder) {
+      asked.add(reminder);
+      return choice;
+    }
   }
 
   public void testTwoSettingsDialogs() {

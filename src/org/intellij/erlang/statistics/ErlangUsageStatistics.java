@@ -21,10 +21,6 @@ import com.intellij.codeInsight.hints.declarative.DeclarativeInlayHintsSettings;
 import com.intellij.codeInspection.LocalInspectionEP;
 import com.intellij.codeInspection.ex.InspectionProfileImpl;
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationAction;
-import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
@@ -32,7 +28,6 @@ import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -53,7 +48,6 @@ import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
-import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -72,19 +66,14 @@ import java.util.concurrent.TimeUnit;
 @Service(Service.Level.APP)
 @State(name = "ErlangUsageStatistics", storages = @Storage(value = "erlangUsageStatistics.xml", roamingType = RoamingType.DISABLED))
 public final class ErlangUsageStatistics implements PersistentStateComponent<ErlangUsageStatisticsState>, Disposable {
-  public static final String NOTIFICATION_GROUP = "Erlang Usage Statistics";
   public static final String PRIVACY_URL = "https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md";
   public static final String TITLE = "Help improve the Erlang plugin";
   public static final String TEXT = "Hi, this is Sergey, the author of the Erlang plugin. " +
                                     "I want to make the plugin better, and for that I need to know which features people use. " +
-                                    "May the plugin send anonymous usage counts once a day? It never sends code, file names or paths.";
+                                    "May the plugin send anonymous usage counts once a day?";
   public static final String REMINDER_TEXT = "Hi, it's Sergey again, the author of the Erlang plugin. " +
                                              "I still want to make the plugin better, and it would help a lot to know which features people use. " +
-                                             "May the plugin send anonymous usage counts once a day? It never sends code, file names or paths.";
-  public static final String YES = "Yes, send statistics";
-  public static final String LATER = "Later";
-  public static final String NO = "No, thanks";
-  public static final String WHAT_IS_SENT = "What is sent";
+                                             "May the plugin send anonymous usage counts once a day?";
   public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
   private static final Logger LOG = Logger.getInstance(ErlangUsageStatistics.class);
   private static final long TIMER_MINUTES = 45;
@@ -98,8 +87,9 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed,
     new ErlangAmplitudeSender());
   private volatile ScheduledFuture<?> myTimer;
-  // the notification that waits for an answer; it holds no project
-  private volatile Notification myNotification;
+  private volatile ErlangUsageAskUi myAskUi = ErlangUsageAskDialog.UI;
+  // at most one question per IDE session, in whichever project
+  private volatile boolean myAskedInSession;
 
   @NotNull
   public static ErlangUsageStatistics getInstance() {
@@ -174,8 +164,6 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
 
   public void setEnabled(boolean enabled) {
     myCollector.setEnabled(enabled);
-    Notification notification = myNotification;
-    if (notification != null) notification.expire();
     if (enabled) {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         project.putUserData(SNAPSHOT_DATE, null);
@@ -203,72 +191,42 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
         project.putUserData(ERLANG_PROJECT, count > 0);
         if (count == 0) return;
         AppExecutorUtil.getAppExecutorService().execute(() -> recordProject(project, count));
-        if (myCollector.shouldAsk()) {
-          ApplicationManager.getApplication().invokeLater(this::ask, ModalityState.nonModal(), project.getDisposed());
-        }
+        askLater(project);
       });
   }
 
+  // asks on the EDT, outside of any dialog; when the user is busy, the next timer tick tries again
+  private void askLater(@NotNull Project project) {
+    if (myAskedInSession || !myCollector.shouldAsk()) return;
+    ApplicationManager.getApplication().invokeLater(() -> ask(project), ModalityState.nonModal(), project.getDisposed());
+  }
+
   /**
-   * Asks once. "Later", closing the notification and its expiry all mean: ask again in {@link ErlangUsageCollector#ASK_AGAIN_DAYS}
-   * days, at most {@link ErlangUsageCollector#MAX_ASKS} times in total. The ask is counted when it is shown.
-   * The notification shows in the project that is open; it keeps no reference to it.
+   * Asks at most once per IDE session. "Ask me later", Esc and closing the dialog all mean: ask again in
+   * {@link ErlangUsageCollector#ASK_AGAIN_DAYS} days, at most {@link ErlangUsageCollector#MAX_ASKS} times in total.
+   * The ask is counted when the dialog is shown.
    */
   @RequiresEdt
-  private void ask() {
-    if (!myCollector.shouldAsk()) return;
-    showAsk(myCollector.isReminder());
-  }
-
-  @RequiresEdt
-  private void showAsk(boolean reminder) {
-    Project target = null;
-    for (Project open : ProjectManager.getInstance().getOpenProjects()) {
-      if (isErlangProject(open)) {
-        target = open;
-        break;
-      }
-    }
-    if (target == null) return;
-    Notification old = myNotification;
-    if (old != null) old.expire();
+  void ask(@NotNull Project project) {
+    if (myAskedInSession || !myCollector.shouldAsk() || !isErlangProject(project)) return;
+    if (!myAskUi.canAskNow(project)) return;
+    myAskedInSession = true;
+    boolean reminder = myCollector.isReminder();
     myCollector.markAsked();
-    Notification notification = createAsk(reminder);
-    myNotification = notification;
-    notification.whenExpired(() -> {
-      if (myNotification == notification) myNotification = null;
-    });
-    notification.notify(target);
+    answer(myAskUi.ask(project, reminder));
   }
 
-  @NotNull
-  static Notification createAsk(boolean reminder) {
-    Notification notification = NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
-      .createNotification(TITLE, reminder ? REMINDER_TEXT : TEXT, NotificationType.INFORMATION)
-      .setSuggestionType(true);
-    // the first action is the primary one; the balloon may fold the last one into "More"
-    notification.addAction(NotificationAction.createSimpleExpiring(YES, () -> getInstance().setEnabled(true)));
-    notification.addAction(NotificationAction.createSimpleExpiring(LATER, () -> {}));
-    notification.addAction(NotificationAction.createSimpleExpiring(NO, () -> getInstance().setEnabled(false)));
-    // keeps the notification, so that the user can still answer after reading the settings
-    notification.addAction(NotificationAction.create(WHAT_IS_SENT, (event, n) -> {
-      Project project = event.getProject();
-      if (project != null && !project.isDisposed()) {
-        ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.class);
-      }
-    }));
-    return notification;
+  void answer(@NotNull ErlangUsageAskUi.Choice choice) {
+    switch (choice) {
+      case YES -> setEnabled(true);
+      case NO -> setEnabled(false);
+      case LATER -> {}
+    }
   }
 
   @TestOnly
-  @Nullable
-  Notification getNotificationForTests() {
-    return myNotification;
-  }
-
-  @TestOnly
-  void showAskForTests(boolean reminder) {
-    showAsk(reminder);
+  void setAskUiForTests(@NotNull ErlangUsageAskUi ui) {
+    myAskUi = ui;
   }
 
   private synchronized void startTimer() {
@@ -280,11 +238,15 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private void tick() {
     try {
       myCollector.flush();
-      if (!myCollector.isCounting()) return;
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
-        if (!LocalDate.now().toString().equals(project.getUserData(SNAPSHOT_DATE))) checkProject(project);
+        if (myCollector.isCounting() && !LocalDate.now().toString().equals(project.getUserData(SNAPSHOT_DATE))) {
+          checkProject(project);
+        }
+        else if (isErlangProject(project)) {
+          askLater(project);
+        }
       }
-      myCollector.sendPending();
+      if (myCollector.isCounting()) myCollector.sendPending();
     }
     catch (Exception e) {
       // an exception would stop the timer
@@ -398,5 +360,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   public void resetForTests() {
     myCollector.loadState(new ErlangUsageStatisticsState());
+    myAskUi = ErlangUsageAskDialog.UI;
+    myAskedInSession = false;
   }
 }

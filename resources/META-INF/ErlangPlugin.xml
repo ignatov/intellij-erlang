@@ -321,7 +321,6 @@
     </extensions>
     <!-- Opt-in usage statistics: one summary of counts a day, see PRIVACY.md -->
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="Erlang Usage Statistics" displayType="STICKY_BALLOON"/>
         <postStartupActivity implementation="org.intellij.erlang.statistics.ErlangUsageListeners$Startup"/>
     </extensions>
     <applicationListeners>

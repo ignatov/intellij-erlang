@@ -47,6 +47,37 @@ public final class ErlangUsagePayload {
   private ErlangUsagePayload() {
   }
 
+  /**
+   * An example daily summary for the consent dialog: fixed sample values written by {@link #build}, so its shape is that
+   * of a real one. The key is hidden and the id is an obvious fake.
+   */
+  @NotNull
+  public static String example() {
+    ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
+    day.date = "2026-11-19";
+    day.country = "Germany";
+    String[][] properties = {
+      {"PLUGIN_VERSION", "0.11.1304"}, {"IDE_PRODUCT", "IU"}, {"IDE_BASELINE", "263"}, {"SMALL_IDE", "false"}, {"OS", "mac"},
+      {"OTP", "27"}, {"SDK_CONFIGURED", "true"}, {"REBAR", "rebar3"}, {"PROJECT_SIZE", "up_to_100"},
+      {"INLAY_PARAMETER_HINTS", "true"}, {"CHANGED_INSPECTIONS", "ErlangSingleClauseCase"}};
+    for (String[] property : properties) {
+      day.properties.put(property[0], property[1]);
+    }
+    Object[][] counters = {
+      {ErlangUsageKey.COMPLETION, 42}, {ErlangUsageKey.COMPLETION_FUNCTION, 30}, {ErlangUsageKey.COMPLETION_MODULE, 8},
+      {ErlangUsageKey.COMPLETION_VARIABLE, 4}, {ErlangUsageKey.GO_TO_DECLARATION, 25}, {ErlangUsageKey.FIND_USAGES, 3},
+      {ErlangUsageKey.QUICK_DOCUMENTATION, 5}, {ErlangUsageKey.REFORMAT, 2}, {ErlangUsageKey.RENAME, 1},
+      {ErlangUsageKey.RUN_EUNIT, 4}, {ErlangUsageKey.DEBUG_SESSION, 1}, {ErlangUsageKey.OPENED_ERL, 12},
+      {ErlangUsageKey.OPENED_HRL, 2}};
+    for (Object[] counter : counters) {
+      day.counters.put(((ErlangUsageKey)counter[0]).name(), ((Integer)counter[1]).longValue());
+    }
+    day.counters.put(QUICK_FIX_PREFIX + "ErlangExportFunctionFix", 1L);
+    return build(EXAMPLE_ID, List.of(day)).replace(ErlangAmplitudeSender.API_KEY, "…");
+  }
+
+  public static final String EXAMPLE_ID = "00000000-0000-4000-8000-000000000000";
+
   @NotNull
   public static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days) {
     if (!DEVICE_ID.matcher(deviceId).matches()) throw new IllegalArgumentException("Not an installation id");

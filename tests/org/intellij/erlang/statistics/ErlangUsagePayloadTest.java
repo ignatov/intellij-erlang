@@ -126,6 +126,28 @@ public class ErlangUsagePayloadTest extends TestCase {
     }
   }
 
+  public void testExampleHasTheShapeOfARealSummary() {
+    JsonObject example = JsonParser.parseString(ErlangUsagePayload.example()).getAsJsonObject();
+    assertEquals("…", example.get("api_key").getAsString());
+    JsonObject exampleEvent = example.getAsJsonArray("events").get(0).getAsJsonObject();
+    assertEquals(ErlangUsagePayload.EXAMPLE_ID, exampleEvent.get("device_id").getAsString());
+    assertFalse(ErlangUsagePayload.example().contains(ErlangAmplitudeSender.API_KEY));
+
+    ErlangUsageStatisticsState.Day day = day("2026-11-19");
+    day.country = "Germany";
+    day.counters.put("RENAME", 1L);
+    JsonObject realEvent = ErlangUsageCollectorTest.events(ErlangUsagePayload.build(ID, List.of(day))).get(0).getAsJsonObject();
+    assertEquals(realEvent.keySet(), exampleEvent.keySet());
+    JsonObject properties = exampleEvent.getAsJsonObject("event_properties");
+    assertAllowedKeys(properties);
+    // every environment property and some counters of each kind
+    for (ErlangUsageProperty property : ErlangUsageProperty.values()) {
+      assertTrue(property.jsonName(), properties.has(property.jsonName()));
+    }
+    assertTrue(properties.has("completion"));
+    assertTrue(properties.has("quick_fixes"));
+  }
+
   public void testCountryFromTimeZone() {
     assertEquals("Germany", ErlangUsageCountry.fromTimeZone(java.time.ZoneId.of("Europe/Berlin")));
     assertEquals("United States", ErlangUsageCountry.fromTimeZone(java.time.ZoneId.of("America/Los_Angeles")));

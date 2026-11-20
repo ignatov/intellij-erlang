@@ -46,7 +46,7 @@ public final class ErlangUsageCollector {
   public static final String PLUGIN_ID = "org.jetbrains.erlang";
   // the first ask and two reminders
   public static final int MAX_ASKS = 3;
-  // "Later" or a notification closed without an answer asks again after this many days
+  // "Ask me later", Esc or a dialog closed without an answer asks again after this many days
   public static final int ASK_AGAIN_DAYS = 30;
   public static final int MAX_DAYS = 7;
   // after this many failed sends on one day, the next try is on the next day
@@ -353,7 +353,7 @@ public final class ErlangUsageCollector {
       if (today.equals(day.date)) preview = copy(day);
     }
     if (preview == null) preview = newDay(today, myCountry.get());
-    String id = myState.installationId != null ? myState.installationId : "00000000-0000-4000-8000-000000000000";
+    String id = myState.installationId != null ? myState.installationId : ErlangUsagePayload.EXAMPLE_ID;
     return ErlangUsagePayload.build(id, List.of(preview));
   }
 

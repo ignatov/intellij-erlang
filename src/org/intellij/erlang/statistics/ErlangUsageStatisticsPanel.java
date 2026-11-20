@@ -47,14 +47,14 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
     super(new BorderLayout());
     JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0));
     JButton show = new JButton("Show what is sent");
-    show.addActionListener(e -> new PreviewDialog(this, ErlangUsageStatistics.getInstance().getCollector().previewToday()).show());
+    show.addActionListener(e -> showPreview(this));
     actions.add(show);
     actions.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
     JPanel form = FormBuilder.createFormBuilder()
       .addComponent(new TitledSeparator("Usage Statistics"))
       .addComponent(myCheckBox)
-      .addComponent(new JBLabel("Once a day: counts of the features used, the IDE, the OS and the Erlang/OTP release. " +
-                                "Never code, names or paths."))
+      .addComponent(new JBLabel(ErlangUsageAskDialog.wrapped("Once a day: counts of the features used, the IDE, the OS and the " +
+                                                             "Erlang/OTP release. Never code, names or paths.")))
       .addComponent(actions)
       .getPanel();
     add(form, BorderLayout.CENTER);
@@ -79,6 +79,11 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
   @TestOnly
   void setSelectedForTests(boolean selected) {
     myCheckBox.setSelected(selected);
+  }
+
+  // the JSON of today's summary so far, in a read-only dialog
+  static void showPreview(@NotNull Component parent) {
+    new PreviewDialog(parent, ErlangUsageStatistics.getInstance().getCollector().previewToday()).show();
   }
 
   private static boolean isEnabled(@NotNull ErlangUsageStatistics statistics) {

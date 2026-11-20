@@ -8,13 +8,13 @@ The statistics tell me, Sergey Ignatov, the author of the plugin, which features
 
 ## When the plugin asks
 
-The plugin asks in a notification, after you open a project with Erlang modules or headers (`.erl` or `.hrl` files). You can answer:
+The plugin asks in a small dialog, after you open a project with Erlang modules or headers (`.erl` or `.hrl` files). It waits until you are not busy with another dialog, a popup or indexing. You can answer:
 
 - "Yes, send statistics": the plugin starts to count.
-- "Later": the plugin asks again, but not earlier than 30 days later. Closing the notification without an answer means the same.
+- "Ask me later": the plugin asks again, but not earlier than 30 days later. Esc or closing the dialog means the same.
 - "No, thanks": the plugin never asks again.
 
-The plugin asks at most 3 times in total: the first time and two reminders. After that it does not ask again, and it sends nothing. "What is sent" in the notification opens the settings described below; the notification stays, so you can still answer.
+The plugin asks at most 3 times in total: the first time and two reminders. After that it does not ask again, and it sends nothing. The "What is sent" link in the dialog shows the data of today, and "Privacy policy" opens this page.
 
 You can change the answer at any time on the **Erlang External Tools** page of the IDE settings (type its name into the search field of the settings), section **Usage Statistics**. The **Show what is sent** button there shows the data of today, exactly as it would be sent.
 
