@@ -119,7 +119,7 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertEquals(ErlangUsageCollector.Consent.NO, myCollector.getConsent());
   }
 
-  public void testAtMostThreeAsks() {
+  public void testAtMostTwoAsks() {
     for (int i = 0; i < ErlangUsageCollector.MAX_ASKS; i++) {
       assertTrue(myCollector.shouldAsk());
       assertEquals(i > 0, myCollector.isReminder());
