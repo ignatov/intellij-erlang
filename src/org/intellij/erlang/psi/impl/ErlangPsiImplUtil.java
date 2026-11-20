@@ -1703,8 +1703,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangBehaviour o) {
-    String fromStub = getNameFromStub(o);
-    if (fromStub != null) return fromStub;
+    ErlangBehaviourStub stub = ObjectUtils.tryCast(o.getStub(), ErlangBehaviourStub.class);
+    if (stub != null) return StringUtil.notNullize(stub.getName());
 
     ErlangModuleRef moduleRef = o.getModuleRef();
     ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;
