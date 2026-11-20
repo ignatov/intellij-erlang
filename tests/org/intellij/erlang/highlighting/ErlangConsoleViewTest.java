@@ -22,6 +22,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.pom.Navigatable;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -120,6 +121,26 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     PsiElement resolved = reference.resolve();
     assertNotNull(resolved);
     assertTrue(resolved.isValid());
+  }
+
+  public void testSentVariableDeclarationOpensNoFile() {
+    attachToFakeProcess(new ByteArrayOutputStream());
+
+    myView.append("X = 42.");
+    myView.execute();
+    myView.append("X + X.");
+    PsiFile file = myView.getFile();
+    Document document = myView.getConsoleEditor().getDocument();
+    PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+
+    ErlangQVar var = PsiTreeUtil.getParentOfType(file.findElementAt(0), ErlangQVar.class);
+    assertNotNull(var);
+    PsiReference reference = var.getReference();
+    assertNotNull(reference);
+    PsiElement resolved = reference.resolve();
+    assertNotNull(resolved);
+    assertFalse("the declaration is in " + resolved.getContainingFile().getVirtualFile(), resolved.isPhysical());
+    assertFalse(((Navigatable) resolved).canNavigate());
   }
 
   private void attachToFakeProcess(ByteArrayOutputStream processInput) {
