@@ -91,6 +91,26 @@ public class ErlangUnitRerunFailedTestsActionTest extends BasePlatformTestCase {
     assertNotification(notifications, "Some failed tests cannot be rerun", "-helper/0-fun-0-");
   }
 
+  // the file was edited after the run, so the reported line 5 is no longer in gen_test_
+  public void testRerunGeneratorNamedInLocationAfterEdit() {
+    myFixture.configureByText("p_tests.erl", """
+      -module(p_tests).
+      -include_lib("eunit/include/eunit.hrl").
+      plain_test() ->
+        A = 1,
+        A = 2.
+      -export([x/0]).
+      x() -> ok.
+      gen_test_() -> [?_assert(true),
+        ?_assertEqual(1, 2)].
+      """);
+
+    assertEquals(Set.of("p_tests:gen_test_"), ErlangUnitRerunFailedTestsAction.collectTestsToRerun(getProject(), List.of(
+      failedTest("-gen_test_/0-fun-1-", "p_tests:-gen_test_/0-fun-1-:5"))));
+    assertEquals(Set.of("p_tests:gen_test_"), ErlangUnitRerunFailedTestsAction.collectTestsToRerun(getProject(), List.of(
+      failedTest("-gen_test_/0-fun-1-", "p_tests:-gen_test_/0-fun-1-:6"))));
+  }
+
   // a test made by a fixture instantiator of arity 1 has no zero-arity test function to rerun
   public void testRerunReportsTestsThatCannotBeRerun() {
     configureFixtureModule();

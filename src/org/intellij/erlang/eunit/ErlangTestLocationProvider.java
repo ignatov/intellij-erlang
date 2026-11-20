@@ -80,13 +80,21 @@ public class ErlangTestLocationProvider implements SMTestLocator {
   }
 
   /**
-   * Whether the location hint is that of a test made by a fun, for example eunit://g_tests:-gen_test_/0-fun-1-:5.
+   * The function named in the location hint of a test made by a fun, gen_test_/0 for
+   * eunit://g_tests:-gen_test_/0-fun-1-:5 whatever is now on line 5, or null for other hints.
    */
-  public static boolean isGeneratedTestLocation(@Nullable String locationUrl) {
+  @Nullable
+  public static ErlangFunction findGeneratingFunction(@NotNull Project project, @Nullable String locationUrl) {
     String prefix = ErlangUnitRunConfigurationType.PROTOCOL + "://";
-    if (locationUrl == null || !locationUrl.startsWith(prefix)) return false;
+    if (locationUrl == null || !locationUrl.startsWith(prefix)) return null;
     Matcher matcher = LOCATION_PATTERN.matcher(locationUrl.substring(prefix.length()));
-    return matcher.matches() && matcher.group(2) != null && GENERATED_FUNCTION_PATTERN.matcher(matcher.group(2)).matches();
+    Matcher generated = matcher.matches() && matcher.group(2) != null ? GENERATED_FUNCTION_PATTERN.matcher(matcher.group(2)) : null;
+    if (generated == null || !generated.matches()) return null;
+    for (ErlangFile file : getErlangFiles(project, matcher.group(1))) {
+      ErlangFunction function = file.getFunction(generated.group(1), StringUtil.parseInt(generated.group(2), -1));
+      if (function != null) return function;
+    }
+    return null;
   }
 
   @Nullable

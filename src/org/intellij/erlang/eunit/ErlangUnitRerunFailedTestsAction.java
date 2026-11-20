@@ -118,10 +118,11 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
                                                               @NotNull Collection<String> testsNotRerun) {
     List<ErlangFunction> functions = new ArrayList<>();
     for (AbstractTestProxy testProxy : failedTests) {
-      Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-      PsiElement psiElement = location != null ? location.getPsiElement() : null;
-      ErlangFunction function = ErlangUnitTestElementUtil.findRerunnableTestFunction(
-        psiElement, ErlangTestLocationProvider.isGeneratedTestLocation(testProxy.getLocationUrl()));
+      // for a test made by a fun, the function named in the hint, whatever is now on the reported line
+      ErlangFunction generator = ErlangTestLocationProvider.findGeneratingFunction(project, testProxy.getLocationUrl());
+      Location location = generator == null ? testProxy.getLocation(project, GlobalSearchScope.allScope(project)) : null;
+      PsiElement psiElement = generator != null ? generator : location != null ? location.getPsiElement() : null;
+      ErlangFunction function = ErlangUnitTestElementUtil.findRerunnableTestFunction(psiElement, generator != null);
       if (function != null) {
         if (!functions.contains(function)) functions.add(function);
       }
