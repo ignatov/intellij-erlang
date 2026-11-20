@@ -455,7 +455,8 @@ jobs:
     # scripts/smoke/parser-baseline.txt. Pushes to master only. The release gate requires this job by its name; a
     # skipped run of it is not a pass.
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # TEMPORARY, removed by the next commit: also run on this pull request once, to prove the job.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     defaults:
