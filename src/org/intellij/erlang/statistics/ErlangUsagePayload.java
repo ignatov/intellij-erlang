@@ -106,6 +106,11 @@ public final class ErlangUsagePayload {
     return build(deviceId, days, false);
   }
 
+  // whether build accepts the id
+  static boolean isInstallationId(@NotNull String id) {
+    return DEVICE_ID.matcher(id).matches();
+  }
+
   // for the example, the counters come first and the envelope last, so that the visible lines show what is counted
   @NotNull
   private static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days, boolean example) {
