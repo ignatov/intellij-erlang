@@ -40,7 +40,7 @@ At most one summary a day. It is sent on a later day, for each day on which you 
 
 ## Where it goes
 
-The summaries go to [Amplitude](https://amplitude.com/), an analytics service, to its data center in the United States (`api2.amplitude.com`). Only the author of the plugin can see the data. The data is kept as long as the Amplitude plan keeps it.
+The summaries go to [Amplitude](https://amplitude.com/), an analytics service, to its data center in the European Union (`api.eu.amplitude.com`). Only the author of the plugin can see the data. The data is kept as long as the Amplitude plan keeps it.
 
 The plugin does not put your IP address into the data. Amplitude, like any web server, sees the address of the connection.
 
