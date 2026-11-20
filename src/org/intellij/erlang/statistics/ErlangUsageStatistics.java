@@ -102,7 +102,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private volatile boolean myAskedInSession;
   // the checks of the current ask chain
   private volatile int myRetries;
-  private int myScheduledForTests;
+  private volatile int myScheduledForTests;
   private volatile boolean myDisposed;
   // true from askLater until the chain of checks it starts asks or gives up; one chain at a time
   private final AtomicBoolean myChainAlive = new AtomicBoolean();
@@ -347,6 +347,11 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   @TestOnly
+  void tickForTests() {
+    tick();
+  }
+
+  @TestOnly
   void setAskUiForTests(@NotNull ErlangUsageAskUi ui) {
     myAskUi = ui;
   }
@@ -366,6 +371,10 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
         }
         else if (isErlangProject(project)) {
           askLater(project);
+        }
+        else if (!myCollector.isCounting() && !myAskedInSession && myCollector.shouldAsk()) {
+          // the project may have got its first Erlang files since it was checked; the check asks when it finds them
+          checkProject(project);
         }
       }
       if (myCollector.isCounting()) myCollector.sendPending();
