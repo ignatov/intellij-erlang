@@ -465,6 +465,100 @@ class LaunchTest(unittest.TestCase):
         self.assertIn('<option name="enableMcpServer" value="false" />', smoke.MCP_SERVER_SETTINGS)
 
 
+CONSENTS_JSON = json.dumps([{'consentId': 'ea.auto.report', 'version': '1.1'}, {'consentId': 'eap', 'version': '2.0'}])
+
+
+class NoReportTest(TempTest):
+    def fake_ide(self):
+        os.makedirs(self.path('ide', 'lib'))
+        with open(self.path('ide', 'lib', 'a.jar'), 'wb') as f:
+            f.write(jar_bytes({'consents.json': json.dumps([{'consentId': 'ea.auto.report', 'version': '1.0'}])}))
+        with open(self.path('ide', 'lib', 'b.jar'), 'wb') as f:
+            f.write(jar_bytes({'consents.json': CONSENTS_JSON}))
+        return self.path('ide')
+
+    def sandbox(self, os_name='Linux'):
+        os.makedirs(self.path('sb'), exist_ok=True)
+        self.config = '-Didea.config.path=' + self.path('sb', 'config')
+        return smoke.write_no_report_sandbox(self.path('sb'), self.fake_ide(), os_name, now_ms=5)
+
+    def test_consent_versions_take_the_highest_bundled_one(self):
+        self.assertEqual({'ea.auto.report': '1.1', 'rsch.send.usage.stat': '1.0'},
+                         smoke.consent_versions(self.fake_ide(), smoke.NO_REPORT_CONSENTS))
+
+    def test_sandbox_has_the_settings_off_and_a_dead_network(self):
+        options, env = self.sandbox()
+        home = self.path('sb', 'home')
+        self.assertEqual(['-Dea.auto.report.allowed=false', '-Dea.auto.report.feature.visible=false',
+                          '-Dhttp.proxyHost=127.0.0.1', '-Dhttp.proxyPort=9', '-Dhttps.proxyHost=127.0.0.1',
+                          '-Dhttps.proxyPort=9', '-Djdk.net.hosts.file=' + self.path('sb', 'hosts'),
+                          '-Duser.home=' + home], options)
+        self.assertEqual({'XDG_DATA_HOME': os.path.join(home, '.local', 'share'), 'HOME': home}, env)
+        with open(os.path.join(home, '.local', 'share', 'JetBrains', 'consentOptions', 'accepted')) as f:
+            self.assertEqual('ea.auto.report:1.1:0:5;rsch.send.usage.stat:1.0:0:5', f.read())
+        with open(self.path('sb', 'hosts')) as f:
+            hosts = f.read()
+        self.assertTrue(hosts.startswith('127.0.0.1 '), hosts)
+        self.assertIn('localhost', hosts)
+        self.assertNotIn('jetbrains', hosts)
+        with open(self.path('sb', 'config', 'options', 'proxy.settings.xml')) as f:
+            self.assertIn('<option name="PROXY_PORT" value="9" />', f.read())
+        smoke.check_no_report_options(['java', self.config] + options + ['Main', 'inspect'], env, 'Linux')
+
+    def test_consent_file_of_macos(self):
+        self.sandbox('macOS')
+        self.assertTrue(os.path.isfile(self.path('sb', 'home', 'Library', 'Application Support', 'JetBrains',
+                                                 'consentOptions', 'accepted')))
+
+    def test_ide_does_not_start_without_every_barrier(self):
+        options, env = self.sandbox()
+        options = [self.config] + options
+        for left_out in options:
+            with self.assertRaises(smoke.SmokeError, msg=left_out):
+                smoke.check_no_report_options([o for o in options if o != left_out], env, 'Linux')
+        with self.assertRaises(smoke.SmokeError):
+            smoke.check_no_report_options(options, {}, 'Linux')
+        with self.assertRaises(smoke.SmokeError):
+            smoke.check_no_report_options([o.replace('=false', '=true') for o in options], env, 'Linux')
+        with open(self.path('sb', 'config', 'options', 'proxy.settings.xml'), 'w') as f:
+            f.write('<application/>')
+        with self.assertRaises(smoke.SmokeError):
+            smoke.check_no_report_options(options, env, 'Linux')
+        with open(self.path('sb', 'config', 'options', 'proxy.settings.xml'), 'w') as f:
+            f.write(smoke.DEAD_PROXY_SETTINGS)
+        smoke.check_no_report_options(options, env, 'Linux')
+        with open(self.path('sb', 'hosts'), 'a') as f:
+            f.write('1.2.3.4 ea-report.jetbrains.com\n')
+        with self.assertRaises(smoke.SmokeError):
+            smoke.check_no_report_options(options, env, 'Linux')
+
+    def test_accepted_consent_is_refused(self):
+        options, env = self.sandbox()
+        options = [self.config] + options
+        consents = os.path.join(env['XDG_DATA_HOME'], 'JetBrains', 'consentOptions', 'accepted')
+        with open(consents, 'w') as f:
+            f.write('ea.auto.report:1.1:1:5')
+        with self.assertRaises(smoke.SmokeError):
+            smoke.check_no_report_options(options, env, 'Linux')
+
+    def test_report_attempt_in_the_log_fails(self):
+        for line in ['2026-11-20 04:58:26,655 [  7015]   INFO - #c.i.d.ITNProxy - report ID: 2123524074608267264',
+                     '2026-11-20 04:58:26,656 [  7016]   INFO - #c.i.p.d.e.f.ExceptionAutoReportServiceImplKt - Reported '
+                     'exception with id 2123524074608267264',
+                     '2026-11-20 17:03:03,314 [ 60552]   WARN - #c.i.d.ITNReporter - Failed to submit exception automatically']:
+            info = smoke.analyze_log(LOG + line + '\n', '')
+            self.assertEqual(1, len(info['reportAttempts']), line)
+            self.assertEqual(['the IDE tried to send an exception report: ' + line], clean_failures(info))
+        self.assertEqual([], smoke.analyze_log(LOG, '')['reportAttempts'])
+
+    def test_watchdog_passes_the_environment(self):
+        out = self.path('out.txt')
+        self.assertEqual((0, False), smoke.run_with_watchdog(['sh', '-c', 'echo "home=$XDG_DATA_HOME"'], out, 10,
+                                                             self.path('dump.txt'), 'jcmd', {'XDG_DATA_HOME': '/sb/h'}))
+        with open(out) as f:
+            self.assertIn('home=/sb/h', f.read())
+
+
 class ParserTest(TempTest):
     def setUp(self):
         super().setUp()
