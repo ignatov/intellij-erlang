@@ -79,7 +79,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                      @Nullable Editor editor,
                      @NotNull PsiElement startElement,
                      @Nullable PsiElement endElement) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     if (startElement instanceof ErlangFunction) {
       processFunction(project, (ErlangFunction) startElement, editor);
     }

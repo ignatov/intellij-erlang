@@ -26,8 +26,8 @@ import java.io.IOException;
  */
 public interface ErlangUsageSender {
   /**
-   * @return true when the service accepted the events
+   * @return the HTTP status of the answer
    */
   @RequiresBackgroundThread
-  boolean send(@NotNull String json) throws IOException;
+  int send(@NotNull String json) throws IOException;
 }

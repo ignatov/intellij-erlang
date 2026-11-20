@@ -37,8 +37,9 @@ public class ErlangUsageStatisticsState {
   public String lastAskDate;
   // a random UUID; it exists only while the user allows the statistics
   public String installationId;
-  // the local date of the last successful send, yyyy-MM-dd
-  public String lastSendDate;
+  // the local date of the last failed send, yyyy-MM-dd, and how many sends failed on that day
+  public String failedSendDate;
+  public int failedSends;
   @XCollection(propertyElementName = "days")
   public List<Day> days = new ArrayList<>();
 
@@ -47,6 +48,9 @@ public class ErlangUsageStatisticsState {
     // the local date, yyyy-MM-dd
     @Attribute("date")
     public String date;
+    // the country of the day, guessed from the time zone; null when the time zone is not in the table
+    @Attribute("country")
+    public String country;
     // the names of ErlangUsageKey constants, or "quick_fix:" or "intention:" and the simple name of a class of this plugin
     public Map<String, Long> counters = new TreeMap<>();
     // the names of ErlangUsageProperty constants; a LIST value is a sorted, comma-separated set

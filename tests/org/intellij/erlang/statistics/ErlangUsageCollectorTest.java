@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 public class ErlangUsageCollectorTest extends TestCase {
   private static final LocalDate DAY = LocalDate.of(2026, 11, 19);
@@ -41,7 +42,12 @@ public class ErlangUsageCollectorTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    myCollector = new ErlangUsageCollector(() -> myToday, ErlangUsageCollectorTest::appProperties, () -> "Germany", mySender);
+    myCollector = newCollector(() -> true);
+  }
+
+  @NotNull
+  private ErlangUsageCollector newCollector(@NotNull BooleanSupplier allowed) {
+    return new ErlangUsageCollector(() -> myToday, ErlangUsageCollectorTest::appProperties, () -> "Germany", allowed, mySender);
   }
 
   static Map<ErlangUsageProperty, String> appProperties() {
@@ -99,8 +105,6 @@ public class ErlangUsageCollectorTest extends TestCase {
     myToday = DAY.plusDays(30);
     assertTrue(myCollector.shouldAsk());
     assertTrue(myCollector.isReminder());
-    assertEquals(ErlangUsageStatistics.REMINDER_TEXT + " " + ErlangUsageStatistics.WHAT_IS_SENT_LINK,
-                 ErlangUsageStatistics.notificationText(myCollector.isReminder()));
     assertEquals(ErlangUsageCollector.Consent.UNSET, myCollector.getConsent());
     assertFalse(myCollector.isCounting());
   }
@@ -133,10 +137,6 @@ public class ErlangUsageCollectorTest extends TestCase {
     // the settings can still turn it on
     myCollector.setEnabled(true);
     assertEquals(ErlangUsageCollector.Consent.YES, myCollector.getConsent());
-  }
-
-  public void testFirstAskText() {
-    assertEquals(ErlangUsageStatistics.TEXT + " <a href=\"settings\">See what is sent</a>", ErlangUsageStatistics.notificationText(false));
   }
 
   public void testTurningOffDeletesIdAndCounters() {
@@ -172,7 +172,6 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertEquals(id + "-2026-11-19", event.get("insert_id").getAsString());
     assertEquals(DAY.atTime(LocalTime.NOON).toInstant(ZoneOffset.UTC).toEpochMilli(), event.get("time").getAsLong());
     assertEquals(1, event.getAsJsonObject("event_properties").get("find_usages").getAsInt());
-    assertEquals(DAY.plusDays(1).toString(), myCollector.getState().lastSendDate);
 
     assertEquals(0, myCollector.sendPending());
     assertEquals(1, mySender.bodies.size());
@@ -182,9 +181,9 @@ public class ErlangUsageCollectorTest extends TestCase {
     myCollector.setEnabled(true);
     myCollector.count(ErlangUsageKey.FIND_USAGES);
     myToday = DAY.plusDays(1);
-    mySender.accept = false;
+    mySender.status = 503;
     assertEquals(0, myCollector.sendPending());
-    mySender.accept = true;
+    mySender.status = 200;
     assertEquals(1, myCollector.sendPending());
     assertEquals(2, mySender.bodies.size());
     assertEquals(events(mySender.bodies.get(0)).get(0).getAsJsonObject().get("insert_id"),
@@ -195,12 +194,11 @@ public class ErlangUsageCollectorTest extends TestCase {
     myCollector.setEnabled(true);
     myCollector.count(ErlangUsageKey.RENAME);
     myToday = DAY.plusDays(1);
-    mySender.accept = false;
+    mySender.status = 503;
     assertEquals(0, myCollector.sendPending());
     assertEquals(1, myCollector.getState().days.size());
-    assertNull(myCollector.getState().lastSendDate);
 
-    mySender.accept = true;
+    mySender.status = 200;
     mySender.fail = true;
     assertEquals(0, myCollector.sendPending());
     assertEquals(1, myCollector.getState().days.size());
@@ -299,6 +297,123 @@ public class ErlangUsageCollectorTest extends TestCase {
                  events(mySender.bodies.get(0)).get(0).getAsJsonObject().get("device_id").getAsString());
   }
 
+  public void testCountsBeforeConsentAreNeverKept() {
+    myCollector.count(ErlangUsageKey.RENAME);
+    myCollector.countQuickFix(FakeSender.class);
+    assertEquals(0, myCollector.countsInMemory());
+    myCollector.setEnabled(true);
+    myCollector.flush();
+    assertTrue(myCollector.getState().days.isEmpty());
+    myToday = DAY.plusDays(1);
+    assertEquals(0, myCollector.sendPending());
+    assertTrue(mySender.bodies.isEmpty());
+  }
+
+  public void testCountsBeforeTurningOffAreNotSentAfterTurningOnAgain() {
+    myCollector.setEnabled(true);
+    myCollector.count(ErlangUsageKey.RENAME);
+    myCollector.setEnabled(false);
+    myCollector.setEnabled(true);
+    myCollector.flush();
+    assertTrue(myCollector.getState().days.isEmpty());
+  }
+
+  public void testNothingIsCountedWhenTheEnvironmentSwitchesItOff() {
+    ErlangUsageCollector collector = newCollector(() -> false);
+    collector.setEnabled(true);
+    assertFalse(collector.isCounting());
+    collector.count(ErlangUsageKey.RENAME);
+    collector.setProperty(ErlangUsageProperty.OTP, "27");
+    assertEquals(0, collector.countsInMemory());
+    assertTrue(collector.getState().days.isEmpty());
+    myToday = DAY.plusDays(1);
+    assertEquals(0, collector.sendPending());
+    assertTrue(mySender.bodies.isEmpty());
+  }
+
+  public void testOldDaysAreDroppedWithoutSending() {
+    myCollector.setEnabled(true);
+    for (int i = 0; i < 60; i++) {
+      myCollector.count(ErlangUsageKey.RENAME);
+      myToday = myToday.plusDays(1);
+    }
+    myCollector.flush();
+    // the last 7 days; today has no counts yet
+    assertEquals(ErlangUsageCollector.MAX_DAYS, myCollector.getState().days.size());
+  }
+
+  public void testOpenedConfigFilesAloneDoNotMakeADayUsed() {
+    myCollector.setEnabled(true);
+    myCollector.count(ErlangUsageKey.OPENED_CONFIG);
+    myCollector.count(ErlangUsageKey.OPENED_APP);
+    myToday = DAY.plusDays(1);
+    assertEquals(0, myCollector.sendPending());
+    assertTrue(mySender.bodies.isEmpty());
+    myCollector.count(ErlangUsageKey.OPENED_CONFIG);
+    myCollector.count(ErlangUsageKey.OPENED_ERL);
+    myToday = DAY.plusDays(2);
+    assertEquals(1, myCollector.sendPending());
+  }
+
+  public void testRefusedDayIsDropped() {
+    myCollector.setEnabled(true);
+    myCollector.count(ErlangUsageKey.RENAME);
+    myToday = DAY.plusDays(1);
+    mySender.status = 400;
+    assertEquals(0, myCollector.sendPending());
+    assertTrue(myCollector.getState().days.isEmpty());
+    assertEquals(0, myCollector.sendPending());
+    assertEquals(1, mySender.bodies.size());
+  }
+
+  public void testTooLargeRequestIsSplit() {
+    myCollector.setEnabled(true);
+    for (int i = 0; i < 4; i++) {
+      myToday = DAY.plusDays(i);
+      myCollector.count(ErlangUsageKey.RENAME);
+    }
+    myToday = DAY.plusDays(4);
+    ErlangUsageSender sender = json -> {
+      mySender.bodies.add(json);
+      return events(json).size() > 1 ? 413 : 200;
+    };
+    myCollector.setSender(sender);
+    assertEquals(4, myCollector.sendPending());
+    // 4 days, then 2 and 2, then 1, 1, 1 and 1
+    assertEquals(7, mySender.bodies.size());
+    assertTrue(myCollector.getState().days.isEmpty());
+  }
+
+  public void testFailuresBackOffUntilTheNextDay() {
+    myCollector.setEnabled(true);
+    myCollector.count(ErlangUsageKey.RENAME);
+    myToday = DAY.plusDays(1);
+    for (int status : new int[]{429, 500, 503}) {
+      mySender.status = status;
+      for (int tick = 0; tick < 32; tick++) {
+        myCollector.sendPending();
+      }
+    }
+    assertEquals(ErlangUsageCollector.MAX_FAILED_SENDS_PER_DAY, mySender.bodies.size());
+    assertEquals(1, myCollector.getState().days.size());
+    myToday = DAY.plusDays(2);
+    mySender.status = 200;
+    assertEquals(1, myCollector.sendPending());
+    assertEquals(ErlangUsageCollector.MAX_FAILED_SENDS_PER_DAY + 1, mySender.bodies.size());
+  }
+
+  public void testCountryIsThatOfTheDay() {
+    String[] country = {"Germany"};
+    ErlangUsageCollector collector =
+      new ErlangUsageCollector(() -> myToday, ErlangUsageCollectorTest::appProperties, () -> country[0], () -> true, mySender);
+    collector.setEnabled(true);
+    collector.count(ErlangUsageKey.RENAME);
+    country[0] = "Japan";
+    myToday = DAY.plusDays(1);
+    assertEquals(1, collector.sendPending());
+    assertEquals("Germany", events(mySender.bodies.get(0)).get(0).getAsJsonObject().get("country").getAsString());
+  }
+
   @NotNull
   static JsonArray events(@NotNull String body) {
     return JsonParser.parseString(body).getAsJsonObject().getAsJsonArray("events");
@@ -306,14 +421,14 @@ public class ErlangUsageCollectorTest extends TestCase {
 
   static final class FakeSender implements ErlangUsageSender {
     final List<String> bodies = new ArrayList<>();
-    boolean accept = true;
+    int status = 200;
     boolean fail;
 
     @Override
-    public boolean send(@NotNull String json) throws IOException {
+    public int send(@NotNull String json) throws IOException {
       bodies.add(json);
       if (fail) throw new IOException("offline");
-      return accept;
+      return status;
     }
   }
 }

@@ -19,6 +19,7 @@ package org.intellij.erlang.debugger.xdebug;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectLocator;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -45,7 +46,7 @@ public class ErlangLineBreakpointType extends XLineBreakpointType<ErlangLineBrea
   @Nullable
   @Override
   public ErlangLineBreakpointProperties createBreakpointProperties(@NotNull VirtualFile file, int line) {
-    ErlangUsageCounters.count(ErlangUsageKey.BREAKPOINT_ADDED);
+    ErlangUsageCounters.count(ProjectLocator.getInstance().guessProjectForFile(file), ErlangUsageKey.BREAKPOINT_ADDED);
     return new ErlangLineBreakpointProperties();
   }
 

@@ -18,6 +18,7 @@ package org.intellij.erlang.statistics;
 
 import com.intellij.codeInsight.intention.preview.IntentionPreviewUtils;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,8 +29,8 @@ import static org.intellij.erlang.statistics.ErlangUsageKey.*;
 
 /**
  * Counts one use of a feature for the usage statistics. A call costs almost nothing, and does nothing at all
- * unless the user allowed the statistics. The arguments are enum constants and classes of this plugin only, so no
- * text from the user's project can be counted.
+ * unless the user allowed the statistics, and only in projects with Erlang modules or headers. The arguments are enum
+ * constants and classes of this plugin only, so no text from the user's project can be counted.
  */
 public final class ErlangUsageCounters {
   // the internal file templates of the plugin; any other template counts as NEW_FILE_OTHER
@@ -54,14 +55,15 @@ public final class ErlangUsageCounters {
   private ErlangUsageCounters() {
   }
 
-  public static void count(@NotNull ErlangUsageKey key) {
-    ErlangUsageCollector collector = collector();
+  // one use in the project; it counts only when the project has Erlang modules or headers
+  public static void count(@Nullable Project project, @NotNull ErlangUsageKey key) {
+    ErlangUsageCollector collector = collector(project);
     if (collector != null) collector.count(key);
   }
 
   // a file was created from a template of the New Erlang File dialog; only the kind of the template counts
-  public static void countNewFile(@Nullable String templateName) {
-    count(newFileKey(templateName));
+  public static void countNewFile(@Nullable Project project, @Nullable String templateName) {
+    count(project, newFileKey(templateName));
   }
 
   @NotNull
@@ -71,25 +73,32 @@ public final class ErlangUsageCounters {
   }
 
   // a quick fix of this plugin was applied; the intention preview does not count
-  public static void countQuickFix(@NotNull Class<?> fixClass) {
-    ErlangUsageCollector collector = collector();
+  public static void countQuickFix(@Nullable Project project, @NotNull Class<?> fixClass) {
+    ErlangUsageCollector collector = collector(project);
     if (collector != null && !IntentionPreviewUtils.isIntentionPreviewActive()) collector.countQuickFix(fixClass);
   }
 
   // an intention of this plugin was applied; the intention preview does not count
-  public static void countIntention(@NotNull Class<?> intentionClass) {
-    ErlangUsageCollector collector = collector();
+  public static void countIntention(@Nullable Project project, @NotNull Class<?> intentionClass) {
+    ErlangUsageCollector collector = collector(project);
     if (collector != null && !IntentionPreviewUtils.isIntentionPreviewActive()) collector.countIntention(intentionClass);
   }
 
+  // false when nothing would be counted anyway, so that listeners can stop early
   public static boolean isCounting() {
     return collector() != null;
+  }
+
+  @Nullable
+  private static ErlangUsageCollector collector(@Nullable Project project) {
+    return ErlangUsageStatistics.isErlangProject(project) ? collector() : null;
   }
 
   @Nullable
   private static ErlangUsageCollector collector() {
     var application = ApplicationManager.getApplication();
     if (application == null || application.isDisposed()) return null;
+    if (!ErlangUsageStatistics.isAllowed()) return null;
     ErlangUsageCollector collector = ErlangUsageStatistics.getInstance().getCollector();
     return collector.isCounting() ? collector : null;
   }

@@ -64,7 +64,7 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-    ErlangUsageCounters.countIntention(getClass());
+    ErlangUsageCounters.countIntention(project, getClass());
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null) {
       new ErlangExportFunctionFix(function).invoke(project, file, editor, function, null);

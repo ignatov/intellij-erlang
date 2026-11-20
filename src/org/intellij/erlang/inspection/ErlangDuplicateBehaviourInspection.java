@@ -74,7 +74,7 @@ public class ErlangDuplicateBehaviourInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangFile file = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangFile.class);
       if (file == null) return;
 

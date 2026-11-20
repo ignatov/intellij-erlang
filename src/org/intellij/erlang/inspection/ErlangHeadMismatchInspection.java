@@ -118,7 +118,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       PsiElement oldHead = descriptor.getPsiElement();
       if (oldHead instanceof ErlangQAtom) {
         ErlangPsiImplUtil.renameQAtom((ErlangQAtom) oldHead, myFunctionName);
@@ -145,7 +145,7 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangFunClause funClause = (ErlangFunClause) descriptor.getPsiElement();
 
       ErlangArgumentDefinition currentName = funClause.getArgumentDefinition();

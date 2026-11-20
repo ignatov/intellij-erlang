@@ -43,7 +43,7 @@ public class ErlangIntroduceMacroQuickFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement psiElement = descriptor.getPsiElement();
 
     if (!(psiElement instanceof ErlangMacros)) return;

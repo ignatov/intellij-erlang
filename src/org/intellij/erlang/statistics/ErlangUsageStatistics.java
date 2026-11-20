@@ -24,7 +24,6 @@ import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationGroupManager;
-import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
@@ -59,7 +58,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
-import javax.swing.event.HyperlinkEvent;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
@@ -83,18 +81,24 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   public static final String REMINDER_TEXT = "Hi, it's Sergey again, the author of the Erlang plugin. " +
                                              "I still want to make the plugin better, and it would help a lot to know which features people use. " +
                                              "May the plugin send anonymous usage counts once a day? It never sends code, file names or paths.";
-  public static final String WHAT_IS_SENT_LINK = "<a href=\"settings\">See what is sent</a>";
   public static final String YES = "Yes, send statistics";
   public static final String LATER = "Later";
   public static final String NO = "No, thanks";
+  public static final String WHAT_IS_SENT = "What is sent";
+  public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
   private static final Logger LOG = Logger.getInstance(ErlangUsageStatistics.class);
   private static final long TIMER_MINUTES = 45;
   private static final int FILE_COUNT_LIMIT = 1001;
   private static final Key<String> SNAPSHOT_DATE = Key.create("ErlangUsageStatistics.snapshotDate");
+  // true when the project has .erl or .hrl files; only such projects count
+  private static final Key<Boolean> ERLANG_PROJECT = Key.create("ErlangUsageStatistics.erlangProject");
+  private static volatile Boolean ourAllowed;
 
-  private final ErlangUsageCollector myCollector =
-    new ErlangUsageCollector(LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, new ErlangAmplitudeSender());
+  private final ErlangUsageCollector myCollector = new ErlangUsageCollector(
+    LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed,
+    new ErlangAmplitudeSender());
   private volatile ScheduledFuture<?> myTimer;
+  // the notification that waits for an answer; it holds no project
   private volatile Notification myNotification;
 
   @NotNull
@@ -125,17 +129,47 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   /**
-   * False in tests, in headless mode, in local and CI builds (a SNAPSHOT version), with -Derlang.usage.statistics=false
-   * and with DO_NOT_TRACK=1. Then the plugin neither asks nor sends.
+   * Whether this IDE session may ask, count, store and send at all. It is decided once per session.
    */
-  public static boolean isSendingAllowed() {
-    var application = ApplicationManager.getApplication();
-    if (application == null || application.isUnitTestMode() || application.isHeadlessEnvironment()) return false;
-    if ("false".equalsIgnoreCase(System.getProperty("erlang.usage.statistics"))) return false;
-    String doNotTrack = System.getenv("DO_NOT_TRACK");
+  public static boolean isAllowed() {
+    Boolean allowed = ourAllowed;
+    if (allowed == null) {
+      var application = ApplicationManager.getApplication();
+      allowed = application != null && isAllowedEnvironment(pluginVersion(), application.isUnitTestMode(), application.isHeadlessEnvironment(),
+                                                           System.getProperty(SWITCH_PROPERTY), System.getenv("DO_NOT_TRACK"));
+      ourAllowed = allowed;
+    }
+    return allowed;
+  }
+
+  /**
+   * False in tests, in headless mode, in local and CI builds (a SNAPSHOT version, or a version that cannot be read),
+   * with -Derlang.usage.statistics=false and with DO_NOT_TRACK=1 (or true).
+   */
+  static boolean isAllowedEnvironment(@Nullable String pluginVersion,
+                                      boolean unitTestMode,
+                                      boolean headless,
+                                      @Nullable String switchProperty,
+                                      @Nullable String doNotTrack) {
+    if (unitTestMode || headless) return false;
+    if ("false".equalsIgnoreCase(switchProperty)) return false;
     if ("1".equals(doNotTrack) || "true".equalsIgnoreCase(doNotTrack)) return false;
-    String version = pluginVersion();
-    return version != null && !version.contains("SNAPSHOT");
+    return pluginVersion != null && !pluginVersion.contains("SNAPSHOT");
+  }
+
+  @TestOnly
+  public static void setAllowedForTests(@Nullable Boolean allowed) {
+    ourAllowed = allowed;
+  }
+
+  // only projects with Erlang modules or headers count; a .config or .app file alone may belong to another tool
+  public static boolean isErlangProject(@Nullable Project project) {
+    return project != null && !project.isDisposed() && Boolean.TRUE.equals(project.getUserData(ERLANG_PROJECT));
+  }
+
+  @TestOnly
+  public static void setErlangProjectForTests(@NotNull Project project, @Nullable Boolean erlang) {
+    project.putUserData(ERLANG_PROJECT, erlang);
   }
 
   public void setEnabled(boolean enabled) {
@@ -145,55 +179,96 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     if (enabled) {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         project.putUserData(SNAPSHOT_DATE, null);
-        recordProjectLater(project);
+        checkProject(project);
       }
     }
   }
 
   // called once for each opened project
   void projectOpened(@NotNull Project project) {
-    if (myCollector.isCounting()) recordProjectLater(project);
-    if (!isSendingAllowed()) return;
+    if (!isAllowed()) return;
     startTimer();
-    if (!myCollector.shouldAsk()) return;
-    ReadAction.nonBlocking(() -> FileTypeIndex.containsFileOfType(ErlangFileType.MODULE, GlobalSearchScope.projectScope(project)))
+    checkProject(project);
+  }
+
+  // finds out off the EDT, when the indices are ready, whether the project has Erlang files; then records its
+  // environment and asks for the consent when it is time to
+  private void checkProject(@NotNull Project project) {
+    if (!isAllowed() || project.isDisposed() || project.isDefault()) return;
+    ReadAction.nonBlocking(() -> countErlangFiles(project))
       .inSmartMode(project)
       .expireWhen(project::isDisposed)
-      .finishOnUiThread(ModalityState.nonModal(), hasErlangFiles -> {
-        if (hasErlangFiles) ask(project);
-      })
-      .submit(AppExecutorUtil.getAppExecutorService());
+      .submit(AppExecutorUtil.getAppExecutorService())
+      .onSuccess(count -> {
+        project.putUserData(ERLANG_PROJECT, count > 0);
+        if (count == 0) return;
+        AppExecutorUtil.getAppExecutorService().execute(() -> recordProject(project, count));
+        if (myCollector.shouldAsk()) {
+          ApplicationManager.getApplication().invokeLater(this::ask, ModalityState.nonModal(), project.getDisposed());
+        }
+      });
   }
 
   /**
    * Asks once. "Later", closing the notification and its expiry all mean: ask again in {@link ErlangUsageCollector#ASK_AGAIN_DAYS}
    * days, at most {@link ErlangUsageCollector#MAX_ASKS} times in total. The ask is counted when it is shown.
+   * The notification shows in the project that is open; it keeps no reference to it.
    */
   @RequiresEdt
-  private void ask(@NotNull Project project) {
-    if (!myCollector.shouldAsk() || project.isDisposed()) return;
-    boolean reminder = myCollector.isReminder();
-    myCollector.markAsked();
-    Notification notification = NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
-      .createNotification(TITLE, notificationText(reminder), NotificationType.INFORMATION)
-      .setSuggestionType(true);
-    // the first action is the primary one; a balloon shows up to three actions before it folds them into "More"
-    notification.addAction(NotificationAction.createSimpleExpiring(YES, () -> setEnabled(true)));
-    notification.addAction(NotificationAction.createSimpleExpiring(LATER, () -> {}));
-    notification.addAction(NotificationAction.createSimpleExpiring(NO, () -> setEnabled(false)));
-    notification.setListener(new NotificationListener.Adapter() {
-      @Override
-      protected void hyperlinkActivated(@NotNull Notification notification, @NotNull HyperlinkEvent event) {
-        ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.class);
+  private void ask() {
+    if (!myCollector.shouldAsk()) return;
+    showAsk(myCollector.isReminder());
+  }
+
+  @RequiresEdt
+  private void showAsk(boolean reminder) {
+    Project target = null;
+    for (Project open : ProjectManager.getInstance().getOpenProjects()) {
+      if (isErlangProject(open)) {
+        target = open;
+        break;
       }
-    });
+    }
+    if (target == null) return;
+    Notification old = myNotification;
+    if (old != null) old.expire();
+    myCollector.markAsked();
+    Notification notification = createAsk(reminder);
     myNotification = notification;
-    notification.notify(project);
+    notification.whenExpired(() -> {
+      if (myNotification == notification) myNotification = null;
+    });
+    notification.notify(target);
   }
 
   @NotNull
-  static String notificationText(boolean reminder) {
-    return (reminder ? REMINDER_TEXT : TEXT) + " " + WHAT_IS_SENT_LINK;
+  static Notification createAsk(boolean reminder) {
+    Notification notification = NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP)
+      .createNotification(TITLE, reminder ? REMINDER_TEXT : TEXT, NotificationType.INFORMATION)
+      .setSuggestionType(true);
+    // the first action is the primary one; the balloon may fold the last one into "More"
+    notification.addAction(NotificationAction.createSimpleExpiring(YES, () -> getInstance().setEnabled(true)));
+    notification.addAction(NotificationAction.createSimpleExpiring(LATER, () -> {}));
+    notification.addAction(NotificationAction.createSimpleExpiring(NO, () -> getInstance().setEnabled(false)));
+    // keeps the notification, so that the user can still answer after reading the settings
+    notification.addAction(NotificationAction.create(WHAT_IS_SENT, (event, n) -> {
+      Project project = event.getProject();
+      if (project != null && !project.isDisposed()) {
+        ShowSettingsUtil.getInstance().showSettingsDialog(project, ErlangExternalToolsConfigurable.class);
+      }
+    }));
+    return notification;
+  }
+
+  @TestOnly
+  @Nullable
+  Notification getNotificationForTests() {
+    return myNotification;
+  }
+
+  @TestOnly
+  void showAskForTests(boolean reminder) {
+    showAsk(reminder);
   }
 
   private synchronized void startTimer() {
@@ -207,32 +282,14 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
       myCollector.flush();
       if (!myCollector.isCounting()) return;
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
-        recordProjectLater(project);
+        if (!LocalDate.now().toString().equals(project.getUserData(SNAPSHOT_DATE))) checkProject(project);
       }
-      if (isSendingAllowed()) myCollector.sendPending();
+      myCollector.sendPending();
     }
     catch (Exception e) {
       // an exception would stop the timer
       LOG.debug("Erlang usage statistics", e);
     }
-  }
-
-  // the environment of the project for today, computed once a day off the EDT when the indices are ready
-  private void recordProjectLater(@NotNull Project project) {
-    if (project.isDisposed() || project.isDefault()) return;
-    String today = LocalDate.now().toString();
-    if (today.equals(project.getUserData(SNAPSHOT_DATE))) return;
-    project.putUserData(SNAPSHOT_DATE, today);
-    ReadAction.nonBlocking(() -> countErlangFiles(project))
-      .inSmartMode(project)
-      .expireWhen(project::isDisposed)
-      .submit(AppExecutorUtil.getAppExecutorService())
-      .onSuccess(count -> {
-        // the SDK release check can start a process, so never on the EDT, even when the promise is already done
-        if (count > 0) AppExecutorUtil.getAppExecutorService().execute(() -> {
-          if (!project.isDisposed()) recordProject(project, count);
-        });
-      });
   }
 
   private static int countErlangFiles(@NotNull Project project) {
@@ -247,17 +304,29 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     return count[0];
   }
 
+  // the environment of the project for today, once a day
   @RequiresBackgroundThread
   private void recordProject(@NotNull Project project, int erlangFiles) {
+    if (!myCollector.isCounting() || project.isDisposed()) return;
+    String today = LocalDate.now().toString();
+    if (today.equals(project.getUserData(SNAPSHOT_DATE))) return;
+    project.putUserData(SNAPSHOT_DATE, today);
     myCollector.setProperty(ErlangUsageProperty.PROJECT_SIZE, sizeBucket(erlangFiles));
     boolean sdkConfigured = ErlangSdkType.getSdkPath(project) != null;
     myCollector.setProperty(ErlangUsageProperty.SDK_CONFIGURED, String.valueOf(sdkConfigured));
-    ErlangSdkRelease release = sdkConfigured ? ErlangSdkType.getProjectSdkRelease(project) : null;
-    myCollector.setProperty(ErlangUsageProperty.OTP, !sdkConfigured ? "none" : release == null ? "unknown" : otpMajor(release));
+    myCollector.setProperty(ErlangUsageProperty.OTP, otp(project, sdkConfigured));
     myCollector.setProperty(ErlangUsageProperty.REBAR, ReadAction.computeBlocking(() -> rebar(project)));
     for (String inspection : ReadAction.computeBlocking(() -> changedInspections(project))) {
       myCollector.setProperty(ErlangUsageProperty.CHANGED_INSPECTIONS, inspection);
     }
+  }
+
+  // only a release that is already known: the statistics never start erl, also not in a project that is not trusted
+  @NotNull
+  static String otp(@NotNull Project project, boolean sdkConfigured) {
+    if (!sdkConfigured) return "none";
+    ErlangSdkRelease release = ErlangSdkType.getKnownProjectSdkRelease(project);
+    return release == null ? "unknown" : otpMajor(release);
   }
 
   @NotNull
@@ -289,7 +358,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   static List<String> changedInspections(@NotNull Project project) {
     InspectionProfileImpl profile = InspectionProjectProfileManager.getInstance(project).getCurrentProfile();
     return LocalInspectionEP.LOCAL_INSPECTION.getExtensionList().stream()
-      .filter(ep -> ep.implementationClass != null && ep.implementationClass.startsWith("org.intellij.erlang."))
+      .filter(ep -> ep.getPluginDescriptor() != null && ErlangUsageCollector.PLUGIN_ID.equals(ep.getPluginDescriptor().getPluginId().getIdString()))
       .filter(ep -> {
         HighlightDisplayKey key = HighlightDisplayKey.find(ep.getShortName());
         return key != null && profile.isToolEnabled(key, null) != ep.enabledByDefault;

@@ -39,9 +39,10 @@ public class ErlangUsagePayloadTest extends TestCase {
     day.properties.put("OTP", "27,R16");
     day.properties.put("SDK_CONFIGURED", "true");
 
-    JsonObject body = JsonParser.parseString(ErlangUsagePayload.build(ID, List.of(day), "Germany")).getAsJsonObject();
+    day.country = "Germany";
+    JsonObject body = JsonParser.parseString(ErlangUsagePayload.build(ID, List.of(day))).getAsJsonObject();
     assertEquals(Set.of("api_key", "events"), body.keySet());
-    assertEquals(ErlangUsagePayload.API_KEY, body.get("api_key").getAsString());
+    assertEquals(ErlangAmplitudeSender.API_KEY, body.get("api_key").getAsString());
     JsonArray events = body.getAsJsonArray("events");
     assertEquals(1, events.size());
     JsonObject event = events.get(0).getAsJsonObject();
@@ -82,7 +83,8 @@ public class ErlangUsagePayloadTest extends TestCase {
     day.properties.put("IDE_BASELINE", "263; DROP");
     day.properties.put("CHANGED_INSPECTIONS", "ErlangUnusedFunction,secret_module,ErlangFoo/../bar");
 
-    String json = ErlangUsagePayload.build(ID, List.of(day), "Atlantis");
+    day.country = "Atlantis";
+    String json = ErlangUsagePayload.build(ID, List.of(day));
     for (String hostile : List.of("secret", "/Users", "john", "compile", "DROP", "Darwin", "Atlantis", "../", "Hostile")) {
       assertFalse(hostile + " in " + json, json.contains(hostile));
     }
@@ -104,9 +106,9 @@ public class ErlangUsagePayloadTest extends TestCase {
       day.counters.put("RENAME", 1L);
       days.add(day);
     }
-    assertEquals(10, ErlangUsageCollectorTest.events(ErlangUsagePayload.build(ID, days.subList(0, 10), null)).size());
+    assertEquals(10, ErlangUsageCollectorTest.events(ErlangUsagePayload.build(ID, days.subList(0, 10))).size());
     try {
-      ErlangUsagePayload.build(ID, days, null);
+      ErlangUsagePayload.build(ID, days);
       fail("11 events in one request");
     }
     catch (IllegalArgumentException expected) {
@@ -114,11 +116,13 @@ public class ErlangUsagePayloadTest extends TestCase {
   }
 
   public void testDeviceIdMustBeRandomId() {
-    try {
-      ErlangUsagePayload.build("john@john-macbook", List.of(), null);
-      fail("not a UUID");
-    }
-    catch (IllegalArgumentException expected) {
+    for (String id : List.of("john@john-macbook", "dev-probe-000000", ID + "x", ID.toUpperCase(Locale.ROOT))) {
+      try {
+        ErlangUsagePayload.build(id, List.of());
+        fail("not a UUID: " + id);
+      }
+      catch (IllegalArgumentException expected) {
+      }
     }
   }
 

@@ -44,7 +44,7 @@ public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-    ErlangUsageCounters.countIntention(getClass());
+    ErlangUsageCounters.countIntention(project, getClass());
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
     assert type != null;
     ErlangExportTypeFix.processType(project, type);

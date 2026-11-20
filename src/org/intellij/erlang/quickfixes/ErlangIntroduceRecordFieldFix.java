@@ -38,7 +38,7 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement element = descriptor.getPsiElement();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     if (recordExpression != null) {

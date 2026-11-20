@@ -425,21 +425,21 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
-    ErlangUsageCounters.count(ErlangUsageKey.DEBUG_STEP);
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
-    ErlangUsageCounters.count(ErlangUsageKey.DEBUG_STEP);
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
-    ErlangUsageCounters.count(ErlangUsageKey.DEBUG_STEP);
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOut();
   }
 

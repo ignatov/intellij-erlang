@@ -74,7 +74,7 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-    ErlangUsageCounters.countIntention(getClass());
+    ErlangUsageCounters.countIntention(project, getClass());
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }

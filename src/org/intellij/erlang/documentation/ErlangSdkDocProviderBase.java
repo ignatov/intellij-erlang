@@ -130,7 +130,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
         String doc = HttpRequests.request(urlString)
           .productNameAsUserAgent()
           .connect(request -> retrieveDoc(request.getReader()));
-        ErlangUsageCounters.count(doc != null ? ErlangUsageKey.OTP_DOCS_WEB_OK : ErlangUsageKey.OTP_DOCS_WEB_FAILED);
+        ErlangUsageCounters.count(myProject, doc != null ? ErlangUsageKey.OTP_DOCS_WEB_OK : ErlangUsageKey.OTP_DOCS_WEB_FAILED);
         return doc;
       }
       if (protocol == null || protocol.equals(URLUtil.FILE_PROTOCOL)) {
@@ -142,7 +142,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       }
     }
     catch (IOException | InvalidPathException e) {
-      if (web) ErlangUsageCounters.count(ErlangUsageKey.OTP_DOCS_WEB_FAILED);
+      if (web) ErlangUsageCounters.count(myProject, ErlangUsageKey.OTP_DOCS_WEB_FAILED);
       LOG.debug("Cannot fetch Erlang SDK documentation from " + urlString, e);
     }
     return null;

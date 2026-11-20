@@ -67,7 +67,7 @@ public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuick
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     int textOffset = file.getLastChild().getTextRange().getEndOffset();
     TemplateManager templateManager = TemplateManager.getInstance(project);
     Template template = templateManager.createTemplate("", "");

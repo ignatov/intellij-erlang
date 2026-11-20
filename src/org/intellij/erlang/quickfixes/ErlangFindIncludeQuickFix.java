@@ -100,7 +100,7 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
 
   public void applyFix(@NotNull Project project,
                        @NotNull ProblemDescriptor problemDescriptor) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
 
     PsiElement problem = problemDescriptor.getPsiElement();
     if (problem == null) return;

@@ -83,7 +83,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
       WriteAction.run(() -> module.setName(sanitize(project)));
@@ -116,7 +116,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
       try {

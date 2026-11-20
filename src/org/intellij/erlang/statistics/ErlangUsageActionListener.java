@@ -36,7 +36,7 @@ import static java.util.Map.entry;
 import static org.intellij.erlang.statistics.ErlangUsageKey.*;
 
 /**
- * Counts the IDE actions performed on an Erlang file, by action id. Only the action id is looked at, never the file.
+ * Counts the IDE actions performed on an Erlang file, by action id. Of the file, only its type is looked at.
  */
 public final class ErlangUsageActionListener implements AnActionListener {
   static final Map<String, ErlangUsageKey> ERLANG_FILE_ACTIONS = Map.ofEntries(
@@ -69,11 +69,11 @@ public final class ErlangUsageActionListener implements AnActionListener {
     ErlangUsageKey key = ERLANG_FILE_ACTIONS.get(id);
     if (key != null) {
       if (isErlangFile(event.getData(CommonDataKeys.PSI_FILE), event.getData(CommonDataKeys.VIRTUAL_FILE))) {
-        ErlangUsageCounters.count(key);
+        ErlangUsageCounters.count(event.getProject(), key);
       }
     }
     else if (EVALUATE_ACTIONS.contains(id) && isErlangDebugSession(event.getProject())) {
-      ErlangUsageCounters.count(EVALUATE_EXPRESSION);
+      ErlangUsageCounters.count(event.getProject(), EVALUATE_EXPRESSION);
     }
   }
 

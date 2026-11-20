@@ -89,13 +89,14 @@ public final class ErlangUsageListeners {
     @Override
     public void activeLookupChanged(@Nullable Lookup oldLookup, @Nullable Lookup newLookup) {
       if (newLookup == null || !ErlangUsageCounters.isCounting() || !(newLookup.getPsiFile() instanceof ErlangFile)) return;
+      Project project = newLookup.getProject();
       newLookup.addLookupListener(new LookupListener() {
         @Override
         public void itemSelected(@NotNull LookupEvent event) {
           LookupElement item = event.getItem();
           if (item == null) return;
-          ErlangUsageCounters.count(COMPLETION);
-          ErlangUsageCounters.count(completionKind(item));
+          ErlangUsageCounters.count(project, COMPLETION);
+          ErlangUsageCounters.count(project, completionKind(item));
         }
       });
     }
@@ -136,7 +137,7 @@ public final class ErlangUsageListeners {
     @Override
     public void processStarted(@NotNull String executorId, @NotNull ExecutionEnvironment env, @NotNull ProcessHandler handler) {
       ErlangUsageKey key = runKey(executorId, env.getRunProfile());
-      if (key != null) ErlangUsageCounters.count(key);
+      if (key != null) ErlangUsageCounters.count(env.getProject(), key);
     }
   }
 
@@ -156,7 +157,7 @@ public final class ErlangUsageListeners {
   public static final class Debugger implements XDebuggerManagerListener {
     @Override
     public void processStarted(@NotNull XDebugProcess debugProcess) {
-      if (debugProcess instanceof ErlangXDebugProcess) ErlangUsageCounters.count(DEBUG_SESSION);
+      if (debugProcess instanceof ErlangXDebugProcess) ErlangUsageCounters.count(debugProcess.getSession().getProject(), DEBUG_SESSION);
     }
   }
 
@@ -173,7 +174,7 @@ public final class ErlangUsageListeners {
       for (Module module : ModuleManager.getInstance(myProject).getModules()) {
         if (ModuleType.get(module) instanceof ErlangModuleType) {
           boolean rebar = ErlangCompilerSettings.getInstance(myProject).isUseRebarCompilerEnabled();
-          ErlangUsageCounters.count(rebar ? BUILD_REBAR : BUILD_BUILT_IN);
+          ErlangUsageCounters.count(myProject, rebar ? BUILD_REBAR : BUILD_BUILT_IN);
           return;
         }
       }
@@ -190,7 +191,7 @@ public final class ErlangUsageListeners {
     @Override
     public void toolWindowShown(@NotNull ToolWindow toolWindow) {
       if (ToolWindowId.STRUCTURE_VIEW.equals(toolWindow.getId()) && isErlangEditor(myProject)) {
-        ErlangUsageCounters.count(STRUCTURE_VIEW);
+        ErlangUsageCounters.count(myProject, STRUCTURE_VIEW);
       }
     }
   }
@@ -208,7 +209,7 @@ public final class ErlangUsageListeners {
       // a live template has an abbreviation; the templates of in-place rename and of other code have none
       TemplateImpl template = state.getTemplate();
       if (template != null && !StringUtil.isEmpty(template.getKey()) && isErlangEditor(myProject)) {
-        ErlangUsageCounters.count(LIVE_TEMPLATE);
+        ErlangUsageCounters.count(myProject, LIVE_TEMPLATE);
       }
     }
   }
@@ -217,7 +218,7 @@ public final class ErlangUsageListeners {
     @Override
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
       ErlangUsageKey key = openedFileKey(file);
-      if (key != null) ErlangUsageCounters.count(key);
+      if (key != null) ErlangUsageCounters.count(source.getProject(), key);
     }
   }
 

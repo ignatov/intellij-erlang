@@ -37,7 +37,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     ErlangExportFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangExportFunction.class, false);
     if (function == null) return;
     PsiFile file = function.getContainingFile();

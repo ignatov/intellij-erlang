@@ -165,7 +165,7 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     ProcessOutput output = runner.apply(state);
     boolean ok = output != null && !output.isTimeout() && output.getStderrLines().isEmpty() &&
                  !ContainerUtil.exists(output.getStdoutLines(), line -> line.startsWith("dialyzer: "));
-    ErlangUsageCounters.count(ok ? ErlangUsageKey.DIALYZER_OK : ErlangUsageKey.DIALYZER_FAILED);
+    ErlangUsageCounters.count(state.myProject, ok ? ErlangUsageKey.DIALYZER_OK : ErlangUsageKey.DIALYZER_FAILED);
     if (output != null && output.isTimeout()) {
       if (timedOutFiles(state.myProject).add(state.myFilePath)) {
         String message = "Dialyzer did not finish in time for " + new File(state.myFilePath).getName() + "; its warnings are not shown";

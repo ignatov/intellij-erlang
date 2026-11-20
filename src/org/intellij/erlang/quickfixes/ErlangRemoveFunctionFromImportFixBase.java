@@ -42,7 +42,7 @@ public abstract class ErlangRemoveFunctionFromImportFixBase extends ErlangQuickF
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     String fullName = getSignature(descriptor.getPsiElement());
     if (fullName != null) {
       removeFunctionFromImport(getAttributesForProcessing(descriptor.getPsiElement()), fullName);

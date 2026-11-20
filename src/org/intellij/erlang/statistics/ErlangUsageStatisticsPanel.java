@@ -28,6 +28,7 @@ import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,6 +40,8 @@ import java.awt.event.ActionListener;
 public final class ErlangUsageStatisticsPanel extends JPanel {
   public static final String CHECKBOX_TEXT = "Send anonymous usage statistics";
   private final JBCheckBox myCheckBox = new JBCheckBox(CHECKBOX_TEXT);
+  // the value shown by the last reset; a second settings dialog that did not touch the check box changes nothing
+  private boolean myShownValue;
 
   public ErlangUsageStatisticsPanel() {
     super(new BorderLayout());
@@ -59,16 +62,23 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
   }
 
   public boolean isModified() {
-    return myCheckBox.isSelected() != isEnabled(ErlangUsageStatistics.getInstance());
+    return myCheckBox.isSelected() != myShownValue;
   }
 
   public void apply() {
-    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
-    if (myCheckBox.isSelected() != isEnabled(statistics)) statistics.setEnabled(myCheckBox.isSelected());
+    if (!isModified()) return;
+    ErlangUsageStatistics.getInstance().setEnabled(myCheckBox.isSelected());
+    myShownValue = myCheckBox.isSelected();
   }
 
   public void reset() {
-    myCheckBox.setSelected(isEnabled(ErlangUsageStatistics.getInstance()));
+    myShownValue = isEnabled(ErlangUsageStatistics.getInstance());
+    myCheckBox.setSelected(myShownValue);
+  }
+
+  @TestOnly
+  void setSelectedForTests(boolean selected) {
+    myCheckBox.setSelected(selected);
   }
 
   private static boolean isEnabled(@NotNull ErlangUsageStatistics statistics) {

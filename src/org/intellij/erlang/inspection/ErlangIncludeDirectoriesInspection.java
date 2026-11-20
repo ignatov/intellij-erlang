@@ -83,7 +83,7 @@ public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       if (myDoFix) {
         for (Module module : ModuleManager.getInstance(project).getModules()) {
           doFix(module);

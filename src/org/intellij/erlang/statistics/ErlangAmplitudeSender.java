@@ -28,19 +28,15 @@ import java.net.URLConnection;
  * Sends the events to the HTTP V2 API of Amplitude with the IDE's HTTP client, so the IDE proxy settings apply.
  */
 public final class ErlangAmplitudeSender implements ErlangUsageSender {
-  // The project's key was accepted only by the US data center; the EU one answered "Invalid API key".
+  // The data center and the key of the Amplitude project; change both together. The key is public by Amplitude's rules.
+  // This key is of a project in the US data center: the EU host (https://api.eu.amplitude.com/2/httpapi) refuses it.
   public static final String URL = "https://api2.amplitude.com/2/httpapi";
+  public static final String API_KEY = "01d7dfca349892ff1ef7e8317d62aa6a";
   private static final int TIMEOUT_MS = 5_000;
 
   @Override
   @RequiresBackgroundThread
-  public boolean send(@NotNull String json) throws IOException {
-    return status(json) == HttpURLConnection.HTTP_OK;
-  }
-
-  // the HTTP status of the answer
-  @RequiresBackgroundThread
-  public int status(@NotNull String json) throws IOException {
+  public int send(@NotNull String json) throws IOException {
     return HttpRequests.post(URL, "application/json")
       .accept("*/*")
       .connectTimeout(TIMEOUT_MS)

@@ -275,6 +275,23 @@ public class ErlangSdkType extends SdkType {
     return ErlangSystemUtil.isSmallIde() ? getReleaseForSmallIde(project) : getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
   }
 
+  // the release of the project's Erlang SDK as far as it is already known: from the cache of detected releases or from
+  // the version string of the SDK. It never reads the SDK and never starts erl; null when the release is not known yet.
+  @Nullable
+  public static ErlangSdkRelease getKnownProjectSdkRelease(@NotNull Project project) {
+    if (ErlangSystemUtil.isSmallIde()) {
+      String sdkPath = getSdkPath(project);
+      return StringUtil.isEmpty(sdkPath) ? null : getInstance().mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkPath));
+    }
+    Sdk sdk = ProjectRootManager.getInstance(project).getProjectSdk();
+    if (sdk == null || sdk.getSdkType() != getInstance()) return null;
+    CachedRelease cached = sdk.getUserData(ERLANG_SDK_RELEASE);
+    if (cached != null && Objects.equals(cached.versionString(), sdk.getVersionString()) && Objects.equals(cached.homePath(), sdk.getHomePath())) {
+      return cached.release();
+    }
+    return ErlangSdkRelease.fromString(sdk.getVersionString());
+  }
+
   @NotNull
   public static ErlangSdkRelease getRelease(@Nullable Module module) {
     if (module == null) return ErlangSdkRelease.DefaultRelease;

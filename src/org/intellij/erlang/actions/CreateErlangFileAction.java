@@ -110,7 +110,7 @@ public class CreateErlangFileAction extends CreateFileFromTemplateAction impleme
   @Override
   protected PsiFile createFile(String name, String templateName, PsiDirectory dir) {
     PsiFile file = super.createFile(name, templateName, dir);
-    if (file != null) ErlangUsageCounters.countNewFile(templateName);
+    if (file != null) ErlangUsageCounters.countNewFile(dir.getProject(), templateName);
     return file;
   }
 

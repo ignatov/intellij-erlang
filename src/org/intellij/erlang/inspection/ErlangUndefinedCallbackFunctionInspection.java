@@ -100,7 +100,7 @@ public class ErlangUndefinedCallbackFunctionInspection extends ErlangInspectionB
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
-      ErlangUsageCounters.countQuickFix(getClass());
+      ErlangUsageCounters.countQuickFix(project, getClass());
       PsiElement problemElement = problemDescriptor.getPsiElement();
       PsiFile containingFile = problemElement != null ? problemElement.getContainingFile() : null;
       ErlangFile file = ObjectUtils.tryCast(containingFile, ErlangFile.class);

@@ -19,14 +19,28 @@ package org.intellij.erlang.statistics;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.notification.Notification;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkModificator;
+import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -44,13 +58,19 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     super.setUp();
     ErlangUsageStatistics.getInstance().resetForTests();
     collector().setSender(mySender);
+    ErlangUsageStatistics.setAllowedForTests(true);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
   }
 
   @Override
   protected void tearDown() throws Exception {
     try {
+      Notification notification = ErlangUsageStatistics.getInstance().getNotificationForTests();
+      if (notification != null) notification.expire();
       ErlangUsageStatistics.getInstance().resetForTests();
       collector().setSender(new ErlangAmplitudeSender());
+      ErlangUsageStatistics.setAllowedForTests(null);
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), null);
     }
     catch (Throwable e) {
       addSuppressedException(e);
@@ -60,14 +80,170 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
-  public void testNoSendingOrAskingInTests() {
-    assertFalse(ErlangUsageStatistics.isSendingAllowed());
+  public void testNothingIsAllowedInTestsByDefault() {
+    ErlangUsageStatistics.setAllowedForTests(null);
+    assertFalse(ErlangUsageStatistics.isAllowed());
+    collector().setEnabled(true);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    assertFalse(ErlangUsageCounters.isCounting());
+    assertTrue(collector().getState().days.isEmpty());
+  }
+
+  public void testEnvironmentSwitches() {
+    assertTrue(ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, null, null));
+    assertTrue(ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, "true", "0"));
+    assertFalse("SNAPSHOT", ErlangUsageStatistics.isAllowedEnvironment("0.11.SNAPSHOT", false, false, null, null));
+    assertFalse("no version", ErlangUsageStatistics.isAllowedEnvironment(null, false, false, null, null));
+    assertFalse("unit tests", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", true, false, null, null));
+    assertFalse("headless", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, true, null, null));
+    assertFalse("property", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, "false", null));
+    assertFalse("property", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, "FALSE", null));
+    assertFalse("DO_NOT_TRACK", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, null, "1"));
+    assertFalse("DO_NOT_TRACK", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, null, "true"));
+  }
+
+  public void testProjectWithoutErlangFilesDoesNotCount() {
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    collector().setEnabled(true);
+    myFixture.configureByText("web.config", "<configuration><appSettings/></configuration>");
+    myFixture.performEditorAction("ReformatCode");
+    completeFunction();
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollectorTest.FakeSender.class);
+    assertTrue(collector().getState().days.isEmpty());
+    JsonObject properties = previewProperties();
+    assertFalse(properties.has("opened_config"));
+    assertFalse(properties.has("reformat"));
+    assertFalse(properties.has("completion"));
+  }
+
+  public void testPreviewStoresNothing() {
+    collector().previewToday();
+    assertTrue(collector().getState().days.isEmpty());
+    assertNull(collector().getInstallationId());
+  }
+
+  public void testAskActionsAndTexts() {
+    Notification first = ErlangUsageStatistics.createAsk(false);
+    assertEquals(ErlangUsageStatistics.TEXT, first.getContent());
+    assertEquals(ErlangUsageStatistics.TITLE, first.getTitle());
+    assertEquals(List.of(ErlangUsageStatistics.YES, ErlangUsageStatistics.LATER, ErlangUsageStatistics.NO, ErlangUsageStatistics.WHAT_IS_SENT),
+                 ContainerUtil.map(first.getActions(), action -> action.getTemplateText()));
+    assertEquals(ErlangUsageStatistics.REMINDER_TEXT, ErlangUsageStatistics.createAsk(true).getContent());
+    assertFalse(first.getContent().contains("<a"));
+  }
+
+  public void testReminderExpiresTheOldAsk() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.showAskForTests(false);
+    Notification first = statistics.getNotificationForTests();
+    assertNotNull(first);
+    statistics.showAskForTests(true);
+    Notification reminder = statistics.getNotificationForTests();
+    assertTrue(first.isExpired());
+    assertNotSame(first, reminder);
+    assertEquals(ErlangUsageStatistics.REMINDER_TEXT, reminder.getContent());
+    assertEquals(2, collector().getState().askCount);
+    reminder.expire();
+    assertNull(statistics.getNotificationForTests());
+  }
+
+  public void testTwoSettingsDialogs() {
+    ErlangUsageStatisticsPanel first = new ErlangUsageStatisticsPanel();
+    ErlangUsageStatisticsPanel second = new ErlangUsageStatisticsPanel();
+    first.setSelectedForTests(true);
+    assertTrue(first.isModified());
+    first.apply();
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+    // the second dialog still shows "off", but the user did not touch it
+    assertFalse(second.isModified());
+    second.apply();
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+  }
+
+  public void testOtpReleaseNeverStartsErl() throws Exception {
+    File home = FileUtil.createTempDirectory("erlang-sdk", null);
+    File marker = new File(home, "erl-started");
+    File erl = new File(home, "bin/erl");
+    FileUtil.writeToFile(erl, "#!/bin/sh\ntouch '" + marker.getPath() + "'\n");
+    assertTrue(erl.setExecutable(true));
+    ProjectJdkImpl sdk = new ProjectJdkImpl("Erlang without version", ErlangSdkType.getInstance());
+    ProjectRootManager rootManager = ProjectRootManager.getInstance(getProject());
+    Sdk old = rootManager.getProjectSdk();
+    WriteAction.run(() -> {
+      SdkModificator modificator = sdk.getSdkModificator();
+      modificator.setHomePath(home.getPath());
+      modificator.commitChanges();
+      ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable());
+      rootManager.setProjectSdk(sdk);
+    });
+    assertSame(sdk, rootManager.getProjectSdk());
+    try {
+      assertEquals("unknown", ErlangUsageStatistics.otp(getProject(), true));
+      assertFalse(marker.exists());
+      WriteAction.run(() -> {
+        SdkModificator modificator = sdk.getSdkModificator();
+        modificator.setVersionString(ErlangSdkRelease.V_27_0.toString());
+        modificator.commitChanges();
+      });
+      assertEquals("27", ErlangUsageStatistics.otp(getProject(), true));
+      assertEquals("none", ErlangUsageStatistics.otp(getProject(), false));
+      assertFalse(marker.exists());
+    }
+    finally {
+      WriteAction.run(() -> rootManager.setProjectSdk(old));
+    }
+  }
+
+  public void testOnlyClassesOfThisPluginCount() {
+    collector().setEnabled(true);
+    ErlangUsageCounters.countQuickFix(getProject(), LocalQuickFix.class);
+    ErlangUsageCounters.countIntention(getProject(), String.class);
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollector.class);
+    collector().flush();
+    assertEquals(Map.of("quick_fix:ErlangUsageCollector", 1L), collector().getState().days.get(0).counters);
+  }
+
+  // hostile values through every setter and through a changed state file never reach the JSON
+  public void testHostileValuesInTheStateFile() throws Exception {
+    ErlangUsageCollectorTest.FakeSender sender = new ErlangUsageCollectorTest.FakeSender();
+    LocalDate[] today = {LocalDate.of(2026, 11, 19)};
+    ErlangUsageCollector collector =
+      new ErlangUsageCollector(() -> today[0], ErlangUsageCollectorTest::appProperties, () -> "Germany", () -> true, sender);
+    collector.setEnabled(true);
+    String[] hostile = {"/Users/hostile", "hostile\",\"ip\":\"1.2.3.4", "27,/Users/hostile", "Erlang/../hostile", "ErlangHostile\u0000x",
+      "true,hostile", "IU\nhostile", "263 hostile", "0.11.1\"hostile"};
+    for (ErlangUsageProperty property : ErlangUsageProperty.values()) {
+      for (String value : hostile) collector.setProperty(property, value);
+    }
+    collector.count(ErlangUsageKey.RENAME);
+    collector.flush();
+    ErlangUsageStatisticsState state = collector.getState();
+    ErlangUsageStatisticsState.Day day = state.days.get(0);
+    day.counters.put("quick_fix:/Users/hostile", 1L);
+    day.counters.put("intention:Hostile name", 1L);
+    day.counters.put("hostile_counter", 1L);
+    day.counters.put("RENAME\",\"ip\":\"1.2.3.4", 1L);
+    day.properties.put("hostile_property", "hostile");
+    day.properties.put("OTP", "27,/Users/hostile,R16");
+    day.properties.put("CHANGED_INSPECTIONS", "ErlangUnusedVariable,hostile path,Erlang\"x");
+    day.country = "Hostile\",\"ip\":\"1.2.3.4";
+    ErlangUsageStatisticsState.Day bad = new ErlangUsageStatisticsState.Day();
+    bad.date = "2026-11-18\",\"ip\":\"1.2.3.4";
+    bad.counters.put("RENAME", 1L);
+    state.days.add(bad);
+    String xml = JDOMUtil.write(XmlSerializer.serialize(state));
+    collector.loadState(XmlSerializer.deserialize(JDOMUtil.load(xml), ErlangUsageStatisticsState.class));
+    today[0] = today[0].plusDays(1);
+    assertEquals(1, collector.sendPending());
+    String json = String.join("\n", sender.bodies);
+    assertFalse(json, json.contains("hostile") || json.contains("Hostile") || json.contains("/Users") || json.contains("\"ip\""));
+    assertTrue(json, json.contains("\"otp\":[\"27\",\"R16\"]"));
   }
 
   public void testDefaultIsOff() {
     completeFunction();
     myFixture.performEditorAction("ReformatCode");
-    ErlangUsageCounters.count(ErlangUsageKey.RENAME);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
     assertFalse(ErlangUsageCounters.isCounting());
     assertTrue(collector().getState().days.isEmpty());
     assertEquals(0, collector().sendPending());
@@ -98,7 +274,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
 
   public void testTurningOffDeletesTheData() {
     collector().setEnabled(true);
-    ErlangUsageCounters.count(ErlangUsageKey.RENAME);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
     assertNotNull(collector().getInstallationId());
     ErlangUsageStatisticsPanel panel = new ErlangUsageStatisticsPanel();
     assertFalse(panel.isModified());
@@ -110,8 +286,8 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
 
   public void testStateIsStoredAndRead() {
     collector().setEnabled(true);
-    ErlangUsageCounters.count(ErlangUsageKey.RENAME);
-    ErlangUsageCounters.countQuickFix(ErlangUsageCollectorTest.FakeSender.class);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollectorTest.FakeSender.class);
     collector().setProperty(ErlangUsageProperty.OTP, "27");
     collector().markAsked();
     ErlangUsageStatisticsState state = ErlangUsageStatistics.getInstance().getState();
@@ -151,14 +327,14 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     myFixture.performEditorAction("RenameElement");
     myFixture.configureByText("hostile_text.txt", "hostile_text");
     myFixture.performEditorAction("ReformatCode");
-    ErlangUsageCounters.countNewFile("hostile_template /Users/hostile_user/hostile_dir");
-    ErlangUsageCounters.countNewFile(null);
-    ErlangUsageCounters.countQuickFix(String.class);
-    ErlangUsageCounters.countQuickFix(new Object() {}.getClass());
-    ErlangUsageCounters.countIntention(ErlangUsageCollectorTest.FakeSender.class);
+    ErlangUsageCounters.countNewFile(getProject(), "hostile_template /Users/hostile_user/hostile_dir");
+    ErlangUsageCounters.countNewFile(getProject(), null);
+    ErlangUsageCounters.countQuickFix(getProject(), String.class);
+    ErlangUsageCounters.countQuickFix(getProject(), new Object() {}.getClass());
+    ErlangUsageCounters.countIntention(getProject(), ErlangUsageCollectorTest.FakeSender.class);
     ErlangApplicationConfiguration configuration =
       new ErlangApplicationConfiguration(getProject(), "hostile_run /tmp/hostile_path", ErlangApplicationRunConfigurationType.getInstance());
-    ErlangUsageCounters.count(ErlangUsageListeners.runKey("Run", configuration));
+    ErlangUsageCounters.count(getProject(), ErlangUsageListeners.runKey("Run", configuration));
 
     String json = collector().previewToday();
     String state = JDOMUtil.write(XmlSerializer.serialize(ErlangUsageStatistics.getInstance().getState()));

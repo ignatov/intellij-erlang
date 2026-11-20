@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
  * <pre>ERLANG_USAGE_PROBE=1 ./gradlew test --tests 'org.intellij.erlang.statistics.ErlangUsageProbeManualTest' --rerun</pre>
  */
 public class ErlangUsageProbeManualTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final String FIXED_ID = "00000000-0000-4000-8000-000000000000";
+
   public void testSendOneProbeEvent() throws Exception {
     if (!"1".equals(System.getenv("ERLANG_USAGE_PROBE"))) return;
     ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
@@ -37,9 +39,11 @@ public class ErlangUsageProbeManualTest extends ErlangLightPlatformCodeInsightFi
     day.counters.put(ErlangUsageKey.COMPLETION.name(), 1L);
     day.counters.put(ErlangUsageKey.COMPLETION_FUNCTION.name(), 1L);
     day.counters.put(ErlangUsageKey.RENAME.name(), 1L);
-    String json = ErlangUsagePayload.build("dev-probe-000000", List.of(day), "Germany");
+    day.country = "Germany";
+    // the payload takes only random ids; the probe id replaces a fixed one afterwards
+    String json = ErlangUsagePayload.build(FIXED_ID, List.of(day)).replace(FIXED_ID, "dev-probe-000000");
     int status = ApplicationManager.getApplication()
-      .executeOnPooledThread(() -> new ErlangAmplitudeSender().status(json))
+      .executeOnPooledThread(() -> new ErlangAmplitudeSender().send(json))
       .get(30, TimeUnit.SECONDS);
     System.out.println("Amplitude answered HTTP " + status + " for " + json);
     assertEquals(200, status);

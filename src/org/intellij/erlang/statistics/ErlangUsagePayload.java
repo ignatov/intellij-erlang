@@ -35,13 +35,12 @@ import java.util.regex.Pattern;
  * stored state is skipped, so a name or a path cannot be sent even if it got into the state.
  */
 public final class ErlangUsagePayload {
-  public static final String API_KEY = "01d7dfca349892ff1ef7e8317d62aa6a";
   public static final String EVENT_TYPE = "daily_usage";
   public static final int MAX_EVENTS_PER_REQUEST = 10;
   static final String QUICK_FIX_PREFIX = "quick_fix:";
   static final String INTENTION_PREFIX = "intention:";
 
-  private static final Pattern DEVICE_ID = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|dev-probe-0{6}");
+  private static final Pattern DEVICE_ID = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
   private static final Pattern DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
   static final Pattern CLASS_NAME = Pattern.compile("[A-Z][A-Za-z0-9_]{0,80}");
 
@@ -49,19 +48,19 @@ public final class ErlangUsagePayload {
   }
 
   @NotNull
-  public static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days, @Nullable String country) {
+  public static String build(@NotNull String deviceId, @NotNull List<ErlangUsageStatisticsState.Day> days) {
     if (!DEVICE_ID.matcher(deviceId).matches()) throw new IllegalArgumentException("Not an installation id");
     if (days.size() > MAX_EVENTS_PER_REQUEST) throw new IllegalArgumentException("Too many events: " + days.size());
     StringBuilder json = new StringBuilder();
     json.append("{\"api_key\":");
-    string(json, API_KEY);
+    string(json, ErlangAmplitudeSender.API_KEY);
     json.append(",\"events\":[");
     boolean first = true;
     for (ErlangUsageStatisticsState.Day day : days) {
       if (day.date == null || !DATE.matcher(day.date).matches()) continue;
       if (!first) json.append(',');
       first = false;
-      event(json, deviceId, day, country != null && ErlangUsageCountry.isKnown(country) ? country : null);
+      event(json, deviceId, day, day.country != null && ErlangUsageCountry.isKnown(day.country) ? day.country : null);
     }
     json.append("]}");
     return json.toString();

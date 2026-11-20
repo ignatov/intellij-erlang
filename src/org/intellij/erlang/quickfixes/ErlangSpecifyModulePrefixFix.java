@@ -39,7 +39,7 @@ public class ErlangSpecifyModulePrefixFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor d) {
-    ErlangUsageCounters.countQuickFix(getClass());
+    ErlangUsageCounters.countQuickFix(project, getClass());
     ErlangFunctionCallExpression call = PsiTreeUtil.getParentOfType(d.getPsiElement(), ErlangFunctionCallExpression.class);
     if (call != null) {
       call.replace(ErlangElementFactory.createFunctionWithModuleCallExpression(project, myModuleName, call.getText()));

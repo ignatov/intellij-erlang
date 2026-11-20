@@ -98,6 +98,9 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       }
     }
 
+    // the statistics setting is for the whole IDE, not for new projects
+    myUsageStatisticsPanel.setVisible(!project.isDefault());
+
     if (!ErlangSystemUtil.isSmallIde()) {
       mySdkPathSelector.setVisible(false);
       mySdkTitledSeparator.setVisible(false);
@@ -146,7 +149,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
       || !myEmacsSettings.getEmacsPath().equals(emacsSelectedPath)
       || !myDialyzerSettings.getCurrentPltPath().equals(myPltPathSelector.getText())
       || !StringUtil.notNullize(ErlangSdkType.getSdkPath(myProject)).equals(mySdkPathSelector.getText())
-      || myUsageStatisticsPanel.isModified();
+      || !myProject.isDefault() && myUsageStatisticsPanel.isModified();
   }
 
   @Override
@@ -154,7 +157,7 @@ public class ErlangExternalToolsConfigurable implements SearchableConfigurable, 
     myRebarSettings.setRebarPath(myRebarConfigurationForm.getPath());
     myEmacsSettings.setEmacsPath(myEmacsPathSelector.getText());
     myDialyzerSettings.setCurrentPltPath(myPltPathSelector.getText());
-    myUsageStatisticsPanel.apply();
+    if (!myProject.isDefault()) myUsageStatisticsPanel.apply();
     if (ErlangSystemUtil.isSmallIde()) {
       ErlangSdkForSmallIdes.setUpOrUpdateSdk(myProject, mySdkPathSelector.getText());
     }
