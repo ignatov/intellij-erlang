@@ -92,7 +92,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private static final Key<Boolean> ERLANG_PROJECT = Key.create("ErlangUsageStatistics.erlangProject");
   // when the project was first found to have Erlang files with the indices ready
   private static final Key<Long> READY_SINCE = Key.create("ErlangUsageStatistics.readySince");
-  private static final long ASK_DELAY_MS = 60_000;
+  static final long ASK_DELAY_MS = 60_000;
   private static final long IDLE_MS = 5_000;
   private static final long RETRY_MS = 2_500;
   // 10 minutes of checks every 2.5 seconds
