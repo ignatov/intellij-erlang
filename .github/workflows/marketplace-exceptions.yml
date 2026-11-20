@@ -1,0 +1,89 @@
+name: Marketplace exceptions
+
+# Copies the exception reports of the plugin on JetBrains Marketplace (plugin 7083, the Exceptions tab) into issues of
+# this repository, one issue per group, so that the bug-fixing factory can fix them. scripts/marketplace/exceptions.py
+# does the work; its docstring has the rules (which groups are filed, updates, reopening, caps and privacy).
+#
+# Modes:
+#   probe    only check access: the HTTP status of /exceptions/resolved and the top-level JSON type and keys.
+#   dry-run  print what a run would do and the body of the first new issue; write nothing.
+#   run      write the issues.
+# A manual run uses the mode of its input (default dry-run). The scheduled run uses dry-run until the repository
+# variable MARKETPLACE_EXCEPTIONS is "true", then run. A scheduled run without the secret does nothing and says so in
+# the job summary; a manual run without it fails.
+#
+# Secret: JETBRAINS_MARKETPLACE_TOKEN, a Marketplace permanent token (My Tokens) of a user who can edit the plugin. Only
+# the step "Copy the reports" gets it. The script only reads Marketplace: it never sends a POST there, so it never marks
+# a group resolved. It never prints the temporary storage link that Marketplace can redirect to.
+# Variables: MARKETPLACE_EXCEPTIONS ("true" lets the scheduled run write), MARKETPLACE_EXCEPTIONS_MIN_VERSION
+# (optional; the oldest plugin version whose reports are filed, default 0.11.1300).
+
+on:
+  schedule:
+    - cron: '37 3 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: probe (check access only), dry-run (print what it would do) or run (write the issues)
+        type: choice
+        options:
+          - probe
+          - dry-run
+          - run
+        default: dry-run
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: marketplace-exceptions
+  cancel-in-progress: false
+
+jobs:
+  copy:
+    if: github.repository == 'ignatov/intellij-erlang'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Test the script
+      run: python3 -m unittest discover -s scripts/marketplace -p 'test_*.py'
+    - name: Choose the mode
+      id: mode
+      env:
+        EVENT: ${{ github.event_name }}
+        INPUT_MODE: ${{ inputs.mode }}
+        ENABLED: ${{ vars.MARKETPLACE_EXCEPTIONS }}
+        HAS_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN != '' }}
+      run: |
+        if [[ "$EVENT" == workflow_dispatch ]]; then
+          mode="$INPUT_MODE"
+        elif [[ "$ENABLED" == true ]]; then
+          mode=run
+        else
+          mode=dry-run
+        fi
+        case "$mode" in
+          probe|dry-run|run) ;;
+          *) echo "::error::Unknown mode: $mode"; exit 1 ;;
+        esac
+        if [[ "$HAS_TOKEN" != true ]]; then
+          if [[ "$EVENT" == workflow_dispatch ]]; then
+            echo "::error::The secret JETBRAINS_MARKETPLACE_TOKEN is not set"
+            exit 1
+          fi
+          echo "The secret JETBRAINS_MARKETPLACE_TOKEN is not set, so nothing was read." >> "$GITHUB_STEP_SUMMARY"
+          mode=none
+        fi
+        echo "mode=$mode" >> "$GITHUB_OUTPUT"
+    - name: Copy the reports
+      if: steps.mode.outputs.mode != 'none'
+      env:
+        MARKETPLACE_TOKEN: ${{ secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
+        MARKETPLACE_MIN_VERSION: ${{ vars.MARKETPLACE_EXCEPTIONS_MIN_VERSION }}
+        MODE: ${{ steps.mode.outputs.mode }}
+      run: python3 scripts/marketplace/exceptions.py "--$MODE"
