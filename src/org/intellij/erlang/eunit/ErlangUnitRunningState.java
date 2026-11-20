@@ -151,7 +151,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
     String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ErlangUnitRunningState::toAtom, ", ");
     }
     else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
@@ -163,7 +163,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append("fun ").append(toAtom(moduleName)).append(':').append(toAtom(function)).append("/0")
                 .append(isGenerator ? "}" : "")
                 .append(", ");
         }
@@ -179,6 +179,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       throw new ExecutionException("Unknown run config kind");
     }
     return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
+  }
+
+  @NotNull
+  private static String toAtom(@NotNull String name) {
+    return Objects.requireNonNullElse(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {

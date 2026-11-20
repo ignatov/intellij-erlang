@@ -31,6 +31,10 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
   protected String getTestDataPath() {
@@ -54,6 +58,50 @@ public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFix
     ErlangFunction function = file.getFunction("my-case_test", 0);
     assertNotNull(function);
     assertEquals("[{\"module 'my-mod_tests'\", [fun 'my-mod_tests':'my-case_test'/0]}]", getTestObjects(function.getNameIdentifier()));
+  }
+
+  public void testPlainNamesStayUnquoted() throws ExecutionException {
+    assertEquals("[sample_tests, other_tests]", getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE,
+                                                               "sample_tests", "other_tests"));
+    assertEquals("[{\"module 'sample_tests'\", [fun sample_tests:a_test/0, {generator, fun sample_tests:b_test_/0}]}]",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION,
+                                "sample_tests:a_test", "sample_tests:b_test_"));
+  }
+
+  public void testQuotedGeneratorFunction() throws ExecutionException {
+    assertEquals("[{\"module 'my-mod_tests'\", [{generator, fun 'my-mod_tests':'my-gen_test_'/0}]}]",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION, "my-mod_tests:my-gen_test_"));
+  }
+
+  public void testNamesTypedWithQuotesAreNotQuotedAgain() throws ExecutionException {
+    assertEquals("['my-mod_tests']", getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "'my-mod_tests'"));
+    String functions = getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION, "'my-mod_tests':'my-case_test'");
+    assertTrue(functions, functions.contains("[fun 'my-mod_tests':'my-case_test'/0]"));
+  }
+
+  public void testDebugEntryPointQuotesNames() throws ExecutionException {
+    ErlangUnitRunConfiguration configuration = createConfiguration(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "my-mod_tests");
+    String debugTests = new ErlangUnitRunningState(null, getModule(), configuration).getDebugEntryPoint().getArgsList().get(0);
+    assertEquals("[{timeout, " + Integer.MAX_VALUE + ", ['my-mod_tests']}]", debugTests);
+  }
+
+  private String getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, String... names) throws ExecutionException {
+    ErlangUnitRunConfiguration configuration = createConfiguration(kind, names);
+    return new ErlangUnitRunningState(null, getModule(), configuration).getEntryPoint().getArgsList().get(0);
+  }
+
+  private ErlangUnitRunConfiguration createConfiguration(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind, String... names) {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    configuration.getConfigData().setKind(kind);
+    Set<String> nameSet = new LinkedHashSet<>(Arrays.asList(names));
+    if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
+      configuration.getConfigData().setModuleNames(nameSet);
+    }
+    else {
+      configuration.getConfigData().setFunctionNames(nameSet);
+    }
+    return configuration;
   }
 
   private String getTestObjects(PsiElement element) throws ExecutionException {
