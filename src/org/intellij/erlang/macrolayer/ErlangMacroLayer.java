@@ -1,5 +1,6 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressManager;
@@ -13,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiFileImpl;
@@ -39,6 +41,7 @@ import java.util.*;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Spike 3: macro expansion as a separate layer, used only as an oracle.
@@ -291,7 +294,7 @@ public final class ErlangMacroLayer {
    * The cheap per-file table: which macro names the file can see (its own and those of its headers, transitively),
    * which variables appear in macro bodies, and the header summaries for the expander. It never builds a copy. Its
    * dependencies are the dependencies of the copy: the file's own text, the directive lines of the included headers,
-   * file creation/deletion/moves and project roots (include resolution can change only then).
+   * and the {@link IncludeTracker} of the file (what its includes and those of its headers resolve to).
    */
   static final class Table {
     final @Nullable String refusal;
@@ -301,14 +304,16 @@ public final class ErlangMacroLayer {
     final Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested = new IdentityHashMap<>();
     final List<VirtualFile> headers = new ArrayList<>();
     final Object[] deps;
+    final @NotNull IncludeTracker includes;
     final ConcurrentHashMap<Integer, Boolean> formUse = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formError = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
 
-    Table(@Nullable String refusal, Object[] deps) {
+    Table(@Nullable String refusal, Object[] deps, @NotNull IncludeTracker includes) {
       this.refusal = refusal;
       this.deps = deps;
+      this.includes = includes;
     }
 
     ErlangMacroExpander.IncludeResolver resolver() {
@@ -328,6 +333,148 @@ public final class ErlangMacroLayer {
   }
 
   private static final Key<CachedValue<Table>> TABLE_KEY = Key.create("erlang.macro.layer.table");
+  private static final Key<IncludeTracker> INCLUDE_TRACKER_KEY = Key.create("erlang.macro.layer.include.tracker");
+  /** Stamps of an {@link IncludeTracker} that could not check: each differs from every stamp a cached value keeps. */
+  private static final AtomicLong UNCHECKED_STAMPS = new AtomicLong();
+
+  /**
+   * Round 5: what the includes of a file, and of its headers transitively, resolve to. Its count changes only when one
+   * of them resolves to another file or to none. Include resolution ({@link ErlangPsiImplUtil#getDirectlyIncludedFiles})
+   * reads only the file tree, the project roots, the application index and the include attributes. The attributes are
+   * covered by the other dependencies (the file's own text and the header directive trackers); the rest can change only
+   * with a VFS structure event (creation, deletion, move, rename, copy) or a roots change. So the tracker re-runs
+   * master's resolution, once, when the VFS structure count or the roots count moved since its last check, and compares
+   * the result with the last one. A header that appears or disappears changes the result (an include now resolves, or
+   * no longer does, or resolves elsewhere); an unrelated file event does not. Where it cannot check (the UI thread,
+   * which must not query indices; no read access; dumb mode), it answers a fresh stamp, so the caller sees the cached
+   * table and copy as stale and gets master's answer; the next background question checks.
+   */
+  static final class IncludeTracker implements ModificationTracker {
+    private final @NotNull ErlangFile myFile;
+    private long myVfs = -1;
+    private long myRoots = -1;
+    private @Nullable List<Object> myResolution;
+    private long myVersion;
+
+    IncludeTracker(@NotNull ErlangFile file) {
+      myFile = file;
+    }
+
+    @Override
+    public long getModificationCount() {
+      Project project = myFile.getProject();
+      long vfs = VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount();
+      long roots = ProjectRootManager.getInstance(project).getModificationCount();
+      synchronized (this) {
+        if (vfs == myVfs && roots == myRoots) return myVersion;
+      }
+      var app = ApplicationManager.getApplication();
+      if (app.isDispatchThread() && !isEdtBuildAllowed() || !app.isReadAccessAllowed() || project.isDisposed() ||
+          DumbService.isDumb(project) || !myFile.isValid()) {
+        return -UNCHECKED_STAMPS.incrementAndGet();
+      }
+      return update(resolveIncludes(myFile, new HashMap<>()), vfs, roots);
+    }
+
+    /** Records the resolution seen with the given VFS structure and roots counts; returns the version. */
+    synchronized long update(@NotNull List<Object> resolution, long vfs, long roots) {
+      if (myResolution != null && !myResolution.equals(resolution)) myVersion++;
+      myResolution = resolution;
+      myVfs = vfs;
+      myRoots = roots;
+      return myVersion;
+    }
+  }
+
+  private static final Key<TextTracker> TEXT_TRACKER_KEY = Key.create("erlang.macro.layer.text.tracker");
+
+  /**
+   * Round 5: the file's own text and tree. The PSI modification stamp of a file also moves when the platform clears the
+   * caches of every PSI file (a file moved or a directory deleted anywhere in the project does that), so the tracker
+   * checks, when the stamp moved, whether the text (its length and 64-bit hash) or the tree (the identity of the file
+   * element) changed, and changes only then. Cached answers keep real elements, so a new tree with the same text counts.
+   */
+  static final class TextTracker implements ModificationTracker {
+    private final @NotNull PsiFile myFile;
+    private long myStamp = -1;
+    private long myHash;
+    private int myLength = -1;
+    private @NotNull WeakReference<ASTNode> myTree = new WeakReference<>(null);
+    private long myVersion;
+
+    TextTracker(@NotNull PsiFile file) {
+      myFile = file;
+    }
+
+    @Override
+    public long getModificationCount() {
+      long stamp = myFile.getModificationStamp();
+      synchronized (this) {
+        if (stamp == myStamp) return myVersion;
+      }
+      // the UI thread does not load or hash the text: the caller sees the copy as stale and gets master's answer
+      if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() || !myFile.isValid()) {
+        return -UNCHECKED_STAMPS.incrementAndGet();
+      }
+      ASTNode tree = myFile.getNode();
+      CharSequence text = tree.getChars();
+      long hash = hash64(text);
+      synchronized (this) {
+        if (stamp == myStamp) return myVersion;
+        if (myLength >= 0 && (myLength != text.length() || myHash != hash || myTree.get() != tree)) myVersion++;
+        myStamp = stamp;
+        myHash = hash;
+        myLength = text.length();
+        myTree = new WeakReference<>(tree);
+        return myVersion;
+      }
+    }
+  }
+
+  private static long hash64(@NotNull CharSequence s) {
+    long h = 0xcbf29ce484222325L; // FNV-1a
+    for (int i = 0, n = s.length(); i < n; i++) {
+      h ^= s.charAt(i);
+      h *= 0x100000001b3L;
+    }
+    return h;
+  }
+
+  static @NotNull TextTracker textTracker(@NotNull PsiFile file) {
+    TextTracker t = file.getUserData(TEXT_TRACKER_KEY);
+    return t != null ? t : ((UserDataHolderEx)file).putUserDataIfAbsent(TEXT_TRACKER_KEY, new TextTracker(file));
+  }
+
+  static @NotNull IncludeTracker includeTracker(@NotNull ErlangFile file) {
+    IncludeTracker t = file.getUserData(INCLUDE_TRACKER_KEY);
+    return t != null ? t : ((UserDataHolderEx)file).putUserDataIfAbsent(INCLUDE_TRACKER_KEY, new IncludeTracker(file));
+  }
+
+  /**
+   * The include graph of a file with master's resolution: for the file and every header it reaches, the include keys
+   * and the files they resolve to (null: none), in a fixed order. The direct includes of each visited file are kept in
+   * {@code direct}, so that the table reuses them.
+   */
+  private static @NotNull List<Object> resolveIncludes(@NotNull ErlangFile file, @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct) {
+    List<Object> r = new ArrayList<>();
+    Set<ErlangFile> seen = new HashSet<>();
+    ArrayDeque<ErlangFile> queue = new ArrayDeque<>();
+    queue.add(file);
+    seen.add(file);
+    while (!queue.isEmpty()) {
+      ProgressManager.checkCanceled();
+      ErlangFile f = queue.poll();
+      Map<String, ErlangFile> includes = direct.computeIfAbsent(f, ErlangMacroLayer::directIncludes);
+      r.add(f.getOriginalFile().getVirtualFile());
+      for (Map.Entry<String, ErlangFile> e : includes.entrySet()) {
+        ErlangFile target = e.getValue();
+        r.add(e.getKey());
+        r.add(target == null ? null : target.getOriginalFile().getVirtualFile());
+        if (target != null && seen.add(target)) queue.add(target);
+      }
+    }
+    return r;
+  }
   private static final Key<CachedValue<ErlangMacroExpander.HeaderSummary>> SUMMARY_KEY = Key.create("erlang.macro.layer.summary");
   public static final AtomicInteger SUMMARIES_BUILT = new AtomicInteger();
   public static final AtomicInteger TABLES_BUILT = new AtomicInteger();
@@ -387,9 +534,14 @@ public final class ErlangMacroLayer {
     TABLES_BUILT.incrementAndGet();
     Project project = file.getProject();
     List<Object> deps = new ArrayList<>();
-    deps.add(file);
-    deps.add(VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS);
-    deps.add(ProjectRootManager.getInstance(project));
+    deps.add(textTracker(file));
+    // the counts first: a change during the resolution below makes the tracker check again
+    long vfs = VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount();
+    long roots = ProjectRootManager.getInstance(project).getModificationCount();
+    Map<ErlangFile, Map<String, ErlangFile>> direct = new HashMap<>();
+    IncludeTracker includes = includeTracker(file);
+    includes.update(resolveIncludes(file, direct), vfs, roots);
+    deps.add(includes);
     // own macros
     Set<String> names = new HashSet<>();
     Set<String> bodyVars = new HashSet<>();
@@ -406,16 +558,16 @@ public final class ErlangMacroLayer {
     List<VirtualFile> headers = new ArrayList<>();
     String refusal = null;
     try {
-      for (Map.Entry<String, ErlangFile> e : directIncludes(file).entrySet()) {
+      for (Map.Entry<String, ErlangFile> e : direct.get(file).entrySet()) {
         if (e.getValue() == null) throw new Refusal("unresolved-include");
-        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars));
+        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, direct));
       }
     }
     catch (Refusal r) {
       refusal = r.getMessage();
     }
     for (VirtualFile h : headers) deps.add(ErlangMacroLayerRetention.getInstance(project).tracker(h));
-    Table t = new Table(refusal, deps.toArray());
+    Table t = new Table(refusal, deps.toArray(), includes);
     if (refusal == null) {
       t.names.addAll(names);
       t.bodyVars.addAll(bodyVars);
@@ -451,7 +603,8 @@ public final class ErlangMacroLayer {
   private static @NotNull ErlangMacroExpander.HeaderSummary visitHeader(
     @NotNull ErlangFile header, @NotNull List<VirtualFile> path,
     @NotNull Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested,
-    @NotNull List<VirtualFile> headers, @NotNull Set<String> names, @NotNull Set<String> bodyVars) throws Refusal {
+    @NotNull List<VirtualFile> headers, @NotNull Set<String> names, @NotNull Set<String> bodyVars,
+    @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct) throws Refusal {
     VirtualFile vf = header.getOriginalFile().getVirtualFile();
     if (vf == null) throw new Refusal("unresolved-include");
     if (path.contains(vf)) throw new Refusal("include-cycle");
@@ -469,14 +622,14 @@ public final class ErlangMacroLayer {
     Map<String, ErlangMacroExpander.HeaderSummary> children = new HashMap<>();
     nested.put(s, children);
     if (s.includes().isEmpty()) return s;
-    Map<String, ErlangFile> resolved = directIncludes(header);
+    Map<String, ErlangFile> resolved = direct.computeIfAbsent(header, ErlangMacroLayer::directIncludes);
     path.add(vf);
     try {
       for (ErlangMacroExpander.Directive d : s.includes()) {
         String k = key(d.attribute, d.includeString());
         ErlangFile child = resolved.get(k);
         if (child == null) throw new Refusal("unresolved-include");
-        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars));
+        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, direct));
       }
     }
     finally {
@@ -598,13 +751,12 @@ public final class ErlangMacroLayer {
   private static @NotNull Copy build(@NotNull PsiFile file, @Nullable Table table, @NotNull String trigger, @Nullable String why) {
     long t0 = System.nanoTime();
     Project project = file.getProject();
-    long[] now = {file.getModificationStamp(), table != null ? table.headerVersions(project) : 0,
-      VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
-      ProjectRootManager.getInstance(project).getModificationCount()};
+    long[] now = {textTracker(file).getModificationCount(), table != null ? table.headerVersions(project) : 0,
+      table != null ? table.includes.getModificationCount() : 0};
     long[] last = file.getUserData(LAST_BUILD_STATE);
     String reason = why != null ? why : last == null ? "first" : last[0] != now[0] ? "own-text" :
                                         last[1] != now[1] ? "header-directives" :
-                                        last[2] != now[2] ? "vfs-structure" : last[3] != now[3] ? "roots" : "same-state";
+                                        last[2] != now[2] ? "include-resolution" : "same-state";
     if (!"direct".equals(trigger)) file.putUserData(LAST_BUILD_STATE, now);
     EXPANSIONS_BUILT.incrementAndGet();
     CharSequence text = file.getViewProvider().getContents();
