@@ -35,15 +35,28 @@ def group(title, reports, count=None):
 class FakeMarketplace:
     """Answers the Marketplace URLs; the exception list comes through a redirect, as the API is said to do."""
 
-    def __init__(self, groups, resolved=(), traces=None, redirect=True):
+    def __init__(self, groups, resolved=(), traces=None, redirect=True, updates=None):
         self.exceptions = json.dumps(groups).encode('utf-8')
         self.resolved = json.dumps(list(resolved)).encode('utf-8')
         self.traces = traces or {}
         self.redirect = redirect
+        self.updates = updates  # None: every 0.N.N version of the reports, published at the epoch
+
+    def update_list(self):
+        if self.updates is not None:
+            return self.updates
+        versions = set(re.findall(r'"pluginVersion": "(0\.[0-9]+\.[0-9]+)"', self.exceptions.decode('utf-8')))
+        return [{'version': version, 'cdate': '0', 'approve': True} for version in sorted(versions)]
 
     def handle(self, method, url, headers, data):
         if method != 'GET':
             raise AssertionError('Marketplace got a %s' % method)
+        match = re.fullmatch(re.escape(API) + r'/updates\?size=100&page=([0-9]+)', url)
+        if match:
+            if 'Authorization' in headers:
+                raise AssertionError('the token was sent to the public update list')
+            page = int(match.group(1))
+            return ea.Response(200, {}, json.dumps(self.update_list()[(page - 1) * 100:page * 100]).encode('utf-8'))
         if url == STORAGE:
             if 'Authorization' in headers:
                 raise AssertionError('the token was sent to the storage link')
@@ -858,9 +871,9 @@ class MarkerTest(unittest.TestCase):
 
     def reports(self, first_id, version):
         hostile = self.hostile('x')
-        return [report(first_id, version, appBuild=hostile, osName=hostile, timestamp=hostile,
-                       comment=hostile, message=hostile),
-                report(first_id + 1, hostile, build=hostile, os_name=hostile)]
+        return [report(first_id, version, appBuild=hostile, osName=hostile, comment=hostile, message=hostile),
+                report(first_id + 1, hostile, build=hostile, os_name=hostile),
+                report(first_id + 100, version, timestamp=hostile)]
 
     def traces(self, *ids):
         trace = '\n'.join(
@@ -950,6 +963,161 @@ class MarkerTest(unittest.TestCase):
             with open(path, encoding='utf-8') as file:
                 self.check(file.read(), [])
         self.check(out, [])
+
+
+class PublishedTest(unittest.TestCase):
+    """A report counts only if its plugin version was published when the report was sent."""
+
+    PUBLISHED = 1795171499  # 0.11.1303 on Marketplace: 2026-11-20T10:44:59Z
+    UPDATES = [{'version': '0.11.1303', 'cdate': '1795171499000', 'approve': True},
+               {'version': '0.11.1302', 'cdate': 1794650170000, 'approve': True},
+               {'version': '0.11.1304', 'cdate': '1795200000000', 'approve': False},
+               {'version': 'junk', 'cdate': '1'}, {'version': '0.11.1299'}, 'junk']
+
+    def at(self, seconds):
+        return seconds * 1000
+
+    def test_update_list(self):
+        self.assertEqual({'0.11.1303': 1795171499, '0.11.1302': 1794650170}, ea.parse_publications(self.UPDATES))
+        with self.assertRaisesRegex(ea.Failure, r'\[versions\]'):
+            ea.parse_publications({'versions': []})
+
+    def test_update_list_is_read_without_the_token_and_with_pages(self):
+        updates = [{'version': '0.11.%d' % i, 'cdate': str(i * 1000)} for i in range(150)]
+        http = FakeHttp(FakeMarketplace([], updates=updates))
+        found = ea.Marketplace(http, TOKEN).publications()
+        self.assertEqual(150, len(found))
+        calls = [(url, headers) for _, url, headers in http.requests if '/updates' in url]
+        self.assertEqual([API + '/updates?size=100&page=1', API + '/updates?size=100&page=2'], [u for u, _ in calls])
+        self.assertTrue(all('Authorization' not in headers for _, headers in calls))
+
+    def test_before_and_after_the_publication(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1303', timestamp=self.at(t - 3600)),
+                                    report(2, '0.11.1303', timestamp=self.at(t - ea.PUBLISH_TOLERANCE - 1)),
+                                    report(3, '0.11.1303', timestamp=self.at(t - ea.PUBLISH_TOLERANCE)),
+                                    report(4, '0.11.1303', timestamp=self.at(t + 60)),
+                                    report(5, '0.11.1302', timestamp=self.at(t - 3600)),
+                                    report(6, '0.11.1303', timestamp=None)], count=6))
+        result = ea.published_only(groups, ea.parse_publications(self.UPDATES))
+        self.assertEqual(['3', '4', '5'], [r.id for r in result[0].reports])
+        self.assertEqual((3, 3), (result[0].report_count, result.unpublished_reports))
+        self.assertEqual('4', result[0].newest_report().id)
+
+    def test_unknown_versions_and_the_github_fallback(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1305', timestamp=self.at(t)),
+                                    report(2, '0.11.1306', timestamp=self.at(t)),
+                                    report(3, '0.11.1307', timestamp=self.at(t)),
+                                    report(4, '1.2.3.4', timestamp=self.at(t)),
+                                    report(5, 'junk', timestamp=self.at(t))]))
+        calls = []
+
+        def fallback():
+            calls.append(1)
+            return ea.release_times_of([{'tag_name': 'v0.11.1305', 'published_at': '2026-11-20T10:00:00Z'},
+                                        {'tag_name': 'v0.11.1306', 'published_at': '2026-11-21T10:00:00Z'},
+                                        {'tag_name': 'v0.11.1307', 'draft': True,
+                                         'published_at': '2026-11-01T10:00:00Z'}])
+        result = ea.published_only(groups, {}, fallback)
+        self.assertEqual(['1'], [r.id for r in result[0].reports])
+        self.assertEqual(1, len(calls))
+        self.assertEqual(4, result.unpublished_reports)
+
+    def test_versions_dates_and_hidden_values_use_the_remaining_reports(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1303', timestamp=self.at(t - 86400), build='junk'),
+                                    report(2, '0.11.1302', timestamp=self.at(t + 86400))]))
+        result = ea.published_only(groups, ea.parse_publications(self.UPDATES))
+        body = ea.render_body(result[0], '', ea.empty_state())
+        self.assertIn('- Plugin versions: `0.11.1302`\n', body)
+        self.assertIn('- First report: `2026-11-21`', body)
+        self.assertIn('- IDE builds: `IU-263.7307.44`\n', body)
+
+    def run_with(self, updates, groups, http=None):
+        http = http or FakeHttp(FakeMarketplace(groups, traces={str(i): TRACE for i in range(1, 60)}, updates=updates))
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, err = run(http, '--run', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        self.assertEqual(0, code, err)
+        return http, summary
+
+    def test_a_group_emptied_by_the_rule_is_skipped_and_counted(self):
+        t = self.PUBLISHED
+        groups = [group('local only', [report(i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(1, 49)]),
+                  group('real', [report(50, '0.11.1302', timestamp=self.at(t))])]
+        http, summary = self.run_with(self.UPDATES, groups)
+        self.assertEqual(['Marketplace exception: real'], [i['title'] for i in http.github.issues.values()])
+        self.assertIn('| Skipped: reports from builds that were not published | 48 |', summary)
+        self.assertIn('| Skipped: groups with only such reports | 1 |', summary)
+
+    def test_a_lower_count_is_not_new_reports(self):
+        t = self.PUBLISHED
+        groups = [group('A', [report(i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(1, 4)] +
+                        [report(10, '0.11.1302', timestamp=self.at(t)), report(11, '0.11.1302', timestamp=self.at(t))]),
+                  group('B', [report(20 + i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(4)])]
+        everything = [{'version': '0.11.1303', 'cdate': '0'}, {'version': '0.11.1302', 'cdate': '0'}]
+        http, _ = self.run_with(everything, groups)
+        github = http.github
+        a = [n for n, i in github.issues.items() if i['title'].endswith(': A')][0]
+        b = [n for n, i in github.issues.items() if i['title'].endswith(': B')][0]
+        self.assertIn('- Reports: 5', github.issues[a]['body'])
+        http.marketplace.updates = self.UPDATES
+        _, summary = self.run_with(None, None, http)
+        self.assertIn('- Reports: 2', github.issues[a]['body'])
+        self.assertIn('- Plugin versions: `0.11.1302`\n', github.issues[a]['body'])
+        comment = github.comments[a][0]
+        self.assertTrue(comment.startswith(
+            'The report count is now 2, not 5. Reports from plugin builds that were not published when the report was '
+            'sent (for example local pre-release builds) are no longer counted. Plugin versions no longer counted: '
+            '`0.11.1303`.'), comment)
+        self.assertNotIn('new report', comment)
+        self.assertIn('- Reports: 0', github.issues[b]['body'])
+        self.assertIn('ErlangPsiImplUtil.resolve', github.issues[b]['body'])
+        self.assertTrue(github.comments[b][0].startswith('The report count is now 0, not 4.'))
+        self.assertIn('| Updated issues | 2 |', summary)
+        writes = len(github.writes)
+        self.run_with(None, None, http)
+        self.assertEqual(writes, len(github.writes))
+
+    def test_closed_issue_of_an_emptied_group_is_left_alone(self):
+        t = self.PUBLISHED
+        groups = [group('B', [report(20 + i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(4)])]
+        everything = [{'version': '0.11.1303', 'cdate': '0'}]
+        http, _ = self.run_with(everything, groups)
+        http.github.close(1)
+        http.github.releases = [{'tag_name': 'v0.11.1303', 'published_at': '2026-11-20T10:45:04Z'}]
+        http.marketplace.updates = self.UPDATES
+        writes = len(http.github.writes)
+        _, summary = self.run_with(None, None, http)
+        self.assertEqual(writes, len(http.github.writes))
+        self.assertIn('| Skipped: groups with only such reports | 1 |', summary)
+
+    def test_pre_release_reports_never_reopen(self):
+        # Closed when 0.11.1303 is the newest release: a local 0.11.1304 build sends a report before 0.11.1304 is
+        # published. It does not count, so it does not reopen the issue; a report after the publication does.
+        t = self.PUBLISHED
+        groups = [group('A', [report(1, '0.11.1302', timestamp=self.at(t))])]
+        http, _ = self.run_with(self.UPDATES[:2], groups)
+        github = http.github
+        github.releases = [{'tag_name': 'v0.11.1303', 'published_at': '2026-11-20T10:45:04Z'}]
+        github.close(1)
+        self.run_with(None, None, http)
+        self.assertEqual('0.11.1303', ea.read_state(github.issues[1]['body'])['closed']['release'])
+        later = t + 86400
+        http.marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1302', timestamp=self.at(t)),
+                                                              report(2, '0.11.1304', timestamp=self.at(later - 3600))])]
+                                                 ).encode()
+        http.marketplace.updates = self.UPDATES[:2] + [{'version': '0.11.1304', 'cdate': str(later * 1000)}]
+        self.run_with(None, None, http)
+        self.assertEqual('closed', github.issues[1]['state'])
+        http.marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1302', timestamp=self.at(t)),
+                                                              report(3, '0.11.1304', timestamp=self.at(later + 60))])]
+                                                 ).encode()
+        self.run_with(None, None, http)
+        self.assertEqual('open', github.issues[1]['state'])
 
 
 class PlanTest(unittest.TestCase):

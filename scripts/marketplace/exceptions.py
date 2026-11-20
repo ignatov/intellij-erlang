@@ -12,6 +12,9 @@ Marketplace (no documentation; the paths come from the code of the Marketplace w
   GET /api/plugins/{id}/exceptions/resolved  the titles of the groups that are resolved on Marketplace, JSON.
   GET /api/plugins/{id}/exceptions/{reportId}/stacktrace
                                              the stack trace of one report, text. At most one per new or changed group.
+  GET /api/plugins/{id}/updates?size=100&page=N
+                                             the published plugin versions with their upload time (cdate), JSON.
+                                             This is a public call: it is sent without the token.
 The script never sends a POST to Marketplace. The token is read from the environment variable MARKETPLACE_TOKEN.
 
 GitHub: the REST API with GITHUB_TOKEN. One list call (with pages) finds the issues with the label
@@ -21,9 +24,15 @@ versions that the body shows, what the comments have announced so far, and for a
 the newest plugin release at that time.
 
 Rules:
-  - A group is filed only when a report comes from a plugin release (0.N.N) >= --min-version. Groups that are
+  - A report counts only if its plugin version was published when the report was sent: a 0.N.N version that
+    Marketplace lists (or, as a fallback, a v0.N.N release of this repository), and a report time no more than
+    PUBLISH_TOLERANCE seconds before the publication. Other reports come from local builds (for example the release
+    smoke test runs a build before it is published); they are dropped and counted. Counts, versions, dates and the
+    choice of the newest report use only the reports that remain; a group with none left is skipped and counted.
+  - A new issue is filed only when a report comes from a plugin release (0.N.N) >= --min-version. Groups that are
     resolved on Marketplace, freeze groups (titles that start with "F:") and malformed groups are skipped and counted.
-  - A known open issue whose group has more reports or new plugin versions gets a new body and one short comment.
+  - A known open issue whose group has another report count or other plugin versions gets a new body and one short
+    comment.
     The body is written first and says that a comment is due; the comment carries a hidden marker; then the body says
     that it was posted. So a run that stops between the steps loses no comment and posts none twice.
   - The first run that sees an issue closed (as completed) stores the newest plugin release (the newest v0.N.N
@@ -107,6 +116,7 @@ RELEASE_VERSION = re.compile(r'0\.[0-9]+\.[0-9]+')
 IDE_BUILD = re.compile(r'[A-Z]{2,3}-[0-9]+(?:\.[0-9]+)+')
 OS_NAME = re.compile(r'(?:Windows|macOS|Mac OS X|Linux)(?: [0-9]+(?:\.[0-9]+)*)?')
 OTHER_OS = 'other'
+PUBLISH_TOLERANCE = 600
 CLOSED_AT = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z')
 MAX_SECONDS = 253402300799  # 9999-12-31T23:59:59Z
 
@@ -201,6 +211,24 @@ class Marketplace:
     def status(self, path, what):
         return self._get(path, what)
 
+    def publications(self):
+        """The published versions; see parse_publications. A public call: no token, no redirect."""
+        found = {}
+        for page in range(1, 11):
+            url = '%s/updates?size=100&page=%d' % (self.base, page)
+            parts = urllib.parse.urlsplit(url)
+            if parts.scheme != 'https' or parts.netloc != TOKEN_HOST:
+                raise Failure('the update list is read only from https://%s' % TOKEN_HOST)
+            response = self.http.request('GET', url, {'User-Agent': USER_AGENT})
+            if response.status != 200:
+                raise Failure('the update list: HTTP %d' % response.status)
+            data = response.json('the update list')
+            for version, seconds in parse_publications(data).items():
+                found[version] = min(found.get(version, seconds), seconds)
+            if len(data) < 100:
+                return found
+        return found
+
     def groups(self):
         response = self._get('/exceptions', 'the exception list')
         if response.status != 200:
@@ -244,6 +272,11 @@ class FixtureMarketplace:
             return set()
         return parse_resolved(Response(200, {}, self._read('resolved.json')).json('resolved.json'))
 
+    def publications(self):
+        if not os.path.exists(os.path.join(self.directory, 'updates.json')):
+            return {}
+        return parse_publications(Response(200, {}, self._read('updates.json')).json('updates.json'))
+
     def stacktrace(self, report_id):
         path = os.path.join('stacktrace', '%s.txt' % report_id)
         if not re.fullmatch(r'[0-9]+', report_id) or not os.path.exists(os.path.join(self.directory, path)):
@@ -273,6 +306,7 @@ class Group:
         self.reports = reports
         self.hidden = hidden  # field name -> the number of values that failed their pattern
         self.key = group_key(title)
+        self.unpublished = 0  # reports dropped because their builds were not published
 
     def versions(self):
         return sort_versions({report.plugin_version for report in self.reports if report.plugin_version})
@@ -296,21 +330,99 @@ class Group:
 
 
 class Report:
-    def __init__(self, report_id, timestamp, app_build, os_name, plugin_version):
+    def __init__(self, report_id, timestamp, app_build, os_name, plugin_version, hidden=None):
         self.id = report_id
-        self.timestamp = timestamp
+        self.timestamp = timestamp  # YYYY-MM-DDTHH:MM:SS in UTC, or None
         self.app_build = app_build
         self.os_name = os_name
         self.plugin_version = plugin_version
+        self.hidden = hidden or {}  # field name -> 1 when the value failed its pattern
+
+    def seconds(self):
+        if not self.timestamp:
+            return None
+        return int(datetime.datetime.strptime(self.timestamp, '%Y-%m-%dT%H:%M:%S').replace(
+            tzinfo=datetime.timezone.utc).timestamp())
 
 
 class Groups(list):
-    """The groups of the exception list, with the number of malformed groups and reports that were skipped."""
+    """The groups of the exception list, with the number of malformed groups and reports that were skipped, and of
+    reports dropped because their builds were not published."""
 
-    def __init__(self, groups, malformed_groups, malformed_reports):
+    def __init__(self, groups, malformed_groups, malformed_reports, unpublished_reports=0):
         super().__init__(groups)
         self.malformed_groups = malformed_groups
         self.malformed_reports = malformed_reports
+        self.unpublished_reports = unpublished_reports
+
+
+def published_only(groups, publications, fallback=lambda: {}):
+    """The groups with only the reports whose plugin version was published when the report was sent.
+    publications maps a 0.N.N version to its publication time in seconds; fallback is called at most once, when a
+    version is not in it, and gives more of them (the GitHub releases). The report count of a group goes down by the
+    number of its dropped reports (reports that Marketplace counts but does not list stay counted); a group with no
+    listed report left has the count 0 and no reports, and plan() skips it unless its issue is open."""
+    known = dict(publications)
+    asked = []
+    kept = []
+    dropped_reports = 0
+    for group in groups:
+        remaining = []
+        for report in group.reports:
+            version = report.plugin_version
+            if version and RELEASE_VERSION.fullmatch(version) and version not in known and not asked:
+                asked.append(True)
+                for name, seconds in (fallback() or {}).items():
+                    known.setdefault(name, seconds)
+            published = known.get(version) if version else None
+            sent = report.seconds()
+            if published is not None and sent is not None and sent >= published - PUBLISH_TOLERANCE:
+                remaining.append(report)
+        dropped = len(group.reports) - len(remaining)
+        dropped_reports += dropped
+        hidden = {field: sum(report.hidden.get(field, 0) for report in remaining) for field in group.hidden}
+        count = max(len(remaining), group.report_count - dropped) if remaining else 0
+        result = Group(group.title, count, remaining, hidden)
+        result.unpublished = dropped
+        kept.append(result)
+    return Groups(kept, getattr(groups, 'malformed_groups', 0), getattr(groups, 'malformed_reports', 0),
+                  dropped_reports)
+
+
+def parse_publications(data):
+    """0.N.N version -> publication time in seconds, from the update list of Marketplace (version, cdate in epoch
+    milliseconds as a number or a string). Updates that are not approved are not published. Unknown entries are
+    skipped; a top level that is not a list is a Failure."""
+    if not isinstance(data, list):
+        raise Failure('the update list has an unknown shape: %s' % keys_of(data))
+    found = {}
+    for item in data:
+        if not isinstance(item, dict) or item.get('approve') is False:
+            continue
+        version = item.get('version')
+        cdate = item.get('cdate')
+        if isinstance(cdate, str) and re.fullmatch(r'[0-9]{1,15}', cdate):
+            cdate = int(cdate)
+        if (not isinstance(version, str) or not RELEASE_VERSION.fullmatch(version) or isinstance(cdate, bool)
+                or not isinstance(cdate, int) or not 0 <= cdate <= MAX_SECONDS * 1000):
+            continue
+        found[version] = min(found.get(version, cdate // 1000), cdate // 1000)
+    return found
+
+
+def release_times_of(items):
+    """0.N.N version -> publication time in seconds, from the GitHub releases (tag v0.N.N, published_at)."""
+    found = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or item.get('draft'):
+            continue
+        tag = item.get('tag_name')
+        at = item.get('published_at')
+        if (isinstance(tag, str) and re.fullmatch(r'v0\.[0-9]+\.[0-9]+', tag) and isinstance(at, str)
+                and CLOSED_AT.fullmatch(at)):
+            found[tag[1:]] = int(datetime.datetime.strptime(at, '%Y-%m-%dT%H:%M:%SZ').replace(
+                tzinfo=datetime.timezone.utc).timestamp())
+    return found
 
 
 def parse_groups(data):
@@ -360,10 +472,14 @@ def parse_report(item, hidden):
     report_id = str(report_id)
     if not re.fullmatch(r'[0-9]{1,20}', report_id) or int(report_id) >= 2 ** 64:
         return None
-    return Report(report_id, parse_time(item.get('timestamp')),
-                  checked_value(item.get('appBuild'), IDE_BUILD, hidden, 'appBuild'),
-                  os_name(item.get('osName')),
-                  checked_value(item.get('pluginVersion'), DISPLAY_VERSION, hidden, 'pluginVersion'))
+    own = {'pluginVersion': 0, 'appBuild': 0}
+    result = Report(report_id, parse_time(item.get('timestamp')),
+                    checked_value(item.get('appBuild'), IDE_BUILD, own, 'appBuild'),
+                    os_name(item.get('osName')),
+                    checked_value(item.get('pluginVersion'), DISPLAY_VERSION, own, 'pluginVersion'), own)
+    for field, value in own.items():
+        hidden[field] += value
+    return result
 
 
 def checked_value(value, pattern, hidden, field):
@@ -786,14 +902,27 @@ def update_comment(group, state, reopened_after=None):
     if reopened_after:
         parts.append('Reopened: a report came from plugin version %s, which is newer than %s, the newest release '
                      'when this issue was closed.' % (code(group.newest_release()), code(reopened_after)))
+    gone_versions = [version for version in state['versions'] if version not in group.state_versions()]
     if new_reports > 0:
         parts.append('%d new %s (%d in total).' % (new_reports, 'report' if new_reports == 1 else 'reports',
                                                    group.report_count))
+    elif new_reports < 0:
+        parts.append(lower_count_text(group.report_count, noted['count'], group.unpublished))
     if new_versions:
         parts.append('New plugin versions: %s.' % ', '.join(code(version) for version in new_versions))
-    elif not reopened_after:
+    elif not reopened_after and new_reports >= 0 and not gone_versions:
         parts.append('No new plugin versions.')
+    if gone_versions:
+        parts.append('Plugin versions no longer counted: %s.' % ', '.join(code(version) for version in gone_versions))
     return ' '.join(parts)
+
+
+def lower_count_text(count, before, unpublished):
+    text = 'The report count is now %d, not %d.' % (count, before)
+    if unpublished:
+        text += (' Reports from plugin builds that were not published when the report was sent (for example local '
+                 'pre-release builds) are no longer counted.')
+    return text
 
 
 def note_comment(state):
@@ -803,6 +932,8 @@ def note_comment(state):
     if new_reports > 0:
         parts.append('%d new %s (%d in total).' % (new_reports, 'report' if new_reports == 1 else 'reports',
                                                    state['count']))
+    elif new_reports < 0:
+        parts.append(lower_count_text(state['count'], noted_of(state)['count'], 0))
     if state['versions']:
         parts.append('Newest plugin version: %s.' % code(state['versions'][0]))
     return ' '.join(parts) or 'The reports changed.'
@@ -847,12 +978,20 @@ class GitHub:
                 return found
         raise Failure('more than 5000 issues have the label %s' % LABEL)
 
+    def releases(self):
+        if getattr(self, '_releases', None) is None:
+            items = self._call('GET', '/releases?per_page=100').json('the GitHub release list')
+            if not isinstance(items, list):
+                raise Failure('the GitHub release list is not a list')
+            self._releases = items
+        return self._releases
+
     def latest_release(self):
         """The newest plugin release, the largest v0.N.N tag of a published release, without the v; or None."""
-        items = self._call('GET', '/releases?per_page=100').json('the GitHub release list')
-        if not isinstance(items, list):
-            raise Failure('the GitHub release list is not a list')
-        return newest_release_of(items)
+        return newest_release_of(self.releases())
+
+    def release_times(self):
+        return release_times_of(self.releases())
 
     def has_comment(self, number, marker):
         for page in range(1, 11):
@@ -919,6 +1058,9 @@ class FixtureGitHub:
     def latest_release(self):
         return newest_release_of(self._load('releases.json'))
 
+    def release_times(self):
+        return release_times_of(self._load('releases.json'))
+
     def has_comment(self, number, marker):
         return False
 
@@ -935,7 +1077,7 @@ class Action:
         self.release = release  # 'record': the newest release now; 'reopen': the one stored at the close
 
 
-COUNTS = ('groups', 'malformed_groups', 'malformed_reports', 'resolved', 'freeze', 'old', 'duplicate', 'unchanged',
+COUNTS = ('groups', 'malformed_groups', 'malformed_reports', 'unpublished_reports', 'unpublished_groups', 'resolved', 'freeze', 'old', 'duplicate', 'unchanged',
           'closed', 'waiting_new', 'waiting_updates')
 
 
@@ -945,6 +1087,7 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
     counts = {name: 0 for name in COUNTS}
     counts['malformed_groups'] = getattr(groups, 'malformed_groups', 0)
     counts['malformed_reports'] = getattr(groups, 'malformed_reports', 0)
+    counts['unpublished_reports'] = getattr(groups, 'unpublished_reports', 0)
     by_key = {}
     for issue in sorted(issues, key=lambda issue: (issue['state'] != 'open', issue['number'])):
         key = read_key(issue['body'])
@@ -967,10 +1110,16 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
         if group.title.startswith('F:'):
             counts['freeze'] += 1
             continue
-        if not any(version_key(version) >= minimum for version in group.releases()):
+        issue = by_key.get(group.key)
+        emptied = group.unpublished and not group.reports
+        if emptied and (issue is None or issue['state'] != 'open'):
+            # Every listed report came from a build that was not published; an open issue is updated to say so.
+            counts['unpublished_groups'] += 1
+            continue
+        if issue is None and not any(version_key(version) >= minimum for version in group.releases()):
+            # The minimum is for new issues; a known issue keeps following its group.
             counts['old'] += 1
             continue
-        issue = by_key.get(group.key)
         if issue is None:
             if new < max_new:
                 actions.append(Action('create', group))
@@ -981,9 +1130,8 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
         state = read_state(issue['body']) or empty_state()
         action = None
         if issue['state'] == 'open':
-            grew = group.report_count > state['count'] or any(
-                version not in state['versions'] for version in group.state_versions())
-            if grew:
+            changed = group.report_count != state['count'] or group.state_versions() != state['versions']
+            if changed:
                 action = Action('update', group, issue, state)
             elif noted_of(state)['key'] != content_key(state['count'], state['versions']):
                 action = Action('note', group, issue, state)
@@ -1012,7 +1160,7 @@ def trace_section(marketplace, group, old_body=None, shapes=None):
     keeps the trace of the earlier body or says that it could not be read."""
     report = group.newest_report()
     if report is None:
-        return 'No report of this group has a stack trace.'
+        return read_trace(old_body) or 'No report of this group has a stack trace.'
     text = marketplace.stacktrace(report.id)
     trace, frames = analyse_trace(text, shapes) if text and text.strip() else (None, 0)
     if not frames:
@@ -1120,6 +1268,8 @@ def summary(mode, counts, actions, lines):
         '| Skipped: freeze groups | %d |' % counts['freeze'],
         '| Skipped: malformed groups, malformed reports | %d, %d |' % (counts['malformed_groups'],
                                                                        counts['malformed_reports']),
+        '| Skipped: reports from builds that were not published | %d |' % counts['unpublished_reports'],
+        '| Skipped: groups with only such reports | %d |' % counts['unpublished_groups'],
         '| Waiting for the next run (new, other) | %d, %d |' % (counts['waiting_new'], counts['waiting_updates']),
         '',
     ]
@@ -1199,7 +1349,7 @@ def run(args, environ, http, out, clock):
         out.write(text.getvalue())
         write_summary(args.summary, '### Marketplace exceptions (probe)\n\n```\n%s```\n' % text.getvalue())
         return code_
-    groups = marketplace.groups()
+    groups = published_only(marketplace.groups(), marketplace.publications(), github.release_times)
     resolved = marketplace.resolved()
     actions, counts = plan(groups, resolved, github.issues(), args.min_version, args.max_new, args.max_updates,
                            github.latest_release)
