@@ -133,6 +133,15 @@ public final class ErlangUsageCollector {
     }
   }
 
+  @NotNull
+  static List<String> split(@NotNull String list) {
+    List<String> result = new ArrayList<>();
+    for (String item : list.split(",")) {
+      if (!item.isEmpty()) result.add(item);
+    }
+    return result;
+  }
+
   @Nullable
   private static LocalDate parse(@Nullable String date) {
     if (date == null) return null;

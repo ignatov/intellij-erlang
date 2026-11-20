@@ -16,10 +16,14 @@
 
 package org.intellij.erlang.statistics;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import junit.framework.TestCase;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 public class ErlangUsageCollectorTest extends TestCase {
@@ -37,6 +41,16 @@ public class ErlangUsageCollectorTest extends TestCase {
   @NotNull
   private ErlangUsageCollector newCollector(@NotNull BooleanSupplier allowed) {
     return new ErlangUsageCollector(() -> myToday, allowed);
+  }
+
+  static Map<ErlangUsageProperty, String> appProperties() {
+    Map<ErlangUsageProperty, String> properties = new EnumMap<>(ErlangUsageProperty.class);
+    properties.put(ErlangUsageProperty.PLUGIN_VERSION, "0.11.1304");
+    properties.put(ErlangUsageProperty.IDE_PRODUCT, "IU");
+    properties.put(ErlangUsageProperty.IDE_BASELINE, "263");
+    properties.put(ErlangUsageProperty.SMALL_IDE, "false");
+    properties.put(ErlangUsageProperty.OS, "mac");
+    return properties;
   }
 
   public void testDefaultIsOff() {
@@ -136,5 +150,10 @@ public class ErlangUsageCollectorTest extends TestCase {
     ErlangUsageCollector collector = newCollector(() -> false);
     collector.setEnabled(true);
     assertFalse(collector.isCounting());
+  }
+
+  @NotNull
+  static JsonArray events(@NotNull String body) {
+    return JsonParser.parseString(body).getAsJsonObject().getAsJsonArray("events");
   }
 }
