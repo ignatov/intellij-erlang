@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 
 public class ErlangSdkType extends SdkType {
   private static final String OTP_RELEASE_PREFIX_LINE = "ErlangSdkType_OTP_RELEASE:";
@@ -72,8 +73,41 @@ public class ErlangSdkType extends SdkType {
     "]),erlang:halt().";
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
-  private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
-                                                                        new HashMap<>() : new WeakHashMap<>();
+  private final ReleaseCache mySdkHomeToReleaseCache = new ReleaseCache(ApplicationManager.getApplication().isUnitTestMode() ?
+                                                                         new HashMap<>() : new WeakHashMap<>());
+
+  // the detected release of each SDK home; threads share it (the statistics read it on a pooled thread while detection
+  // writes it on another one), so every access holds its lock, but a detection, which may start erl, runs outside it
+  static final class ReleaseCache {
+    // guarded by this
+    private final Map<String, ErlangSdkRelease> myReleases;
+
+    ReleaseCache(@NotNull Map<String, ErlangSdkRelease> releases) {
+      myReleases = releases;
+    }
+
+    @Nullable
+    synchronized ErlangSdkRelease get(@Nullable String home) {
+      return myReleases.get(home);
+    }
+
+    synchronized void put(@Nullable String home, @NotNull ErlangSdkRelease release) {
+      myReleases.put(home, release);
+    }
+
+    // like Map.computeIfAbsent; two threads may both detect the same home, and the first result is kept
+    @Nullable
+    ErlangSdkRelease computeIfAbsent(@Nullable String home, @NotNull Function<String, ErlangSdkRelease> detect) {
+      ErlangSdkRelease known = get(home);
+      if (known != null) return known;
+      ErlangSdkRelease detected = detect.apply(home);
+      if (detected == null) return null;
+      synchronized (this) {
+        ErlangSdkRelease first = myReleases.putIfAbsent(home, detected);
+        return first != null ? first : detected;
+      }
+    }
+  }
 
   @NotNull
   public static ErlangSdkType getInstance() {
