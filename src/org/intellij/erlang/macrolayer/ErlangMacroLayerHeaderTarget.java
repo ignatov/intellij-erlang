@@ -1,5 +1,6 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -30,6 +31,8 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
   private final int myIndex;
   private final String myText;
   private final Class<?> myPreferred;
+  /** The last answer of {@link #isValid()} under read access; it was valid when the layer made it. */
+  private volatile boolean myLastValid = true;
 
   ErlangMacroLayerHeaderTarget(@NotNull Project project, @NotNull VirtualFile header, int directive, int index,
                                @NotNull String text, @NotNull Class<?> preferred) {
@@ -71,9 +74,19 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
     return myProject;
   }
 
+  /**
+   * Like {@code PsiFileImpl.isValid()}, this may be called without read access (listeners and expiration checks do).
+   * Then it reads no PSI: it checks the header's virtual file and returns the last answer given under read access.
+   * The answer cannot be fresher anyway: without read access a write action may change the header at any moment.
+   * Under read access it checks that the header's directive still has the token.
+   */
   @Override
   public boolean isValid() {
-    return currentRange() != null;
+    if (myProject.isDisposed() || !myHeader.isValid()) return false;
+    if (!ApplicationManager.getApplication().isReadAccessAllowed()) return myLastValid;
+    boolean valid = currentRange() != null;
+    myLastValid = valid;
+    return valid;
   }
 
   @Override

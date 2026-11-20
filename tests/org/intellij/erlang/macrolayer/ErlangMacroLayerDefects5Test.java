@@ -154,4 +154,48 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     assertEquals("ErlangQVarImpl@/src/d1/a.erl", resolved(a, "Z.\n"));
     assertEquals(1, buildsOf("b.erl"));
   }
+
+  // ------------------------------------------------------------------------------------------------ defect 3
+
+  /** Runs on a pooled thread without a read action, like listeners and expiration checks. */
+  private static <T> T withoutReadAction(java.util.concurrent.Callable<T> c) throws Exception {
+    return com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      assertFalse(com.intellij.openapi.application.ApplicationManager.getApplication().isReadAccessAllowed());
+      return c.call();
+    }).get();
+  }
+
+  private PsiElement headerTarget(PsiFile includer, String marker) throws Exception {
+    PsiElement t = inBackground(() -> refAt(includer, marker).resolve());
+    assertTrue(String.valueOf(t), t instanceof ErlangMacroLayerHeaderTarget);
+    return t;
+  }
+
+  private void editHeader(PsiFile h, String from, String to) {
+    com.intellij.openapi.editor.Document d = com.intellij.psi.PsiDocumentManager.getInstance(getProject()).getDocument(h);
+    int at = h.getText().indexOf(from);
+    com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> d.replaceString(at, at + from.length(), to));
+    com.intellij.psi.PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+  }
+
+  /** P6: isValid() of a header target answers without a read action (as PSI files do) and reads no PSI there. */
+  public void testHeaderTargetIsValidWithoutReadAction() throws Exception {
+    PsiFile h = myFixture.addFileToProject("d3/h.hrl", "-define(H_X, Xh = 1).\n");
+    PsiFile a = myFixture.addFileToProject("d3/a.erl", "-module(a).\n-include(\"h.hrl\").\n-export([g/0]).\ng() -> ?H_X, Xh.\n");
+    highlight(a);
+    PsiElement t = headerTarget(a, "Xh.\n");
+    assertTrue(withoutReadAction(t::isValid));
+    assertTrue(withoutReadAction(((ErlangMacroLayerHeaderTarget)t)::canNavigate));
+    // the name leaves the header's directive: invalid, under a read action and then without one
+    editHeader(h, "Xh = 1", "Yh = 1");
+    assertFalse(inBackground(t::isValid));
+    assertFalse(withoutReadAction(t::isValid));
+    editHeader(h, "Yh = 1", "Xh = 1");
+    assertTrue(inBackground(t::isValid));
+    assertTrue(withoutReadAction(t::isValid));
+    // the header is deleted
+    WriteAction.run(() -> h.getVirtualFile().delete(this));
+    assertFalse(withoutReadAction(t::isValid));
+    assertFalse(inBackground(t::isValid));
+  }
 }
