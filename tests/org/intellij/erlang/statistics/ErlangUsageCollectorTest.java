@@ -495,6 +495,25 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertEquals((long)threads * counts, stored);
   }
 
+  // each status on its own: in the test above, the daily cap is reached during the first status
+  public void testEachFailureStatusKeepsTheDayAndBacksOff() {
+    for (int status : new int[]{429, 500, 503}) {
+      FakeSender sender = new FakeSender();
+      sender.status = status;
+      LocalDate[] today = {DAY};
+      ErlangUsageCollector collector =
+        new ErlangUsageCollector(() -> today[0], ErlangUsageCollectorTest::appProperties, () -> "Germany", () -> true, sender);
+      collector.setEnabled(true);
+      collector.count(ErlangUsageKey.RENAME);
+      today[0] = DAY.plusDays(1);
+      for (int tick = 0; tick < 32; tick++) {
+        assertEquals("HTTP " + status, 0, collector.sendPending());
+      }
+      assertEquals("HTTP " + status, ErlangUsageCollector.MAX_FAILED_SENDS_PER_DAY, sender.bodies.size());
+      assertEquals("HTTP " + status, 1, collector.getState().days.size());
+    }
+  }
+
   public void testCountryIsThatOfTheDay() {
     String[] country = {"Germany"};
     ErlangUsageCollector collector =
