@@ -42,6 +42,27 @@ public class ErlangConsoleViewDirectoryTest extends ErlangLightPlatformCodeInsig
     assertTrue("a stopped console hides the running one", afterStop.isRunning());
   }
 
+  public void testMostRecentlyStartedOrUsedRunningConsoleIsChosen() {
+    FakeProcessHandler first = startConsole();
+    FakeProcessHandler second = startConsole();
+    assertSame(second.myView, ErlangConsoleViewDirectory.getInstance().getConsole(getProject()));
+
+    first.myView.append("ok.");
+    first.myView.execute();
+    assertSame(first.myView, ErlangConsoleViewDirectory.getInstance().getConsole(getProject()));
+
+    first.destroyProcess();
+    assertSame(second.myView, ErlangConsoleViewDirectory.getInstance().getConsole(getProject()));
+  }
+
+  public void testNoConsoleWhenAllStopped() {
+    FakeProcessHandler first = startConsole();
+    FakeProcessHandler second = startConsole();
+    first.destroyProcess();
+    second.destroyProcess();
+    assertNull(ErlangConsoleViewDirectory.getInstance().getConsole(getProject()));
+  }
+
   @NotNull
   private FakeProcessHandler startConsole() {
     ErlangConsoleView view = new ErlangConsoleView(getProject());
