@@ -30,6 +30,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.refactoring.rename.RenameProcessor;
 import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.inspection.ErlangUnboundVariableInspection;
 import org.intellij.erlang.psi.ErlangQVar;
@@ -141,6 +142,32 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     assertNotNull(resolved);
     assertFalse("the declaration is in " + resolved.getContainingFile().getVirtualFile(), resolved.isPhysical());
     assertFalse(((Navigatable) resolved).canNavigate());
+  }
+
+  public void testRenameInInputKeepsSentVariable() {
+    attachToFakeProcess(new ByteArrayOutputStream());
+
+    myView.append("X = 42.");
+    myView.execute();
+    myView.append("X + X.");
+    PsiFile file = myView.getFile();
+    Document document = myView.getConsoleEditor().getDocument();
+    PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+
+    ErlangQVar var = PsiTreeUtil.getParentOfType(file.findElementAt(0), ErlangQVar.class);
+    assertNotNull(var);
+    PsiReference reference = var.getReference();
+    assertNotNull(reference);
+    PsiElement resolved = reference.resolve();
+    assertNotNull(resolved);
+    new RenameProcessor(getProject(), resolved, "Y", false, false).run();
+
+    Map<String, ErlangQVar> context = file.getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    assertNotNull(context);
+    ErlangQVar remembered = context.get("X");
+    assertNotNull(remembered);
+    assertTrue(remembered.isValid());
+    assertEquals("X", remembered.getText());
   }
 
   private void attachToFakeProcess(ByteArrayOutputStream processInput) {

@@ -17,10 +17,12 @@
 package org.intellij.erlang.rename;
 
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.refactoring.listeners.RefactoringElementListener;
 import com.intellij.refactoring.rename.RenamePsiElementProcessor;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +49,13 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
     }
     if (variableNameIsInvalid) {
       throw new IncorrectOperationException("Invalid variable name");
+    }
+    if (ErlangConsoleView.isConsoleVariable(element)) {
+      for (UsageInfo usage : usages) {
+        PsiReference reference = usage.getReference();
+        if (reference != null) reference.handleElementRename(newName);
+      }
+      return;
     }
     super.renameElement(element, newName, usages, listener);
   }
