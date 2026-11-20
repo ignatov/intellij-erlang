@@ -14,7 +14,7 @@ The plugin asks in a small dialog, after you open a project with Erlang modules 
 - "Ask me later": the plugin asks again, but not earlier than 30 days later. Esc or closing the dialog means the same.
 - "No, thanks": the plugin never asks again.
 
-The plugin asks at most 2 times in total: the first time and one reminder. After that it does not ask again, and it sends nothing. The dialog has a closed section "Example of the data that is sent", which shows an example summary, and a "Privacy policy" link, which opens this page. The real summary of today is in the settings (see below).
+The plugin asks at most 2 times in total: the first time and one reminder. If neither gets an answer, it does not ask again, and it sends nothing. The dialog has a closed section "Example of the data that is sent", which shows an example summary, and a "Privacy policy" link, which opens this page. The real summary of today is in the settings (see below).
 
 You can change the answer at any time on the **Erlang External Tools** page of the IDE settings (type its name into the search field of the settings), section **Usage Statistics**. The **Show what is sent** button there shows the data of today, exactly as it would be sent.
 
