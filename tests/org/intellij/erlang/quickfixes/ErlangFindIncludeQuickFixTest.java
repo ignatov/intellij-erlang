@@ -17,13 +17,18 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.openapi.ui.popup.ListPopupStep;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.PlatformTestUtil;
+import com.intellij.ui.UiInterceptors;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeInspection;
 import org.intellij.erlang.inspection.ErlangUnresolvedIncludeLibInspection;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -40,14 +45,26 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
     ApplicationManager.getApplication().runWriteAction(() -> ErlangFacet.createFacet(myFixture.getModule()));
   }
 
-  // todo :: check what's going on with disposables
   public void testSimple() {
-//    doIncludeTest("inc", "test.erl", "inc/inc.hrl");
+    doIncludeTest("inc", "test.erl", "inc/inc.hrl");
   }
 
   private void doIncludeTest(String expectedIncludePath, String ... files) {
     myFixture.configureByFiles(files);
+    List<String> offered = new ArrayList<>();
+    UiInterceptors.registerPossible(getTestRootDisposable(), new UiInterceptors.UiInterceptor<>(ListPopup.class) {
+      @Override
+      protected void doIntercept(ListPopup popup) {
+        //noinspection unchecked
+        ListPopupStep<Object> step = (ListPopupStep<Object>) popup.getListStep();
+        for (Object value : step.getValues()) offered.add(step.getTextFor(value));
+        if (!step.getValues().isEmpty()) step.onChosen(step.getValues().getFirst(), true);
+      }
+    });
     launchIntention("Find include");
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+    assertEquals("files offered by the popup: " + offered, 1, offered.size());
+    assertTrue(offered.getFirst(), offered.getFirst().endsWith(files[files.length - 1]));
     List<VirtualFile> includeDirectories = ErlangIncludeDirectoryUtil.getIncludeDirectories(myFixture.getModule());
     assertEquals(1, includeDirectories.size());
     assertTrue(includeDirectories.getFirst().getPath().endsWith(expectedIncludePath));
