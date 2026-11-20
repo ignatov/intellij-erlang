@@ -17,8 +17,10 @@
 package org.intellij.erlang.eunit;
 
 import com.intellij.execution.configuration.EnvironmentVariablesData;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,5 +38,21 @@ public class ErlangUnitRerunFailedTestsActionTest extends BasePlatformTestCase {
     assertEquals(envData, new ErlangUnitRunningState(null, getModule(), rerun).getEnvData());
     assertEquals(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION, rerun.getConfigData().getKind());
     assertEquals(Set.of("sample_tests:failing_test"), rerun.getConfigData().getFunctionNames());
+  }
+
+  public void testRerunKeepsWorkDirectory() {
+    ErlangUnitRunConfiguration original =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    original.setWorkDirectory("/tmp/wd");
+
+    ErlangUnitRunConfiguration rerun =
+      ErlangUnitRerunFailedTestsAction.createRerunConfiguration(original, Set.of("sample_tests:failing_test"));
+
+    ErlangUnitRunningState state = new ErlangUnitRunningState(null, getModule(), rerun);
+    GeneralCommandLine commandLine = new GeneralCommandLine();
+    state.setWorkDirectory(commandLine);
+
+    assertEquals("/tmp/wd", state.getWorkDirectory());
+    assertEquals(new File("/tmp/wd"), commandLine.getWorkDirectory());
   }
 }
