@@ -32,6 +32,7 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
@@ -43,10 +44,16 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.lang.reflect.Proxy;
 import java.time.LocalDate;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String MODULE = """
@@ -294,6 +301,86 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(0, collector().getState().askCount);
   }
 
+  // review point 1: after the busy checks of one chain ran out, the next chain of the timer has its own checks
+  public void testTimerAsksAgainAfterTheBusyChecksRanOut() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.canAsk = false;
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    for (int chain = 0; chain < 2; chain++) {
+      // the timer starts a chain, and the user stays busy during all of its checks
+      statistics.askLaterForTests(getProject());
+      assertEquals("checks of chain " + chain, ErlangUsageStatistics.MAX_RETRIES + 1, scheduler.runAll());
+      assertFalse(ErlangUsageIdle.isInstalled());
+    }
+    ui.canAsk = true;
+    statistics.askLaterForTests(getProject());
+    scheduler.runAll();
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  // the listener starts with the chain, so its first check waits until the user was quiet for long enough
+  public void testFirstCheckOfAChainComesAfterTheIdleTime() {
+    FakeAskUi ui = new FakeAskUi();
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    statistics.askLaterForTests(getProject());
+    assertEquals("checks until the question", 1, scheduler.runAll());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testOneChainAtATime() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.canAsk = false;
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    // the project check and the timer both want to ask
+    statistics.askLaterForTests(getProject());
+    statistics.askLaterForTests(getProject());
+    assertEquals(1, statistics.getScheduledForTests());
+    assertEquals(ErlangUsageStatistics.MAX_RETRIES + 1, scheduler.runAll());
+  }
+
+  public void testChainEndsWhenItsProjectCloses() {
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(new FakeAskUi());
+    statistics.setSchedulerForTests(scheduler);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    boolean[] disposed = {false};
+    Project closing = fakeProject(disposed);
+    ErlangUsageStatistics.setErlangProjectForTests(closing, true);
+    statistics.askLaterForTests(closing);
+    assertTrue(ErlangUsageIdle.isInstalled());
+    disposed[0] = true;
+    scheduler.runAll();
+    assertFalse("no question is due, so the listener stops", ErlangUsageIdle.isInstalled());
+    // another project can start a chain
+    statistics.askLaterForTests(getProject());
+    assertEquals(2, statistics.getScheduledForTests());
+  }
+
+  // review point 5: a check with no delay can run before the scheduler returns its future
+  public void testCheckThatRunsBeforeTheSchedulerReturns() {
+    FakeAskUi ui = new FakeAskUi();
+    FakeScheduler scheduler = new FakeScheduler();
+    scheduler.immediately = true;
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    statistics.askLaterForTests(getProject());
+    PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+    assertEquals(List.of(false), ui.asked);
+  }
+
   public void testEscIsLaterAlsoDuringTheGuard() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
@@ -416,6 +503,92 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       asked.add(reminder);
       return choice;
     }
+  }
+
+  // runs the checks of the ask chain when the test says so; while a check waits, the time passes without input
+  private static final class FakeScheduler implements ErlangUsageStatistics.AskScheduler {
+    private record Task(Runnable task, long delay) {
+    }
+
+    private final ArrayDeque<Task> myTasks = new ArrayDeque<>();
+    // like a check with no delay that runs before schedule returns
+    boolean immediately;
+
+    @Override
+    public @NotNull ScheduledFuture<?> schedule(@NotNull Runnable task, long delayMillis) {
+      if (immediately) task.run();
+      else myTasks.add(new Task(task, delayMillis));
+      return new DoneFuture();
+    }
+
+    // runs the checks until none is due; returns how many ran
+    int runAll() {
+      int checks = 0;
+      while (!myTasks.isEmpty()) {
+        Task task = myTasks.poll();
+        ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - ErlangUsageIdle.idleMillis() - task.delay());
+        task.task().run();
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+        checks++;
+      }
+      return checks;
+    }
+  }
+
+  private static final class DoneFuture implements ScheduledFuture<Object> {
+    @Override
+    public long getDelay(@NotNull TimeUnit unit) {
+      return 0;
+    }
+
+    @Override
+    public int compareTo(@NotNull Delayed o) {
+      return 0;
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return false;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public boolean isDone() {
+      return true;
+    }
+
+    @Override
+    public Object get() {
+      return null;
+    }
+
+    @Override
+    public Object get(long timeout, @NotNull TimeUnit unit) {
+      return null;
+    }
+  }
+
+  // a project that the test can close; it keeps only its user data
+  @NotNull
+  private static Project fakeProject(boolean @NotNull [] disposed) {
+    Map<Object, Object> data = new HashMap<>();
+    return (Project)Proxy.newProxyInstance(Project.class.getClassLoader(), new Class<?>[]{Project.class}, (proxy, method, args) ->
+      switch (method.getName()) {
+        case "isDisposed" -> disposed[0];
+        case "getUserData" -> data.get(args[0]);
+        case "putUserData" -> {
+          data.put(args[0], args[1]);
+          yield null;
+        }
+        case "hashCode" -> System.identityHashCode(proxy);
+        case "equals" -> proxy == args[0];
+        case "toString" -> "fake project";
+        default -> method.getReturnType() == boolean.class ? false : null;
+      });
   }
 
   public void testTwoSettingsDialogs() {
