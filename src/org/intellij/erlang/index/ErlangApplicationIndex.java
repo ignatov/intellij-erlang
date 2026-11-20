@@ -207,7 +207,8 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
     private static int compareLibraryDirectoryNames(@NotNull String appName, @NotNull String name1, @NotNull String name2) {
       String prefix = appName + "-";
       if (name1.startsWith(prefix) && name2.startsWith(prefix)) {
-        return VersionComparatorUtil.compare(name1.substring(prefix.length()), name2.substring(prefix.length()));
+        int result = VersionComparatorUtil.compare(name1.substring(prefix.length()), name2.substring(prefix.length()));
+        if (result != 0) return result;
       }
       return name1.compareTo(name2);
     }

@@ -37,6 +37,22 @@ public class ErlangApplicationIndexTest extends ErlangLightPlatformCodeInsightFi
     doTest("foo-8.5.4.1", "foo-8.5.4", "foo-8.5.4.1");
   }
 
+  public void testTrailingZeroComponentWins() {
+    doTest("foo-1.0.0", "foo-1.0", "foo-1.0.0");
+  }
+
+  public void testTrailingZeroComponentWinsInReverseOrder() {
+    doTest("foo-1.0.0", "foo-1.0.0", "foo-1.0");
+  }
+
+  public void testTrailingZeroComponentsWin() {
+    doTest("foo-1.2.0.0", "foo-1.2", "foo-1.2.0.0");
+  }
+
+  public void testTrailingZeroComponentWinsOverMajorOnly() {
+    doTest("foo-1.0", "foo-1", "foo-1.0");
+  }
+
   public void testNoVersionWins() {
     doTest("foo", "foo-1.9", "foo-1.10", "foo");
   }
