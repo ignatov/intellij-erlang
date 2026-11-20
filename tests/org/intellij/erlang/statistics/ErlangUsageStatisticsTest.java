@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.statistics;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -396,6 +398,19 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  public void testTwoSettingsDialogs() {
+    ErlangUsageStatisticsPanel first = new ErlangUsageStatisticsPanel();
+    ErlangUsageStatisticsPanel second = new ErlangUsageStatisticsPanel();
+    first.setSelectedForTests(true);
+    assertTrue(first.isModified());
+    first.apply();
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+    // the second dialog still shows "off", but the user did not touch it
+    assertFalse(second.isModified());
+    second.apply();
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+  }
+
   public void testOtpReleaseNeverStartsErl() throws Exception {
     File home = FileUtil.createTempDirectory("erlang-sdk", null);
     File marker = new File(home, "erl-started");
@@ -476,6 +491,18 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertTrue(json, json.contains("\"otp\":[\"27\",\"R16\"]"));
   }
 
+  public void testTurningOffDeletesTheData() {
+    collector().setEnabled(true);
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    assertNotNull(collector().getInstallationId());
+    ErlangUsageStatisticsPanel panel = new ErlangUsageStatisticsPanel();
+    assertFalse(panel.isModified());
+    ErlangUsageStatistics.getInstance().setEnabled(false);
+    assertNull(collector().getInstallationId());
+    assertTrue(collector().getState().days.isEmpty());
+    assertFalse(previewProperties().has("rename"));
+  }
+
   public void testStateIsStoredAndRead() {
     collector().setEnabled(true);
     ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
@@ -509,6 +536,13 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(ErlangUsageKey.OPENED_APP, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.app.src")));
     assertEquals(ErlangUsageKey.OPENED_CONFIG, ErlangUsageListeners.openedFileKey(new LightVirtualFile("sys.config")));
     assertNull(ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.txt")));
+  }
+
+  @NotNull
+  private JsonObject previewProperties() {
+    String json = collector().previewToday();
+    return JsonParser.parseString(json).getAsJsonObject().getAsJsonArray("events").get(0).getAsJsonObject()
+      .getAsJsonObject("event_properties");
   }
 
   @NotNull

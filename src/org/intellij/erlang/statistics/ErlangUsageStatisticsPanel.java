@@ -16,14 +16,109 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.ide.BrowserUtil;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.ActionLink;
+import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextArea;
+import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
 
 /**
  * The "Usage Statistics" section of the Erlang External Tools settings page.
  */
 public final class ErlangUsageStatisticsPanel extends JPanel {
+  public static final String CHECKBOX_TEXT = "Send anonymous usage statistics";
+  private final JBCheckBox myCheckBox = new JBCheckBox(CHECKBOX_TEXT);
+  // the value shown by the last reset; a second settings dialog that did not touch the check box changes nothing
+  private boolean myShownValue;
+
+  public ErlangUsageStatisticsPanel() {
+    super(new BorderLayout());
+    // no gap on the left, so that the button lines up with the text above it
+    JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    JButton show = new JButton("Show what is sent");
+    show.addActionListener(e -> showPreview(this));
+    actions.add(show);
+    actions.add(Box.createHorizontalStrut(JBUI.scale(12)));
+    actions.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
+    JPanel form = FormBuilder.createFormBuilder()
+      .addComponent(new TitledSeparator("Usage Statistics"))
+      .addComponent(myCheckBox)
+      .addComponent(new JBLabel(ErlangUsageAskDialog.wrapped("Once a day: counts of the features used, the IDE, the OS and the " +
+                                                             "Erlang/OTP release. Never code, names or paths.")))
+      .addComponent(actions)
+      .getPanel();
+    add(form, BorderLayout.CENTER);
+    reset();
+  }
+
+  public boolean isModified() {
+    return myCheckBox.isSelected() != myShownValue;
+  }
+
+  public void apply() {
+    if (!isModified()) return;
+    ErlangUsageStatistics.getInstance().setEnabled(myCheckBox.isSelected());
+    myShownValue = myCheckBox.isSelected();
+  }
+
+  public void reset() {
+    myShownValue = isEnabled(ErlangUsageStatistics.getInstance());
+    myCheckBox.setSelected(myShownValue);
+  }
+
+  @TestOnly
+  void setSelectedForTests(boolean selected) {
+    myCheckBox.setSelected(selected);
+  }
+
+  // the JSON of today's summary so far, in a read-only dialog
+  static void showPreview(@NotNull Component parent) {
+    new PreviewDialog(parent, ErlangUsageStatistics.getInstance().getCollector().previewToday()).show();
+  }
+
+  private static boolean isEnabled(@NotNull ErlangUsageStatistics statistics) {
+    return statistics.getCollector().getConsent() == ErlangUsageCollector.Consent.YES;
+  }
+
+  private static final class PreviewDialog extends DialogWrapper {
+    private final String myJson;
+
+    PreviewDialog(@NotNull Component parent, @NotNull String json) {
+      super(parent, false);
+      myJson = json;
+      setTitle("What Is Sent");
+      init();
+    }
+
+    @Override
+    protected @Nullable JComponent createCenterPanel() {
+      JBTextArea text = new JBTextArea(prettyPrint(myJson), 24, 72);
+      text.setEditable(false);
+      text.setFont(JBUI.Fonts.create(Font.MONOSPACED, text.getFont().getSize()));
+      JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(8)));
+      panel.add(new JBLabel("The summary of today so far. If the statistics are on, it is sent tomorrow."), BorderLayout.NORTH);
+      panel.add(new JBScrollPane(text), BorderLayout.CENTER);
+      return panel;
+    }
+
+    @Override
+    protected Action @NotNull [] createActions() {
+      return new Action[]{getOKAction()};
+    }
+  }
+
   @NotNull
   static String prettyPrint(@NotNull String json) {
     StringBuilder result = new StringBuilder();
