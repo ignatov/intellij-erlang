@@ -112,6 +112,8 @@ public final class ErlangUsageCollector {
 
   public synchronized void setEnabled(boolean enabled) {
     if (enabled) {
+      // an environment that switches the statistics off stores no consent and makes no id
+      if (!myAllowed.getAsBoolean()) return;
       myState.consent = Consent.YES.name();
       if (myState.installationId == null) myState.installationId = UUID.randomUUID().toString();
     }
@@ -386,11 +388,14 @@ public final class ErlangUsageCollector {
     myState = state;
     myBatch = null;
     boolean yes = storedConsent() == Consent.YES;
+    boolean allowed = myAllowed.getAsBoolean();
+    // in a session that switches the statistics off, the days not sent yet are deleted, so that a later session does
+    // not send them; a stored yes stays, but gets no new id
+    if (!yes || !allowed) state.days.clear();
     if (!yes) {
       state.installationId = null;
-      state.days.clear();
     }
-    else if (state.installationId == null) {
+    else if (state.installationId == null && allowed) {
       state.installationId = UUID.randomUUID().toString();
     }
     myConsented = yes;

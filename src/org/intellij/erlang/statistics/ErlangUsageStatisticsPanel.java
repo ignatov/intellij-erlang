@@ -26,6 +26,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
@@ -39,6 +40,8 @@ import java.awt.event.ActionListener;
  */
 public final class ErlangUsageStatisticsPanel extends JPanel {
   public static final String CHECKBOX_TEXT = "Send anonymous usage statistics";
+  static final String SWITCHED_OFF_TEXT = "Switched off in this IDE session by DO_NOT_TRACK, -Derlang.usage.statistics=false, " +
+                                          "a development build or headless mode.";
   private final JBCheckBox myCheckBox = new JBCheckBox(CHECKBOX_TEXT);
   // the value shown by the last reset; a second settings dialog that did not touch the check box changes nothing
   private boolean myShownValue;
@@ -52,9 +55,17 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
     actions.add(show);
     actions.add(Box.createHorizontalStrut(JBUI.scale(12)));
     actions.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
-    JPanel form = FormBuilder.createFormBuilder()
+    FormBuilder builder = FormBuilder.createFormBuilder()
       .addComponent(new TitledSeparator("Usage Statistics"))
-      .addComponent(myCheckBox)
+      .addComponent(myCheckBox);
+    if (!ErlangUsageStatistics.isAllowed()) {
+      // the environment switches the statistics off, so the check box cannot store an answer
+      myCheckBox.setEnabled(false);
+      JBLabel off = new JBLabel(ErlangUsageAskDialog.wrapped(SWITCHED_OFF_TEXT));
+      off.setForeground(UIUtil.getContextHelpForeground());
+      builder.addComponent(off);
+    }
+    JPanel form = builder
       .addComponent(new JBLabel(ErlangUsageAskDialog.wrapped("Once a day: counts of the features used, the IDE, the OS and the " +
                                                              "Erlang/OTP release. Never code, names or paths.")))
       .addComponent(actions)
@@ -81,6 +92,11 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
   @TestOnly
   void setSelectedForTests(boolean selected) {
     myCheckBox.setSelected(selected);
+  }
+
+  @TestOnly
+  boolean isCheckBoxEnabledForTests() {
+    return myCheckBox.isEnabled();
   }
 
   // the JSON of today's summary so far, in a read-only dialog
