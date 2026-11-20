@@ -44,6 +44,8 @@ public class ErlangMacroLayerGateTest extends ErlangLightPlatformCodeInsightFixt
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    // spike 4: these gate checks resolve on the test (UI) thread; let it build, as round three did
+    ErlangMacroLayer.setEdtBuildForTests(true, getTestRootDisposable());
     setUpProjectSdk();
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
   }

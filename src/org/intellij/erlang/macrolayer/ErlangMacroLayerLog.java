@@ -73,6 +73,7 @@ public final class ErlangMacroLayerLog {
     EVENTS.clear();
     EVENT_COUNT.set(0);
     QUERIES.clear();
+    QUERY_NANOS.reset();
   }
 
   @TestOnly
@@ -85,6 +86,17 @@ public final class ErlangMacroLayerLog {
     Map<String, Integer> m = new java.util.TreeMap<>();
     QUERIES.forEach((k, v) -> m.put(k, v.get()));
     return m;
+  }
+
+  private static final java.util.concurrent.atomic.LongAdder QUERY_NANOS = new java.util.concurrent.atomic.LongAdder();
+
+  /** Time spent answering oracle questions in a built copy (builds excluded). */
+  public static long queryNanosTotal() {
+    return QUERY_NANOS.sum();
+  }
+
+  public static void queryNanos(long nanos) {
+    if (isEnabled()) QUERY_NANOS.add(nanos);
   }
 
   public static void query(@NotNull String kind, @NotNull String file) {

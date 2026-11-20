@@ -72,6 +72,21 @@ public final class ErlangMacroLayer {
   private static final boolean REMOTE_DEFAULT = "on".equals(read("erlang.macro.layer.remote", "ERLANG_MACRO_LAYER_REMOTE"));
   private static volatile @Nullable Mode ourTestMode;
   private static volatile @Nullable Boolean ourTestRemote;
+  /** Diagnostic only: {@code erlang.macro.layer.edt=allow} lets the UI thread build a copy (default: never). */
+  private static final boolean EDT_BUILD_DEFAULT = "allow".equals(read("erlang.macro.layer.edt", "ERLANG_MACRO_LAYER_EDT"));
+  private static volatile @Nullable Boolean ourTestEdtBuild;
+
+  static boolean isEdtBuildAllowed() {
+    Boolean b = ourTestEdtBuild;
+    return b != null ? b : EDT_BUILD_DEFAULT;
+  }
+
+  @TestOnly
+  public static void setEdtBuildForTests(boolean allow, @NotNull Disposable parent) {
+    Boolean previous = ourTestEdtBuild;
+    ourTestEdtBuild = allow;
+    Disposer.register(parent, () -> ourTestEdtBuild = previous);
+  }
 
   private ErlangMacroLayer() {
   }
@@ -288,6 +303,7 @@ public final class ErlangMacroLayer {
     final Object[] deps;
     final ConcurrentHashMap<Integer, Boolean> formUse = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formError = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
 
     Table(@Nullable String refusal, Object[] deps) {
@@ -330,7 +346,7 @@ public final class ErlangMacroLayer {
   }
 
   /** The summary of a header, made by lexing its text; cached on the header, one per header text. */
-  static @NotNull ErlangMacroExpander.HeaderSummary summaryOf(@NotNull PsiFile header) {
+  public static @NotNull ErlangMacroExpander.HeaderSummary summaryOf(@NotNull PsiFile header) {
     return CachedValuesManager.getManager(header.getProject()).getCachedValue(header, SUMMARY_KEY, () -> {
       long t0 = System.nanoTime();
       SUMMARIES_BUILT.incrementAndGet();
@@ -355,7 +371,7 @@ public final class ErlangMacroLayer {
       }, false);
       cv = ((UserDataHolderEx)file).putUserDataIfAbsent(TABLE_KEY, cv);
     }
-    if (ApplicationManager.getApplication().isDispatchThread() && !cv.hasUpToDateValue()) return null;
+    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) return null;
     return cv.getValue();
   }
 
@@ -514,7 +530,7 @@ public final class ErlangMacroLayer {
       }, false);
       cv = ((UserDataHolderEx)file).putUserDataIfAbsent(HOLDER_KEY, cv);
     }
-    boolean edt = ApplicationManager.getApplication().isDispatchThread();
+    boolean edt = ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed();
     if (edt) {
       CopyHolder h = cv.hasUpToDateValue() ? cv.getValue() : null;
       Copy c = h != null ? h.get() : null;
@@ -537,6 +553,22 @@ public final class ErlangMacroLayer {
     }
     ErlangMacroLayerRetention.getInstance(project).touch(holder, copy);
     return copy;
+  }
+
+  /** The cached copy if it is built and up to date; never builds. */
+  @TestOnly
+  public static @Nullable Copy peekCopy(@NotNull PsiFile file) {
+    CachedValue<CopyHolder> cv = file.getUserData(HOLDER_KEY);
+    if (cv == null || !cv.hasUpToDateValue()) return null;
+    return cv.getValue().get();
+  }
+
+  /** Why the layer gives master's behaviour for the whole file (unresolved include, cycle, ...), or null. */
+  @TestOnly
+  public static @Nullable String refusalForTests(@NotNull PsiFile file) {
+    if (!(file instanceof ErlangFile ef)) return "not-erlang";
+    if (!file.getName().endsWith(".erl")) return "not-erl";
+    return computeTable(ef).refusal;
   }
 
   /** Builds the copy without the cache (also used by measurement tests). */
@@ -606,7 +638,7 @@ public final class ErlangMacroLayer {
   }
 
   /** The text has a use {@code ?NAME} of a name the file can see. Superset: strings and comments count too. */
-  static boolean usesKnownMacro(@NotNull CharSequence s, @NotNull Set<String> names) {
+  public static boolean usesKnownMacro(@NotNull CharSequence s, @NotNull Set<String> names) {
     int n = s.length();
     for (int i = 0; i < n; i++) {
       if (s.charAt(i) != '?') continue;
@@ -648,6 +680,17 @@ public final class ErlangMacroLayer {
       t.formUse.put(at, b);
     }
     return b;
+  }
+
+  /** Names of the variables inside macro arguments of the form. */
+  private static @NotNull Set<String> argumentVars(@NotNull Table t, @NotNull PsiElement form) {
+    return t.formArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
+      Set<String> r = new HashSet<>();
+      for (ErlangMacrosArg a : PsiTreeUtil.findChildrenOfType(form, ErlangMacrosArg.class)) {
+        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(a, ErlangQVar.class)) r.add(v.getText());
+      }
+      return r;
+    });
   }
 
   private static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
@@ -731,7 +774,9 @@ public final class ErlangMacroLayer {
     String answerKey = "r" + element.getTextRange().getStartOffset() + ref.getClass().getSimpleName();
     Object cached = copy.answers.get(answerKey);
     if (cached != null) return cached == NO_ANSWER ? null : (PsiElement)cached;
+    long q0 = System.nanoTime();
     PsiElement answer = resolveInCopy(copy, ref, element, file, t);
+    ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
     copy.answers.put(answerKey, answer == null ? NO_ANSWER : answer);
     return answer;
   }
@@ -768,7 +813,7 @@ public final class ErlangMacroLayer {
     PsiElement form = topForm(element);
     if (form == null || !formUsesMacro(t, form)) return ResolveResult.EMPTY_ARRAY;
     // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form
-    if (!t.bodyVars.contains(element.getText()) && PsiTreeUtil.getParentOfType(element, ErlangMacrosArg.class) == null &&
+    if (!t.bodyVars.contains(element.getText()) && !argumentVars(t, form).contains(element.getText()) &&
         !formHasError(t, form)) {
       return ResolveResult.EMPTY_ARRAY;
     }
@@ -779,7 +824,9 @@ public final class ErlangMacroLayer {
     String answerKey = "v" + element.getTextRange().getStartOffset();
     Object cached = copy.answers.get(answerKey);
     if (cached instanceof ResolveResult[] rr) return rr;
+    long q0 = System.nanoTime();
     ResolveResult[] answer = multiResolveInCopy(copy, ref, element, file);
+    ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
     copy.answers.put(answerKey, answer);
     return answer;
   }
@@ -830,6 +877,16 @@ public final class ErlangMacroLayer {
     ErlangMacroLayerLog.query("error-filter", file.getName());
     Copy copy = getCopy(file, "error-filter");
     if (copy == null || copy.copyFile == null) return false;
+    long q0 = System.nanoTime();
+    try {
+      return explained(copy, error);
+    }
+    finally {
+      ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
+    }
+  }
+
+  private static boolean explained(@NotNull Copy copy, @NotNull PsiErrorElement error) {
     int offset = error.getTextRange().getStartOffset();
     Form f = copy.expansion.formAtSource(offset);
     if (f == null) {
