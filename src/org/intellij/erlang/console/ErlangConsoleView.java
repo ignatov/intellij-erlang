@@ -31,6 +31,7 @@ import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangRecursiveVisitor;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +101,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
         @Override
         public void visitQVar(@NotNull ErlangQVar o) {
           String name = o.getName();
-          if (!context.containsKey(name)) context.put(name, o);
+          if (!context.containsKey(name)) context.put(name, (ErlangQVar) ErlangElementFactory.createQVarFromText(getProject(), name));
         }
 
         @Override

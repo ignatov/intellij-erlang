@@ -24,8 +24,11 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.DebugUtil;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.inspection.ErlangUnboundVariableInspection;
 import org.intellij.erlang.psi.ErlangQVar;
@@ -97,6 +100,26 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     Map<String, ErlangQVar> context = myView.getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     assertNotNull(context);
     assertTrue("variables bound by the sent text: " + context.keySet(), context.containsKey("X"));
+  }
+
+  public void testSentVariableResolvesInLaterInput() {
+    attachToFakeProcess(new ByteArrayOutputStream());
+
+    myView.append("X = 42.");
+    myView.execute();
+    myView.append("X + 1.");
+    PsiFile file = myView.getFile();
+    Document document = myView.getConsoleEditor().getDocument();
+    PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+
+    PsiElement x = file.findElementAt(0);
+    ErlangQVar var = PsiTreeUtil.getParentOfType(x, ErlangQVar.class);
+    assertNotNull(var);
+    PsiReference reference = var.getReference();
+    assertNotNull(reference);
+    PsiElement resolved = reference.resolve();
+    assertNotNull(resolved);
+    assertTrue(resolved.isValid());
   }
 
   private void attachToFakeProcess(ByteArrayOutputStream processInput) {
