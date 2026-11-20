@@ -305,6 +305,10 @@ public final class ErlangUsageCollector {
     int sent = 0;
     while (!requests.isEmpty()) {
       List<ErlangUsageStatisticsState.Day> chunk = requests.poll();
+      // the user may have turned the statistics off, or off and on again, while the previous request was on its way
+      synchronized (this) {
+        if (!isCounting() || !id.equals(myState.installationId)) break;
+      }
       int status;
       try {
         status = mySender.send(ErlangUsagePayload.build(id, chunk));
