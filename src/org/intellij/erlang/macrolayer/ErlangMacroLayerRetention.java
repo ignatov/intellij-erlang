@@ -49,6 +49,16 @@ public final class ErlangMacroLayerRetention implements Disposable {
 
   synchronized void touch(@NotNull ErlangMacroLayer.CopyHolder holder, @NotNull ErlangMacroLayer.Copy copy) {
     holder.strong = copy;
+    if (!myLru.containsKey(holder) && holder.file != null) {
+      // a new holder for a file: the holders of its older versions are stale; let their copies go
+      for (Iterator<ErlangMacroLayer.CopyHolder> old = myLru.keySet().iterator(); old.hasNext(); ) {
+        ErlangMacroLayer.CopyHolder h = old.next();
+        if (holder.file.equals(h.file)) {
+          h.strong = null;
+          old.remove();
+        }
+      }
+    }
     myLru.put(holder, Boolean.TRUE);
     Iterator<ErlangMacroLayer.CopyHolder> it = myLru.keySet().iterator();
     while (myLru.size() > STRONG && it.hasNext()) {
