@@ -49,6 +49,16 @@ public class ErlangFindIncludeQuickFixTest extends ErlangLightPlatformCodeInsigh
     doIncludeTest("inc", "test.erl", "inc/inc.hrl");
   }
 
+  public void testIncludeWithPath() {
+    doIncludeTest("hdr", "test.erl", "hdr/inc.hrl");
+    myFixture.checkResultByFile("test-after.erl");
+  }
+
+  public void testIncludeLibWithPath() {
+    doIncludeTest("hdr", "test.erl", "hdr/inc.hrl");
+    myFixture.checkResultByFile("test-after.erl");
+  }
+
   private void doIncludeTest(String expectedIncludePath, String ... files) {
     myFixture.configureByFiles(files);
     List<String> offered = new ArrayList<>();

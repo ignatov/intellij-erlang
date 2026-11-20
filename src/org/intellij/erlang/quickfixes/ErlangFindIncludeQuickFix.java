@@ -38,11 +38,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.icons.ErlangIcons;
-import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -51,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -110,8 +112,13 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
           indicator.setIndeterminate(true);
           List<ErlangFile> files = ApplicationManager.getApplication().runReadAction(
             (Computable<List<ErlangFile>>) () -> {
-              // pass indicator into the search
-              return ErlangModuleIndex.getFilesByName(project, includeFileName, GlobalSearchScope.allScope(project));
+              PsiManager psiManager = PsiManager.getInstance(project);
+              return FilenameIndex.getVirtualFilesByName(includeFileName, GlobalSearchScope.allScope(project)).stream()
+                .sorted(Comparator.comparing(VirtualFile::getPath))
+                .map(psiManager::findFile)
+                .filter(ErlangFile.class::isInstance)
+                .map(ErlangFile.class::cast)
+                .toList();
             }
           );
 
