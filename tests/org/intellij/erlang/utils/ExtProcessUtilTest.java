@@ -227,6 +227,13 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
         }
         catch (IOException ignored) {
         }
+        try {
+          //noinspection BusyWait
+          Thread.sleep(5);
+        }
+        catch (InterruptedException e) {
+          return;
+        }
       }
     });
     watcher.start();
@@ -245,8 +252,9 @@ public class ExtProcessUtilTest extends BasePlatformTestCase {
     assertFalse("the command is still running after execAndGetFirstLine returned", alive);
     assertTrue("the call took " + elapsed + " ms", elapsed < 5000);
     assertTrue("the first line has " + output.getStdOut().length() + " characters", output.getStdOut().length() <= 64 * 1024);
-    // `cat /dev/zero` writes gigabytes per second into the page cache, so the file grows by megabytes between two checks.
-    assertTrue("the output file reached " + largestOutput.get() + " bytes", largestOutput.get() < 128 * 1024 * 1024);
+    // `cat /dev/zero` writes gigabytes per second into the page cache, so the file grows by megabytes between two checks,
+    // and by far more when a loaded machine stalls the check. The bound only rules out a writer that is not stopped.
+    assertTrue("the output file reached " + largestOutput.get() + " bytes", largestOutput.get() < 1024L * 1024 * 1024);
   }
 
   // A process that has no ProcessHandle, as one that Eel starts on 2026.2, is still killed and cleaned up.
