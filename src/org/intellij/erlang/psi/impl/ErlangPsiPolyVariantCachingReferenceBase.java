@@ -29,18 +29,16 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   }
 
   private static final ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase<?>, PsiElement> MY_RESOLVER =
-    (base, incompleteCode) -> {
-      PsiElement result = base.resolveInner();
-      // spike 3: when master's path finds nothing, ask the macro expansion layer
-      return result != null ? result : ErlangMacroLayer.resolveFallback(base);
-    };
+    (base, incompleteCode) -> base.resolveInner();
 
   @Nullable
   @Override
   public final PsiElement resolve() {
-    return getElement().isValid()
-           ? ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false)
-           : null;
+    if (!getElement().isValid()) return null;
+    PsiElement result = ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
+    // spike 4: when master's (cached) path finds nothing, ask the macro expansion layer. Its answer is cached in the
+    // layer's copy, not in the ResolveCache, so a "no copy yet" answer on the UI thread is not kept.
+    return result != null ? result : ErlangMacroLayer.resolveFallback(this);
   }
 
   @Nullable

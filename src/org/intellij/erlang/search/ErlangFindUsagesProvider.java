@@ -85,18 +85,36 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @NotNull
   @Override
   public String getType(@NotNull PsiElement element) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewTypeLocation.INSTANCE);
+    return describe(element, UsageViewTypeLocation.INSTANCE);
+  }
+
+  /**
+   * For an element no description provider knows (a bare leaf), the platform's default description asks this
+   * provider again, which recursed until StackOverflowError. Break the cycle: the inner call answers "".
+   */
+  private static final ThreadLocal<Boolean> DESCRIBING = new ThreadLocal<>();
+
+  @NotNull
+  private static String describe(@NotNull PsiElement element, @NotNull com.intellij.psi.ElementDescriptionLocation location) {
+    if (DESCRIBING.get() != null) return "";
+    DESCRIBING.set(Boolean.TRUE);
+    try {
+      return ElementDescriptionUtil.getElementDescription(element, location);
+    }
+    finally {
+      DESCRIBING.remove();
+    }
   }
 
   @NotNull
   @Override
   public String getDescriptiveName(@NotNull PsiElement element) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewLongNameLocation.INSTANCE);
+    return describe(element, UsageViewLongNameLocation.INSTANCE);
   }
 
   @NotNull
   @Override
   public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewNodeTextLocation.INSTANCE);
+    return describe(element, UsageViewNodeTextLocation.INSTANCE);
   }
 }

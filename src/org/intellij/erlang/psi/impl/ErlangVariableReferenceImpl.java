@@ -40,7 +40,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     ResolveResult[] results = multiResolveOnMaster();
-    // spike 3: when master's path finds nothing, ask the macro expansion layer
+    // spike 3/4: when master's path finds nothing, ask the macro expansion layer
     return results.length > 0 ? results : ErlangMacroLayer.multiResolveFallback(this);
   }
 
@@ -63,7 +63,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Nullable
   @Override
   public PsiElement resolveInner() {
-    ResolveResult[] resolveResults = multiResolve(false);
+    ResolveResult[] resolveResults = multiResolveOnMaster();
     return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
   }
 

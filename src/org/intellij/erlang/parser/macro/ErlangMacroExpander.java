@@ -1,6 +1,7 @@
 package org.intellij.erlang.parser.macro;
 
 import com.intellij.lexer.Lexer;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
@@ -32,6 +33,79 @@ public final class ErlangMacroExpander {
   public static final int SRC_ARGUMENT = 1;
   public static final int SRC_BODY = 2;
   public static final int SRC_VERBATIM = 3;
+  /** A token of a {@code -define} body in an included header; its origin is a {@link HeaderTok}. */
+  public static final int SRC_HEADER = 4;
+
+  /** Where a header token comes from: the header (an opaque key of the caller), the directive and the token index. */
+  public record HeaderTok(@NotNull Object header, int directive, int index) {
+  }
+
+  /** Resolves an {@code -include}/{@code -include_lib} directive of a file (owner null) or of a header. */
+  public interface IncludeResolver {
+    /** The summary of the included header, or null: then nothing of that include is visible. */
+    @Nullable HeaderSummary resolve(@Nullable HeaderSummary owner, @NotNull String attribute, @Nullable String includeString);
+  }
+
+  /** One macro directive of a header, as significant tokens. */
+  public static final class Directive {
+    public final @NotNull String attribute;
+    public final @NotNull List<Tok> tokens;
+
+    Directive(@NotNull String attribute, @NotNull List<Tok> tokens) {
+      this.attribute = attribute;
+      this.tokens = tokens;
+    }
+
+    /** The unquoted string of an include directive, else null. */
+    public @Nullable String includeString() {
+      for (Tok t : tokens) {
+        if (t.type() == ERL_STRING) {
+          String x = t.text();
+          return x.length() >= 2 ? x.substring(1, x.length() - 1) : x;
+        }
+      }
+      return null;
+    }
+
+    public @NotNull String name() {
+      return tokens.size() > 3 && tokens.get(2).type() == ERL_PAR_LEFT ? tokens.get(3).text() : "";
+    }
+  }
+
+  /**
+   * The macro summary of a header, made by lexing its text (no PSI). Only the directive forms are kept:
+   * {@code -define}, {@code -undef}, {@code -include}, {@code -include_lib} and the conditional directives.
+   * {@link #hash} depends only on the token texts of those forms: an edit anywhere else keeps it.
+   */
+  public static final class HeaderSummary {
+    public final @NotNull Object header;
+    public final @NotNull List<Directive> directives;
+    public final long hash;
+    public final int tokens;
+    public final int defines;
+
+    HeaderSummary(@NotNull Object header, @NotNull List<Directive> directives, long hash, int tokens, int defines) {
+      this.header = header;
+      this.directives = directives;
+      this.hash = hash;
+      this.tokens = tokens;
+      this.defines = defines;
+    }
+
+    /** The include directives in text order. */
+    public @NotNull List<Directive> includes() {
+      List<Directive> r = new ArrayList<>();
+      for (Directive d : directives) if (isInclude(d.attribute)) r.add(d);
+      return r;
+    }
+  }
+
+  static final Set<String> DIRECTIVES = Set.of("define", "undef", "include", "include_lib", "ifdef", "ifndef", "if",
+                                               "elif", "else", "endif");
+
+  static boolean isInclude(String attribute) {
+    return "include".equals(attribute) || "include_lib".equals(attribute);
+  }
 
   public static final Set<String> PREDEFINED = Set.of(
     "FILE", "FUNCTION_NAME", "FUNCTION_ARITY", "LINE", "MODULE", "MODULE_STRING", "BASE_MODULE", "BASE_MODULE_STRING",
@@ -39,7 +113,7 @@ public final class ErlangMacroExpander {
 
   /** What happened to a macro use in the text (outside {@code -define} bodies). */
   public enum Outcome {
-    SUBSTITUTED, PREDEFINED, NOT_IN_FILE, AMBIGUOUS, ARITY_MISMATCH,
+    SUBSTITUTED, PREDEFINED, NOT_IN_FILE, AMBIGUOUS, ARITY_MISMATCH, CONDITIONAL,
     LIMIT_DEPTH, LIMIT_TOKENS, LIMIT_RECURSION, BAD_ARGUMENTS, FORM_OVER_CAP
   }
 
@@ -88,6 +162,11 @@ public final class ErlangMacroExpander {
     public final List<Form> forms;
     public final EnumMap<Outcome, Integer> outcomes;
     private final int[] myExpStart, myExpEnd, mySrcStart, mySrcEnd, myKind;
+    private final Object[] myOrigin;
+    /** Uses substituted with a definition from a header; uses of header names lost to "one visible definition". */
+    public int headerUses, headerAmbiguous, headerConditional;
+    /** Significant tokens of the source, and of the expanded text (estimated from the substitutions). */
+    public int sourceTokens, expandedTokens;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
     private Map<Integer, int[]> myArgumentCopies;
@@ -102,6 +181,7 @@ public final class ErlangMacroExpander {
       mySrcStart = out.srcStart;
       mySrcEnd = out.srcEnd;
       myKind = out.kind;
+      myOrigin = out.origin;
       mySegments = out.n;
       int v = 0;
       for (int i = 0; i < mySegments; i++) if (myKind[i] == SRC_VERBATIM) v++;
@@ -162,6 +242,13 @@ public final class ErlangMacroExpander {
       return -1;
     }
 
+    /** The header origin of a single expanded token range, or null when the range is not one header token. */
+    public @Nullable HeaderTok headerOrigin(int expStart, int expEnd) {
+      int s = segmentAt(expStart);
+      if (s < 0 || myKind[s] != SRC_HEADER || myExpStart[s] != expStart || myExpEnd[s] != expEnd) return null;
+      return myOrigin[s] instanceof HeaderTok h ? h : null;
+    }
+
     /** The source kind of the expanded offset: one of the SRC_ constants, or -1 for a space between tokens. */
     public int kindAt(int expOffset) {
       int s = segmentAt(expOffset);
@@ -176,7 +263,7 @@ public final class ErlangMacroExpander {
     public @Nullable TextRange toSource(int expStart, int expEnd) {
       if (expEnd <= expStart) {
         int s = segmentAt(expStart);
-        if (s < 0 || myKind[s] == SRC_NONE) return null;
+        if (s < 0 || myKind[s] == SRC_NONE || myKind[s] == SRC_HEADER) return null;
         int at = mySrcStart[s] + (expStart - myExpStart[s]);
         return TextRange.create(at, at);
       }
@@ -184,7 +271,7 @@ public final class ErlangMacroExpander {
       int last = segmentAt(expEnd - 1);
       if (first < 0 || last < 0) return null;
       int kind = myKind[first];
-      if (kind == SRC_NONE) return null;
+      if (kind == SRC_NONE || kind == SRC_HEADER) return null;
       for (int i = first + 1; i <= last; i++) {
         if (myKind[i] != kind) return null;
         if (mySrcStart[i] < mySrcEnd[i - 1]) return null;
@@ -227,9 +314,14 @@ public final class ErlangMacroExpander {
   static final class Out {
     final StringBuilder text = new StringBuilder();
     int[] expStart = new int[64], expEnd = new int[64], srcStart = new int[64], srcEnd = new int[64], kind = new int[64];
+    Object[] origin = new Object[64];
     int n;
 
     void segment(int es, int ee, int ss, int se, int k) {
+      segment(es, ee, ss, se, k, null);
+    }
+
+    void segment(int es, int ee, int ss, int se, int k, @Nullable Object o) {
       if (k == SRC_VERBATIM && n > 0 && kind[n - 1] == SRC_VERBATIM && expEnd[n - 1] == es && srcEnd[n - 1] == ss) {
         expEnd[n - 1] = ee;
         srcEnd[n - 1] = se;
@@ -242,7 +334,9 @@ public final class ErlangMacroExpander {
         srcStart = Arrays.copyOf(srcStart, size);
         srcEnd = Arrays.copyOf(srcEnd, size);
         kind = Arrays.copyOf(kind, size);
+        origin = Arrays.copyOf(origin, size);
       }
+      origin[n] = o;
       expStart[n] = es;
       expEnd[n] = ee;
       srcStart[n] = ss;
@@ -275,10 +369,22 @@ public final class ErlangMacroExpander {
    * @param formCap the largest number of significant tokens an expanded form may have; a larger form is not expanded
    */
   public static @NotNull Expansion expand(@NotNull CharSequence text, @NotNull Lexer base, int formCap) {
+    return expand(text, base, formCap, null);
+  }
+
+  /** Expands the text with the macros of the included headers ({@code resolver} null: same-file macros only). */
+  public static @NotNull Expansion expand(@NotNull CharSequence text, @NotNull Lexer base, int formCap,
+                                          @Nullable IncludeResolver resolver) {
     Base b = Base.lex(base, text, 0, text.length(), 0);
-    Run run = new Run(b, formCap);
+    Run run = new Run(b, formCap, resolver);
     run.run();
-    return new Expansion(text, run.out.text.toString(), run.forms, run.outcomes, run.out);
+    Expansion e = new Expansion(text, run.out.text.toString(), run.forms, run.outcomes, run.out);
+    e.headerUses = run.headerUses;
+    e.headerAmbiguous = run.headerAmbiguous;
+    e.headerConditional = run.headerConditional;
+    e.sourceTokens = run.sigCount;
+    e.expandedTokens = run.sigCount + run.expandedDelta;
+    return e;
   }
 
   /** The tokens of the base lexer. */
@@ -308,6 +414,7 @@ public final class ErlangMacroExpander {
         b.start[b.n] = lexer.getTokenStart();
         b.end[b.n] = lexer.getTokenEnd();
         b.n++;
+        if ((b.n & 1023) == 0) ProgressManager.checkCanceled();
         lexer.advance();
       }
       return b;
@@ -319,10 +426,45 @@ public final class ErlangMacroExpander {
   }
 
   /** A token of a macro body, an argument or a result, with its source kind and absolute source range. */
-  record Tok(@NotNull IElementType type, @NotNull String text, int kind, int start, int end) {
+  public record Tok(@NotNull IElementType type, @NotNull String text, int kind, int start, int end, @Nullable Object origin) {
     Tok(@NotNull IElementType type, @NotNull String text) {
-      this(type, text, SRC_NONE, -1, -1);
+      this(type, text, SRC_NONE, -1, -1, null);
     }
+
+    Tok(@NotNull IElementType type, @NotNull String text, int kind, int start, int end) {
+      this(type, text, kind, start, end, null);
+    }
+  }
+
+  /** Lexes a header and keeps its directive forms. Checks for cancellation. */
+  public static @NotNull HeaderSummary summarize(@NotNull CharSequence text, @NotNull Lexer lexer, @NotNull Object header) {
+    Base b = Base.lex(lexer, text, 0, text.length(), 0);
+    Run run = new Run(b, Integer.MAX_VALUE, null);
+    List<Directive> directives = new ArrayList<>();
+    long hash = 17;
+    int defines = 0;
+    int p = 0;
+    while (p < run.sigCount) {
+      if ((p & 255) == 0) ProgressManager.checkCanceled();
+      int formEnd = p;
+      while (formEnd < run.sigCount - 1 && !run.isFormEnd(formEnd)) formEnd++;
+      String attribute = run.attributeName(p, formEnd);
+      if (attribute != null && DIRECTIVES.contains(attribute)) {
+        int di = directives.size();
+        List<Tok> toks = new ArrayList<>(formEnd - p + 1);
+        for (int q = p; q <= formEnd; q++) {
+          int raw = run.sig[q];
+          String t = b.text(raw);
+          toks.add(new Tok(b.type[raw], t, SRC_HEADER, b.start[raw], b.end[raw], new HeaderTok(header, di, q - p)));
+          hash = hash * 1_000_003L + t.hashCode();
+        }
+        hash = hash * 31 + 7;
+        directives.add(new Directive(attribute, List.copyOf(toks)));
+        if ("define".equals(attribute)) defines++;
+      }
+      p = formEnd + 1;
+    }
+    return new HeaderSummary(header, List.copyOf(directives), hash, run.sigCount, defines);
   }
 
   static final class Def {
@@ -332,6 +474,8 @@ public final class ErlangMacroExpander {
     final List<Tok> body;
     final String key;
     final boolean fragment;
+    Branch branch;
+    boolean fromHeader;
 
     Def(String name, int arity, List<String> params, List<Tok> body, boolean fragment) {
       this.name = name;
@@ -357,6 +501,24 @@ public final class ErlangMacroExpander {
   private record Selection(@Nullable Def def, @NotNull Outcome outcome) {
   }
 
+  /**
+   * A branch of a conditional directive. Conditions are not evaluated. A definition made inside a branch is visible
+   * only to uses inside the same branch, except in an {@code -ifndef(N)} branch that itself defines N (an include
+   * guard or a default value): such a branch is "transparent".
+   */
+  static final class Branch {
+    final String attribute;
+    final String condition;
+    final Branch parent;
+    boolean transparent;
+
+    Branch(String attribute, String condition, Branch parent) {
+      this.attribute = attribute;
+      this.condition = condition;
+      this.parent = parent;
+    }
+  }
+
   private record Use(int q, int last, Def def, List<Tok> result) {
   }
 
@@ -371,11 +533,16 @@ public final class ErlangMacroExpander {
     final EnumMap<Outcome, Integer> outcomes = new EnumMap<>(Outcome.class);
     int cursor; // next source offset to copy
     int formSubstitutedTokens;
-    int conditionalDepth;
+    Branch branch;
+    final @Nullable IncludeResolver resolver;
+    int headerUses, headerAmbiguous, headerConditional;
+    int replayDepth;
+    int expandedDelta;
 
-    Run(Base b, int formCap) {
+    Run(Base b, int formCap, @Nullable IncludeResolver resolver) {
       this.b = b;
       this.formCap = formCap;
+      this.resolver = resolver;
       int[] s = new int[b.n];
       int c = 0;
       for (int i = 0; i < b.n; i++) {
@@ -425,11 +592,13 @@ public final class ErlangMacroExpander {
       out.text.append(' ');
       Tok prev = null;
       for (Tok t : tokens) {
-        boolean glued = prev != null && prev.kind == t.kind && t.kind != SRC_NONE && prev.end == t.start;
+        boolean glued = prev != null && prev.kind == t.kind && t.kind != SRC_NONE && prev.end == t.start &&
+                        (t.kind != SRC_HEADER || prev.origin instanceof HeaderTok a && t.origin instanceof HeaderTok c &&
+                                                 a.header() == c.header() && a.directive() == c.directive());
         if (prev != null && !glued) out.text.append(' ');
         int es = out.text.length();
         out.text.append(t.text);
-        out.segment(es, out.text.length(), t.start, t.end, t.kind);
+        out.segment(es, out.text.length(), t.start, t.end, t.kind, t.origin);
         prev = t;
       }
       out.text.append(' ');
@@ -438,14 +607,14 @@ public final class ErlangMacroExpander {
     void run() {
       int p = 0;
       while (p < sigCount) {
+        ProgressManager.checkCanceled();
         int formStart = p;
         int formEnd = p;
         while (formEnd < sigCount - 1 && !isFormEnd(formEnd)) formEnd++;
         formSubstitutedTokens = 0;
         Form form = new Form(b.start[sig[formStart]], b.end[sig[formEnd]]);
         String attribute = attributeName(formStart, formEnd);
-        boolean directive = "define".equals(attribute) || "undef".equals(attribute) ||
-                            "ifdef".equals(attribute) || "ifndef".equals(attribute);
+        boolean directive = attribute != null && DIRECTIVES.contains(attribute);
         List<Use> uses = new ArrayList<>();
         boolean ambiguous = false, refused = false;
         if (!directive) {
@@ -474,6 +643,7 @@ public final class ErlangMacroExpander {
           }
           else {
             form.status = FormStatus.EXPANDED;
+            expandedDelta += size - (formEnd - formStart + 1);
             form.substitutedUses = uses.size();
             for (Use u : uses) if (!u.def.fragment) form.allFragments = false;
           }
@@ -490,18 +660,75 @@ public final class ErlangMacroExpander {
         flushTo(form.srcEnd);
         form.expEnd = out.text.length();
         forms.add(form);
-        if ("define".equals(attribute)) define(formStart, formEnd);
-        else if ("undef".equals(attribute)) undef(formStart, formEnd);
-        else if ("ifdef".equals(attribute) || "ifndef".equals(attribute) || "if".equals(attribute)) conditionalDepth++;
-        else if ("endif".equals(attribute) && conditionalDepth > 0) conditionalDepth--;
+        if (directive) {
+          List<Tok> toks = new ArrayList<>(formEnd - formStart + 1);
+          for (int q = formStart; q <= formEnd; q++) toks.add(tokAt(q, SRC_BODY));
+          directive(attribute, toks, null);
+        }
         p = formEnd + 1;
       }
       flushTo(b.text.length());
     }
 
     @Nullable String attributeName(int from, int to) {
-      if (to - from < 1 || st(from) != ERL_OP_MINUS || st(from + 1) != ERL_ATOM_NAME) return null;
-      return stext(from + 1);
+      if (to - from < 1 || st(from) != ERL_OP_MINUS) return null;
+      IElementType t = st(from + 1);
+      if (t == ERL_ATOM_NAME) return stext(from + 1);
+      String x = stext(from + 1); // keywords: -if, -else
+      return "if".equals(x) || "else".equals(x) ? x : null;
+    }
+
+    /** One directive of the file (owner null) or of a replayed header. */
+    void directive(String attribute, List<Tok> toks, @Nullable HeaderSummary owner) {
+      switch (attribute) {
+        case "define" -> define(toks, owner != null);
+        case "undef" -> undef(toks);
+        case "ifdef", "ifndef", "if" -> branch = new Branch(attribute, toks.size() > 3 ? toks.get(3).text() : "", branch);
+        case "elif", "else" -> {
+          if (branch != null) branch = new Branch(attribute, "", branch.parent);
+        }
+        case "endif" -> {
+          if (branch != null) branch = branch.parent;
+        }
+        case "include", "include_lib" -> {
+          if (resolver == null || owner != null) return; // a header's own includes are replayed by replay()
+          replay(resolver.resolve(null, attribute, new Directive(attribute, toks).includeString()));
+        }
+        default -> {
+        }
+      }
+    }
+
+    void replay(@Nullable HeaderSummary h) {
+      if (h == null || replayDepth > MAX_DEPTH) return;
+      replayDepth++;
+      try {
+        for (Directive d : h.directives) {
+          if (isInclude(d.attribute)) {
+            replay(resolver.resolve(h, d.attribute, d.includeString()));
+            continue;
+          }
+          directive(d.attribute, d.tokens, h);
+        }
+      }
+      finally {
+        replayDepth--;
+      }
+    }
+
+    boolean visible(Def d) {
+      for (Branch x = d.branch; x != null; x = x.parent) {
+        if (x.transparent) continue;
+        boolean enclosing = false;
+        for (Branch y = branch; y != null; y = y.parent) {
+          if (y == x) {
+            enclosing = true;
+            break;
+          }
+        }
+        if (!enclosing) return false;
+      }
+      return true;
     }
 
     Tok tokAt(int p, int kind) {
@@ -509,30 +736,35 @@ public final class ErlangMacroExpander {
       return new Tok(b.type[raw], b.text(raw), kind, b.start[raw], b.end[raw]);
     }
 
-    void define(int from, int to) {
-      int p = from + 3;
-      if (p > to || st(from + 2) != ERL_PAR_LEFT) return;
-      Name n = nameAt(p, to);
+    static IElementType type(List<Tok> t, int p) {
+      return p < t.size() ? t.get(p).type() : null;
+    }
+
+    void define(List<Tok> t, boolean fromHeader) {
+      int to = t.size() - 1;
+      int p = 3;
+      if (p > to || type(t, 2) != ERL_PAR_LEFT) return;
+      Name n = tokName(t, p);
       if (n == null) return;
       String name = n.name;
       p = n.last + 1;
       int arity = -1;
       List<String> params = new ArrayList<>();
-      if (st(p) == ERL_PAR_LEFT) {
+      if (type(t, p) == ERL_PAR_LEFT) {
         p++;
-        if (st(p) == ERL_PAR_RIGHT) {
+        if (type(t, p) == ERL_PAR_RIGHT) {
           p++;
         }
         else {
           while (true) {
-            if (st(p) != ERL_VAR) return;
-            params.add(stext(p));
+            if (type(t, p) != ERL_VAR) return;
+            params.add(t.get(p).text());
             p++;
-            if (st(p) == ERL_COMMA) {
+            if (type(t, p) == ERL_COMMA) {
               p++;
               continue;
             }
-            if (st(p) == ERL_PAR_RIGHT) {
+            if (type(t, p) == ERL_PAR_RIGHT) {
               p++;
               break;
             }
@@ -541,24 +773,26 @@ public final class ErlangMacroExpander {
         }
         arity = params.size();
       }
-      int bodyEnd = st(to) == ERL_DOT ? to - 1 : to;
-      if (st(bodyEnd) != ERL_PAR_RIGHT) return;
+      int bodyEnd = type(t, to) == ERL_DOT ? to - 1 : to;
+      if (type(t, bodyEnd) != ERL_PAR_RIGHT) return;
       List<Tok> body = new ArrayList<>();
-      if (st(p) == ERL_COMMA) {
-        for (int q = p + 1; q < bodyEnd; q++) body.add(tokAt(q, SRC_BODY));
+      if (type(t, p) == ERL_COMMA) {
+        body.addAll(t.subList(p + 1, bodyEnd));
       }
       else if (p != bodyEnd) {
         return;
       }
       if (PREDEFINED.contains(name)) return;
       Def def = new Def(name, arity, params, body, isFragment(body, params));
+      def.branch = branch;
+      def.fromHeader = fromHeader;
+      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition)) branch.transparent = true;
       defs.computeIfAbsent(name, k -> new ArrayList<>()).add(def);
     }
 
-    void undef(int from, int to) {
-      int p = from + 3;
-      if (conditionalDepth > 0 || st(from + 2) != ERL_PAR_LEFT) return;
-      Name n = nameAt(p, to);
+    void undef(List<Tok> t) {
+      if (branch != null || type(t, 2) != ERL_PAR_LEFT) return;
+      Name n = tokName(t, 3);
       if (n != null) defs.remove(n.name);
     }
 
@@ -623,8 +857,11 @@ public final class ErlangMacroExpander {
 
     Selection select(String name, int arity) {
       if (PREDEFINED.contains(name)) return new Selection(null, Outcome.PREDEFINED);
-      List<Def> list = defs.get(name);
-      if (list == null || list.isEmpty()) return new Selection(null, Outcome.NOT_IN_FILE);
+      List<Def> all = defs.get(name);
+      if (all == null || all.isEmpty()) return new Selection(null, Outcome.NOT_IN_FILE);
+      List<Def> list = new ArrayList<>(all.size());
+      for (Def d : all) if (visible(d)) list.add(d);
+      if (list.isEmpty()) return new Selection(null, Outcome.CONDITIONAL);
       boolean allNone = true;
       for (Def d : list) if (d.arity != -1) allNone = false;
       List<Def> candidates = new ArrayList<>();
@@ -676,9 +913,16 @@ public final class ErlangMacroExpander {
       Selection selection = select(name, arity);
       if (selection.def == null) {
         count(selection.outcome);
-        return selection.outcome;
+        if (selection.outcome == Outcome.AMBIGUOUS || selection.outcome == Outcome.CONDITIONAL) {
+          boolean header = false;
+          for (Def d : defs.get(name)) header |= d.fromHeader;
+          if (header && selection.outcome == Outcome.AMBIGUOUS) headerAmbiguous++;
+          if (header && selection.outcome == Outcome.CONDITIONAL) headerConditional++;
+        }
+        return selection.outcome == Outcome.CONDITIONAL ? Outcome.NOT_IN_FILE : selection.outcome;
       }
       Def def = selection.def;
+      if (def.fromHeader) headerUses++;
       if (def.arity == -1) {
         // a definition without parentheses: the argument list, if any, stays in the text
         last = nameLast;
