@@ -563,6 +563,22 @@ public final class ErlangMacroLayer {
     return cv.getValue().get();
   }
 
+  /** The gate steps for a variable reference, for tests. */
+  @TestOnly
+  public static @NotNull String explainForTests(@NotNull PsiReference ref) {
+    PsiElement element = ref.getElement();
+    ErlangFile file = layerFile(element);
+    if (file == null) return "no layer file";
+    Table t = table(file);
+    if (t == null) return "no table";
+    PsiElement form = topForm(element);
+    Copy c = peekCopy(file);
+    return "refusal=" + t.refusal + " names=" + t.names + " bodyVars=" + t.bodyVars + " form=" + (form == null ? null : form.getClass().getSimpleName()) +
+           " formUses=" + (form != null && formUsesMacro(t, form)) + " argVars=" + (form == null ? null : argumentVars(t, form)) +
+           " refClass=" + ref.getClass().getSimpleName() + " copy=" + (c == null ? null : c.expansion.text.length()) +
+           " answers=" + (c == null ? null : c.answers.keySet());
+  }
+
   /** Why the layer gives master's behaviour for the whole file (unresolved include, cycle, ...), or null. */
   @TestOnly
   public static @Nullable String refusalForTests(@NotNull PsiFile file) {
@@ -686,11 +702,15 @@ public final class ErlangMacroLayer {
   private static @NotNull Set<String> argumentVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
       Set<String> r = new HashSet<>();
-      // a macro use with arguments is a call whose callee is the macro: its parent holds the arguments (a superset)
-      for (ErlangMacros m : PsiTreeUtil.findChildrenOfType(form, ErlangMacros.class)) {
-        PsiElement call = m.getParent();
-        if (call == null || call == form) continue;
-        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(call, ErlangQVar.class)) r.add(v.getText());
+      // a variable inside a macro use: some element between it and the form starts with '?' (a superset)
+      for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(form, ErlangQVar.class)) {
+        for (PsiElement p = v.getParent(); p != null && p != form; p = p.getParent()) {
+          PsiElement first = PsiTreeUtil.firstChild(p);
+          if (first != null && first != v && first.textMatches("?")) {
+            r.add(v.getText());
+            break;
+          }
+        }
       }
       return r;
     });
@@ -813,6 +833,7 @@ public final class ErlangMacroLayer {
     if (file == null) return ResolveResult.EMPTY_ARRAY;
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) return ResolveResult.EMPTY_ARRAY;
+    if ("_".equals(element.getText())) return ResolveResult.EMPTY_ARRAY;
     PsiElement form = topForm(element);
     if (form == null || !formUsesMacro(t, form)) return ResolveResult.EMPTY_ARRAY;
     // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form

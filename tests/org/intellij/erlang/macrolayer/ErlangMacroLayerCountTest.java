@@ -262,6 +262,7 @@ public class ErlangMacroLayerCountTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(0, builds().size());
     myFixture.doHighlighting();
     PsiElement afterHl = varRef(f, "Xa + 1").resolve();
+    out("C5 explain " + ErlangMacroLayer.explainForTests(varRef(f, "Xa + 1")) + " bg=" + inBackground(() -> varRef(f, "Xa + 1").resolve()));
     out("C5 UI thread after highlighting: resolve=" + afterHl + " builds=" + builds().size() + " thread of the build=" +
         (builds().isEmpty() ? "-" : builds().getFirst().thread()));
     assertNotNull("the cached copy answers on the UI thread", afterHl);
