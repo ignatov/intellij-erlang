@@ -682,12 +682,12 @@ public final class ErlangMacroLayer {
     return b;
   }
 
-  /** Names of the variables inside macro arguments of the form. */
+  /** Names of the variables inside macro calls (their arguments) of the form. */
   private static @NotNull Set<String> argumentVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
       Set<String> r = new HashSet<>();
-      for (ErlangMacrosArg a : PsiTreeUtil.findChildrenOfType(form, ErlangMacrosArg.class)) {
-        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(a, ErlangQVar.class)) r.add(v.getText());
+      for (ErlangMacrosCall c : PsiTreeUtil.findChildrenOfType(form, ErlangMacrosCall.class)) {
+        for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(c, ErlangQVar.class)) r.add(v.getText());
       }
       return r;
     });

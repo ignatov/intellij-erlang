@@ -524,6 +524,13 @@ public class ErlangMacroLayerPerfTest extends ErlangLightPlatformCodeInsightFixt
         for (Map.Entry<PsiElement, PsiElement> e : layerVars.entrySet()) {
           if (offVars.get(e.getKey()) != null) continue;
           gainedVars++;
+          if (gainedVars <= 4) {
+            PsiElement k = e.getKey(), t = e.getValue();
+            diff.append(hc.header).append(" GAINED-VAR ").append(v.getName()).append(' ')
+              .append(context(f, "x|" + k.getTextRange().getStartOffset() + "|" + k.getText())).append(" -> ")
+              .append(t instanceof ErlangMacroLayerHeaderTarget ? t.toString() : t.getContainingFile().getName() + ":" + t.getTextRange()
+                + " " + (t == k ? "(itself)" : "")).append('\n');
+          }
           if (e.getValue() instanceof ErlangMacroLayerHeaderTarget ht) {
             headerTargets++;
             PsiElement nav = inBackground(ht::getNavigationElement);
