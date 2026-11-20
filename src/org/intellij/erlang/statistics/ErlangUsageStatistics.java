@@ -16,18 +16,35 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.codeInsight.daemon.HighlightDisplayKey;
 import com.intellij.codeInsight.hints.declarative.DeclarativeInlayHintsSettings;
+import com.intellij.codeInspection.LocalInspectionEP;
+import com.intellij.codeInspection.ex.InspectionProfileImpl;
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.profile.codeInspection.InspectionProjectProfileManager;
+import com.intellij.psi.search.FileTypeIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
+import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +52,7 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +66,10 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
   private static final Logger LOG = Logger.getInstance(ErlangUsageStatistics.class);
   private static final long TIMER_MINUTES = 45;
+  private static final int FILE_COUNT_LIMIT = 1001;
+  private static final Key<String> SNAPSHOT_DATE = Key.create("ErlangUsageStatistics.snapshotDate");
+  // true when the project has .erl or .hrl files; only such projects count
+  private static final Key<Boolean> ERLANG_PROJECT = Key.create("ErlangUsageStatistics.erlangProject");
   private static volatile Boolean ourAllowed;
 
   private final ErlangUsageCollector myCollector = new ErlangUsageCollector(
@@ -116,10 +138,46 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     ourAllowed = allowed;
   }
 
+  // only projects with Erlang modules or headers count; a .config or .app file alone may belong to another tool
+  public static boolean isErlangProject(@Nullable Project project) {
+    return project != null && !project.isDisposed() && Boolean.TRUE.equals(project.getUserData(ERLANG_PROJECT));
+  }
+
+  @TestOnly
+  public static void setErlangProjectForTests(@NotNull Project project, @Nullable Boolean erlang) {
+    project.putUserData(ERLANG_PROJECT, erlang);
+  }
+
+  public void setEnabled(boolean enabled) {
+    myCollector.setEnabled(enabled);
+    if (enabled) {
+      for (Project project : ProjectManager.getInstance().getOpenProjects()) {
+        project.putUserData(SNAPSHOT_DATE, null);
+        checkProject(project);
+      }
+    }
+  }
+
   // called once for each opened project
   void projectOpened(@NotNull Project project) {
     if (!isAllowed()) return;
     startTimer();
+    checkProject(project);
+  }
+
+  // finds out off the EDT, when the indices are ready, whether the project has Erlang files; then records its
+  // environment
+  private void checkProject(@NotNull Project project) {
+    if (!isAllowed() || project.isDisposed() || project.isDefault()) return;
+    ReadAction.nonBlocking(() -> countErlangFiles(project))
+      .inSmartMode(project)
+      .expireWhen(project::isDisposed)
+      .submit(AppExecutorUtil.getAppExecutorService())
+      .onSuccess(count -> {
+        project.putUserData(ERLANG_PROJECT, count > 0);
+        if (count == 0) return;
+        AppExecutorUtil.getAppExecutorService().execute(() -> recordProject(project, count));
+      });
   }
 
   private synchronized void startTimer() {
@@ -131,12 +189,93 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private void tick() {
     try {
       myCollector.flush();
+      for (Project project : ProjectManager.getInstance().getOpenProjects()) {
+        if (myCollector.isCounting() && !LocalDate.now().toString().equals(project.getUserData(SNAPSHOT_DATE))) {
+          checkProject(project);
+        }
+      }
       if (myCollector.isCounting()) myCollector.sendPending();
     }
     catch (Exception e) {
       // an exception would stop the timer
       LOG.debug("Erlang usage statistics", e);
     }
+  }
+
+  private static int countErlangFiles(@NotNull Project project) {
+    int[] count = {0};
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(project);
+    for (ErlangFileType type : List.of(ErlangFileType.MODULE, ErlangFileType.HEADER)) {
+      FileTypeIndex.processFiles(type, file -> {
+        ProgressManager.checkCanceled();
+        return ++count[0] < FILE_COUNT_LIMIT;
+      }, scope);
+    }
+    return count[0];
+  }
+
+  // the environment of the project for today, once a day
+  @RequiresBackgroundThread
+  private void recordProject(@NotNull Project project, int erlangFiles) {
+    if (!myCollector.isCounting() || project.isDisposed()) return;
+    String today = LocalDate.now().toString();
+    if (today.equals(project.getUserData(SNAPSHOT_DATE))) return;
+    project.putUserData(SNAPSHOT_DATE, today);
+    myCollector.setProperty(ErlangUsageProperty.PROJECT_SIZE, sizeBucket(erlangFiles));
+    boolean sdkConfigured = ErlangSdkType.getSdkPath(project) != null;
+    myCollector.setProperty(ErlangUsageProperty.SDK_CONFIGURED, String.valueOf(sdkConfigured));
+    myCollector.setProperty(ErlangUsageProperty.OTP, otp(project, sdkConfigured));
+    myCollector.setProperty(ErlangUsageProperty.REBAR, ReadAction.computeBlocking(() -> rebar(project)));
+    for (String inspection : ReadAction.computeBlocking(() -> changedInspections(project))) {
+      myCollector.setProperty(ErlangUsageProperty.CHANGED_INSPECTIONS, inspection);
+    }
+  }
+
+  // only a release that is already known: the statistics never start erl, also not in a project that is not trusted
+  @NotNull
+  static String otp(@NotNull Project project, boolean sdkConfigured) {
+    if (!sdkConfigured) return "none";
+    ErlangSdkRelease release = ErlangSdkType.getKnownProjectSdkRelease(project);
+    return release == null ? "unknown" : otpMajor(release);
+  }
+
+  @NotNull
+  static String sizeBucket(int erlangFiles) {
+    return erlangFiles <= 10 ? "up_to_10" : erlangFiles <= 100 ? "up_to_100" : erlangFiles <= 1000 ? "up_to_1000" : "over_1000";
+  }
+
+  // "R15" for R15B02, "27" for 27
+  @NotNull
+  static String otpMajor(@NotNull ErlangSdkRelease release) {
+    String otp = release.getOtpRelease();
+    int start = otp.startsWith("R") ? 1 : 0;
+    int end = start;
+    while (end < otp.length() && Character.isDigit(otp.charAt(end))) end++;
+    return end > start ? otp.substring(0, end) : "unknown";
+  }
+
+  // the rebar of the project: by the configured path, else "unknown" when the project has a rebar.config
+  @NotNull
+  private static String rebar(@NotNull Project project) {
+    RebarSettings settings = RebarSettings.getInstance(project);
+    if (!StringUtil.isEmptyOrSpaces(settings.getRebarPath())) return settings.isRebar3() ? "rebar3" : "rebar2";
+    VirtualFile baseDir = ProjectUtil.guessProjectDir(project);
+    return baseDir != null && baseDir.findChild("rebar.config") != null ? "unknown" : "none";
+  }
+
+  // the short names of this plugin's inspections that are on or off unlike their default, in the current profile
+  @NotNull
+  static List<String> changedInspections(@NotNull Project project) {
+    InspectionProfileImpl profile = InspectionProjectProfileManager.getInstance(project).getCurrentProfile();
+    return LocalInspectionEP.LOCAL_INSPECTION.getExtensionList().stream()
+      .filter(ep -> ep.getPluginDescriptor() != null && ErlangUsageCollector.PLUGIN_ID.equals(ep.getPluginDescriptor().getPluginId().getIdString()))
+      .filter(ep -> {
+        HighlightDisplayKey key = HighlightDisplayKey.find(ep.getShortName());
+        return key != null && profile.isToolEnabled(key, null) != ep.enabledByDefault;
+      })
+      .map(LocalInspectionEP::getShortName)
+      .limit(ErlangUsageProperty.MAX_LIST_SIZE)
+      .toList();
   }
 
   @NotNull

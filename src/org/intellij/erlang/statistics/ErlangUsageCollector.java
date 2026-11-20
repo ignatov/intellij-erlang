@@ -42,6 +42,7 @@ import java.util.function.Supplier;
  */
 public final class ErlangUsageCollector {
   private static final Logger LOG = Logger.getInstance(ErlangUsageCollector.class);
+  public static final String PLUGIN_ID = "org.jetbrains.erlang";
   // the first ask and two reminders
   public static final int MAX_ASKS = 3;
   // "Ask me later", Esc or a dialog closed without an answer asks again after this many days

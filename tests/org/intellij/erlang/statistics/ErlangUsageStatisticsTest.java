@@ -16,11 +16,21 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SdkModificator;
+import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.time.LocalDate;
 
 public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -32,6 +42,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     ErlangUsageStatistics.getInstance().resetForTests();
     collector().setSender(mySender);
     ErlangUsageStatistics.setAllowedForTests(true);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
   }
 
   @Override
@@ -40,6 +51,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       ErlangUsageStatistics.getInstance().resetForTests();
       collector().setSender(new ErlangAmplitudeSender());
       ErlangUsageStatistics.setAllowedForTests(null);
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), null);
     }
     catch (Throwable e) {
       addSuppressedException(e);
@@ -71,6 +83,40 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     collector().previewToday();
     assertTrue(collector().getState().days.isEmpty());
     assertNull(collector().getInstallationId());
+  }
+
+  public void testOtpReleaseNeverStartsErl() throws Exception {
+    File home = FileUtil.createTempDirectory("erlang-sdk", null);
+    File marker = new File(home, "erl-started");
+    File erl = new File(home, "bin/erl");
+    FileUtil.writeToFile(erl, "#!/bin/sh\ntouch '" + marker.getPath() + "'\n");
+    assertTrue(erl.setExecutable(true));
+    ProjectJdkImpl sdk = new ProjectJdkImpl("Erlang without version", ErlangSdkType.getInstance());
+    ProjectRootManager rootManager = ProjectRootManager.getInstance(getProject());
+    Sdk old = rootManager.getProjectSdk();
+    WriteAction.run(() -> {
+      SdkModificator modificator = sdk.getSdkModificator();
+      modificator.setHomePath(home.getPath());
+      modificator.commitChanges();
+      ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable());
+      rootManager.setProjectSdk(sdk);
+    });
+    assertSame(sdk, rootManager.getProjectSdk());
+    try {
+      assertEquals("unknown", ErlangUsageStatistics.otp(getProject(), true));
+      assertFalse(marker.exists());
+      WriteAction.run(() -> {
+        SdkModificator modificator = sdk.getSdkModificator();
+        modificator.setVersionString(ErlangSdkRelease.V_27_0.toString());
+        modificator.commitChanges();
+      });
+      assertEquals("27", ErlangUsageStatistics.otp(getProject(), true));
+      assertEquals("none", ErlangUsageStatistics.otp(getProject(), false));
+      assertFalse(marker.exists());
+    }
+    finally {
+      WriteAction.run(() -> rootManager.setProjectSdk(old));
+    }
   }
 
   // hostile values through every setter and through a changed state file never reach the JSON
