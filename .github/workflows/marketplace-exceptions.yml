@@ -17,14 +17,19 @@ name: Marketplace exceptions
 #     repository variable MARKETPLACE_EXCEPTIONS is "true"; then it runs in the mode run.
 #   - A manual run (workflow_dispatch) uses the mode of its input, default dry-run.
 #
-# What keeps the token in:
-#   - The token is the secret MARKETPLACE_EXCEPTIONS_TOKEN of the environment marketplace-exceptions, which the
-#     maintainer restricts to the branch master, so a run from another branch cannot read it. It is not the
-#     publishing token JETBRAINS_MARKETPLACE_TOKEN of release.yml.
-#   - Only the job copy enters the environment, and only its step "Copy the reports" gets the token. The job mode,
-#     which decides whether to run at all, has no secret. There is no pull_request trigger.
-#   - The script sends the token only to plugins.jetbrains.com, never to the storage link that Marketplace may
-#     redirect to, never prints it, and never sends a POST to Marketplace.
+# The token:
+#   - The step "Copy the reports" uses the secret MARKETPLACE_EXCEPTIONS_TOKEN when it exists (a repository secret or
+#     a secret of the environment marketplace-exceptions), else the publishing token JETBRAINS_MARKETPLACE_TOKEN of
+#     release.yml. The owner chose to reuse the publishing token; a dedicated read-only token can replace it later by
+#     adding the one secret, with no change here.
+#   - Why the token must stay in: the publishing token can upload a new plugin version to every user, and this job
+#     reads and parses data from outside (the reports of users). So the token reaches only that one step. The job
+#     mode, which decides whether to run at all, has no secret. There is no pull_request trigger. The script sends
+#     the token only to https://plugins.jetbrains.com (it refuses any other host, and never sends it to the storage
+#     link that Marketplace may redirect to or to GitHub), never prints it, and never sends a POST to Marketplace.
+#   - The environment marketplace-exceptions needs no setup: GitHub creates it, without rules, on the first run that
+#     uses it, and repository secrets stay available in it. The owner can later restrict it to master and keep a
+#     dedicated token there.
 # Variables: MARKETPLACE_EXCEPTIONS ("true" turns the scheduled run on), MARKETPLACE_EXCEPTIONS_MIN_VERSION (optional;
 # the oldest plugin release whose reports are filed, default 0.11.1300).
 
@@ -89,7 +94,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: marketplace-exceptions
-      # The environment is used for its secret and its branch policy only; this is not a deployment.
+      # Used only for a dedicated secret and a branch rule that the owner may add later; this is not a deployment.
       deployment: false
     steps:
     - uses: actions/checkout@v7
@@ -99,13 +104,14 @@ jobs:
       run: python3 -m unittest discover -s scripts/marketplace -p 'test_*.py'
     - name: Copy the reports
       env:
-        MARKETPLACE_TOKEN: ${{ secrets.MARKETPLACE_EXCEPTIONS_TOKEN }}
+        # The dedicated token wins when it exists; else the publishing token. See "The token" at the top.
+        MARKETPLACE_TOKEN: ${{ secrets.MARKETPLACE_EXCEPTIONS_TOKEN || secrets.JETBRAINS_MARKETPLACE_TOKEN }}
         GITHUB_TOKEN: ${{ github.token }}
         MARKETPLACE_MIN_VERSION: ${{ vars.MARKETPLACE_EXCEPTIONS_MIN_VERSION }}
         MODE: ${{ needs.mode.outputs.mode }}
       run: |
         if [[ -z "$MARKETPLACE_TOKEN" ]]; then
-          echo "::error::The secret MARKETPLACE_EXCEPTIONS_TOKEN of the environment marketplace-exceptions is not set."
+          echo "::error::Neither MARKETPLACE_EXCEPTIONS_TOKEN nor JETBRAINS_MARKETPLACE_TOKEN is set."
           exit 1
         fi
         python3 scripts/marketplace/exceptions.py "--$MODE"

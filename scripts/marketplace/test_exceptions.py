@@ -386,6 +386,31 @@ class SecretTest(unittest.TestCase):
         self.assertNotIn('perm:', text)
         return code, err
 
+    def test_marketplace_token_goes_only_to_plugins_jetbrains_com(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')]), group('B', [report(2, '0.11.1300')])],
+                                      traces={'1': TRACE})
+        http = FakeHttp(marketplace)
+        run(http)
+        marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1300'), report(3, '0.11.1301')])]).encode()
+        run(http)
+        run(http, '--probe')
+        with_token = [url for _, url, headers in http.requests if TOKEN in headers.get('Authorization', '')]
+        self.assertTrue(with_token)
+        self.assertTrue(all(url.startswith('https://plugins.jetbrains.com/') for url in with_token), with_token)
+        self.assertTrue(any(url == STORAGE for _, url, _ in http.requests))
+        self.assertTrue(any(url.startswith('https://api.github.com/') for _, url, _ in http.requests))
+        for _, url, headers in http.requests:
+            if not url.startswith('https://plugins.jetbrains.com/'):
+                self.assertNotIn(TOKEN, json.dumps(headers), url)
+
+    def test_marketplace_token_is_refused_for_another_host(self):
+        for base in ('http://plugins.jetbrains.com/api', 'https://plugins.jetbrains.com.evil.example/api',
+                     'https://evil.example/api', 'https://user@plugins.jetbrains.com/api'):
+            http = FakeHttp(FakeMarketplace([]))
+            with self.assertRaisesRegex(ea.Failure, 'sent only to https://plugins.jetbrains.com'):
+                ea.Marketplace(http, TOKEN, base=base).resolved()
+            self.assertEqual([], http.requests)
+
     def test_tokens_with_characters_a_token_cannot_have(self):
         for token in ('perm:SECRETPART1\nSECRETPART2', 'perm:SECRETPART\x00X', 'perm:SECRETPART\u2019X',
                       'perm:SECRETPART X'):

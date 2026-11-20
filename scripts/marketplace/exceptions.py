@@ -63,6 +63,7 @@ import urllib.parse
 import urllib.request
 
 MARKETPLACE = 'https://plugins.jetbrains.com/api'
+TOKEN_HOST = 'plugins.jetbrains.com'
 GITHUB = 'https://api.github.com'
 PLUGIN_ID = '7083'
 REPOSITORY = 'ignatov/intellij-erlang'
@@ -174,9 +175,13 @@ class Marketplace:
         self.base = '%s/plugins/%s' % (base, plugin_id)
 
     def _get(self, path, what):
-        """GETs base + path with the token. A redirect is followed without the token; its link is never shown."""
-        headers = {'User-Agent': USER_AGENT, 'Authorization': 'Bearer ' + self.token}
+        """GETs base + path with the token. A redirect is followed without the token; its link is never shown.
+        The token can be the publishing token of the plugin, so it goes only to TOKEN_HOST over https."""
         url = self.base + path
+        parts = urllib.parse.urlsplit(url)
+        if parts.scheme != 'https' or parts.netloc != TOKEN_HOST:
+            raise Failure('the Marketplace token is sent only to https://%s' % TOKEN_HOST)
+        headers = {'User-Agent': USER_AGENT, 'Authorization': 'Bearer ' + self.token}
         response = self.http.request('GET', url, headers)
         hops = 0
         while response.status in REDIRECTS:
