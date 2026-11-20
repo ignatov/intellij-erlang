@@ -12,6 +12,9 @@ Marketplace (no documentation; the paths come from the code of the Marketplace w
   GET /api/plugins/{id}/exceptions/resolved  the titles of the groups that are resolved on Marketplace, JSON.
   GET /api/plugins/{id}/exceptions/{reportId}/stacktrace
                                              the stack trace of one report, text. At most one per new or changed group.
+  GET /api/plugins/{id}/updates?size=100&page=N
+                                             the published plugin versions with their upload time (cdate), JSON.
+                                             This is a public call: it is sent without the token.
 The script never sends a POST to Marketplace. The token is read from the environment variable MARKETPLACE_TOKEN.
 
 GitHub: the REST API with GITHUB_TOKEN. One list call (with pages) finds the issues with the label
@@ -21,9 +24,15 @@ versions that the body shows, what the comments have announced so far, and for a
 the newest plugin release at that time.
 
 Rules:
-  - A group is filed only when a report comes from a plugin release (0.N.N) >= --min-version. Groups that are
+  - A report counts only if its plugin version was published when the report was sent: a 0.N.N version that
+    Marketplace lists (or, as a fallback, a v0.N.N release of this repository), and a report time no more than
+    PUBLISH_TOLERANCE seconds before the publication. Other reports come from local builds (for example the release
+    smoke test runs a build before it is published); they are dropped and counted. Counts, versions, dates and the
+    choice of the newest report use only the reports that remain; a group with none left is skipped and counted.
+  - A new issue is filed only when a report comes from a plugin release (0.N.N) >= --min-version. Groups that are
     resolved on Marketplace, freeze groups (titles that start with "F:") and malformed groups are skipped and counted.
-  - A known open issue whose group has more reports or new plugin versions gets a new body and one short comment.
+  - A known open issue whose group has another report count or other plugin versions gets a new body and one short
+    comment.
     The body is written first and says that a comment is due; the comment carries a hidden marker; then the body says
     that it was posted. So a run that stops between the steps loses no comment and posts none twice.
   - The first run that sees an issue closed (as completed) stores the newest plugin release (the newest v0.N.N
@@ -40,7 +49,8 @@ Rules:
 
 Modes:
   --probe    only check access: print the HTTP status of /exceptions/resolved and the top-level JSON type and keys.
-  --dry-run  print what a run would do and the body of the first new issue; write nothing.
+  --dry-run  print what a run would do and the body of the first new issue; write nothing. Also print the shapes of
+             the trace lines that were not kept (letters become a, digits 0), so that a new trace format shows up.
   --run      write the issues.
 --fixture DIR reads Marketplace from files instead (exceptions.json, resolved.json, stacktrace/<reportId>.txt, and
 optionally issues.json and releases.json for GitHub); it is for local checks with --dry-run only.
@@ -106,6 +116,7 @@ RELEASE_VERSION = re.compile(r'0\.[0-9]+\.[0-9]+')
 IDE_BUILD = re.compile(r'[A-Z]{2,3}-[0-9]+(?:\.[0-9]+)+')
 OS_NAME = re.compile(r'(?:Windows|macOS|Mac OS X|Linux)(?: [0-9]+(?:\.[0-9]+)*)?')
 OTHER_OS = 'other'
+PUBLISH_TOLERANCE = 600
 CLOSED_AT = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z')
 MAX_SECONDS = 253402300799  # 9999-12-31T23:59:59Z
 
@@ -200,6 +211,24 @@ class Marketplace:
     def status(self, path, what):
         return self._get(path, what)
 
+    def publications(self):
+        """The published versions; see parse_publications. A public call: no token, no redirect."""
+        found = {}
+        for page in range(1, 11):
+            url = '%s/updates?size=100&page=%d' % (self.base, page)
+            parts = urllib.parse.urlsplit(url)
+            if parts.scheme != 'https' or parts.netloc != TOKEN_HOST:
+                raise Failure('the update list is read only from https://%s' % TOKEN_HOST)
+            response = self.http.request('GET', url, {'User-Agent': USER_AGENT})
+            if response.status != 200:
+                raise Failure('the update list: HTTP %d' % response.status)
+            data = response.json('the update list')
+            for version, seconds in parse_publications(data).items():
+                found[version] = min(found.get(version, seconds), seconds)
+            if len(data) < 100:
+                return found
+        return found
+
     def groups(self):
         response = self._get('/exceptions', 'the exception list')
         if response.status != 200:
@@ -243,6 +272,11 @@ class FixtureMarketplace:
             return set()
         return parse_resolved(Response(200, {}, self._read('resolved.json')).json('resolved.json'))
 
+    def publications(self):
+        if not os.path.exists(os.path.join(self.directory, 'updates.json')):
+            return {}
+        return parse_publications(Response(200, {}, self._read('updates.json')).json('updates.json'))
+
     def stacktrace(self, report_id):
         path = os.path.join('stacktrace', '%s.txt' % report_id)
         if not re.fullmatch(r'[0-9]+', report_id) or not os.path.exists(os.path.join(self.directory, path)):
@@ -272,6 +306,7 @@ class Group:
         self.reports = reports
         self.hidden = hidden  # field name -> the number of values that failed their pattern
         self.key = group_key(title)
+        self.unpublished = 0  # reports dropped because their builds were not published
 
     def versions(self):
         return sort_versions({report.plugin_version for report in self.reports if report.plugin_version})
@@ -295,21 +330,99 @@ class Group:
 
 
 class Report:
-    def __init__(self, report_id, timestamp, app_build, os_name, plugin_version):
+    def __init__(self, report_id, timestamp, app_build, os_name, plugin_version, hidden=None):
         self.id = report_id
-        self.timestamp = timestamp
+        self.timestamp = timestamp  # YYYY-MM-DDTHH:MM:SS in UTC, or None
         self.app_build = app_build
         self.os_name = os_name
         self.plugin_version = plugin_version
+        self.hidden = hidden or {}  # field name -> 1 when the value failed its pattern
+
+    def seconds(self):
+        if not self.timestamp:
+            return None
+        return int(datetime.datetime.strptime(self.timestamp, '%Y-%m-%dT%H:%M:%S').replace(
+            tzinfo=datetime.timezone.utc).timestamp())
 
 
 class Groups(list):
-    """The groups of the exception list, with the number of malformed groups and reports that were skipped."""
+    """The groups of the exception list, with the number of malformed groups and reports that were skipped, and of
+    reports dropped because their builds were not published."""
 
-    def __init__(self, groups, malformed_groups, malformed_reports):
+    def __init__(self, groups, malformed_groups, malformed_reports, unpublished_reports=0):
         super().__init__(groups)
         self.malformed_groups = malformed_groups
         self.malformed_reports = malformed_reports
+        self.unpublished_reports = unpublished_reports
+
+
+def published_only(groups, publications, fallback=lambda: {}):
+    """The groups with only the reports whose plugin version was published when the report was sent.
+    publications maps a 0.N.N version to its publication time in seconds; fallback is called at most once, when a
+    version is not in it, and gives more of them (the GitHub releases). The report count of a group goes down by the
+    number of its dropped reports (reports that Marketplace counts but does not list stay counted); a group with no
+    listed report left has the count 0 and no reports, and plan() skips it unless its issue is open."""
+    known = dict(publications)
+    asked = []
+    kept = []
+    dropped_reports = 0
+    for group in groups:
+        remaining = []
+        for report in group.reports:
+            version = report.plugin_version
+            if version and RELEASE_VERSION.fullmatch(version) and version not in known and not asked:
+                asked.append(True)
+                for name, seconds in (fallback() or {}).items():
+                    known.setdefault(name, seconds)
+            published = known.get(version) if version else None
+            sent = report.seconds()
+            if published is not None and sent is not None and sent >= published - PUBLISH_TOLERANCE:
+                remaining.append(report)
+        dropped = len(group.reports) - len(remaining)
+        dropped_reports += dropped
+        hidden = {field: sum(report.hidden.get(field, 0) for report in remaining) for field in group.hidden}
+        count = max(len(remaining), group.report_count - dropped) if remaining else 0
+        result = Group(group.title, count, remaining, hidden)
+        result.unpublished = dropped
+        kept.append(result)
+    return Groups(kept, getattr(groups, 'malformed_groups', 0), getattr(groups, 'malformed_reports', 0),
+                  dropped_reports)
+
+
+def parse_publications(data):
+    """0.N.N version -> publication time in seconds, from the update list of Marketplace (version, cdate in epoch
+    milliseconds as a number or a string). Updates that are not approved are not published. Unknown entries are
+    skipped; a top level that is not a list is a Failure."""
+    if not isinstance(data, list):
+        raise Failure('the update list has an unknown shape: %s' % keys_of(data))
+    found = {}
+    for item in data:
+        if not isinstance(item, dict) or item.get('approve') is False:
+            continue
+        version = item.get('version')
+        cdate = item.get('cdate')
+        if isinstance(cdate, str) and re.fullmatch(r'[0-9]{1,15}', cdate):
+            cdate = int(cdate)
+        if (not isinstance(version, str) or not RELEASE_VERSION.fullmatch(version) or isinstance(cdate, bool)
+                or not isinstance(cdate, int) or not 0 <= cdate <= MAX_SECONDS * 1000):
+            continue
+        found[version] = min(found.get(version, cdate // 1000), cdate // 1000)
+    return found
+
+
+def release_times_of(items):
+    """0.N.N version -> publication time in seconds, from the GitHub releases (tag v0.N.N, published_at)."""
+    found = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or item.get('draft'):
+            continue
+        tag = item.get('tag_name')
+        at = item.get('published_at')
+        if (isinstance(tag, str) and re.fullmatch(r'v0\.[0-9]+\.[0-9]+', tag) and isinstance(at, str)
+                and CLOSED_AT.fullmatch(at)):
+            found[tag[1:]] = int(datetime.datetime.strptime(at, '%Y-%m-%dT%H:%M:%SZ').replace(
+                tzinfo=datetime.timezone.utc).timestamp())
+    return found
 
 
 def parse_groups(data):
@@ -359,10 +472,14 @@ def parse_report(item, hidden):
     report_id = str(report_id)
     if not re.fullmatch(r'[0-9]{1,20}', report_id) or int(report_id) >= 2 ** 64:
         return None
-    return Report(report_id, parse_time(item.get('timestamp')),
-                  checked_value(item.get('appBuild'), IDE_BUILD, hidden, 'appBuild'),
-                  os_name(item.get('osName')),
-                  checked_value(item.get('pluginVersion'), DISPLAY_VERSION, hidden, 'pluginVersion'))
+    own = {'pluginVersion': 0, 'appBuild': 0}
+    result = Report(report_id, parse_time(item.get('timestamp')),
+                    checked_value(item.get('appBuild'), IDE_BUILD, own, 'appBuild'),
+                    os_name(item.get('osName')),
+                    checked_value(item.get('pluginVersion'), DISPLAY_VERSION, own, 'pluginVersion'), own)
+    for field, value in own.items():
+        hidden[field] += value
+    return result
 
 
 def checked_value(value, pattern, hidden, field):
@@ -444,7 +561,11 @@ ZERO_WIDTH = '​'
 
 def redact(text):
     """Removes links, home and other private paths, e-mail addresses, mentions, issue references, backticks and HTML
-    comments from text."""
+    comments from text, and breaks lines that start with "Signature:".
+
+    The factory dispatcher trusts github-actions[bot], the author of these issues, when it looks for its own markers
+    on public issues: HTML comments that start with "<!-- factory:" and lines that start with "Signature:". So no
+    text from a report may keep either in a working form; test_exceptions.MarkerTest pins it."""
     text = EMAIL.sub('<e-mail removed>', text)
     for pattern, replacement in PATHS:
         text = pattern.sub(replacement, text)
@@ -452,15 +573,18 @@ def redact(text):
     text = re.sub(r'@(?=[A-Za-z0-9_-])', '@' + ZERO_WIDTH, text)
     text = re.sub(r'#(?=[0-9])', '#' + ZERO_WIDTH, text)
     text = text.replace('<!--', '<!' + ZERO_WIDTH + '--').replace('-->', '--' + ZERO_WIDTH + '>')
+    text = re.sub(r'(?im)^([ \t]*signature)([ \t]*:)', r'\1' + ZERO_WIDTH + r'\2', text)
     return text
 
 
 def clean_title(title):
     """The title cut to TITLE_RAW_LIMIT characters, percent-decoded, without paths, links and e-mail addresses, with
-    only letters, digits, spaces and . $ : < > _ - left, GH-N references broken, and cut to TITLE_LIMIT."""
+    only letters, digits, spaces and . $ : < > _ - left, GH-N references and "Signature:" broken, and cut to
+    TITLE_LIMIT."""
     title = redact(urllib.parse.unquote(title[:TITLE_RAW_LIMIT], errors='replace'))
     title = re.sub(r'[^\w.$:<> -]', ' ', title, flags=re.ASCII)
     title = re.sub(r'\bGH-(?=[0-9])', 'GH- ', title, flags=re.IGNORECASE)
+    title = re.sub(r'(signature) *:', r'\1 -', title, flags=re.IGNORECASE)
     title = re.sub(r' +', ' ', title).strip()
     if len(title) > TITLE_LIMIT:
         title = title[:TITLE_LIMIT - 3].rstrip() + '...'
@@ -471,58 +595,159 @@ IDENTIFIER = r'[A-Za-z_$][\w$]*'
 CLASS_NAME = re.compile(r'(?:[a-z_$][\w$]*\.)+[A-Z_$][\w$]*', re.ASCII)
 HEADER = re.compile(r'(?P<cls>[^\s:]+)(?P<rest>:.*)?')
 NESTED = re.compile(r'(?P<indent>[ \t]*)(?P<kind>Caused by|Suppressed): ?(?P<what>.*)')
+# [at ][module/]pkg.Class.method(source) [~][jar:version]. The class can be a hidden lambda class
+# (Foo$$Lambda/0x1f or Foo$$Lambda$12/345); the method can be <init>, <clinit> or a Kotlin name with "-".
 FRAME = re.compile(
-    r'(?P<indent>[ \t]*)at (?P<frame>(?:[\w.$@-]*/){0,2}' + IDENTIFIER + r'(?:\.' + IDENTIFIER + r'){1,}\.'
-    r'(?:' + IDENTIFIER + r'|<init>|<clinit>)'
-    r'\((?:[\w$-]+\.(?:java|kt|kts|groovy|scala):[0-9]+|Unknown Source|Native Method)\))'
-    r'(?: ~\[[\w.:?-]*\])?[ \t]*', re.ASCII)
+    r'(?P<indent>[ \t]*)(?:at[ \t]+)?(?P<frame>(?:[\w.$@-]*/){0,2}(?:' + IDENTIFIER + r'\.)+' + IDENTIFIER +
+    r'(?:\$\$Lambda(?:\$[0-9]+)?/(?:0x[0-9a-f]+|[0-9]+))?'
+    r'\.(?:[A-Za-z_$][\w$-]*|<init>|<clinit>)'
+    r'\((?:[\w$-]+(?:\.[\w$-]+)*\.(?:java|kt|kts|groovy|scala)(?::[0-9]+)?|SourceFile(?::[0-9]+)?|Unknown Source|Native Method)\))'
+    r'(?:[ \t]*~?\[[\w.:?+-]*\])?[ \t]*', re.ASCII)
 MORE = re.compile(r'(?P<indent>[ \t]*)\.\.\. (?P<count>[0-9]{1,6}) (?P<what>more|common frames omitted)[ \t]*')
+SHAPE_INPUT_LIMIT = 200
+SHAPE_LIMIT = 12
+SHAPE_PUNCTUATION = set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ')
 
 
-def redact_trace(text):
-    """Keeps the stack frames of a strict shape (at [module/]pkg.Class.method(File.java:N | Unknown Source | Native
-    Method)) and the "... N more" lines. The first line and the "Caused by:" and "Suppressed:" lines keep only a Java
-    class name, and only when the next kept line is a frame; else they become REMOVED. Messages become
-    MESSAGE_REMOVED; every other line is dropped. Only the first TRACE_INPUT_LIMIT characters are read, and lines
-    longer than TRACE_LINE_INPUT_LIMIT are dropped, so that the patterns stay fast."""
-    items = []  # (kind, value): kind is 'header', 'frame' or 'more'
+def unescape_trace(text):
+    """The trace as text: a trace sent as one JSON string is decoded, and literal \n, \r\n and \t sequences become
+    line breaks and tabs when there are more of them than real line breaks."""
+    stripped = text.strip()
+    if len(stripped) >= 2 and stripped[0] == '"' and stripped[-1] == '"':
+        try:
+            value = json.loads(stripped)
+        except (ValueError, RecursionError):
+            value = None
+        if isinstance(value, str):
+            text = value
+    if text.count('\\n') > text.count('\n'):
+        text = text.replace('\\r\\n', '\n').replace('\\n', '\n').replace('\\r', '\n').replace('\\t', '\t')
+    return text
+
+
+def line_shape(line):
+    """The shape of a line, safe to print in a public log: every letter becomes a, every digit 0, other characters
+    than ASCII punctuation and spaces ?, a backtick ', and runs of a, 0 and spaces become X{n}. Leading tabs are \t, leading
+    spaces \s{n}. Only the first SHAPE_INPUT_LIMIT characters are read."""
+    lead = re.match(r'[ \t]*', line).group(0)
+    shape = []
+    for run in re.finditer(r'\t+| +', lead):
+        marker = '\\t' if run.group(0)[0] == '\t' else '\\s'
+        shape.append(marker if len(run.group(0)) == 1 else '%s{%d}' % (marker, len(run.group(0))))
+    rest = line[len(lead):]
+    classes = []
+    for char in rest[:SHAPE_INPUT_LIMIT]:
+        if char.isalpha():
+            classes.append('a')
+        elif char.isdigit() or char.isnumeric():
+            classes.append('0')
+        elif char == '`':
+            classes.append("'")
+        elif char in SHAPE_PUNCTUATION:
+            classes.append(char)
+        else:
+            classes.append('?')
+    for run in re.finditer(r'a+|0+| +|[^a0 ]', ''.join(classes)):
+        text = run.group(0)
+        shape.append(text if len(text) == 1 or text[0] not in 'a0 ' else '%s{%d}' % (text[0], len(text)))
+    if len(rest) > SHAPE_INPUT_LIMIT:
+        shape.append('...(+%d)' % (len(rest) - SHAPE_INPUT_LIMIT))
+    return ''.join(shape).replace('<!--', '<!' + ZERO_WIDTH + '--').replace('-->', '--' + ZERO_WIDTH + '>')
+
+
+class Shapes:
+    """The shapes of the trace lines that were not kept, with their counts, for the dry run."""
+
+    def __init__(self):
+        self.counts = {}
+
+    def add(self, line):
+        shape = line_shape(line)
+        self.counts[shape] = self.counts.get(shape, 0) + 1
+
+    def report(self):
+        if not self.counts:
+            return 'Every line of the stack traces that were read was kept.\n\n'
+        ranked = sorted(self.counts.items(), key=lambda item: -item[1])
+        lines = ['Shapes of the stack trace lines that were not kept (letters are a, digits 0; at most %d):'
+                 % SHAPE_LIMIT]
+        lines += ['%6d  %s' % (count, shape) for shape, count in ranked[:SHAPE_LIMIT]]
+        if len(ranked) > SHAPE_LIMIT:
+            lines.append('        and %d more shapes' % (len(ranked) - SHAPE_LIMIT))
+        return '\n'.join(lines) + '\n\n'
+
+
+def analyse_trace(text, shapes=None):
+    """The redacted trace and the number of frames in it. Keeps the stack frames of a strict shape ([at ][module/]
+    pkg.Class.method(File.java[:N] | SourceFile[:N] | Unknown Source | Native Method), a jar suffix dropped) and the
+    "... N more" lines. The first line and the "Caused by:" and "Suppressed:" lines keep only a Java class name, and
+    only when the next kept line is a frame; else they become REMOVED. Messages become MESSAGE_REMOVED. Other lines
+    are dropped, and each run of dropped lines becomes one line "<N lines removed>". A trace that starts with a frame
+    (it was cut at the start) has no first line. Only the first TRACE_INPUT_LIMIT characters are read, and only the
+    first TRACE_LINE_INPUT_LIMIT characters of a line, so that the patterns stay fast; a longer line is never a
+    frame. The shapes of the lines that were
+    not kept go to shapes."""
+    items = []  # (kind, value): kind is 'header', 'frame', 'more' or 'removed' (value: the raw line)
     header_seen = False
-    for line in text[:TRACE_INPUT_LIMIT].replace('\r\n', '\n').replace('\r', '\n').split('\n'):
+    text = unescape_trace(text[:2 * TRACE_INPUT_LIMIT])[:TRACE_INPUT_LIMIT]
+    for line in text.replace('\r\n', '\n').replace('\r', '\n').split('\n'):
         line = line.rstrip()
-        if not line.strip() or (header_seen and len(line) > TRACE_LINE_INPUT_LIMIT):
+        if not line.strip():
             continue
+        cut = len(line) > TRACE_LINE_INPUT_LIMIT
+        line = line[:TRACE_LINE_INPUT_LIMIT]
         nested = NESTED.fullmatch(line)
-        frame = FRAME.fullmatch(line)
+        frame = None if cut else FRAME.fullmatch(line)
         more = MORE.fullmatch(line)
-        if not header_seen:
-            items.append(('header', ('', None, line.strip()[:TRACE_LINE_INPUT_LIMIT])))
-            header_seen = True
+        if not header_seen and not frame:
+            items.append(('header', ('', None, line.strip(), line)))
         elif nested:
-            items.append(('header', (nested.group('indent'), nested.group('kind'), nested.group('what'))))
+            items.append(('header', (nested.group('indent'), nested.group('kind'), nested.group('what'), line)))
         elif frame:
-            items.append(('frame', '%sat %s' % (frame.group('indent'), frame.group('frame'))))
+            items.append(('frame', '%sat %s' % (frame.group('indent') or '\t', frame.group('frame'))))
         elif more:
             items.append(('more', '%s... %s %s' % (more.group('indent'), more.group('count'), more.group('what'))))
-    result = []
-    for index, (kind, value) in enumerate(items):
-        if kind != 'header':
-            result.append(value)
         else:
-            indent, prefix, what = value
-            following = items[index + 1][0] if index + 1 < len(items) else None
+            items.append(('removed', line))
+        header_seen = True
+    result = []
+    frames = 0
+    removed = 0
+    for index, (kind, value) in enumerate(items):
+        if kind == 'removed':
+            removed += 1
+            if shapes is not None:
+                shapes.add(value)
+            if index + 1 < len(items) and items[index + 1][0] == 'removed':
+                continue
+            result.append('<%d %s removed>' % (removed, 'line' if removed == 1 else 'lines'))
+            removed = 0
+        elif kind == 'header':
+            indent, prefix, what, raw = value
+            following = next((other for other, _ in items[index + 1:] if other != 'removed'), None)
             match = HEADER.fullmatch(what.strip())
             if following == 'frame' and match and CLASS_NAME.fullmatch(match.group('cls')):
                 shown = match.group('cls') + (': ' + MESSAGE_REMOVED if match.group('rest') is not None else '')
             else:
                 shown = REMOVED
+                if shapes is not None:
+                    shapes.add(raw)
             result.append('%s%s%s' % (indent, prefix + ': ' if prefix else '', shown))
+        else:
+            frames += kind == 'frame'
+            result.append(value)
         if len(result) >= TRACE_LINE_LIMIT:
             result.append('\t... (cut)')
             break
     trace = redact('\n'.join(result))
     if len(trace) > TRACE_CHAR_LIMIT:
         trace = trace[:TRACE_CHAR_LIMIT] + '\n\t... (cut)'
-    return trace
+    return trace, frames
+
+
+def redact_trace(text, shapes=None):
+    """The redacted trace; see analyse_trace."""
+    return analyse_trace(text, shapes)[0]
 
 
 # ---------------------------------------------------------------- issues
@@ -677,14 +902,27 @@ def update_comment(group, state, reopened_after=None):
     if reopened_after:
         parts.append('Reopened: a report came from plugin version %s, which is newer than %s, the newest release '
                      'when this issue was closed.' % (code(group.newest_release()), code(reopened_after)))
+    gone_versions = [version for version in state['versions'] if version not in group.state_versions()]
     if new_reports > 0:
         parts.append('%d new %s (%d in total).' % (new_reports, 'report' if new_reports == 1 else 'reports',
                                                    group.report_count))
+    elif new_reports < 0:
+        parts.append(lower_count_text(group.report_count, noted['count'], group.unpublished))
     if new_versions:
         parts.append('New plugin versions: %s.' % ', '.join(code(version) for version in new_versions))
-    elif not reopened_after:
+    elif not reopened_after and new_reports >= 0 and not gone_versions:
         parts.append('No new plugin versions.')
+    if gone_versions:
+        parts.append('Plugin versions no longer counted: %s.' % ', '.join(code(version) for version in gone_versions))
     return ' '.join(parts)
+
+
+def lower_count_text(count, before, unpublished):
+    text = 'The report count is now %d, not %d.' % (count, before)
+    if unpublished:
+        text += (' Reports from plugin builds that were not published when the report was sent (for example local '
+                 'pre-release builds) are no longer counted.')
+    return text
 
 
 def note_comment(state):
@@ -694,6 +932,8 @@ def note_comment(state):
     if new_reports > 0:
         parts.append('%d new %s (%d in total).' % (new_reports, 'report' if new_reports == 1 else 'reports',
                                                    state['count']))
+    elif new_reports < 0:
+        parts.append(lower_count_text(state['count'], noted_of(state)['count'], 0))
     if state['versions']:
         parts.append('Newest plugin version: %s.' % code(state['versions'][0]))
     return ' '.join(parts) or 'The reports changed.'
@@ -738,12 +978,20 @@ class GitHub:
                 return found
         raise Failure('more than 5000 issues have the label %s' % LABEL)
 
+    def releases(self):
+        if getattr(self, '_releases', None) is None:
+            items = self._call('GET', '/releases?per_page=100').json('the GitHub release list')
+            if not isinstance(items, list):
+                raise Failure('the GitHub release list is not a list')
+            self._releases = items
+        return self._releases
+
     def latest_release(self):
         """The newest plugin release, the largest v0.N.N tag of a published release, without the v; or None."""
-        items = self._call('GET', '/releases?per_page=100').json('the GitHub release list')
-        if not isinstance(items, list):
-            raise Failure('the GitHub release list is not a list')
-        return newest_release_of(items)
+        return newest_release_of(self.releases())
+
+    def release_times(self):
+        return release_times_of(self.releases())
 
     def has_comment(self, number, marker):
         for page in range(1, 11):
@@ -810,6 +1058,9 @@ class FixtureGitHub:
     def latest_release(self):
         return newest_release_of(self._load('releases.json'))
 
+    def release_times(self):
+        return release_times_of(self._load('releases.json'))
+
     def has_comment(self, number, marker):
         return False
 
@@ -826,7 +1077,7 @@ class Action:
         self.release = release  # 'record': the newest release now; 'reopen': the one stored at the close
 
 
-COUNTS = ('groups', 'malformed_groups', 'malformed_reports', 'resolved', 'freeze', 'old', 'duplicate', 'unchanged',
+COUNTS = ('groups', 'malformed_groups', 'malformed_reports', 'unpublished_reports', 'unpublished_groups', 'resolved', 'freeze', 'old', 'duplicate', 'unchanged',
           'closed', 'waiting_new', 'waiting_updates')
 
 
@@ -836,6 +1087,7 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
     counts = {name: 0 for name in COUNTS}
     counts['malformed_groups'] = getattr(groups, 'malformed_groups', 0)
     counts['malformed_reports'] = getattr(groups, 'malformed_reports', 0)
+    counts['unpublished_reports'] = getattr(groups, 'unpublished_reports', 0)
     by_key = {}
     for issue in sorted(issues, key=lambda issue: (issue['state'] != 'open', issue['number'])):
         key = read_key(issue['body'])
@@ -858,10 +1110,16 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
         if group.title.startswith('F:'):
             counts['freeze'] += 1
             continue
-        if not any(version_key(version) >= minimum for version in group.releases()):
+        issue = by_key.get(group.key)
+        emptied = group.unpublished and not group.reports
+        if emptied and (issue is None or issue['state'] != 'open'):
+            # Every listed report came from a build that was not published; an open issue is updated to say so.
+            counts['unpublished_groups'] += 1
+            continue
+        if issue is None and not any(version_key(version) >= minimum for version in group.releases()):
+            # The minimum is for new issues; a known issue keeps following its group.
             counts['old'] += 1
             continue
-        issue = by_key.get(group.key)
         if issue is None:
             if new < max_new:
                 actions.append(Action('create', group))
@@ -872,9 +1130,8 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
         state = read_state(issue['body']) or empty_state()
         action = None
         if issue['state'] == 'open':
-            grew = group.report_count > state['count'] or any(
-                version not in state['versions'] for version in group.state_versions())
-            if grew:
+            changed = group.report_count != state['count'] or group.state_versions() != state['versions']
+            if changed:
                 action = Action('update', group, issue, state)
             elif noted_of(state)['key'] != content_key(state['count'], state['versions']):
                 action = Action('note', group, issue, state)
@@ -898,17 +1155,20 @@ def plan(groups, resolved, issues, min_version, max_new, max_updates, latest_rel
     return actions, counts
 
 
-def trace_section(marketplace, group, old_body=None):
+def trace_section(marketplace, group, old_body=None, shapes=None):
+    """The trace part of the body. A trace that cannot be read, or that has no frame left after the redaction,
+    keeps the trace of the earlier body or says that it could not be read."""
     report = group.newest_report()
     if report is None:
-        return 'No report of this group has a stack trace.'
+        return read_trace(old_body) or 'No report of this group has a stack trace.'
     text = marketplace.stacktrace(report.id)
-    if text is None or not text.strip():
+    trace, frames = analyse_trace(text, shapes) if text and text.strip() else (None, 0)
+    if not frames:
         old = read_trace(old_body)
         if old:
             return old
         return render_trace(report, None)
-    return render_trace(report, redact_trace(text))
+    return render_trace(report, trace)
 
 
 # ---------------------------------------------------------------- main
@@ -918,9 +1178,11 @@ def new_state(group, noted, closed=None):
     return {'count': group.report_count, 'versions': group.state_versions(), 'noted': noted, 'closed': closed}
 
 
-def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_BUDGET, clock=time.monotonic):
+def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_BUDGET, clock=time.monotonic,
+            shapes=None):
     """Carries out the actions (write=True) or prints them. Returns the lines of the summary and the number of
-    actions left for the next run because the time budget ran out."""
+    actions left for the next run because the time budget ran out. The shapes of trace lines that were not kept go
+    to shapes."""
     lines = []
     first_body = None
     labels_ready = False
@@ -933,7 +1195,7 @@ def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_B
         title = code(issue_title(group))
         if action.kind == 'create':
             key = content_key(group.report_count, group.state_versions())
-            body = render_body(group, trace_section(marketplace, group),
+            body = render_body(group, trace_section(marketplace, group, shapes=shapes),
                                new_state(group, {'count': group.report_count, 'key': key}))
             if first_body is None:
                 first_body = body
@@ -970,7 +1232,7 @@ def execute(marketplace, github, actions, write, out, time_budget=DEFAULT_TIME_B
         reopen = action.kind == 'reopen'
         comment = update_comment(group, action.state, action.release if reopen else None)
         due = new_state(group, noted_of(action.state))
-        body = render_body(group, trace_section(marketplace, group, issue['body']), due)
+        body = render_body(group, trace_section(marketplace, group, issue['body'], shapes), due)
         key = content_key(due['count'], due['versions'])
         verb = 'reopened' if reopen else 'updated'
         if write:
@@ -1006,6 +1268,8 @@ def summary(mode, counts, actions, lines):
         '| Skipped: freeze groups | %d |' % counts['freeze'],
         '| Skipped: malformed groups, malformed reports | %d, %d |' % (counts['malformed_groups'],
                                                                        counts['malformed_reports']),
+        '| Skipped: reports from builds that were not published | %d |' % counts['unpublished_reports'],
+        '| Skipped: groups with only such reports | %d |' % counts['unpublished_groups'],
         '| Waiting for the next run (new, other) | %d, %d |' % (counts['waiting_new'], counts['waiting_updates']),
         '',
     ]
@@ -1085,11 +1349,15 @@ def run(args, environ, http, out, clock):
         out.write(text.getvalue())
         write_summary(args.summary, '### Marketplace exceptions (probe)\n\n```\n%s```\n' % text.getvalue())
         return code_
-    groups = marketplace.groups()
+    groups = published_only(marketplace.groups(), marketplace.publications(), github.release_times)
     resolved = marketplace.resolved()
     actions, counts = plan(groups, resolved, github.issues(), args.min_version, args.max_new, args.max_updates,
                            github.latest_release)
-    lines, left = execute(marketplace, github, actions, args.mode == 'run', out, args.time_budget, clock)
+    shapes = Shapes() if args.mode == 'dry-run' else None
+    lines, left = execute(marketplace, github, actions, args.mode == 'run', out, args.time_budget, clock, shapes)
+    if shapes is not None:
+        # Only in the log, not in the job summary: the shapes hold no letter or digit of the trace.
+        out.write(shapes.report())
     if left:
         counts['waiting_updates'] += left
         actions = actions[:len(actions) - left]

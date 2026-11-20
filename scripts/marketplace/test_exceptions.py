@@ -35,15 +35,28 @@ def group(title, reports, count=None):
 class FakeMarketplace:
     """Answers the Marketplace URLs; the exception list comes through a redirect, as the API is said to do."""
 
-    def __init__(self, groups, resolved=(), traces=None, redirect=True):
+    def __init__(self, groups, resolved=(), traces=None, redirect=True, updates=None):
         self.exceptions = json.dumps(groups).encode('utf-8')
         self.resolved = json.dumps(list(resolved)).encode('utf-8')
         self.traces = traces or {}
         self.redirect = redirect
+        self.updates = updates  # None: every 0.N.N version of the reports, published at the epoch
+
+    def update_list(self):
+        if self.updates is not None:
+            return self.updates
+        versions = set(re.findall(r'"pluginVersion": "(0\.[0-9]+\.[0-9]+)"', self.exceptions.decode('utf-8')))
+        return [{'version': version, 'cdate': '0', 'approve': True} for version in sorted(versions)]
 
     def handle(self, method, url, headers, data):
         if method != 'GET':
             raise AssertionError('Marketplace got a %s' % method)
+        match = re.fullmatch(re.escape(API) + r'/updates\?size=100&page=([0-9]+)', url)
+        if match:
+            if 'Authorization' in headers:
+                raise AssertionError('the token was sent to the public update list')
+            page = int(match.group(1))
+            return ea.Response(200, {}, json.dumps(self.update_list()[(page - 1) * 100:page * 100]).encode('utf-8'))
         if url == STORAGE:
             if 'Authorization' in headers:
                 raise AssertionError('the token was sent to the storage link')
@@ -508,6 +521,7 @@ class RedactionTest(unittest.TestCase):
         trace = ea.redact_trace(TRACE)
         self.assertEqual('\n'.join([
             'com.intellij.openapi.util.InvalidDataException: <message removed>',
+            '<1 line removed>',
             '\tat org.intellij.erlang.psi.impl.ErlangPsiImplUtil.resolve(ErlangPsiImplUtil.java:812)',
             'Caused by: java.io.IOException: <message removed>',
             '\tat java.base/java.io.FileInputStream.open0(Native Method)',
@@ -549,6 +563,7 @@ class RedactionTest(unittest.TestCase):
         ]
         self.assertEqual('\n'.join([
             'java.lang.IllegalStateException: <message removed>',
+            '<8 lines removed>',
             '\tat a.B.c(B.java:1)',
             '\tat app//com.foo.Bar.<init>(Bar.kt:7)',
             '\tat java.base@\u200b21.0.1/java.lang.Thread.run(Thread.java:1583)',
@@ -577,7 +592,8 @@ class RedactionTest(unittest.TestCase):
         trace = ea.redact_trace('a.E: ' + 'x' * 200000 + '\n\tat a.B.c(B.java:1)\n\tat ' + 'a' * 200000 + '.B.c(B.java:1)\n'
                                 + '\tat a.B.c(B.java:1)\n' * 200000 + ('a' * 5000 + '@') * 100)
         self.assertLess(time.monotonic() - start, 10)
-        self.assertTrue(trace.startswith('a.E: <message removed>\n\tat a.B.c(B.java:1)\n\tat a.B.c(B.java:1)'))
+        self.assertTrue(trace.startswith('a.E: <message removed>\n\tat a.B.c(B.java:1)\n<1 line removed>\n'
+                                         '\tat a.B.c(B.java:1)'), trace[:200])
 
     def test_paths(self):
         self.assertEqual('/Users/<user>/x /home/<user>/y C:\\Users/<user>\\z c:/Users/<user>/w',
@@ -667,6 +683,441 @@ class RedactionTest(unittest.TestCase):
                         '<!-- marketplace-ea: 000000000000'):
             self.assertNotIn(private, text)
         self.assertEqual(2, text.count('```'))
+
+
+class TraceFormatTest(unittest.TestCase):
+    """The variants of the stack trace format that a real report can have."""
+
+    def frames(self, *lines):
+        trace, count = ea.analyse_trace('java.lang.IllegalStateException: m\n' + '\n'.join(lines))
+        return trace.split('\n')[1:], count
+
+    def test_frame_variants_are_kept(self):
+        variants = {
+            'com.foo.Bar.baz(Bar.java:12)': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '    at com.foo.Bar.baz(Bar.java:12)': '    at com.foo.Bar.baz(Bar.java:12)',
+            '\t\tat com.foo.Bar.baz(Bar.java:12)': '\t\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12) ~[app.jar:263.1]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12) [idea.jar:?]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Bar.java:12)~[util-8.jar:263.1]': '\tat com.foo.Bar.baz(Bar.java:12)',
+            '\tat com.foo.Bar.baz(Unknown Source)': '\tat com.foo.Bar.baz(Unknown Source)',
+            '\tat java.base/jdk.internal.misc.Unsafe.park(Native Method)':
+                '\tat java.base/jdk.internal.misc.Unsafe.park(Native Method)',
+            '\tat com.foo.Bar.baz(Bar.java)': '\tat com.foo.Bar.baz(Bar.java)',
+            '\tat com.foo.Bar.baz(SourceFile:3)': '\tat com.foo.Bar.baz(SourceFile:3)',
+            '\tat com.foo.BarKt.baz(Bar.kt:7)': '\tat com.foo.BarKt.baz(Bar.kt:7)',
+            '\tat com.foo.Bar$Companion$1.invoke(Bar.kt:7)': '\tat com.foo.Bar$Companion$1.invoke(Bar.kt:7)',
+            '\tat com.foo.Bar.<init>(Bar.java:5)': '\tat com.foo.Bar.<init>(Bar.java:5)',
+            '\tat com.foo.Bar.<clinit>(Bar.java:5)': '\tat com.foo.Bar.<clinit>(Bar.java:5)',
+            '\tat com.foo.Bar.lambda$run$0(Bar.java:5)': '\tat com.foo.Bar.lambda$run$0(Bar.java:5)',
+            '\tat com.foo.Bar.access$getX$p(Bar.kt:5)': '\tat com.foo.Bar.access$getX$p(Bar.kt:5)',
+            '\tat com.foo.Bar.invoke-0E7RQCE(Bar.kt:5)': '\tat com.foo.Bar.invoke-0E7RQCE(Bar.kt:5)',
+            '\tat com.foo.Bar$$Lambda/0x00007f3c1c0a1b28.run(Unknown Source)':
+                '\tat com.foo.Bar$$Lambda/0x00007f3c1c0a1b28.run(Unknown Source)',
+            '\tat com.foo.Bar$$Lambda$12/345678.run(Unknown Source)':
+                '\tat com.foo.Bar$$Lambda$12/345678.run(Unknown Source)',
+            '\tat app//com.foo.Bar.baz(Bar.groovy:1)': '\tat app//com.foo.Bar.baz(Bar.groovy:1)',
+            '\tat java.base@21.0.4/java.lang.Thread.run(Thread.java:1583)':
+                '\tat java.base@\u200b21.0.4/java.lang.Thread.run(Thread.java:1583)',
+            '\tat com.foo.Bar.baz(Bar.scala:1)': '\tat com.foo.Bar.baz(Bar.scala:1)',
+            '\tat com.foo.Bar.baz(build.gradle.kts:1)': '\tat com.foo.Bar.baz(build.gradle.kts:1)',
+        }
+        for line, kept in variants.items():
+            self.assertEqual(([kept], 1), self.frames(line), line)
+
+    def test_free_text_is_never_kept(self):
+        for line in ('at foo bar(baz)', 'com.foo.Bar.baz(secret text)', 'com.foo.Bar.baz(Bar.java:12) trailing',
+                     '\tat a/b/c/d.E.f(E.java:1)', '\tat com.foo.Bar.baz(Bar.erl:1)', '\tat Bar.baz(Bar.java:1)',
+                     '\tat com.foo.Bar.baz(Bar.java:12) ~[secret words]', '\tat com.foo.Bar$$Lambda/zz.run(X.java:1)',
+                     '\tat com.foo.Bar.baz(/Users/jdoe/Bar.java:1)', 'com.foo.Bar.baz', 'jdoe(at)example.com(x)',
+                     '\tat com.foo.Bar.baz(Bar.java:12', '\tat com.foo.Bar.ba'):
+            self.assertEqual((['<1 line removed>'], 0), self.frames(line), line)
+
+    def test_one_json_string(self):
+        text = json.dumps('java.lang.IllegalStateException: m\n\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)')
+        self.assertEqual(('java.lang.IllegalStateException: <message removed>\n\tat a.B.c(B.java:1)\n'
+                          '\tat a.B.d(B.java:2)', 2), ea.analyse_trace(text))
+
+    def test_literal_escape_sequences(self):
+        for separator in ('\\n\\t', '\\r\\n\\t', '\\r\\n', '\\n'):
+            text = 'java.lang.IllegalStateException: m' + separator + 'at a.B.c(B.java:1)' + separator + \
+                   'at a.B.d(B.java:2)'
+            trace, frames = ea.analyse_trace(text)
+            self.assertEqual(2, frames, separator)
+            self.assertTrue(trace.startswith('java.lang.IllegalStateException: <message removed>\n'), separator)
+
+    def test_real_line_breaks_of_every_kind(self):
+        for separator in ('\r\n', '\r', '\n'):
+            text = separator.join(['a.E: m', '\tat a.B.c(B.java:1)', '\tat a.B.d(B.java:2)'])
+            self.assertEqual(2, ea.analyse_trace(text)[1], repr(separator))
+
+    def test_truncated_traces(self):
+        self.assertEqual(('\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)', 2),
+                         ea.analyse_trace('\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)'))
+        self.assertEqual(('a.E: <message removed>\n\tat a.B.c(B.java:1)\n<1 line removed>', 1),
+                         ea.analyse_trace('a.E: m\n\tat a.B.c(B.java:1)\n\tat a.B.d(B.ja'))
+
+    def test_runs_of_removed_lines_become_one_line(self):
+        trace = ea.redact_trace('a.E: m\nsecret 1\nsecret 2\n\nsecret 3\n\tat a.B.c(B.java:1)\nsecret 4\n'
+                                '\tat a.B.d(B.java:2)')
+        self.assertEqual('a.E: <message removed>\n<3 lines removed>\n\tat a.B.c(B.java:1)\n<1 line removed>\n'
+                         '\tat a.B.d(B.java:2)', trace)
+        self.assertNotIn('\n\n', trace)
+
+    def test_header_ignores_removed_lines_before_the_frame(self):
+        self.assertTrue(ea.redact_trace('a.E: m\nmore message\n\tat a.B.c(B.java:1)').startswith('a.E: <message'))
+
+    def test_a_trace_without_frames_could_not_be_read(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])], traces={'1': 'a.E: m\nsecret text'})
+        http = FakeHttp(marketplace)
+        run(http)
+        body = http.github.issues[1]['body']
+        self.assertIn('The stack trace could not be read', body)
+        self.assertNotIn('```', body)
+        self.assertNotIn('secret', body)
+
+    def test_an_update_without_frames_keeps_the_old_trace(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])], traces={'1': TRACE, '2': 'a.E: x'})
+        http = FakeHttp(marketplace)
+        run(http)
+        marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1300'), report(2, '0.11.1301')])]).encode()
+        run(http)
+        self.assertIn('ErlangPsiImplUtil.resolve', http.github.issues[1]['body'])
+
+    def test_the_real_trace_of_the_first_dry_run(self):
+        # The shape of the trace in the public log of the first dry run (run 44736078989), message replaced.
+        text = '\n'.join([
+            'com.intellij.diagnostic.PluginException: some message [Plugin: org.jetbrains.erlang]',
+            '\tat com.intellij.diagnostic.PluginProblemReporterImpl.createPluginExceptionByClass('
+            'PluginProblemReporterImpl.java:23)',
+            '\tat com.intellij.diagnostic.PluginException.createByClass(PluginException.java:90)',
+            '\tat com.intellij.execution.impl.TemplateDifferenceHelper.isTemplateModified('
+            'RunConfigurationSchemeManager.kt:145)',
+        ])
+        self.assertEqual(3, ea.analyse_trace(text)[1])
+
+
+class ShapeTest(unittest.TestCase):
+    def test_shape(self):
+        self.assertEqual('\\ta{2} a{3}.a{8}.a{10}(a{9}.a{4}:0{3})',
+                         ea.line_shape('\tat com.intellij.diagnostic(Something.java:123)'))
+        self.assertEqual('\\s{4}a: \'a\' <!\u200b-- @a #0', ea.line_shape('    x: `y` <!-- @z #1'))
+        self.assertEqual('\\t\\s{2}a', ea.line_shape('\t  x'))
+
+    def test_no_letter_or_digit_survives(self):
+        text = ('Lorem ipsum /Users/jdoe/secret-project/ C:\\Users\\JDoe 0123456789 \u0416\u0435\u043d\u044f '
+                '\u00e9\u00df\u00f1 \u0663\u0664 \u00bd \u2167 jdoe@example.com https://x.io/?t=ghp_ab12 \u4e2d\u6587 '
+                'Z_z$9')
+        for line in (text, '\t' + text, '  ' + text * 5):
+            shape = ea.line_shape(line)
+            bare = re.sub(r'\{[0-9]+\}', '', shape).replace('\\t', '').replace('\\s', '')
+            bare = re.sub(r'\.\.\.\(\+[0-9]+\)$', '', bare)
+            self.assertEqual(set(), {char for char in bare if char.isalnum()} - {'a', '0'}, shape)
+            for word in ('Lorem', 'jdoe', 'secret', 'example', 'ghp', 'Users', '0123'):
+                self.assertNotIn(word, shape)
+
+    def test_long_lines_are_cut(self):
+        shape = ea.line_shape('x' * 5000)
+        self.assertEqual('a{%d}...(+%d)' % (ea.SHAPE_INPUT_LIMIT, 5000 - ea.SHAPE_INPUT_LIMIT), shape)
+
+    def test_at_most_twelve_shapes_with_counts(self):
+        shapes = ea.Shapes()
+        for i in range(20):
+            for _ in range(i + 1):
+                shapes.add('x' * (i + 1))
+        report = shapes.report().split('\n')
+        self.assertEqual(1 + ea.SHAPE_LIMIT + 1, len([line for line in report if line]))
+        self.assertEqual('    20  a{20}', report[1])
+        self.assertIn('and 8 more shapes', report[-3])
+
+    def test_dry_run_prints_shapes_only_in_the_log(self):
+        marketplace = FakeMarketplace([group('A', [report(1, '0.11.1300')])],
+                                      traces={'1': 'a.E: secret\nsecret line 1\n\tat a.B.c(B.java:1)\nsecret 2'})
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(FakeHttp(marketplace), '--dry-run', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        self.assertEqual(0, code)
+        self.assertIn('Shapes of the stack trace lines that were not kept', out)
+        self.assertIn('     1  a{6} a{4} 0', out)
+        self.assertIn('     1  a{6} 0', out)
+        self.assertNotIn('secret', out)
+        self.assertNotIn('Shapes', summary)
+        code, out, _ = run(FakeHttp(marketplace))
+        self.assertNotIn('Shapes', out)
+
+
+class MarkerTest(unittest.TestCase):
+    """The factory dispatcher trusts github-actions[bot] on public issues when it looks for its own markers. Text
+    that this job writes (issue titles, bodies, comments, the job summary) must never hold an HTML comment other than
+    this job's own markers at their fixed places, or a line that starts with "Signature:"."""
+
+    OWN = {
+        'key': r'<!-- marketplace-ea: [0-9a-f]{12} -->',
+        'state': r'<!-- marketplace-ea-state: \{[^<>\n]*\} -->',
+        'trace': r'<!-- marketplace-ea-trace -->',
+        'end': r'<!-- /marketplace-ea-trace -->',
+        'note': r'<!-- marketplace-ea-note: [0-9a-f]{12} -->',
+    }
+    SIGNATURE = re.compile(r'^[ \t]*signature[ \t]*:', re.IGNORECASE | re.MULTILINE)
+    FACTORY = ['<!-- factory:triage:12 -->', '<!-- factory:repro:12 -->', '<!-- factory:found:abc -->',
+               '<!--factory:triage:12-->', '<!--  FACTORY:Repro:1  -->', '<!-- factory:found:abc', 'factory:x -->',
+               '\u003c!-- factory:triage:3 --\u003e', '%3C!--%20factory:triage:4%20--%3E']
+    SIGNATURES = ['Signature: abc', 'signature:abc', '  SIGNATURE : x', '\tSignature:\t1', 'Signature :y']
+
+    def hostile(self, text):
+        return text + ' ' + ' '.join(self.FACTORY) + '\n' + '\n'.join(self.SIGNATURES)
+
+    def reports(self, first_id, version):
+        hostile = self.hostile('x')
+        return [report(first_id, version, appBuild=hostile, osName=hostile, comment=hostile, message=hostile),
+                report(first_id + 1, hostile, build=hostile, os_name=hostile),
+                report(first_id + 100, version, timestamp=hostile)]
+
+    def traces(self, *ids):
+        trace = '\n'.join(
+            ['com.foo.Err: ' + self.hostile('m')] + self.FACTORY + self.SIGNATURES +
+            ['\tat com.foo.Bar.baz(Bar.java:1) ' + marker for marker in self.FACTORY] +
+            ['\tat ' + signature for signature in self.SIGNATURES] +
+            ['Caused by: ' + signature for signature in self.SIGNATURES] +
+            ['Caused by: com.foo.Signature: <!-- factory:triage:9 -->', '\tat com.foo.Bar.baz(Bar.java:2)',
+             '<!-', '- factory:triage:5 -->', 'Sig', 'nature: split', '\tat com.foo.Bar.qux(Bar.java:3)'])
+        escaped = trace.replace('\n', '\\n').replace('\t', '\\t')
+        return {str(ids[0]): trace, str(ids[1]): json.dumps(trace), str(ids[2]): escaped}
+
+    def check(self, text, own):
+        """No HTML comment but the expected own markers, and no Signature: line."""
+        self.assertIsNone(self.SIGNATURE.search(text), text)
+        rest = text
+        for name in own:
+            matches = re.findall(self.OWN[name], rest)
+            self.assertEqual(1, len(matches), (name, text))
+            rest = rest.replace(matches[0], '', 1)
+        self.assertNotIn('<!--', rest, text)
+        self.assertNotIn('-->', rest, text)
+        self.assertNotRegex(rest.lower(), r'<\s*!\s*-\s*-', text)
+
+    def check_body(self, body):
+        self.check(body, ['key', 'state', 'trace', 'end'])
+        lines = body.split('\n')
+        self.assertRegex(lines[0], '^' + self.OWN['key'] + '$')
+        self.assertRegex(lines[1], '^' + self.OWN['state'] + '$')
+        self.assertEqual(1, lines.count(ea.TRACE_START))
+        self.assertEqual(1, lines.count(ea.TRACE_END))
+
+    def test_titles_fields_and_traces(self):
+        title = self.hostile('NPE: Foo.bar')
+        groups = [group(title, self.reports(1, '0.11.1300')), group('Signature: x', self.reports(3, '0.11.1300')),
+                  group('<!-- factory:triage:1 -->', self.reports(5, '0.11.1300'))]
+        marketplace = FakeMarketplace(groups, traces=self.traces(1, 3, 5))
+        http = FakeHttp(marketplace)
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(http, '--dry-run', '--summary', path)
+            self.assertEqual(0, code)
+            body = out[out.index('Body of the first new issue:\n\n') + 29:out.index('Shapes of the')]
+            self.check_body(body.strip('\n') + '\n')
+            code, _, err = run(http, '--run', '--summary', path)
+            self.assertEqual(0, code, err)
+            marketplace.exceptions = json.dumps(
+                [group(title, self.reports(1, '0.11.1300') + self.reports(7, '0.11.1301'), 9),
+                 group('Signature: x', self.reports(3, '0.11.1300') + self.reports(9, '0.11.1302'), 9),
+                 group('<!-- factory:triage:1 -->', self.reports(5, '0.11.1300'))]).encode()
+            marketplace.traces.update(self.traces(7, 9, 11))
+            code, _, err = run(http, '--run', '--summary', path)
+            self.assertEqual(0, code, err)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        github = http.github
+        self.assertEqual(3, len(github.issues))
+        for issue in github.issues.values():
+            self.check(issue['title'], [])
+            self.assertNotIn('\n', issue['title'])
+            self.check_body(issue['body'])
+            self.assertIn('Caused by: com.foo.Signature: <message removed>\n\tat com.foo.Bar.baz(Bar.java:2)', issue['body'])
+        self.assertEqual(2, len(github.comments))
+        for comments in github.comments.values():
+            for comment in comments:
+                self.check(comment, ['note'])
+                self.assertTrue(comment.endswith(re.findall(self.OWN['note'], comment)[0]))
+        self.check(summary, [])
+
+    def test_redact_breaks_every_form(self):
+        for text in self.FACTORY + self.SIGNATURES + ['x\nSignature: y', '<!---->', '<!--->']:
+            self.check(ea.redact(text), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['1']), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['2']), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['3']), [])
+        for text in self.FACTORY + self.SIGNATURES:
+            self.check(ea.clean_title(text), [])
+            self.check(ea.line_shape(text), [])
+
+    def test_probe_summary(self):
+        class Odd(FakeMarketplace):
+            def handle(self, method, url, headers, data):
+                return ea.Response(200, {}, json.dumps({'<!-- factory:triage:1 -->': 1, 'Signature: x': 2}).encode())
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(FakeHttp(Odd([])), '--probe', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                self.check(file.read(), [])
+        self.check(out, [])
+
+
+class PublishedTest(unittest.TestCase):
+    """A report counts only if its plugin version was published when the report was sent."""
+
+    PUBLISHED = 1795171499  # 0.11.1303 on Marketplace: 2026-11-20T10:44:59Z
+    UPDATES = [{'version': '0.11.1303', 'cdate': '1795171499000', 'approve': True},
+               {'version': '0.11.1302', 'cdate': 1794650170000, 'approve': True},
+               {'version': '0.11.1304', 'cdate': '1795200000000', 'approve': False},
+               {'version': 'junk', 'cdate': '1'}, {'version': '0.11.1299'}, 'junk']
+
+    def at(self, seconds):
+        return seconds * 1000
+
+    def test_update_list(self):
+        self.assertEqual({'0.11.1303': 1795171499, '0.11.1302': 1794650170}, ea.parse_publications(self.UPDATES))
+        with self.assertRaisesRegex(ea.Failure, r'\[versions\]'):
+            ea.parse_publications({'versions': []})
+
+    def test_update_list_is_read_without_the_token_and_with_pages(self):
+        updates = [{'version': '0.11.%d' % i, 'cdate': str(i * 1000)} for i in range(150)]
+        http = FakeHttp(FakeMarketplace([], updates=updates))
+        found = ea.Marketplace(http, TOKEN).publications()
+        self.assertEqual(150, len(found))
+        calls = [(url, headers) for _, url, headers in http.requests if '/updates' in url]
+        self.assertEqual([API + '/updates?size=100&page=1', API + '/updates?size=100&page=2'], [u for u, _ in calls])
+        self.assertTrue(all('Authorization' not in headers for _, headers in calls))
+
+    def test_before_and_after_the_publication(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1303', timestamp=self.at(t - 3600)),
+                                    report(2, '0.11.1303', timestamp=self.at(t - ea.PUBLISH_TOLERANCE - 1)),
+                                    report(3, '0.11.1303', timestamp=self.at(t - ea.PUBLISH_TOLERANCE)),
+                                    report(4, '0.11.1303', timestamp=self.at(t + 60)),
+                                    report(5, '0.11.1302', timestamp=self.at(t - 3600)),
+                                    report(6, '0.11.1303', timestamp=None)], count=6))
+        result = ea.published_only(groups, ea.parse_publications(self.UPDATES))
+        self.assertEqual(['3', '4', '5'], [r.id for r in result[0].reports])
+        self.assertEqual((3, 3), (result[0].report_count, result.unpublished_reports))
+        self.assertEqual('4', result[0].newest_report().id)
+
+    def test_unknown_versions_and_the_github_fallback(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1305', timestamp=self.at(t)),
+                                    report(2, '0.11.1306', timestamp=self.at(t)),
+                                    report(3, '0.11.1307', timestamp=self.at(t)),
+                                    report(4, '1.2.3.4', timestamp=self.at(t)),
+                                    report(5, 'junk', timestamp=self.at(t))]))
+        calls = []
+
+        def fallback():
+            calls.append(1)
+            return ea.release_times_of([{'tag_name': 'v0.11.1305', 'published_at': '2026-11-20T10:00:00Z'},
+                                        {'tag_name': 'v0.11.1306', 'published_at': '2026-11-21T10:00:00Z'},
+                                        {'tag_name': 'v0.11.1307', 'draft': True,
+                                         'published_at': '2026-11-01T10:00:00Z'}])
+        result = ea.published_only(groups, {}, fallback)
+        self.assertEqual(['1'], [r.id for r in result[0].reports])
+        self.assertEqual(1, len(calls))
+        self.assertEqual(4, result.unpublished_reports)
+
+    def test_versions_dates_and_hidden_values_use_the_remaining_reports(self):
+        t = self.PUBLISHED
+        groups = parsed(group('A', [report(1, '0.11.1303', timestamp=self.at(t - 86400), build='junk'),
+                                    report(2, '0.11.1302', timestamp=self.at(t + 86400))]))
+        result = ea.published_only(groups, ea.parse_publications(self.UPDATES))
+        body = ea.render_body(result[0], '', ea.empty_state())
+        self.assertIn('- Plugin versions: `0.11.1302`\n', body)
+        self.assertIn('- First report: `2026-11-21`', body)
+        self.assertIn('- IDE builds: `IU-263.7307.44`\n', body)
+
+    def run_with(self, updates, groups, http=None):
+        http = http or FakeHttp(FakeMarketplace(groups, traces={str(i): TRACE for i in range(1, 60)}, updates=updates))
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, err = run(http, '--run', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        self.assertEqual(0, code, err)
+        return http, summary
+
+    def test_a_group_emptied_by_the_rule_is_skipped_and_counted(self):
+        t = self.PUBLISHED
+        groups = [group('local only', [report(i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(1, 49)]),
+                  group('real', [report(50, '0.11.1302', timestamp=self.at(t))])]
+        http, summary = self.run_with(self.UPDATES, groups)
+        self.assertEqual(['Marketplace exception: real'], [i['title'] for i in http.github.issues.values()])
+        self.assertIn('| Skipped: reports from builds that were not published | 48 |', summary)
+        self.assertIn('| Skipped: groups with only such reports | 1 |', summary)
+
+    def test_a_lower_count_is_not_new_reports(self):
+        t = self.PUBLISHED
+        groups = [group('A', [report(i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(1, 4)] +
+                        [report(10, '0.11.1302', timestamp=self.at(t)), report(11, '0.11.1302', timestamp=self.at(t))]),
+                  group('B', [report(20 + i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(4)])]
+        everything = [{'version': '0.11.1303', 'cdate': '0'}, {'version': '0.11.1302', 'cdate': '0'}]
+        http, _ = self.run_with(everything, groups)
+        github = http.github
+        a = [n for n, i in github.issues.items() if i['title'].endswith(': A')][0]
+        b = [n for n, i in github.issues.items() if i['title'].endswith(': B')][0]
+        self.assertIn('- Reports: 5', github.issues[a]['body'])
+        http.marketplace.updates = self.UPDATES
+        _, summary = self.run_with(None, None, http)
+        self.assertIn('- Reports: 2', github.issues[a]['body'])
+        self.assertIn('- Plugin versions: `0.11.1302`\n', github.issues[a]['body'])
+        comment = github.comments[a][0]
+        self.assertTrue(comment.startswith(
+            'The report count is now 2, not 5. Reports from plugin builds that were not published when the report was '
+            'sent (for example local pre-release builds) are no longer counted. Plugin versions no longer counted: '
+            '`0.11.1303`.'), comment)
+        self.assertNotIn('new report', comment)
+        self.assertIn('- Reports: 0', github.issues[b]['body'])
+        self.assertIn('ErlangPsiImplUtil.resolve', github.issues[b]['body'])
+        self.assertTrue(github.comments[b][0].startswith('The report count is now 0, not 4.'))
+        self.assertIn('| Updated issues | 2 |', summary)
+        writes = len(github.writes)
+        self.run_with(None, None, http)
+        self.assertEqual(writes, len(github.writes))
+
+    def test_closed_issue_of_an_emptied_group_is_left_alone(self):
+        t = self.PUBLISHED
+        groups = [group('B', [report(20 + i, '0.11.1303', timestamp=self.at(t - 86400)) for i in range(4)])]
+        everything = [{'version': '0.11.1303', 'cdate': '0'}]
+        http, _ = self.run_with(everything, groups)
+        http.github.close(1)
+        http.github.releases = [{'tag_name': 'v0.11.1303', 'published_at': '2026-11-20T10:45:04Z'}]
+        http.marketplace.updates = self.UPDATES
+        writes = len(http.github.writes)
+        _, summary = self.run_with(None, None, http)
+        self.assertEqual(writes, len(http.github.writes))
+        self.assertIn('| Skipped: groups with only such reports | 1 |', summary)
+
+    def test_pre_release_reports_never_reopen(self):
+        # Closed when 0.11.1303 is the newest release: a local 0.11.1304 build sends a report before 0.11.1304 is
+        # published. It does not count, so it does not reopen the issue; a report after the publication does.
+        t = self.PUBLISHED
+        groups = [group('A', [report(1, '0.11.1302', timestamp=self.at(t))])]
+        http, _ = self.run_with(self.UPDATES[:2], groups)
+        github = http.github
+        github.releases = [{'tag_name': 'v0.11.1303', 'published_at': '2026-11-20T10:45:04Z'}]
+        github.close(1)
+        self.run_with(None, None, http)
+        self.assertEqual('0.11.1303', ea.read_state(github.issues[1]['body'])['closed']['release'])
+        later = t + 86400
+        http.marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1302', timestamp=self.at(t)),
+                                                              report(2, '0.11.1304', timestamp=self.at(later - 3600))])]
+                                                 ).encode()
+        http.marketplace.updates = self.UPDATES[:2] + [{'version': '0.11.1304', 'cdate': str(later * 1000)}]
+        self.run_with(None, None, http)
+        self.assertEqual('closed', github.issues[1]['state'])
+        http.marketplace.exceptions = json.dumps([group('A', [report(1, '0.11.1302', timestamp=self.at(t)),
+                                                              report(3, '0.11.1304', timestamp=self.at(later + 60))])]
+                                                 ).encode()
+        self.run_with(None, None, http)
+        self.assertEqual('open', github.issues[1]['state'])
 
 
 class PlanTest(unittest.TestCase):
