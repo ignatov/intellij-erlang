@@ -56,6 +56,12 @@ public class ErlangUnitRunningStateTest extends BasePlatformTestCase {
     assertTrue(tests, tests.contains("fun m:ok_test/0"));
   }
 
+  public void testFunctionNameWithSpacesAroundColon() throws ExecutionException {
+    String tests = createState(Set.of("m : ok_test")).getEntryPoint().getArgsList().get(0);
+    assertEquals("[{\"module 'm'\", [fun m:ok_test/0]}]", tests);
+    assertInvalidName("m: ", false);
+  }
+
   private void assertInvalidName(String functionName, boolean debug) {
     ErlangUnitRunningState state = createState(Set.of(functionName));
     try {
