@@ -58,10 +58,9 @@ import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The opt-in usage statistics of the plugin: one summary of counts per day, sent to Amplitude.
@@ -101,10 +100,22 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private volatile ErlangUsageAskUi myAskUi = ErlangUsageAskDialog.UI;
   // at most one question per IDE session, in whichever project
   private volatile boolean myAskedInSession;
-  private int myRetries;
+  // the checks of the current ask chain
+  private volatile int myRetries;
   private int myScheduledForTests;
   private volatile boolean myDisposed;
-  private final Set<ScheduledFuture<?>> myScheduledAsks = ConcurrentHashMap.newKeySet();
+  // true from askLater until the chain of checks it starts asks or gives up; one chain at a time
+  private final AtomicBoolean myChainAlive = new AtomicBoolean();
+  // the next check of the chain, cancelled when the plugin is unloaded
+  private volatile ScheduledFuture<?> myPendingAsk;
+  // null: the scheduled executor of the IDE
+  private volatile AskScheduler myTestScheduler;
+
+  // runs a check of the ask chain after a delay; tests drive the checks themselves
+  interface AskScheduler {
+    @NotNull
+    ScheduledFuture<?> schedule(@NotNull Runnable task, long delayMillis);
+  }
 
   @NotNull
   public static ErlangUsageStatistics getInstance() {
@@ -133,10 +144,8 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     ErlangUsageIdle.uninstall();
     ScheduledFuture<?> timer = myTimer;
     if (timer != null) timer.cancel(false);
-    for (ScheduledFuture<?> ask : myScheduledAsks) {
-      ask.cancel(false);
-    }
-    myScheduledAsks.clear();
+    ScheduledFuture<?> ask = myPendingAsk;
+    if (ask != null) ask.cancel(false);
   }
 
   /**
@@ -225,32 +234,52 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
       });
   }
 
-  // asks on the EDT, outside of any dialog, not earlier than a minute after the project is ready
+  // starts a chain of checks that asks on the EDT, outside of any dialog, not earlier than a minute after the project is
+  // ready; nothing when a chain runs already
   private void askLater(@NotNull Project project) {
     if (myAskedInSession || myDisposed || !myCollector.shouldAsk() || !isErlangProject(project)) return;
-    // the idle time counts only from here, so a question that becomes due late in a session also waits for a quiet moment
+    if (!myChainAlive.compareAndSet(false, true)) return;
+    myRetries = 0;
+    // the idle time counts only from here, so a question that becomes due late in a session also waits for a quiet
+    // moment, and the first check comes no earlier than the idle time
     ErlangUsageIdle.install(this);
     Long readySince = project.getUserData(READY_SINCE);
-    long delay = readySince == null ? ASK_DELAY_MS : Math.max(0, readySince + ASK_DELAY_MS - System.currentTimeMillis());
-    schedule(project, delay);
+    long delay = readySince == null ? ASK_DELAY_MS : readySince + ASK_DELAY_MS - System.currentTimeMillis();
+    schedule(project, Math.max(IDLE_MS, delay));
   }
 
-  // a one-shot task that holds the project only weakly and is cancelled when the plugin is unloaded
+  // no check is due any more, so the input listener stops
+  private void endChain() {
+    ErlangUsageIdle.uninstall();
+    myChainAlive.set(false);
+  }
+
+  // the next check of the chain: a one-shot task that holds the project only weakly and is cancelled when the plugin is
+  // unloaded; the chain ends when the project closes before the check
   private void schedule(@NotNull Project project, long delayMillis) {
     myScheduledForTests++;
-    if (ApplicationManager.getApplication().isUnitTestMode() || myDisposed) return;
+    if (myDisposed) {
+      endChain();
+      return;
+    }
+    AskScheduler scheduler = myTestScheduler;
+    if (scheduler == null && ApplicationManager.getApplication().isUnitTestMode()) return;
+    if (scheduler == null) {
+      scheduler = (task, delay) -> AppExecutorUtil.getAppScheduledExecutorService().schedule(task, delay, TimeUnit.MILLISECONDS);
+    }
     WeakReference<Project> projectRef = new WeakReference<>(project);
-    ScheduledFuture<?>[] future = new ScheduledFuture<?>[1];
-    future[0] = AppExecutorUtil.getAppScheduledExecutorService().schedule(() -> {
-      myScheduledAsks.remove(future[0]);
+    myPendingAsk = scheduler.schedule(() -> {
       Project target = projectRef.get();
-      if (target == null || target.isDisposed() || myDisposed) return;
+      if (target == null || target.isDisposed() || myDisposed) {
+        endChain();
+        return;
+      }
       ApplicationManager.getApplication().invokeLater(() -> {
         Project current = projectRef.get();
-        if (current != null) ask(current);
-      }, ModalityState.nonModal(), target.getDisposed());
-    }, delayMillis, TimeUnit.MILLISECONDS);
-    myScheduledAsks.add(future[0]);
+        if (current == null || current.isDisposed()) endChain();
+        else ask(current);
+      }, ModalityState.nonModal());
+    }, delayMillis);
   }
 
   // a minute after the project opened and indexing finished, and a few seconds without key or mouse input; without
@@ -273,17 +302,17 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @RequiresEdt
   void ask(@NotNull Project project) {
     if (myDisposed || myAskedInSession || !myCollector.shouldAsk() || !isErlangProject(project)) {
-      ErlangUsageIdle.uninstall();
+      endChain();
       return;
     }
     if (!isQuietTime(project) || !myAskUi.canAskNow(project)) {
-      // the user is busy: check again every few seconds for a while; after that, the timer tries again later
+      // the user is busy: check again every few seconds for a while; after that, the timer starts a new chain later
       if (myRetries++ < MAX_RETRIES) schedule(project, RETRY_MS);
-      else ErlangUsageIdle.uninstall();
+      else endChain();
       return;
     }
     myAskedInSession = true;
-    ErlangUsageIdle.uninstall();
+    endChain();
     boolean reminder = myCollector.isReminder();
     // the ask counts only once the dialog exists and is about to be shown
     answer(myAskUi.ask(project, reminder, myCollector::markAsked));
@@ -305,6 +334,11 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   int getScheduledForTests() {
     return myScheduledForTests;
+  }
+
+  @TestOnly
+  void setSchedulerForTests(@Nullable AskScheduler scheduler) {
+    myTestScheduler = scheduler;
   }
 
   @TestOnly
@@ -452,5 +486,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
     myAskedInSession = false;
     myRetries = 0;
     myScheduledForTests = 0;
+    myTestScheduler = null;
+    myChainAlive.set(false);
   }
 }
