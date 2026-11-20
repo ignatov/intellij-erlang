@@ -30,6 +30,8 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.roots.ModuleFileIndex;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.ui.popup.*;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.text.StringUtil;
@@ -38,11 +40,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiAnchor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.util.PsiEditorUtil;
 import com.intellij.util.FileContentUtilCore;
 import org.intellij.erlang.icons.ErlangIcons;
-import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
@@ -50,7 +52,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -65,10 +69,12 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   private static class FileItem {
     final PsiAnchor fileAnchor;
     final String displayPath;
+    final VirtualFile includeDirectory;
 
-    FileItem(PsiAnchor fileAnchor, String displayPath) {
+    FileItem(PsiAnchor fileAnchor, String displayPath, VirtualFile includeDirectory) {
       this.fileAnchor = fileAnchor;
       this.displayPath = displayPath;
+      this.includeDirectory = includeDirectory;
     }
   }
 
@@ -98,6 +104,8 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
     if (problem == null) return;
     Editor editor = PsiEditorUtil.findEditor(problem);
     if (editor == null) return;
+    Module module = ModuleUtilCore.findModuleForPsiElement(problem);
+    if (module == null) return;
 
     //Looks for a file that is referenced by include string
     String includeString = StringUtil.unquoteString(problem.getText());
@@ -108,26 +116,28 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
         @Override
         public void run(@NotNull ProgressIndicator indicator) {
           indicator.setIndeterminate(true);
-          List<ErlangFile> files = ApplicationManager.getApplication().runReadAction(
-            (Computable<List<ErlangFile>>) () -> {
-              // pass indicator into the search
-              return ErlangModuleIndex.getFilesByName(project, includeFileName, GlobalSearchScope.allScope(project));
+          // Only the files whose include directory can be marked in the module are offered, and
+          // the display paths are computed here to keep that work off the EDT
+          final List<FileItem> fileItems = ApplicationManager.getApplication().runReadAction(
+            (Computable<List<FileItem>>) () -> {
+              PsiManager psiManager = PsiManager.getInstance(project);
+              ModuleFileIndex moduleFileIndex = ModuleRootManager.getInstance(module).getFileIndex();
+              List<FileItem> items = new ArrayList<>();
+              for (VirtualFile file : FilenameIndex.getVirtualFilesByName(includeFileName, module.getModuleContentScope())) {
+                ProgressManager.checkCanceled();
+                VirtualFile includeDirectory = getIncludeDirectory(file, includeString, setDirectHrlLink);
+                if (includeDirectory == null || !moduleFileIndex.isInContent(includeDirectory)) continue;
+                if (psiManager.findFile(file) instanceof ErlangFile erlangFile) {
+                  items.add(new FileItem(PsiAnchor.create(erlangFile), calcFilePath(erlangFile, project), includeDirectory));
+                }
+              }
+              items.sort(Comparator.comparing(item -> item.displayPath));
+              return items;
             }
           );
 
-          // Pre-compute all display paths and create FileItem objects
-          // This work is done outside the EDT to avoid performance issues
-          // during popup rendering
-          final List<FileItem> fileItems = files.stream().map(file -> {
-                                                  PsiAnchor anchor = PsiAnchor.create(file);
-                                                  String displayPath = calcFilePath(file, project);
-                                                  return new FileItem(anchor, displayPath);
-                                                })
-                                                .toList();
-
-
           ApplicationManager.getApplication().invokeLater(() -> {
-            if (!files.isEmpty()) {
+            if (!fileItems.isEmpty()) {
               displayPopupListDialog(project, problem, fileItems, setDirectHrlLink, includeString, includeFileName);
             }
             else {
@@ -226,8 +236,8 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
           .withUndoConfirmationPolicy(UndoConfirmationPolicy.DEFAULT)
           .run(() -> {
             PsiElement element = item.fileAnchor.retrieve();
-            if (element instanceof PsiFile) {
-              fixUsingIncludeFile(problem, (PsiFile) element);
+            if (element instanceof PsiFile && item.includeDirectory.isValid()) {
+              fixUsingIncludeFile(problem, item.includeDirectory);
               renameIncludeString(project, problem, setDirectHrlLink, includeString, includeFileName);
               FileContentUtilCore.reparseFiles(Collections.singletonList(problem.getContainingFile().getVirtualFile()));
             }
@@ -293,16 +303,28 @@ public class ErlangFindIncludeQuickFix extends ErlangQuickFixBase {
   }
 
   private static void fixUsingIncludeFile(PsiElement problem,
-                                          PsiFile includeFile) {
+                                          VirtualFile includeDirectory) {
     //Search the module that contains the current(problem) file & fix facets
     Module containedModule = ModuleUtilCore.findModuleForPsiElement(problem);
     if (containedModule == null) return;
+    ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeDirectory);
+  }
 
-    VirtualFile includeFileParent = includeFile.getVirtualFile() != null ?
-                                    includeFile.getVirtualFile().getParent() : null;
-    if (includeFileParent != null) {
-      ErlangIncludeDirectoryUtil.markAsIncludeDirectory(containedModule, includeFileParent);
+  /*
+   * returns the directory to mark as include directory so that the include string resolves to the file:
+   * the parent of the file when the include string is renamed to the file name, otherwise the directory
+   * that the whole include string is relative to, or null if there is none
+   * eg: for "app/include/x.hrl" and the file libs/app/include/x.hrl it is libs
+   * */
+  @Nullable
+  private static VirtualFile getIncludeDirectory(VirtualFile file, String includeString, boolean setDirectHrlLink) {
+    if (setDirectHrlLink) return file.getParent();
+    if (!file.getPath().endsWith(INCLUDE_STRING_PATH_SEPARATOR + includeString)) return null;
+    VirtualFile directory = file;
+    for (String ignored : StringUtil.split(includeString, String.valueOf(INCLUDE_STRING_PATH_SEPARATOR))) {
+      directory = directory == null ? null : directory.getParent();
     }
+    return directory != null && file.equals(VfsUtilCore.findRelativeFile(includeString, directory)) ? directory : null;
   }
 
   /*
