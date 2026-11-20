@@ -180,12 +180,21 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   }
 
   private void endGuard() {
-    if (isDisposed()) return;
+    Window window = getWindow();
+    endGuard(window != null ? window.getMostRecentFocusOwner() : null);
+  }
+
+  // true when the focus goes to Yes
+  private boolean endGuard(@Nullable Component focusOwner) {
+    if (isDisposed()) return false;
     myGuarded = false;
     setButtonsEnabled(true);
-    // a disabled button could not take the focus when the dialog opened
+    // a disabled button could not take the focus when the dialog opened; a control of the content that the user moved
+    // to keeps it
+    boolean toYes = focusOwner == null || focusOwner == myContent || !SwingUtilities.isDescendingFrom(focusOwner, myContent);
     JButton yes = getButton(myYesAction);
-    if (yes != null) yes.requestFocusInWindow();
+    if (toYes && yes != null) yes.requestFocusInWindow();
+    return toYes;
   }
 
   // disabled buttons never arm, so a press during the guard cannot click them; Esc and the close button still work
@@ -387,6 +396,21 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   @TestOnly
   void endGuardForTests() {
     endGuard();
+  }
+
+  @TestOnly
+  boolean endGuardForTests(@Nullable Component focusOwner) {
+    return endGuard(focusOwner);
+  }
+
+  @TestOnly
+  JComponent getContentForTests() {
+    return myContent;
+  }
+
+  @TestOnly
+  JComponent getToggleForTests() {
+    return myToggle;
   }
 
   @TestOnly
