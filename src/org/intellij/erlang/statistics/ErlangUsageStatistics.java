@@ -18,10 +18,15 @@ package org.intellij.erlang.statistics;
 
 import com.intellij.codeInsight.hints.declarative.DeclarativeInlayHintsSettings;
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.util.concurrency.AppExecutorUtil;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
@@ -31,18 +36,24 @@ import org.jetbrains.annotations.TestOnly;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The opt-in usage statistics of the plugin: one summary of counts per day, sent to Amplitude.
  */
 @Service(Service.Level.APP)
 @State(name = "ErlangUsageStatistics", storages = @Storage(value = "erlangUsageStatistics.xml", roamingType = RoamingType.DISABLED))
-public final class ErlangUsageStatistics implements PersistentStateComponent<ErlangUsageStatisticsState> {
+public final class ErlangUsageStatistics implements PersistentStateComponent<ErlangUsageStatisticsState>, Disposable {
   public static final String SWITCH_PROPERTY = "erlang.usage.statistics";
+  private static final Logger LOG = Logger.getInstance(ErlangUsageStatistics.class);
+  private static final long TIMER_MINUTES = 45;
   private static volatile Boolean ourAllowed;
 
   private final ErlangUsageCollector myCollector = new ErlangUsageCollector(
-    LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed);
+    LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed,
+    new ErlangAmplitudeSender());
+  private volatile ScheduledFuture<?> myTimer;
 
   @NotNull
   public static ErlangUsageStatistics getInstance() {
@@ -63,6 +74,12 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @Override
   public void loadState(@NotNull ErlangUsageStatisticsState state) {
     myCollector.loadState(state);
+  }
+
+  @Override
+  public void dispose() {
+    ScheduledFuture<?> timer = myTimer;
+    if (timer != null) timer.cancel(false);
   }
 
   /**
@@ -97,6 +114,29 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   public static void setAllowedForTests(@Nullable Boolean allowed) {
     ourAllowed = allowed;
+  }
+
+  // called once for each opened project
+  void projectOpened(@NotNull Project project) {
+    if (!isAllowed()) return;
+    startTimer();
+  }
+
+  private synchronized void startTimer() {
+    if (myTimer != null) return;
+    myTimer = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(this::tick, 1, TIMER_MINUTES, TimeUnit.MINUTES);
+  }
+
+  @RequiresBackgroundThread
+  private void tick() {
+    try {
+      myCollector.flush();
+      if (myCollector.isCounting()) myCollector.sendPending();
+    }
+    catch (Exception e) {
+      // an exception would stop the timer
+      LOG.debug("Erlang usage statistics", e);
+    }
   }
 
   @NotNull

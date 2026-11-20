@@ -37,6 +37,9 @@ public class ErlangUsageStatisticsState {
   public String lastAskDate;
   // a random UUID; it exists only while the user allows the statistics
   public String installationId;
+  // the local date of the last failed send, yyyy-MM-dd, and how many sends failed on that day
+  public String failedSendDate;
+  public int failedSends;
   @XCollection(propertyElementName = "days")
   public List<Day> days = new ArrayList<>();
 

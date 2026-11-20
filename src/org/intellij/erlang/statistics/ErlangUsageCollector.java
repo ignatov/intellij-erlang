@@ -16,10 +16,14 @@
 
 package org.intellij.erlang.statistics;
 
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -29,17 +33,25 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * The consent and the counters of the usage statistics, without the IDE around them.
+ * The consent, the counters and the daily send of the usage statistics, without the IDE around them.
  * <p>
  * Counters live in memory and move to the stored state on {@link #flush()}. Nothing is counted or stored unless the
- * user said yes and the environment allows statistics. The stored state keeps at most the last {@link #MAX_DAYS} days.
+ * user said yes and the environment allows statistics. Once a day, the summaries of the previous days (at most
+ * {@link #MAX_DAYS}) are sent, one event per day, and are removed when the service accepted or refused them. A day
+ * without any counted use is never sent.
  */
 public final class ErlangUsageCollector {
+  private static final Logger LOG = Logger.getInstance(ErlangUsageCollector.class);
   // the first ask and two reminders
   public static final int MAX_ASKS = 3;
   // "Ask me later", Esc or a dialog closed without an answer asks again after this many days
   public static final int ASK_AGAIN_DAYS = 30;
   public static final int MAX_DAYS = 7;
+  // after this many failed sends on one day, the next try is on the next day
+  public static final int MAX_FAILED_SENDS_PER_DAY = 3;
+  // counters that do not make a day "used": these file types also match files of other tools, for example web.config
+  private static final Set<String> NOT_ACTIVITY = Set.of(ErlangUsageKey.OPENED_CONFIG.name(), ErlangUsageKey.OPENED_APP.name());
+  private static final int HTTP_TOO_LARGE = 413;
 
   public enum Consent {UNSET, YES, NO}
 
@@ -50,6 +62,7 @@ public final class ErlangUsageCollector {
   private final Supplier<Map<ErlangUsageProperty, String>> myAppProperties;
   private final Supplier<String> myCountry;
   private final BooleanSupplier myAllowed;
+  private volatile ErlangUsageSender mySender;
   // guarded by this
   private ErlangUsageStatisticsState myState = new ErlangUsageStatisticsState();
   // the consent is yes
@@ -62,11 +75,13 @@ public final class ErlangUsageCollector {
   public ErlangUsageCollector(@NotNull Supplier<LocalDate> today,
                               @NotNull Supplier<Map<ErlangUsageProperty, String>> appProperties,
                               @NotNull Supplier<String> country,
-                              @NotNull BooleanSupplier allowed) {
+                              @NotNull BooleanSupplier allowed,
+                              @NotNull ErlangUsageSender sender) {
     myToday = today;
     myAppProperties = appProperties;
     myCountry = country;
     myAllowed = allowed;
+    mySender = sender;
   }
 
   // consent
@@ -102,6 +117,8 @@ public final class ErlangUsageCollector {
       myState.consent = Consent.NO.name();
       myState.installationId = null;
       myState.days.clear();
+      myState.failedSendDate = null;
+      myState.failedSends = 0;
     }
     // counts never move from before a change of the consent to after it
     myBatch = null;
@@ -212,6 +229,103 @@ public final class ErlangUsageCollector {
     return day;
   }
 
+  // a day counts as used when it has a counter other than the files opened that may not be Erlang ones
+  static boolean hasActivity(@NotNull ErlangUsageStatisticsState.Day day) {
+    for (Map.Entry<String, Long> entry : day.counters.entrySet()) {
+      if (!NOT_ACTIVITY.contains(entry.getKey()) && entry.getValue() != null && entry.getValue() > 0) return true;
+    }
+    return false;
+  }
+
+  // sending
+
+  /**
+   * Sends the summaries of the days before today. A day that the service refused as invalid (HTTP 400) is dropped;
+   * a request that is too large (HTTP 413) is split. Any other failure keeps the days; after
+   * {@link #MAX_FAILED_SENDS_PER_DAY} failures the next try is on the next day.
+   *
+   * @return the number of days the service accepted
+   */
+  @RequiresBackgroundThread
+  public int sendPending() {
+    String id;
+    List<ErlangUsageStatisticsState.Day> pending;
+    LocalDate today = myToday.get();
+    synchronized (this) {
+      flushLocked();
+      id = myState.installationId;
+      if (!isCounting() || id == null) return 0;
+      if (today.toString().equals(myState.failedSendDate) && myState.failedSends >= MAX_FAILED_SENDS_PER_DAY) return 0;
+      myState.days.removeIf(day -> {
+        LocalDate date = parse(day.date);
+        return date == null || date.isBefore(today) && !hasActivity(day);
+      });
+      pending = new ArrayList<>();
+      for (ErlangUsageStatisticsState.Day day : myState.days) {
+        LocalDate date = parse(day.date);
+        if (date != null && date.isBefore(today)) pending.add(copy(day));
+      }
+    }
+    pending.sort(Comparator.comparing(day -> day.date));
+    Deque<List<ErlangUsageStatisticsState.Day>> requests = new ArrayDeque<>();
+    for (int from = 0; from < pending.size(); from += ErlangUsagePayload.MAX_EVENTS_PER_REQUEST) {
+      requests.add(pending.subList(from, Math.min(pending.size(), from + ErlangUsagePayload.MAX_EVENTS_PER_REQUEST)));
+    }
+    int sent = 0;
+    while (!requests.isEmpty()) {
+      List<ErlangUsageStatisticsState.Day> chunk = requests.poll();
+      int status;
+      try {
+        status = mySender.send(ErlangUsagePayload.build(id, chunk));
+      }
+      catch (IOException e) {
+        LOG.debug("Cannot send the Erlang usage statistics", e);
+        status = -1;
+      }
+      if (status == HTTP_TOO_LARGE && chunk.size() > 1) {
+        int half = chunk.size() / 2;
+        requests.addFirst(chunk.subList(half, chunk.size()));
+        requests.addFirst(chunk.subList(0, half));
+        continue;
+      }
+      boolean accepted = status == HttpURLConnection.HTTP_OK;
+      boolean refused = status == HttpURLConnection.HTTP_BAD_REQUEST || status == HTTP_TOO_LARGE;
+      if (refused) LOG.debug("The statistics service refused " + chunk.size() + " day(s) with HTTP " + status);
+      synchronized (this) {
+        if (!id.equals(myState.installationId)) break;
+        if (!accepted && !refused) {
+          if (!today.toString().equals(myState.failedSendDate)) myState.failedSends = 0;
+          myState.failedSendDate = today.toString();
+          myState.failedSends++;
+          break;
+        }
+        Set<String> dates = new HashSet<>();
+        for (ErlangUsageStatisticsState.Day day : chunk) {
+          dates.add(day.date);
+        }
+        myState.days.removeIf(day -> dates.contains(day.date));
+      }
+      if (accepted) sent += chunk.size();
+    }
+    return sent;
+  }
+
+  /**
+   * The JSON that the summary of today would be sent as, for the settings page. It stores nothing.
+   */
+  @NotNull
+  public synchronized String previewToday() {
+    flushLocked();
+    String today = myToday.get().toString();
+    ErlangUsageStatisticsState.Day preview = null;
+    for (ErlangUsageStatisticsState.Day day : myState.days) {
+      if (today.equals(day.date)) preview = copy(day);
+    }
+    if (preview == null) preview = newDay(today, myCountry.get());
+    String id = myState.installationId != null ? myState.installationId : ErlangUsagePayload.EXAMPLE_ID;
+    return ErlangUsagePayload.build(id, List.of(preview));
+  }
+
   // state
 
   // a copy, so that the IDE can write it to disk while the counters change
@@ -223,6 +337,8 @@ public final class ErlangUsageCollector {
     copy.askCount = myState.askCount;
     copy.lastAskDate = myState.lastAskDate;
     copy.installationId = myState.installationId;
+    copy.failedSendDate = myState.failedSendDate;
+    copy.failedSends = myState.failedSends;
     for (ErlangUsageStatisticsState.Day day : myState.days) {
       copy.days.add(copy(day));
     }
@@ -241,6 +357,11 @@ public final class ErlangUsageCollector {
       state.installationId = UUID.randomUUID().toString();
     }
     myConsented = yes;
+  }
+
+  @TestOnly
+  public void setSender(@NotNull ErlangUsageSender sender) {
+    mySender = sender;
   }
 
   @NotNull
