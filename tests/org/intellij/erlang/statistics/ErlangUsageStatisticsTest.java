@@ -618,6 +618,18 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
   }
 
+  public void testSettingsCheckBoxIsDisabledWhenTheEnvironmentSwitchesItOff() {
+    ErlangUsageStatistics.setAllowedForTests(false);
+    ErlangUsageStatisticsPanel panel = new ErlangUsageStatisticsPanel();
+    assertFalse(panel.isCheckBoxEnabledForTests());
+    panel.setSelectedForTests(true);
+    panel.apply();
+    assertEquals("UNSET", collector().getState().consent);
+    assertNull(collector().getInstallationId());
+    ErlangUsageStatistics.setAllowedForTests(true);
+    assertTrue(new ErlangUsageStatisticsPanel().isCheckBoxEnabledForTests());
+  }
+
   public void testOtpReleaseNeverStartsErl() throws Exception {
     File home = FileUtil.createTempDirectory("erlang-sdk", null);
     File marker = new File(home, "erl-started");

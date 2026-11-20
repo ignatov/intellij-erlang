@@ -54,6 +54,8 @@ The plugin does not ask, count, store or send anything:
 - if the environment variable `DO_NOT_TRACK` is `1` or `true`;
 - if the IDE runs with the system property `-Derlang.usage.statistics=false`.
 
+In these cases the check box in the settings is disabled, and the plugin deletes the counts of earlier days that it did not send yet.
+
 ## How to turn it off
 
 Clear the **Send anonymous usage statistics** check box on the **Erlang External Tools** page of the IDE settings. Then the plugin stops counting, deletes the counts that it did not send yet, and deletes the installation id. If you turn it on again later, the plugin makes a new id, so the old and the new data cannot be connected.

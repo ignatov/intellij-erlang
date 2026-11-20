@@ -336,6 +336,31 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertTrue(mySender.bodies.isEmpty());
   }
 
+  // review point 2: the settings cannot store a consent or make an id while the environment switches the statistics off
+  public void testSwitchedOffEnvironmentStoresNoConsent() {
+    ErlangUsageCollector collector = newCollector(() -> false);
+    collector.setEnabled(true);
+    assertEquals(ErlangUsageCollector.Consent.UNSET, collector.getConsent());
+    assertNull(collector.getInstallationId());
+    assertEquals("UNSET", collector.getState().consent);
+  }
+
+  // review points 2 and 3: a stored yes gets no new id, and the days not sent yet are deleted
+  public void testStateLoadedInASwitchedOffEnvironment() {
+    ErlangUsageCollector collector = newCollector(() -> false);
+    ErlangUsageStatisticsState state = new ErlangUsageStatisticsState();
+    state.consent = "YES";
+    ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
+    day.date = DAY.minusDays(1).toString();
+    day.counters.put("RENAME", 3L);
+    state.days.add(day);
+    collector.loadState(state);
+    assertNull(collector.getInstallationId());
+    assertTrue(collector.getState().days.isEmpty());
+    // the answer itself stays for a later session that allows the statistics
+    assertEquals("YES", collector.getState().consent);
+  }
+
   public void testOldDaysAreDroppedWithoutSending() {
     myCollector.setEnabled(true);
     for (int i = 0; i < 60; i++) {
