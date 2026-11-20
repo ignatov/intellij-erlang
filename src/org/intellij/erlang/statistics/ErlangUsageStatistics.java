@@ -24,6 +24,7 @@ import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.Logger;
@@ -32,6 +33,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.UserDataHolderEx;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -40,6 +42,7 @@ import com.intellij.psi.search.FileTypeIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import com.intellij.util.concurrency.annotations.RequiresEdt;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.hints.ErlangParameterHintsProvider;
 import org.intellij.erlang.rebar.settings.RebarSettings;
@@ -50,10 +53,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import java.lang.ref.WeakReference;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -78,12 +84,26 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   private static final Key<String> SNAPSHOT_DATE = Key.create("ErlangUsageStatistics.snapshotDate");
   // true when the project has .erl or .hrl files; only such projects count
   private static final Key<Boolean> ERLANG_PROJECT = Key.create("ErlangUsageStatistics.erlangProject");
+  // when the project was first found to have Erlang files with the indices ready
+  private static final Key<Long> READY_SINCE = Key.create("ErlangUsageStatistics.readySince");
+  private static final long ASK_DELAY_MS = 60_000;
+  private static final long IDLE_MS = 5_000;
+  private static final long RETRY_MS = 2_500;
+  // 10 minutes of checks every 2.5 seconds
+  static final int MAX_RETRIES = 240;
   private static volatile Boolean ourAllowed;
 
   private final ErlangUsageCollector myCollector = new ErlangUsageCollector(
     LocalDate::now, ErlangUsageStatistics::appProperties, ErlangUsageCountry::current, ErlangUsageStatistics::isAllowed,
     new ErlangAmplitudeSender());
   private volatile ScheduledFuture<?> myTimer;
+  private volatile ErlangUsageAskUi myAskUi = ErlangUsageAskDialog.UI;
+  // at most one question per IDE session, in whichever project
+  private volatile boolean myAskedInSession;
+  private int myRetries;
+  private int myScheduledForTests;
+  private volatile boolean myDisposed;
+  private final Set<ScheduledFuture<?>> myScheduledAsks = ConcurrentHashMap.newKeySet();
 
   @NotNull
   public static ErlangUsageStatistics getInstance() {
@@ -108,8 +128,14 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
 
   @Override
   public void dispose() {
+    myDisposed = true;
+    ErlangUsageIdle.uninstall();
     ScheduledFuture<?> timer = myTimer;
     if (timer != null) timer.cancel(false);
+    for (ScheduledFuture<?> ask : myScheduledAsks) {
+      ask.cancel(false);
+    }
+    myScheduledAsks.clear();
   }
 
   /**
@@ -154,10 +180,18 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   public static void setErlangProjectForTests(@NotNull Project project, @Nullable Boolean erlang) {
     project.putUserData(ERLANG_PROJECT, erlang);
+    project.putUserData(READY_SINCE, Boolean.TRUE.equals(erlang) ? System.currentTimeMillis() - ASK_DELAY_MS - 1 : null);
+  }
+
+  @TestOnly
+  static void setReadySinceForTests(@NotNull Project project, long time) {
+    project.putUserData(READY_SINCE, time);
   }
 
   public void setEnabled(boolean enabled) {
     myCollector.setEnabled(enabled);
+    // the answer is given, so no question is due any more
+    ErlangUsageIdle.uninstall();
     if (enabled) {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         project.putUserData(SNAPSHOT_DATE, null);
@@ -174,7 +208,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   // finds out off the EDT, when the indices are ready, whether the project has Erlang files; then records its
-  // environment
+  // environment and asks for the consent when it is time to
   private void checkProject(@NotNull Project project) {
     if (!isAllowed() || project.isDisposed() || project.isDefault()) return;
     ReadAction.nonBlocking(() -> countErlangFiles(project))
@@ -184,8 +218,102 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
       .onSuccess(count -> {
         project.putUserData(ERLANG_PROJECT, count > 0);
         if (count == 0) return;
+        ((UserDataHolderEx)project).putUserDataIfAbsent(READY_SINCE, System.currentTimeMillis());
         AppExecutorUtil.getAppExecutorService().execute(() -> recordProject(project, count));
+        askLater(project);
       });
+  }
+
+  // asks on the EDT, outside of any dialog, not earlier than a minute after the project is ready
+  private void askLater(@NotNull Project project) {
+    if (myAskedInSession || myDisposed || !myCollector.shouldAsk() || !isErlangProject(project)) return;
+    // the idle time counts only from here, so a question that becomes due late in a session also waits for a quiet moment
+    ErlangUsageIdle.install(this);
+    Long readySince = project.getUserData(READY_SINCE);
+    long delay = readySince == null ? ASK_DELAY_MS : Math.max(0, readySince + ASK_DELAY_MS - System.currentTimeMillis());
+    schedule(project, delay);
+  }
+
+  // a one-shot task that holds the project only weakly and is cancelled when the plugin is unloaded
+  private void schedule(@NotNull Project project, long delayMillis) {
+    myScheduledForTests++;
+    if (ApplicationManager.getApplication().isUnitTestMode() || myDisposed) return;
+    WeakReference<Project> projectRef = new WeakReference<>(project);
+    ScheduledFuture<?>[] future = new ScheduledFuture<?>[1];
+    future[0] = AppExecutorUtil.getAppScheduledExecutorService().schedule(() -> {
+      myScheduledAsks.remove(future[0]);
+      Project target = projectRef.get();
+      if (target == null || target.isDisposed() || myDisposed) return;
+      ApplicationManager.getApplication().invokeLater(() -> {
+        Project current = projectRef.get();
+        if (current != null) ask(current);
+      }, ModalityState.nonModal(), target.getDisposed());
+    }, delayMillis, TimeUnit.MILLISECONDS);
+    myScheduledAsks.add(future[0]);
+  }
+
+  // a minute after the project opened and indexing finished, and a few seconds without key or mouse input; without
+  // the input listener the user counts as busy, and the listener starts
+  boolean isQuietTime(@NotNull Project project) {
+    Long readySince = project.getUserData(READY_SINCE);
+    if (readySince == null || System.currentTimeMillis() - readySince < ASK_DELAY_MS) return false;
+    if (!ErlangUsageIdle.isInstalled()) {
+      ErlangUsageIdle.install(this);
+      return false;
+    }
+    return ErlangUsageIdle.idleMillis() >= IDLE_MS;
+  }
+
+  /**
+   * Asks at most once per IDE session. "Ask me later", Esc and closing the dialog all mean: ask again in
+   * {@link ErlangUsageCollector#ASK_AGAIN_DAYS} days, at most {@link ErlangUsageCollector#MAX_ASKS} times in total.
+   * The ask is counted when the dialog is shown.
+   */
+  @RequiresEdt
+  void ask(@NotNull Project project) {
+    if (myDisposed || myAskedInSession || !myCollector.shouldAsk() || !isErlangProject(project)) {
+      ErlangUsageIdle.uninstall();
+      return;
+    }
+    if (!isQuietTime(project) || !myAskUi.canAskNow(project)) {
+      // the user is busy: check again every few seconds for a while; after that, the timer tries again later
+      if (myRetries++ < MAX_RETRIES) schedule(project, RETRY_MS);
+      else ErlangUsageIdle.uninstall();
+      return;
+    }
+    myAskedInSession = true;
+    ErlangUsageIdle.uninstall();
+    boolean reminder = myCollector.isReminder();
+    // the ask counts only once the dialog exists and is about to be shown
+    answer(myAskUi.ask(project, reminder, myCollector::markAsked));
+  }
+
+  void answer(@NotNull ErlangUsageAskUi.Choice choice) {
+    switch (choice) {
+      case YES -> setEnabled(true);
+      case NO -> setEnabled(false);
+      case LATER -> {}
+    }
+  }
+
+  @TestOnly
+  void setDisposedForTests(boolean disposed) {
+    myDisposed = disposed;
+  }
+
+  @TestOnly
+  int getScheduledForTests() {
+    return myScheduledForTests;
+  }
+
+  @TestOnly
+  void askLaterForTests(@NotNull Project project) {
+    askLater(project);
+  }
+
+  @TestOnly
+  void setAskUiForTests(@NotNull ErlangUsageAskUi ui) {
+    myAskUi = ui;
   }
 
   private synchronized void startTimer() {
@@ -200,6 +328,9 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         if (myCollector.isCounting() && !LocalDate.now().toString().equals(project.getUserData(SNAPSHOT_DATE))) {
           checkProject(project);
+        }
+        else if (isErlangProject(project)) {
+          askLater(project);
         }
       }
       if (myCollector.isCounting()) myCollector.sendPending();
@@ -316,5 +447,9 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   @TestOnly
   public void resetForTests() {
     myCollector.loadState(new ErlangUsageStatisticsState());
+    myAskUi = ErlangUsageAskDialog.UI;
+    myAskedInSession = false;
+    myRetries = 0;
+    myScheduledForTests = 0;
   }
 }

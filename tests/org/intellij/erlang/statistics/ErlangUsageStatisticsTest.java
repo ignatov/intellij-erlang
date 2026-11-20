@@ -17,6 +17,7 @@
 package org.intellij.erlang.statistics;
 
 import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.application.WriteAction;
@@ -41,6 +42,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +56,8 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     collector().setSender(mySender);
     ErlangUsageStatistics.setAllowedForTests(true);
     ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+    // the input listener runs and the user has been quiet for a minute
+    ErlangUsageIdle.setInstalledForTests(true, System.currentTimeMillis() - 60_000);
   }
 
   @Override
@@ -63,6 +67,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       collector().setSender(new ErlangAmplitudeSender());
       ErlangUsageStatistics.setAllowedForTests(null);
       ErlangUsageStatistics.setErlangProjectForTests(getProject(), null);
+      ErlangUsageIdle.setInstalledForTests(false, 0);
     }
     catch (Throwable e) {
       addSuppressedException(e);
@@ -198,6 +203,75 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  public void testNoInputListenerMeansBusy() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    assertTrue(ErlangUsageIdle.isInstalled());
+    ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 6_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+    assertFalse("the listener stops after the ask", ErlangUsageIdle.isInstalled());
+  }
+
+  public void testAskLaterStartsTheInputListener() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    statistics.askLaterForTests(getProject());
+    assertFalse("not for a project without Erlang files", ErlangUsageIdle.isInstalled());
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+    statistics.askLaterForTests(getProject());
+    assertTrue(ErlangUsageIdle.isInstalled());
+    assertEquals(1, statistics.getScheduledForTests());
+    statistics.setEnabled(false);
+    assertFalse("an answer stops the listener", ErlangUsageIdle.isInstalled());
+  }
+
+  public void testAskIsNotCountedWhenTheDialogCannotBeCreated() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.fail = true;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    try {
+      ErlangUsageStatistics.getInstance().ask(getProject());
+      fail("the fake dialog throws");
+    }
+    catch (IllegalStateException expected) {
+    }
+    assertEquals(0, collector().getState().askCount);
+  }
+
+  public void testNoAskAfterThePluginIsUnloaded() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setDisposedForTests(true);
+    try {
+      statistics.ask(getProject());
+      assertEquals(List.of(), ui.asked);
+    }
+    finally {
+      statistics.setDisposedForTests(false);
+    }
+  }
+
+  public void testBusyChecksAreLimited() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.canAsk = false;
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    for (int i = 0; i < ErlangUsageStatistics.MAX_RETRIES + 10; i++) {
+      statistics.ask(getProject());
+    }
+    assertEquals(ErlangUsageStatistics.MAX_RETRIES, statistics.getScheduledForTests());
+    assertFalse(ErlangUsageIdle.isInstalled());
+    assertEquals(List.of(), ui.asked);
+    assertEquals(0, collector().getState().askCount);
+  }
+
   public void testEscIsLaterAlsoDuringTheGuard() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
@@ -223,6 +297,102 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
     finally {
       Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testAskWaitsAMinuteAfterTheProjectIsReady() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 50_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    ErlangUsageStatistics.setReadySinceForTests(getProject(), System.currentTimeMillis() - 61_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testAskWaitsUntilTheUserStopsTyping() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    try {
+      ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 1_000);
+      statistics.ask(getProject());
+      assertEquals(List.of(), ui.asked);
+      ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 6_000);
+      statistics.ask(getProject());
+      assertEquals(List.of(false), ui.asked);
+    }
+    finally {
+      ErlangUsageIdle.setLastInputForTests(0);
+    }
+  }
+
+  public void testAskWaitsUntilTheUserIsNotBusyAndAsksOncePerSession() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    ui.canAsk = false;
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    assertEquals(0, collector().getState().askCount);
+
+    ui.canAsk = true;
+    ui.choice = ErlangUsageAskUi.Choice.LATER;
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+    assertEquals(1, collector().getState().askCount);
+    assertEquals(ErlangUsageCollector.Consent.UNSET, collector().getConsent());
+
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testAskOnlyInErlangProjects() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(List.of(), ui.asked);
+  }
+
+  public void testYesFromTheDialog() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.choice = ErlangUsageAskUi.Choice.YES;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(ErlangUsageCollector.Consent.YES, collector().getConsent());
+    assertNotNull(collector().getInstallationId());
+  }
+
+  public void testNoFromTheDialog() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.choice = ErlangUsageAskUi.Choice.NO;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    ErlangUsageStatistics.getInstance().ask(getProject());
+    assertEquals(ErlangUsageCollector.Consent.NO, collector().getConsent());
+    assertFalse(collector().shouldAsk());
+  }
+
+  private static final class FakeAskUi implements ErlangUsageAskUi {
+    final List<Boolean> asked = new ArrayList<>();
+    boolean canAsk = true;
+    boolean fail;
+    Choice choice = Choice.LATER;
+
+    @Override
+    public boolean canAskNow(@NotNull Project project) {
+      return canAsk;
+    }
+
+    @Override
+    public @NotNull Choice ask(@NotNull Project project, boolean reminder, @NotNull Runnable beforeShow) {
+      // like a dialog whose construction throws before it is shown
+      if (fail) throw new IllegalStateException("no dialog");
+      beforeShow.run();
+      asked.add(reminder);
+      return choice;
     }
   }
 
