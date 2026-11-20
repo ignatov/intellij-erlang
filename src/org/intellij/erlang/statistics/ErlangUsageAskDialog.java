@@ -63,7 +63,7 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   public static final String SENT_TOGETHER =
     "Sent together with: the date, a random installation id, the plugin version, the IDE, the OS and the country.";
   public static final String REAL_SUMMARY = "The real summary of today is in Settings | Erlang External Tools.";
-  static final int GUARD_MS = 1500;
+  static final int GUARD_MS = 500;
   // own exit codes; the OK exit code, which the hidden OK action may give, means later
   private static final int YES_EXIT_CODE = NEXT_USER_EXIT_CODE;
   private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE + 1;
