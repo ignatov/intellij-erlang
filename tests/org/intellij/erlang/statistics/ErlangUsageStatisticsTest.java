@@ -132,6 +132,17 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertFalse(properties.has("completion"));
   }
 
+  // the preview says that today is sent only when sendPending would send it
+  public void testPreviewSaysWhetherTodayIsSent() {
+    assertEquals(ErlangUsageStatisticsPanel.PREVIEW_SENT, ErlangUsageStatisticsPanel.previewNote(collector()));
+    collector().setEnabled(true);
+    collector().setProperty(ErlangUsageProperty.OTP, "27");
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.OPENED_CONFIG);
+    assertEquals(ErlangUsageStatisticsPanel.PREVIEW_NOT_SENT, ErlangUsageStatisticsPanel.previewNote(collector()));
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    assertEquals(ErlangUsageStatisticsPanel.PREVIEW_SENT, ErlangUsageStatisticsPanel.previewNote(collector()));
+  }
+
   public void testPreviewStoresNothing() {
     collector().previewToday();
     assertTrue(collector().getState().days.isEmpty());

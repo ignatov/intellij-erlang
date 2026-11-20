@@ -40,6 +40,8 @@ import java.awt.event.ActionListener;
  */
 public final class ErlangUsageStatisticsPanel extends JPanel {
   public static final String CHECKBOX_TEXT = "Send anonymous usage statistics";
+  static final String PREVIEW_SENT = "The summary of today so far. If the statistics are on, it is sent tomorrow.";
+  static final String PREVIEW_NOT_SENT = "The summary of today so far. Today has no Erlang work yet, so it is not sent.";
   static final String SWITCHED_OFF_TEXT = "Switched off in this IDE session by DO_NOT_TRACK, -Derlang.usage.statistics=false, " +
                                           "a development build or headless mode.";
   private final JBCheckBox myCheckBox = new JBCheckBox(CHECKBOX_TEXT);
@@ -101,7 +103,14 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
 
   // the JSON of today's summary so far, in a read-only dialog
   static void showPreview(@NotNull Component parent) {
-    new PreviewDialog(parent, ErlangUsageStatistics.getInstance().getCollector().previewToday()).show();
+    ErlangUsageCollector collector = ErlangUsageStatistics.getInstance().getCollector();
+    new PreviewDialog(parent, previewNote(collector), collector.previewToday()).show();
+  }
+
+  // what the preview says about the send of today; while the statistics are off nothing is counted, so it stays general
+  @NotNull
+  static String previewNote(@NotNull ErlangUsageCollector collector) {
+    return !collector.isCounting() || collector.hasActivityToday() ? PREVIEW_SENT : PREVIEW_NOT_SENT;
   }
 
   private static boolean isEnabled(@NotNull ErlangUsageStatistics statistics) {
@@ -109,10 +118,12 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
   }
 
   private static final class PreviewDialog extends DialogWrapper {
+    private final String myNote;
     private final String myJson;
 
-    PreviewDialog(@NotNull Component parent, @NotNull String json) {
+    PreviewDialog(@NotNull Component parent, @NotNull String note, @NotNull String json) {
       super(parent, false);
+      myNote = note;
       myJson = json;
       setTitle("What Is Sent");
       init();
@@ -124,7 +135,7 @@ public final class ErlangUsageStatisticsPanel extends JPanel {
       text.setEditable(false);
       text.setFont(JBUI.Fonts.create(Font.MONOSPACED, text.getFont().getSize()));
       JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(8)));
-      panel.add(new JBLabel("The summary of today so far. If the statistics are on, it is sent tomorrow."), BorderLayout.NORTH);
+      panel.add(new JBLabel(myNote), BorderLayout.NORTH);
       panel.add(new JBScrollPane(text), BorderLayout.CENTER);
       return panel;
     }
