@@ -22,6 +22,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +39,12 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
+    ResolveResult[] results = multiResolveOnMaster();
+    // spike 3: when master's path finds nothing, ask the macro expansion layer
+    return results.length > 0 ? results : ErlangMacroLayer.multiResolveFallback(this);
+  }
+
+  private ResolveResult @NotNull [] multiResolveOnMaster() {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
     ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);

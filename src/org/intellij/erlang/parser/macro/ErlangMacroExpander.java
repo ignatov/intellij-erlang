@@ -1,11 +1,10 @@
 package org.intellij.erlang.parser.macro;
 
 import com.intellij.lexer.Lexer;
-import com.intellij.lexer.LexerBase;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.intellij.util.ArrayUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,25 +14,24 @@ import java.util.*;
 import static org.intellij.erlang.ErlangTypes.*;
 
 /**
- * Spike: a lexer for the PSI parser that substitutes the macros defined earlier in the same file.
+ * Spike 3: the macro substitution engine of spikes 1 and 2, turned into a pure function from a file text to an expanded
+ * text with a source map. It is never used by the lexer or the parser of a file.
  * <p>
- * Purity: the output is a function of the text and the base lexer only. It takes no project, file, SDK or index, reads
- * no other file, and does not evaluate {@code -ifdef}/{@code -if}: every {@code -define} earlier in the text counts.
- * <p>
- * For a substituted use it emits one {@link ErlangMacroSubstitution#MACRO_CALL_TEXT} token over the whole use text
- * ({@code ?NAME} or {@code ?NAME(Args)}), which the parser skips as a comment, and then the substituted tokens as
- * zero-length {@link ErlangMacroForeignLeafType} tokens at the end of the use. Everything else is the base lexer's
- * output, unchanged.
- * <p>
- * Selection: a use is substituted only when, among the definitions earlier in the file (after the last
- * {@code -undef} of the name), the definitions with its name and arity all have the same parameters and body. epp's
- * rule that a single definition without parentheses serves every arity is kept. Predefined macros, macros with no
- * definition in the file, and uses inside {@code -define}, {@code -undef}, {@code -ifdef} and {@code -ifndef} are left
- * as they are.
+ * Every same-file macro use with exactly one visible definition for its name and arity is replaced by its expansion
+ * (the selection rule of the engine, without the "fragments" shape test). A form whose expanded size is over the cap
+ * is not expanded at all. Every token of an expansion knows its source: a token of a macro argument at the use, or a
+ * token of a {@code -define} body, both as absolute offsets in the same text; tokens made by {@code ??Arg} have none.
+ * Text outside the replaced uses is copied as it is (verbatim segments).
  */
-public class ErlangMacroSubstitutingLexer extends LexerBase {
+public final class ErlangMacroExpander {
   public static final int MAX_DEPTH = 32;
+  /** A hard limit of the engine, independent of the form cap. */
   public static final int MAX_TOKENS_PER_FORM = 50_000;
+
+  public static final int SRC_NONE = 0;
+  public static final int SRC_ARGUMENT = 1;
+  public static final int SRC_BODY = 2;
+  public static final int SRC_VERBATIM = 3;
 
   public static final Set<String> PREDEFINED = Set.of(
     "FILE", "FUNCTION_NAME", "FUNCTION_ARITY", "LINE", "MODULE", "MODULE_STRING", "BASE_MODULE", "BASE_MODULE_STRING",
@@ -41,14 +39,217 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
 
   /** What happened to a macro use in the text (outside {@code -define} bodies). */
   public enum Outcome {
-    SUBSTITUTED, PREDEFINED, NOT_IN_FILE, AMBIGUOUS, ARITY_MISMATCH, EXPRESSION_SHAPE_SKIPPED,
-    LIMIT_DEPTH, LIMIT_TOKENS, LIMIT_RECURSION, BAD_ARGUMENTS
+    SUBSTITUTED, PREDEFINED, NOT_IN_FILE, AMBIGUOUS, ARITY_MISMATCH,
+    LIMIT_DEPTH, LIMIT_TOKENS, LIMIT_RECURSION, BAD_ARGUMENTS, FORM_OVER_CAP
   }
 
-  /** Receives every macro use the lexer sees; for the spike's statistics. */
-  public interface UseListener {
-    void use(int offset, @NotNull String name, int arity, @NotNull Outcome outcome, @Nullable Boolean fragmentBody,
-             int substitutedTokens);
+  public enum FormStatus {
+    /** No same-file macro use was substituted and none was refused. */
+    NO_USES,
+    EXPANDED,
+    /** Same-file uses exist, none substituted, at least one because of more than one visible definition. */
+    NOT_EXPANDED_AMBIGUOUS,
+    /** Substitutions were possible, but the expanded form is larger than the cap. */
+    OVER_CAP,
+    /** Same-file uses exist, none substituted, for another reason (limits, arity, bad arguments). */
+    NOT_EXPANDED_OTHER
+  }
+
+  public static final class Form {
+    public final int srcStart;
+    public final int srcEnd;
+    public int expStart;
+    public int expEnd;
+    public FormStatus status = FormStatus.NO_USES;
+    public int substitutedUses;
+    public int expandedTokens;
+    /** All substituted uses have a body that is not one complete expression (the "fragments" class of spikes 1, 2). */
+    public boolean allFragments = true;
+
+    Form(int srcStart, int srcEnd) {
+      this.srcStart = srcStart;
+      this.srcEnd = srcEnd;
+    }
+
+    public boolean containsSource(int offset) {
+      return srcStart <= offset && offset <= srcEnd;
+    }
+
+    @Override
+    public String toString() {
+      return "Form[" + srcStart + ".." + srcEnd + " -> " + expStart + ".." + expEnd + " " + status + "]";
+    }
+  }
+
+  /** The result: the expanded text, its source map and its forms. */
+  public static final class Expansion {
+    public final CharSequence sourceText;
+    public final String text;
+    public final List<Form> forms;
+    public final EnumMap<Outcome, Integer> outcomes;
+    private final int[] myExpStart, myExpEnd, mySrcStart, mySrcEnd, myKind;
+    private final int mySegments;
+    private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
+    private Map<Integer, int[]> myArgumentCopies;
+
+    Expansion(CharSequence sourceText, String text, List<Form> forms, EnumMap<Outcome, Integer> outcomes, Out out) {
+      this.sourceText = sourceText;
+      this.text = text;
+      this.forms = forms;
+      this.outcomes = outcomes;
+      myExpStart = out.expStart;
+      myExpEnd = out.expEnd;
+      mySrcStart = out.srcStart;
+      mySrcEnd = out.srcEnd;
+      myKind = out.kind;
+      mySegments = out.n;
+      int v = 0;
+      for (int i = 0; i < mySegments; i++) if (myKind[i] == SRC_VERBATIM) v++;
+      myVerbatim = new int[v];
+      v = 0;
+      for (int i = 0; i < mySegments; i++) if (myKind[i] == SRC_VERBATIM) myVerbatim[v++] = i;
+    }
+
+    public boolean hasExpansions() {
+      for (Form f : forms) if (f.status == FormStatus.EXPANDED) return true;
+      return false;
+    }
+
+    public int expandedFormCount() {
+      int n = 0;
+      for (Form f : forms) if (f.status == FormStatus.EXPANDED) n++;
+      return n;
+    }
+
+    /** The expanded offset of a source offset that lies in copied (verbatim) text, else -1. */
+    public int toExpanded(int srcOffset) {
+      int lo = 0, hi = myVerbatim.length - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        int s = myVerbatim[mid];
+        if (srcOffset < mySrcStart[s]) hi = mid - 1;
+        else if (srcOffset >= mySrcEnd[s]) lo = mid + 1;
+        else return myExpStart[s] + (srcOffset - mySrcStart[s]);
+      }
+      return -1;
+    }
+
+    /** The expanded offsets of every copy of the argument token that starts at srcOffset (empty if none). */
+    public int @NotNull [] argumentCopies(int srcOffset) {
+      if (myArgumentCopies == null) {
+        Map<Integer, int[]> map = new HashMap<>();
+        for (int i = 0; i < mySegments; i++) {
+          if (myKind[i] != SRC_ARGUMENT) continue;
+          int[] old = map.get(mySrcStart[i]);
+          int[] now = old == null ? new int[1] : Arrays.copyOf(old, old.length + 1);
+          now[now.length - 1] = myExpStart[i];
+          map.put(mySrcStart[i], now);
+        }
+        myArgumentCopies = map;
+      }
+      int[] r = myArgumentCopies.get(srcOffset);
+      return r == null ? new int[0] : r;
+    }
+
+    private int segmentAt(int expOffset) {
+      int lo = 0, hi = mySegments - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        if (expOffset < myExpStart[mid]) hi = mid - 1;
+        else if (expOffset >= myExpEnd[mid]) lo = mid + 1;
+        else return mid;
+      }
+      return -1;
+    }
+
+    /** The source kind of the expanded offset: one of the SRC_ constants, or -1 for a space between tokens. */
+    public int kindAt(int expOffset) {
+      int s = segmentAt(expOffset);
+      return s < 0 ? -1 : myKind[s];
+    }
+
+    /**
+     * The single source range of an expanded range, or null. The range has a single source when all its tokens come
+     * from one kind of source (verbatim text, argument tokens, or {@code -define} body tokens), in source order, with
+     * only whitespace between them in the source.
+     */
+    public @Nullable TextRange toSource(int expStart, int expEnd) {
+      if (expEnd <= expStart) {
+        int s = segmentAt(expStart);
+        if (s < 0 || myKind[s] == SRC_NONE) return null;
+        int at = mySrcStart[s] + (expStart - myExpStart[s]);
+        return TextRange.create(at, at);
+      }
+      int first = segmentAt(expStart);
+      int last = segmentAt(expEnd - 1);
+      if (first < 0 || last < 0) return null;
+      int kind = myKind[first];
+      if (kind == SRC_NONE) return null;
+      for (int i = first + 1; i <= last; i++) {
+        if (myKind[i] != kind) return null;
+        if (mySrcStart[i] < mySrcEnd[i - 1]) return null;
+        for (int c = mySrcEnd[i - 1]; c < mySrcStart[i]; c++) {
+          if (!Character.isWhitespace(sourceText.charAt(c))) return null;
+        }
+      }
+      int start = mySrcStart[first] + (expStart - myExpStart[first]);
+      int end = mySrcStart[last] + (expEnd - myExpStart[last]);
+      if (end > mySrcEnd[last] || start > mySrcEnd[first]) return null;
+      return TextRange.create(start, end);
+    }
+
+    public @Nullable Form formAtSource(int srcOffset) {
+      int lo = 0, hi = forms.size() - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        Form f = forms.get(mid);
+        if (srcOffset < f.srcStart) hi = mid - 1;
+        else if (srcOffset > f.srcEnd) lo = mid + 1;
+        else return f;
+      }
+      return null;
+    }
+
+    public @Nullable Form formAtExpanded(int expOffset) {
+      int lo = 0, hi = forms.size() - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        Form f = forms.get(mid);
+        if (expOffset < f.expStart) hi = mid - 1;
+        else if (expOffset > f.expEnd) lo = mid + 1;
+        else return f;
+      }
+      return null;
+    }
+  }
+
+  /** Segments of the expanded text. */
+  static final class Out {
+    final StringBuilder text = new StringBuilder();
+    int[] expStart = new int[64], expEnd = new int[64], srcStart = new int[64], srcEnd = new int[64], kind = new int[64];
+    int n;
+
+    void segment(int es, int ee, int ss, int se, int k) {
+      if (k == SRC_VERBATIM && n > 0 && kind[n - 1] == SRC_VERBATIM && expEnd[n - 1] == es && srcEnd[n - 1] == ss) {
+        expEnd[n - 1] = ee;
+        srcEnd[n - 1] = se;
+        return;
+      }
+      if (n == kind.length) {
+        int size = n * 2;
+        expStart = Arrays.copyOf(expStart, size);
+        expEnd = Arrays.copyOf(expEnd, size);
+        srcStart = Arrays.copyOf(srcStart, size);
+        srcEnd = Arrays.copyOf(srcEnd, size);
+        kind = Arrays.copyOf(kind, size);
+      }
+      expStart[n] = es;
+      expEnd[n] = ee;
+      srcStart[n] = ss;
+      srcEnd[n] = se;
+      kind[n] = k;
+      n++;
+    }
   }
 
   private static final TokenSet SKIPPED = TokenSet.orSet(ErlangParserDefinition.COMMENTS, TokenSet.create(TokenType.WHITE_SPACE));
@@ -59,105 +260,25 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
     ERL_OP_EQ_COL_EQ, ERL_OP_EQ_DIV_EQ, ERL_OP_PLUS_PLUS, ERL_OP_MINUS_MINUS, ERL_OP_EQ, ERL_OP_EXL, ERL_OP_MAYBE_EQ);
   private static final TokenSet ANY_OPERATOR_OR_DANGLING = TokenSet.orSet(BINARY_ONLY_OPERATORS, TokenSet.create(
     ERL_OP_PLUS, ERL_OP_MINUS, ERL_NOT, ERL_BNOT, ERL_CATCH, ERL_RADIX, ERL_COLON, ERL_QMARK));
-  /** Tokens that cannot be at the top level of one complete expression. */
   private static final TokenSet NOT_IN_EXPRESSION_TOP = TokenSet.create(
     ERL_COMMA, ERL_SEMI, ERL_ARROW, ERL_WHEN, ERL_OP_OR, ERL_OR_OR, ERL_ASSOC, ERL_MATCH, ERL_OP_LT_MINUS,
     ERL_OP_LT_EQ, ERL_OP_LT_COLON_MINUS, ERL_OP_LT_COLON_EQ, ERL_OP_AND_AND, ERL_DOT_DOT, ERL_DOT_DOT_DOT, ERL_OF,
     ERL_AFTER, ERL_END, ERL_ELSE);
 
-  private final Lexer myBase;
-  private final ErlangMacroSubstitution.Mode myMode;
-  private @Nullable UseListener myListener;
-
-  private CharSequence myBuffer = "";
-  private int myBufferEnd;
-
-  // output
-  private IElementType[] myTypes = new IElementType[0];
-  private int[] myStarts = ArrayUtil.EMPTY_INT_ARRAY;
-  private int[] myEnds = ArrayUtil.EMPTY_INT_ARRAY;
-  private int myCount;
-  private int myIndex;
-
-  // statistics of the last run
-  private int myBaseTokenCount;
-  private int myForeignTokenCount;
-
-  public ErlangMacroSubstitutingLexer(@NotNull Lexer base, @NotNull ErlangMacroSubstitution.Mode mode) {
-    myBase = base;
-    myMode = mode;
+  private ErlangMacroExpander() {
   }
 
-  public void setListener(@Nullable UseListener listener) {
-    myListener = listener;
-  }
-
-  public int getBaseTokenCount() {
-    return myBaseTokenCount;
-  }
-
-  public int getForeignTokenCount() {
-    return myForeignTokenCount;
-  }
-
-  @Override
-  public void start(@NotNull CharSequence buffer, int startOffset, int endOffset, int initialState) {
-    myBuffer = buffer;
-    myBufferEnd = endOffset;
-    myCount = 0;
-    myIndex = 0;
-    myForeignTokenCount = 0;
-    Base base = Base.lex(myBase, buffer, startOffset, endOffset, initialState);
-    myBaseTokenCount = base.n;
-    new Run(base).run();
-  }
-
-  @Override
-  public int getState() {
-    return 0;
-  }
-
-  @Override
-  public @Nullable IElementType getTokenType() {
-    return myIndex < myCount ? myTypes[myIndex] : null;
-  }
-
-  @Override
-  public int getTokenStart() {
-    return myIndex < myCount ? myStarts[myIndex] : myBufferEnd;
-  }
-
-  @Override
-  public int getTokenEnd() {
-    return myIndex < myCount ? myEnds[myIndex] : myBufferEnd;
-  }
-
-  @Override
-  public void advance() {
-    if (myIndex < myCount) myIndex++;
-  }
-
-  @Override
-  public @NotNull CharSequence getBufferSequence() {
-    return myBuffer;
-  }
-
-  @Override
-  public int getBufferEnd() {
-    return myBufferEnd;
-  }
-
-  private void emit(IElementType type, int start, int end) {
-    if (myCount == myTypes.length) {
-      int size = Math.max(16, myCount * 2);
-      myTypes = Arrays.copyOf(myTypes, size);
-      myStarts = Arrays.copyOf(myStarts, size);
-      myEnds = Arrays.copyOf(myEnds, size);
-    }
-    myTypes[myCount] = type;
-    myStarts[myCount] = start;
-    myEnds[myCount] = end;
-    myCount++;
+  /**
+   * Expands the text.
+   *
+   * @param base    the plain Erlang lexer
+   * @param formCap the largest number of significant tokens an expanded form may have; a larger form is not expanded
+   */
+  public static @NotNull Expansion expand(@NotNull CharSequence text, @NotNull Lexer base, int formCap) {
+    Base b = Base.lex(base, text, 0, text.length(), 0);
+    Run run = new Run(b, formCap);
+    run.run();
+    return new Expansion(text, run.out.text.toString(), run.forms, run.outcomes, run.out);
   }
 
   /** The tokens of the base lexer. */
@@ -197,20 +318,10 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
     }
   }
 
-  /**
-   * A token of a macro body or of a substitution result, with its source: {@code kind} is
-   * {@link ErlangMacroForeignLeafType#SOURCE_NONE} (made by the substitution, as {@code ??Arg}),
-   * {@link ErlangMacroForeignLeafType#SOURCE_ARGUMENT} (argument {@code a}, significant token {@code index} of the top-level
-   * use) or {@link ErlangMacroForeignLeafType#SOURCE_BODY} (significant token {@code index} of the body of the
-   * {@code -define} of {@code defName}/{@code a}).
-   */
-  record Tok(@NotNull IElementType type, @NotNull String text, int kind, @Nullable String defName, int a, int index) {
+  /** A token of a macro body, an argument or a result, with its source kind and absolute source range. */
+  record Tok(@NotNull IElementType type, @NotNull String text, int kind, int start, int end) {
     Tok(@NotNull IElementType type, @NotNull String text) {
-      this(type, text, ErlangMacroForeignLeafType.SOURCE_NONE, null, 0, 0);
-    }
-
-    Tok asArgument(int argIndex, int tokenIndex) {
-      return new Tok(type, text, ErlangMacroForeignLeafType.SOURCE_ARGUMENT, null, argIndex, tokenIndex);
+      this(type, text, SRC_NONE, -1, -1);
     }
   }
 
@@ -243,20 +354,28 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
     }
   }
 
-  /** Lookup result. */
   private record Selection(@Nullable Def def, @NotNull Outcome outcome) {
   }
 
-  private final class Run {
+  private record Use(int q, int last, Def def, List<Tok> result) {
+  }
+
+  private static final class Run {
     final Base b;
-    final int[] sig; // raw indices of the significant tokens
+    final int[] sig;
     final int sigCount;
+    final int formCap;
     final Map<String, List<Def>> defs = new HashMap<>();
+    final Out out = new Out();
+    final List<Form> forms = new ArrayList<>();
+    final EnumMap<Outcome, Integer> outcomes = new EnumMap<>(Outcome.class);
+    int cursor; // next source offset to copy
     int formSubstitutedTokens;
     int conditionalDepth;
 
-    Run(Base b) {
+    Run(Base b, int formCap) {
       this.b = b;
+      this.formCap = formCap;
       int[] s = new int[b.n];
       int c = 0;
       for (int i = 0; i < b.n; i++) {
@@ -274,7 +393,6 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
       return b.text(sig[p]);
     }
 
-    /** The macro name at significant position p and the position of its last token, or null. */
     @Nullable Name nameAt(int p, int limit) {
       IElementType t = st(p);
       if (p > limit) return null;
@@ -291,37 +409,94 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
       return raw + 1 >= b.n || SKIPPED.contains(b.type[raw + 1]);
     }
 
+    void count(Outcome o) {
+      outcomes.merge(o, 1, Integer::sum);
+    }
+
+    void flushTo(int srcOffset) {
+      if (srcOffset <= cursor) return;
+      int es = out.text.length();
+      out.text.append(b.text, cursor, srcOffset);
+      out.segment(es, out.text.length(), cursor, srcOffset, SRC_VERBATIM);
+      cursor = srcOffset;
+    }
+
+    void emitTokens(List<Tok> tokens) {
+      out.text.append(' ');
+      Tok prev = null;
+      for (Tok t : tokens) {
+        boolean glued = prev != null && prev.kind == t.kind && t.kind != SRC_NONE && prev.end == t.start;
+        if (prev != null && !glued) out.text.append(' ');
+        int es = out.text.length();
+        out.text.append(t.text);
+        out.segment(es, out.text.length(), t.start, t.end, t.kind);
+        prev = t;
+      }
+      out.text.append(' ');
+    }
+
     void run() {
-      int raw = 0; // next raw token to copy
       int p = 0;
       while (p < sigCount) {
         int formStart = p;
         int formEnd = p;
         while (formEnd < sigCount - 1 && !isFormEnd(formEnd)) formEnd++;
         formSubstitutedTokens = 0;
+        Form form = new Form(b.start[sig[formStart]], b.end[sig[formEnd]]);
         String attribute = attributeName(formStart, formEnd);
         boolean directive = "define".equals(attribute) || "undef".equals(attribute) ||
                             "ifdef".equals(attribute) || "ifndef".equals(attribute);
+        List<Use> uses = new ArrayList<>();
+        boolean ambiguous = false, refused = false;
         if (!directive) {
           for (int q = formStart; q <= formEnd; q++) {
             if (st(q) != ERL_QMARK) continue;
-            int useEnd = handleUse(q, formEnd, raw);
-            if (useEnd >= 0) {
-              raw = sig[useEnd] + 1;
-              q = useEnd;
+            Object r = handleUse(q, formEnd);
+            if (r instanceof Use u) {
+              uses.add(u);
+              q = u.last;
             }
+            else if (r == Outcome.AMBIGUOUS) ambiguous = true;
+            else if (r instanceof Outcome o && o != Outcome.PREDEFINED && o != Outcome.NOT_IN_FILE) refused = true;
           }
         }
+        if (!uses.isEmpty()) {
+          int size = formEnd - formStart + 1;
+          for (Use u : uses) size += u.result.size() - (u.last - u.q + 1);
+          form.expandedTokens = size;
+          if (size > formCap) {
+            form.status = FormStatus.OVER_CAP;
+            for (int i = 0; i < uses.size(); i++) {
+              count(Outcome.FORM_OVER_CAP);
+              outcomes.merge(Outcome.SUBSTITUTED, -1, Integer::sum);
+            }
+            uses.clear();
+          }
+          else {
+            form.status = FormStatus.EXPANDED;
+            form.substitutedUses = uses.size();
+            for (Use u : uses) if (!u.def.fragment) form.allFragments = false;
+          }
+        }
+        else if (ambiguous) form.status = FormStatus.NOT_EXPANDED_AMBIGUOUS;
+        else if (refused) form.status = FormStatus.NOT_EXPANDED_OTHER;
+        flushTo(form.srcStart);
+        form.expStart = out.text.length();
+        for (Use u : uses) {
+          flushTo(b.start[sig[u.q]]);
+          emitTokens(u.result);
+          cursor = b.end[sig[u.last]];
+        }
+        flushTo(form.srcEnd);
+        form.expEnd = out.text.length();
+        forms.add(form);
         if ("define".equals(attribute)) define(formStart, formEnd);
         else if ("undef".equals(attribute)) undef(formStart, formEnd);
         else if ("ifdef".equals(attribute) || "ifndef".equals(attribute) || "if".equals(attribute)) conditionalDepth++;
         else if ("endif".equals(attribute) && conditionalDepth > 0) conditionalDepth--;
         p = formEnd + 1;
       }
-      while (raw < b.n) {
-        emit(b.type[raw], b.start[raw], b.end[raw]);
-        raw++;
-      }
+      flushTo(b.text.length());
     }
 
     @Nullable String attributeName(int from, int to) {
@@ -329,10 +504,12 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
       return stext(from + 1);
     }
 
-    // ---------------------------------------------------------------- definitions
+    Tok tokAt(int p, int kind) {
+      int raw = sig[p];
+      return new Tok(b.type[raw], b.text(raw), kind, b.start[raw], b.end[raw]);
+    }
 
     void define(int from, int to) {
-      // - define ( Name [( Params )] , Body ) .
       int p = from + 3;
       if (p > to || st(from + 2) != ERL_PAR_LEFT) return;
       Name n = nameAt(p, to);
@@ -364,14 +541,11 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
         }
         arity = params.size();
       }
-      // the body is everything between the comma and the ')' before the final dot
       int bodyEnd = st(to) == ERL_DOT ? to - 1 : to;
       if (st(bodyEnd) != ERL_PAR_RIGHT) return;
       List<Tok> body = new ArrayList<>();
       if (st(p) == ERL_COMMA) {
-        for (int q = p + 1; q < bodyEnd; q++) {
-          body.add(new Tok(st(q), stext(q), ErlangMacroForeignLeafType.SOURCE_BODY, name, arity, q - p - 1));
-        }
+        for (int q = p + 1; q < bodyEnd; q++) body.add(tokAt(q, SRC_BODY));
       }
       else if (p != bodyEnd) {
         return;
@@ -383,21 +557,11 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
 
     void undef(int from, int to) {
       int p = from + 3;
-      // An -undef inside -ifdef/-ifndef/-if may or may not run, and conditions are not evaluated: keep the earlier
-      // definitions, so that a redefinition after it makes the name ambiguous instead of silently winning.
       if (conditionalDepth > 0 || st(from + 2) != ERL_PAR_LEFT) return;
       Name n = nameAt(p, to);
       if (n != null) defs.remove(n.name);
     }
 
-    /**
-     * The cheap shape test of the {@code fragments} mode. A body is "one complete expression" unless one of these holds:
-     * it is empty; its brackets or blocks do not balance; it has {@code , ; -> when | || => := <- <= <:- <:= && .. ...}
-     * outside every bracket and block ({@code -> when ;} also inside brackets, unless inside a
-     * {@code fun/begin/case/if/receive/try/maybe ... end} block); it has {@code ::} anywhere; it starts with a binary-only
-     * operator; it ends with an operator, {@code #}, {@code :} or {@code ?}; it starts with {@code - atom (} (an
-     * attribute); or it uses a same-file macro that is a fragment.
-     */
     boolean isFragment(List<Tok> body, List<String> params) {
       if (body.isEmpty()) return true;
       Deque<IElementType> stack = new ArrayDeque<>();
@@ -473,87 +637,65 @@ public class ErlangMacroSubstitutingLexer extends LexerBase {
       return new Selection(first, Outcome.SUBSTITUTED);
     }
 
-    // ---------------------------------------------------------------- uses in the text
-
     /**
-     * Handles a {@code ?} at significant position q. If the use is substituted, copies the raw tokens before it, emits
-     * the call text and the substituted tokens, and returns the significant position of the last token of the use.
-     * Otherwise returns -1.
+     * Handles a {@code ?} at significant position q: returns a {@link Use} when the use is substituted, else the
+     * {@link Outcome} that stopped it, or null when it is not a macro use.
      */
-    int handleUse(int q, int formEnd, int raw) {
-      if (q > 0 && st(q - 1) == ERL_QMARK && sig[q - 1] + 1 == sig[q]) return -1; // second '?' of '??X'
+    @Nullable Object handleUse(int q, int formEnd) {
+      if (q > 0 && st(q - 1) == ERL_QMARK && sig[q - 1] + 1 == sig[q]) return null; // second '?' of '??X'
       Name n = nameAt(q + 1, formEnd);
-      if (n == null) return -1;
+      if (n == null) return null;
       String name = n.name;
       int nameLast = n.last;
       int last = nameLast;
       List<List<Tok>> args = null;
       int arity = -1;
       if (nameLast + 1 <= formEnd && st(nameLast + 1) == ERL_PAR_LEFT) {
-        List<Tok> tokens = new ArrayList<>();
-        for (int i = nameLast + 1; i <= formEnd; i++) tokens.add(new Tok(st(i), stext(i)));
+        int from = nameLast + 1;
+        // a lazy view: parseArgs reads only up to the closing parenthesis
+        List<Tok> tokens = new AbstractList<>() {
+          @Override
+          public Tok get(int i) {
+            return tokAt(from + i, SRC_ARGUMENT);
+          }
+
+          @Override
+          public int size() {
+            return formEnd - from + 1;
+          }
+        };
         ArgsResult parsed = parseArgs(tokens, 0);
         if (parsed == null) {
-          report(q, name, -1, Outcome.BAD_ARGUMENTS, null, 0);
-          return -1;
+          count(Outcome.BAD_ARGUMENTS);
+          return Outcome.BAD_ARGUMENTS;
         }
-        args = new ArrayList<>(parsed.args.size());
-        for (int i = 0; i < parsed.args.size(); i++) {
-          List<Tok> arg = parsed.args.get(i);
-          List<Tok> sourced = new ArrayList<>(arg.size());
-          for (int j = 0; j < arg.size(); j++) sourced.add(arg.get(j).asArgument(i, j));
-          args.add(sourced);
-        }
+        args = parsed.args;
         arity = args.size();
-        last = nameLast + 1 + parsed.closeIndex;
+        last = from + parsed.closeIndex;
       }
       Selection selection = select(name, arity);
       if (selection.def == null) {
-        report(q, name, arity, selection.outcome, null, 0);
-        return -1;
+        count(selection.outcome);
+        return selection.outcome;
       }
       Def def = selection.def;
-      if (myMode == ErlangMacroSubstitution.Mode.FRAGMENTS && !def.fragment) {
-        report(q, name, arity, Outcome.EXPRESSION_SHAPE_SKIPPED, false, 0);
-        return -1;
-      }
       if (def.arity == -1) {
         // a definition without parentheses: the argument list, if any, stays in the text
         last = nameLast;
         args = null;
       }
-      List<Tok> result;
       try {
-        result = expand(def, args, 1, new ArrayDeque<>());
-        if (result.size() > ErlangMacroSubstitution.MAX_TOKENS_PER_USE) throw new LimitException(Outcome.LIMIT_TOKENS);
+        List<Tok> result = expand(def, args, 1, new ArrayDeque<>());
         if (formSubstitutedTokens + result.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
         formSubstitutedTokens += result.size();
+        count(Outcome.SUBSTITUTED);
+        return new Use(q, last, def, result);
       }
       catch (LimitException e) {
-        report(q, name, arity, e.outcome, def.fragment, 0);
-        return -1;
+        count(e.outcome);
+        return e.outcome;
       }
-      // copy the raw tokens before the use, then the call text, then the substituted tokens
-      int useStartRaw = sig[q];
-      int useEndRaw = sig[last];
-      for (int i = raw; i < useStartRaw; i++) emit(b.type[i], b.start[i], b.end[i]);
-      int startOffset = b.start[useStartRaw];
-      int endOffset = b.end[useEndRaw];
-      emit(ErlangMacroSubstitution.MACRO_CALL_TEXT, startOffset, endOffset);
-      for (Tok t : result) {
-        emit(new ErlangMacroForeignLeafType(t.type, t.text, name, 1, t.kind, t.defName, t.a, t.index), endOffset, endOffset);
-      }
-      myForeignTokenCount += result.size();
-      report(q, name, arity, Outcome.SUBSTITUTED, def.fragment, result.size());
-      return last;
     }
-
-    void report(int q, String name, int arity, Outcome outcome, @Nullable Boolean fragment, int tokens) {
-      UseListener listener = myListener;
-      if (listener != null) listener.use(b.start[sig[q]], name, arity, outcome, fragment, tokens);
-    }
-
-    // ---------------------------------------------------------------- expansion
 
     List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth, Deque<String> active) throws LimitException {
       if (depth > MAX_DEPTH) throw new LimitException(Outcome.LIMIT_DEPTH);

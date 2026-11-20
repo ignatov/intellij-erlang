@@ -20,6 +20,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElement> extends PsiPolyVariantReferenceBase<T> {
@@ -28,7 +29,11 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   }
 
   private static final ResolveCache.AbstractResolver<ErlangPsiPolyVariantCachingReferenceBase<?>, PsiElement> MY_RESOLVER =
-    (base, incompleteCode) -> base.resolveInner();
+    (base, incompleteCode) -> {
+      PsiElement result = base.resolveInner();
+      // spike 3: when master's path finds nothing, ask the macro expansion layer
+      return result != null ? result : ErlangMacroLayer.resolveFallback(base);
+    };
 
   @Nullable
   @Override
