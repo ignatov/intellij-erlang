@@ -33,6 +33,8 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.testFramework.PlatformTestUtil;
+import com.intellij.util.TimeoutUtil;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
@@ -52,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Delayed;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -647,6 +650,27 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     finally {
       WriteAction.run(() -> rootManager.setProjectSdk(old));
     }
+  }
+
+  // the SDK of the project is read in a read action, so it waits while a write action changes the roots
+  public void testSdkIsReadInAReadAction() throws Exception {
+    collector().setEnabled(true);
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    Future<?>[] record = new Future<?>[1];
+    WriteAction.run(() -> {
+      record[0] = AppExecutorUtil.getAppExecutorService().submit(() -> statistics.recordProjectForTests(getProject(), 5));
+      long end = System.currentTimeMillis() + 1_000;
+      while (System.currentTimeMillis() < end && !hasSdkConfigured()) {
+        TimeoutUtil.sleep(10);
+      }
+      assertFalse("the SDK was read during a write action", hasSdkConfigured());
+    });
+    record[0].get(10, TimeUnit.SECONDS);
+    assertTrue(hasSdkConfigured());
+  }
+
+  private static boolean hasSdkConfigured() {
+    return collector().getState().days.stream().anyMatch(day -> day.properties.containsKey(ErlangUsageProperty.SDK_CONFIGURED.name()));
   }
 
   public void testOnlyClassesOfThisPluginCount() {
