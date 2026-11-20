@@ -91,6 +91,35 @@ public final class ErlangMacroLayer {
   private ErlangMacroLayer() {
   }
 
+  /** Spike 5: the outcome of one entry-point call, for {@link ErlangMacroLayerStats}; null when the log is off. */
+  static final class Outcome {
+    String value = "exception";
+    String file;
+  }
+
+  private static void mark(@Nullable Outcome o, @NotNull String value) {
+    if (o != null) o.value = value;
+  }
+
+  private static void markFile(@Nullable Outcome o, @Nullable PsiFile file) {
+    if (o != null && file != null) o.file = file.getName();
+  }
+
+  /** Diagnostic ablation switches for the measurement harness (spike 5); all off by default. */
+  static volatile boolean ourAblateResolve, ourAblateVariable, ourAblateErrorFilter;
+
+  @TestOnly
+  public static void setAblationForTests(boolean resolve, boolean variable, boolean errorFilter, @NotNull Disposable parent) {
+    ourAblateResolve = resolve;
+    ourAblateVariable = variable;
+    ourAblateErrorFilter = errorFilter;
+    Disposer.register(parent, () -> {
+      ourAblateResolve = false;
+      ourAblateVariable = false;
+      ourAblateErrorFilter = false;
+    });
+  }
+
   private static @Nullable String read(String property, String env) {
     String value = System.getProperty(property);
     if (value == null || value.isEmpty()) value = System.getenv(env);
@@ -203,6 +232,7 @@ public final class ErlangMacroLayer {
       Map<String, PsiElement> map = myFunctionsMadeByMacros;
       if (map != null) return map;
       map = new LinkedHashMap<>();
+      long f0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
       if (copyFile != null) {
         Map<String, Integer> made = new HashMap<>();
         for (ErlangFunction fn : copyFile.getFunctions()) made.merge(fn.getName() + "/" + fn.getArity(), 1, Integer::sum);
@@ -220,6 +250,7 @@ public final class ErlangMacroLayer {
         }
       }
       myFunctionsMadeByMacros = map;
+      if (f0 != 0) ErlangMacroLayerStats.phase("functions-made-by-macros", realFile.getName(), System.nanoTime() - f0);
       return map;
     }
 
@@ -356,6 +387,7 @@ public final class ErlangMacroLayer {
                                                                          vf != null ? vf : header);
       ErlangMacroLayerLog.event("SUMMARY", header.getName(), System.nanoTime() - t0, s.tokens, s.directives.size(),
                                 "hash=" + Long.toHexString(s.hash), "defines=" + s.defines);
+      ErlangMacroLayerStats.phase("summary-build", header.getName(), System.nanoTime() - t0);
       return CachedValueProvider.Result.create(s, header);
     }, false);
   }
@@ -371,8 +403,18 @@ public final class ErlangMacroLayer {
       }, false);
       cv = ((UserDataHolderEx)file).putUserDataIfAbsent(TABLE_KEY, cv);
     }
-    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) return null;
-    return cv.getValue();
+    if (!ErlangMacroLayerStats.on()) {
+      if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) return null;
+      return cv.getValue();
+    }
+    long g0 = System.nanoTime();
+    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) {
+      ErlangMacroLayerStats.phase("table-get:edt-miss", file.getName(), System.nanoTime() - g0);
+      return null;
+    }
+    Table t = cv.getValue();
+    ErlangMacroLayerStats.phase("table-get", file.getName(), System.nanoTime() - g0);
+    return t;
   }
 
   private static @NotNull String key(@NotNull String attribute, @Nullable String string) {
@@ -384,6 +426,16 @@ public final class ErlangMacroLayer {
   }
 
   private static @NotNull Table computeTable(@NotNull ErlangFile file) {
+    long c0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
+    try {
+      return computeTable0(file);
+    }
+    finally {
+      if (c0 != 0) ErlangMacroLayerStats.phase("table-build", file.getName(), System.nanoTime() - c0);
+    }
+  }
+
+  private static @NotNull Table computeTable0(@NotNull ErlangFile file) {
     TABLES_BUILT.incrementAndGet();
     Project project = file.getProject();
     List<Object> deps = new ArrayList<>();
@@ -493,6 +545,8 @@ public final class ErlangMacroLayer {
     volatile @Nullable Copy strong;
     volatile @NotNull WeakReference<Copy> weak = new WeakReference<>(null);
     volatile boolean everBuilt;
+    /** Spike 5: the thread that builds now, for the lock-wait events. */
+    volatile @Nullable String builder;
 
     CopyHolder(@Nullable VirtualFile file) {
       this.file = file;
@@ -541,17 +595,38 @@ public final class ErlangMacroLayer {
     CopyHolder holder = cv.getValue();
     Copy copy = holder.get();
     if (copy == null) {
+      boolean stats = ErlangMacroLayerStats.on();
+      long w0 = stats ? System.nanoTime() : 0;
+      String heldBy = stats ? holder.builder : null;
       // highlighting asks from several threads at once; build once per file and let the others wait
       synchronized (holder) {
+        if (stats) {
+          long waited = System.nanoTime() - w0;
+          ErlangMacroLayerStats.inner("lock-wait", file.getName(), waited);
+          if (waited > 20_000_000L) {
+            ErlangMacroLayerLog.event("LOCK_WAIT", file.getName(), waited, 0, 0, "held-by=" + heldBy, trigger,
+                                      "copyThere=" + (holder.get() != null));
+          }
+        }
         copy = holder.get();
         if (copy == null) {
-          copy = build(file, table, trigger, holder.everBuilt ? "collected" : null);
+          long b0 = stats ? System.nanoTime() : 0;
+          holder.builder = stats ? Thread.currentThread().getName() : null;
+          try {
+            copy = build(file, table, trigger, holder.everBuilt ? "collected" : null);
+          }
+          finally {
+            holder.builder = null;
+            if (stats) ErlangMacroLayerStats.inner("build", file.getName(), System.nanoTime() - b0);
+          }
           holder.weak = new WeakReference<>(copy);
           holder.everBuilt = true;
         }
       }
     }
+    long r0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
     ErlangMacroLayerRetention.getInstance(project).touch(holder, copy);
+    if (r0 != 0) ErlangMacroLayerStats.phase("retention-touch", null, System.nanoTime() - r0);
     return copy;
   }
 
@@ -596,6 +671,60 @@ public final class ErlangMacroLayer {
   private static final Key<long[]> LAST_BUILD_STATE = Key.create("erlang.macro.layer.last.build");
 
   private static @NotNull Copy build(@NotNull PsiFile file, @Nullable Table table, @NotNull String trigger, @Nullable String why) {
+    if (!ErlangMacroLayerLog.isEnabled()) return build0(file, table, trigger, why, null);
+    BuildProbe probe = new BuildProbe();
+    try {
+      return build0(file, table, trigger, why, probe);
+    }
+    catch (com.intellij.openapi.progress.ProcessCanceledException e) {
+      long dt = System.nanoTime() - probe.t0;
+      ErlangMacroLayerStats.phase("build-cancelled", file.getName(), dt);
+      ErlangMacroLayerLog.event("CANCELLED", file.getName(), dt, 0, 0, "phase=" + probe.phase, trigger, probe.details());
+      throw e;
+    }
+  }
+
+  /** Spike 5: what one build spends, by phase, with GC and thread CPU time; for the log only. */
+  private static final class BuildProbe {
+    final long t0 = System.nanoTime();
+    final long cpu0 = threadCpu();
+    final long gc0 = gcMillis();
+    final long gcCount0 = gcCount();
+    long lex, expand, parse, errors;
+    String phase = "start";
+
+    String details() {
+      com.intellij.openapi.progress.ProgressIndicator pi = ProgressManager.getGlobalProgressIndicator();
+      return String.format(Locale.ROOT, "lex=%.1f expand=%.1f parse=%.1f errors=%.1f cpu=%.1f gcMs=%d gcCount=%d indicator=%s nonCancelable=%s",
+                           lex / 1e6, expand / 1e6, parse / 1e6, errors / 1e6, (threadCpu() - cpu0) / 1e6, gcMillis() - gc0,
+                           gcCount() - gcCount0, pi == null ? "none" : pi.getClass().getSimpleName(),
+                           ProgressManager.getInstance().isInNonCancelableSection());
+    }
+
+    static long threadCpu() {
+      java.lang.management.ThreadMXBean b = java.lang.management.ManagementFactory.getThreadMXBean();
+      return b.isCurrentThreadCpuTimeSupported() ? b.getCurrentThreadCpuTime() : 0;
+    }
+
+    static long gcMillis() {
+      long n = 0;
+      for (java.lang.management.GarbageCollectorMXBean b : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+        n += Math.max(0, b.getCollectionTime());
+      }
+      return n;
+    }
+
+    static long gcCount() {
+      long n = 0;
+      for (java.lang.management.GarbageCollectorMXBean b : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+        n += Math.max(0, b.getCollectionCount());
+      }
+      return n;
+    }
+  }
+
+  private static @NotNull Copy build0(@NotNull PsiFile file, @Nullable Table table, @NotNull String trigger, @Nullable String why,
+                                      @Nullable BuildProbe probe) {
     long t0 = System.nanoTime();
     Project project = file.getProject();
     long[] now = {file.getModificationStamp(), table != null ? table.headerVersions(project) : 0,
@@ -609,8 +738,15 @@ public final class ErlangMacroLayer {
     EXPANSIONS_BUILT.incrementAndGet();
     CharSequence text = file.getViewProvider().getContents();
     if (file.getTextLength() != text.length() || !file.textMatches(text)) text = file.getText();
+    if (probe != null) probe.phase = "expand";
     Expansion expansion = ErlangMacroExpander.expand(text, new ErlangLexer(project), FORM_CAP,
                                                      table != null ? table.resolver() : null);
+    long p0 = System.nanoTime();
+    if (probe != null) {
+      probe.lex = expansion.lexNanos;
+      probe.expand = p0 - t0 - expansion.lexNanos;
+      probe.phase = "parse";
+    }
     ErlangFile copyFile = null;
     if (expansion.hasExpansions()) {
       COPIES_PARSED.incrementAndGet();
@@ -623,9 +759,21 @@ public final class ErlangMacroLayer {
         parsed.getNode().getFirstChildNode(); // parse now, so that the build time is honest
       }
     }
+    long e0 = System.nanoTime();
+    if (probe != null) {
+      probe.parse = e0 - p0;
+      probe.phase = "errors";
+    }
     Copy copy = new Copy(file, expansion, copyFile, System.nanoTime() - t0);
+    if (probe != null) {
+      probe.errors = System.nanoTime() - e0;
+      ErlangMacroLayerStats.phase("build:lex", file.getName(), probe.lex);
+      ErlangMacroLayerStats.phase("build:expand", file.getName(), probe.expand);
+      ErlangMacroLayerStats.phase("build:parse", file.getName(), probe.parse);
+      ErlangMacroLayerStats.phase("build:errors-walk", file.getName(), probe.errors);
+    }
     ErlangMacroLayerLog.event("BUILD", file.getName(), copy.buildNanos, expansion.sourceTokens, expansion.expandedTokens,
-                              reason, trigger);
+                              reason, trigger, probe != null ? probe.details() : "");
     return copy;
   }
 
@@ -766,41 +914,80 @@ public final class ErlangMacroLayer {
 
   /** Hook: master's resolve found nothing. Returns a real element or null (master's answer). */
   public static @Nullable PsiElement resolveFallback(@NotNull PsiReference ref) {
+    if (!ErlangMacroLayerStats.on()) return resolveFallback(ref, null);
+    Outcome o = new Outcome();
+    long t0 = ErlangMacroLayerStats.enter();
+    String entry = ref instanceof ErlangVariableReferenceImpl ? "variable(resolve)" : "resolve:" + ref.getClass().getSimpleName();
+    try {
+      return resolveFallback(ref, o);
+    }
+    finally {
+      ErlangMacroLayerStats.exit(entry, o.value, o.file, t0);
+    }
+  }
+
+  private static @Nullable PsiElement resolveFallback(@NotNull PsiReference ref, @Nullable Outcome o) {
     PsiElement element = ref.getElement();
     ErlangFile file = layerFile(element);
-    if (file == null) return null;
+    if (file == null) {
+      mark(o, "gate:not-layer-file");
+      return null;
+    }
+    markFile(o, file);
     if (ref instanceof ErlangVariableReferenceImpl v) {
-      ResolveResult[] rr = multiResolveFallback(v);
+      ResolveResult[] rr = multiResolveFallback(v, o);
       return rr.length > 0 ? rr[0].getElement() : null;
     }
+    if (ourAblateResolve) {
+      mark(o, "ablated");
+      return null;
+    }
     if (ref instanceof ErlangFunctionReference fr && isRemoteCall(element)) {
+      mark(o, isRemoteEnabled() ? "remote" : "gate:remote-off");
       return isRemoteEnabled() ? remoteFallback(file, element, fr) : null;
     }
     Table t = table(file);
-    if (t == null || t.refusal != null || t.names.isEmpty()) return null;
+    if (t == null || t.refusal != null || t.names.isEmpty()) {
+      mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
+      return null;
+    }
     boolean formHasUse = formUsesMacro(t, topForm(element));
     if (!formHasUse) {
       // a local function may be made by a macro in another form: the per-file table
-      if (!(ref instanceof ErlangFunctionReference fr) || !hasTopLevelMacroForm(file, t)) return null;
+      if (!(ref instanceof ErlangFunctionReference fr) || !hasTopLevelMacroForm(file, t)) {
+        mark(o, "gate:form-no-use");
+        return null;
+      }
       FALLBACK_ASKED.incrementAndGet();
       ErlangMacroLayerLog.query("function-table", file.getName());
       Copy copy = getCopy(file, "function-table");
-      if (copy == null) return null;
+      if (copy == null) {
+        mark(o, "function-table:no-copy");
+        return null;
+      }
       PsiElement real = exit(copy.functionsMadeByMacros().get(fr.getName() + "/" + fr.getArity()), file);
       if (real != null) FALLBACK_ANSWERED.incrementAndGet();
+      mark(o, real != null ? "function-table:answered" : "function-table:none");
       return real;
     }
     FALLBACK_ASKED.incrementAndGet();
     ErlangMacroLayerLog.query("resolve", file.getName());
     Copy copy = getCopy(file, "resolve");
-    if (copy == null) return null;
+    if (copy == null) {
+      mark(o, "asked:no-copy");
+      return null;
+    }
     String answerKey = "r" + element.getTextRange().getStartOffset() + ref.getClass().getSimpleName();
     Object cached = copy.answers.get(answerKey);
-    if (cached != null) return cached == NO_ANSWER ? null : (PsiElement)cached;
+    if (cached != null) {
+      mark(o, cached == NO_ANSWER ? "asked:cached-none" : "asked:cached-answer");
+      return cached == NO_ANSWER ? null : (PsiElement)cached;
+    }
     long q0 = System.nanoTime();
     PsiElement answer = resolveInCopy(copy, ref, element, file, t);
     ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
     copy.answers.put(answerKey, answer == null ? NO_ANSWER : answer);
+    mark(o, answer == null ? "asked:computed-none" : "asked:computed-answer");
     return answer;
   }
 
@@ -828,30 +1015,70 @@ public final class ErlangMacroLayer {
 
   /** Hook for poly-variant resolve (variables): master's multiResolve found nothing. */
   public static @NotNull ResolveResult @NotNull [] multiResolveFallback(@NotNull PsiPolyVariantReference ref) {
+    if (!ErlangMacroLayerStats.on()) return multiResolveFallback(ref, null);
+    Outcome o = new Outcome();
+    long t0 = ErlangMacroLayerStats.enter();
+    try {
+      return multiResolveFallback(ref, o);
+    }
+    finally {
+      ErlangMacroLayerStats.exit("variable(multiResolve)", o.value, o.file, t0);
+    }
+  }
+
+  private static @NotNull ResolveResult @NotNull [] multiResolveFallback(@NotNull PsiPolyVariantReference ref, @Nullable Outcome o) {
     PsiElement element = ref.getElement();
     ErlangFile file = layerFile(element);
-    if (file == null) return ResolveResult.EMPTY_ARRAY;
-    Table t = table(file);
-    if (t == null || t.refusal != null || t.names.isEmpty()) return ResolveResult.EMPTY_ARRAY;
-    if ("_".equals(element.getText())) return ResolveResult.EMPTY_ARRAY;
-    PsiElement form = topForm(element);
-    if (form == null || !formUsesMacro(t, form)) return ResolveResult.EMPTY_ARRAY;
-    // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form
-    if (!t.bodyVars.contains(element.getText()) && !argumentVars(t, form).contains(element.getText()) &&
-        !formHasError(t, form)) {
+    if (file == null) {
+      mark(o, "gate:not-layer-file");
       return ResolveResult.EMPTY_ARRAY;
     }
+    markFile(o, file);
+    if (ourAblateVariable) {
+      mark(o, "ablated");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    Table t = table(file);
+    if (t == null || t.refusal != null || t.names.isEmpty()) {
+      mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    if ("_".equals(element.getText())) {
+      mark(o, "gate:underscore");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    PsiElement form = topForm(element);
+    if (form == null || !formUsesMacro(t, form)) {
+      mark(o, "gate:form-no-use");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form
+    boolean body = t.bodyVars.contains(element.getText());
+    boolean arg = !body && argumentVars(t, form).contains(element.getText());
+    boolean err = !body && !arg && formHasError(t, form);
+    if (!body && !arg && !err) {
+      mark(o, "gate:var-not-candidate");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    String why = body ? "body-var" : arg ? "arg-var" : "form-error";
     FALLBACK_ASKED.incrementAndGet();
     ErlangMacroLayerLog.query("variable", file.getName());
     Copy copy = getCopy(file, "variable");
-    if (copy == null) return ResolveResult.EMPTY_ARRAY;
+    if (copy == null) {
+      mark(o, "asked(" + why + "):no-copy");
+      return ResolveResult.EMPTY_ARRAY;
+    }
     String answerKey = "v" + element.getTextRange().getStartOffset();
     Object cached = copy.answers.get(answerKey);
-    if (cached instanceof ResolveResult[] rr) return rr;
+    if (cached instanceof ResolveResult[] rr) {
+      mark(o, "asked(" + why + "):cached-" + (rr.length > 0 ? "answer" : "none"));
+      return rr;
+    }
     long q0 = System.nanoTime();
     ResolveResult[] answer = multiResolveInCopy(copy, ref, element, file);
     ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
     copy.answers.put(answerKey, answer);
+    mark(o, "asked(" + why + "):computed-" + (answer.length > 0 ? "answer" : "none"));
     return answer;
   }
 
@@ -894,16 +1121,44 @@ public final class ErlangMacroLayer {
 
   /** Hook of the error filter: the error is in an expanded form whose expansion parses without errors. */
   public static boolean isErrorExplainedByExpansion(@NotNull PsiErrorElement error) {
+    if (!ErlangMacroLayerStats.on()) return isErrorExplainedByExpansion(error, null);
+    Outcome o = new Outcome();
+    long t0 = ErlangMacroLayerStats.enter();
+    try {
+      return isErrorExplainedByExpansion(error, o);
+    }
+    finally {
+      ErlangMacroLayerStats.exit("error-filter", o.value, o.file, t0);
+    }
+  }
+
+  private static boolean isErrorExplainedByExpansion(@NotNull PsiErrorElement error, @Nullable Outcome o) {
     ErlangFile file = layerFile(error);
-    if (file == null) return false;
+    if (file == null) {
+      mark(o, "gate:not-layer-file");
+      return false;
+    }
+    markFile(o, file);
+    if (ourAblateErrorFilter) {
+      mark(o, "ablated");
+      return false;
+    }
     Table t = table(file);
-    if (t == null || t.refusal != null || !formUsesMacro(t, topForm(error))) return false;
+    if (t == null || t.refusal != null || !formUsesMacro(t, topForm(error))) {
+      mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:form-no-use");
+      return false;
+    }
     ErlangMacroLayerLog.query("error-filter", file.getName());
     Copy copy = getCopy(file, "error-filter");
-    if (copy == null || copy.copyFile == null) return false;
+    if (copy == null || copy.copyFile == null) {
+      mark(o, copy == null ? "asked:no-copy" : "asked:no-expansion");
+      return false;
+    }
     long q0 = System.nanoTime();
     try {
-      return explained(copy, error);
+      boolean hide = explained(copy, error);
+      mark(o, hide ? "asked:hidden" : "asked:shown");
+      return hide;
     }
     finally {
       ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);

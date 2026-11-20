@@ -34,16 +34,42 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ErlangMacroLayerLog {
   private static final Logger LOG = Logger.getInstance(ErlangMacroLayerLog.class);
 
+  /**
+   * One event. Spike 5 appended three columns: the wall-clock time of the event's end and of its start
+   * (epoch milliseconds; start = end - duration), and free-form details ({@code key=value} pairs separated by spaces).
+   */
   public record Event(@NotNull String kind, @NotNull String file, @NotNull String thread, boolean edt, long nanos,
                       int sourceTokens, int expandedTokens, @NotNull String reason, @NotNull String trigger,
-                      @NotNull String stack) {
+                      @NotNull String stack, long wallMillis, @NotNull String details) {
     public String line() {
       return String.join("\t", kind, file, thread, edt ? "edt" : "bgt", String.format(Locale.ROOT, "%.3f", nanos / 1e6),
-                         String.valueOf(sourceTokens), String.valueOf(expandedTokens), reason, trigger, stack);
+                         String.valueOf(sourceTokens), String.valueOf(expandedTokens), reason, trigger, stack,
+                         String.valueOf(wallMillis), String.format(Locale.ROOT, "%.1f", wallMillis - nanos / 1e6), details);
     }
   }
 
   private static final String SETTING = read();
+
+  static {
+    // spike 5: when the log is a file, the entry-point counters go to "<log>.stats.tsv" at JVM exit
+    if (SETTING != null && !"on".equalsIgnoreCase(SETTING)) {
+      try {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> writeStats(Paths.get(SETTING + ".stats.tsv")), "macro layer stats"));
+      }
+      catch (RuntimeException ignored) {
+      }
+    }
+  }
+
+  /** Writes the entry-point counters ({@link ErlangMacroLayerStats#summary()}) to a file. */
+  public static void writeStats(@NotNull Path file) {
+    try {
+      Files.writeString(file, ErlangMacroLayerStats.summary(), StandardCharsets.UTF_8);
+    }
+    catch (IOException | RuntimeException ex) {
+      LOG.debug(ex);
+    }
+  }
   private static volatile boolean ourTestEnabled;
   private static final ConcurrentLinkedQueue<Event> EVENTS = new ConcurrentLinkedQueue<>();
   private static final AtomicInteger EVENT_COUNT = new AtomicInteger();
@@ -74,6 +100,7 @@ public final class ErlangMacroLayerLog {
     EVENT_COUNT.set(0);
     QUERIES.clear();
     QUERY_NANOS.reset();
+    ErlangMacroLayerStats.reset();
   }
 
   @TestOnly
@@ -106,10 +133,16 @@ public final class ErlangMacroLayerLog {
 
   public static void event(@NotNull String kind, @NotNull String file, long nanos, int sourceTokens, int expandedTokens,
                            @NotNull String reason, @NotNull String trigger) {
+    event(kind, file, nanos, sourceTokens, expandedTokens, reason, trigger, "");
+  }
+
+  public static void event(@NotNull String kind, @NotNull String file, long nanos, int sourceTokens, int expandedTokens,
+                           @NotNull String reason, @NotNull String trigger, @NotNull String details) {
     if (!isEnabled()) return;
     Thread t = Thread.currentThread();
     boolean edt = ApplicationManager.getApplication() != null && ApplicationManager.getApplication().isDispatchThread();
-    Event e = new Event(kind, file, t.getName(), edt, nanos, sourceTokens, expandedTokens, reason, trigger, stackSummary());
+    Event e = new Event(kind, file, t.getName(), edt, nanos, sourceTokens, expandedTokens, reason, trigger, stackSummary(),
+                        System.currentTimeMillis(), details);
     if (EVENT_COUNT.incrementAndGet() <= MAX_KEPT) EVENTS.add(e);
     String s = SETTING;
     if (s == null) return;

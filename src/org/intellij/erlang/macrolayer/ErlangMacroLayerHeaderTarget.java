@@ -47,6 +47,16 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
 
   /** The current range of the token in the header, from the header's summary (no PSI tree), or null. */
   public @Nullable TextRange currentRange() {
+    long t0 = ErlangMacroLayerStats.enter();
+    try {
+      return currentRange0();
+    }
+    finally {
+      ErlangMacroLayerStats.exit("header-target", "range", myHeader.getName(), t0);
+    }
+  }
+
+  private @Nullable TextRange currentRange0() {
     PsiFile f = headerFile();
     if (f == null) return null;
     ErlangMacroExpander.HeaderSummary s = ErlangMacroLayer.summaryOf(f);

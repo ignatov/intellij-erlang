@@ -167,6 +167,8 @@ public final class ErlangMacroExpander {
     public int headerUses, headerAmbiguous, headerConditional;
     /** Significant tokens of the source, and of the expanded text (estimated from the substitutions). */
     public int sourceTokens, expandedTokens;
+    /** Spike 5: time of the base lexing inside {@link #expand} (measurement only). */
+    public long lexNanos;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
     private Map<Integer, int[]> myArgumentCopies;
@@ -375,7 +377,9 @@ public final class ErlangMacroExpander {
   /** Expands the text with the macros of the included headers ({@code resolver} null: same-file macros only). */
   public static @NotNull Expansion expand(@NotNull CharSequence text, @NotNull Lexer base, int formCap,
                                           @Nullable IncludeResolver resolver) {
+    long l0 = System.nanoTime();
     Base b = Base.lex(base, text, 0, text.length(), 0);
+    long lexNanos = System.nanoTime() - l0;
     Run run = new Run(b, formCap, resolver);
     run.run();
     Expansion e = new Expansion(text, run.out.text.toString(), run.forms, run.outcomes, run.out);
@@ -384,6 +388,7 @@ public final class ErlangMacroExpander {
     e.headerConditional = run.headerConditional;
     e.sourceTokens = run.sigCount;
     e.expandedTokens = run.sigCount + run.expandedDelta;
+    e.lexNanos = lexNanos;
     return e;
   }
 
