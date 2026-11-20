@@ -132,12 +132,14 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
       assertFalse(first.isExampleShownForTests());
       assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
-      // the OK exit code, which Enter or Ctrl+Enter may give, is not consent
-      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
+      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
       assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));
       // Esc and the close button of the window cancel the dialog
       first.doCancelAction();
       assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(first.getExitCode()));
+      reminder.clickNoForTests();
+      assertFalse("No during the guard time", reminder.isDisposed());
+      reminder.endGuardForTests();
       reminder.clickNoForTests();
       assertEquals(ErlangUsageAskUi.Choice.NO, ErlangUsageAskDialog.choiceOf(reminder.getExitCode()));
     }
@@ -147,21 +149,42 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
-  public void testEnterDoesNotGiveConsent() {
+  public void testYesIsTheDefaultAfterAShortGuard() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
-      for (Action action : dialog.getActionsForTests()) {
-        assertNull((String)action.getValue(Action.NAME), action.getValue(DialogWrapper.DEFAULT_ACTION));
-      }
+      Action yes = dialog.getActionsForTests().get(0);
+      assertEquals(ErlangUsageAskDialog.YES, yes.getValue(Action.NAME));
+      assertNotNull(yes.getValue(DialogWrapper.DEFAULT_ACTION));
       JComponent focused = dialog.getPreferredFocusedComponent();
-      assertNotNull(focused);
-      assertFalse(focused instanceof AbstractButton);
-      dialog.pressEnterForTests();
-      assertNotSame(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
-      assertEquals(ErlangUsageCollector.Consent.UNSET, collector().getConsent());
+      assertTrue(focused instanceof JButton);
+      assertEquals(ErlangUsageAskDialog.YES, ((JButton)focused).getText());
+
+      // a key press that was on its way when the dialog appeared does not answer
+      assertTrue(dialog.isGuardedForTests());
+      assertFalse(yes.isEnabled());
+      dialog.pressYesForTests();
+      assertFalse(dialog.isDisposed());
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
+
+      dialog.endGuardForTests();
+      assertTrue(yes.isEnabled());
+      dialog.pressYesForTests();
+      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
     }
     finally {
-      Disposer.dispose(dialog.getDisposable());
+      if (!dialog.isDisposed()) Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testEscIsLaterAlsoDuringTheGuard() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      assertTrue(dialog.isGuardedForTests());
+      dialog.doCancelAction();
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
+    }
+    finally {
+      if (!dialog.isDisposed()) Disposer.dispose(dialog.getDisposable());
     }
   }
 

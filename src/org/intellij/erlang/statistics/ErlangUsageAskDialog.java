@@ -18,7 +18,6 @@ package org.intellij.erlang.statistics;
 
 import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.icons.AllIcons;
-import com.intellij.ide.ui.laf.darcula.ui.DarculaButtonUI;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.DumbService;
@@ -40,7 +39,10 @@ import org.jetbrains.annotations.TestOnly;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,9 +56,9 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   public static final String NO = "No, thanks";
   public static final String LATER = "Ask me later";
   public static final String NEVER_SENT = "It never sends code, file names or paths.";
-  // own exit codes: the OK exit code, which Enter or Ctrl+Enter may give, never means yes
   private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE;
-  private static final int YES_EXIT_CODE = NEXT_USER_EXIT_CODE + 1;
+  // the buttons do not react this long after the dialog appears, so a key press already on its way does not answer
+  static final int GUARD_MS = 1500;
   public static final String EXAMPLE_TITLE = "Example of the data that is sent";
   public static final String REAL_SUMMARY = "The real summary of today is in Settings | Erlang External Tools.";
   private static final int TEXT_WIDTH = 440;
@@ -87,55 +89,91 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   private JComponent myContent;
   private ActionLink myToggle;
   private Dimension myCollapsedSize;
-  // no action is the default one, so Enter or Space from a user who was typing never gives consent
-  private final Action myYesAction = new DialogWrapperExitAction(YES, YES_EXIT_CODE);
-  private final Action myNoAction = new DialogWrapperExitAction(NO, NO_EXIT_CODE);
+  private final Action myNoAction = new DialogWrapperExitAction(NO, NO_EXIT_CODE) {
+    @Override
+    protected void doAction(ActionEvent e) {
+      if (!myGuarded) super.doAction(e);
+    }
+  };
+  private volatile boolean myGuarded = true;
 
   ErlangUsageAskDialog(@Nullable Project project, boolean reminder) {
     super(project, false);
     myReminder = reminder;
     setTitle(TITLE);
+    setOKButtonText(YES);
     setCancelButtonText(LATER);
     setResizable(false);
     init();
+    startGuard(myContent);
   }
 
   @NotNull
   static ErlangUsageAskUi.Choice choiceOf(int exitCode) {
-    if (exitCode == YES_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
+    if (exitCode == OK_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
     if (exitCode == NO_EXIT_CODE) return ErlangUsageAskUi.Choice.NO;
     return ErlangUsageAskUi.Choice.LATER;
   }
 
   @Override
   protected Action @NotNull [] createActions() {
-    return new Action[]{myYesAction, myNoAction, getCancelAction()};
+    return new Action[]{getOKAction(), myNoAction, getCancelAction()};
   }
 
-  // the OK action is not shown; Ctrl+Enter, which runs it, does nothing
+  // "Yes, send statistics" is the default button, but not in the first moment after the dialog appears
   @Override
   protected void doOKAction() {
+    if (!myGuarded) super.doOKAction();
   }
 
-  // "Yes" looks like the primary button, but it is not the default button of the dialog
-  @Override
-  protected @NotNull JButton createJButtonForAction(@NotNull Action action) {
-    JButton button = super.createJButtonForAction(action);
-    if (action == myYesAction) button.putClientProperty(DarculaButtonUI.DEFAULT_STYLE_KEY, Boolean.TRUE);
-    return button;
+  // the buttons are disabled until the guard time after the dialog is shown is over; Esc still means later
+  private void startGuard(@NotNull JComponent shown) {
+    setButtonsEnabled(false);
+    shown.addHierarchyListener(new HierarchyListener() {
+      @Override
+      public void hierarchyChanged(HierarchyEvent e) {
+        if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == 0 || !shown.isShowing()) return;
+        shown.removeHierarchyListener(this);
+        Timer timer = new Timer(GUARD_MS, event -> endGuard());
+        timer.setRepeats(false);
+        Disposer.register(getDisposable(), timer::stop);
+        timer.start();
+      }
+    });
+  }
+
+  private void endGuard() {
+    if (isDisposed()) return;
+    myGuarded = false;
+    setButtonsEnabled(true);
+  }
+
+  private void setButtonsEnabled(boolean enabled) {
+    getOKAction().setEnabled(enabled);
+    myNoAction.setEnabled(enabled);
+    JButton later = getButton(getCancelAction());
+    if (later != null) later.setEnabled(enabled);
+  }
+
+  @TestOnly
+  void endGuardForTests() {
+    endGuard();
+  }
+
+  @TestOnly
+  boolean isGuardedForTests() {
+    return myGuarded;
+  }
+
+  @TestOnly
+  void pressYesForTests() {
+    doOKAction();
   }
 
   @TestOnly
   @NotNull
   List<Action> getActionsForTests() {
     return List.of(createActions());
-  }
-
-  @TestOnly
-  void pressEnterForTests() {
-    JButton defaultButton = getRootPane() != null ? getRootPane().getDefaultButton() : null;
-    if (defaultButton != null) defaultButton.doClick();
-    else doOKAction();
   }
 
   @TestOnly
@@ -162,15 +200,13 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
 
   @TestOnly
   void clickNoForTests() {
-    close(NO_EXIT_CODE);
+    myNoAction.actionPerformed(new ActionEvent(myContent, ActionEvent.ACTION_PERFORMED, NO));
   }
 
   @Override
   protected @NotNull JComponent createCenterPanel() {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    // the first focus goes here: Space or Enter on a panel does nothing
-    panel.setFocusable(true);
     myContent = panel;
     String text = myReminder ? ErlangUsageStatistics.REMINDER_TEXT : ErlangUsageStatistics.TEXT;
     panel.add(left(new JBLabel(wrapped(text))));
@@ -230,7 +266,7 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
 
   @Override
   public @Nullable JComponent getPreferredFocusedComponent() {
-    return myContent;
+    return getButton(getOKAction());
   }
 
   // HTML with a fixed width, so that the text wraps into a compact block
