@@ -1,0 +1,13 @@
+# The parser baseline of the release smoke (scripts/smoke/run.sh, job release-smoke of .github/workflows/gradle.yml).
+# The corpus is the .erl and .hrl files of the inputs that scripts/smoke/inputs.sh pins (cowboy src and test, Erlang/OTP
+# stdlib and kernel src and include) and of testData/smoke/smoke_app/src. ErlangCorpusParsingTest parses them, and the
+# check fails when a file has more error elements than this file lists (a file not listed must have none), when the
+# parser throws, or when the corpus is another one. Every file compiles with erlc, so each error element is a parser bug.
+# After a parser fix, or after a change of the pins, refresh the baseline from the root of the checkout:
+#   scripts/smoke/run.sh inputs parser-baseline
+# and commit it with the change; the pull request says why the counts changed.
+corpus cowboy 2.19.0 79e3fb02b31d, Erlang/OTP 27.3.4.9
+files 381
+7 otp/kernel/src/inet_dns.erl
+2 otp/stdlib/src/edlin_key.erl
+2 otp/stdlib/src/json.erl

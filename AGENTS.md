@@ -32,6 +32,9 @@ The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts
 | Parse every `.erl`/`.hrl` under a directory (corpus check) | `CORPUS_DIR=/usr/local/lib/erlang CORPUS_REPORT=/tmp/corpus.json ./gradlew test --tests 'org.intellij.erlang.parser.ErlangCorpusParsingTest' --rerun` |
 | Unit tests of the compatibility check scripts | `python3 -m unittest discover -s scripts/compat -p 'test_*.py' -v` |
 | Compatibility check on GitHub | `gh workflow run compat.yml -f ide=263.7307.44 -f otp=28.0` |
+| Release smoke, machine half (CI job `release-smoke`, JDK 25) | `scripts/smoke/run.sh` (phases and settings in its header) |
+| Unit tests of the release smoke scripts | `python3 -m unittest discover -s scripts/smoke -p 'test_*.py' -v` |
+| Refresh the parser baseline of the release smoke | `scripts/smoke/run.sh inputs parser-baseline` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml`). It fails if any test was skipped.
