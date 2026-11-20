@@ -18,6 +18,7 @@ package org.intellij.erlang.statistics;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -49,6 +50,12 @@ import java.util.List;
 import java.util.Map;
 
 public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final String MODULE = """
+    -module(hostile_module).
+    hostile_fun_one() -> ok.
+    hostile_fun_two() -> ok.
+    main() -> hostile_fun_<caret>
+    """;
   private final ErlangUsageCollectorTest.FakeSender mySender = new ErlangUsageCollectorTest.FakeSender();
 
   @Override
@@ -99,6 +106,20 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertFalse("property", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, "FALSE", null));
     assertFalse("DO_NOT_TRACK", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, null, "1"));
     assertFalse("DO_NOT_TRACK", ErlangUsageStatistics.isAllowedEnvironment("0.11.1304", false, false, null, "true"));
+  }
+
+  public void testProjectWithoutErlangFilesDoesNotCount() {
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    collector().setEnabled(true);
+    myFixture.configureByText("web.config", "<configuration><appSettings/></configuration>");
+    myFixture.performEditorAction("ReformatCode");
+    completeFunction();
+    ErlangUsageCounters.countQuickFix(getProject(), ErlangUsageCollectorTest.FakeSender.class);
+    assertTrue(collector().getState().days.isEmpty());
+    JsonObject properties = previewProperties();
+    assertFalse(properties.has("opened_config"));
+    assertFalse(properties.has("reformat"));
+    assertFalse(properties.has("completion"));
   }
 
   public void testPreviewStoresNothing() {
@@ -491,6 +512,38 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertTrue(json, json.contains("\"otp\":[\"27\",\"R16\"]"));
   }
 
+  public void testDefaultIsOff() {
+    completeFunction();
+    myFixture.performEditorAction("ReformatCode");
+    ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
+    assertFalse(ErlangUsageCounters.isCounting());
+    assertTrue(collector().getState().days.isEmpty());
+    assertEquals(0, collector().sendPending());
+    assertTrue(mySender.bodies.isEmpty());
+  }
+
+  public void testCompletionInErlangFileIsCounted() {
+    collector().setEnabled(true);
+    completeFunction();
+    JsonObject properties = previewProperties();
+    assertEquals(1, properties.get("completion").getAsInt());
+    assertEquals(1, properties.get("completion_function").getAsInt());
+  }
+
+  public void testActionInErlangFileIsCounted() {
+    collector().setEnabled(true);
+    myFixture.configureByText("a.erl", "-module(a).\nfoo()->ok.\n");
+    myFixture.performEditorAction("ReformatCode");
+    assertEquals(1, previewProperties().get("reformat").getAsInt());
+  }
+
+  public void testActionInOtherFileIsNotCounted() {
+    collector().setEnabled(true);
+    myFixture.configureByText("a.txt", "text");
+    myFixture.performEditorAction("ReformatCode");
+    assertFalse(previewProperties().has("reformat"));
+  }
+
   public void testTurningOffDeletesTheData() {
     collector().setEnabled(true);
     ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
@@ -536,6 +589,49 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(ErlangUsageKey.OPENED_APP, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.app.src")));
     assertEquals(ErlangUsageKey.OPENED_CONFIG, ErlangUsageListeners.openedFileKey(new LightVirtualFile("sys.config")));
     assertNull(ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.txt")));
+  }
+
+  // names and paths pushed through every public way to count must not get into the JSON or the stored state
+  public void testNoNamesOrPathsLeak() throws Exception {
+    collector().setEnabled(true);
+    completeFunction();
+    myFixture.performEditorAction("ReformatCode");
+    myFixture.performEditorAction("RenameElement");
+    myFixture.configureByText("hostile_text.txt", "hostile_text");
+    myFixture.performEditorAction("ReformatCode");
+    ErlangUsageCounters.countNewFile(getProject(), "hostile_template /Users/hostile_user/hostile_dir");
+    ErlangUsageCounters.countNewFile(getProject(), null);
+    ErlangUsageCounters.countQuickFix(getProject(), String.class);
+    ErlangUsageCounters.countQuickFix(getProject(), new Object() {}.getClass());
+    ErlangUsageCounters.countIntention(getProject(), ErlangUsageCollectorTest.FakeSender.class);
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "hostile_run /tmp/hostile_path", ErlangApplicationRunConfigurationType.getInstance());
+    ErlangUsageCounters.count(getProject(), ErlangUsageListeners.runKey("Run", configuration));
+
+    String json = collector().previewToday();
+    String state = JDOMUtil.write(XmlSerializer.serialize(ErlangUsageStatistics.getInstance().getState()));
+    for (String text : List.of(json, state)) {
+      for (String hostile : List.of("hostile", "/Users", "/tmp", "String", getProject().getName())) {
+        assertFalse(hostile + " in " + text, text.contains(hostile));
+      }
+    }
+    JsonObject properties = previewProperties();
+    ErlangUsagePayloadTest.assertAllowedKeys(properties);
+    assertEquals(1, properties.get("completion_function").getAsInt());
+    assertEquals(1, properties.get("reformat").getAsInt());
+    // the fixture opens the module in an editor; the text file does not count
+    assertEquals(1, properties.get("opened_erl").getAsInt());
+    assertEquals(2, properties.get("new_file_other").getAsInt());
+    assertEquals(1, properties.get("run_application").getAsInt());
+    assertEquals(1, properties.getAsJsonObject("intentions").get("FakeSender").getAsInt());
+    assertFalse(properties.has("quick_fixes"));
+  }
+
+  private void completeFunction() {
+    myFixture.configureByText("hostile_module.erl", MODULE);
+    myFixture.completeBasic();
+    assertNotNull(myFixture.getLookup());
+    myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
   }
 
   @NotNull
