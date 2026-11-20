@@ -171,7 +171,9 @@ public final class ErlangUsageCollector {
            aClass.getName().startsWith("org.intellij.erlang.");
   }
 
-  private void add(@NotNull String key) {
+  // under the lock of newBatch and flush, so that a count never lands in a batch that was already moved to the state,
+  // and never in the batch of a later consent
+  private synchronized void add(@NotNull String key) {
     if (!isCounting()) return;
     LocalDate today = myToday.get();
     Batch batch = myBatch;
