@@ -29,7 +29,7 @@ import java.net.URLConnection;
  */
 public final class ErlangAmplitudeSender implements ErlangUsageSender {
   // The data center and the key of the Amplitude project; change both together. The key is public by Amplitude's rules.
-  // The project is in the EU data center; a key of a US project needs https://api2.amplitude.com/2/httpapi instead.
+  // The project is in the EU data center.
   public static final String URL = "https://api.eu.amplitude.com/2/httpapi";
   public static final String API_KEY = "cf7d5b9ddda8fc71a93ba88fcea2372d";
   private static final int TIMEOUT_MS = 5_000;

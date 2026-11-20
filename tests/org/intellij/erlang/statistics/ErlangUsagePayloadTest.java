@@ -151,8 +151,23 @@ public class ErlangUsagePayloadTest extends TestCase {
     for (ErlangUsageProperty property : ErlangUsageProperty.values()) {
       assertTrue(property.jsonName(), properties.has(property.jsonName()));
     }
-    assertTrue(properties.has("completion"));
-    assertTrue(properties.has("quick_fixes"));
+    // every sample counter, with its value
+    ErlangUsageStatisticsState.Day sample = ErlangUsagePayload.exampleDay();
+    for (Map.Entry<String, Long> counter : sample.counters.entrySet()) {
+      String key = counter.getKey();
+      if (key.startsWith("quick_fix:")) {
+        assertEquals(key, counter.getValue().longValue(), properties.getAsJsonObject("quick_fixes").get(key.substring(10)).getAsLong());
+      }
+      else if (key.startsWith("intention:")) {
+        assertEquals(key, counter.getValue().longValue(), properties.getAsJsonObject("intentions").get(key.substring(10)).getAsLong());
+      }
+      else {
+        assertEquals(key, counter.getValue().longValue(), properties.get(ErlangUsageKey.valueOf(key).jsonName()).getAsLong());
+      }
+    }
+    // the part the dialog shows is the same object
+    assertEquals(properties, JsonParser.parseString(ErlangUsagePayload.exampleEventProperties()).getAsJsonObject());
+    assertEquals("completion", JsonParser.parseString(ErlangUsagePayload.exampleEventProperties()).getAsJsonObject().keySet().iterator().next());
   }
 
   public void testCountryFromTimeZone() {

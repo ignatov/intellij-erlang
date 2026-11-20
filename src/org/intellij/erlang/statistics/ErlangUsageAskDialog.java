@@ -41,26 +41,32 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * A small dialog in the middle of the IDE window that asks whether the plugin may send usage statistics.
- * "Ask me later", Esc and closing the window all mean later.
+ * "Yes, send statistics" is the default button. For the first {@link #GUARD_MS} ms after the window is shown, the
+ * buttons are disabled, so that a key press that was already on its way does not answer. "Ask me later", Esc and
+ * closing the window all mean later.
  */
 public final class ErlangUsageAskDialog extends DialogWrapper {
+  // never exactly "Yes" or "No", and no mnemonics: DialogWrapper binds the bare Y and N keys to such buttons
   public static final String TITLE = "Help improve the Erlang plugin";
   public static final String YES = "Yes, send statistics";
   public static final String NO = "No, thanks";
   public static final String LATER = "Ask me later";
   public static final String NEVER_SENT = "It never sends code, file names or paths.";
-  private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE;
-  // the buttons do not react this long after the dialog appears, so a key press already on its way does not answer
-  static final int GUARD_MS = 1500;
   public static final String EXAMPLE_TITLE = "Example of the data that is sent";
+  public static final String SENT_TOGETHER =
+    "Sent together with: the date, a random installation id, the plugin version, the IDE, the OS and the country.";
   public static final String REAL_SUMMARY = "The real summary of today is in Settings | Erlang External Tools.";
+  static final int GUARD_MS = 1500;
+  // own exit codes; the OK exit code, which the hidden OK action may give, means later
+  private static final int YES_EXIT_CODE = NEXT_USER_EXIT_CODE;
+  private static final int NO_EXIT_CODE = NEXT_USER_EXIT_CODE + 1;
   private static final int TEXT_WIDTH = 440;
   private static final int EXAMPLE_ROWS = 13;
 
@@ -75,138 +81,123 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     }
 
     @Override
-    public @NotNull ErlangUsageAskUi.Choice ask(@NotNull Project project, boolean reminder) {
+    public @NotNull ErlangUsageAskUi.Choice ask(@NotNull Project project, boolean reminder, @NotNull Runnable beforeShow) {
       ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(project, reminder);
       // closes the dialog if the project closes; after the dialog closes, nothing keeps it
       Disposer.register(project, dialog.getDisposable());
+      beforeShow.run();
       dialog.show();
       return choiceOf(dialog.getExitCode());
     }
   };
 
   private final boolean myReminder;
-  private JComponent myExample;
+  private final Action myYesAction = new GuardedExitAction(YES, YES_EXIT_CODE);
+  private final Action myNoAction = new GuardedExitAction(NO, NO_EXIT_CODE);
   private JComponent myContent;
+  private JPanel myExampleHolder;
+  private JComponent myExample;
   private ActionLink myToggle;
+  private JBTextArea myExampleText;
   private Dimension myCollapsedSize;
-  private final Action myNoAction = new DialogWrapperExitAction(NO, NO_EXIT_CODE) {
-    @Override
-    protected void doAction(ActionEvent e) {
-      if (!myGuarded) super.doAction(e);
-    }
-  };
-  private volatile boolean myGuarded = true;
+  private boolean myGuarded = true;
+  private Timer myGuardTimer;
 
   ErlangUsageAskDialog(@Nullable Project project, boolean reminder) {
     super(project, false);
     myReminder = reminder;
+    myYesAction.putValue(DEFAULT_ACTION, Boolean.TRUE);
+    myYesAction.putValue(FOCUSED_ACTION, Boolean.TRUE);
     setTitle(TITLE);
-    setOKButtonText(YES);
     setCancelButtonText(LATER);
     setResizable(false);
     init();
-    startGuard(myContent);
+    setButtonsEnabled(false);
+    Window window = getWindow();
+    if (window != null) {
+      window.addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowOpened(WindowEvent e) {
+          if (myCollapsedSize == null) myCollapsedSize = e.getWindow().getSize();
+          startGuard();
+        }
+
+        @Override
+        public void windowActivated(WindowEvent e) {
+          startGuard();
+        }
+      });
+    }
+  }
+
+  // an exit action that does nothing while the guard is on, also when its button was pressed before and released after
+  private final class GuardedExitAction extends DialogWrapperExitAction {
+    GuardedExitAction(@NotNull String name, int exitCode) {
+      super(name, exitCode);
+    }
+
+    @Override
+    protected void doAction(ActionEvent e) {
+      if (!myGuarded) super.doAction(e);
+    }
   }
 
   @NotNull
   static ErlangUsageAskUi.Choice choiceOf(int exitCode) {
-    if (exitCode == OK_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
+    if (exitCode == YES_EXIT_CODE) return ErlangUsageAskUi.Choice.YES;
     if (exitCode == NO_EXIT_CODE) return ErlangUsageAskUi.Choice.NO;
     return ErlangUsageAskUi.Choice.LATER;
   }
 
+  // on macOS the default action goes to the right end; elsewhere this order is kept
   @Override
   protected Action @NotNull [] createActions() {
-    return new Action[]{getOKAction(), myNoAction, getCancelAction()};
+    return new Action[]{myYesAction, myNoAction, getCancelAction()};
   }
 
-  // "Yes, send statistics" is the default button, but not in the first moment after the dialog appears
+  // the OK action is not shown; Ctrl+Enter, which runs it, does nothing
   @Override
   protected void doOKAction() {
-    if (!myGuarded) super.doOKAction();
   }
 
-  // the buttons are disabled until the guard time after the dialog is shown is over; Esc still means later
-  private void startGuard(@NotNull JComponent shown) {
-    setButtonsEnabled(false);
-    shown.addHierarchyListener(new HierarchyListener() {
-      @Override
-      public void hierarchyChanged(HierarchyEvent e) {
-        if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == 0 || !shown.isShowing()) return;
-        shown.removeHierarchyListener(this);
-        Timer timer = new Timer(GUARD_MS, event -> endGuard());
-        timer.setRepeats(false);
-        Disposer.register(getDisposable(), timer::stop);
-        timer.start();
-      }
-    });
+  // the guard starts once, when the window is shown or activated; a Swing timer ends it and stops with the dialog
+  private void startGuard() {
+    if (myGuardTimer != null || isDisposed()) return;
+    myGuardTimer = new Timer(GUARD_MS, e -> endGuard());
+    myGuardTimer.setRepeats(false);
+    Timer timer = myGuardTimer;
+    Disposer.register(getDisposable(), timer::stop);
+    timer.start();
   }
 
   private void endGuard() {
     if (isDisposed()) return;
     myGuarded = false;
     setButtonsEnabled(true);
+    // a disabled button could not take the focus when the dialog opened
+    JButton yes = getButton(myYesAction);
+    if (yes != null) yes.requestFocusInWindow();
   }
 
+  // disabled buttons never arm, so a press during the guard cannot click them; Esc and the close button still work
   private void setButtonsEnabled(boolean enabled) {
-    getOKAction().setEnabled(enabled);
+    myYesAction.setEnabled(enabled);
     myNoAction.setEnabled(enabled);
     JButton later = getButton(getCancelAction());
     if (later != null) later.setEnabled(enabled);
   }
 
-  @TestOnly
-  void endGuardForTests() {
-    endGuard();
-  }
-
-  @TestOnly
-  boolean isGuardedForTests() {
-    return myGuarded;
-  }
-
-  @TestOnly
-  void pressYesForTests() {
-    doOKAction();
-  }
-
-  @TestOnly
-  @NotNull
-  List<Action> getActionsForTests() {
-    return List.of(createActions());
-  }
-
-  @TestOnly
-  void toggleExampleForTests() {
-    toggleExample();
-  }
-
-  @TestOnly
-  @NotNull
-  Dimension getContentPreferredSizeForTests() {
-    return myContent.getPreferredSize();
-  }
-
-  @TestOnly
-  @NotNull
-  List<String> getButtonTextsForTests() {
-    return Arrays.stream(createActions()).map(action -> (String)action.getValue(Action.NAME)).toList();
-  }
-
-  @TestOnly
-  boolean isExampleShownForTests() {
-    return myExample.isVisible();
-  }
-
-  @TestOnly
-  void clickNoForTests() {
-    myNoAction.actionPerformed(new ActionEvent(myContent, ActionEvent.ACTION_PERFORMED, NO));
+  @Override
+  public @Nullable JComponent getPreferredFocusedComponent() {
+    // during the guard the buttons are disabled; the content takes the focus until then
+    return myGuarded ? myContent : getButton(myYesAction);
   }
 
   @Override
   protected @NotNull JComponent createCenterPanel() {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.setFocusable(true);
     myContent = panel;
     String text = myReminder ? ErlangUsageStatistics.REMINDER_TEXT : ErlangUsageStatistics.TEXT;
     panel.add(left(new JBLabel(wrapped(text))));
@@ -223,50 +214,62 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     return panel;
   }
 
-  // a collapsed section with an example summary; the dialog grows when it opens and shrinks when it closes
+  @NotNull
+  static String exampleText() {
+    return ErlangUsageStatisticsPanel.prettyPrint(ErlangUsagePayload.exampleEventProperties()) + "\n\n" + SENT_TOGETHER;
+  }
+
+  // a collapsed section with an example summary; the dialog grows when it opens and gets its first size back when it closes
   @NotNull
   private JComponent createExample() {
-    JBTextArea json = new JBTextArea(ErlangUsageStatisticsPanel.prettyPrint(ErlangUsagePayload.example()), EXAMPLE_ROWS, 0);
-    json.setEditable(false);
-    json.setFont(JBUI.Fonts.create(Font.MONOSPACED, json.getFont().getSize()));
-    json.setCaretPosition(0);
+    myExampleText = new JBTextArea(exampleText(), EXAMPLE_ROWS, 0);
+    myExampleText.setEditable(false);
+    myExampleText.setLineWrap(true);
+    myExampleText.setWrapStyleWord(true);
+    myExampleText.setFont(JBUI.Fonts.create(Font.MONOSPACED, myExampleText.getFont().getSize()));
+    myExampleText.setCaretPosition(0);
     JPanel content = new JPanel(new BorderLayout(0, JBUI.scale(4)));
-    content.add(new JBScrollPane(json), BorderLayout.CENTER);
+    content.add(new JBScrollPane(myExampleText), BorderLayout.CENTER);
     JBLabel where = new JBLabel(wrapped(REAL_SUMMARY), UIUtil.ComponentStyle.SMALL);
     where.setForeground(NamedColorUtil.getInactiveTextColor());
     content.add(where, BorderLayout.SOUTH);
-    content.setVisible(false);
+    content.setBorder(JBUI.Borders.emptyTop(4));
     myExample = content;
-    ActionLink toggle = new ActionLink(EXAMPLE_TITLE);
-    toggle.setIcon(AllIcons.General.ArrowRight, false);
-    myToggle = toggle;
-    toggle.addActionListener(e -> toggleExample());
-    JPanel holder = new JPanel(new BorderLayout(0, JBUI.scale(4)));
-    holder.add(toggle, BorderLayout.NORTH);
-    holder.add(content, BorderLayout.CENTER);
-    return holder;
+    myToggle = new ActionLink(EXAMPLE_TITLE);
+    myToggle.setIcon(AllIcons.General.ArrowRight, false);
+    myToggle.addActionListener(e -> toggleExample());
+    // the example is not in the panel while it is closed, so the closed layout is exactly the first one
+    myExampleHolder = new JPanel(new BorderLayout());
+    myExampleHolder.add(myToggle, BorderLayout.NORTH);
+    return myExampleHolder;
   }
 
-  // grows the dialog to show the example, and gives it back its first size when the example is hidden again
   private void toggleExample() {
-    boolean expand = !myExample.isVisible();
+    boolean expand = myExample.getParent() == null;
     Window window = SwingUtilities.getWindowAncestor(myContent);
-    if (expand && window != null) myCollapsedSize = window.getSize();
-    myExample.setVisible(expand);
+    if (expand && window != null && myCollapsedSize == null) myCollapsedSize = window.getSize();
+    if (expand) myExampleHolder.add(myExample, BorderLayout.CENTER);
+    else myExampleHolder.remove(myExample);
     myToggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, false);
+    // BoxLayout keeps the sizes of its children until its container is invalidated itself
+    myExampleHolder.invalidate();
+    myContent.invalidate();
     myContent.revalidate();
-    if (!expand && window != null && myCollapsedSize != null) {
-      window.setSize(myCollapsedSize);
-      window.validate();
-    }
-    else {
+    if (window == null) return;
+    if (expand) {
       pack();
     }
-  }
-
-  @Override
-  public @Nullable JComponent getPreferredFocusedComponent() {
-    return getButton(getOKAction());
+    else if (myCollapsedSize != null) {
+      // the first size, also if the window was given a larger minimum size while the example was open
+      Dimension size = new Dimension(myCollapsedSize);
+      window.setMinimumSize(size);
+      window.setSize(size);
+      window.validate();
+      // once more after the pending layout, in case it changed the size again
+      SwingUtilities.invokeLater(() -> {
+        if (myExample.getParent() == null && !isDisposed() && !window.getSize().equals(size)) window.setSize(size);
+      });
+    }
   }
 
   // HTML with a fixed width, so that the text wraps into a compact block
@@ -279,5 +282,85 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   private static JComponent left(@NotNull JComponent component) {
     component.setAlignmentX(Component.LEFT_ALIGNMENT);
     return component;
+  }
+
+  // tests
+
+  @TestOnly
+  @NotNull
+  List<Action> getActionsForTests() {
+    return List.of(createActions());
+  }
+
+  @TestOnly
+  @NotNull
+  List<String> getMacOrderForTests() {
+    List<Action> actions = new java.util.ArrayList<>(List.of(createActions()));
+    sortActionsOnMac(actions);
+    return actions.stream().map(action -> (String)action.getValue(Action.NAME)).toList();
+  }
+
+  @TestOnly
+  @NotNull
+  List<String> getButtonTextsForTests() {
+    return Arrays.stream(createActions()).map(action -> (String)action.getValue(Action.NAME)).toList();
+  }
+
+  @TestOnly
+  @Nullable
+  JButton getButtonForTests(@NotNull Action action) {
+    return getButton(action);
+  }
+
+  @TestOnly
+  void startGuardForTests() {
+    startGuard();
+  }
+
+  @TestOnly
+  boolean isGuardTimerRunningForTests() {
+    return myGuardTimer != null && myGuardTimer.isRunning();
+  }
+
+  @TestOnly
+  void endGuardForTests() {
+    endGuard();
+  }
+
+  @TestOnly
+  boolean isGuardedForTests() {
+    return myGuarded;
+  }
+
+  @TestOnly
+  void pressYesForTests() {
+    myYesAction.actionPerformed(new ActionEvent(myContent, ActionEvent.ACTION_PERFORMED, YES));
+  }
+
+  @TestOnly
+  void clickNoForTests() {
+    myNoAction.actionPerformed(new ActionEvent(myContent, ActionEvent.ACTION_PERFORMED, NO));
+  }
+
+  @TestOnly
+  boolean isExampleShownForTests() {
+    return myExample.getParent() != null;
+  }
+
+  @TestOnly
+  void toggleExampleForTests() {
+    toggleExample();
+  }
+
+  @TestOnly
+  @NotNull
+  String getExampleTextForTests() {
+    return myExampleText.getText();
+  }
+
+  @TestOnly
+  @NotNull
+  Dimension getContentPreferredSizeForTests() {
+    return myContent.getPreferredSize();
   }
 }

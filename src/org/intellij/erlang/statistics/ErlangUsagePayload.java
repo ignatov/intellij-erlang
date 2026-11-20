@@ -57,6 +57,13 @@ public final class ErlangUsagePayload {
     return build(EXAMPLE_ID, List.of(exampleDay()), true);
   }
 
+  // the event_properties object of the example, the part that shows what is counted
+  @NotNull
+  public static String exampleEventProperties() {
+    ErlangUsageStatisticsState.Day day = exampleDay();
+    return eventProperties(day, properties(day), true);
+  }
+
   // the sample values of the example: every environment property and counters of every area
   @NotNull
   static ErlangUsageStatisticsState.Day exampleDay() {
@@ -148,6 +155,19 @@ public final class ErlangUsagePayload {
     optional(envelope, "os_name", properties.get(ErlangUsageProperty.OS));
     optional(envelope, "country", country);
 
+    String eventProperties = "\"event_properties\":" + eventProperties(day, properties, example);
+
+    json.append('{');
+    if (example) json.append(eventProperties).append(',').append(envelope);
+    else json.append(envelope).append(',').append(eventProperties);
+    json.append('}');
+  }
+
+  // the event_properties object; for the example, the counters come first
+  @NotNull
+  private static String eventProperties(@NotNull ErlangUsageStatisticsState.Day day,
+                                        @NotNull Map<ErlangUsageProperty, String> properties,
+                                        boolean example) {
     // each value already written as JSON, by its property name
     Map<String, String> counters = new LinkedHashMap<>();
     // in the order of the enum, which groups them by area
@@ -186,7 +206,7 @@ public final class ErlangUsagePayload {
       all.putAll(environment);
       all.putAll(counters);
     }
-    StringBuilder eventProperties = new StringBuilder("\"event_properties\":{");
+    StringBuilder eventProperties = new StringBuilder("{");
     boolean first = true;
     for (Map.Entry<String, String> entry : all.entrySet()) {
       first = comma(eventProperties, first);
@@ -194,11 +214,7 @@ public final class ErlangUsagePayload {
       eventProperties.append(':').append(entry.getValue());
     }
     eventProperties.append('}');
-
-    json.append('{');
-    if (example) json.append(eventProperties).append(',').append(envelope);
-    else json.append(envelope).append(',').append(eventProperties);
-    json.append('}');
+    return eventProperties.toString();
   }
 
   // the properties of the day that pass their checks, in a fixed order

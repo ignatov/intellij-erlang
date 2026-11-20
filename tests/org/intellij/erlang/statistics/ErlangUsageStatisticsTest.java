@@ -65,6 +65,8 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     collector().setSender(mySender);
     ErlangUsageStatistics.setAllowedForTests(true);
     ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+    // the input listener runs and the user has been quiet for a minute
+    ErlangUsageIdle.setInstalledForTests(true, System.currentTimeMillis() - 60_000);
   }
 
   @Override
@@ -74,6 +76,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       collector().setSender(new ErlangAmplitudeSender());
       ErlangUsageStatistics.setAllowedForTests(null);
       ErlangUsageStatistics.setErlangProjectForTests(getProject(), null);
+      ErlangUsageIdle.setInstalledForTests(false, 0);
     }
     catch (Throwable e) {
       addSuppressedException(e);
@@ -132,7 +135,6 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
       assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
       assertFalse(first.isExampleShownForTests());
       assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
-      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
       assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));
       // Esc and the close button of the window cancel the dialog
       first.doCancelAction();
@@ -153,27 +155,144 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
       Action yes = dialog.getActionsForTests().get(0);
+      Action no = dialog.getActionsForTests().get(1);
       assertEquals(ErlangUsageAskDialog.YES, yes.getValue(Action.NAME));
       assertNotNull(yes.getValue(DialogWrapper.DEFAULT_ACTION));
-      JComponent focused = dialog.getPreferredFocusedComponent();
-      assertTrue(focused instanceof JButton);
-      assertEquals(ErlangUsageAskDialog.YES, ((JButton)focused).getText());
+      assertNotNull(yes.getValue(DialogWrapper.FOCUSED_ACTION));
+      // Yes has its own exit code; the hidden OK action means later
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
 
-      // a key press that was on its way when the dialog appeared does not answer
+      // the buttons are disabled when the dialog opens, until the guard timer, which starts when the window is shown, ends
       assertTrue(dialog.isGuardedForTests());
       assertFalse(yes.isEnabled());
+      assertFalse(no.isEnabled());
+      assertFalse(dialog.isGuardTimerRunningForTests());
+      dialog.startGuardForTests();
+      assertTrue(dialog.isGuardTimerRunningForTests());
       dialog.pressYesForTests();
       assertFalse(dialog.isDisposed());
-      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
 
+      // a press during the guard with a release after it does not click
+      JButton yesButton = dialog.getButtonForTests(yes);
+      if (yesButton != null) {
+        assertFalse(yesButton.isEnabled());
+        yesButton.getModel().setArmed(true);
+        yesButton.getModel().setPressed(true);
+      }
       dialog.endGuardForTests();
       assertTrue(yes.isEnabled());
+      assertTrue(no.isEnabled());
+      if (yesButton != null) {
+        assertTrue(yesButton.isEnabled());
+        yesButton.getModel().setPressed(false);
+        assertFalse(dialog.isDisposed());
+      }
+      assertSame(yesButton, dialog.getPreferredFocusedComponent());
+
       dialog.pressYesForTests();
       assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
     }
     finally {
       if (!dialog.isDisposed()) Disposer.dispose(dialog.getDisposable());
     }
+  }
+
+  public void testButtonTextsAndOrder() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      for (String text : dialog.getButtonTextsForTests()) {
+        // DialogWrapper binds the bare Y and N keys to buttons named exactly "Yes" and "No"
+        assertFalse(text, text.equals("Yes") || text.equals("No") || text.contains("&") || text.contains("_"));
+      }
+      assertEquals(List.of(ErlangUsageAskDialog.LATER, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.YES), dialog.getMacOrderForTests());
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testDialogShowsTheExample() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      String text = dialog.getExampleTextForTests();
+      assertEquals(ErlangUsageAskDialog.exampleText(), text);
+      assertTrue(text, text.startsWith(ErlangUsageStatisticsPanel.prettyPrint(ErlangUsagePayload.exampleEventProperties())));
+      // the counters from the first visible line on
+      assertTrue(text, text.startsWith("{\n  \"completion\": "));
+      assertTrue(text, text.endsWith(ErlangUsageAskDialog.SENT_TOGETHER));
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testNoInputListenerMeansBusy() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    statistics.ask(getProject());
+    assertEquals(List.of(), ui.asked);
+    assertTrue(ErlangUsageIdle.isInstalled());
+    ErlangUsageIdle.setLastInputForTests(System.currentTimeMillis() - 6_000);
+    statistics.ask(getProject());
+    assertEquals(List.of(false), ui.asked);
+    assertFalse("the listener stops after the ask", ErlangUsageIdle.isInstalled());
+  }
+
+  public void testAskLaterStartsTheInputListener() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    statistics.askLaterForTests(getProject());
+    assertFalse("not for a project without Erlang files", ErlangUsageIdle.isInstalled());
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+    statistics.askLaterForTests(getProject());
+    assertTrue(ErlangUsageIdle.isInstalled());
+    assertEquals(1, statistics.getScheduledForTests());
+    statistics.setEnabled(false);
+    assertFalse("an answer stops the listener", ErlangUsageIdle.isInstalled());
+  }
+
+  public void testAskIsNotCountedWhenTheDialogCannotBeCreated() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.fail = true;
+    ErlangUsageStatistics.getInstance().setAskUiForTests(ui);
+    try {
+      ErlangUsageStatistics.getInstance().ask(getProject());
+      fail("the fake dialog throws");
+    }
+    catch (IllegalStateException expected) {
+    }
+    assertEquals(0, collector().getState().askCount);
+  }
+
+  public void testNoAskAfterThePluginIsUnloaded() {
+    FakeAskUi ui = new FakeAskUi();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setDisposedForTests(true);
+    try {
+      statistics.ask(getProject());
+      assertEquals(List.of(), ui.asked);
+    }
+    finally {
+      statistics.setDisposedForTests(false);
+    }
+  }
+
+  public void testBusyChecksAreLimited() {
+    FakeAskUi ui = new FakeAskUi();
+    ui.canAsk = false;
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    for (int i = 0; i < ErlangUsageStatistics.MAX_RETRIES + 10; i++) {
+      statistics.ask(getProject());
+    }
+    assertEquals(ErlangUsageStatistics.MAX_RETRIES, statistics.getScheduledForTests());
+    assertFalse(ErlangUsageIdle.isInstalled());
+    assertEquals(List.of(), ui.asked);
+    assertEquals(0, collector().getState().askCount);
   }
 
   public void testEscIsLaterAlsoDuringTheGuard() {
@@ -282,6 +401,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
   private static final class FakeAskUi implements ErlangUsageAskUi {
     final List<Boolean> asked = new ArrayList<>();
     boolean canAsk = true;
+    boolean fail;
     Choice choice = Choice.LATER;
 
     @Override
@@ -290,7 +410,10 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     }
 
     @Override
-    public @NotNull Choice ask(@NotNull Project project, boolean reminder) {
+    public @NotNull Choice ask(@NotNull Project project, boolean reminder, @NotNull Runnable beforeShow) {
+      // like a dialog whose construction throws before it is shown
+      if (fail) throw new IllegalStateException("no dialog");
+      beforeShow.run();
       asked.add(reminder);
       return choice;
     }

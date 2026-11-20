@@ -33,26 +33,41 @@ final class ErlangUsageIdle {
   private static volatile long ourLastInput;
   private static final AWTEventListener LISTENER = event -> ourLastInput = System.currentTimeMillis();
   private static boolean ourInstalled;
+  private static Disposable ourDisposable;
 
   private ErlangUsageIdle() {
   }
 
+  // the idle time counts from here; without a display there is no input, and only the time stamp is set
   static synchronized void install(@NotNull Disposable parent) {
-    if (ourInstalled || GraphicsEnvironment.isHeadless()) return;
+    if (ourInstalled) return;
     ourInstalled = true;
     ourLastInput = System.currentTimeMillis();
-    Toolkit.getDefaultToolkit().addAWTEventListener(LISTENER, MASK);
-    Disposer.register(parent, ErlangUsageIdle::uninstall);
+    if (!GraphicsEnvironment.isHeadless()) Toolkit.getDefaultToolkit().addAWTEventListener(LISTENER, MASK);
+    if (ourDisposable == null) {
+      ourDisposable = ErlangUsageIdle::uninstall;
+      Disposer.register(parent, ourDisposable);
+    }
   }
 
   static synchronized void uninstall() {
     if (!ourInstalled) return;
     ourInstalled = false;
-    Toolkit.getDefaultToolkit().removeAWTEventListener(LISTENER);
+    if (!GraphicsEnvironment.isHeadless()) Toolkit.getDefaultToolkit().removeAWTEventListener(LISTENER);
+  }
+
+  static synchronized boolean isInstalled() {
+    return ourInstalled;
   }
 
   static long idleMillis() {
     return System.currentTimeMillis() - ourLastInput;
+  }
+
+  @TestOnly
+  static synchronized void setInstalledForTests(boolean installed, long lastInput) {
+    ourInstalled = installed;
+    ourLastInput = lastInput;
   }
 
   @TestOnly

@@ -30,8 +30,8 @@ public interface ErlangUsageAskUi {
   @RequiresEdt
   boolean canAskNow(@NotNull Project project);
 
-  // shows the question and waits for the answer
+  // shows the question and waits for the answer; beforeShow runs once the question is ready to be shown
   @RequiresEdt
   @NotNull
-  Choice ask(@NotNull Project project, boolean reminder);
+  Choice ask(@NotNull Project project, boolean reminder, @NotNull Runnable beforeShow);
 }
