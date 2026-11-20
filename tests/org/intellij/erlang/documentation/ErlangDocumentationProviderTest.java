@@ -17,6 +17,8 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.codeInsight.navigation.CtrlMouseHandler;
+import com.intellij.navigation.ItemPresentation;
+import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -772,6 +774,31 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         });
       }
     };
+  }
+
+  // #1396: the documentation hover builds the presentation of the target that the reference resolves to
+  public void testPresentationOfBifInFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  public void testPresentationOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  private void doTestTargetPresentation(@NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertInstanceOf(element, NavigationItem.class);
+    ItemPresentation presentation = ((NavigationItem) element).getPresentation();
+    assertNotNull(presentation);
+    assertFalse("<unknown>".equals(presentation.getPresentableText()));
   }
 
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {
