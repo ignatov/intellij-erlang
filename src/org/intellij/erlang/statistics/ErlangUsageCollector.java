@@ -44,8 +44,8 @@ import java.util.function.Supplier;
 public final class ErlangUsageCollector {
   private static final Logger LOG = Logger.getInstance(ErlangUsageCollector.class);
   public static final String PLUGIN_ID = "org.jetbrains.erlang";
-  // the first ask and two reminders
-  public static final int MAX_ASKS = 3;
+  // the first ask and one reminder
+  public static final int MAX_ASKS = 2;
   // "Ask me later", Esc or a dialog closed without an answer asks again after this many days
   public static final int ASK_AGAIN_DAYS = 30;
   public static final int MAX_DAYS = 7;
