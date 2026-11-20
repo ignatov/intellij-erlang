@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.List;
@@ -44,6 +45,13 @@ public class ErlangTestLocationProviderTest extends ErlangLightPlatformCodeInsig
     assertNotNull("the location of a generator test must lie inside its generator function, got " + generated, function);
     assertEquals("gen_test_", function.getName());
     assertEquals(4, myFixture.getEditor().getDocument().getLineNumber(generated.getTextOffset()));
+  }
+
+  public void testModuleLocation() {
+    myFixture.configureByFile("g_tests.erl");
+
+    assertInstanceOf(getSingleLocation("g_tests"), ErlangModule.class);
+    assertInstanceOf(getSingleLocation("g_tests:-no_such_fun/0-fun-0-:5"), ErlangModule.class);
   }
 
   private PsiElement getSingleLocation(String path) {

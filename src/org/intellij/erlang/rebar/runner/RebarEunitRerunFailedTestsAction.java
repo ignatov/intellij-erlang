@@ -42,6 +42,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.eunit.ErlangTestLocationProvider;
+import org.intellij.erlang.eunit.ErlangUnitTestElementUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -112,7 +114,8 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
           Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
           PsiElement psiElement = location != null ? location.getPsiElement() : null;
-          ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
+          ErlangFunction function = ErlangUnitTestElementUtil.findRerunnableTestFunction(
+            psiElement, ErlangTestLocationProvider.isGeneratedTestLocation(testProxy.getLocationUrl()));
           if (function != null && function.getArity() != 0) {
             failedGeneratedTests.add(function);
           }

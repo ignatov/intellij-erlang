@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.eunit;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.Location;
 import com.intellij.execution.configurations.RunConfigurationBase;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAction {
@@ -69,28 +71,36 @@ public class ErlangUnitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
       @NotNull
       @Override
-      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) {
+      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment env) throws ExecutionException {
         ErlangUnitRunConfiguration runConfiguration = createRerunFailedTestsRunConfiguration();
 
         return new ErlangUnitRunningState(env, getModules()[0], runConfiguration);
       }
 
-      private ErlangUnitRunConfiguration createRerunFailedTestsRunConfiguration() {
-        Project project = getProject();
-        LinkedHashSet<String> testsToRerun = new LinkedHashSet<>();
-        for (AbstractTestProxy testProxy : getFailedTests(project)) {
-          Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-          PsiElement psiElement = location != null ? location.getPsiElement() : null;
-
-          if (!(psiElement instanceof ErlangFunction function)) continue;
-
-          String functionName = ErlangPsiImplUtil.getQualifiedFunctionName(function);
-          testsToRerun.add(functionName);
+      private ErlangUnitRunConfiguration createRerunFailedTestsRunConfiguration() throws ExecutionException {
+        Set<String> testsToRerun = getTestsToRerun(getProject(), getFailedTests(getProject()));
+        if (testsToRerun.isEmpty()) {
+          throw new ExecutionException("None of the failed tests can be rerun: no test function was found for them");
         }
-
         return createRerunConfiguration((ErlangUnitRunConfiguration)getPeer(), testsToRerun);
       }
     };
+  }
+
+  @VisibleForTesting
+  @NotNull
+  static Set<String> getTestsToRerun(@NotNull Project project, @NotNull List<? extends AbstractTestProxy> failedTests) {
+    LinkedHashSet<String> testsToRerun = new LinkedHashSet<>();
+    for (AbstractTestProxy testProxy : failedTests) {
+      Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
+      PsiElement psiElement = location != null ? location.getPsiElement() : null;
+      ErlangFunction function = ErlangUnitTestElementUtil.findRerunnableTestFunction(
+        psiElement, ErlangTestLocationProvider.isGeneratedTestLocation(testProxy.getLocationUrl()));
+      if (function == null) continue;
+
+      testsToRerun.add(ErlangPsiImplUtil.getQualifiedFunctionName(function));
+    }
+    return testsToRerun;
   }
 
   @VisibleForTesting
