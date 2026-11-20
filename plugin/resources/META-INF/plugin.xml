@@ -31,6 +31,9 @@
     <p>
         If you find this plugin useful, consider making a <a href="https://github.com/sponsors/ignatov">donation</a> to support the project.
     </p>
+    <p>
+        The plugin can send anonymous usage counts once a day, only if you allow it. See the <a href="https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md">privacy policy</a>.
+    </p>
     ]]>
     </description>
     <change-notes>

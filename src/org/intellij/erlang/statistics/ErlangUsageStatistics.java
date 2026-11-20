@@ -65,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * The opt-in usage statistics of the plugin: one summary of counts per day, sent to Amplitude.
+ * See PRIVACY.md at the root of the repository for what is sent.
  */
 @Service(Service.Level.APP)
 @State(name = "ErlangUsageStatistics", storages = @Storage(value = "erlangUsageStatistics.xml", roamingType = RoamingType.DISABLED))
