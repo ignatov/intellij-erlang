@@ -788,7 +788,7 @@ class ShapeTest(unittest.TestCase):
     def test_shape(self):
         self.assertEqual('\\ta{2} a{3}.a{8}.a{10}(a{9}.a{4}:0{3})',
                          ea.line_shape('\tat com.intellij.diagnostic(Something.java:123)'))
-        self.assertEqual('\\s{4}a: \'a\' <!-- @a #0', ea.line_shape('    x: `y` <!-- @z #1'))
+        self.assertEqual('\\s{4}a: \'a\' <!\u200b-- @a #0', ea.line_shape('    x: `y` <!-- @z #1'))
         self.assertEqual('\\t\\s{2}a', ea.line_shape('\t  x'))
 
     def test_no_letter_or_digit_survives(self):
@@ -833,6 +833,123 @@ class ShapeTest(unittest.TestCase):
         self.assertNotIn('Shapes', summary)
         code, out, _ = run(FakeHttp(marketplace))
         self.assertNotIn('Shapes', out)
+
+
+class MarkerTest(unittest.TestCase):
+    """The factory dispatcher trusts github-actions[bot] on public issues when it looks for its own markers. Text
+    that this job writes (issue titles, bodies, comments, the job summary) must never hold an HTML comment other than
+    this job's own markers at their fixed places, or a line that starts with "Signature:"."""
+
+    OWN = {
+        'key': r'<!-- marketplace-ea: [0-9a-f]{12} -->',
+        'state': r'<!-- marketplace-ea-state: \{[^<>\n]*\} -->',
+        'trace': r'<!-- marketplace-ea-trace -->',
+        'end': r'<!-- /marketplace-ea-trace -->',
+        'note': r'<!-- marketplace-ea-note: [0-9a-f]{12} -->',
+    }
+    SIGNATURE = re.compile(r'^[ \t]*signature[ \t]*:', re.IGNORECASE | re.MULTILINE)
+    FACTORY = ['<!-- factory:triage:12 -->', '<!-- factory:repro:12 -->', '<!-- factory:found:abc -->',
+               '<!--factory:triage:12-->', '<!--  FACTORY:Repro:1  -->', '<!-- factory:found:abc', 'factory:x -->',
+               '\u003c!-- factory:triage:3 --\u003e', '%3C!--%20factory:triage:4%20--%3E']
+    SIGNATURES = ['Signature: abc', 'signature:abc', '  SIGNATURE : x', '\tSignature:\t1', 'Signature :y']
+
+    def hostile(self, text):
+        return text + ' ' + ' '.join(self.FACTORY) + '\n' + '\n'.join(self.SIGNATURES)
+
+    def reports(self, first_id, version):
+        hostile = self.hostile('x')
+        return [report(first_id, version, appBuild=hostile, osName=hostile, timestamp=hostile,
+                       comment=hostile, message=hostile),
+                report(first_id + 1, hostile, build=hostile, os_name=hostile)]
+
+    def traces(self, *ids):
+        trace = '\n'.join(
+            ['com.foo.Err: ' + self.hostile('m')] + self.FACTORY + self.SIGNATURES +
+            ['\tat com.foo.Bar.baz(Bar.java:1) ' + marker for marker in self.FACTORY] +
+            ['\tat ' + signature for signature in self.SIGNATURES] +
+            ['Caused by: ' + signature for signature in self.SIGNATURES] +
+            ['Caused by: com.foo.Signature: <!-- factory:triage:9 -->', '\tat com.foo.Bar.baz(Bar.java:2)',
+             '<!-', '- factory:triage:5 -->', 'Sig', 'nature: split', '\tat com.foo.Bar.qux(Bar.java:3)'])
+        escaped = trace.replace('\n', '\\n').replace('\t', '\\t')
+        return {str(ids[0]): trace, str(ids[1]): json.dumps(trace), str(ids[2]): escaped}
+
+    def check(self, text, own):
+        """No HTML comment but the expected own markers, and no Signature: line."""
+        self.assertIsNone(self.SIGNATURE.search(text), text)
+        rest = text
+        for name in own:
+            matches = re.findall(self.OWN[name], rest)
+            self.assertEqual(1, len(matches), (name, text))
+            rest = rest.replace(matches[0], '', 1)
+        self.assertNotIn('<!--', rest, text)
+        self.assertNotIn('-->', rest, text)
+        self.assertNotRegex(rest.lower(), r'<\s*!\s*-\s*-', text)
+
+    def check_body(self, body):
+        self.check(body, ['key', 'state', 'trace', 'end'])
+        lines = body.split('\n')
+        self.assertRegex(lines[0], '^' + self.OWN['key'] + '$')
+        self.assertRegex(lines[1], '^' + self.OWN['state'] + '$')
+        self.assertEqual(1, lines.count(ea.TRACE_START))
+        self.assertEqual(1, lines.count(ea.TRACE_END))
+
+    def test_titles_fields_and_traces(self):
+        title = self.hostile('NPE: Foo.bar')
+        groups = [group(title, self.reports(1, '0.11.1300')), group('Signature: x', self.reports(3, '0.11.1300')),
+                  group('<!-- factory:triage:1 -->', self.reports(5, '0.11.1300'))]
+        marketplace = FakeMarketplace(groups, traces=self.traces(1, 3, 5))
+        http = FakeHttp(marketplace)
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(http, '--dry-run', '--summary', path)
+            self.assertEqual(0, code)
+            body = out[out.index('Body of the first new issue:\n\n') + 29:out.index('Shapes of the')]
+            self.check_body(body.strip('\n') + '\n')
+            code, _, err = run(http, '--run', '--summary', path)
+            self.assertEqual(0, code, err)
+            marketplace.exceptions = json.dumps(
+                [group(title, self.reports(1, '0.11.1300') + self.reports(7, '0.11.1301'), 9),
+                 group('Signature: x', self.reports(3, '0.11.1300') + self.reports(9, '0.11.1302'), 9),
+                 group('<!-- factory:triage:1 -->', self.reports(5, '0.11.1300'))]).encode()
+            marketplace.traces.update(self.traces(7, 9, 11))
+            code, _, err = run(http, '--run', '--summary', path)
+            self.assertEqual(0, code, err)
+            with open(path, encoding='utf-8') as file:
+                summary = file.read()
+        github = http.github
+        self.assertEqual(3, len(github.issues))
+        for issue in github.issues.values():
+            self.check(issue['title'], [])
+            self.assertNotIn('\n', issue['title'])
+            self.check_body(issue['body'])
+            self.assertIn('Caused by: com.foo.Signature: <message removed>\n\tat com.foo.Bar.baz(Bar.java:2)', issue['body'])
+        self.assertEqual(2, len(github.comments))
+        for comments in github.comments.values():
+            for comment in comments:
+                self.check(comment, ['note'])
+                self.assertTrue(comment.endswith(re.findall(self.OWN['note'], comment)[0]))
+        self.check(summary, [])
+
+    def test_redact_breaks_every_form(self):
+        for text in self.FACTORY + self.SIGNATURES + ['x\nSignature: y', '<!---->', '<!--->']:
+            self.check(ea.redact(text), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['1']), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['2']), [])
+        self.check(ea.redact_trace(self.traces(1, 2, 3)['3']), [])
+        for text in self.FACTORY + self.SIGNATURES:
+            self.check(ea.clean_title(text), [])
+            self.check(ea.line_shape(text), [])
+
+    def test_probe_summary(self):
+        class Odd(FakeMarketplace):
+            def handle(self, method, url, headers, data):
+                return ea.Response(200, {}, json.dumps({'<!-- factory:triage:1 -->': 1, 'Signature: x': 2}).encode())
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, 'summary.md')
+            code, out, _ = run(FakeHttp(Odd([])), '--probe', '--summary', path)
+            with open(path, encoding='utf-8') as file:
+                self.check(file.read(), [])
+        self.check(out, [])
 
 
 class PlanTest(unittest.TestCase):

@@ -445,7 +445,11 @@ ZERO_WIDTH = '​'
 
 def redact(text):
     """Removes links, home and other private paths, e-mail addresses, mentions, issue references, backticks and HTML
-    comments from text."""
+    comments from text, and breaks lines that start with "Signature:".
+
+    The factory dispatcher trusts github-actions[bot], the author of these issues, when it looks for its own markers
+    on public issues: HTML comments that start with "<!-- factory:" and lines that start with "Signature:". So no
+    text from a report may keep either in a working form; test_exceptions.MarkerTest pins it."""
     text = EMAIL.sub('<e-mail removed>', text)
     for pattern, replacement in PATHS:
         text = pattern.sub(replacement, text)
@@ -453,15 +457,18 @@ def redact(text):
     text = re.sub(r'@(?=[A-Za-z0-9_-])', '@' + ZERO_WIDTH, text)
     text = re.sub(r'#(?=[0-9])', '#' + ZERO_WIDTH, text)
     text = text.replace('<!--', '<!' + ZERO_WIDTH + '--').replace('-->', '--' + ZERO_WIDTH + '>')
+    text = re.sub(r'(?im)^([ \t]*signature)([ \t]*:)', r'\1' + ZERO_WIDTH + r'\2', text)
     return text
 
 
 def clean_title(title):
     """The title cut to TITLE_RAW_LIMIT characters, percent-decoded, without paths, links and e-mail addresses, with
-    only letters, digits, spaces and . $ : < > _ - left, GH-N references broken, and cut to TITLE_LIMIT."""
+    only letters, digits, spaces and . $ : < > _ - left, GH-N references and "Signature:" broken, and cut to
+    TITLE_LIMIT."""
     title = redact(urllib.parse.unquote(title[:TITLE_RAW_LIMIT], errors='replace'))
     title = re.sub(r'[^\w.$:<> -]', ' ', title, flags=re.ASCII)
     title = re.sub(r'\bGH-(?=[0-9])', 'GH- ', title, flags=re.IGNORECASE)
+    title = re.sub(r'(signature) *:', r'\1 -', title, flags=re.IGNORECASE)
     title = re.sub(r' +', ' ', title).strip()
     if len(title) > TITLE_LIMIT:
         title = title[:TITLE_LIMIT - 3].rstrip() + '...'
@@ -529,7 +536,7 @@ def line_shape(line):
         shape.append(text if len(text) == 1 or text[0] not in 'a0 ' else '%s{%d}' % (text[0], len(text)))
     if len(rest) > SHAPE_INPUT_LIMIT:
         shape.append('...(+%d)' % (len(rest) - SHAPE_INPUT_LIMIT))
-    return ''.join(shape)
+    return ''.join(shape).replace('<!--', '<!' + ZERO_WIDTH + '--').replace('-->', '--' + ZERO_WIDTH + '>')
 
 
 class Shapes:
