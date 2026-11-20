@@ -181,14 +181,15 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
   }
 
-  private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
+  private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) throws ExecutionException {
     Map<String, List<String>> result = new HashMap<>(qualifiedFunctionNames.size());
     for (String qualifiedFunctionName : qualifiedFunctionNames) {
-      String[] moduleAndFunction = qualifiedFunctionName.split(":");
+      String[] moduleAndFunction = qualifiedFunctionName.split(":", -1);
+      if (moduleAndFunction.length != 2 || moduleAndFunction[0].isEmpty() || moduleAndFunction[1].isEmpty()) {
+        throw new ExecutionException("Invalid test function name '" + qualifiedFunctionName + "': expected module:function");
+      }
       String module = moduleAndFunction[0];
       String function = moduleAndFunction[1];
-
-      if (moduleAndFunction.length != 2) continue;
 
       List<String> functions = result.computeIfAbsent(module, k -> new ArrayList<>());
       functions.add(function);

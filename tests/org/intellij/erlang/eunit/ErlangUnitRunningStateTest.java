@@ -31,6 +31,45 @@ public class ErlangUnitRunningStateTest extends BasePlatformTestCase {
     doTestMalformedFunctionName("my_tests:");
   }
 
+  public void testMalformedFunctionNameIsReported() {
+    assertInvalidName("my_test", false);
+    assertInvalidName("my_tests:", false);
+    assertInvalidName(":my_test", false);
+    assertInvalidName("a:b:my_test", false);
+  }
+
+  public void testMalformedFunctionNameIsReportedInDebug() {
+    assertInvalidName("my_test", true);
+  }
+
+  public void testWellFormedFunctionNames() throws ExecutionException {
+    ErlangUnitRunningState state = createState(Set.of("my_tests:my_test", "my_tests:gen_test_"));
+    String tests = state.getEntryPoint().getArgsList().get(0);
+    assertTrue(tests, tests.startsWith("[{\"module 'my_tests'\", ["));
+    assertTrue(tests, tests.contains("fun my_tests:my_test/0"));
+    assertTrue(tests, tests.contains("{generator, fun my_tests:gen_test_/0}"));
+  }
+
+  private void assertInvalidName(String functionName, boolean debug) {
+    ErlangUnitRunningState state = createState(Set.of(functionName));
+    try {
+      if (debug) state.getDebugEntryPoint();
+      else state.getEntryPoint();
+      fail("ExecutionException expected for " + functionName);
+    }
+    catch (ExecutionException e) {
+      assertEquals("Invalid test function name '" + functionName + "': expected module:function", e.getMessage());
+    }
+  }
+
+  private ErlangUnitRunningState createState(Set<String> functionNames) {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+    configuration.getConfigData().setFunctionNames(functionNames);
+    return new ErlangUnitRunningState(null, getModule(), configuration);
+  }
+
   private void doTestMalformedFunctionName(String functionName) {
     ErlangUnitRunConfiguration configuration =
       new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
