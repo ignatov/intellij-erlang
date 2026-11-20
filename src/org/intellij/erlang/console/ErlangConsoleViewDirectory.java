@@ -21,13 +21,15 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 final class ErlangConsoleViewDirectory {
   private static final ErlangConsoleViewDirectory outInstance = new ErlangConsoleViewDirectory();
 
-  private final Set<ErlangConsoleView> consoleViews = new HashSet<>();
+  private final Set<ErlangConsoleView> consoleViews = new LinkedHashSet<>();
 
   private ErlangConsoleViewDirectory() {
   }
@@ -37,7 +39,14 @@ final class ErlangConsoleViewDirectory {
   }
 
   public synchronized void addConsole(@NotNull ErlangConsoleView console) {
+    consoleViews.remove(console);
     consoleViews.add(console);
+  }
+
+  public synchronized void markUsed(@NotNull ErlangConsoleView console) {
+    if (consoleViews.remove(console)) {
+      consoleViews.add(console);
+    }
   }
 
   public synchronized void delConsole(@NotNull ErlangConsoleView console) {
@@ -56,8 +65,10 @@ final class ErlangConsoleViewDirectory {
 
   @Nullable
   public synchronized ErlangConsoleView getConsole(@NotNull Project project) {
-    for (ErlangConsoleView consoleView : consoleViews) {
-      if (project == consoleView.getProject()) {
+    List<ErlangConsoleView> views = new ArrayList<>(consoleViews);
+    for (int i = views.size() - 1; i >= 0; i--) {
+      ErlangConsoleView consoleView = views.get(i);
+      if (project == consoleView.getProject() && consoleView.isRunning()) {
         return consoleView;
       }
     }
