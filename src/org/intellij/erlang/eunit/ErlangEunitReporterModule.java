@@ -19,7 +19,9 @@ package org.intellij.erlang.eunit;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.ResourceUtil;
 import com.intellij.util.io.URLUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URL;
@@ -31,8 +33,12 @@ public class ErlangEunitReporterModule {
   public static final String MODULE_NAME = "eunit_teamcity";
   private static final String MODULE_BEAM = MODULE_NAME + ".beam";
 
-  public static void putReporterModuleTo(@NotNull File directory) throws IOException {
-    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(), "/eunit", MODULE_BEAM);
+  // Without a known release the module for OTP 27 and later is used: it also loads on OTP 26, while the one for
+  // older releases is refused from OTP 27 on.
+  public static void putReporterModuleTo(@NotNull File directory, @Nullable ErlangSdkRelease release) throws IOException {
+    String beamDirectory = release != null ? release.getBundledBeamDirectory() : "otp_27_plus";
+    URL moduleUrl = ResourceUtil.getResource(ErlangEunitReporterModule.class.getClassLoader(),
+                                             "/eunit/beams/" + beamDirectory, MODULE_BEAM);
     if (moduleUrl == null) {
       throw new IOException("Failed to locate eunit reporter module.");
     }

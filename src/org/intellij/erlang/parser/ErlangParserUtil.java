@@ -328,6 +328,33 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return ErrorState.get(builder_).completionState != null;
   }
 
+  // Tells whether the binary that starts before the current token has '||' at its top level before its '>>',
+  // so that binary_comprehension does not parse the first element of every binary speculatively.
+  public static boolean isBinaryComprehension(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
+    PsiBuilder.Marker m = builder.mark();
+    try {
+      int depth = 0;
+      for (IElementType type = builder.getTokenType(); type != null; builder.advanceLexer(), type = builder.getTokenType()) {
+        if (type == ErlangTypes.ERL_BIN_START || type == ErlangTypes.ERL_PAR_LEFT ||
+            type == ErlangTypes.ERL_BRACKET_LEFT || type == ErlangTypes.ERL_CURLY_LEFT) {
+          depth++;
+        }
+        else if (type == ErlangTypes.ERL_BIN_END || type == ErlangTypes.ERL_PAR_RIGHT ||
+                 type == ErlangTypes.ERL_BRACKET_RIGHT || type == ErlangTypes.ERL_CURLY_RIGHT) {
+          if (depth == 0) return false;
+          depth--;
+        }
+        else if (type == ErlangTypes.ERL_OR_OR && depth == 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+    finally {
+      m.rollbackTo();
+    }
+  }
+
   private static final Key<Boolean> IS_COMPREHENSION_KEY = Key.create("Erlang.IS_COMPREHENSION");
 
   public static boolean markComprehension(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {

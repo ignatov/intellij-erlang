@@ -120,6 +120,25 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
+  public void testBinaryComprehensionTemplates()        { doTest(false); }
+
+  public void testDeeplyNestedBinariesParseWithoutBacktracking() {
+    int depth = 20;
+    String parenthesized = "X";
+    String caseTemplates = "<<>>";
+    for (int i = 0; i < depth; i++) {
+      parenthesized = "<<(" + parenthesized + ")/binary>>";
+      caseTemplates = "<< case X of _ -> " + caseTemplates + " end >>";
+    }
+    String text = "f(X) -> " + parenthesized + ".\ng(X) -> " + caseTemplates + ".\n";
+    long start = System.nanoTime();
+    PsiFile file = createPsiFile("nested", text);
+    boolean hasErrors = PsiTreeUtil.hasErrorElements(file);
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertFalse("PsiFile contains error elements", hasErrors);
+    assertTrue("Parsing took " + millis + " ms", millis < 5000);
+  }
+
   public void testTypedMacroBody()                      { doTest(false); }
   public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
@@ -192,5 +211,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
     @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
 
     @Override public String toString() { return text; }
-  }
+    }
 }
