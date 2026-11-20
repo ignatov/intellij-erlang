@@ -128,6 +128,7 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     ErlangUsageAskDialog reminder = new ErlangUsageAskDialog(getProject(), true);
     try {
       assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
+      assertFalse(first.isExampleShownForTests());
       assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
       assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
       assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));

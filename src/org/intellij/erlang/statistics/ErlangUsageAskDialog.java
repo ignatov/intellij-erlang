@@ -17,6 +17,7 @@
 package org.intellij.erlang.statistics;
 
 import com.intellij.codeInsight.lookup.LookupManager;
+import com.intellij.icons.AllIcons;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.DumbService;
@@ -25,7 +26,6 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.WindowManager;
-import com.intellij.ui.HideableDecorator;
 import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
@@ -80,6 +80,7 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   };
 
   private final boolean myReminder;
+  private JComponent myExample;
   private final Action myNoAction = new DialogWrapperExitAction(NO, NO_EXIT_CODE);
 
   ErlangUsageAskDialog(@Nullable Project project, boolean reminder) {
@@ -111,6 +112,11 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
   }
 
   @TestOnly
+  boolean isExampleShownForTests() {
+    return myExample.isVisible();
+  }
+
+  @TestOnly
   void clickNoForTests() {
     close(NO_EXIT_CODE);
   }
@@ -136,7 +142,7 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
 
   // a collapsed section with an example summary; the dialog grows when it opens and shrinks when it closes
   @NotNull
-  private static JComponent createExample() {
+  private JComponent createExample() {
     JBTextArea json = new JBTextArea(ErlangUsageStatisticsPanel.prettyPrint(ErlangUsagePayload.example()), EXAMPLE_ROWS, 0);
     json.setEditable(false);
     json.setFont(JBUI.Fonts.create(Font.MONOSPACED, json.getFont().getSize()));
@@ -146,10 +152,19 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     JBLabel where = new JBLabel(wrapped(REAL_SUMMARY), UIUtil.ComponentStyle.SMALL);
     where.setForeground(NamedColorUtil.getInactiveTextColor());
     content.add(where, BorderLayout.SOUTH);
-    JPanel holder = new JPanel(new BorderLayout());
-    HideableDecorator decorator = new HideableDecorator(holder, EXAMPLE_TITLE, true);
-    decorator.setContentComponent(content);
-    decorator.setOn(false);
+    content.setVisible(false);
+    myExample = content;
+    ActionLink toggle = new ActionLink(EXAMPLE_TITLE);
+    toggle.setIcon(AllIcons.General.ArrowRight, false);
+    toggle.addActionListener(e -> {
+      boolean expand = !content.isVisible();
+      content.setVisible(expand);
+      toggle.setIcon(expand ? AllIcons.General.ArrowDown : AllIcons.General.ArrowRight, false);
+      pack();
+    });
+    JPanel holder = new JPanel(new BorderLayout(0, JBUI.scale(4)));
+    holder.add(toggle, BorderLayout.NORTH);
+    holder.add(content, BorderLayout.CENTER);
     return holder;
   }
 
