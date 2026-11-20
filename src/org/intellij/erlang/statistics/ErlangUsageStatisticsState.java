@@ -18,7 +18,10 @@ package org.intellij.erlang.statistics;
 
 import com.intellij.util.xmlb.annotations.Attribute;
 import com.intellij.util.xmlb.annotations.Tag;
+import com.intellij.util.xmlb.annotations.XCollection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -34,6 +37,8 @@ public class ErlangUsageStatisticsState {
   public String lastAskDate;
   // a random UUID; it exists only while the user allows the statistics
   public String installationId;
+  @XCollection(propertyElementName = "days")
+  public List<Day> days = new ArrayList<>();
 
   @Tag("day")
   public static class Day {
