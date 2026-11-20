@@ -17,6 +17,8 @@
 package org.intellij.erlang.statistics;
 
 import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -35,8 +37,11 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -93,6 +98,132 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     collector().previewToday();
     assertTrue(collector().getState().days.isEmpty());
     assertNull(collector().getInstallationId());
+  }
+
+  public void testAskDialogButtonsAndChoices() {
+    ErlangUsageAskDialog first = new ErlangUsageAskDialog(getProject(), false);
+    ErlangUsageAskDialog reminder = new ErlangUsageAskDialog(getProject(), true);
+    try {
+      assertEquals(ErlangUsageAskDialog.TITLE, first.getTitle());
+      assertFalse(first.isExampleShownForTests());
+      assertEquals(List.of(ErlangUsageAskDialog.YES, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.LATER), first.getButtonTextsForTests());
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.CANCEL_EXIT_CODE));
+      // Esc and the close button of the window cancel the dialog
+      first.doCancelAction();
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(first.getExitCode()));
+      reminder.clickNoForTests();
+      assertFalse("No during the guard time", reminder.isDisposed());
+      reminder.endGuardForTests();
+      reminder.clickNoForTests();
+      assertEquals(ErlangUsageAskUi.Choice.NO, ErlangUsageAskDialog.choiceOf(reminder.getExitCode()));
+    }
+    finally {
+      Disposer.dispose(first.getDisposable());
+      Disposer.dispose(reminder.getDisposable());
+    }
+  }
+
+  public void testYesIsTheDefaultAfterAShortGuard() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      Action yes = dialog.getActionsForTests().get(0);
+      Action no = dialog.getActionsForTests().get(1);
+      assertEquals(ErlangUsageAskDialog.YES, yes.getValue(Action.NAME));
+      assertNotNull(yes.getValue(DialogWrapper.DEFAULT_ACTION));
+      assertNotNull(yes.getValue(DialogWrapper.FOCUSED_ACTION));
+      // Yes has its own exit code; the hidden OK action means later
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(DialogWrapper.OK_EXIT_CODE));
+
+      // the buttons are disabled when the dialog opens, until the guard timer, which starts when the window is shown, ends
+      assertTrue(dialog.isGuardedForTests());
+      assertFalse(yes.isEnabled());
+      assertFalse(no.isEnabled());
+      assertFalse(dialog.isGuardTimerRunningForTests());
+      dialog.startGuardForTests();
+      assertTrue(dialog.isGuardTimerRunningForTests());
+      dialog.pressYesForTests();
+      assertFalse(dialog.isDisposed());
+
+      // a press during the guard with a release after it does not click
+      JButton yesButton = dialog.getButtonForTests(yes);
+      if (yesButton != null) {
+        assertFalse(yesButton.isEnabled());
+        yesButton.getModel().setArmed(true);
+        yesButton.getModel().setPressed(true);
+      }
+      dialog.endGuardForTests();
+      assertTrue(yes.isEnabled());
+      assertTrue(no.isEnabled());
+      if (yesButton != null) {
+        assertTrue(yesButton.isEnabled());
+        yesButton.getModel().setPressed(false);
+        assertFalse(dialog.isDisposed());
+      }
+      assertSame(yesButton, dialog.getPreferredFocusedComponent());
+
+      dialog.pressYesForTests();
+      assertEquals(ErlangUsageAskUi.Choice.YES, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
+    }
+    finally {
+      if (!dialog.isDisposed()) Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testButtonTextsAndOrder() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      for (String text : dialog.getButtonTextsForTests()) {
+        // DialogWrapper binds the bare Y and N keys to buttons named exactly "Yes" and "No"
+        assertFalse(text, text.equals("Yes") || text.equals("No") || text.contains("&") || text.contains("_"));
+      }
+      assertEquals(List.of(ErlangUsageAskDialog.LATER, ErlangUsageAskDialog.NO, ErlangUsageAskDialog.YES), dialog.getMacOrderForTests());
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testDialogShowsTheExample() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      String text = dialog.getExampleTextForTests();
+      assertEquals(ErlangUsageAskDialog.exampleText(), text);
+      assertTrue(text, text.startsWith(ErlangUsageStatisticsPanel.prettyPrint(ErlangUsagePayload.exampleEventProperties())));
+      // the counters from the first visible line on
+      assertTrue(text, text.startsWith("{\n  \"completion\": "));
+      assertTrue(text, text.endsWith(ErlangUsageAskDialog.SENT_TOGETHER));
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testEscIsLaterAlsoDuringTheGuard() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      assertTrue(dialog.isGuardedForTests());
+      dialog.doCancelAction();
+      assertEquals(ErlangUsageAskUi.Choice.LATER, ErlangUsageAskDialog.choiceOf(dialog.getExitCode()));
+    }
+    finally {
+      if (!dialog.isDisposed()) Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  public void testExampleClosedAgainHasTheFirstSize() {
+    ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
+    try {
+      Dimension collapsed = dialog.getContentPreferredSizeForTests();
+      dialog.toggleExampleForTests();
+      assertTrue(dialog.isExampleShownForTests());
+      assertTrue(dialog.getContentPreferredSizeForTests().height > collapsed.height);
+      dialog.toggleExampleForTests();
+      assertFalse(dialog.isExampleShownForTests());
+      assertEquals(collapsed, dialog.getContentPreferredSizeForTests());
+    }
+    finally {
+      Disposer.dispose(dialog.getDisposable());
+    }
   }
 
   public void testOtpReleaseNeverStartsErl() throws Exception {
