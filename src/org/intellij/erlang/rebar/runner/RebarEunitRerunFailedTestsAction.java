@@ -17,7 +17,6 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.Executor;
-import com.intellij.execution.Location;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -38,10 +37,10 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.eunit.ErlangUnitRerunFailedTestsAction;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -109,15 +108,14 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
         final Project project = getProject();
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
-        List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(getFailedTests(project), testProxy -> {
-          Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-          PsiElement psiElement = location != null ? location.getPsiElement() : null;
-          ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
-          if (function != null && function.getArity() != 0) {
+        final List<String> testsNotRerun = new ArrayList<>();
+        List<ErlangFunction> failedTests =
+          ErlangUnitRerunFailedTestsAction.findTestFunctionsToRerun(project, getFailedTests(project), testsNotRerun);
+        for (ErlangFunction function : failedTests) {
+          if (function.getArity() != 0) {
             failedGeneratedTests.add(function);
           }
-          return function;
-        });
+        }
         Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, function -> {
           PsiFile containingFile = function.getContainingFile();
           return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
@@ -126,6 +124,9 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
 
         if (!failedGeneratedTests.isEmpty()) {
           notifyGeneratedTestsFailed(failedGeneratedTests);
+        }
+        if (!testsNotRerun.isEmpty()) {
+          ErlangUnitRerunFailedTestsAction.notifyTestsNotRerun(project, testsNotRerun, false);
         }
 
         String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false);

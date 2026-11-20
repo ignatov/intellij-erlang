@@ -33,7 +33,6 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.ObjectUtils;
 import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
@@ -166,7 +165,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-                .append("fun ").append(moduleName).append(':').append(ObjectUtils.notNull(ErlangPsiImplUtil.toAtomName(function), function)).append("/0")
+                .append("fun ").append(toAtom(moduleName)).append(':').append(toAtom(function)).append("/0")
                 .append(isGenerator ? "}" : "")
                 .append(", ");
         }
@@ -182,6 +181,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       throw new ExecutionException("Unknown run config kind");
     }
     return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
+  }
+
+  @NotNull
+  private static String toAtom(@NotNull String name) {
+    return StringUtil.notNullize(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) throws ExecutionException {
