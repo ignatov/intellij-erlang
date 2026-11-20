@@ -18,24 +18,49 @@ package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.NopProcessHandler;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.util.PathUtil;
+import com.intellij.util.TimeoutUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
 import org.intellij.erlang.application.ErlangApplicationRunningState;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
+import org.intellij.erlang.eunit.ErlangEunitReporterModule;
+import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
+import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
+import org.intellij.erlang.eunit.ErlangUnitRunningState;
+import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
+import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -60,12 +85,122 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
       new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
     configuration.setModuleAndFunction("riak_dt_runner boot");
     configuration.setErlFlags("-s lager start -extra foo bar");
+    ExecutionEnvironment environment = createEnvironment(configuration);
+    ErlangApplicationRunningState state = new ErlangApplicationRunningState(environment, getModule(), configuration);
 
     GeneralCommandLine commandLine = new GeneralCommandLine();
-    ErlangXDebugProcess.addDebugTargetParameters(commandLine, new ErlangApplicationRunningState(null, getModule(), configuration), 4242);
+    ErlangXDebugProcess.addDebugTargetParameters(commandLine, state, prepare(environment, state).codePath(), 4242);
 
     assertEquals(List.of("-pa", "/src", "-s", "lager", "start", "-run", "debugnode", "main", "4242", "-noshell",
                          "-s", "init", "stop", "-extra", "foo", "bar"), commandLine.getParametersList().getList());
+  }
+
+  public void testPrepareFindsCodePathAndModulesToInterpret() throws Exception {
+    VirtualFile debugged = myFixture.addFileToProject("debugged.erl", "-module(debugged).").getVirtualFile();
+    myFixture.addFileToProject("skipped.erl", "-module(skipped).");
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.getDebugOptions().setModulesNotToInterpret(Set.of("skipped"));
+    ExecutionEnvironment environment = createEnvironment(configuration);
+
+    ErlangXDebugProcess.SetUp setUp = prepare(environment, new ErlangApplicationRunningState(environment, getModule(), configuration));
+
+    assertEquals(List.of("-pa", "/src"), setUp.codePath());
+    assertEquals(List.of(PathUtil.getLocalPath(debugged)), setUp.moduleSourcePaths());
+    assertTrue(new File(setUp.beamsDirectory(), "debugnode.beam").isFile());
+  }
+
+  // a write action waits for a blocking read action, and the EDT with it, so the scan of the sources must give way
+  public void testScanForModulesToInterpretGivesWayToWriteActions() throws Exception {
+    myFixture.addFileToProject("debugged.erl", "-module(debugged).");
+    CountDownLatch inScan = new CountDownLatch(1);
+    AtomicBoolean written = new AtomicBoolean();
+    AtomicBoolean waited = new AtomicBoolean();
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance()) {
+        @Override
+        public ErlangDebugOptions getDebugOptions() {
+          if (waited.compareAndSet(false, true)) {
+            inScan.countDown();
+            long end = System.currentTimeMillis() + 10_000;
+            while (!written.get() && System.currentTimeMillis() < end) {
+              ProgressManager.checkCanceled();
+              TimeoutUtil.sleep(10);
+            }
+          }
+          return super.getDebugOptions();
+        }
+      };
+    ExecutionEnvironment environment = createEnvironment(configuration);
+    ErlangApplicationRunningState state = new ErlangApplicationRunningState(environment, getModule(), configuration);
+    Future<ErlangXDebugProcess.SetUp> setUp = ApplicationManager.getApplication().executeOnPooledThread(() -> ErlangXDebugProcess.prepare(environment, state));
+    PlatformTestUtil.waitWithEventsDispatching("the scan did not start", () -> inScan.getCount() == 0, 30);
+
+    long start = System.currentTimeMillis();
+    WriteAction.run(() -> written.set(true));
+    long writeWait = System.currentTimeMillis() - start;
+
+    PlatformTestUtil.waitWithEventsDispatching("prepare did not finish", setUp::isDone, 30);
+    assertNotEmpty(setUp.get().moduleSourcePaths());
+    assertTrue("a write action waited " + writeWait + " ms for the scan of the sources", writeWait < 5_000);
+  }
+
+  // EUnit puts its reporter module on the code path in a directory of its own, made for one session
+  public void testEunitReporterDirectoryIsDeletedWhenTargetTerminates() throws Exception {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    ExecutionEnvironment environment = createEnvironment(configuration);
+    ErlangXDebugProcess.SetUp setUp = prepare(environment, new ErlangUnitRunningState(environment, getModule(), configuration));
+    File reporter = ContainerUtil.find(ContainerUtil.map(setUp.codePath(), File::new),
+                                       file -> file.getName().startsWith(ErlangEunitReporterModule.MODULE_NAME));
+    assertNotNull("no reporter directory on the code path " + setUp.codePath(), reporter);
+    assertTrue(new File(reporter, ErlangEunitReporterModule.MODULE_NAME + ".beam").isFile());
+    NopProcessHandler processHandler = new NopProcessHandler();
+    ErlangXDebugProcess.deleteBeamsOnTermination(processHandler, setUp);
+    processHandler.startNotify();
+
+    processHandler.destroyProcess();
+
+    PlatformTestUtil.waitWithEventsDispatching("the reporter directory of the session is left after the debug target terminated",
+                                               () -> !reporter.exists() && !setUp.beamsDirectory().exists(), 30);
+  }
+
+  // a write action waits for a read action, and the EDT with it, so the reporter directory must be made outside one
+  public void testEunitReporterDirectoryIsCreatedOutsideReadAction() throws Exception {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    ExecutionEnvironment environment = createEnvironment(configuration);
+    AtomicReference<Boolean> readAccess = new AtomicReference<>();
+    ErlangUnitRunningState state = new ErlangUnitRunningState(environment, getModule(), configuration) {
+      @Override
+      public @NotNull List<File> createCodePathDirectories() throws ExecutionException {
+        readAccess.set(ApplicationManager.getApplication().isReadAccessAllowed());
+        return super.createCodePathDirectories();
+      }
+    };
+
+    prepare(environment, state);
+
+    assertEquals("the reporter directory is created under a read action", Boolean.FALSE, readAccess.get());
+  }
+
+  @NotNull
+  private ExecutionEnvironment createEnvironment(@NotNull ErlangRunConfigurationBase<?> configuration) throws ExecutionException {
+    configuration.getConfigurationModule().setModule(getModule());
+    return ExecutionEnvironmentBuilder
+      .create(getProject(), DefaultDebugExecutor.getDebugExecutorInstance(), configuration)
+      .runner(new ErlangDebugRunner())
+      .build();
+  }
+
+  // the runner calls prepare on a pooled thread; the EDT dispatches events meanwhile, as in the IDE
+  @NotNull
+  private static ErlangXDebugProcess.SetUp prepare(@NotNull ExecutionEnvironment environment,
+                                                   @NotNull ErlangRunningState state) throws Exception {
+    Future<ErlangXDebugProcess.SetUp> setUp =
+      ApplicationManager.getApplication().executeOnPooledThread(() -> ErlangXDebugProcess.prepare(environment, state));
+    PlatformTestUtil.waitWithEventsDispatching("prepare did not finish", setUp::isDone, 30);
+    return setUp.get();
   }
 
   public void testStopUnblocksDebuggerNodeBeforeConnect() throws Exception {
@@ -88,6 +223,19 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     processHandler.destroyProcess();
 
     assertTrue("the debugger node must stop when the debug target terminates", stopped.await(10, TimeUnit.SECONDS));
+  }
+
+  public void testBeamsAreDeletedWhenTargetTerminates() throws Exception {
+    File beams = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
+    FileUtil.writeToFile(new File(beams, "debugnode.beam"), "");
+    NopProcessHandler processHandler = new NopProcessHandler();
+    ErlangXDebugProcess.deleteBeamsOnTermination(processHandler, new ErlangXDebugProcess.SetUp(beams, List.of(), List.of(), List.of()));
+    processHandler.startNotify();
+
+    processHandler.destroyProcess();
+
+    PlatformTestUtil.waitWithEventsDispatching("the beams of the session must be deleted when the debug target terminates",
+                                               () -> !beams.exists(), 30);
   }
 
   private static class StoppedListener implements ErlangDebuggerEventListener {
