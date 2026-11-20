@@ -46,6 +46,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.lang.reflect.Proxy;
 import java.time.LocalDate;
@@ -276,6 +278,19 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     statistics.ask(getProject());
     assertEquals(List.of(false), ui.asked);
     assertFalse("the listener stops after the ask", ErlangUsageIdle.isInstalled());
+  }
+
+  // a drag is input, a pointer that only moves is not
+  public void testMouseDragIsInput() {
+    assertTrue("drags do not reach the listener", (ErlangUsageIdle.MASK & AWTEvent.MOUSE_MOTION_EVENT_MASK) != 0);
+    JPanel source = new JPanel();
+    long quiet = System.currentTimeMillis() - 60_000;
+    ErlangUsageIdle.setLastInputForTests(quiet);
+    ErlangUsageIdle.dispatchForTests(new MouseEvent(source, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), 0, 1, 1, 0, false));
+    assertTrue("a move is not input", ErlangUsageIdle.idleMillis() >= 60_000);
+    ErlangUsageIdle.dispatchForTests(new MouseEvent(source, MouseEvent.MOUSE_DRAGGED, System.currentTimeMillis(),
+                                                    InputEvent.BUTTON1_DOWN_MASK, 1, 1, 0, false));
+    assertTrue("a drag is input", ErlangUsageIdle.idleMillis() < 10_000);
   }
 
   public void testAskLaterStartsTheInputListener() {

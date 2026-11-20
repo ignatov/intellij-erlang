@@ -23,15 +23,20 @@ import org.jetbrains.annotations.TestOnly;
 
 import java.awt.*;
 import java.awt.event.AWTEventListener;
+import java.awt.event.MouseEvent;
 
 /**
  * The time of the last key or mouse input, so that the consent dialog does not open while the user types or clicks.
  * It listens only while a question is due and only writes a time stamp per event.
  */
 final class ErlangUsageIdle {
-  private static final long MASK = AWTEvent.KEY_EVENT_MASK | AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK;
+  // the motion events are there for drags; a pointer that only moves is not input
+  static final long MASK = AWTEvent.KEY_EVENT_MASK | AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK |
+                           AWTEvent.MOUSE_MOTION_EVENT_MASK;
   private static volatile long ourLastInput;
-  private static final AWTEventListener LISTENER = event -> ourLastInput = System.currentTimeMillis();
+  private static final AWTEventListener LISTENER = event -> {
+    if (event.getID() != MouseEvent.MOUSE_MOVED) ourLastInput = System.currentTimeMillis();
+  };
   private static boolean ourInstalled;
   private static Disposable ourDisposable;
 
@@ -68,6 +73,11 @@ final class ErlangUsageIdle {
   static synchronized void setInstalledForTests(boolean installed, long lastInput) {
     ourInstalled = installed;
     ourLastInput = lastInput;
+  }
+
+  @TestOnly
+  static void dispatchForTests(@NotNull AWTEvent event) {
+    LISTENER.eventDispatched(event);
   }
 
   @TestOnly
