@@ -302,6 +302,25 @@ public class ErlangUsageCollectorTest extends TestCase {
                  events(mySender.bodies.get(0)).get(0).getAsJsonObject().get("device_id").getAsString());
   }
 
+  // an id that the payload writer refuses would make every send and the preview fail; its days cannot be sent either
+  public void testLoadedStateWithABrokenIdGetsANewOne() {
+    for (String broken : new String[]{"", "not-an-id", "8F1C2B0E-1111-4222-8333-444455556666"}) {
+      ErlangUsageStatisticsState state = new ErlangUsageStatisticsState();
+      state.consent = "YES";
+      state.installationId = broken;
+      ErlangUsageStatisticsState.Day day = new ErlangUsageStatisticsState.Day();
+      day.date = DAY.minusDays(1).toString();
+      day.counters.put("RENAME", 3L);
+      state.days.add(day);
+      myCollector.loadState(state);
+      String id = myCollector.getInstallationId();
+      assertNotNull("id \"" + broken + "\"", id);
+      assertFalse("id \"" + broken + "\" was kept", broken.equals(id));
+      assertTrue("days of id \"" + broken + "\"", myCollector.getState().days.isEmpty());
+      myCollector.previewToday();
+    }
+  }
+
   public void testCountsBeforeConsentAreNeverKept() {
     myCollector.count(ErlangUsageKey.RENAME);
     myCollector.countQuickFix(FakeSender.class);

@@ -395,8 +395,13 @@ public final class ErlangUsageCollector {
     if (!yes) {
       state.installationId = null;
     }
-    else if (state.installationId == null && allowed) {
-      state.installationId = UUID.randomUUID().toString();
+    else {
+      // an id that the payload writer refuses: its days cannot be sent, and they do not move to a new id
+      if (state.installationId != null && !ErlangUsagePayload.isInstallationId(state.installationId)) {
+        state.installationId = null;
+        state.days.clear();
+      }
+      if (state.installationId == null && allowed) state.installationId = UUID.randomUUID().toString();
     }
     myConsented = yes;
   }
