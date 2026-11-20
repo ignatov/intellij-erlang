@@ -38,6 +38,7 @@ import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
+import org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -628,6 +629,18 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertNull(collector().getInstallationId());
     ErlangUsageStatistics.setAllowedForTests(true);
     assertTrue(new ErlangUsageStatisticsPanel().isCheckBoxEnabledForTests());
+  }
+
+  // a missing dialyzer executable gives an empty output without an exit code: Dialyzer did not run, so it is not ok
+  public void testDialyzerThatNeverStartedIsNotOk() {
+    collector().setEnabled(true);
+    String missing = FileUtil.getTempDirectory() + "/no-such-sdk";
+    ErlangDialyzerExternalAnnotator.State state =
+      new ErlangDialyzerExternalAnnotator.State(getProject(), missing + "/bin/dialyzer", null, missing + "/foo.erl", FileUtil.getTempDirectory());
+    new ErlangDialyzerExternalAnnotator().doAnnotate(state);
+    JsonObject properties = previewProperties();
+    assertFalse(properties.toString(), properties.has("dialyzer_ok"));
+    assertEquals(1, properties.get("dialyzer_failed").getAsInt());
   }
 
   public void testOtpReleaseNeverStartsErl() throws Exception {

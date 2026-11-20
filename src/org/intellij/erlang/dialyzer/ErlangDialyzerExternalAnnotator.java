@@ -163,7 +163,8 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (state == null) return null;
 
     ProcessOutput output = runner.apply(state);
-    boolean ok = output != null && !output.isTimeout() && output.getStderrLines().isEmpty() &&
+    // without an exit code Dialyzer did not run: the executable or the working directory is missing
+    boolean ok = output != null && output.isExitCodeSet() && !output.isTimeout() && output.getStderrLines().isEmpty() &&
                  !ContainerUtil.exists(output.getStdoutLines(), line -> line.startsWith("dialyzer: "));
     ErlangUsageCounters.count(state.myProject, ok ? ErlangUsageKey.DIALYZER_OK : ErlangUsageKey.DIALYZER_FAILED);
     if (output != null && output.isTimeout()) {
