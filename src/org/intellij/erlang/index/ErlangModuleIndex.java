@@ -104,7 +104,7 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
   }
 
   public static boolean hasModule(@NotNull String name, @NotNull GlobalSearchScope searchScope) {
-    return FileBasedIndex.getInstance().getContainingFilesIterator(ERLANG_MODULE_INDEX, name, searchScope).hasNext();
+    return !FileBasedIndex.getInstance().processValues(ERLANG_MODULE_INDEX, name, null, (file, value) -> false, searchScope);
   }
 
   @NotNull
