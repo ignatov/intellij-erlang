@@ -384,6 +384,24 @@ public class ErlangUsageCollectorTest extends TestCase {
     assertTrue(myCollector.getState().days.isEmpty());
   }
 
+  public void testTurningOffDuringASendStopsTheSplitRequests() {
+    myCollector.setEnabled(true);
+    for (int i = 0; i < 2; i++) {
+      myToday = DAY.plusDays(i);
+      myCollector.count(ErlangUsageKey.RENAME);
+    }
+    myToday = DAY.plusDays(2);
+    // the user turns the statistics off while the first request is on its way, and the service answers 413
+    myCollector.setSender(json -> {
+      mySender.bodies.add(json);
+      myCollector.setEnabled(false);
+      return 413;
+    });
+    assertEquals(0, myCollector.sendPending());
+    assertEquals(1, mySender.bodies.size());
+    assertTrue(myCollector.getState().days.isEmpty());
+  }
+
   public void testFailuresBackOffUntilTheNextDay() {
     myCollector.setEnabled(true);
     myCollector.count(ErlangUsageKey.RENAME);
