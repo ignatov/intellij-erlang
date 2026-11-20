@@ -25,6 +25,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
@@ -91,6 +92,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     EditorEx consoleEditor = getConsoleEditor();
     Document editorDocument = consoleEditor.getDocument();
     String text = editorDocument.getText();
+    PsiDocumentManager.getInstance(getProject()).commitDocument(editorDocument);
 
     final Map<String, ErlangQVar> context = getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     if (context != null) { // todo: process only successful statements

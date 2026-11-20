@@ -69,8 +69,37 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
     assertEquals(FileUtil.loadFile(new File(getTestDataPath() + testName + ".txt"), true), DebugUtil.psiToString(file, false));
   }
 
+  public void testSentForgetClearsVariables() {
+    ByteArrayOutputStream processInput = new ByteArrayOutputStream();
+    attachToFakeProcess(processInput);
+
+    myView.append("X = 42.");
+    myView.execute();
+    Map<String, ErlangQVar> context = myView.getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    assertNotNull(context);
+    assertTrue("variables bound by the sent text: " + context.keySet(), context.containsKey("X"));
+
+    myView.append("f().");
+    myView.execute();
+
+    assertEquals("X = 42.\nf().\n", processInput.toString());
+    assertTrue("variables left after f(): " + context.keySet(), context.isEmpty());
+  }
+
   public void testSentSelectionBindsVariables() {
     ByteArrayOutputStream processInput = new ByteArrayOutputStream();
+    attachToFakeProcess(processInput);
+
+    myView.append("X = 42.");
+    myView.execute();
+
+    assertEquals("X = 42.\n", processInput.toString());
+    Map<String, ErlangQVar> context = myView.getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
+    assertNotNull(context);
+    assertTrue("variables bound by the sent text: " + context.keySet(), context.containsKey("X"));
+  }
+
+  private void attachToFakeProcess(ByteArrayOutputStream processInput) {
     myView.attachToProcess(new ProcessHandler() {
       @Override
       protected void destroyProcessImpl() {
@@ -92,14 +121,6 @@ public class ErlangConsoleViewTest extends DaemonAnalyzerTestCase {
         return processInput;
       }
     });
-
-    myView.append("X = 42.");
-    myView.execute();
-
-    assertEquals("X = 42.\n", processInput.toString());
-    Map<String, ErlangQVar> context = myView.getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
-    assertNotNull(context);
-    assertTrue("variables bound by the sent text: " + context.keySet(), context.containsKey("X"));
   }
 
   @Override
