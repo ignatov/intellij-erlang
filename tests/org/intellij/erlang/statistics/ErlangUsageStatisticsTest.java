@@ -381,6 +381,17 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(List.of(false), ui.asked);
   }
 
+  // review point 7: a project without Erlang files at the start is checked again by the timer while a question is due
+  public void testProjectThatGetsItsFirstErlangFileIsAsked() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setSchedulerForTests(new FakeScheduler());
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), false);
+    myFixture.addFileToProject("first.erl", "-module(first).\n");
+    statistics.tickForTests();
+    PlatformTestUtil.waitWithEventsDispatching("the timer did not start a question", () -> statistics.getScheduledForTests() == 1, 10);
+    assertTrue(ErlangUsageStatistics.isErlangProject(getProject()));
+  }
+
   public void testEscIsLaterAlsoDuringTheGuard() {
     ErlangUsageAskDialog dialog = new ErlangUsageAskDialog(getProject(), false);
     try {
