@@ -14,7 +14,7 @@ The plugin asks in a small dialog, after you open a project with Erlang modules 
 - "Ask me later": the plugin asks again, but not earlier than 30 days later. Esc or closing the dialog means the same.
 - "No, thanks": the plugin never asks again.
 
-The plugin asks at most 3 times in total: the first time and two reminders. After that it does not ask again, and it sends nothing. The "What is sent" link in the dialog shows the data of today, and "Privacy policy" opens this page.
+The plugin asks at most 3 times in total: the first time and two reminders. After that it does not ask again, and it sends nothing. The dialog has a closed section "Example of the data that is sent", which shows an example summary, and a "Privacy policy" link, which opens this page. The real summary of today is in the settings (see below).
 
 You can change the answer at any time on the **Erlang External Tools** page of the IDE settings (type its name into the search field of the settings), section **Usage Statistics**. The **Show what is sent** button there shows the data of today, exactly as it would be sent.
 
@@ -26,7 +26,7 @@ At most one summary a day. It is sent on a later day, for each day on which you 
 - The date of the day.
 - The plugin version, the IDE product code and version (for example `IU`, `263`), whether the IDE is IntelliJ IDEA or another IDE, and the operating system family (mac, windows, linux).
 - The country, guessed from the time zone of your computer on that day.
-- For the Erlang projects that you opened: the major release of the Erlang/OTP SDK (for example `27`, or `unknown` when the IDE does not know it yet; the statistics never start Erlang to find it out), whether an SDK is set, which rebar is used (rebar3, rebar2 or none), and the number of Erlang files as a range (up to 10, up to 100, up to 1000, more).
+- For the Erlang projects that you opened: the major release of the Erlang/OTP SDK (for example `27`, or `unknown` when the IDE does not know it yet; the statistics never start Erlang to find it out), whether an SDK is set, which rebar is used (rebar3, rebar2, none, or unknown when the project has a `rebar.config` but no rebar path is set), and the number of Erlang files as a range (up to 10, up to 100, up to 1000, more).
 - Whether parameter name hints are on, and the names of this plugin's inspections that you turned on or off.
 - Counts of the features you used, for example: completion items chosen, go to declaration, find usages, quick documentation, reformat, rename, run and debug of each kind of Erlang run configuration, breakpoints added, builds, Dialyzer runs, and the quick fixes and intentions of this plugin, by their class name in the plugin.
 
@@ -51,7 +51,7 @@ The plugin does not put your IP address into the data. Amplitude, like any web s
 The plugin does not ask, count, store or send anything:
 
 - in local and test builds of the plugin (versions with `SNAPSHOT`), in tests and in headless mode;
-- if the environment variable `DO_NOT_TRACK` is `1`;
+- if the environment variable `DO_NOT_TRACK` is `1` or `true`;
 - if the IDE runs with the system property `-Derlang.usage.statistics=false`.
 
 ## How to turn it off
