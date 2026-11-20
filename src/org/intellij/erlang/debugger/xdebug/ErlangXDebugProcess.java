@@ -28,10 +28,13 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.io.FileUtil;
@@ -40,7 +43,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.PathUtil;
 import com.intellij.util.ResourceUtil;
-import com.intellij.util.SlowOperations;
+import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -87,7 +90,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
   private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
 
-  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
+  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env, @NotNull SetUp setUp) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
     super(session);
     mySession = session;
@@ -109,9 +112,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
 
     // it's important to set modules to interpret before running the debug target
-    SlowOperations.allowSlowOperations(this::setModulesToInterpret);
+    myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
     //TODO split running debug target and debugger process spawning
-    myErlangProcessHandler = runDebugTarget();
+    myErlangProcessHandler = runDebugTarget(setUp);
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
@@ -315,10 +318,50 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     return sourcePosition != null ? myPositionToLineBreakpointMap.get(sourcePosition) : null;
   }
 
-  private void setModulesToInterpret() {
-    Project project = myExecutionEnvironment.getProject();
+  // the file I/O and the scan of the sources of a session, which ErlangDebugRunner does before the platform creates
+  // the debug process on the EDT
+  @NotNull
+  static SetUp prepare(@NotNull ExecutionEnvironment environment, @NotNull ErlangRunningState runningState) throws ExecutionException {
+    ThreadingAssertions.assertBackgroundThread();
+    ErlangRunConfigurationBase<?> runConfiguration = (ErlangRunConfigurationBase<?>) environment.getRunProfile();
+    // a write action cancels a non-blocking read action, which then starts again, instead of waiting for it
+    List<String> moduleSourcePaths =
+      ReadAction.nonBlocking(() -> getModulesToInterpret(environment.getProject(), runConfiguration)).executeSynchronously();
+    List<String> modulesCodePath = ReadAction.computeBlocking(runningState::getModulesCodePath);
+    String beamSubdir = ReadAction.computeBlocking(() -> resolveBeamDirectory(runningState.getModule()));
+    File beamsDirectory = setUpErlangDebuggerCodePath(beamSubdir);
+    List<File> codePathDirectories;
+    try {
+      codePathDirectories = runningState.createCodePathDirectories();
+    }
+    catch (ExecutionException | RuntimeException e) {
+      FileUtil.delete(beamsDirectory);
+      throw e;
+    }
+    List<String> codePath = new ArrayList<>();
+    for (File directory : codePathDirectories) {
+      codePath.add("-pa");
+      codePath.add(PathUtil.toSystemIndependentName(directory.getPath()));
+    }
+    codePath.addAll(modulesCodePath);
+    return new SetUp(beamsDirectory, codePathDirectories, codePath, moduleSourcePaths);
+  }
+
+  // what prepare() made for one session; the session owns the directories once it is started
+  record SetUp(@NotNull File beamsDirectory,
+               @NotNull List<File> codePathDirectories,
+               @NotNull List<String> codePath,
+               @NotNull List<String> moduleSourcePaths) {
+    void deleteDirectories() {
+      ThreadingAssertions.assertBackgroundThread();
+      FileUtil.delete(beamsDirectory);
+      codePathDirectories.forEach(FileUtil::delete);
+    }
+  }
+
+  @NotNull
+  private static List<String> getModulesToInterpret(@NotNull Project project, @NotNull ErlangRunConfigurationBase<?> runConfiguration) {
     Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
-    ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
     if (runConfiguration.isUseTestCodePath()) {
       HashSet<ErlangFile> erlangTestModules = new HashSet<>();
       for (Module module : runConfiguration.getModules()) {
@@ -330,12 +373,13 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     Set<String> notToInterpret = runConfiguration.getDebugOptions().getModulesNotToInterpret();
     List<String> moduleSourcePaths = new ArrayList<>(erlangModules.size());
     for (ErlangFile erlangModule : erlangModules) {
+      ProgressManager.checkCanceled();
       VirtualFile file = erlangModule.getVirtualFile();
       if (file != null && !notToInterpret.contains(file.getNameWithoutExtension())) {
         moduleSourcePaths.add(PathUtil.getLocalPath(file));
       }
     }
-    myDebuggerNode.interpretModules(moduleSourcePaths);
+    return moduleSourcePaths;
   }
 
   @NotNull
@@ -451,7 +495,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @NotNull
-  private OSProcessHandler runDebugTarget() throws ExecutionException {
+  private OSProcessHandler runDebugTarget(@NotNull SetUp setUp) throws ExecutionException {
     OSProcessHandler erlangProcessHandler;
     LOG.debug("Preparing to run debug target.");
     try {
@@ -459,8 +503,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       myRunningState.setExePath(commandLine);
       myRunningState.setWorkDirectory(commandLine);
       myRunningState.setEnvironment(commandLine);
-      setUpErlangDebuggerCodePath(commandLine);
-      addDebugTargetParameters(commandLine, myRunningState, myDebuggerNode.getLocalDebuggerPort());
+      commandLine.addParameters("-pa", setUp.beamsDirectory().getPath());
+      addDebugTargetParameters(commandLine, myRunningState, setUp.codePath(), myDebuggerNode.getLocalDebuggerPort());
 
       LOG.debug("Running debugger process. Command line (platform-independent): ");
       LOG.debug(commandLine.getCommandLineString());
@@ -468,6 +512,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       Process process = commandLine.createProcess();
       erlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
       stopDebuggerNodeOnTermination(erlangProcessHandler, myDebuggerNode);
+      deleteBeamsOnTermination(erlangProcessHandler, setUp);
 
       LOG.debug("Debugger process started.");
 
@@ -499,8 +544,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   static void addDebugTargetParameters(@NotNull GeneralCommandLine commandLine,
                                        @NotNull ErlangRunningState runningState,
+                                       @NotNull List<String> codePath,
                                        int debuggerPort) throws ExecutionException {
-    runningState.setCodePath(commandLine);
+    commandLine.addParameters(codePath);
     runningState.setErlangFlags(commandLine);
     commandLine.addParameters("-run", "debugnode", "main", String.valueOf(debuggerPort));
     runningState.setNoShellMode(commandLine);
@@ -518,27 +564,42 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     });
   }
 
-  private void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+  // the beams are copied for one session, so they must not stay in the temp directory after it
+  static void deleteBeamsOnTermination(@NotNull ProcessHandler processHandler, @NotNull SetUp setUp) {
+    processHandler.addProcessListener(new ProcessListener() {
+      @Override
+      public void processTerminated(@NotNull ProcessEvent event) {
+        // the listeners of the session and the console come after this one
+        ApplicationManager.getApplication().executeOnPooledThread(setUp::deleteDirectories);
+      }
+    });
+  }
+
+  @NotNull
+  private static File setUpErlangDebuggerCodePath(@NotNull String beamSubdir) throws ExecutionException {
     LOG.debug("Setting up debugger environment.");
+    File tempDirectory = null;
     try {
       String[] beams = {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
-      File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
+      tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
-      String beamSubdir = resolveBeamDirectory();
       LOG.debug("Using beam files from: " + beamSubdir + " directory");
       for (String beam : beams) {
         copyBeamTo(beamSubdir, beam, tempDirectory);
       }
       LOG.debug("Debugger beams were copied successfully.");
-      commandLine.addParameters("-pa", tempDirectory.getPath());
+      return tempDirectory;
     }
     catch (IOException e) {
+      if (tempDirectory != null) {
+        FileUtil.delete(tempDirectory);
+      }
       throw new ExecutionException("Failed to setup debugger environment: " + e.getMessage(), e);
     }
   }
 
-  private @NotNull String resolveBeamDirectory() {
-    return ErlangSdkType.getRelease(myRunningState.getModule()).getBundledBeamDirectory();
+  private static @NotNull String resolveBeamDirectory(@NotNull Module module) {
+    return ErlangSdkType.getRelease(module).getBundledBeamDirectory();
   }
 
   private static void copyBeamTo(String prefix, String beamName, File directory) throws IOException {
