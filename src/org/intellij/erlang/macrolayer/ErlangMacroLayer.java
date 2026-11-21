@@ -370,12 +370,19 @@ public final class ErlangMacroLayer {
       if (file != copyFile) return file.getUserData(COPY_OF) == null ? target : null;
       if (!isUsableTarget(target.getTextRange().getStartOffset())) return null;
       PsiElement real = mapElement(target, target);
-      if (real != null) return real;
-      if (target instanceof PsiNameIdentifierOwner owner) {
+      if (target instanceof PsiNameIdentifierOwner owner && (real == null || isOtherElementOfSource(real, target))) {
+        // the source text of the target may be some other element of the real file: a record field with a default
+        // value, `sf = 0` in a -define body, is an assignment there; the name is the target then
         PsiElement id = owner.getNameIdentifier();
-        if (id != null) return mapElement(id, owner);
+        PsiElement byName = id != null && id != owner ? mapElement(id, owner) : null;
+        if (byName != null || real == null) return byName;
       }
-      return null;
+      return real;
+    }
+
+    /** The element found in the real file for the copy's target is of another kind: it only has the same text range. */
+    private static boolean isOtherElementOfSource(@NotNull PsiElement real, @NotNull PsiElement target) {
+      return !(real instanceof ErlangMacroLayerHeaderTarget) && !target.getClass().isInstance(real);
     }
 
     /** {@code owner}: the copy element the answer stands for (the element itself, or the owner of a name identifier). */
