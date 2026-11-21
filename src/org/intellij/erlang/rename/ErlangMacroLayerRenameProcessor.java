@@ -10,9 +10,11 @@ import com.intellij.refactoring.rename.RenamePsiElementProcessor;
 import com.intellij.refactoring.rename.UnresolvableCollisionUsageInfo;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.search.ErlangFindUsagesHandlerFactory;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +43,12 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
            element instanceof ErlangFunction && ErlangMacroLayer.isEnabled();
   }
 
+  /** The functions of the main tree that a made function name continues are renamed with it (their callers too). */
+  @Override
+  public void prepareRenaming(@NotNull PsiElement element, @NotNull String newName, @NotNull Map<PsiElement, String> allRenames) {
+    for (ErlangFunction f : ErlangMacroLayer.functionsContinuingMadeName(element)) allRenames.put(f, newName);
+  }
+
   private static boolean isLayerTarget(@NotNull PsiElement element) {
     return element instanceof ErlangMacroLayerHeaderTarget || ErlangMacroLayer.isNameMadeByMacro(element);
   }
@@ -61,7 +69,15 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
       super.renameElement(element, newName, usages, listener);
       return;
     }
-    // the declaration tokens first, while the target still resolves; then the references
+    // the other clause names of a made function (verbatim tokens after the declaration: renaming them first moves
+    // nothing before them), then the declaration tokens, while the target still resolves; then the references
+    List<PsiElement> clauses = new ArrayList<>(ErlangMacroLayer.otherClauseNamesOfMadeFunction(element));
+    clauses.sort(Comparator.comparingInt((PsiElement e) -> e.getTextRange().getStartOffset()).reversed());
+    for (PsiElement leaf : clauses) {
+      ErlangAtom atom = PsiTreeUtil.getParentOfType(leaf, ErlangAtom.class, false);
+      if (atom != null && atom.getTextRange().equals(leaf.getTextRange())) ErlangPsiImplUtil.renameAtom(atom, newName);
+      else ErlangMacroResolve.renameBareName(leaf, newName);
+    }
     renameDeclaration(element, newName);
     for (UsageInfo usage : usages) {
       PsiReference ref = usage.getReference();
@@ -95,8 +111,16 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
       return;
     }
     ErlangAtom atom = PsiTreeUtil.getParentOfType(leaf, ErlangAtom.class, false);
-    if (atom == null || !atom.getTextRange().equals(range)) throw new IncorrectOperationException("The declaration of the name was not found");
-    ErlangPsiImplUtil.renameAtom(atom, newName);
+    if (atom != null && atom.getTextRange().equals(range)) {
+      ErlangPsiImplUtil.renameAtom(atom, newName);
+      return;
+    }
+    // a name in a -define body that the parser keeps as raw tokens (sign(N) when N > 0 -> of a fragment macro)
+    if (leaf != null && leaf.getTextRange().equals(range) && leaf.getNode().getElementType() == ErlangTypes.ERL_ATOM_NAME &&
+        ErlangMacroResolve.nameElement(leaf.getProject(), newName) instanceof ErlangAtom && ErlangMacroResolve.renameBareName(leaf, newName)) {
+      return;
+    }
+    throw new IncorrectOperationException("The declaration of the name was not found");
   }
 
   @Override

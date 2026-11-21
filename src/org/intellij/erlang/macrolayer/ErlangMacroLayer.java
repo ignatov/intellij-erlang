@@ -2298,6 +2298,49 @@ public final class ErlangMacroLayer {
    * in {@code -define(R, -record(mr, {mf})).}), as the copy tells; it is then its own declaration (the uses resolve to
    * it). A structural check first; the copy only for such tokens, under the layer's build rule (a passive query waits).
    */
+  /**
+   * The functions of the main tree that continue a function whose first clauses a top-level macro use makes with this
+   * name ({@code ?HEAD(X) positive; sign(0) -> zero.}: the recovery made {@code sign(0) -> zero.} a function of its
+   * own): renaming the made name renames them too.
+   */
+  public static @NotNull List<ErlangFunction> functionsContinuingMadeName(@NotNull PsiElement madeName) {
+    ErlangFile file = layerFile(madeName);
+    if (file == null || !isNameMadeByMacro(madeName)) return List.of();
+    String name = StringUtil.unquoteString(madeName.getText(), '\'');
+    List<ErlangFunction> r = new ArrayList<>();
+    for (ErlangFunction f : file.getFunctions()) {
+      if (!name.equals(f.getName()) || f.getParent() != file) continue;
+      PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(f);
+      if (prev != null && !endsSourceForm(prev)) r.add(f);
+    }
+    return r;
+  }
+
+  /**
+   * The names of the other clauses of a function whose first clause a macro makes ({@code ?HEAD(X) positive;
+   * sign(0) -> zero.}): in the copy they are clauses of the same function; these are their tokens in the real file.
+   */
+  public static @NotNull List<PsiElement> otherClauseNamesOfMadeFunction(@NotNull PsiElement madeName) {
+    ErlangFile file = layerFile(madeName);
+    if (file == null || !isNameMadeByMacro(madeName)) return List.of();
+    Copy copy = getCopy(file, "rename");
+    if (copy == null || copy.copyFile == null) return List.of();
+    TextRange range = madeName.getTextRange();
+    List<PsiElement> r = new ArrayList<>();
+    for (ErlangFunction fn : copy.copyFile.getFunctions()) {
+      PsiElement real = copy.toReal(fn.getNameIdentifier());
+      if (real == null || !range.equals(real.getTextRange())) continue;
+      for (ErlangFunctionClause clause : fn.getFunctionClauseList()) {
+        ErlangQAtom q = clause.getQAtom();
+        PsiElement other = q == null ? null : copy.toReal(q);
+        if (other == null || range.equals(other.getTextRange()) || other.getContainingFile() != file) continue;
+        PsiElement leaf = file.findElementAt(other.getTextRange().getStartOffset());
+        if (leaf != null && leaf.getText().equals(madeName.getText())) r.add(leaf);
+      }
+    }
+    return r;
+  }
+
   public static boolean isMadeNameDeclaration(@NotNull PsiElement leaf) {
     if (!isNameMadeByMacro(leaf)) return false;
     ErlangFile file = layerFile(leaf);
