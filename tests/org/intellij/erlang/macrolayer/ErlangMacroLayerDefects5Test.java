@@ -26,6 +26,9 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     ErlangMacroLayerLog.enableForTests(true);
     ErlangMacroLayerLog.reset();
+    // round 5: highlighting runs the Erlang inspections, as in the IDE; they ask the layer (since round 5 the name of a
+    // macro call, which the parameter hints asked for, no longer does)
+    enableAll(myFixture);
   }
 
   @Override

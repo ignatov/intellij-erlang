@@ -181,6 +181,8 @@ public class ErlangMacroLayerGateTest extends ErlangLightPlatformCodeInsightFixt
   // ---------------------------------------------------------------------------------------------- G4
 
   public void testG4TypingNeverBuildsAnExpansion() {
+    // round 5: highlighting runs the Erlang inspections, as in the IDE (the name of a macro call no longer asks the layer)
+    LayerTestSupport.enableAll(myFixture);
     myFixture.configureByText("type.erl", """
       -module(type).
       -export([f/1]).
@@ -194,6 +196,9 @@ public class ErlangMacroLayerGateTest extends ErlangLightPlatformCodeInsightFixt
       myFixture.type(c);
       PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
     }
+    // round 5: the new form goes after f/1, so that f/1 keeps its use of Value, which highlighting asks the layer for (the
+    // name of the macro call ?DEF(more), which was the only question when the form split f/1, no longer asks)
+    myFixture.getEditor().getCaretModel().moveToOffset(myFixture.getEditor().getDocument().getTextLength());
     myFixture.type("\n?DEF(more).\n");
     PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
     PsiFile file = myFixture.getFile();
