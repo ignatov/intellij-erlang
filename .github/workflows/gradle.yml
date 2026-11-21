@@ -173,8 +173,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
-      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml and scripts/smoke/inputs.sh (the release
-      # smoke); change the pins together in all three.
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml, coverage.yml and scripts/smoke/inputs.sh
+      # (the release smoke); change the pins together in all four.
       env:
         OTP_VERSION: '27.3.4.9'
       run: |
