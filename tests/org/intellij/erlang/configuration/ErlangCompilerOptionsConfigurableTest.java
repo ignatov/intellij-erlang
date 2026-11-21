@@ -18,6 +18,7 @@ package org.intellij.erlang.configuration;
 
 import com.intellij.ui.RawCommandLineEditor;
 import com.intellij.util.ui.UIUtil;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import javax.swing.*;
@@ -47,5 +48,103 @@ public class ErlangCompilerOptionsConfigurableTest extends ErlangLightPlatformCo
     finally {
       configurable.disposeUIResources();
     }
+  }
+
+  public void testRevisitKeepsUnsavedCheckBoxes() {
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      JCheckBox debugInfo = findCheckBox(component, "debug info");
+      boolean stored = debugInfo.isSelected();
+      debugInfo.setSelected(!stored);
+      assertTrue(configurable.isModified());
+
+      fireShown(component);
+
+      assertEquals(!stored, debugInfo.isSelected());
+      assertTrue(configurable.isModified());
+    }
+    finally {
+      configurable.disposeUIResources();
+    }
+  }
+
+  public void testResetReloadsStoredValues() {
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      RawCommandLineEditor editor = UIUtil.findComponentOfType(component, RawCommandLineEditor.class);
+      assertNotNull(editor);
+      editor.setText("+foo");
+      JCheckBox debugInfo = findCheckBox(component, "debug info");
+      boolean stored = debugInfo.isSelected();
+      debugInfo.setSelected(!stored);
+
+      configurable.reset();
+
+      assertEquals("", editor.getText());
+      assertEquals(stored, debugInfo.isSelected());
+      assertFalse(configurable.isModified());
+    }
+    finally {
+      configurable.disposeUIResources();
+    }
+  }
+
+  public void testRevisitRefreshesRebarState() {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      rebarSettings.setRebarPath("");
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      JCheckBox useRebar = findCheckBox(component, "rebar");
+      JButton configureRebar = UIUtil.findComponentOfType(component, JButton.class);
+      assertNotNull(configureRebar);
+      RawCommandLineEditor editor = UIUtil.findComponentOfType(component, RawCommandLineEditor.class);
+      assertNotNull(editor);
+      assertFalse(useRebar.isEnabled());
+      assertTrue(configureRebar.isVisible());
+      editor.setText("+foo");
+
+      rebarSettings.setRebarPath("/usr/bin/rebar3");
+      fireShown(component);
+
+      assertTrue(useRebar.isEnabled());
+      assertFalse(configureRebar.isVisible());
+      assertEquals("+foo", editor.getText());
+      useRebar.setSelected(true);
+      assertFalse(editor.isVisible());
+
+      rebarSettings.setRebarPath("");
+      fireShown(component);
+
+      assertFalse(useRebar.isEnabled());
+      assertFalse(useRebar.isSelected());
+      assertTrue(configureRebar.isVisible());
+      assertTrue(editor.isVisible());
+      assertEquals("+foo", editor.getText());
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+      configurable.disposeUIResources();
+    }
+  }
+
+  private static void fireShown(JComponent component) {
+    AncestorEvent shown = new AncestorEvent(component, AncestorEvent.ANCESTOR_ADDED, component, component.getParent());
+    for (AncestorListener listener : component.getAncestorListeners()) {
+      listener.ancestorAdded(shown);
+    }
+  }
+
+  private static JCheckBox findCheckBox(JComponent component, String textPart) {
+    for (JCheckBox checkBox : UIUtil.findComponentsOfType(component, JCheckBox.class)) {
+      if (checkBox.getText().contains(textPart)) return checkBox;
+    }
+    throw new AssertionError("no check box with text containing " + textPart);
   }
 }

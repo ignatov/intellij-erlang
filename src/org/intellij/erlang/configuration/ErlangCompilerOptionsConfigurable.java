@@ -65,7 +65,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myRootPanel.addAncestorListener(new AncestorAdapter() {
       @Override
       public void ancestorAdded(AncestorEvent event) {
-        reset();
+        updateRebarState();
       }
     });
     myUseRebarCompilerCheckBox.addItemListener(e -> setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected()));
@@ -89,12 +89,19 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   @Override
   public void reset() {
+    setUseRebarCompiler(mySettings.isUseRebarCompilerEnabled());
+    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
+    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    updateRebarState();
+  }
+
+  private void updateRebarState() {
     boolean rebarPathIsSet = StringUtil.isNotEmpty(RebarSettings.getInstance(myProject).getRebarPath());
     myUseRebarCompilerCheckBox.setEnabled(rebarPathIsSet);
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
-    setUseRebarCompiler(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
-    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
-    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    if (!rebarPathIsSet && myUseRebarCompilerCheckBox.isSelected()) {
+      setUseRebarCompiler(false);
+    }
   }
 
   @Override
