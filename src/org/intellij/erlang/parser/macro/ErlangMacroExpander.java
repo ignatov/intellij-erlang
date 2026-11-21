@@ -90,8 +90,10 @@ public final class ErlangMacroExpander {
       return null;
     }
 
+    /** The macro name of {@code -define}, {@code -undef}, {@code -ifdef} or {@code -ifndef} (unquoted), else "". */
     public @NotNull String name() {
-      return tokens.size() > 3 && tokens.get(2).type() == ERL_PAR_LEFT ? tokens.get(3).text() : "";
+      Name n = conditionName(tokens);
+      return n == null ? "" : n.name;
     }
   }
 

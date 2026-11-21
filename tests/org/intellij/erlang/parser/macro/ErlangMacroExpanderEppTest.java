@@ -182,4 +182,12 @@ public class ErlangMacroExpanderEppTest extends ErlangLightPlatformCodeInsightFi
     Expansion x = expand("-module(m).\n-define(LOG, a).\n-ifdef(DEBUG).\n-undef(LOG).\n-endif.\nt() -> ?LOG.\n");
     assertEquals("t ( ) -> a .", form(x, "t()"));
   }
+
+  /** B12 (probe b12): a header's -define('X', ...) has the name X. */
+  public void testQuotedNameInAHeader() {
+    ErlangMacroExpander.HeaderSummary h = ErlangMacroExpander.summarize("-define('X', quoted).\n-undef('Y').\n", new ErlangLexer(getProject()), "q.hrl");
+    assertEquals("X", h.directives.get(0).name());
+    assertEquals("Y", h.directives.get(1).name());
+    assertEquals("t ( ) -> quoted .", form(expand("-module(b12).\n-include(\"q.hrl\").\nt() -> ?'X'.\n", "q.hrl", "-define('X', quoted).\n"), "t()"));
+  }
 }
