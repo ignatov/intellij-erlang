@@ -90,4 +90,49 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     assertEquals(binding, resolveLastZ(f));
     assertEquals("after the pause any caller builds", 3, builds().size());
   }
+
+  /**
+   * Round 5, last fix round: in a real editor the PSI changes only when the document is committed, and while the user
+   * types into a large file the commits may fall behind the keys. The caller then reads the last committed PSI, whose
+   * change is older than the quiet time, while the document changes with every key: it still starts no build.
+   */
+  public void testNoBuildWhileTheDocumentChangesAheadOfThePsi() throws Exception {
+    ErlangMacroLayer.setQuietMillisForTests(300, getTestRootDisposable());
+    PsiFile f = myFixture.addFileToProject("u.erl", "-module(u).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Z), Z.\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals(1, builds().size());
+    edit(f, "%% typed\n");
+    Thread.sleep(400); // the last commit is older than the quiet time
+    Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%% more keys, not committed yet\n"));
+    assertEquals("master's answer", "null", resolveLastZ(f));
+    assertEquals("no build by the caret-driven caller", 1, builds().size());
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+  }
+
+  /**
+   * Round 5, last fix round: a file whose macros are all plain, with a form broken in the middle of typing. That form
+   * needs the copy only for highlighting; a caret-driven caller starts no build for it, also after the quiet time.
+   */
+  public void testNoBuildByOtherCallersForAFormBrokenWithPlainMacrosOnly() throws Exception {
+    ErlangMacroLayer.setQuietMillisForTests(0, getTestRootDisposable());
+    PsiFile f = myFixture.addFileToProject("v.erl", "-module(v).\n-define(A, a).\n-define(P(X), {X, ?A}).\n-export([f/1]).\n" +
+                                                    "f(X) -> Y = ?P(X), Y.\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals(0, builds().size());
+    Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
+    int at = f.getText().indexOf("Y.\n");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(at, "lists:map(fun(Q) -> W + Q, "));
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    String target = inBackgroundWithIndicator(() -> {
+      PsiReference ref = f.findReferenceAt(f.getText().indexOf("W + Q"));
+      PsiElement t = ref == null ? null : ref.resolve();
+      return String.valueOf(t);
+    });
+    assertEquals("null", target);
+    assertEquals("no build by the caret-driven caller", 0, builds().size());
+    assertTrue(ErlangMacroLayerLog.events().stream().anyMatch(e -> e.kind().equals("SKIPPED") && e.line().contains("broken-plain")));
+  }
 }

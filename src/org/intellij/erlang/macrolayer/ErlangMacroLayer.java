@@ -16,6 +16,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.util.TextRange;
@@ -454,6 +455,8 @@ public final class ErlangMacroLayer {
     volatile Boolean topLevelMacroForm;
     /** Round 5: some top-level form of the file needs the copy ({@link #anyFormNeedsCopy}). */
     volatile Boolean anyFormNeedsCopy;
+    /** Round 5: the forms that need the copy need it only because they are broken ({@link #onlyBrokenFormsNeedCopy}). */
+    volatile Boolean onlyBrokenFormsNeedCopy;
 
     /** Round 5: the copy of this version of the file (a new table, a new holder: the same dependencies). */
     final @NotNull CopyHolder holder;
@@ -981,6 +984,11 @@ public final class ErlangMacroLayer {
       Build running = holder.building.get();
       if (running == null) {
         String refusal = buildRefusal(file);
+        if (refusal == null && !isEdtBuildAllowed() && !isHighlighting(ProgressManager.getGlobalProgressIndicator()) &&
+            onlyBrokenFormsNeedCopy(file, table)) {
+          // round 5: a form broken while the user types, with plain macros only: only highlighting builds for it
+          refusal = "broken-plain";
+        }
         if (refusal != null) {
           ErlangMacroLayerStats.phase("build-skipped:" + refusal, file.getName(), 0);
           ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, refusal, trigger);
@@ -1063,7 +1071,53 @@ public final class ErlangMacroLayer {
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
     if (tt != null && quiet > 0 && tt.changedWithin(quiet)) return "typing";
+    if (quiet > 0 && isBeingTyped(file, quiet)) return "typing";
     return null;
+  }
+
+  /**
+   * The text of the file's document changed less than {@code quiet} ms ago. The PSI tracker alone misses typing in a
+   * real editor: it moves only when the document is committed, and while the user types into a large file the commits
+   * may fall behind the keys for more than the quiet time; the caret-driven callers then read the last committed PSI,
+   * and each next key cancels the copy build they start.
+   */
+  private static boolean isBeingTyped(@NotNull PsiFile file, long quiet) {
+    Document document = PsiDocumentManager.getInstance(file.getProject()).getCachedDocument(file);
+    if (document == null) return false;
+    Long changed = document.getUserData(DOCUMENT_CHANGED_AT);
+    return changed != null && System.nanoTime() - changed < quiet * 1_000_000L;
+  }
+
+  /** Round 5: System.nanoTime() of the last change of a document (set by the listener of the retention service). */
+  private static final Key<Long> DOCUMENT_CHANGED_AT = Key.create("erlang.macro.layer.document.changed.at");
+
+  static void documentChanged(@NotNull Document document) {
+    document.putUserData(DOCUMENT_CHANGED_AT, System.nanoTime());
+  }
+
+  /**
+   * Round 5: every form of the file that needs the copy needs it only because it is broken in the main tree: it does
+   * not start with {@code ?}, and each of its macro uses is a plain macro in a plain slot. Such a form is broken in
+   * the copy too (a plain body is one balanced expression in the place of a use the main tree already parsed), so the
+   * copy answers nothing there; it is most likely a form the user is typing. Computed once per table.
+   */
+  static boolean onlyBrokenFormsNeedCopy(@NotNull ErlangFile file, @NotNull Table t) {
+    Boolean b = t.onlyBrokenFormsNeedCopy;
+    if (b != null) return b;
+    b = !isGateWide();
+    for (PsiElement c = file.getFirstChild(); c != null && b; c = c.getNextSibling()) {
+      if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+      ProgressManager.checkCanceled();
+      if (formNeedsCopy(t, c) && !needsCopyOnlyBecauseBroken(t, c)) b = false;
+    }
+    t.onlyBrokenFormsNeedCopy = b;
+    return b;
+  }
+
+  private static boolean needsCopyOnlyBecauseBroken(@NotNull Table t, @NotNull PsiElement form) {
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    if (first == null || "?".equals(first.getText())) return false;
+    return !usesNeedSubstitution(t, form, first);
   }
 
   /**
@@ -1508,6 +1562,11 @@ public final class ErlangMacroLayer {
       PsiElement attribute = PsiTreeUtil.nextVisibleLeaf(first);
       if (attribute != null && ErlangMacroExpander.isDirectiveName(attribute.getText())) return false;
     }
+    return usesNeedSubstitution(t, form, first);
+  }
+
+  /** Some {@code ?} of the form is not a use of a plain macro in a plain slot (or of a predefined or invisible macro). */
+  private static boolean usesNeedSubstitution(@NotNull Table t, @NotNull PsiElement form, @NotNull PsiElement first) {
     int end = form.getTextRange().getEndOffset();
     for (PsiElement leaf = first; leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
       if (leaf.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_QMARK) continue;

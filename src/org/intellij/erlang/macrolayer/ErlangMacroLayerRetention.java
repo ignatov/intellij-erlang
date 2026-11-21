@@ -2,10 +2,14 @@ package org.intellij.erlang.macrolayer;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.ModificationTracker;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -45,6 +49,14 @@ public final class ErlangMacroLayerRetention implements Disposable {
         release(file);
       }
     });
+    // round 5: when a document last changed (a key press; the PSI changes later, when the document is committed)
+    EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
+      @Override
+      public void documentChanged(@NotNull DocumentEvent event) {
+        // a replacement by the same text (as a test fixture's setText) is no key press
+        if (!StringUtil.equals(event.getOldFragment(), event.getNewFragment())) ErlangMacroLayer.documentChanged(event.getDocument());
+      }
+    }, this);
     // round 5: the own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
     PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
       @Override
