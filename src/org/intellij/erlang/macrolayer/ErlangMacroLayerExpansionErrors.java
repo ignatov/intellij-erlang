@@ -210,9 +210,18 @@ public final class ErlangMacroLayerExpansionErrors {
     int kind = x.kindAt(at);
     // only a token that a macro made (from a body or an argument): an error at a copied token of the file may be the
     // file's own (erlc then reports it with or without the macro; the main tree's checks may already show it there)
-    if (kind == ErlangMacroExpander.SRC_VERBATIM || kind < 0) return null;
-    TextRange use = x.useSourceRange(at);
+    TextRange use;
+    if (kind == ErlangMacroExpander.SRC_VERBATIM || kind < 0) {
+      // except the '.' that ends the form: the expansion left the form unfinished ("syntax error before: '.'"), and
+      // nothing of the file's own was wrong there (the main tree had no error); the last use before it did it
+      if (token.getNode().getElementType() != ErlangTypes.ERL_DOT || token.getTextRange().getEndOffset() < f.expEnd) return null;
+      use = useBefore(x, f, at);
+    }
+    else {
+      use = x.useSourceRange(at);
+    }
     TextRange range = kind == ErlangMacroExpander.SRC_ARGUMENT ? x.toSource(at, token.getTextRange().getEndOffset()) : use;
+    if (use == null) return null;
     if (use == null || range == null || range.isEmpty() || range.getStartOffset() < f.srcStart || range.getEndOffset() > f.srcEnd) return null;
     String name = macroName(x.sourceText, use);
     if (name == null) return null;
@@ -255,6 +264,15 @@ public final class ErlangMacroLayerExpansionErrors {
       leaf = PsiTreeUtil.nextLeaf(leaf);
     }
     return leaf;
+  }
+
+  /** The nearest macro use before the expanded offset in the form. */
+  private static @Nullable TextRange useBefore(@NotNull ErlangMacroExpander.Expansion x, @NotNull Form f, int at) {
+    for (int o = at - 1; o >= f.expStart; o--) {
+      int k = x.kindAt(o);
+      if (k >= 0 && k != ErlangMacroExpander.SRC_VERBATIM) return x.useSourceRange(o);
+    }
+    return null;
   }
 
   /**

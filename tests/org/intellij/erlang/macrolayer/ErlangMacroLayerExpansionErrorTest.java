@@ -138,6 +138,19 @@ public class ErlangMacroLayerExpansionErrorTest extends ErlangLightPlatformCodeI
     }
   }
 
+  /** A body that leaves the form unfinished: the error before the final '.' goes on the last use. erlc: syntax error before: '.'. */
+  public void testGuardBodyInAnExpression() {
+    doTest("-module(main).\n-export([f/1]).\n-define(G(X), is_atom(X); is_integer(X)).\nf(X) -> " + err("G", "'.'", "?G(X)") + ".\n");
+  }
+
+  /**
+   * {@code f(_) ?AR ok.} with {@code -define(AR, ->)}: the main tree ends the function before the use; the layer sees the
+   * use from both pieces and hides their false errors (erlc compiles it; kind k08 of the report).
+   */
+  public void testArrowMacroAfterAHead() {
+    doTest("-module(main).\n-export([f/1]).\n-define(AR, ->).\nf(_) ?AR ok.\n");
+  }
+
   // ------------------------------------------------------------------------------------------------ epp's own errors
 
   /** erlc: undefined macro 'NOPE', also in a fragment position (the syntax error stays: nothing can expand the form). */

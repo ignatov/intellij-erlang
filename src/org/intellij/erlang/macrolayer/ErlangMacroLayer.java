@@ -1496,7 +1496,12 @@ public final class ErlangMacroLayer {
     PsiElement first = PsiTreeUtil.firstChild(form);
     while (first != null && (first instanceof PsiWhiteSpace || first instanceof PsiComment || first.getTextLength() == 0)) first = PsiTreeUtil.nextLeaf(first);
     PsiElement prev = first == null ? null : PsiTreeUtil.prevVisibleLeaf(first);
-    return prev != null && prev.textMatches("?") && names.contains(StringUtil.unquoteString(first.getText(), '\''));
+    if (prev != null && prev.textMatches("?") && names.contains(StringUtil.unquoteString(first.getText(), '\''))) return true;
+    // the form ends broken right before a form that starts with a use: f(_) ?ARROW ok. (with -define(ARROW, ->))
+    PsiElement next = last == null ? null : PsiTreeUtil.nextVisibleLeaf(last);
+    if (next == null || !next.textMatches("?") || PsiTreeUtil.isAncestor(form, next, false) || !PsiTreeUtil.hasErrorElements(form)) return false;
+    PsiElement name = PsiTreeUtil.nextVisibleLeaf(next);
+    return name != null && names.contains(StringUtil.unquoteString(name.getText(), '\''));
   }
 
   /** Names of the variables inside macro calls (their arguments) of the form. */
