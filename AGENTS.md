@@ -107,7 +107,7 @@ You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer 
 
 ## Definition of done
 - A bug fix comes with a test that fails before the fix and passes after it. Run it both ways.
-- `scripts/coverage/pr-coverage.sh` tells whether the tests of the change execute its changed lines. The number adds to the rule above and does not replace it: "executed" is not "asserted".
+- `scripts/coverage/pr-coverage.sh` tells whether the tests of the change execute its changed lines. Running it is optional for the author of a change: CI runs it on each pull request (job `changed-lines-coverage`), and the reviewer reads the result there or runs it once. The number adds to the rule above and does not replace it: "executed" is not "asserted".
 - A behaviour change or new feature comes with tests and `testData` for the new behaviour.
 - `./gradlew test` passes. Run `testCompilation` too when you touch `build/`, `jps/` or `jps-plugin/` and Erlang is available.
 - Keep the diff small and about the task only. No drive-by refactors, reformatting, import reshuffles, renames, dependency or tool bumps, and no documentation churn.
