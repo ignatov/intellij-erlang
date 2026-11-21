@@ -1,0 +1,5 @@
+-module(bTuple).
+-callback on_receive(Data :: term()) -> term().
+-callback ready(Args :: term()) -> ok.
+-callback done() -> ok.
+-optional_callbacks([{ready, 1}, done/0]).

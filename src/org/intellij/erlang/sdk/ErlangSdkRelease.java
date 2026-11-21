@@ -33,7 +33,7 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
-  public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.1");
+  public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.0");
   public static final ErlangSdkRelease V_28_0 = new ErlangSdkRelease("28", "16.0");
   public static final ErlangSdkRelease V_29_0 = new ErlangSdkRelease("29", "17.0");
 
@@ -71,6 +71,13 @@ public final class ErlangSdkRelease {
 
   public boolean isNewerOrEqualTo(@NotNull ErlangSdkRelease other) {
     return VersionComparatorUtil.compare(myErtsVersion, other.myErtsVersion) >= 0;
+  }
+
+  // The directory of the plugin's precompiled .beam files (debugger, EUnit reporter) that this release can load.
+  // The boundary is OTP 27.0, erts 15.0, as in V_27_0.
+  @NotNull
+  public String getBundledBeamDirectory() {
+    return VersionComparatorUtil.compare(myErtsVersion, "15.0") >= 0 ? "otp_27_plus" : "otp_pre_27";
   }
 
   public boolean needBifCompletion(@NotNull String moduleName) {

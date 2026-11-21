@@ -19,14 +19,15 @@ package org.intellij.erlang.rebar.runner;
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.openapi.project.Project;
 import org.intellij.erlang.module.ErlangModuleType;
+import org.intellij.erlang.runconfig.ui.ErlangSettingsEditor;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
-final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfigurationBase> {
+final class RebarRunConfigurationEditorForm extends ErlangSettingsEditor<RebarRunConfigurationBase> {
   private JPanel myComponent;
   private JTextField myCommandText;
   private JCheckBox myRunInModuleCheckBox;
@@ -34,7 +35,8 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
   private JCheckBox mySkipDependenciesCheckBox;
   private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
 
-  RebarRunConfigurationEditorForm() {
+  RebarRunConfigurationEditorForm(@NotNull Project project) {
+    super(project);
     myRunInModuleCheckBox.addActionListener(e -> myModulesComboBox.setEnabled(myRunInModuleCheckBox.isSelected()));
     myModulesComboBox.setVisible(!ErlangSystemUtil.isSmallIde());
     myRunInModuleCheckBox.setVisible(!ErlangSystemUtil.isSmallIde());
@@ -90,5 +92,9 @@ final class RebarRunConfigurationEditorForm extends SettingsEditor<RebarRunConfi
         myRunInModuleCheckBox.doClick();
       }
     }
+  }
+
+  private void createUIComponents() {
+    myEnvironmentVariablesComponent = createEnvironmentVariablesComponent();
   }
 }

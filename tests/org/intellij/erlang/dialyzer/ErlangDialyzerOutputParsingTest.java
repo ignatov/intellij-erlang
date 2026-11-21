@@ -1,0 +1,108 @@
+/*
+ * Copyright 2012-2026 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.dialyzer;
+
+import com.intellij.execution.process.ProcessOutput;
+import com.intellij.openapi.util.text.StringUtil;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+public class ErlangDialyzerOutputParsingTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  // Output of `dialyzer --plt <plt> dz_smoke.erl` (OTP 27 and OTP 29): file:line:column, long messages wrapped. Issue #1350.
+  public void testWrappedWarningWithColumn() {
+    String stdout = "  Checking whether the PLT /tmp/dz/e.plt is up-to-date... yes\n" +
+                    "  Proceeding with analysis...\n" +
+                    "dz_smoke.erl:4:1: Function f/0 has no local return\n" +
+                    "dz_smoke.erl:4:10: The call dz_smoke:g\n" +
+                    "         (1) will never return since it differs in the 1st argument from the success typing arguments: \n" +
+                    "         (atom())\n" +
+                    "dz_smoke.erl:6:1: Function g/1 has no local return\n" +
+                    "dz_smoke.erl:6:11: Guard test is_atom\n" +
+                    "         (X :: 1) can never succeed\n" +
+                    " done in 0m0.09s\n" +
+                    "done (warnings were emitted)\n";
+    ProcessOutput output = new ProcessOutput();
+    output.appendStdout(stdout);
+    ErlangDialyzerExternalAnnotator.State state = new ErlangDialyzerExternalAnnotator.State(
+      getProject(), "/sdk/bin/dialyzer", null, "/project/src/dz_smoke.erl", "/project");
+    ErlangDialyzerExternalAnnotator.State result = new ErlangDialyzerExternalAnnotator().doAnnotate(state, s -> output);
+    assertNotNull(result);
+    assertEquals("Problem{myLine=4, myDescription='Function f/0 has no local return'}\n" +
+                 "Problem{myLine=4, myDescription='The call dz_smoke:g(1) will never return since it differs in the 1st argument from the success typing arguments: (atom())'}\n" +
+                 "Problem{myLine=6, myDescription='Function g/1 has no local return'}\n" +
+                 "Problem{myLine=6, myDescription='Guard test is_atom(X :: 1) can never succeed'}",
+                 StringUtil.join(result.problems, Object::toString, "\n"));
+  }
+
+  // Before OTP 24 there is no column; the "Unknown functions" list after the warnings is not part of them.
+  public void testLineOnlyWarningsAndUnknownFunctions() {
+    String stdout = "  Proceeding with analysis...\n" +
+                    "dz_smoke.erl:4: Function f/0 has no local return\n" +
+                    "dz_smoke.erl:6: Call to missing or unexported function foo:bar/1\n" +
+                    " done in 0m0.09s\n" +
+                    "Unknown functions:\n" +
+                    "  foo:bar/1 (dz_smoke.erl:6:3)\n" +
+                    "done (warnings were emitted)\n";
+    ProcessOutput output = new ProcessOutput();
+    output.appendStdout(stdout);
+    ErlangDialyzerExternalAnnotator.State state = new ErlangDialyzerExternalAnnotator.State(
+      getProject(), "/sdk/bin/dialyzer", null, "/project/src/dz_smoke.erl", "/project");
+    ErlangDialyzerExternalAnnotator.State result = new ErlangDialyzerExternalAnnotator().doAnnotate(state, s -> output);
+    assertNotNull(result);
+    assertEquals("Problem{myLine=4, myDescription='Function f/0 has no local return'}\n" +
+                 "Problem{myLine=6, myDescription='Call to missing or unexported function foo:bar/1'}",
+                 StringUtil.join(result.problems, Object::toString, "\n"));
+  }
+
+  // Dialyzer 5.3.1 (OTP 27): line breaks inside a warning separate words, except before a wrapped argument list.
+  public void testWrappedLinesKeepWordSeparators() {
+    String stdout = "p1.erl:5:2: Invalid type specification for function p1:f/1.\n" +
+                    " The success typing is p1:f\n" +
+                    "          (atom()) -> 'ok'\n" +
+                    " But the spec is p1:f\n" +
+                    "          (integer()) -> 'ok'\n" +
+                    " They do not overlap in the 1st argument\n" +
+                    "p1.erl:9:1: Record construction #r{a::atom(), b::atom()} violates the declared type of field a ::\n" +
+                    "          integer()\n" +
+                    " done in 0m0.10s\n";
+    assertEquals("Problem{myLine=5, myDescription='Invalid type specification for function p1:f/1. " +
+                 "The success typing is p1:f(atom()) -> 'ok' But the spec is p1:f(integer()) -> 'ok' " +
+                 "They do not overlap in the 1st argument'}\n" +
+                 "Problem{myLine=9, myDescription='Record construction #r{a::atom(), b::atom()} violates the declared type of field a :: integer()'}",
+                 annotate("/project/src/p1.erl", stdout));
+  }
+
+  // Warnings located in an included file are not annotated on the same line number of the analysed module.
+  public void testWarningsOfIncludedFileSkipped() {
+    String stdout = "p2.hrl:5:2: Invalid type specification for function p2:q/1.\n" +
+                    " The success typing is p2:q\n" +
+                    "          (atom()) -> 'ok'\n" +
+                    "p2.hrl:6:1: Function q/1 will never be called\n" +
+                    "p2.erl:4:1: Function f/0 has no local return\n";
+    assertEquals("Problem{myLine=4, myDescription='Function f/0 has no local return'}",
+                 annotate("C:\\project\\src\\p2.erl", stdout));
+  }
+
+  private String annotate(String filePath, String stdout) {
+    ProcessOutput output = new ProcessOutput();
+    output.appendStdout(stdout);
+    ErlangDialyzerExternalAnnotator.State state = new ErlangDialyzerExternalAnnotator.State(
+      getProject(), "/sdk/bin/dialyzer", null, filePath, "/project");
+    ErlangDialyzerExternalAnnotator.State result = new ErlangDialyzerExternalAnnotator().doAnnotate(state, s -> output);
+    assertNotNull(result);
+    return StringUtil.join(result.problems, Object::toString, "\n");
+  }
+}

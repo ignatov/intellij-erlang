@@ -18,10 +18,10 @@
     <id>org.jetbrains.erlang</id>
     <vendor email="ignatovs@gmail.com">Sergey Ignatov</vendor>
     <depends>com.intellij.modules.lang</depends>
-    <!-- The test runner and the structure view are part of the platform in 2026.1 and separate plugins from 2026.2 on.
-         These are their ids in 2026.2; later IDEs keep them as aliases. Optional, so that 2026.1 loads the plugin. -->
-    <depends optional="true" config-file="test-runner-deps.xml">intellij.testRunner.plugin</depends>
-    <depends optional="true" config-file="structure-view-deps.xml">intellij.structureView.plugin</depends>
+    <!-- The test runner and the structure view are separate plugins of the IDE. These are their ids in 2026.2;
+         later IDEs keep them as aliases. -->
+    <depends>intellij.testRunner.plugin</depends>
+    <depends>intellij.structureView.plugin</depends>
     <name>Erlang</name>
     <description><![CDATA[
     <p>Erlang support for IntelliJ IDEA, PyCharm, WebStorm, PhpStorm, RubyMine and other JetBrains IDE.</p>
@@ -31,21 +31,22 @@
     <p>
         If you find this plugin useful, consider making a <a href="https://github.com/sponsors/ignatov">donation</a> to support the project.
     </p>
+    <p>
+        The plugin can send anonymous usage counts once a day, only if you allow it. See the <a href="https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md">privacy policy</a>.
+    </p>
     ]]>
     </description>
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Fixed builds that silently produced no .beam files: a missing Erlang build plugin, a failing erlc or a module without rebar.config is now reported instead of ending as "successful" (#1077, #1028)</li>
-              <li>Fixed erlc warnings with column numbers (OTP 24+) being reported as errors and failing the build</li>
-              <li>Fixed build order for parse transforms when the IDE and JPS project names differ</li>
-              <li>Fixed false 'multi-valued comprehension' error on map comprehensions (#1093)</li>
-              <li>Quick documentation for OTP functions, types and modules works with the new erlang.org documentation (OTP 27+), including links between pages; documentation is downloaded using the IDE proxy settings</li>
-              <li>Parameter name hints are shorter (parameter name, spec name or a short pattern summary) and can be turned off in Settings | Editor | Inlay Hints | Parameter names | Erlang (#1064)</li>
-              <li>Works in IntelliJ IDEA 2026.1, 2026.2 and 2026.3: one build serves all three</li>
-              <li>Added support for Erlang/OTP 29 syntax and native records</li>
-              <li>Added support for Erlang/OTP 28 comprehension generators, based float literals and nominal types</li>
-              <li>Added support for Erlang/OTP 27 sigil string literals</li>
+              <li>The plugin asks whether it may send anonymous usage counts once a day; it is off unless you say yes (<a href="https://github.com/ignatov/intellij-erlang/pull/1401">#1401</a>)</li>
+              <li>Rebar: support the rebar3 script made by rebar3 local install in run configurations and the rebar build, running it on the project's… (<a href="https://github.com/ignatov/intellij-erlang/issues/1233">#1233</a>)</li>
+              <li>Show the "Project SDK is not defined" banner again in IntelliJ IDEA for .erl and .hrl files when no SDK is set (<a href="https://github.com/ignatov/intellij-erlang/issues/1269">#1269</a>)</li>
+              <li>-include_lib and module resolve now pick the highest application version when version components differ in length (for example 1.10… (<a href="https://github.com/ignatov/intellij-erlang/issues/1383">#1383</a>)</li>
+              <li>Behaviour names of files that are not open are read from the index, without parsing the file (<a href="https://github.com/ignatov/intellij-erlang/issues/1382">#1382</a>)</li>
+              <li>Calls to modules that exist twice in a project, such as an OTP module and a copy in deps, resolve to the same file every time (<a href="https://github.com/ignatov/intellij-erlang/pull/1424">#1424</a>)</li>
+              <li>The example in the usage statistics dialog stays readable after the theme changes (<a href="https://github.com/ignatov/intellij-erlang/pull/1418">#1418</a>)</li>
+              <li>and 13 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1304">full list</a></li>
             </ul>
         ]]>
     </change-notes>

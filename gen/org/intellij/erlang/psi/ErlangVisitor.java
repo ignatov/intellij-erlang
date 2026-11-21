@@ -248,6 +248,10 @@ public class ErlangVisitor extends PsiElementVisitor {
     visitCompositeElement(o);
   }
 
+  public void visitIfAtomAttribute(@NotNull ErlangIfAtomAttribute o) {
+    visitMetaAttribute(o);
+  }
+
   public void visitIfClause(@NotNull ErlangIfClause o) {
     visitCompositeElement(o);
   }

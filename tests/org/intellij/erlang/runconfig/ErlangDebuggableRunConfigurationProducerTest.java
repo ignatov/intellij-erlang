@@ -322,7 +322,7 @@ Allowed roots: [/Users/ignatov/.gradle, /private/etc, /private/var/folders/2f/1q
     ErlangRunConfigurationBase<?> configuration = createConfiguration(ErlangApplicationRunConfigurationProducer.class, nifsInSource, false);
     configuration.getDebugOptions().setModulesNotToInterpret(new HashSet<>());
 
-    ErlangRunConfigurationEditorForm editor = new ErlangRunConfigurationEditorForm();
+    ErlangRunConfigurationEditorForm editor = new ErlangRunConfigurationEditorForm(getProject());
     Disposer.register(getTestRootDisposable(), editor);
     editor.getComponent();
 

@@ -12,9 +12,12 @@ name: Compatibility check
 # before it is used, and `ref` must be the tag of a published release of this repository or a commit of its default
 # branch, because the job runs the Gradle build of that commit. The step "Check the commit" finds, before any check
 # runs, the checks that the checked-out commit cannot run because it predates this check; they are skipped and
-# reported as not-run. No credentials are persisted and no Gradle cache is saved, and the steps with a token run
-# before any code of `ref`. A step that reads an output of another step also requires that step to have succeeded,
-# because the output of a step that was skipped or timed out is unset.
+# reported as not-run. The archive of the published release is verified only against an IDE whose build is at or above
+# the since-build of the archive's plugin.xml (an IDE above its until-build is verified too); against an older IDE the
+# check releasedPlugin is not run and is reported as not-run with notApplicable, which does not make the result
+# incomplete. No credentials are persisted and no Gradle cache is saved, and the steps with a token run before any code
+# of `ref`. A step that reads an output of another step also requires that step to have succeeded, because the output
+# of a step that was skipped or timed out is unset.
 
 on:
   workflow_dispatch:
@@ -69,9 +72,11 @@ jobs:
       with:
         path: compat-tool
         persist-credentials: false
-        # What scripts/compat/test_compat.py reads besides the scripts (see REPOSITORY_PATHS there).
+        # What scripts/compat/test_compat.py reads besides the scripts (see REPOSITORY_PATHS there), and the action that
+        # routes Maven Central through a mirror.
         sparse-checkout: |
           scripts/compat
+          .github/actions
           .github/workflows
           src/org/intellij/erlang/sdk
           testData/mockSdk-R27
@@ -112,6 +117,8 @@ jobs:
       with:
         distribution: temurin
         java-version: '25'
+    - name: Route Maven Central through a mirror
+      uses: ./compat-tool/.github/actions/maven-central-mirror
     - name: Resolve the IDE
       # Fails, and so writes no result, when the IDE cannot be downloaded or the build cannot be configured.
       id: resolve
@@ -146,12 +153,21 @@ jobs:
         COMPAT_IDE: ${{ steps.inputs.outputs.ide }}
       run: |
         "$TOOL/run-check.sh" verify "$TOOL/gradle.sh" verifyPlugin
+    - name: Check the since-build of the released plugin
+      # applies=false if the build of the resolved IDE is below the since-build of the released archive.
+      id: bounds
+      if: >-
+        ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.release.outcome == 'success'
+        && steps.release.outputs.archive != '' }}
+      run: |
+        python3 "$TOOL/compat.py" released-applies --logs "$COMPAT_LOGS" --ide-info plugin/build/compat/ide.json
     - name: Verify the released plugin
       # The archive of the published release, the build on JetBrains Marketplace, without building it.
       if: >-
         ${{ !cancelled() && steps.resolve.outcome == 'success' && steps.release.outcome == 'success'
         && steps.release.outputs.archive != '' && steps.tree.outcome == 'success'
-        && steps.tree.outputs.current == 'true' }}
+        && steps.tree.outputs.current == 'true' && steps.bounds.outcome == 'success'
+        && steps.bounds.outputs.applies == 'true' }}
       timeout-minutes: 20
       working-directory: plugin
       env:
@@ -203,9 +219,11 @@ jobs:
       with:
         path: compat-tool
         persist-credentials: false
-        # What scripts/compat/test_compat.py reads besides the scripts (see REPOSITORY_PATHS there).
+        # What scripts/compat/test_compat.py reads besides the scripts (see REPOSITORY_PATHS there), and the action that
+        # routes Maven Central through a mirror.
         sparse-checkout: |
           scripts/compat
+          .github/actions
           .github/workflows
           src/org/intellij/erlang/sdk
           testData/mockSdk-R27
@@ -240,6 +258,8 @@ jobs:
       with:
         distribution: temurin
         java-version: '25'
+    - name: Route Maven Central through a mirror
+      uses: ./compat-tool/.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
       # A copy of the step in gradle.yml with the version as an argument: builds.hex.pm, sha256 from builds.txt.
       timeout-minutes: 10

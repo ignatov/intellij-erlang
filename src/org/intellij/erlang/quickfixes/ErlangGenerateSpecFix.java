@@ -26,6 +26,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.intellij.erlang.types.ErlType;
 import org.intellij.erlang.types.ErlTypeUnion;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     var function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class, false);
 
     if (function != null) {

@@ -19,10 +19,14 @@ package org.intellij.erlang.debugger.xdebug;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.executors.DefaultDebugExecutor;
+import com.intellij.execution.runners.AsyncProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.GenericProgramRunner;
 import com.intellij.execution.ui.RunContentDescriptor;
+import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
@@ -30,24 +34,59 @@ import com.intellij.xdebugger.XDebuggerManager;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
+import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.concurrency.AsyncPromise;
+import org.jetbrains.concurrency.Promise;
 
-public class ErlangDebugRunner extends GenericProgramRunner {
+public class ErlangDebugRunner extends AsyncProgramRunner<RunnerSettings> {
   private static final String ERLANG_DEBUG_RUNNER_ID = "ErlangDebugRunner";
 
-  @Nullable
+  // The platform creates the debug process on the EDT, so what it needs from the disk is prepared on a background thread first.
+  @NotNull
   @Override
-  protected RunContentDescriptor doExecute(@NotNull RunProfileState state,
-                                           @NotNull final ExecutionEnvironment environment) throws ExecutionException {
+  protected Promise<RunContentDescriptor> execute(@NotNull ExecutionEnvironment environment, @NotNull RunProfileState state) {
+    AsyncPromise<RunContentDescriptor> result = new AsyncPromise<>();
+    ModalityState modalityState = ModalityState.defaultModalityState();
+    Application application = ApplicationManager.getApplication();
+    application.executeOnPooledThread(() -> {
+      ErlangXDebugProcess.SetUp setUp;
+      try {
+        setUp = ErlangXDebugProcess.prepare(environment, (ErlangRunningState) state);
+      }
+      catch (Throwable e) {
+        // settled on the EDT, as below: the caller adds its error handler there after this method returns
+        application.invokeLater(() -> result.setError(e), modalityState);
+        return;
+      }
+      application.invokeLater(() -> {
+        try {
+          if (environment.getProject().isDisposed()) {
+            throw new ExecutionException("The project is closed");
+          }
+          result.setResult(startSession(environment, setUp));
+        }
+        catch (Throwable e) {
+          application.executeOnPooledThread(setUp::deleteDirectories);
+          result.setError(e);
+        }
+      }, modalityState);
+    });
+    return result;
+  }
+
+  @Nullable
+  private static RunContentDescriptor startSession(@NotNull ExecutionEnvironment environment,
+                                                   @NotNull ErlangXDebugProcess.SetUp setUp) throws ExecutionException {
     XDebuggerManager xDebuggerManager = XDebuggerManager.getInstance(environment.getProject());
-    return xDebuggerManager.startSession(environment, new XDebugProcessStarter() {
+    return xDebuggerManager.newSessionBuilder(new XDebugProcessStarter() {
       @NotNull
       @Override
       public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-        return new ErlangXDebugProcess(session, environment);
+        return new ErlangXDebugProcess(session, environment, setUp);
       }
-    }).getRunContentDescriptor();
+    }).environment(environment).startSession().getRunContentDescriptor();
   }
 
   @NotNull
