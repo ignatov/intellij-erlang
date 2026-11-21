@@ -391,6 +391,42 @@ tasks.register('verifyGeneratedSources') {
   }
 }
 
+// Line and branch coverage of the plugin's classes, only with -Pcoverage: `./gradlew test -Pcoverage`, optionally with
+// testCompilation, writes build/reports/jacoco/coverageReport/{html,coverageReport.xml} for the test tasks that ran.
+// The tests load the plugin through the IDE's PathClassLoader from the test sandbox, so the agent must include classes
+// without a code source location, and the report must read the instrumented classes that the sandbox jars contain.
+// JaCoCo 0.8.16 supports class files and runtimes of Java 25, the JetBrains Runtime the tests run on.
+if (providers.gradleProperty('coverage').isPresent()) {
+  [project, project(':jps-plugin')].each { p ->
+    p.apply plugin: 'jacoco'
+    p.jacoco.toolVersion = '0.8.16'
+    p.tasks.withType(Test).configureEach {
+      jacoco {
+        includeNoLocationClasses = true
+        includes = ['org.intellij.erlang.*']
+        excludes = ['jdk.internal.*']
+      }
+      // A finalizer runs also when tests fail, so a flaky test does not cost the report.
+      finalizedBy ':coverageReport'
+    }
+  }
+  tasks.register('coverageReport', JacocoReport) {
+    description = 'Writes the coverage report of the test tasks of this build that ran with -Pcoverage.'
+    mustRunAfter tasks.withType(Test), project(':jps-plugin').tasks.withType(Test)
+    // The data of the test tasks of this build, not the tasks themselves: the report must not run the tests again.
+    executionData.from(files({
+      gradle.taskGraph.allTasks.findAll { it instanceof Test && it.extensions.findByName('jacoco') != null }
+        .collect { it.jacoco.destinationFile }.findAll { it.exists() }
+    }))
+    classDirectories.from(tasks.named('instrumentCode'), project(':jps-plugin').tasks.named('instrumentCode'))
+    sourceDirectories.from('src', 'gen', 'jps-plugin/src')
+    reports {
+      xml.required = true
+      html.required = true
+    }
+  }
+}
+
 apply plugin: 'idea'
 idea {
   project {
