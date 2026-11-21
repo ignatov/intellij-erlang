@@ -85,9 +85,16 @@ def class_name(path):
     return path[len(TEST_ROOT):-len('.java')].replace('/', '.')
 
 
+def has_changed_source_lines(files):
+    return any(is_source(f['path']) and f['status'] != 'deleted' and f['added'] for f in files)
+
+
 def plan(files, repository):
-    """{"run": [test classes for `test`], "left_out": [{"class", "why"}], "notes": [...]} for a pull request."""
+    """{"run": [test classes for `test`], "left_out": [{"class", "why"}], "notes": [...]} for a pull request.
+
+    Without a changed line in the Java files of src/ or jps-plugin/src/ nothing is run: there is nothing to measure."""
     run, left_out, notes = [], [], []
+    measurable = has_changed_source_lines(files)
     tests = [f for f in files if f['path'].endswith('.java')
              and (f['path'].startswith(TEST_ROOT) or f['path'].startswith('jps-plugin/tests/'))]
     for f in tests:
@@ -110,6 +117,9 @@ def plan(files, repository):
             left_out.append({'class': name, 'why': 'an abstract base class: its subclasses are not run'})
         elif not (simple.endswith('Test') or re.search(r'\bpublic\s+void\s+test\w*\s*\(', text)):
             left_out.append({'class': name, 'why': 'not a test class (no name ending with Test, no test method)'})
+        elif not measurable:
+            left_out.append({'class': name, 'why': 'no changed line in the Java files of src/ or jps-plugin/src/ to '
+                                                   'measure'})
         else:
             run.append(name)
     if not tests:

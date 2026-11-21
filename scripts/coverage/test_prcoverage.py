@@ -193,6 +193,16 @@ class PlanTest(Checkout):
                          {x['class']: x['why'] for x in result['left_out']})
         self.assertEqual([], result['notes'])
 
+    def test_no_changed_source_line_runs_nothing(self):
+        self.write('tests/org/intellij/erlang/parser/ErlangParserTest.java', 'public class ErlangParserTest {}')
+        files = prcoverage.parse_diff(diff(GEN_AND_DATA, DELETED_SOURCE, PURE_RENAME)) + [
+            self.change('tests/org/intellij/erlang/parser/ErlangParserTest.java')]
+        result = prcoverage.plan(files, self.repository)
+        self.assertEqual([], result['run'])
+        self.assertEqual([{'class': 'org.intellij.erlang.parser.ErlangParserTest',
+                           'why': 'no changed line in the Java files of src/ or jps-plugin/src/ to measure'}],
+                         result['left_out'])
+
     def test_no_test_change(self):
         result = prcoverage.plan([self.change('src/org/intellij/erlang/sdk/ErlangSdkType.java')], self.repository)
         self.assertEqual([], result['run'])
