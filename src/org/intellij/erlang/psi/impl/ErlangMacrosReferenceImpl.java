@@ -68,11 +68,11 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
     // F5: the name of -ifdef/-ifndef/-undef: what is defined at that point, any arity
     ErlangAttribute directive = ErlangMacroResolve.directiveOf(myNameElement);
-    if (directive != null) return PsiElementResolveResult.createResults(ErlangMacroResolve.definedBefore(file, directive, myReferenceName));
+    if (directive != null) return PsiElementResolveResult.createResults(ErlangMacroResolve.directiveTargets(file, directive, myReferenceName));
     int arity = ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement));
-    List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myReferenceName, arity);
+    List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myReferenceName, arity, myNameElement);
     if (all.isEmpty()) {
-      ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myReferenceName, arity);
+      ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myReferenceName, arity, myNameElement);
       return d == null ? ResolveResult.EMPTY_ARRAY : new ResolveResult[]{new PsiElementResolveResult(d)};
     }
     return PsiElementResolveResult.createResults(all);
@@ -92,11 +92,13 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     // round 6 (next): the name of another -define (another branch, another arity) is a definition, not a use
     if (myNameElement.getParent() instanceof ErlangMacrosDefinition d && d.getMacrosName() == myNameElement) return false;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
-    // F5: a directive's name is about the macro of any arity (a rename of the macro renames it too)
-    if (ErlangMacroResolve.directiveOf(myNameElement) != null) return ErlangMacroResolve.isVisibleOrUnknown(file, definition);
+    // the name of a directive refers to what it acts on (every arity defined before it; see directiveTargets)
+    ErlangAttribute directive = ErlangMacroResolve.directiveOf(myNameElement);
+    if (directive != null) return ErlangMacroResolve.directiveTargets(file, directive, myReferenceName).contains(definition);
     // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
     List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myReferenceName,
-                                                                 ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement)));
+                                                                 ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement)),
+                                                                 myNameElement);
     if (!m.isEmpty()) return m.contains(definition);
     // round 6: not a definition of the same name in an unrelated file (a header may use a macro only its includers define)
     return ErlangMacroResolve.isVisibleOrUnknown(file, definition);

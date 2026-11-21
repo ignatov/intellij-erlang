@@ -8,8 +8,8 @@ import java.util.List;
 
 /**
  * F5 (fuzz): the name in {@code -ifdef(X)}, {@code -ifndef(X)}, {@code -undef(X)} refers to what epp tests there: the
- * definitions of X before the directive (any arity), in the file and in the headers included before it; none when X is
- * not defined yet (a header guard), not a definition after the directive.
+ * definitions of X before the directive (any arity), in the file and in the headers included before it; when X is not
+ * defined yet (a header guard), the definitions of X in the conditional body the directive opens, never one after it.
  */
 public class ErlangMacroDirectiveNameTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private List<String> targets(String text) {
@@ -29,8 +29,9 @@ public class ErlangMacroDirectiveNameTest extends ErlangLightPlatformCodeInsight
                  targets("-module(m).\n-define(M5(X), {X}).\n-define(M5(X, Y), [X | Y]).\n-ifndef(M<caret>5).\n-define(M5, 0).\n-endif.\n"));
   }
 
-  public void testHeaderGuardHasNoTarget() {
-    assertEquals(List.of(), targets("-module(m).\n-ifndef(G<caret>UARD).\n-define(GUARD, 1).\n-endif.\n"));
+  public void testHeaderGuardGoesToItsDefinition() {
+    // nothing is defined before the guard: its name goes to the definition in the body it opens (go to and rename work)
+    assertEquals(List.of("m.erl:-define(GUARD, 1)."), targets("-module(m).\n-ifndef(G<caret>UARD).\n-define(GUARD, 1).\n-endif.\n"));
   }
 
   public void testUndef() {

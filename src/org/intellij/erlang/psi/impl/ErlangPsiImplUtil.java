@@ -1690,6 +1690,8 @@ public class ErlangPsiImplUtil {
       macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, newName);
     } catch (Exception ignore) {
     }
+    // a name that needs quotes parses as its first part ("p q" as p): quote it
+    if (macroName != null && !macroName.getText().equals(newName)) macroName = null;
     if (macroName == null) {
       try {
         macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, '\'' + newName + '\'');

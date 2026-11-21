@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -147,9 +146,9 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
     int arity = ErlangMacroResolve.arityAfter(myName);
-    List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myName.getText(), arity);
+    List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myName.getText(), arity, myName);
     if (!all.isEmpty()) return PsiElementResolveResult.createResults(all); // round 6 (next), item 4
-    ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myName.getText(), arity);
+    ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myName.getText(), arity, myName);
     return d == null ? ResolveResult.EMPTY_ARRAY : new ResolveResult[]{new PsiElementResolveResult(d)};
   }
 
@@ -158,7 +157,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
     if (!(element instanceof ErlangMacrosDefinition d) || !myName.getText().equals(d.getName())) return false;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
     // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
-    List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myName.getText(), ErlangMacroResolve.arityAfter(myName));
+    List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myName.getText(), ErlangMacroResolve.arityAfter(myName), myName);
     if (!m.isEmpty()) return m.contains(d);
     // a header may use a macro that only its includers define: then any definition of the name may be meant
     return ErlangMacroResolve.isVisibleOrUnknown(file, d);
@@ -171,12 +170,11 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
 
   @Override
   public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
-    PsiElement replacement = ErlangMacroResolve.nameToken(myName.getProject(), newElementName);
-    boolean quoted = PsiTreeUtil.prevLeaf(myName) instanceof LeafPsiElement l && l.getElementType() == ErlangTypes.ERL_SINGLE_QUOTE;
-    if (replacement == null || quoted && replacement.getNode().getElementType() != ErlangTypes.ERL_ATOM_NAME) {
+    // the name and its quotes, quoted again when the new name needs it (the rename processor rejects a name that no
+    // macro can have before anything changes)
+    if (!ErlangMacroResolve.renameBareName(myName, newElementName)) {
       throw new IncorrectOperationException("Cannot rename the macro use to " + newElementName);
     }
-    myName.replace(replacement);
     return myElement;
   }
 

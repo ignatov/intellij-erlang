@@ -16,6 +16,7 @@ import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Form;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -220,11 +221,17 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   public PsiElement handleElementRename(@NotNull String newElementName) throws IncorrectOperationException {
     if (myElement instanceof ErlangAtom atom) return ErlangPsiImplUtil.setName(atom, newElementName);
     PsiElement replacement = tokenOf(newElementName);
-    if (replacement == null || replacement.getNode().getElementType() != myLeaf.getNode().getElementType()) {
-      throw new IncorrectOperationException("Cannot rename " + myLeaf.getText() + " to " + newElementName + " here");
+    if (replacement != null && replacement.getNode().getElementType() == myLeaf.getNode().getElementType()) {
+      myLeaf.replace(replacement);
+      return myElement;
     }
-    myLeaf.replace(replacement);
-    return myElement;
+    // an atom name that needs quotes now (or had them): the name and its quotes
+    PsiElement name = ErlangMacroResolve.nameElement(myLeaf.getProject(), newElementName);
+    if (myLeaf.getNode().getElementType() == ErlangTypes.ERL_ATOM_NAME && name instanceof ErlangAtom &&
+        ErlangMacroResolve.renameBareName(myLeaf, newElementName)) {
+      return myElement;
+    }
+    throw new IncorrectOperationException("Cannot rename " + myLeaf.getText() + " to " + newElementName + " here");
   }
 
   private @Nullable PsiElement tokenOf(@NotNull String name) {
