@@ -104,6 +104,8 @@ public final class FuzzRecorder {
                                                @Nullable Throwable t) {
         Throwable e = t != null ? t : new Throwable(message);
         if (t != null && !message.isEmpty() && !message.equals(t.getMessage())) e = new LoggedError(message, t);
+        String sup = mySuppressed;
+        if (sup != null && message.contains(sup)) return EnumSet.noneOf(Action.class);
         if (!(e instanceof ControlFlowException)) myLogged.add(e);
         return EnumSet.noneOf(Action.class);
       }
@@ -114,6 +116,26 @@ public final class FuzzRecorder {
     finally {
       drainLogged();
       myStopped = true;
+    }
+  }
+
+  private volatile String mySuppressed;
+
+  /** Runs the action with logged errors whose message contains {@code text} left out (an expected platform assertion). */
+  public boolean guardSuppressing(@NotNull String text, @NotNull String label, @NotNull Body body) {
+    mySuppressed = text;
+    try {
+      return guard(label, () -> {
+        try {
+          body.run();
+        }
+        finally {
+          com.intellij.testFramework.PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+        }
+      });
+    }
+    finally {
+      mySuppressed = null;
     }
   }
 

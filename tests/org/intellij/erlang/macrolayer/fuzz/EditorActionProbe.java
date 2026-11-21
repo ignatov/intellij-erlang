@@ -109,11 +109,18 @@ public final class EditorActionProbe {
   }
 
   public @NotNull Act random(@NotNull Random rnd, boolean readOnlyOnly) {
+    return random(rnd, readOnlyOnly, Set.of());
+  }
+
+  public @NotNull Act random(@NotNull Random rnd, boolean readOnlyOnly, @NotNull Set<String> exclude) {
     while (true) {
       Act a = myActs.get(rnd.nextInt(myActs.size()));
-      if (!readOnlyOnly || a.readOnly) return a;
+      if ((!readOnlyOnly || a.readOnly) && !exclude.contains(a.name)) return a;
     }
   }
+
+  /** Actions that wait for smart mode in tests (the daemon) and so never end inside dumb mode. */
+  public static final Set<String> NOT_IN_DUMB_MODE = Set.of("highlight", "GotoNextError", "find-usages-at-caret");
 
   /** Turns on every inspection of the plugin (the Dialyzer one excepted) for the highlighting actions. */
   public static void enableInspections(@NotNull CodeInsightTestFixture fixture) {

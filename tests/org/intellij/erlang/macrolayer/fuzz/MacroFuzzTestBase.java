@@ -46,6 +46,8 @@ public abstract class MacroFuzzTestBase extends ErlangLightPlatformCodeInsightFi
   protected void setUp() throws Exception {
     super.setUp();
     setUpProjectSdk();
+    // MACRO_FUZZ_LAYER=off: the branch with the macro layer switched off (to compare with master)
+    if ("off".equals(FuzzConfig.env("MACRO_FUZZ_LAYER"))) LayerHooks.setEnabled(false, getTestRootDisposable());
   }
 
   public interface CaseBody {
