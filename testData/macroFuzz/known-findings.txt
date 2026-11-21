@@ -1,0 +1,2 @@
+# Signatures of the macro fuzz suite that do not fail its smoke run: one per line, "signature<TAB>finding id".
+# The findings themselves are listed in FINDINGS.md of the fuzz scratch folder. Empty: every finding fails the smoke run.
