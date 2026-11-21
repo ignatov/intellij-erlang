@@ -48,6 +48,8 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.sdk.ErlangSystemUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,17 +59,59 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDialyzerExternalAnnotator.State, ErlangDialyzerExternalAnnotator.State> {
   private final static Logger LOG = Logger.getInstance(ErlangDialyzerExternalAnnotator.class);
   private static final Key<Set<String>> TIMED_OUT_FILES = Key.create("Erlang.DIALYZER_TIMED_OUT_FILES");
 
-  @Nullable
-  private static Problem parseProblem(String input) {
-    List<String> split = StringUtil.split(input, ":");
-    if (split.size() < 3) return null;
-    int line = StringUtil.parseInt(split.get(1), 0);
-    return new Problem(line, StringUtil.join(split.subList(2, split.size()), ":"));
+  // file:line: message (before OTP 24) or file:line:column: message
+  private static final Pattern WARNING = Pattern.compile("(.+?):(\\d+)(?::\\d+)?: (.*)");
+  // Dialyzer wraps long warnings onto indented lines; " done in 0m0.09s" is its timing line, not a continuation
+  private static final Pattern TIMING = Pattern.compile("\\s*done in \\d+m[\\d.]+s\\s*");
+
+  // Dialyzer prints the base name of the file; warnings located in other files (included .hrl) are skipped
+  @NotNull
+  static List<Problem> parseProblems(@NotNull List<String> lines, @NotNull String fileName) {
+    List<Problem> problems = new ArrayList<>();
+    int problemLine = 0;
+    StringBuilder description = null;
+    boolean inOtherFile = false;
+    for (String line : lines) {
+      LOG.debug(line);
+      boolean continuation = !line.isEmpty() && Character.isWhitespace(line.charAt(0)) && !TIMING.matcher(line).matches();
+      if ((description != null || inOtherFile) && continuation) {
+        if (description != null) appendContinuation(description, StringUtil.trimLeading(line));
+        continue;
+      }
+      if (description != null) problems.add(new Problem(problemLine, description.toString().trim()));
+      description = null;
+      inOtherFile = false;
+      Matcher matcher = WARNING.matcher(line);
+      if (matcher.matches()) {
+        if (!fileName.equals(baseName(matcher.group(1)))) {
+          inOtherFile = true;
+          continue;
+        }
+        problemLine = StringUtil.parseInt(matcher.group(2), 0);
+        description = new StringBuilder(matcher.group(3));
+      }
+    }
+    if (description != null) problems.add(new Problem(problemLine, description.toString().trim()));
+    return problems;
+  }
+
+  // a line break separates words, except before a wrapped argument list: "p1:f\n   (atom())"
+  private static void appendContinuation(@NotNull StringBuilder description, @NotNull String text) {
+    boolean separated = description.length() == 0 || Character.isWhitespace(description.charAt(description.length() - 1));
+    if (!separated && !text.startsWith("(")) description.append(' ');
+    description.append(text);
+  }
+
+  @NotNull
+  private static String baseName(@NotNull String path) {
+    return path.substring(Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\')) + 1);
   }
 
   @Nullable
@@ -119,6 +163,10 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (state == null) return null;
 
     ProcessOutput output = runner.apply(state);
+    // without an exit code Dialyzer did not run: the executable or the working directory is missing
+    boolean ok = output != null && output.isExitCodeSet() && !output.isTimeout() && output.getStderrLines().isEmpty() &&
+                 !ContainerUtil.exists(output.getStdoutLines(), line -> line.startsWith("dialyzer: "));
+    ErlangUsageCounters.count(state.myProject, ok ? ErlangUsageKey.DIALYZER_OK : ErlangUsageKey.DIALYZER_FAILED);
     if (output != null && output.isTimeout()) {
       if (timedOutFiles(state.myProject).add(state.myFilePath)) {
         String message = "Dialyzer did not finish in time for " + new File(state.myFilePath).getName() + "; its warnings are not shown";
@@ -129,15 +177,13 @@ public class ErlangDialyzerExternalAnnotator extends ExternalAnnotator<ErlangDia
     if (output != null) {
       timedOutFiles(state.myProject).remove(state.myFilePath);
       if (output.getStderrLines().isEmpty()) {
-        for (String line : output.getStdoutLines()) {
-          LOG.debug(line);
-          if (line.startsWith("dialyzer: ")) {
-            new Notification("Dialyzer-based inspections", line, NotificationType.WARNING).notify(state.myProject);
-            return state;
-          }
-          Problem problem = parseProblem(line);
-          LOG.debug(problem != null ? problem.toString() : null);
-          ContainerUtil.addAllNotNull(state.problems, problem);
+        List<String> lines = output.getStdoutLines();
+        int error = ContainerUtil.indexOf(lines, line -> line.startsWith("dialyzer: "));
+        List<Problem> problems = parseProblems(error == -1 ? lines : lines.subList(0, error), baseName(state.myFilePath));
+        LOG.debug(problems.toString());
+        state.problems.addAll(problems);
+        if (error != -1) {
+          new Notification("Dialyzer-based inspections", lines.get(error), NotificationType.WARNING).notify(state.myProject);
         }
       }
     }

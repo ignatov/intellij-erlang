@@ -28,6 +28,7 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,6 +74,7 @@ public class ErlangGenerateDocIntention extends ErlangBaseNamedElementIntention 
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countIntention(project, getClass());
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }

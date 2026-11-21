@@ -165,6 +165,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "bar(A)-> #foo{<caret>}", "id", "two");
   }
   
+  public void testRecordFieldsFromTypedMacro() {
+    doTestEquals(
+      "-define(BASE(M), module = M :: atom(), id :: atom()).\n" +
+      "-record(foo, {?BASE(m), two :: integer()}).\n" +
+      "bar(A)-> #foo{<caret>}", "module", "id", "two");
+  }
+
   public void testRecordFields2() {
     doTestEquals(
       "-record(foo, {id, two}).\n" +

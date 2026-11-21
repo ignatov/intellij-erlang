@@ -10,11 +10,14 @@ Every check has a status: passed, failed or not-run. A check that ran and found 
 findings. A check that did not work is not-run with a reason, also when its step ran: no test ran, the Gradle task or
 option does not exist, the check wrote no report or an unreadable one, its result is missing, its step started and left
 no exit code (it timed out or was cancelled), or the checked commit predates the compatibility check (PREDATES). A
-check that was not run because a check it needs found problems has blockedBy, the name of that check. The result's
-status is incomplete if a check is not-run without a failed blockedBy, otherwise failed if a check failed, and passed
-otherwise. When the job could not get as far as its checks (an IDE that cannot be resolved, an Erlang/OTP that cannot
-be installed), no JSON is written and the script exits with 2, so that a run without the result artifact means an
-infrastructure failure. Any other Gradle failure once the IDE is resolved is a finding of the check that failed.
+check that was not run because a check it needs found problems has blockedBy, the name of that check. A check that was
+not run because it does not apply to the checked IDE is not-run with notApplicable and the reason: releasedPlugin,
+when the IDE build is below the since-build of the released archive (an IDE above its until-build is still verified,
+which tells whether the bound can be raised). The result's status is incomplete if a check is not-run without a failed
+blockedBy and without notApplicable, otherwise failed if a check failed, and passed otherwise. When the job could not
+get as far as its checks (an IDE that cannot be resolved, an Erlang/OTP that cannot be installed), no JSON is written
+and the script exits with 2, so that a run without the result artifact means an infrastructure failure. Any other
+Gradle failure once the IDE is resolved is a finding of the check that failed.
 
 Subcommands:
   inputs --job JOB --event EVENT
@@ -25,6 +28,12 @@ Subcommands:
                           what the checks of JOB need, current=false if it predates the compatibility check
   pins GRADLE_YML         print OTP_VERSION, REBAR3_VERSION and REBAR3_SHA256 pinned in gradle.yml as NAME=value lines
   release-tag             print the tag of the published plugin, read from `gh release list --json tagName` on stdin
+  release-meta --tag TAG ARCHIVE
+                          print the description of the released archive as JSON: tag, asset, and the sinceBuild and
+                          untilBuild of META-INF/plugin.xml in its plugin jar
+  released-applies --logs DIR --ide-info IDE_JSON
+                          write applies=true to $GITHUB_OUTPUT if the released plugin is to be verified against the
+                          resolved IDE, applies=false if the IDE build is below the archive's since-build
   ide-result ...          the result of the ide job
   otp-result ...          the result of the otp job
   conclusion RESULT_JSON --event EVENT
@@ -35,6 +44,7 @@ Python 3 standard library only.
 
 import argparse
 import glob
+import io
 import json
 import os
 import re
@@ -43,6 +53,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ElementTree
+import zipfile
+import zlib
 
 SCHEMA_VERSION = 1
 LIST_LIMIT = 100
@@ -79,6 +91,14 @@ PIN_PATTERNS = {
     'REBAR3_SHA256': re.compile(r'[0-9a-f]{64}'),
 }
 SHA = re.compile(r'[0-9a-f]{40}')
+# A build number of IntelliJ IDEA (com.intellij.openapi.util.BuildNumber) as in since-build and until-build of
+# plugin.xml and in product-info.json, with an optional product code: 263, 263.7307.44, 263.*, IU-263.SNAPSHOT.
+BUILD_NUMBER = re.compile(r'(?:[A-Z]+-)?([0-9]+(?:\.(?:[0-9]+|\*|SNAPSHOT))*)')
+# BuildNumber reads * and SNAPSHOT as Integer.MAX_VALUE.
+BUILD_COMPONENT_MAX = 2 ** 31 - 1
+# Limits of what release_meta reads from the released archive.
+PLUGIN_JAR_LIMIT = 200 * 1024 * 1024
+PLUGIN_XML_LIMIT = 1024 * 1024
 
 # The failure levels of verifyPlugin in build.gradle, and the phrases of verification-verdict.txt that the IntelliJ
 # Platform Gradle Plugin 2.20.1 (VerifyPluginTask.metadataOf) maps to them.
@@ -652,6 +672,95 @@ def gradle_property(path, name):
     return match.group(1)
 
 
+def build_number(value):
+    """The components of the build number `value` as a tuple of ints for comparison, or None if it is not one."""
+    match = BUILD_NUMBER.fullmatch(value) if isinstance(value, str) else None
+    if not match:
+        return None
+    return tuple(int(c) if c.isdigit() else BUILD_COMPONENT_MAX for c in match.group(1).split('.'))
+
+
+def plugin_bounds(plugin_xml):
+    """sinceBuild and untilBuild of the <idea-version> of `plugin_xml` (bytes); None for an attribute that is absent."""
+    if b'<!DOCTYPE' in plugin_xml or b'<!ENTITY' in plugin_xml:
+        raise InputError('META-INF/plugin.xml has a DOCTYPE or an ENTITY')
+    try:
+        root = ElementTree.fromstring(plugin_xml)
+    except ElementTree.ParseError as e:
+        raise InputError('META-INF/plugin.xml is not valid XML: %s' % e)
+    if root.tag != 'idea-plugin':
+        raise InputError('META-INF/plugin.xml is not an <idea-plugin>')
+    versions = root.findall('idea-version')
+    if len(versions) > 1:
+        raise InputError('META-INF/plugin.xml has %d <idea-version> elements' % len(versions))
+    bounds = {}
+    for key, attribute in (('sinceBuild', 'since-build'), ('untilBuild', 'until-build')):
+        value = (versions[0].get(attribute) or '').strip() if versions else ''
+        if value and build_number(value) is None:
+            raise InputError('the %s %r of META-INF/plugin.xml is not a build number' % (attribute, text(value, 100)))
+        bounds[key] = value or None
+    return bounds
+
+
+def release_meta(tag, archive):
+    """The description of the released plugin `archive`: tag, asset and the bounds of the META-INF/plugin.xml of the
+    one jar in it that has one. Reads the archive in memory and extracts nothing."""
+    try:
+        with zipfile.ZipFile(archive) as plugin_zip:
+            descriptors = []
+            for entry in plugin_zip.infolist():
+                if not entry.filename.endswith('.jar'):
+                    continue
+                if entry.file_size > PLUGIN_JAR_LIMIT:
+                    raise InputError('%s is larger than %d bytes' % (entry.filename, PLUGIN_JAR_LIMIT))
+                with zipfile.ZipFile(io.BytesIO(plugin_zip.read(entry))) as jar:
+                    try:
+                        descriptor = jar.getinfo('META-INF/plugin.xml')
+                    except KeyError:
+                        continue
+                    if descriptor.file_size > PLUGIN_XML_LIMIT:
+                        raise InputError('META-INF/plugin.xml of %s is larger than %d bytes'
+                                         % (entry.filename, PLUGIN_XML_LIMIT))
+                    descriptors.append((entry.filename, jar.read(descriptor)))
+    except (zipfile.BadZipFile, zlib.error, EOFError, OSError) as e:
+        raise InputError('cannot read %s: %s' % (os.path.basename(archive), e))
+    if len(descriptors) != 1:
+        raise InputError('%s has %d jars with META-INF/plugin.xml, expected 1: %s' % (
+            os.path.basename(archive), len(descriptors), ', '.join(name for name, _ in descriptors) or 'none'))
+    meta = {'tag': tag, 'asset': os.path.basename(archive), 'pluginJar': descriptors[0][0]}
+    meta.update(plugin_bounds(descriptors[0][1]))
+    return meta
+
+
+def released_not_applicable(meta, ide_build):
+    """Why the released plugin of `meta` (released.json) is not verified against the IDE build `ide_build`: the reason
+    if the IDE build is below the since-build of the archive, else None. An IDE above the until-build is verified,
+    and so is any IDE when a build number is missing or cannot be read."""
+    since, ide = build_number(meta.get('sinceBuild')), build_number(ide_build)
+    if since is None or ide is None or ide >= since:
+        return None
+    return ('not applicable: the IDE build %s is below since-build %s of the archive of %s'
+            % (ide_build, meta.get('sinceBuild'), meta.get('tag')))
+
+
+def read_released_meta(logs):
+    """released.json of fetch-release.sh: the released archive or why there is none; {} if it is missing or broken."""
+    try:
+        meta = json.loads(read_file(os.path.join(logs, 'released.json')) or '{}')
+    except ValueError:
+        return {}
+    return meta if isinstance(meta, dict) else {}
+
+
+def ide_build_number(info_path):
+    """The buildNumber of build/compat/ide.json, or None if it cannot be read."""
+    try:
+        info = json.loads(read_file(info_path) or '{}')
+    except ValueError:
+        return None
+    return info.get('buildNumber') if isinstance(info, dict) else None
+
+
 def run_info():
     server = os.environ.get('GITHUB_SERVER_URL', 'https://github.com')
     repository = os.environ.get('GITHUB_REPOSITORY')
@@ -667,8 +776,9 @@ def run_info():
 
 
 def incomplete_checks(checks):
-    """The checks that gave no answer: not-run, unless the check named by their blockedBy failed with findings."""
-    return [name for name, check in checks.items() if check['status'] == NOT_RUN
+    """The checks that gave no answer: not-run, unless they do not apply (notApplicable) or the check named by their
+    blockedBy failed with findings."""
+    return [name for name, check in checks.items() if check['status'] == NOT_RUN and not check.get('notApplicable')
             and (checks.get(check.get('blockedBy')) or {}).get('status') != FAILED]
 
 
@@ -683,8 +793,12 @@ def overall(checks):
 
 
 def ide_result(args):
-    released_meta = json.loads(read_file(os.path.join(args.logs, 'released.json')) or '{}')
-    released_extra = {'release': text(released_meta.get('tag')), 'asset': text(released_meta.get('asset'))}
+    predates = predating_checks(args.root, 'ide', args.ide)
+    ide = resolve_ide(args.ide, args.ide_info, bool(predates))
+    released_meta = read_released_meta(args.logs)
+    released_extra = {'release': text(released_meta.get('tag')), 'asset': text(released_meta.get('asset')),
+                      'sinceBuild': text(released_meta.get('sinceBuild'), 100),
+                      'untilBuild': text(released_meta.get('untilBuild'), 100)}
     if released_meta.get('error'):
         released_extra['reason'] = text(released_meta['error'])
     checks = {
@@ -695,6 +809,9 @@ def ide_result(args):
         'releasedPlugin': verifier_check(args.logs, 'released', os.path.join(args.root, 'build/compat/released-verifier'),
                                          released_extra),
     }
+    not_applicable = released_not_applicable(released_meta, ide['buildNumber'])
+    if not_applicable and 'exitCode' not in checks['releasedPlugin']:
+        checks['releasedPlugin'].update({'notApplicable': True, 'reason': text(not_applicable)})
     for name in ('test', 'verifyPlugin'):
         if checks[name]['status'] != NOT_RUN or 'exitCode' in checks[name]:
             continue
@@ -704,7 +821,6 @@ def ide_result(args):
         elif checks['compile'].get('reason') == TIMED_OUT:
             checks[name]['reason'] = 'the compile check did not finish'
             checks[name]['blockedBy'] = 'compile'
-    predates = predating_checks(args.root, 'ide', args.ide)
     checks.update({name: {'status': NOT_RUN, 'reason': PREDATES} for name in predates})
     return {
         'schemaVersion': SCHEMA_VERSION,
@@ -713,7 +829,7 @@ def ide_result(args):
         'limits': {'listItems': LIST_LIMIT, 'textChars': TEXT_LIMIT},
         'run': run_info(),
         'inputs': {'ide': args.ide or '', 'ref': args.ref or ''},
-        'resolved': {'commit': args.commit, 'ide': resolve_ide(args.ide, args.ide_info, bool(predates))},
+        'resolved': {'commit': args.commit, 'ide': ide},
         'checks': checks,
     }
 
@@ -777,6 +893,9 @@ def check_facts(name, check):
                                                           check['skipped']))
     if name == 'releasedPlugin' and check.get('release'):
         facts.append('%s (%s)' % (check['release'], check.get('asset')))
+    if name == 'releasedPlugin' and (check.get('sinceBuild') or check.get('untilBuild')):
+        facts.append('since-build %s, until-build %s' % (check.get('sinceBuild') or 'none',
+                                                         check.get('untilBuild') or 'none'))
     if 'reports' in check:
         facts.append('; '.join('%s: %s' % (r['ide'], r['verdict']) for r in check['reports']))
     if name == 'corpus' and 'files' in check:
@@ -904,6 +1023,15 @@ def main(argv=None):
     release = commands.add_parser('release-tag')
     release.add_argument('--gradle-properties', required=True, help='the gradle.properties whose version is released')
 
+    meta = commands.add_parser('release-meta')
+    meta.add_argument('--tag', required=True, help='the tag of the release')
+    meta.add_argument('archive', help='the downloaded plugin archive')
+
+    applies = commands.add_parser('released-applies')
+    applies.add_argument('--logs', required=True, help='the directory of run-check.sh, with released.json')
+    applies.add_argument('--ide-info', required=True, help='build/compat/ide.json of compatIdeInfo')
+    applies.add_argument('--output', default=os.environ.get('GITHUB_OUTPUT'))
+
     for name in ('ide-result', 'otp-result'):
         command = commands.add_parser(name)
         command.add_argument('--root', required=True, help='the checked-out repository')
@@ -945,6 +1073,12 @@ def main(argv=None):
                 print('%s=%s' % (name, value))
         elif args.command == 'release-tag':
             print(release_tag(json.load(sys.stdin), gradle_property(args.gradle_properties, 'version')))
+        elif args.command == 'release-meta':
+            print(json.dumps(release_meta(args.tag, args.archive)))
+        elif args.command == 'released-applies':
+            reason = released_not_applicable(read_released_meta(args.logs), ide_build_number(args.ide_info))
+            print('The released plugin is not verified: %s' % reason if reason else 'The released plugin is verified')
+            write_outputs({'applies': 'false' if reason else 'true'}, args.output)
         elif args.command in ('ide-result', 'otp-result'):
             result = ide_result(args) if args.command == 'ide-result' else otp_result(args)
             write_result(result, args.out, args.summary)

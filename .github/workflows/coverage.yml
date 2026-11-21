@@ -1,0 +1,137 @@
+name: Coverage
+
+# Line and branch coverage of the plugin's classes by `test` and `testCompilation` on master, as a report artifact and
+# totals in the job summary. It is information, not a check: a workflow of its own, so that the release gate, which
+# waits for the whole gradle.yml run, and the readers of the conclusion of that run never wait for it or see it red.
+# It is green whenever a report was written, also when tests failed; the summary names the failed tests.
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Test the coverage scripts
+      run: python3 -m unittest discover -s scripts/coverage -p 'test_*.py'
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Install Erlang/OTP
+      # The same pinned build and check as the compilation-tests job of gradle.yml; change the pins together.
+      env:
+        OTP_VERSION: '27.3.4.9'
+      run: |
+        . /etc/os-release
+        base="https://builds.hex.pm/builds/otp/$(dpkg --print-architecture)/ubuntu-$VERSION_ID"
+        sha256=$(curl -fsSL --retry 3 "$base/builds.txt" | awk -v build="OTP-$OTP_VERSION" '$1 == build { print $4 }')
+        if [ -z "$sha256" ]; then
+          echo "::error::$base/builds.txt has no OTP-$OTP_VERSION"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "$base/OTP-$OTP_VERSION.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "${OTP_VERSION%%.*}" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected ${OTP_VERSION%%.*}"
+          exit 1
+        fi
+    - name: Install rebar3
+      # The same pinned escript as the compilation-tests job of gradle.yml.
+      env:
+        REBAR3_VERSION: '3.28.0'
+        REBAR3_SHA256: 5a28b1cca082d3b023ec0f5df9d9f9d52557036c6f2a21c1ffa11b93a984dd42
+      run: |
+        rebar3="$RUNNER_TEMP/rebar3/rebar3"
+        mkdir -p "$(dirname "$rebar3")"
+        curl -fsSL --retry 3 -o "$rebar3" "https://github.com/erlang/rebar3/releases/download/$REBAR3_VERSION/rebar3"
+        echo "$REBAR3_SHA256  $rebar3" | sha256sum -c -
+        chmod +x "$rebar3"
+        escript "$rebar3" version
+        echo "REBAR3_PATH=$rebar3" >> "$GITHUB_ENV"
+    - name: Run the tests with coverage
+      # --continue runs testCompilation also when a test of `test` failed, and the report is written after both.
+      # A failed test does not fail this step; the summary counts the failures.
+      run: |
+        erlang_root="$(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        status=0
+        ./gradlew --no-daemon --continue clean test testCompilation -Pcoverage \
+          -Derlang.sdk.path="$erlang_root" -Drebar.path="$REBAR3_PATH" || status=$?
+        echo "Gradle exit status: $status"
+    - name: Summarize
+      if: ${{ !cancelled() }}
+      run: |
+        report=build/reports/jacoco/coverageReport/coverageReport.xml
+        {
+          echo "## Coverage of ${GITHUB_REF_NAME} at ${GITHUB_SHA:0:8}"
+          echo
+          if [[ -f "$report" ]]; then
+            python3 scripts/coverage/totals.py "$report"
+          else
+            echo "No coverage report was written."
+          fi
+          echo
+          shopt -s nullglob
+          for task in test testCompilation; do
+            files=(build/test-results/"$task"/*.xml)
+            if [[ $task == testCompilation ]]; then
+              files+=(jps-plugin/build/test-results/testCompilation/*.xml)
+            fi
+            { grep -ho '<testsuite [^>]*>' "${files[@]}" /dev/null || true; } | awk -v task="$task" '
+              function attr(name) { return match($0, name "=\"[0-9]+\"") ? substr($0, RSTART + length(name) + 2, RLENGTH - length(name) - 3) : 0 }
+              { tests += attr("tests"); failures += attr("failures"); errors += attr("errors"); skipped += attr("skipped") }
+              END { printf "- `%s`: %d tests, %d failed, %d errors, %d skipped in %d classes\n", task, tests, failures, errors, skipped, NR }'
+            failed="$({ grep -l -E '<(failure|error)[ >]' "${files[@]}" /dev/null || true; } | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u)"
+            if [[ -n "$failed" ]]; then
+              echo "  Classes with failed tests: ${failed//$'\n'/ }"
+            fi
+          done
+          echo
+          echo "Lines and branches are summed over source files. The report is the artifact coverage-report."
+        } | tee -a "$GITHUB_STEP_SUMMARY"
+        if [[ ! -f "$report" ]]; then
+          echo "::error::No coverage report was written"
+          exit 1
+        fi
+    - name: Upload the coverage report
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-report
+        path: |
+          build/reports/jacoco/coverageReport
+          build/test-results/test
+          build/test-results/testCompilation
+          jps-plugin/build/test-results/testCompilation
+        if-no-files-found: ignore

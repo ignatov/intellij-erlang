@@ -16,10 +16,14 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.daemon.impl.analysis.FileHighlightingSetting;
+import com.intellij.codeInsight.daemon.impl.analysis.HighlightingSettingsPerFile;
+import com.intellij.ide.PowerSaveMode;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
+import org.intellij.erlang.intention.ErlangExportFunctionIntention;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 
@@ -66,6 +70,56 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertNoIntentionsAvailable("Export function", "no -export can be placed below the -define and above the functions");
   }
 
+  public void testExportOfferedOnce() {
+    myFixture.configureByFile("exportOfferedOnce.erl");
+    var actions = myFixture.filterAvailableIntentions("Export function");
+    assertEquals("one \"Export function\" action on an unused function: " + actions, 1, actions.size());
+  }
+
+  public void testExportOfferedOnceWhenInspectionDisabled() {
+    myFixture.disableInspections(new ErlangUnusedFunctionInspection());
+    assertExportOfferedOnce("exportOfferedOnce.erl");
+  }
+
+  public void testExportOfferedOnceWhenSuppressed()   { assertExportOfferedOnce("exportOfferedOnceWhenSuppressed.erl"); }
+  public void testExportOfferedOnceOnUsedFunction()   { assertExportOfferedOnce("exportOfferedOnceOnUsedFunction.erl"); }
+
+  public void testExportOfferedOnceWhenInspectionsSkipped()  { assertExportOfferedOnceWithHighlighting(FileHighlightingSetting.SKIP_INSPECTION); }
+  public void testExportOfferedOnceWhenHighlightingSkipped() { assertExportOfferedOnceWithHighlighting(FileHighlightingSetting.SKIP_HIGHLIGHTING); }
+  public void testExportOfferedOnceWhenEssentialOnly()       { assertExportOfferedOnceWithHighlighting(FileHighlightingSetting.ESSENTIAL); }
+
+  // The light fixture runs the inspections even in Power Save Mode, so only the availability of the intention is checked
+  public void testExportIntentionAvailableInPowerSaveMode() {
+    myFixture.configureByFile("exportOfferedOnce.erl");
+    PowerSaveMode.setEnabled(true);
+    try {
+      assertTrue(new ErlangExportFunctionIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+    }
+    finally {
+      PowerSaveMode.setEnabled(false);
+    }
+  }
+
+  private void assertExportOfferedOnceWithHighlighting(FileHighlightingSetting setting) {
+    myFixture.configureByFile("exportOfferedOnce.erl");
+    HighlightingSettingsPerFile settings = HighlightingSettingsPerFile.getInstance(getProject());
+    settings.setHighlightingSettingForRoot(myFixture.getFile(), setting);
+    try {
+      assertExportOfferedOnce(null);
+    }
+    finally {
+      settings.setHighlightingSettingForRoot(myFixture.getFile(), FileHighlightingSetting.FORCE_HIGHLIGHTING);
+    }
+  }
+
+  private void assertExportOfferedOnce(String fileName) {
+    if (fileName != null) myFixture.configureByFile(fileName);
+    var actions = myFixture.filterAvailableIntentions("Export function");
+    assertEquals(String.valueOf(actions), 1, actions.size());
+    myFixture.launchAction(actions.getFirst());
+    assertEquals(myFixture.getFile().getText(), 2, ((ErlangFile) myFixture.getFile()).getExportedFunctions().size());
+  }
+
   public void testQuotedAtomWithExport() { doTest("Export function"); }
   public void testQuotedAtomWithout()    { doTest("Export function"); }
 
@@ -77,6 +131,7 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testOneDuplicateExport1() { doTest("Remove duplicate export"); }
   public void testOneDuplicateExport2() { doTest("Remove duplicate export"); }
   public void testFewDuplicateExport()  { doTest("Remove duplicate export"); }
+  public void testDuplicateExportWithDigitSeparators() { doTest("Remove duplicate export"); }
 
   public void testFewEmpties()          { doTest("Export function"); }
   public void testFewNonEmpties1()      { doTest("Export function"); }

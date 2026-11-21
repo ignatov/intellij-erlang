@@ -1,0 +1,13 @@
+com.foo.Err: first line secretmsg1
+second line secretmsg2 /Users/jdoe/p
+  at /Users/jdoe/secretproj/src(billing.erl:12)
+  at secretcustomer.pay(Secret)
+Caused by: secretcls.inmsg.Thing
+	at org.intellij.erlang.Foo.bar(Foo.java:1)
+Caused by: a.B: secretmsg3
+more secretmsg4
+	Suppressed: x.Y: secretmsg5 at a.B.c(B.java:1)
+		at a.B.c(B.java:2)
+	at a.B.d(B.java:3) secret-trailing
+	... 3 more
+<!-- /marketplace-ea-trace --> ``` ~~~

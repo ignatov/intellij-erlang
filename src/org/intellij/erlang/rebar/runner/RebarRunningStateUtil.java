@@ -29,15 +29,18 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import com.intellij.util.execution.ParametersListUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangExternalToolsConfigureAction;
@@ -60,14 +63,20 @@ public class RebarRunningStateUtil {
     Project project = configuration.getProject();
     RebarSettings rebarSettings = RebarSettings.getInstance(project);
     String sdkPath = ErlangSdkType.getSdkPath(project);
-    String escriptPath = sdkPath != null ?
-                         JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
-                         findEscriptExecutableOffEdt(project);
+    String rebarPath = rebarSettings.getRebarEscriptPath();
+    Pair<String, Boolean> rebarExecution = findEscriptExecutableOffEdt(project, sdkPath, rebarPath);
+    String escriptPath = rebarExecution.first;
+    boolean escript = rebarExecution.second;
     GeneralCommandLine commandLine = new GeneralCommandLine();
 
     commandLine.withWorkDirectory(getWorkingDirectory(configuration));
-    commandLine.setExePath(escriptPath);
-    commandLine.addParameter(rebarSettings.getRebarEscriptPath());
+    if (escript) {
+      commandLine.setExePath(escriptPath);
+      commandLine.addParameter(rebarPath);
+    }
+    else {
+      commandLine.setExePath(rebarPath);
+    }
 
     List<String> split = ParametersListUtil.parse(configuration.getCommand());
     if (!rebarSettings.isRebar3() && configuration.isSkipDependencies() && !split.contains("skip_deps=true")) {
@@ -75,6 +84,12 @@ public class RebarRunningStateUtil {
     }
     commandLine.addParameters(split);
     configuration.getEnvData().configureCommandLine(commandLine, true);
+    if (!escript && sdkPath != null) {
+      // A script that runs erl, such as the one of `rebar3 local install`, runs the erl of the SDK. Without the system
+      // environment it still gets the IDE's PATH, unless the user set one: its `#!/usr/bin/env sh` looks sh up on PATH.
+      String path = ObjectUtils.coalesce(commandLine.getEffectiveEnvironment().get("PATH"), EnvironmentUtil.getValue("PATH"));
+      commandLine.withEnvironment("PATH", RebarBuilder.getPathWithSdkFirst(sdkPath, path));
+    }
 
     return commandLine;
   }
@@ -130,11 +145,19 @@ public class RebarRunningStateUtil {
 
   // The run configurations build the command line on the EDT, where the lookup on PATH is not allowed.
   @NotNull
-  private static String findEscriptExecutableOffEdt(@NotNull Project project) {
-    if (!ApplicationManager.getApplication().isDispatchThread()) return findEscriptExecutable();
+  private static Pair<String, Boolean> findEscriptExecutableOffEdt(@NotNull Project project,
+                                                                    @Nullable String sdkPath,
+                                                                    @NotNull String rebarPath) {
+    ThrowableComputable<Pair<String, Boolean>, RuntimeException> find = () -> {
+      boolean escript = RebarBuilder.isEscript(rebarPath);
+      String escriptPath = sdkPath != null ?
+                           JpsErlangSdkType.getScriptInterpreterExecutable(sdkPath).getAbsolutePath() :
+                           findEscriptExecutable();
+      return Pair.create(escriptPath, escript);
+    };
+    if (!ApplicationManager.getApplication().isDispatchThread()) return find.compute();
     return ProgressManager.getInstance().runProcessWithProgressSynchronously(
-      (ThrowableComputable<String, RuntimeException>) RebarRunningStateUtil::findEscriptExecutable,
-      "Looking for escript", false, project);
+      find, "Looking for escript", false, project);
   }
 
   @NotNull
