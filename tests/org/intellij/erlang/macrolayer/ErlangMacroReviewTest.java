@@ -216,4 +216,15 @@ public class ErlangMacroReviewTest extends ErlangLightPlatformCodeInsightFixture
     assertEquals(List.of("Argument mismatch for macro '?LOG': no definition takes 2 arguments"),
                  errorsOf("-module(m).\n-export([f/0]).\n-define(LOG(X), {log, X}).\nf() -> ?LOG(a, b).\n"));
   }
+
+  // D6: two functions of the same name and different arity both stay among the items after a lost position
+  public void testD6CompletionKeepsFunctionsOfBothArities() {
+    open("-module(m).\n-export([f/0, bar/0, bar/1]).\n-define(PAR, ()).\nf() ->\n  foo?PAR,\n  ba.\nfoo() -> ok.\nbar() -> ok.\nbar(X) -> X.\n");
+    myFixture.doHighlighting();
+    caretAt("  ba|.");
+    com.intellij.codeInsight.lookup.LookupElement[] items = myFixture.complete(com.intellij.codeInsight.completion.CompletionType.BASIC);
+    assertNotNull("a list, not one item inserted", items);
+    long bars = java.util.Arrays.stream(items).filter(e -> e.getLookupString().equals("bar")).count();
+    assertEquals(java.util.Arrays.stream(items).map(e -> e.getLookupString()).toList().toString(), 2, bars);
+  }
 }

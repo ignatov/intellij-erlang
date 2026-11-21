@@ -86,9 +86,11 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       return;
     }
     // round 6 (next), item 3d: the main tree's items first, as fast as on master; the copy's items after them
-    Set<String> seen = new HashSet<>();
+    // the main tree's items, by name and target: a copy item is dropped only when the main tree has the same one
+    // (bar/0 and bar/1 have the same name and both stay)
+    Set<Object> seen = new HashSet<>();
     result.runRemainingContributors(parameters, r -> {
-      seen.add(r.getLookupElement().getLookupString());
+      seen.add(key(r.getLookupElement()));
       result.passResult(r);
     });
     ourLastMainNanos = System.nanoTime() - t0;
@@ -98,11 +100,18 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     if (p != null) {
       TAKEN_OVER.incrementAndGet();
       result.runRemainingContributors(parameters.withPosition(p.position, p.offset), r -> {
-        if (seen.add(r.getLookupElement().getLookupString())) result.passResult(r.withLookupElement(realLookup(p, r.getLookupElement())));
+        LookupElement real = realLookup(p, r.getLookupElement());
+        if (!seen.contains(key(real))) result.passResult(r.withLookupElement(real));
       });
     }
     ourLastTotalNanos = System.nanoTime() - t0;
     result.stopHere();
+  }
+
+  /** An item's name and, when it has one, its target. */
+  private static @NotNull Object key(@NotNull LookupElement e) {
+    PsiElement psi = e.getPsiElement();
+    return psi == null ? e.getLookupString() : Arrays.asList(e.getLookupString(), psi);
   }
 
   /** Nanoseconds to the main tree's items and to the end of the last completion that could take over (tests, measurements). */
