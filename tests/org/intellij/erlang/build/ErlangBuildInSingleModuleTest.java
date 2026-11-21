@@ -179,6 +179,25 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     assertFalse(beam.exists());
   }
 
+  // #1407: after its header is deleted, the including module must be compiled again, and erlc fails on it.
+  public void testModuleIsRecompiledAfterItsHeaderIsDeleted() throws Exception {
+    VirtualFile header = addSourceFile(myModule, "header.hrl", "");
+    addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").include("header.hrl").build());
+    compileAndAssertOutput(false);
+
+    WriteCommandAction.runWriteCommandAction(null, () -> {
+      try {
+        header.delete(null);
+      }
+      catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    });
+    List<CompilerMessage> messages = myCompilationRunner.compile();
+    assertTrue("module1.erl was not compiled again after header.hrl was deleted: " + messages,
+               ContainerUtil.exists(messages, m -> m.getCategory() == CompilerMessageCategory.ERROR));
+  }
+
   public void testAppSrcModulesSkipExcludedDirectory() throws Exception {
     addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
     addSourceFile(myModule, "a.app.src", "{application, a, []}.");
