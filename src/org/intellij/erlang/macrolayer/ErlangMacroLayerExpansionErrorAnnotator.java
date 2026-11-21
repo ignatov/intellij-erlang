@@ -48,7 +48,8 @@ public class ErlangMacroLayerExpansionErrorAnnotator
   public @Nullable Info collectInformation(@NotNull PsiFile file) {
     if (!ErlangMacroLayer.isEnabled()) return null;
     ErlangFile f = ErlangMacroLayer.layerFile(file);
-    return f == null ? null : new Info(f, f.getModificationStamp());
+    // round 6 (next), item 3f: nothing to check, nothing collected
+    return f == null || !ErlangMacroLayerExpansionErrors.mayHaveProblems(f) ? null : new Info(f, f.getModificationStamp());
   }
 
   @Override

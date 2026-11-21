@@ -2153,6 +2153,22 @@ public final class ErlangMacroLayer {
     return copy == null ? null : copy.madeNameKinds().get(token.getTextRange());
   }
 
+  /**
+   * Round 6 (next), item 3f: whether some form of the file needs the copy, from the valid table (computed if it is not
+   * known for it yet; a walk of the forms, cached on the table), else from the file's last table if that one knows;
+   * null when there is no table or the answer is not known. Never computes a table, never builds, never waits.
+   */
+  static @Nullable Boolean anyFormNeedsCopyNoWait(@NotNull ErlangFile file) {
+    TableCache cache = file.getUserData(TABLE_KEY);
+    TableEntry last = cache == null ? null : cache.entry;
+    if (last == null) return null;
+    Table valid = cachedTable(file);
+    if (valid != null) return valid.refusal == null && !valid.names.isEmpty() && anyFormNeedsCopy(file, valid);
+    Table t = last.table;
+    if (t.refusal != null || t.names.isEmpty()) return false;
+    return t.anyFormNeedsCopy;
+  }
+
   /** Round 6 (next): the table of the file if it is up to date; never computes one, never waits. */
   static @Nullable Table cachedTable(@NotNull ErlangFile file) {
     if (file.getUserData(TABLE_KEY) == null) return null;

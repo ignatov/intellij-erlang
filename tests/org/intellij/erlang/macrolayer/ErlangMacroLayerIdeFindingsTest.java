@@ -74,6 +74,26 @@ public class ErlangMacroLayerIdeFindingsTest extends ErlangLightPlatformCodeInsi
     assertEquals("no stack walk", 0, ErlangMacroLayer.STACK_WALKS.get() - walks0);
   }
 
+  /**
+   * 3f: the platform's external-tool pass, which ends the highlighting only after a queue delay of 300 ms, is created
+   * only when an external annotator applies to the file. The expansion-error pass applies only to a file with a form
+   * that needs the copy; a file whose macros are all plain (erl_types.erl) gets no such pass, as on master.
+   */
+  public void testExpansionErrorPassOnlyWhereAFormNeedsTheCopy() {
+    PsiFile plain = myFixture.addFileToProject("p/plain3f.erl", "-module(plain3f).\n-define(A, 1).\n-export([f/1]).\nf(X) -> Y = X + ?A, Y.\ng(X) -> lists:map(fun(Q) -> W + Q, \n");
+    myFixture.configureFromExistingVirtualFile(plain.getVirtualFile());
+    myFixture.doHighlighting();
+    assertFalse("no expansion-error pass for a file that needs no copy",
+                com.intellij.lang.ExternalLanguageAnnotators.allForFile(org.intellij.erlang.ErlangLanguage.INSTANCE, plain).stream()
+                  .anyMatch(a -> a instanceof ErlangMacroLayerExpansionErrorAnnotator));
+    PsiFile owner = myFixture.addFileToProject("p/owner3f.erl", ErlangMacroUseTest.OWNER.replace("-module(main).", "-module(owner3f)."));
+    myFixture.configureFromExistingVirtualFile(owner.getVirtualFile());
+    myFixture.doHighlighting();
+    assertTrue("the pass for a file with a fragment use",
+               com.intellij.lang.ExternalLanguageAnnotators.allForFile(org.intellij.erlang.ErlangLanguage.INSTANCE, owner).stream()
+                 .anyMatch(a -> a instanceof ErlangMacroLayerExpansionErrorAnnotator));
+  }
+
   /** 1d: an unresolved macro used where error recovery left bare tokens is reported once per use (rebar_fetch.erl). */
   public void testUnresolvedBareMacroIsReportedOnce() {
     String text = """

@@ -303,6 +303,8 @@
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerExpansionErrorAnnotator"/>
+        <!-- round 6 (next): no external-tool pass (and its 300 ms queue) for a file where the expansion-error pass has nothing to check -->
+        <daemon.externalAnnotatorsFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerExternalAnnotatorsFilter"/>
         <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>

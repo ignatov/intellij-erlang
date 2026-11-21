@@ -58,6 +58,25 @@ public final class ErlangMacroLayerExpansionErrors {
    * gives none now (refused while the file is typed in, or a table not built yet). Forms the round-5 gate sends to the
    * copy are checked, and, with {@link #checksPlainForms()}, also the forms whose macro uses are all plain.
    */
+  /**
+   * Round 6 (next), item 3f: the pass may find a problem in the file: the layer is on, it is a layer file, and its table
+   * (the valid one, else the last one; never computed here) has a form that needs the copy, or is not known yet. Cheap:
+   * the platform asks it when it creates the passes of a highlighting.
+   */
+  public static boolean mayHaveProblems(@NotNull PsiFile file) {
+    if (!ErlangMacroLayer.isEnabled()) return false;
+    ErlangFile f = ErlangMacroLayer.layerFile(file);
+    if (f == null) return false;
+    if (checksPlainForms()) return true;
+    if (!com.intellij.openapi.application.ApplicationManager.getApplication().isDispatchThread() && !DumbService.isDumb(f.getProject())) {
+      // the daemon creates its passes off the UI thread: the table of this version (the main highlighting needs it too)
+      ErlangMacroLayer.Table t = ErlangMacroLayer.table(f);
+      if (t != null) return t.refusal == null && !t.names.isEmpty() && ErlangMacroLayer.anyFormNeedsCopy(f, t);
+    }
+    Boolean known = ErlangMacroLayer.anyFormNeedsCopyNoWait(f);
+    return known == null || known;
+  }
+
   public static @Nullable List<Problem> problems(@NotNull ErlangFile file) {
     if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.layerFile(file) == null || DumbService.isDumb(file.getProject())) return List.of();
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
