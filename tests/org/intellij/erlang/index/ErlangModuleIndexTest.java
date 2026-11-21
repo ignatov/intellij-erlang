@@ -18,6 +18,8 @@ package org.intellij.erlang.index;
 
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -42,6 +44,60 @@ public class ErlangModuleIndexTest extends ErlangLightPlatformCodeInsightFixture
     VirtualFile first = addModule("apps/aa/src/dup.erl");
     VirtualFile second = addModule("apps/bb/src/dup.erl");
     doTest(first, second);
+  }
+
+  public void testResolveToSameNameModulesCreatedInOrder() {
+    addModule("apps/aa/src/dup.erl");
+    addModule("apps/bb/src/dup.erl");
+    doResolveTest("/src/apps/aa/src/dup.erl");
+  }
+
+  public void testResolveToSameNameModulesCreatedInReverseOrder() {
+    addModule("apps/bb/src/dup.erl");
+    addModule("apps/aa/src/dup.erl");
+    doResolveTest("/src/apps/aa/src/dup.erl");
+  }
+
+  public void testResolveToSameVersionKernelCopiesCreatedInOrder() {
+    addKernelCopy("a");
+    addKernelCopy("b");
+    doResolveTest("/src/a/kernel-1.0/src/dup.erl");
+  }
+
+  public void testResolveToSameVersionKernelCopiesCreatedInReverseOrder() {
+    addKernelCopy("b");
+    addKernelCopy("a");
+    doResolveTest("/src/a/kernel-1.0/src/dup.erl");
+  }
+
+  public void testResolveToUnversionedKernelCopiesCreatedInOrder() {
+    addKernelCopy("a", "kernel");
+    addKernelCopy("b", "kernel");
+    doResolveTest("/src/a/kernel/src/dup.erl");
+  }
+
+  public void testResolveToUnversionedKernelCopiesCreatedInReverseOrder() {
+    addKernelCopy("b", "kernel");
+    addKernelCopy("a", "kernel");
+    doResolveTest("/src/a/kernel/src/dup.erl");
+  }
+
+  private void addKernelCopy(String root) {
+    addKernelCopy(root, "kernel-1.0");
+  }
+
+  private void addKernelCopy(String root, String appDir) {
+    myFixture.addFileToProject(root + "/" + appDir + "/src/kernel.app.src", "{application, kernel, []}.");
+    addModule(root + "/" + appDir + "/src/dup.erl");
+  }
+
+  private void doResolveTest(String expectedPath) {
+    myFixture.configureByText("caller.erl", "-module(caller).\ng() -> dup:<caret>f().\n");
+    PsiReference reference = myFixture.getFile().findReferenceAt(myFixture.getCaretOffset());
+    assertNotNull(reference);
+    PsiElement target = reference.resolve();
+    assertNotNull(target);
+    assertEquals(expectedPath, target.getContainingFile().getVirtualFile().getPath());
   }
 
   private VirtualFile addModule(String path) {
