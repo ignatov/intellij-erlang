@@ -424,10 +424,21 @@ public final class ErlangMacroLayer {
     final ConcurrentHashMap<Integer, Set<String>> formSubstitutedArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
 
-    Table(@Nullable String refusal, Object[] deps, @NotNull IncludeTracker includes) {
+    /** Round 5: the copy of this version of the file (a new table, a new holder: the same dependencies). */
+    final @NotNull CopyHolder holder;
+
+    Table(@Nullable String refusal, Object[] deps, @NotNull IncludeTracker includes, @Nullable VirtualFile file) {
       this.refusal = refusal;
       this.deps = deps;
       this.includes = includes;
+      this.holder = new CopyHolder(file);
+    }
+
+    /** The modification counts of the dependencies (the file's text, its include resolution, its headers' directives). */
+    long @NotNull [] depCounts() {
+      long[] r = new long[deps.length];
+      for (int i = 0; i < deps.length; i++) r[i] = ((ModificationTracker)deps[i]).getModificationCount();
+      return r;
     }
 
     ErlangMacroExpander.IncludeResolver resolver() {
@@ -446,7 +457,7 @@ public final class ErlangMacroLayer {
     }
   }
 
-  private static final Key<CachedValue<Table>> TABLE_KEY = Key.create("erlang.macro.layer.table");
+  private static final Key<TableCache> TABLE_KEY = Key.create("erlang.macro.layer.table");
   private static final Key<IncludeTracker> INCLUDE_TRACKER_KEY = Key.create("erlang.macro.layer.include.tracker");
   /** Stamps of an {@link IncludeTracker} that could not check: each differs from every stamp a cached value keeps. */
   private static final AtomicLong UNCHECKED_STAMPS = new AtomicLong();
@@ -607,29 +618,90 @@ public final class ErlangMacroLayer {
     }, false);
   }
 
+  /**
+   * Round 5, fix 5: the table of a file, the counts of its dependencies when it was computed, and the stamps (the
+   * project's PSI modification count, the VFS structure count, the roots count) under which it was last found valid.
+   * Every dependency of the table changes only with a PSI change, a VFS structure change or a roots change, so while
+   * these three stamps stay the same the table is valid without asking its dependencies (the header trackers, which
+   * cost the most in a file with many headers). After a change anywhere the dependencies are asked once, and the
+   * table is computed again only when one of them moved.
+   */
+  record TableEntry(@NotNull Table table, long @NotNull [] depCounts, long psi, long vfs, long roots) {
+  }
+
+  record TableBuild(@NotNull Thread thread, @NotNull CompletableFuture<Table> result) {
+  }
+
+  static final class TableCache {
+    volatile @Nullable TableEntry entry;
+    /** The table computation in progress, if any: concurrent askers wait for it instead of computing their own. */
+    final AtomicReference<TableBuild> building = new AtomicReference<>();
+  }
+
+  private static @NotNull TableCache tableCache(@NotNull ErlangFile file) {
+    TableCache c = file.getUserData(TABLE_KEY);
+    return c != null ? c : ((UserDataHolderEx)file).putUserDataIfAbsent(TABLE_KEY, new TableCache());
+  }
+
   /** The table of a file; on the UI thread only a cached one (never computed there). */
   static @Nullable Table table(@NotNull ErlangFile file) {
-    Project project = file.getProject();
-    CachedValue<Table> cv = file.getUserData(TABLE_KEY);
-    if (cv == null) {
-      cv = CachedValuesManager.getManager(project).createCachedValue(() -> {
-        Table t = computeTable(file);
-        return CachedValueProvider.Result.create(t, t.deps);
-      }, false);
-      cv = ((UserDataHolderEx)file).putUserDataIfAbsent(TABLE_KEY, cv);
-    }
-    if (!ErlangMacroLayerStats.on()) {
-      if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) return null;
-      return cv.getValue();
-    }
+    if (!ErlangMacroLayerStats.on()) return table0(file);
     long g0 = System.nanoTime();
-    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() && !cv.hasUpToDateValue()) {
-      ErlangMacroLayerStats.phase("table-get:edt-miss", file.getName(), System.nanoTime() - g0);
-      return null;
-    }
-    Table t = cv.getValue();
-    ErlangMacroLayerStats.phase("table-get", file.getName(), System.nanoTime() - g0);
+    Table t = table0(file);
+    ErlangMacroLayerStats.phase(t == null ? "table-get:edt-miss" : "table-get", file.getName(), System.nanoTime() - g0);
     return t;
+  }
+
+  private static @Nullable Table table0(@NotNull ErlangFile file) {
+    Project project = file.getProject();
+    TableCache cache = tableCache(file);
+    long psi = PsiModificationTracker.getInstance(project).getModificationCount();
+    long vfs = VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount();
+    long roots = ProjectRootManager.getInstance(project).getModificationCount();
+    Table valid = validTable(file, cache, psi, vfs, roots);
+    if (valid != null) return valid;
+    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return null;
+    return buildTable(file, cache, psi, vfs, roots);
+  }
+
+  /** The cached table if it is valid for these stamps (checking its dependencies once after a change), else null. */
+  private static @Nullable Table validTable(@NotNull ErlangFile file, @NotNull TableCache cache, long psi, long vfs, long roots) {
+    TableEntry e = cache.entry;
+    if (e == null) return null;
+    if (e.psi == psi && e.vfs == vfs && e.roots == roots) return e.table;
+    long c0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
+    boolean same = Arrays.equals(e.table.depCounts(), e.depCounts);
+    if (c0 != 0) ErlangMacroLayerStats.phase("table-check", file.getName(), System.nanoTime() - c0);
+    if (!same) return null;
+    cache.entry = new TableEntry(e.table, e.depCounts, psi, vfs, roots);
+    return e.table;
+  }
+
+  /** Computes the table once for all threads that ask at the same time; the others wait, cancellably. */
+  private static @NotNull Table buildTable(@NotNull ErlangFile file, @NotNull TableCache cache, long psi, long vfs, long roots) {
+    while (true) {
+      TableBuild mine = new TableBuild(Thread.currentThread(), new CompletableFuture<>());
+      TableBuild other = cache.building.compareAndExchange(null, mine);
+      if (other == null) {
+        Table t = null;
+        try {
+          t = validTable(file, cache, psi, vfs, roots); // another thread may have finished just before
+          if (t == null) {
+            t = computeTable(file);
+            cache.entry = new TableEntry(t, t.depCounts(), psi, vfs, roots);
+          }
+          return t;
+        }
+        finally {
+          cache.building.set(null);
+          mine.result().complete(t);
+        }
+      }
+      if (other.thread() == Thread.currentThread()) return computeTable(file);
+      // both threads hold a read action: no change between the other thread's computation and this question
+      Table t = awaitCancellably(other.result());
+      if (t != null) return t;
+    }
   }
 
   private static @NotNull String key(@NotNull String attribute, @Nullable String string) {
@@ -692,7 +764,7 @@ public final class ErlangMacroLayer {
       refusal = r.getMessage();
     }
     for (VirtualFile h : headers) deps.add(ErlangMacroLayerRetention.getInstance(project).tracker(h));
-    Table t = new Table(refusal, deps.toArray(), includes);
+    Table t = new Table(refusal, deps.toArray(), includes, file.getOriginalFile().getVirtualFile());
     if (refusal == null) {
       t.names.addAll(names);
       t.bodyVars.addAll(bodyVars);
@@ -913,7 +985,7 @@ public final class ErlangMacroLayer {
   }
 
   /** Waits for a build of another thread; throws {@link ProcessCanceledException} as soon as this thread is cancelled. */
-  private static @Nullable Copy awaitCancellably(@NotNull CompletableFuture<Copy> build) {
+  private static <T> @Nullable T awaitCancellably(@NotNull CompletableFuture<T> build) {
     while (true) {
       ProgressManager.checkCanceled();
       try {
@@ -977,8 +1049,6 @@ public final class ErlangMacroLayer {
     return getCopy(file, "direct-get");
   }
 
-  private static final Key<CachedValue<CopyHolder>> HOLDER_KEY = Key.create("erlang.macro.layer.holder");
-
   static @Nullable Copy getCopy(@NotNull PsiFile psiFile, @NotNull String trigger) {
     ErlangFile file = layerFile(psiFile);
     if (file == null) return null;
@@ -989,24 +1059,15 @@ public final class ErlangMacroLayer {
     }
     if (table.refusal != null) return null;
     Project project = file.getProject();
-    CachedValue<CopyHolder> cv = file.getUserData(HOLDER_KEY);
-    if (cv == null) {
-      cv = CachedValuesManager.getManager(project).createCachedValue(() -> {
-        Table t = table(file);
-        Object[] deps = t != null ? t.deps : new Object[]{file, PsiModificationTracker.getInstance(project)};
-        return CachedValueProvider.Result.create(new CopyHolder(file.getOriginalFile().getVirtualFile()), deps);
-      }, false);
-      cv = ((UserDataHolderEx)file).putUserDataIfAbsent(HOLDER_KEY, cv);
-    }
     boolean edt = ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed();
     if (edt) {
-      CopyHolder h = cv.hasUpToDateValue() ? cv.getValue() : null;
-      Copy c = h != null ? h.get() : null;
+      CopyHolder h = table.holder;
+      Copy c = h.get();
       if (c == null) ErlangMacroLayerLog.event("EDT_MISS", file.getName(), 0, 0, 0, "copy", trigger);
       else ErlangMacroLayerRetention.getInstance(project).touch(h, c);
       return c;
     }
-    CopyHolder holder = cv.getValue();
+    CopyHolder holder = table.holder;
     Copy copy = obtain(holder, file, table, trigger);
     if (copy == null) return null;
     long r0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
@@ -1018,9 +1079,12 @@ public final class ErlangMacroLayer {
   /** The cached copy if it is built and up to date; never builds. */
   @TestOnly
   public static @Nullable Copy peekCopy(@NotNull PsiFile file) {
-    CachedValue<CopyHolder> cv = file.getUserData(HOLDER_KEY);
-    if (cv == null || !cv.hasUpToDateValue()) return null;
-    return cv.getValue().get();
+    if (!(file instanceof ErlangFile ef) || ef.getUserData(TABLE_KEY) == null) return null;
+    Project project = file.getProject();
+    Table t = validTable(ef, tableCache(ef), PsiModificationTracker.getInstance(project).getModificationCount(),
+                         VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
+                         ProjectRootManager.getInstance(project).getModificationCount());
+    return t == null ? null : t.holder.get();
   }
 
   /** The gate steps for a variable reference, for tests. */

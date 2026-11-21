@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service(Service.Level.PROJECT)
 public final class ErlangMacroLayerRetention implements Disposable {
   public static final int STRONG = Math.max(1, Integer.getInteger("erlang.macro.layer.strong", 24));
+  /** Round 5: how often a header directive tracker was asked (for tests and measurements). */
+  public static final AtomicLong DIRECTIVE_CHECKS = new AtomicLong();
 
   private final Project myProject;
   private final LinkedHashMap<ErlangMacroLayer.CopyHolder, Boolean> myLru = new LinkedHashMap<>(32, 0.75f, true);
@@ -155,6 +157,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
 
     @Override
     public long getModificationCount() {
+      DIRECTIVE_CHECKS.incrementAndGet();
       PsiFile f = myHeader.isValid() && !myProject.isDisposed() ? PsiManager.getInstance(myProject).findFile(myHeader) : null;
       if (f == null) return myVersion.get();
       long hash = ErlangMacroLayer.summaryOf(f).hash;
