@@ -23,6 +23,7 @@ import com.intellij.refactoring.RefactoringActionHandler;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.refactoring.introduce.ErlangExtractFunctionHandler;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,7 +51,8 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
 
   @Override
   public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
-    return o instanceof ErlangNamedElement || o instanceof ErlangQAtom;
+    // round 6: a free variable of a header macro body is renamed with the dialog, through the macro layer's target
+    return (o instanceof ErlangNamedElement || o instanceof ErlangQAtom) && !ErlangMacroLayer.isHeaderBodyVariable(o);
   }
 
   @Nullable

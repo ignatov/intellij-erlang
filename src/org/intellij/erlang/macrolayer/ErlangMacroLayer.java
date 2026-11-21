@@ -356,6 +356,37 @@ public final class ErlangMacroLayer {
       return map;
     }
 
+    private volatile Map<TextRange, String> myMadeNameKinds;
+
+    /**
+     * Round 6: the names that only the expansions make (functions, records, record fields, local types), by the range
+     * of their token in the real file, with their kind. The layer gives these tokens as the targets of the names.
+     */
+    @NotNull Map<TextRange, String> madeNameKinds() {
+      Map<TextRange, String> m = myMadeNameKinds;
+      if (m != null) return m;
+      m = new HashMap<>();
+      for (PsiElement e : functionsMadeByMacros().values()) putMadeName(m, e, "function");
+      Map<String, PsiElement> records = recordsMadeByMacros();
+      for (PsiElement e : records.values()) putMadeName(m, e, "record");
+      for (PsiElement e : typesMadeByMacros().values()) putMadeName(m, e, "type");
+      if (copyFile != null) {
+        for (ErlangRecordDefinition d : copyFile.getRecords()) {
+          ProgressManager.checkCanceled();
+          ErlangTypedRecordFields fields = records.containsKey(String.valueOf(d.getName())) ? d.getTypedRecordFields() : null;
+          if (fields == null) continue;
+          for (ErlangTypedExpr t : fields.getTypedExprList()) putMadeName(m, toReal(t.getQAtom()), "record field");
+          for (ErlangQAtom q : PsiTreeUtil.getChildrenOfTypeAsList(fields, ErlangQAtom.class)) putMadeName(m, toReal(q), "record field");
+        }
+      }
+      myMadeNameKinds = m;
+      return m;
+    }
+
+    private void putMadeName(@NotNull Map<TextRange, String> m, @Nullable PsiElement real, @NotNull String kind) {
+      if (real != null && real.getContainingFile() == realFile) m.putIfAbsent(real.getTextRange(), kind);
+    }
+
     /** The copy elements that correspond to a real range: its verbatim copy, else every copy of an argument token. */
     int @NotNull [] toCopyOffsets(@NotNull TextRange real) {
       int e = expansion.toExpanded(real.getStartOffset());
@@ -1775,11 +1806,84 @@ public final class ErlangMacroLayer {
   public static @Nullable String describeLayerTarget(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
     if (element instanceof ErlangMacroLayerHeaderTarget target) return target.describe(location);
     if (isNameMadeByMacro(element)) {
-      // a name in a macro use at the top level makes a function; in a -define body it may name anything
+      // a name in a macro use at the top level makes a function; in a -define body it may name anything (round 6:
+      // the copy, if there is one, tells what)
       String kind = isInTopLevelMacroForm(element) ? "function" : "name";
-      return ErlangMacroLayerHeaderTarget.describe(kind, element.getText(), location);
+      String made = madeNameKind(element);
+      return ErlangMacroLayerHeaderTarget.describe(made != null ? made : kind, element.getText(), location);
     }
     return null;
+  }
+
+  /** Round 6: the kind of a name made by a macro at this token of a real .erl file, from a copy that is there; or null. */
+  private static @Nullable String madeNameKind(@NotNull PsiElement token) {
+    ErlangFile file = layerFile(token);
+    Copy copy = file == null ? null : cachedCopy(file);
+    return copy == null ? null : copy.madeNameKinds().get(token.getTextRange());
+  }
+
+  /** The copy of the file if it is built and up to date; never builds, never computes a table. */
+  private static @Nullable Copy cachedCopy(@NotNull ErlangFile file) {
+    if (file.getUserData(TABLE_KEY) == null) return null;
+    Project project = file.getProject();
+    Table t = validTable(file, tableCache(file), PsiModificationTracker.getInstance(project).getModificationCount(),
+                         VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
+                         ProjectRootManager.getInstance(project).getModificationCount());
+    return t == null ? null : t.holder.get();
+  }
+
+  /**
+   * Round 6: the element to rename when a rename starts at a token inside a macro, or null when the layer cannot tell
+   * now (the caller then refuses the rename with a message). The uses of a name made by a macro resolve to the name's
+   * leaf ({@code made} in {@code ?MK(made).}, {@code mr} in {@code -define(R, -record(mr, {mf})).}), and the uses of a
+   * free variable of a header macro body to an {@link ErlangMacroLayerHeaderTarget}; started at the token itself, the
+   * rename would take the atom or the variable of the token and edit only that token. Every other element is given
+   * back as it is.
+   */
+  public static @Nullable PsiElement renameTargetOfMacroToken(@NotNull PsiElement element) {
+    if (!isEnabled()) return element;
+    if (element instanceof ErlangQVar v) {
+      PsiElement h = headerBodyVariableTarget(v);
+      return h != null ? h : element;
+    }
+    if (!(element instanceof ErlangQAtom q) || q.getAtom() == null) return element;
+    PsiElement leaf = PsiTreeUtil.firstChild(q);
+    if (leaf == null || !isNameMadeByMacro(leaf)) return element;
+    ErlangFile file = layerFile(leaf);
+    if (file == null) return element; // a header body: master's rename and the header targets
+    // on the UI thread only a copy that is there (getCopy never builds there); elsewhere it builds
+    Copy copy = getCopy(file, "rename-target");
+    if (copy == null) {
+      Table t = file.getUserData(TABLE_KEY) == null ? null : table(file);
+      if (t != null && (t.refusal != null || !anyFormNeedsCopy(file, t))) return element;
+      return null;
+    }
+    return copy.madeNameKinds().containsKey(leaf.getTextRange()) ? leaf : element;
+  }
+
+  /** Round 6: a variable of a header macro body that is not a parameter of its macro: the uses in the includers see it. */
+  public static boolean isHeaderBodyVariable(@NotNull PsiElement element) {
+    return element instanceof ErlangQVar v && isEnabled() && headerBodyVariableTarget(v) != null;
+  }
+
+  private static @Nullable ErlangMacroLayerHeaderTarget headerBodyVariableTarget(@NotNull ErlangQVar v) {
+    PsiFile f = v.getContainingFile();
+    if (!(f instanceof ErlangFile ef) || f.getUserData(COPY_OF) != null || f.getName().endsWith(".erl")) return null;
+    ErlangMacrosDefinition def = PsiTreeUtil.getParentOfType(v, ErlangMacrosDefinition.class);
+    if (def == null || def.getName() == null || !PsiTreeUtil.isAncestor(def.getMacrosBody(), v, false)) return null;
+    if (isMacroParameter(def, v.getText()) || "_".equals(v.getText())) return null;
+    VirtualFile vf = ef.getOriginalFile().getVirtualFile();
+    ErlangMacroExpander.HeaderTok h = vf == null ? null : headerOrigin(ef, vf, v.getTextRange().getStartOffset(), v.getText());
+    return h == null ? null : new ErlangMacroLayerHeaderTarget(ef.getProject(), vf, h.directive(), h.index(), v.getText(), v.getClass(),
+                                                                "variable");
+  }
+
+  /** The name is a parameter of the macro definition. */
+  public static boolean isMacroParameter(@NotNull ErlangMacrosDefinition def, @NotNull String name) {
+    ErlangArgumentDefinitionList args = def.getArgumentDefinitionList();
+    if (args == null) return false;
+    for (ErlangArgumentDefinition a : args.getArgumentDefinitionList()) if (a.getText().equals(name)) return true;
+    return false;
   }
 
   // ------------------------------------------------------------------------------------------------ macro bodies

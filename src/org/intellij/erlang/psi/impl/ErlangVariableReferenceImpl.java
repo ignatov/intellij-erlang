@@ -45,6 +45,11 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     return results.length > 0 ? results : ErlangMacroLayer.multiResolveFallback(this);
   }
 
+  /** Round 6: the macro layer's answers when master's path resolves nothing; else none. */
+  public ResolveResult @NotNull [] resolveOnlyThroughMacroLayer() {
+    return multiResolveOnMaster().length == 0 ? ErlangMacroLayer.multiResolveFallback(this) : ResolveResult.EMPTY_ARRAY;
+  }
+
   private ResolveResult @NotNull [] multiResolveOnMaster() {
     ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
     ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);

@@ -117,17 +117,7 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
     for (ErlangFile includer : ErlangMacroLayer.includersOfHeader(header, macro)) {
       String place = includer.getName();
       switch (target.getKind()) {
-        case "variable" -> {
-          for (ErlangFunction f : functionsUsingMacro(includer, macro)) {
-            for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(f, ErlangQVar.class)) {
-              if (v.getText().equals(newName)) {
-                result.add(collision(v, element, "Variable " + newName + " already exists in " + f.getName() + "/" + f.getArity() +
-                                                 " of " + place + ", which uses ?" + macro));
-                break;
-              }
-            }
-          }
-        }
+        case "variable" -> variableCollisions(includer, macro, newName, element, result);
         case "function" -> {
           for (ErlangFunction f : includer.getFunctions()) {
             if (newName.equals(f.getName())) result.add(collision(f, element, "Function " + newName + "/" + f.getArity() + " already exists in " + place));
@@ -169,6 +159,20 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
     }
   }
 
+  /** A function of the file that uses the macro already has a variable with the new name. */
+  static void variableCollisions(@NotNull ErlangFile file, @NotNull String macro, @NotNull String newName, @NotNull PsiElement renamed,
+                                 @NotNull List<UsageInfo> result) {
+    for (ErlangFunction f : functionsUsingMacro(file, macro)) {
+      for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(f, ErlangQVar.class)) {
+        if (v.getText().equals(newName)) {
+          result.add(collision(v, renamed, "Variable " + newName + " already exists in " + f.getName() + "/" + f.getArity() +
+                                           " of " + file.getName() + ", which uses ?" + macro));
+          break;
+        }
+      }
+    }
+  }
+
   private static @NotNull List<ErlangFunction> functionsUsingMacro(@NotNull ErlangFile file, @NotNull String macro) {
     Set<ErlangFunction> r = new LinkedHashSet<>();
     for (ErlangMacrosName name : PsiTreeUtil.findChildrenOfType(file, ErlangMacrosName.class)) {
@@ -179,7 +183,7 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
     return new ArrayList<>(r);
   }
 
-  private static @NotNull UsageInfo collision(@NotNull PsiElement place, @NotNull PsiElement renamed, @NotNull String description) {
+  static @NotNull UsageInfo collision(@NotNull PsiElement place, @NotNull PsiElement renamed, @NotNull String description) {
     return new UnresolvableCollisionUsageInfo(place, renamed) {
       @Override
       public String getDescription() {
