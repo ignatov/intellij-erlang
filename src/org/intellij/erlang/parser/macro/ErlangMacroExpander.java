@@ -1575,36 +1575,26 @@ public final class ErlangMacroExpander {
   }
 
   /**
-   * Splits the arguments of a call that starts with '(' at {@code open}, as epp's macro_arg does. Returns the
-   * arguments and the index of the closing ')' relative to {@code open}, or null if there is no closing ')'.
+   * Splits the arguments of a call that starts with '(' at {@code open}, as epp's macro_arg does
+   * ({@link ErlangMacroArgSplitter}). Returns the arguments and the index of the closing ')' relative to {@code open},
+   * or null if there is no closing ')'.
    */
   static @Nullable ArgsResult parseArgs(List<Tok> tokens, int open) {
     List<List<Tok>> args = new ArrayList<>();
     int i = open + 1;
     if (i < tokens.size() && tokens.get(i).type == ERL_PAR_RIGHT) return new ArgsResult(args, i - open);
-    Deque<IElementType> expected = new ArrayDeque<>();
+    ErlangMacroArgSplitter splitter = new ErlangMacroArgSplitter();
     List<Tok> arg = new ArrayList<>();
     for (; i < tokens.size(); i++) {
       Tok t = tokens.get(i);
-      IElementType type = t.type;
-      if (expected.isEmpty() && (type == ERL_COMMA || type == ERL_PAR_RIGHT)) {
-        args.add(arg);
-        if (type == ERL_PAR_RIGHT) return new ArgsResult(args, i - open);
-        arg = new ArrayList<>();
+      ErlangMacroArgSplitter.Step step = splitter.next(t.type, t.text);
+      if (step == ErlangMacroArgSplitter.Step.ARGUMENT) {
+        arg.add(t);
         continue;
       }
-      if (type == ERL_PAR_LEFT) expected.push(ERL_PAR_RIGHT);
-      else if (type == ERL_BIN_START) expected.push(ERL_BIN_END);
-      else if (type == ERL_BRACKET_LEFT) expected.push(ERL_BRACKET_RIGHT);
-      else if (type == ERL_CURLY_LEFT) expected.push(ERL_CURLY_RIGHT);
-      else if (BLOCK_OPENERS.contains(type)) expected.push(ERL_END);
-      else if (type == ERL_FUN && i + 1 < tokens.size() &&
-               (tokens.get(i + 1).type == ERL_PAR_LEFT ||
-                tokens.get(i + 1).type == ERL_VAR && i + 2 < tokens.size() && tokens.get(i + 2).type == ERL_PAR_LEFT)) {
-        expected.push(ERL_END);
-      }
-      else if (!expected.isEmpty() && expected.peek() == type) expected.pop();
-      arg.add(t);
+      args.add(arg);
+      if (step == ErlangMacroArgSplitter.Step.CLOSE) return new ArgsResult(args, i - open);
+      arg = new ArrayList<>();
     }
     return null;
   }

@@ -8,6 +8,7 @@ import com.intellij.psi.PsiComment;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.macro.ErlangMacroArgSplitter;
 import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
@@ -297,9 +298,8 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * The number of arguments after a macro name token, counted on the tokens (the tree there may be bare tokens):
-   * commas at the top level of the parentheses, where brackets and {@code begin/case/fun/if/receive/try ... end}
-   * nest, as in epp.
+   * The number of arguments after a macro name token, counted on the tokens (the tree there may be bare tokens) as
+   * epp's macro_arg splits them ({@link ErlangMacroArgSplitter}).
    */
   public static int arityAfter(@NotNull PsiElement name) {
     PsiElement next = nextToken(name);
@@ -307,31 +307,18 @@ public final class ErlangMacroResolve {
       next = nextToken(next);
     }
     if (next == null || next.getNode().getElementType() != ErlangTypes.ERL_PAR_LEFT) return NO_ARGUMENTS;
-    int depth = 0, commas = 0;
+    ErlangMacroArgSplitter splitter = new ErlangMacroArgSplitter();
+    int separators = 0;
     boolean any = false;
     for (PsiElement t = nextToken(next); t != null; t = nextToken(t)) {
       var type = t.getNode().getElementType();
       if (type == ErlangTypes.ERL_DOT) return UNKNOWN;
-      if (depth == 0 && type == ErlangTypes.ERL_PAR_RIGHT) return any ? commas + 1 : 0;
+      ErlangMacroArgSplitter.Step step = splitter.next(type, t.getText());
+      if (step == ErlangMacroArgSplitter.Step.CLOSE) return any ? separators + 1 : 0;
       any = true;
-      if (type == ErlangTypes.ERL_PAR_LEFT || type == ErlangTypes.ERL_BRACKET_LEFT || type == ErlangTypes.ERL_CURLY_LEFT ||
-          type == ErlangTypes.ERL_BIN_START || BLOCK_OPENERS.contains(type) ||
-          type == ErlangTypes.ERL_FUN && isFunWithClauses(t)) {
-        depth++;
-      }
-      else if (type == ErlangTypes.ERL_PAR_RIGHT || type == ErlangTypes.ERL_BRACKET_RIGHT || type == ErlangTypes.ERL_CURLY_RIGHT ||
-               type == ErlangTypes.ERL_BIN_END || type == ErlangTypes.ERL_END) {
-        depth--;
-        if (depth < 0) return UNKNOWN;
-      }
-      else if (depth == 0 && type == ErlangTypes.ERL_COMMA) commas++;
+      if (step == ErlangMacroArgSplitter.Step.SEPARATOR) separators++;
     }
     return UNKNOWN;
-  }
-
-  private static boolean isFunWithClauses(@NotNull PsiElement fun) {
-    PsiElement next = nextToken(fun);
-    return next != null && next.getNode().getElementType() == ErlangTypes.ERL_PAR_LEFT;
   }
 
   private static @Nullable PsiElement nextToken(@NotNull PsiElement e) {
