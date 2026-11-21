@@ -883,9 +883,13 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
+  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity, boolean exportedOnly) {
     if (containingFile instanceof ErlangFile erlangFile) {
       List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
+      if (exportedOnly) {
+        Set<String> exportedTypes = getExportedTypeSignatures(erlangFile);
+        types = ContainerUtil.filter(types, t -> exportedTypes.contains(t.getName() + "/" + getArity(t)));
+      }
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
@@ -909,6 +913,24 @@ public class ErlangPsiImplUtil {
       return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
     return Collections.emptyList();
+  }
+
+  @NotNull
+  private static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
+    Set<String> result = new HashSet<>();
+    List<ErlangFile> files = new ArrayList<>(getIncludedFiles(file));
+    files.add(file);
+    for (ErlangFile f : files) {
+      for (ErlangAttribute attribute : f.getAttributes()) {
+        ErlangExportTypeAttribute exportTypeAttribute = attribute.getExportTypeAttribute();
+        ErlangExportTypes exportTypes = exportTypeAttribute != null ? exportTypeAttribute.getExportTypes() : null;
+        if (exportTypes == null) continue;
+        for (ErlangExportType exportType : exportTypes.getExportTypeList()) {
+          result.add(getName(exportType.getQAtom()) + "/" + getArity(exportType.getInteger()));
+        }
+      }
+    }
+    return result;
   }
 
   public static int getArity(@NotNull ErlangTypeDefinition o) {
@@ -1222,7 +1244,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
+  static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
     HashSet<ErlangFile> includedFiles = new HashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
