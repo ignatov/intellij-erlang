@@ -27,6 +27,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
+import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeLib;
@@ -69,6 +70,9 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       /** Round 6: a macro use that the parser left as bare tokens ({@code foo?PAR}), hosted by this element. */
       @Override
       public void visitElement(@NotNull PsiElement o) {
+        // only the hosts of the references (their getReferences adds them): an error element or a dummy block has the
+        // same tokens, which its Erlang parent collects through it (round 6 next: one problem per use, not three)
+        if (!(o instanceof ErlangCompositeElement) && !(o instanceof ErlangFile)) return;
         for (PsiReference r : ErlangBareMacroReference.find(o)) {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();

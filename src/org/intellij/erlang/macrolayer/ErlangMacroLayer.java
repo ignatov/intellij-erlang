@@ -1791,14 +1791,40 @@ public final class ErlangMacroLayer {
     int at = form.getTextRange().getStartOffset();
     Boolean b = t.formUse.get(at);
     if (b == null) {
-      b = usesKnownMacro(form.getNode().getChars(), t.names) || splitUseAtEdge(form, t.names);
-      if (!b && (form instanceof PsiErrorElement || PsiTreeUtil.firstChild(form) instanceof PsiErrorElement)) {
-        PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
-        b = prev != null && usesKnownMacro(prev.getNode().getChars(), t.names);
-      }
+      b = formUsesNames(t.names, form);
       t.formUse.put(at, b);
     }
     return b;
+  }
+
+  private static boolean formUsesNames(@NotNull Set<String> names, @NotNull PsiElement form) {
+    boolean b = usesKnownMacro(form.getNode().getChars(), names) || splitUseAtEdge(form, names);
+    if (!b && (form instanceof PsiErrorElement || PsiTreeUtil.firstChild(form) instanceof PsiErrorElement)) {
+      PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
+      b = prev != null && usesKnownMacro(prev.getNode().getChars(), names);
+    }
+    return b;
+  }
+
+  /**
+   * Round 6 (next), item 1b: {@link #formUsesMacro} for a structural question (does a token reference exist here), which
+   * must never build, wait or be refused: with the valid table of the file, else with the macro names of its last table
+   * (one edit old: the names change only with a {@code -define}, an include or a header's directives; not cached, the
+   * per-form caches of an old table are keyed by old offsets). Null when the file has no table yet. The identifier
+   * highlighting and ctrl-hover look up the references of every element they visit, and right after a key press each
+   * lookup was refused the new table (17,170 refusals of 20,840 in one IDE typing session).
+   */
+  static @Nullable Boolean formUsesMacroNoWait(@NotNull ErlangFile file, @Nullable PsiElement form) {
+    TableCache cache = file.getUserData(TABLE_KEY);
+    TableEntry last = cache == null ? null : cache.entry;
+    if (last == null) return null;
+    Project project = file.getProject();
+    Table valid = validTable(file, cache, PsiModificationTracker.getInstance(project).getModificationCount(),
+                             VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
+                             ProjectRootManager.getInstance(project).getModificationCount());
+    if (valid != null) return valid.refusal == null && formUsesMacro(valid, form);
+    Table t = last.table;
+    return t.refusal == null && form != null && !t.names.isEmpty() && formUsesNames(t.names, form);
   }
 
   /**

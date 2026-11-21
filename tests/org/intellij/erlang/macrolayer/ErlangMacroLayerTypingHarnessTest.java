@@ -162,6 +162,19 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
   }
 
   @SuppressWarnings("unchecked")
+  /** Round 6 (next): a static counter of the layer (an AtomicInteger), or -1 when the build has none. */
+  private static long staticInt(String field) {
+    if (LAYER == null) return -1;
+    try {
+      java.lang.reflect.Field f = LAYER.getDeclaredField(field);
+      f.setAccessible(true);
+      return ((Number)f.get(null)).longValue();
+    }
+    catch (ReflectiveOperationException | RuntimeException e) {
+      return -1;
+    }
+  }
+
   private static List<Object> events() {
     Object m = call(LOG, "events");
     return m == null ? List.of() : (List<Object>)m;
@@ -334,7 +347,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
         " layerClasses=" + (LAYER != null) + " cpus=" + Runtime.getRuntime().availableProcessors());
     myRows.add("round\tfile\ttext\tarm\tfirst_hl_ms\tlast_key_to_hl_ms\ttyping_s\tmax_edt_key_ms\tcpu_ms\tgc_ms\tbuilds\tbuild_ms\tcancelled\t" +
                "lock_wait_ms\tlayer_excl_ms\tlayer_incl_ms\tload\tmax_build_ms\tmax_lock_wait_ms\tlock_waits\treader\tfinal_pass_ms\tdaemon\t" +
-               "asked\tcomputed\tgated\ttable_builds\ttable_gets");
+               "asked\tcomputed\tgated\ttable_builds\ttable_gets\trefused_typing\trefused_other\tstack_walks\twaits\twaits_ready");
     daemon.setUpdateByTimerEnabled(true);
     // warm-up: one run per arm and file, not recorded
     for (String fk : fileKeys) {
@@ -457,6 +470,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     // counters before
     Map<String, long[]> s0 = statsSnapshot();
     int e0 = events().size();
+    long walks0 = staticInt("STACK_WALKS");
     long cpu0 = cpuNanos(), gc0 = gcMillis();
     long maxKey = 0;
     long tStart = System.currentTimeMillis();
@@ -553,6 +567,20 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     }
     else row += "\t-";
     row += "\t" + finalPass + "\t" + daemonRuns + "\t" + asked + "\t" + computed + "\t" + gated + "\t" + tableBuilds + "\t" + tableGets;
+    // round 6 (next): refusals, stack walks and waits of passive queries in this run (from the typing on)
+    long refusedTyping = 0, refusedOther = 0, passiveWaits = 0, waitsReady = 0;
+    for (Object e : ev.subList(Math.min(e0, ev.size()), ev.size())) {
+      String line = (String)e.getClass().getMethod("line").invoke(e);
+      if (line.startsWith("SKIPPED")) {
+        if (line.contains("\ttyping\t")) refusedTyping++;
+        else refusedOther++;
+      }
+      else if (line.startsWith("WAITED")) {
+        passiveWaits++;
+        if (line.contains("\tready\t")) waitsReady++;
+      }
+    }
+    row += "\t" + refusedTyping + "\t" + refusedOther + "\t" + (staticInt("STACK_WALKS") - walks0) + "\t" + passiveWaits + "\t" + waitsReady;
     row = row.replaceFirst("\t" + Pattern.quote(arm) + "\t", "\t" + Matcher.quoteReplacement(armName) + "\t");
     myRows.add(row);
     out("run " + row + " events+" + (events().size() - e0));

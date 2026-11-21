@@ -149,6 +149,9 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     ErlangFile file = ErlangMacroLayer.layerFile(leaf);
     if (file == null) return false;
     if (PsiTreeUtil.getParentOfType(leaf, ErlangMacrosDefinition.class, false) != null) return false;
+    // round 6 (next), item 1b: the valid table or the last one, never a new one (no wait, no refusal)
+    Boolean uses = ErlangMacroLayer.formUsesMacroNoWait(file, form);
+    if (uses != null) return uses;
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) return false;
     return ErlangMacroLayer.formUsesMacro(t, form);

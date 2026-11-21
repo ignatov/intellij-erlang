@@ -147,7 +147,8 @@ public final class ErlangMacroLayerExpansionErrors {
     if (form == null || form instanceof PsiErrorElement || file == null || DumbService.isDumb(file.getProject())) return false;
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
     if (t == null || t.refusal != null || !ErlangMacroLayer.formNeedsCopy(t, form)) return false;
-    ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, "expansion-errors");
+    // round 6 (next): a trigger of its own, so that a build with the trigger "expansion-errors" is one of the pass
+    ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, "expansion-errors-filter");
     return copy != null && expansionProblem(form, file, copy) != null;
   }
 
