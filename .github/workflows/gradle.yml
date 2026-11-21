@@ -155,6 +155,69 @@ jobs:
           build/compat/released-verifier
         if-no-files-found: ignore
 
+  specs:
+    # Validates the OpenSpec changes and specs under openspec/ (see "Specs" in AGENTS.md). A job of its own, so it
+    # runs next to the build job and needs no JDK or Gradle.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Install OpenSpec
+      # The same pinned binary and sha256 as copilot-setup-steps.yml; change the pins together in both files.
+      env:
+        OPENSPEC_VERSION: '2.0.0'
+        OPENSPEC_SHA256: de16fddbce121ee176e74c963a31dc723e851629a3b89a78bd16e360d34dcf4c
+      run: |
+        archive="$RUNNER_TEMP/openspec-linux-x64.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/Fission-AI/OpenSpec/releases/download/v$OPENSPEC_VERSION/openspec-linux-x64.tar.gz"
+        echo "$OPENSPEC_SHA256  $archive" | sha256sum -c -
+        mkdir -p "$RUNNER_TEMP/openspec"
+        tar -xzf "$archive" -C "$RUNNER_TEMP/openspec" openspec
+        echo "$RUNNER_TEMP/openspec" >> "$GITHUB_PATH"
+    - name: Validate OpenSpec changes and specs
+      env:
+        OPENSPEC_TELEMETRY: '0'
+      run: |
+        version=$(openspec --version)
+        echo "OpenSpec $version"
+        openspec validate --all --strict --no-interactive
+    - name: Check that archiving would not refuse a delta
+      # openspec validate exits 0 when an open change adds a requirement whose name the spec already has: it only
+      # prints an INFO line, and `openspec archive` then refuses that change. A fix that archives such a name next
+      # to a merged proposal leaves master with a change that cannot be archived.
+      env:
+        OPENSPEC_TELEMETRY: '0'
+      run: |
+        status=0
+        output="$(openspec validate --all --strict --no-interactive 2>&1)" || status=$?
+        if [ "$status" -ne 0 ]; then
+          echo "$output"
+          exit "$status"
+        fi
+        refused="$(echo "$output" | grep -F 'Archive would refuse this delta' || true)"
+        if [ -n "$refused" ]; then
+          echo "::error::openspec archive would refuse an open change on top of the current specs"
+          echo "$refused"
+          exit 1
+        fi
+    - name: Check for repeated scenario names
+      # openspec validate accepts a scenario name that occurs twice in one spec. Two fixes that each add a scenario
+      # with the same name to different requirements merge without a conflict.
+      run: |
+        status=0
+        for spec in openspec/specs/*/spec.md; do
+          [ -e "$spec" ] || continue
+          repeated="$(grep -h '^#### Scenario:' "$spec" | sed 's/[[:space:]]*$//' | sort | uniq -d)"
+          if [ -n "$repeated" ]; then
+            echo "::error file=$spec::A scenario name occurs more than once in this spec"
+            echo "$spec:"
+            echo "$repeated"
+            status=1
+          fi
+        done
+        exit "$status"
+
   compilation-tests:
     # JPS and external build tests: they run erlc and rebar3, and the IDE starts a real build process that loads the
     # Erlang JPS plugin from the test sandbox through compileServer.plugin, like an installed plugin (#1077).

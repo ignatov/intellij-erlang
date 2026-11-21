@@ -100,3 +100,34 @@ jobs:
           "rebar $REBAR3_VERSION on Erlang/OTP "*) ;;
           *) echo "::error::rebar3 version printed no rebar $REBAR3_VERSION"; exit 1 ;;
         esac
+    # The OpenSpec command line tool for the spec workflow (openspec/, .agents/skills/openspec-*; see "Specs" in
+    # AGENTS.md). The standalone Linux x64 binary of the pinned release, checked against the sha256 that its
+    # SHA256SUMS file and GitHub's asset digest both give. The specs job of gradle.yml installs the same binary:
+    # change the pins together in both files. It does not need Erlang, so it runs even if the steps above failed.
+    # The step environment does not reach the agent, so telemetry is also turned off in the user's OpenSpec
+    # configuration (~/.config/openspec/config.json), which the agent session reads.
+    - name: Install OpenSpec
+      if: ${{ !cancelled() }}
+      env:
+        OPENSPEC_VERSION: '2.0.0'
+        OPENSPEC_SHA256: de16fddbce121ee176e74c963a31dc723e851629a3b89a78bd16e360d34dcf4c
+        OPENSPEC_TELEMETRY: '0'
+      run: |
+        archive="$RUNNER_TEMP/openspec-linux-x64.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://github.com/Fission-AI/OpenSpec/releases/download/v$OPENSPEC_VERSION/openspec-linux-x64.tar.gz"
+        echo "$OPENSPEC_SHA256  $archive" | sha256sum -c -
+        mkdir -p "$RUNNER_TEMP/openspec"
+        tar -xzf "$archive" -C "$RUNNER_TEMP/openspec" openspec
+        sudo install -m 755 "$RUNNER_TEMP/openspec/openspec" /usr/local/bin/openspec
+        command -v openspec
+        version=$(openspec --version)
+        echo "OpenSpec $version"
+        if [ "$version" != "$OPENSPEC_VERSION" ]; then
+          echo "::error::openspec on PATH is $version, expected $OPENSPEC_VERSION"
+          exit 1
+        fi
+        openspec config set telemetry.enabled false
+        if [ "$(openspec config get telemetry.enabled)" != false ]; then
+          echo "::error::OpenSpec telemetry is not turned off"
+          exit 1
+        fi

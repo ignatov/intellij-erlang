@@ -12,6 +12,7 @@ Follow `AGENTS.md`. This profile adds the order of work and how to report it.
 3. Make the smallest fix that removes the root cause.
 4. Run the new test without the fix and with it, then run `./gradlew test`.
 5. Check the neighbouring behaviour that the fix can reach and add tests for it. For a resolve change, that is highlighting, rename, find usages and completion of the same elements.
+6. Record the corrected behaviour in the spec of its area. Follow "A bug fix" in the Specs section of `AGENTS.md` step by step; the rules are there and are not repeated here. If `command -v openspec` prints nothing, or that section tells you to leave the spec step out, do not touch `openspec/`, finish the test and the fix, and say at the top of the pull request description that the spec step is missing and why.
 
 ## When to stop
 If the task needs anything from the "Stop and ask the maintainer" list in `AGENTS.md`, stop and say what is needed and why. Do not guess.
