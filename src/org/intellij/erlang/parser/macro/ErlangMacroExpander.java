@@ -231,6 +231,9 @@ public final class ErlangMacroExpander {
     public int replayedDirectives;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
+    /** The substituted top-level uses in text order: their expanded and source ranges. */
+    private final int[] myUseExpStart, myUseExpEnd, myUseSrcStart, myUseSrcEnd;
+    private final int myUses;
     private Map<Integer, int[]> myArgumentCopies;
 
     Expansion(CharSequence sourceText, String text, List<Form> forms, EnumMap<Outcome, Integer> outcomes, Out out) {
@@ -245,6 +248,11 @@ public final class ErlangMacroExpander {
       myKind = out.kind;
       myOrigin = out.origin;
       mySegments = out.n;
+      myUseExpStart = out.useExpStart;
+      myUseExpEnd = out.useExpEnd;
+      myUseSrcStart = out.useSrcStart;
+      myUseSrcEnd = out.useSrcEnd;
+      myUses = out.uses;
       int v = 0;
       for (int i = 0; i < mySegments; i++) if (myKind[i] == SRC_VERBATIM) v++;
       myVerbatim = new int[v];
@@ -365,21 +373,25 @@ public final class ErlangMacroExpander {
 
     /**
      * Round 6: the source range of the outermost macro use that produced the expanded offset (a body, header or
-     * argument token): the source between the copied (verbatim) text before and after it, without the spaces at its
-     * ends. Null for an offset in copied text.
+     * argument token, or the spaces of an empty expansion). Null for an offset in copied text.
      */
     public @Nullable TextRange useSourceRange(int expOffset) {
-      int s = segmentAt(expOffset);
-      if (s < 0 || myKind[s] == SRC_VERBATIM) return null;
-      int p = s - 1;
-      while (p >= 0 && myKind[p] != SRC_VERBATIM) p--;
-      int n = s + 1;
-      while (n < mySegments && myKind[n] != SRC_VERBATIM) n++;
-      if (p < 0 || n >= mySegments) return null;
-      int start = mySrcEnd[p], end = mySrcStart[n];
-      while (start < end && Character.isWhitespace(sourceText.charAt(start))) start++;
-      while (end > start && Character.isWhitespace(sourceText.charAt(end - 1))) end--;
-      return start < end ? TextRange.create(start, end) : null;
+      int lo = 0, hi = myUses - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        if (expOffset < myUseExpStart[mid]) hi = mid - 1;
+        else if (expOffset >= myUseExpEnd[mid]) lo = mid + 1;
+        else return TextRange.create(myUseSrcStart[mid], myUseSrcEnd[mid]);
+      }
+      return null;
+    }
+
+    /** The source range of the last use that starts at or after {@code from} and before {@code expOffset}, or null. */
+    public @Nullable TextRange useBefore(int from, int expOffset) {
+      for (int u = myUses - 1; u >= 0 && myUseExpStart[u] >= from; u--) {
+        if (myUseExpStart[u] < expOffset) return TextRange.create(myUseSrcStart[u], myUseSrcEnd[u]);
+      }
+      return null;
     }
 
     public @Nullable Form formAtSource(int srcOffset) {
@@ -413,6 +425,22 @@ public final class ErlangMacroExpander {
     int[] expStart = new int[64], expEnd = new int[64], srcStart = new int[64], srcEnd = new int[64], kind = new int[64];
     Object[] origin = new Object[64];
     int n;
+    int[] useExpStart = new int[16], useExpEnd = new int[16], useSrcStart = new int[16], useSrcEnd = new int[16];
+    int uses;
+
+    void use(int es, int ee, int ss, int se) {
+      if (uses == useExpStart.length) {
+        useExpStart = Arrays.copyOf(useExpStart, uses * 2);
+        useExpEnd = Arrays.copyOf(useExpEnd, uses * 2);
+        useSrcStart = Arrays.copyOf(useSrcStart, uses * 2);
+        useSrcEnd = Arrays.copyOf(useSrcEnd, uses * 2);
+      }
+      useExpStart[uses] = es;
+      useExpEnd[uses] = ee;
+      useSrcStart[uses] = ss;
+      useSrcEnd[uses] = se;
+      uses++;
+    }
 
     void segment(int es, int ee, int ss, int se, int k) {
       segment(es, ee, ss, se, k, null);
@@ -1110,7 +1138,9 @@ public final class ErlangMacroExpander {
         form.expStart = out.text.length();
         for (Use u : uses) {
           flushTo(b.start[sig[u.q]]);
+          int es = out.text.length();
           emitTokens(u.result);
+          out.use(es, out.text.length(), b.start[sig[u.q]], b.end[sig[u.last]]);
           cursor = b.end[sig[u.last]];
         }
         flushTo(form.srcEnd);
