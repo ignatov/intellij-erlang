@@ -173,6 +173,8 @@
         <actionPromoter implementation="org.intellij.erlang.console.ErlangConsoleActionPromoter"/>
 
         <findUsagesHandlerFactory implementation="org.intellij.erlang.search.ErlangFindUsagesHandlerFactory"/>
+        <!-- round 6: builds the macro layer's copies of files just typed in before a reference search reads answers -->
+        <referencesSearch implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerReferencesSearcher" order="first"/>
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 

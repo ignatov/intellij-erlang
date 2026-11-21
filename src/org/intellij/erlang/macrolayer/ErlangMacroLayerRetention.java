@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
@@ -16,10 +17,13 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiTreeChangeAdapter;
 import com.intellij.psi.PsiTreeChangeEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,7 +58,10 @@ public final class ErlangMacroLayerRetention implements Disposable {
       @Override
       public void documentChanged(@NotNull DocumentEvent event) {
         // a replacement by the same text (as a test fixture's setText) is no key press
-        if (!StringUtil.equals(event.getOldFragment(), event.getNewFragment())) ErlangMacroLayer.documentChanged(event.getDocument());
+        if (!StringUtil.equals(event.getOldFragment(), event.getNewFragment())) {
+          ErlangMacroLayer.documentChanged(event.getDocument());
+          noteChanged(FileDocumentManager.getInstance().getFile(event.getDocument()));
+        }
       }
     }, this);
     // round 5: the own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
@@ -89,12 +96,34 @@ public final class ErlangMacroLayerRetention implements Disposable {
         changed(event);
       }
 
-      private static void changed(@NotNull PsiTreeChangeEvent event) {
+      private void changed(@NotNull PsiTreeChangeEvent event) {
         PsiFile file = event.getFile();
         ErlangMacroLayer.TextTracker t = file == null ? null : ErlangMacroLayer.textTrackerIfAny(file);
-        if (t != null) t.changed();
+        if (t != null) {
+          t.changed();
+          noteChanged(file.getOriginalFile().getVirtualFile());
+        }
       }
     }, this);
+  }
+
+  /** Round 6: System.nanoTime() of the last change of each .erl file (a document change or a PSI change). */
+  private final Map<VirtualFile, Long> myChangedAt = new ConcurrentHashMap<>();
+
+  private void noteChanged(@Nullable VirtualFile file) {
+    if (file == null || !file.getName().endsWith(".erl")) return;
+    long now = System.nanoTime();
+    myChangedAt.put(file, now);
+    if (myChangedAt.size() > 64) myChangedAt.values().removeIf(t -> now - t > 60_000_000_000L);
+  }
+
+  /** Round 6: the .erl files that changed less than {@code millis} ms ago (see {@link ErlangMacroLayer#prepareSearch}). */
+  @NotNull List<VirtualFile> filesChangedWithin(long millis) {
+    if (millis <= 0 || myChangedAt.isEmpty()) return List.of();
+    long now = System.nanoTime();
+    List<VirtualFile> r = new ArrayList<>();
+    for (Map.Entry<VirtualFile, Long> e : myChangedAt.entrySet()) if (now - e.getValue() < millis * 1_000_000L) r.add(e.getKey());
+    return r;
   }
 
   public static @NotNull ErlangMacroLayerRetention getInstance(@NotNull Project project) {
@@ -151,6 +180,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
   public void dispose() {
     releaseAll();
     myTrackers.clear();
+    myChangedAt.clear();
   }
 
   /**

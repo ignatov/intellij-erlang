@@ -94,6 +94,11 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
    */
   public static boolean processReferencesToNameMadeByMacro(@NotNull PsiElement element, @NotNull SearchScope scope,
                                                            @NotNull Processor<? super PsiReference> processor) {
+    // round 6: the copies of the files just typed in, before the answers are read
+    read(() -> {
+      ErlangMacroLayer.prepareSearch(element, scope);
+      return null;
+    });
     String name = read(element::getText);
     PsiFile declarationFile = read(element::getContainingFile);
     TextRange declaration = read(element::getTextRange);

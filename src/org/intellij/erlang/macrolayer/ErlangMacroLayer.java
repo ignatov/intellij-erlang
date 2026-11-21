@@ -679,14 +679,19 @@ public final class ErlangMacroLayer {
 
   /** The table of a file; on the UI thread only a cached one (never computed there). */
   static @Nullable Table table(@NotNull ErlangFile file) {
-    if (!ErlangMacroLayerStats.on()) return table0(file);
+    return table(file, false);
+  }
+
+  /** {@code explicit}: round 6, the caller is a search that must get the layer's answers (see {@link #prepareSearch}). */
+  static @Nullable Table table(@NotNull ErlangFile file, boolean explicit) {
+    if (!ErlangMacroLayerStats.on()) return table0(file, explicit);
     long g0 = System.nanoTime();
-    Table t = table0(file);
+    Table t = table0(file, explicit);
     ErlangMacroLayerStats.phase(t == null ? "table-get:edt-miss" : "table-get", file.getName(), System.nanoTime() - g0);
     return t;
   }
 
-  private static @Nullable Table table0(@NotNull ErlangFile file) {
+  private static @Nullable Table table0(@NotNull ErlangFile file, boolean explicit) {
     Project project = file.getProject();
     TableCache cache = tableCache(file);
     long psi = PsiModificationTracker.getInstance(project).getModificationCount();
@@ -699,7 +704,7 @@ public final class ErlangMacroLayer {
     // resolution, which the next key press cancelled): an uncancellable caller neither starts one nor waits for one,
     // and while the file changes only its highlighting starts one (another caller waits for a running one)
     String refusal = nonCancellableCaller();
-    if (refusal == null && cache.building.get() == null) refusal = buildRefusal(file);
+    if (refusal == null && cache.building.get() == null && !explicit) refusal = buildRefusal(file);
     if (refusal != null) {
       ErlangMacroLayerStats.phase("table-skipped:" + refusal, file.getName(), 0);
       ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, refusal, "table");
@@ -970,7 +975,7 @@ public final class ErlangMacroLayer {
    * inside its own build (the layer then gives master's answer).
    */
   private static @Nullable Copy obtain(@NotNull CopyHolder holder, @NotNull ErlangFile file, @NotNull Table table,
-                                       @NotNull String trigger) {
+                                       @NotNull String trigger, boolean explicit) {
     while (true) {
       Copy copy = holder.get();
       if (copy != null) return copy;
@@ -982,11 +987,11 @@ public final class ErlangMacroLayer {
         return null;
       }
       Build running = holder.building.get();
-      if (running == null) {
+      if (running == null && !explicit) {
         String refusal = buildRefusal(file);
         if (refusal == null && !isEdtBuildAllowed() && !isHighlighting(ProgressManager.getGlobalProgressIndicator()) &&
-            onlyBrokenFormsNeedCopy(file, table) && !isExplicitUserAction()) {
-          // round 5: a form broken while the user types, with plain macros only: only highlighting builds for it
+            onlyBrokenFormsNeedCopy(file, table) && isPassiveCaller()) {
+          // round 5: a form broken while the user types, with plain macros only: a passive query does not build for it
           refusal = "broken-plain";
         }
         if (refusal != null) {
@@ -1060,10 +1065,13 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5, fix 2: after an edit of a file, only its highlighting starts a copy build for {@link #quietMillis()}; other
-   * callers (the target-element search, {@code isReferenceTo} of the identifier highlighting, ... which the next key
-   * press cancels) use a copy that is there or being built, else they get master's answer. Highlighting is a caller
-   * under the daemon's progress indicator (also through the wrappers of the inspection threads).
+   * Round 5, fix 2, and round 6: while a file changes (for {@link #quietMillis()} after an edit), a passive query at
+   * the caret ({@link #isPassiveCaller}: the identifier highlighting, ctrl-hover, parameter info, highlight usages)
+   * starts no copy build: the next key press would cancel it. It uses a copy that is there or being built, else it
+   * gets master's answer. Every other caller builds and waits, cancellably: highlighting, and every search or
+   * navigation, also when it runs on worker threads that do not show the action that started it. A caller that is
+   * wrongly taken for a passive one would get master's answer, so only callers that are positively recognised are
+   * refused; a caller that is wrongly taken for an active one only costs a build.
    */
   private static @Nullable String buildRefusal(@NotNull PsiFile file) {
     if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
@@ -1071,32 +1079,121 @@ public final class ErlangMacroLayer {
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
     if (tt != null && quiet > 0 && tt.changedWithin(quiet) || quiet > 0 && isBeingTyped(file, quiet)) {
-      return isExplicitUserAction() ? null : "typing";
+      return isPassiveCaller() ? "typing" : null;
     }
     return null;
   }
 
-  /** Caller classes of a search or navigation that the user started: rename and other refactorings, find usages, go to. */
-  private static final String[] EXPLICIT_CALLERS = {
-    "com.intellij.refactoring.", "com.intellij.find.", "com.intellij.codeInsight.navigation.actions."};
-  /** Caller classes of passive queries: the identifier highlighting at the caret, highlight usages, ctrl-hover, hints. */
+  /**
+   * Classes of passive queries at the caret, which run again after every key press and whose answer is only shown:
+   * the identifier highlighting ({@code IdentifierHighlightingComputer} and its manager, updater and pass), ctrl-hover
+   * ({@code CtrlMouseHandler}, {@code CtrlMouseData}), parameter info ({@code com.intellij.codeInsight.hint.}) and
+   * highlight usages in the file ({@code HighlightUsagesHandler}). None of them runs a rename or a find usages.
+   */
   private static final String[] PASSIVE_CALLERS = {"IdentifierHighlight", "HighlightUsages", "CtrlMouse", "com.intellij.codeInsight.hint."};
 
+  /** Round 6: stack walks made by {@link #isPassiveCaller}, for tests and measurements. */
+  static final AtomicInteger STACK_WALKS = new AtomicInteger();
+  /** Round 6: stack walks made by {@link #prepareSearch} (one per search in a file just typed in). */
+  static final AtomicInteger SEARCH_STACK_WALKS = new AtomicInteger();
+
   /**
-   * Round 5 follow-up: the caller is a search or a navigation the user started (rename, find usages, go to declaration),
-   * told by the classes on the thread's stack: one of {@link #EXPLICIT_CALLERS} and none of {@link #PASSIVE_CALLERS}.
-   * Such a caller builds the copy and waits for it while the file changes; giving it master's answer would make a
-   * rename edit only part of the code. Asked only when a build would otherwise be refused.
+   * Round 6: the last progress indicator under which this thread was found to run a passive query (the indicator
+   * itself, not a wrapper of it: the search inside the identifier highlighting wraps it). Only this thread reads it,
+   * and it matches only the very same indicator object, so it never marks a worker thread or another caller: a search
+   * that the platform splits over worker threads walks their own stacks. The identifier highlighting
+   * (every refused question in the IDE measurement, CALLERS6.md) runs under an indicator that
+   * {@code CoroutinesKt.contextToIndicator} makes for that one call, inside the passive frame
+   * ({@code IdentifierHighlightingAccessorImpl.getMarkupData}); the indicator, and so this memo, cannot outlive it.
+   * Weak: the memo keeps no indicator alive.
    */
-  static boolean isExplicitUserAction() {
-    boolean[] explicit = {false};
-    boolean passive = StackWalker.getInstance().walk(frames -> frames.limit(400).anyMatch(f -> {
+  private static final ThreadLocal<WeakReference<ProgressIndicator>> PASSIVE_MEMO = new ThreadLocal<>();
+
+  /**
+   * Round 6: the caller is a passive query ({@link #PASSIVE_CALLERS} on the thread's stack). Asked only when a build
+   * would be refused for a passive caller. The walk stops at the first passive frame (in the IDE 10 to 45 frames
+   * below the layer). The next questions of the same passive call on the same thread are answered by
+   * {@link #PASSIVE_MEMO} without a walk. The answer "not passive" is not kept: such a caller builds the copy, and
+   * then no longer asks.
+   */
+  static boolean isPassiveCaller() {
+    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
+    WeakReference<ProgressIndicator> memo = root == null ? null : PASSIVE_MEMO.get();
+    if (memo != null && memo.get() == root) return true;
+    STACK_WALKS.incrementAndGet();
+    long w0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
+    boolean passive = hasPassiveFrame();
+    if (w0 != 0) ErlangMacroLayerStats.phase(passive ? "stack-walk:passive" : "stack-walk:not-passive", null, System.nanoTime() - w0);
+    if (passive && root != null) PASSIVE_MEMO.set(new WeakReference<>(root));
+    return passive;
+  }
+
+  /** The indicator that the given one wraps ({@link WrappedProgressIndicator}), at any depth; itself if it wraps none. */
+  private static @Nullable ProgressIndicator rootIndicator(@Nullable ProgressIndicator indicator) {
+    ProgressIndicator p = indicator;
+    for (int depth = 0; p instanceof WrappedProgressIndicator w && depth < 16; depth++) p = w.getOriginalProgressIndicator();
+    return p;
+  }
+
+  /** Round 6: a frame of a passive query ({@link #PASSIVE_CALLERS}) is on this thread's stack; always walks. */
+  static boolean hasPassiveFrame() {
+    return StackWalker.getInstance().walk(frames -> frames.limit(400).anyMatch(f -> {
       String c = f.getClassName();
-      for (String p : PASSIVE_CALLERS) if (c.contains(p)) return true;
-      if (!explicit[0]) for (String p : EXPLICIT_CALLERS) if (c.startsWith(p)) explicit[0] = true;
+      for (String marker : PASSIVE_CALLERS) if (c.contains(marker)) return true;
       return false;
     }));
-    return explicit[0] && !passive;
+  }
+
+  /**
+   * Runs the computation as a passive query of the caller's progress indicator (a stand-in for the IDE's callers in
+   * tests that do not run the IDE's own passive callers). The mark lasts only for the computation.
+   */
+  @TestOnly
+  public static <T> T computeAsPassiveQueryForTests(@NotNull java.util.function.Supplier<T> computation) {
+    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
+    if (root == null) throw new IllegalStateException("a passive query runs under a progress indicator");
+    WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
+    PASSIVE_MEMO.set(new WeakReference<>(root));
+    try {
+      return computation.get();
+    }
+    finally {
+      PASSIVE_MEMO.set(previous);
+    }
+  }
+
+  /**
+   * Round 6: called by the layer's reference searcher ({@link ErlangMacroLayerReferencesSearcher}) and by the search of
+   * names made by macros, on the thread that starts a search, before any answer is read. For every Erlang file of the
+   * search scope that changed within {@link #quietMillis()} (the only files for which a build can be refused) and that
+   * contains the name searched for, it builds the copy now, cancellably, unless the search itself is a passive query.
+   * The worker threads of the search then find the copy there, whatever their stacks show; so a wrong "passive" on a
+   * worker can no longer make a rename or a find usages miss the layer's answers in a file just typed in.
+   */
+  public static void prepareSearch(@NotNull PsiElement target, @NotNull com.intellij.psi.search.SearchScope scope) {
+    if (!isEnabled() || ApplicationManager.getApplication().isDispatchThread() || nonCancellableCaller() != null) return;
+    if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return; // highlighting is never refused a build
+    if (!(target instanceof ErlangMacroLayerHeaderTarget) && !target.getLanguage().isKindOf(ErlangLanguage.INSTANCE)) return;
+    Project project = target.getProject();
+    if (DumbService.isDumb(project)) return;
+    List<VirtualFile> changed = ErlangMacroLayerRetention.getInstance(project).filesChangedWithin(quietMillis());
+    if (changed.isEmpty()) return;
+    String name = target instanceof PsiNamedElement named ? named.getName() : target.getText();
+    List<ErlangFile> files = new ArrayList<>();
+    for (VirtualFile vf : changed) {
+      ProgressManager.checkCanceled();
+      if (!vf.isValid() || !scope.contains(vf)) continue;
+      ErlangFile f = PsiManager.getInstance(project).findFile(vf) instanceof ErlangFile ef ? layerFile(ef) : null;
+      if (f == null || name != null && !StringUtil.contains(f.getViewProvider().getContents(), name)) continue;
+      files.add(f);
+    }
+    if (files.isEmpty()) return;
+    SEARCH_STACK_WALKS.incrementAndGet();
+    if (hasPassiveFrame()) return;
+    for (ErlangFile f : files) {
+      ProgressManager.checkCanceled();
+      getCopy(f, "search", true);
+    }
   }
 
   /**
@@ -1190,9 +1287,13 @@ public final class ErlangMacroLayer {
   }
 
   static @Nullable Copy getCopy(@NotNull PsiFile psiFile, @NotNull String trigger) {
+    return getCopy(psiFile, trigger, false);
+  }
+
+  private static @Nullable Copy getCopy(@NotNull PsiFile psiFile, @NotNull String trigger, boolean explicit) {
     ErlangFile file = layerFile(psiFile);
     if (file == null) return null;
-    Table table = table(file);
+    Table table = table(file, explicit);
     if (table == null) {
       ErlangMacroLayerLog.event("EDT_MISS", file.getName(), 0, 0, 0, "table", trigger);
       return null;
@@ -1208,7 +1309,7 @@ public final class ErlangMacroLayer {
       return c;
     }
     CopyHolder holder = table.holder;
-    Copy copy = obtain(holder, file, table, trigger);
+    Copy copy = obtain(holder, file, table, trigger, explicit);
     if (copy == null) return null;
     long r0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
     ErlangMacroLayerRetention.getInstance(project).touch(holder, copy);

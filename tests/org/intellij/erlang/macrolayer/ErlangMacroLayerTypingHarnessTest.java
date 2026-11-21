@@ -57,7 +57,8 @@ import java.util.stream.Stream;
  * ({@code isReferenceTo}); an arm name with {@code -cap<N>} (round 5) runs the layer with a form cap of N tokens;
  * {@code form} (round 5) resolves every reference of the top-level form at the caret in a
  * cancellable non-blocking read action, a stand-in for the IDE's caret-driven callers that ask the layer in a form
- * that needs the copy. An arm name may carry the reader as a suffix
+ * that needs the copy; {@code ihc} (round 6) runs the platform's own identifier highlighting at the caret
+ * ({@code IdentifierHighlightingComputer}) in a cancellable non-blocking read action. An arm name may carry the reader as a suffix
  * ({@code layer+nc}); then it overrides {@code S5_READER}. {@code S5_HOG=<n>}: n threads spin during each run
  * (CPU starvation, as on a loaded host).
  */
@@ -73,6 +74,8 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
   private volatile long myLastFinished;
   private volatile FileEditor myWatched;
   private volatile int myCaret;
+  /** Round 6: the editor of the run, for the {@code ihc} reader. */
+  private volatile Editor myReaderEditor;
   private volatile long myLastStarting;
   private volatile int myStartingCount, myFinishedCount, myCanceledCount;
   private volatile boolean myReading;
@@ -380,6 +383,14 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
         long r0 = System.nanoTime();
         try {
           java.util.concurrent.Callable<Object> c = () -> {
+            if (kind.equals("ihc")) {
+              // round 6: the platform's own identifier highlighting at the caret, the caller of every question that the
+              // layer refused in the IDE measurement (CALLERS6.md); it is the passive caller that must not build
+              if (!file.isValid()) return null;
+              return new com.intellij.codeInsight.daemon.impl.IdentifierHighlightingComputer(
+                file, myReaderEditor, com.intellij.openapi.util.ProperTextRange.create(0, file.getTextLength()),
+                Math.max(0, myCaret - 1)).computeRanges();
+            }
             if (kind.equals("form")) {
               com.intellij.psi.PsiElement at = file.isValid() ? file.findElementAt(Math.max(0, myCaret - 1)) : null;
               while (at != null && at.getParent() != null && !(at.getParent() instanceof PsiFile)) at = at.getParent();
@@ -464,6 +475,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       h.start();
       hogThreads.add(h);
     }
+    myReaderEditor = editor;
     Thread readerThread = startReader(file, reader);
     for (char c : typed.toCharArray()) {
       long k0 = System.nanoTime();

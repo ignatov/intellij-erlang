@@ -52,14 +52,17 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
   }
 
-  /** The target of the last Z of f/0, from a pooled thread under a progress indicator that is not the daemon's. */
+  /**
+   * The target of the last Z of f/0, from a passive query at the caret (round 6: the callers that the rule refuses are
+   * the positively recognised passive ones), on a pooled thread under a progress indicator that is not the daemon's.
+   */
   private String resolveLastZ(PsiFile f) throws Exception {
-    return inBackgroundWithIndicator(() -> {
+    return inBackgroundWithIndicator(() -> ErlangMacroLayer.computeAsPassiveQueryForTests(() -> {
       int at = f.getText().lastIndexOf("Z.");
       PsiReference ref = f.findReferenceAt(at);
       PsiElement t = ref == null ? null : ref.resolve();
       return t == null ? "null" : t.getTextOffset() + "";
-    });
+    }));
   }
 
   public void testOtherCallersBuildNoCopyWhileTheFileChanges() throws Exception {
@@ -126,11 +129,11 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     int at = f.getText().indexOf("Y.\n");
     WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(at, "lists:map(fun(Q) -> W + Q, "));
     PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
-    String target = inBackgroundWithIndicator(() -> {
+    String target = inBackgroundWithIndicator(() -> ErlangMacroLayer.computeAsPassiveQueryForTests(() -> {
       PsiReference ref = f.findReferenceAt(f.getText().indexOf("W + Q"));
       PsiElement t = ref == null ? null : ref.resolve();
       return String.valueOf(t);
-    });
+    }));
     assertEquals("null", target);
     assertEquals("no build by the caret-driven caller", 0, builds().size());
     assertTrue(ErlangMacroLayerLog.events().stream().anyMatch(e -> e.kind().equals("SKIPPED") && e.line().contains("broken-plain")));
