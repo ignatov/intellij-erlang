@@ -19,6 +19,7 @@ package org.intellij.erlang.rebar.settings;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
@@ -29,10 +30,13 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.AnActionLink;
+import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.download.DownloadableFileDescription;
 import com.intellij.util.download.DownloadableFileService;
 import com.intellij.util.download.FileDownloader;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.intellij.erlang.rebar.runner.RebarRunningStateUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.intellij.erlang.utils.ExtProcessUtil;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +49,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class RebarConfigurationForm {
@@ -76,7 +81,7 @@ public class RebarConfigurationForm {
     });
   }
 
-  // The version check runs the rebar escript with the escript of this project's Erlang SDK.
+  // The version check uses this project's Erlang SDK to run the rebar script.
   public void setProject(@Nullable Project project) {
     myProject = project;
   }
@@ -128,9 +133,17 @@ public class RebarConfigurationForm {
           return;
         }
 
-        // The check runs in the temp directory, so a path relative to the IDE's directory must be made absolute.
         String absoluteRebarPath = rebarFile.getAbsolutePath();
-        ExtProcessUtil.ExtProcessOutput rebar = ExtProcessUtil.execAndGetFirstLine(VERSION_CHECK_TIMEOUT, absoluteRebarPath, "--version");
+        String sdkPath = project != null ?
+                         ReadAction.computeBlocking(() -> project.isDisposed() ? null : ErlangSdkType.getSdkPath(project)) : null;
+        Map<String, String> environment = Collections.emptyMap();
+        if (sdkPath != null && !RebarBuilder.isEscript(absoluteRebarPath)) {
+          // As in the run configurations, a script that runs erl, such as the one of `rebar3 local install`, runs the SDK's.
+          environment = Map.of("PATH", RebarBuilder.getPathWithSdkFirst(sdkPath, EnvironmentUtil.getValue("PATH")));
+        }
+        // The check runs in the temp directory, so a path relative to the IDE's directory must be made absolute.
+        ExtProcessUtil.ExtProcessOutput rebar =
+          ExtProcessUtil.execAndGetFirstLine(VERSION_CHECK_TIMEOUT, environment, absoluteRebarPath, "--version");
         String version = rebar.getStdOut();
 
         if (version.startsWith("rebar")) {

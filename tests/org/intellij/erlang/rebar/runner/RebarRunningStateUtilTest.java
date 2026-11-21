@@ -27,6 +27,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.util.EnvironmentUtil;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -144,6 +145,64 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  // The sh script that `rebar3 local install` writes to ~/.cache/rebar3/bin is not an escript: it runs erl from PATH.
+  public void testCommandLineRunsLocalInstallScriptWithSdkFirstOnPath() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File script = createExecutable(directory, "rebar3", "#!/usr/bin/env sh\n## Rebar3 3.28.0\nREBAR3_VSN=${REBAR3_VSN:-3.28.0}\n" +
+                                                         "erl -pz /cache/vsns/${REBAR3_VSN}/lib/*/ebin +sbtu +A1 -noshell " +
+                                                         "-boot start_clean -s rebar3 main $REBAR3_ERL_ARGS -extra \"$@\"\n");
+    GeneralCommandLine commandLine = getCompileCommandLine(script);
+    assertEquals(script.getPath(), commandLine.getExePath());
+    assertEquals(List.of("compile"), commandLine.getParametersList().getList());
+    String sdkBin = JpsErlangSdkType.getByteCodeInterpreterExecutable(ErlangSdkType.getSdkPath(getProject())).getParent();
+    String path = commandLine.getEffectiveEnvironment().get("PATH");
+    assertTrue(path, path.startsWith(sdkBin + File.pathSeparator));
+  }
+
+  // Without the system environment the script still needs the IDE's PATH: `#!/usr/bin/env sh` looks sh up on it.
+  public void testCommandLineRunsLocalInstallScriptWithIdePathWithoutSystemEnvironment() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File script = createExecutable(directory, "rebar3", "#!/usr/bin/env sh\nerl -s rebar3 main -extra \"$@\"\n");
+    RebarSettings settings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = settings.getRebarPath();
+    try {
+      settings.setRebarPath(script.getPath());
+      RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+      configuration.setCommand("compile");
+      configuration.setEnvData(EnvironmentVariablesData.create(Map.of("FOO", "bar"), false));
+      GeneralCommandLine commandLine = RebarRunningStateUtil.getRebarCommandLine(configuration);
+      String sdkBin = JpsErlangSdkType.getByteCodeInterpreterExecutable(ErlangSdkType.getSdkPath(getProject())).getParent();
+      String idePath = EnvironmentUtil.getValue("PATH");
+      assertNotNull(idePath);
+      assertEquals(sdkBin + File.pathSeparator + idePath, commandLine.getEffectiveEnvironment().get("PATH"));
+    }
+    finally {
+      settings.setRebarPath(oldRebarPath);
+    }
+  }
+
+  public void testCommandLineRunsEscriptWithSdkEscript() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebar_bin", null);
+    File escript = createExecutable(directory, "rebar3", "#!/usr/bin/env escript\n%% Rebar3 3.28.0\n%%! +sbtu +A1\n");
+    GeneralCommandLine commandLine = getCompileCommandLine(escript);
+    assertEquals(RebarRunningStateUtil.findEscriptExecutable(getProject()), commandLine.getExePath());
+    assertEquals(List.of(escript.getPath(), "compile"), commandLine.getParametersList().getList());
+  }
+
+  private GeneralCommandLine getCompileCommandLine(File rebar) {
+    RebarSettings settings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = settings.getRebarPath();
+    try {
+      settings.setRebarPath(rebar.getPath());
+      RebarRunConfiguration configuration = new RebarRunConfiguration("rebar", getProject());
+      configuration.setCommand("compile");
+      return RebarRunningStateUtil.getRebarCommandLine(configuration);
+    }
+    finally {
+      settings.setRebarPath(oldRebarPath);
+    }
+  }
+
   public void testRebarPathIgnoresDirectoryNamedRebar3() throws Exception {
     File directory = FileUtil.createTempDirectory("rebar_project", null);
     File rebar3 = new File(directory, "rebar3");
@@ -189,8 +248,12 @@ public class RebarRunningStateUtilTest extends ErlangLightPlatformCodeInsightFix
   }
 
   private static File createExecutable(File directory, String name) throws IOException {
+    return createExecutable(directory, name, "");
+  }
+
+  private static File createExecutable(File directory, String name, String text) throws IOException {
     File file = new File(directory, name);
-    FileUtil.writeToFile(file, "");
+    FileUtil.writeToFile(file, text);
     FileUtil.setExecutable(file);
     return file;
   }

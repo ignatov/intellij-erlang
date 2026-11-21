@@ -16,11 +16,20 @@
 
 package org.intellij.erlang.rebar.settings;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.intellij.erlang.jps.model.JpsErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSdkForSmallIdes;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 
 import javax.swing.*;
 import javax.swing.text.Document;
@@ -55,6 +64,70 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     }
     finally {
       FileUtil.delete(directory);
+    }
+  }
+
+  public void testVersionOfLocalInstallScriptUsesSdkPath() throws IOException {
+    if (SystemInfo.isWindows) return;
+
+    File sdkHome = FileUtil.createTempDirectory("rebarSdk", null, true);
+    ProjectJdkTable sdkTable = ProjectJdkTable.getInstance();
+    Sdk sdk = null;
+    try {
+      assertTrue(new File(sdkHome, "lib").mkdir());
+      File sdkBin = new File(sdkHome, "bin");
+      assertTrue(sdkBin.mkdir());
+      File sdkErlExecutable = new File(sdkBin, "erl");
+      Files.writeString(sdkErlExecutable.toPath(), "#!/bin/sh\nexit 0\n", StandardCharsets.UTF_8);
+      assertTrue(sdkErlExecutable.setExecutable(true));
+      Sdk testSdk = ErlangSdkType.createMockSdk(sdkHome.getPath(), ErlangSdkRelease.V_R15B02);
+      sdk = testSdk;
+
+      if (ErlangSystemUtil.isSmallIde()) {
+        ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), sdkHome.getPath());
+      }
+      else {
+        ApplicationManager.getApplication().runWriteAction(() -> {
+          sdkTable.addJdk(testSdk);
+          ProjectRootManager.getInstance(getProject()).setProjectSdk(testSdk);
+        });
+      }
+
+      File directory = FileUtil.createTempDirectory("rebarLocalInstall", null, true);
+      try {
+        File rebar = new File(directory, "rebar3");
+        Files.writeString(rebar.toPath(), "#!/bin/sh\necho \"rebar $(command -v erl)\"\n", StandardCharsets.UTF_8);
+        assertTrue(rebar.setExecutable(true));
+
+        AtomicReference<String> version = new AtomicReference<>();
+        RebarConfigurationForm.validateRebarPath(rebar.getPath(), getProject(), version::set);
+        long deadline = System.currentTimeMillis() + 20000;
+        while (version.get() == null && System.currentTimeMillis() < deadline) {
+          PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+          PlatformTestUtil.waitForAlarm(10);
+        }
+
+        String sdkPath = ErlangSdkType.getSdkPath(getProject());
+        assertNotNull(sdkPath);
+        String sdkErl = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkPath).getAbsolutePath();
+        assertEquals("rebar " + sdkErl, version.get());
+      }
+      finally {
+        FileUtil.delete(directory);
+      }
+    }
+    finally {
+      if (ErlangSystemUtil.isSmallIde()) {
+        ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), "");
+      }
+      else if (sdk != null) {
+        Sdk sdkToRemove = sdk;
+        ApplicationManager.getApplication().runWriteAction(() -> {
+          ProjectRootManager.getInstance(getProject()).setProjectSdk(null);
+          sdkTable.removeJdk(sdkToRemove);
+        });
+      }
+      FileUtil.delete(sdkHome);
     }
   }
 
