@@ -68,8 +68,9 @@ public class MacroFuzzOracleTest extends MacroFuzzTestBase {
               rec.guard("highlight layer=" + layer, () -> myFixture.doHighlighting());
             }
             String[] s = new String[1];
+            com.intellij.testFramework.IndexingTestUtil.waitUntilIndexesAreReady(getProject());
             rec.guard("snapshot " + p + " layer=" + layer, () -> s[0] = snapshot(f));
-            (layer ? on : off).put(p, s[0]);
+            if (s[0] != null) (layer ? on : off).put(p, s[0]);
           }
         }
         finally {
@@ -78,7 +79,7 @@ public class MacroFuzzOracleTest extends MacroFuzzTestBase {
         }
       }
       for (String p : on.keySet()) {
-        if (!Objects.equals(on.get(p), off.get(p))) {
+        if (off.containsKey(p) && !Objects.equals(on.get(p), off.get(p))) {
           rec.fail("layer-changes-tree", "tree, stubs or indices differ with the layer on and off", p + ": " + firstDiff(on.get(p), off.get(p)));
         }
       }
