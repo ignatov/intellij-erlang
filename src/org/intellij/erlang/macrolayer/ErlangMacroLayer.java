@@ -421,6 +421,7 @@ public final class ErlangMacroLayer {
     final ConcurrentHashMap<Integer, Boolean> formNeedsCopy = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formError = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<Integer, Set<String>> formSubstitutedArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
 
     Table(@Nullable String refusal, Object[] deps, @NotNull IncludeTracker includes) {
@@ -1262,6 +1263,35 @@ public final class ErlangMacroLayer {
     });
   }
 
+  /**
+   * Round 5: names of the variables inside the arguments of the macro uses of the form that need substitution (the
+   * macro is not plain, or the use is not in a plain slot). Every enclosing use counts: {@code ?PLAIN(?OTHER(X))}
+   * counts X for ?OTHER. An element that starts with {@code ?} but is not a macro use counts too (a superset).
+   */
+  private static @NotNull Set<String> substitutedArgumentVars(@NotNull Table t, @NotNull PsiElement form) {
+    return t.formSubstitutedArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
+      Set<String> r = new HashSet<>();
+      for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(form, ErlangQVar.class)) {
+        if (r.contains(v.getText())) continue;
+        for (PsiElement p = v.getParent(); p != null && p != form; p = p.getParent()) {
+          PsiElement first = PsiTreeUtil.firstChild(p);
+          if (first == null || first == v || !first.textMatches("?")) continue;
+          if (!(first.getParent() instanceof ErlangMacros m)) {
+            r.add(v.getText());
+            break;
+          }
+          ErlangMacrosName nameElement = m.getMacrosName();
+          String name = nameElement == null ? null : StringUtil.unquoteString(nameElement.getText(), '\'');
+          if (name == null || t.names.contains(name) && (t.nonPlain.contains(name) || !isPlainPosition(m))) {
+            r.add(v.getText());
+            break;
+          }
+        }
+      }
+      return r;
+    });
+  }
+
   private static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
     return t.formError.computeIfAbsent(form.getTextRange().getStartOffset(), k -> PsiTreeUtil.hasErrorElements(form));
   }
@@ -1742,9 +1772,13 @@ public final class ErlangMacroLayer {
       mark(o, "gate:plain-form");
       return ResolveResult.EMPTY_ARRAY;
     }
-    // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form
-    boolean body = t.bodyVars.contains(element.getText());
-    boolean arg = !body && argumentVars(t, form).contains(element.getText());
+    // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form;
+    // round 5 (narrow gate): only a free variable of a body (not a parameter), and only the arguments of a use that
+    // needs substitution (a plain use puts its arguments in value slots: their bindings are master's)
+    boolean wide = isGateWide();
+    String name = element.getText();
+    boolean body = wide ? t.bodyVars.contains(name) : t.freeBodyVars.contains(name);
+    boolean arg = !body && (wide ? argumentVars(t, form) : substitutedArgumentVars(t, form)).contains(name);
     boolean err = !body && !arg && formHasError(t, form);
     if (!body && !arg && !err) {
       mark(o, "gate:var-not-candidate");
