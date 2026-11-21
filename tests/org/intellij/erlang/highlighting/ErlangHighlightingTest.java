@@ -45,8 +45,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIoFormat()          { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
+  public void testBinaryComprehensionTemplate() { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
+  public void testIfConditionalCompilation() { doTest(); }
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
   public void test211()               { doTest(); }
@@ -103,17 +105,29 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoAutoImport5()     { doTest(); }
   public void testNoAutoImport6()     { doTest(); }
   public void testNoAutoImport7()     { doTest(); }
+  public void testNoAutoImport8()     { doTest(); }
   public void test605()               { doTest(); }
   public void test821()               { doTest(); }
+  public void test933()               { doTest(); }
+  public void testFunVarArityInMacroArguments() { doTest(); }
+  public void testFunVarArityInConstantMacroArguments() { doTest(); }
+  public void testFunVarArityInMacroArgumentsInTypes() { doTest(); }
+  public void testFunVarArityInPredefinedMacroArguments() { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
+  public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
     myFixture.configureByFile(testDataFile);
     myFixture.checkHighlighting(false, true, false, false);
+  }
+
+  public void testIfAttributeAnnotations() {
+    testAttributeAnnotations();
   }
 
   private void doTestWithInclude() {
@@ -189,6 +203,42 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testUnresolvedMacrosInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInConditionalBranches() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosInIfInsideIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosUndefInInclude() {
+    enableUnresolvedMacroInspection();
+    myFixture.configureByText("undef_m.hrl", "-undef(M).");
+    doTest();
+  }
+
+  public void testUnresolvedMacrosQuotedInIfdef() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosOtpRelease() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testMacroThenStringLiteral() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testAlreadyImported1()      { doTestWithInclude(); }
   public void testAlreadyImported2()      { doTestWithInclude(); }
   public void test176() {                    
@@ -211,4 +261,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testFunctionImportFromTransitiveInclusion() { doTestWithApp(); }
   public void testFunctionImportFromInclusion()           { doTestWithApp(); }
   public void testExportFromInclusion()                   { doTestWithApp(); }
+
+  // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
+  public void testLongOperatorChain() {
+    myFixture.configureByText("chain_12000.erl",
+                              "-module(chain_12000).\n-export([f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
+    myFixture.checkHighlighting();
+  }
 }

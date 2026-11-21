@@ -52,16 +52,12 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
     return new ErlangIndentOptionsEditor();
   }
 
-  @NotNull
   @Override
-  public CommonCodeStyleSettings getDefaultCommonSettings() {
-    CommonCodeStyleSettings defaultSettings = new CommonCodeStyleSettings(getLanguage());
-    CommonCodeStyleSettings.IndentOptions indentOptions = defaultSettings.initIndentOptions();
+  protected void customizeDefaults(@NotNull CommonCodeStyleSettings commonSettings,
+                                   @NotNull CommonCodeStyleSettings.IndentOptions indentOptions) {
     indentOptions.INDENT_SIZE = 2;
     indentOptions.CONTINUATION_INDENT_SIZE = 4;
     indentOptions.TAB_SIZE = 2;
-
-    return defaultSettings;
   }
 
   @Override

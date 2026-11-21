@@ -24,6 +24,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     ErlangExportFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangExportFunction.class, false);
     if (function == null) return;
     String signature = ErlangDuplicateFunctionExportInspection.getSignature(function);

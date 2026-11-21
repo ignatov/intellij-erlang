@@ -31,6 +31,7 @@ import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.quickfixes.ErlangQuickFixBase;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
@@ -67,6 +68,7 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangUsageCounters.countQuickFix(project, getClass());
       PsiElement psiElement = descriptor.getPsiElement();
       if (!(psiElement instanceof ErlangQVar)) return;
 

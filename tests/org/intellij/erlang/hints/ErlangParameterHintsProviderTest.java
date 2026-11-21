@@ -119,6 +119,83 @@ public class ErlangParameterHintsProviderTest extends DeclarativeInlayHintsProvi
              """);
   }
 
+  public void testCutVariantOfExactlyMaxLengthGetsEllipsis() {
+    doTest("""
+             -module(test).
+             f(abcdefghijkl) -> one;
+             f(other) -> two.
+             test() -> f(/*<# abcdefghijk…: #>*/x).
+             """);
+  }
+
+  public void testRecordIndexPatternIsNotRecordPattern() {
+    doTest("""
+             -module(test).
+             -record(r, {a, b}).
+             f(#r.a) -> ok;
+             f(#r.b) -> ok.
+             test() -> f(/*<# #r.a|#r.b: #>*/2).
+             """);
+  }
+
+  public void testWhitespaceInStringIsKept() {
+    doTest("""
+             -module(test).
+             f("a  b") -> ok.
+             test() -> f(/*<# "a  b": #>*/"a b").
+             """);
+  }
+
+  public void testWhitespaceInQuotedAtomIsKept() {
+    doTest("""
+             -module(test).
+             f('a  b') -> ok.
+             test() -> f(/*<# 'a  b': #>*/'a b').
+             """);
+  }
+
+  public void testLineBreakInStringBecomesSpace() {
+    doTest("""
+             -module(test).
+             f("a
+             b") -> ok.
+             g('a
+               b') -> ok.
+             test() -> f(/*<# "a b": #>*/x), g(/*<# 'a b': #>*/x).
+             """);
+  }
+
+  public void testTripleQuotedStringEqualToArgumentIsSkipped() {
+    doTest("""
+             -module(test).
+             k(\"""
+               ab
+               \""") -> ok.
+             test() -> k(\"""
+               ab
+               \"""), k(/*<# \""" ab \""": #>*/x).
+             """);
+  }
+
+  public void testSingleRecordIndexPatternIsTrimmed() {
+    doTest("""
+             -module(test).
+             -record(state, {connection_timeout}).
+             f(#state.connection_timeout) -> ok.
+             test() -> f(/*<# #state.conn…: #>*/2).
+             """);
+  }
+
+  public void testWhitespaceBetweenTokensIsNormalized() {
+    doTest("""
+             -module(test).
+             f({a,
+                b}) -> ok.
+             g( c ) -> ok.
+             test() -> f({a, b}), g(c), f(/*<# {a, b}: #>*/x).
+             """);
+  }
+
   public void testRecordPattern() {
     doTest("""
              -module(test).

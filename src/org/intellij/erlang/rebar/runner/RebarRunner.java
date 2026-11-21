@@ -16,12 +16,19 @@
 
 package org.intellij.erlang.rebar.runner;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
+import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.runners.DefaultProgramRunner;
+import com.intellij.execution.runners.DefaultProgramRunnerKt;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.GenericProgramRunner;
+import com.intellij.execution.ui.RunContentDescriptor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class RebarRunner extends DefaultProgramRunner {
+public final class RebarRunner extends GenericProgramRunner<RunnerSettings> {
   private static final String REBAR_RUNNER_ID = "RebarRunner";
 
   @NotNull
@@ -33,5 +40,12 @@ public final class RebarRunner extends DefaultProgramRunner {
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof RebarRunConfigurationBase;
+  }
+
+  @Nullable
+  @Override
+  protected RunContentDescriptor doExecute(@NotNull RunProfileState state,
+                                           @NotNull ExecutionEnvironment environment) throws ExecutionException {
+    return DefaultProgramRunnerKt.executeState(state, environment, this);
   }
 }

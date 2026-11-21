@@ -84,8 +84,8 @@ jobs:
       run: ./gradlew --no-daemon clean test buildPlugin verifyPlugin -PbuildNumber="$BUILD_NUMBER"
 
     - name: Verify the archive against the newer supported IDEs
-      # The archive is built against IntelliJ IDEA 2026.1 and serves every IDE up to its until-build. The same IDEs as
-      # in the other-ides job of gradle.yml, which also runs the tests against them on every push to master.
+      # The archive is built against IntelliJ IDEA 2026.2 and serves every IDE up to its until-build. The same IDEs as
+      # in the other-ides job of gradle.yml, which also runs the tests against them on every push.
       env:
         PLUGIN_VERSION: ${{ steps.version.outputs.plugin_version }}
         BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
@@ -105,12 +105,12 @@ jobs:
           fi
         done
         echo "$range"
-        if [[ "$range" != *'since-build="261"'* || "$range" != *'until-build="263.*"'* ]]; then
+        if [[ "$range" != *'since-build="262"'* || "$range" != *'until-build="263.*"'* ]]; then
           echo "::error::Unexpected compatibility range in $zip: '$range'"
           exit 1
         fi
         cp "$zip" "$RUNNER_TEMP/"
-        for ide in 2026.2 2026.3; do
+        for ide in 2026.3; do
           echo "::group::Plugin Verifier against IntelliJ IDEA $ide"
           COMPAT_IDE="$ide" scripts/compat/gradle.sh verifyPlugin -PbuildNumber="$BUILD_NUMBER" \
             -PcompatPluginArchive="$RUNNER_TEMP/intellij-erlang-$PLUGIN_VERSION.zip"

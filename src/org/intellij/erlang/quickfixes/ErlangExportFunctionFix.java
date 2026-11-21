@@ -44,6 +44,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,6 +79,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                      @Nullable Editor editor,
                      @NotNull PsiElement startElement,
                      @Nullable PsiElement endElement) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     if (startElement instanceof ErlangFunction) {
       processFunction(project, (ErlangFunction) startElement, editor);
     }
@@ -197,7 +199,7 @@ public class ErlangExportFunctionFix extends LocalQuickFixAndIntentionActionOnPs
                                                     boolean cellHasFocus) {
         var rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-        String text = ReadAction.compute(() -> {
+        String text = ReadAction.computeBlocking(() -> {
           PsiElement e = ((PsiAnchor) value).retrieve();
           if (e instanceof ErlangExport export && export.getExportFunctions() != null) {
             var exportText = export.getExportFunctions().getText();

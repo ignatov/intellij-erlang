@@ -43,7 +43,7 @@ public class ErlangUnitRunConfiguration extends ErlangRunConfigurationBase<Erlan
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new ErlangUnitRunConfigurationEditorForm();
+    return new ErlangUnitRunConfigurationEditorForm(getProject());
   }
 
   @NotNull
