@@ -53,9 +53,9 @@
 
         <!-- file types -->
         <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
-        <fileType language="Erlang" name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
-        <fileType language="Erlang" name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
-        <fileType language="Erlang" name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
+        <fileType name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
+        <fileType name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
+        <fileType name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
 
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
         <iconProvider implementation="org.intellij.erlang.icons.ErlangIconProvider"/>
