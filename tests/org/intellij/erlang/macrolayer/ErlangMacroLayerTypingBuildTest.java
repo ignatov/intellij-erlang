@@ -73,8 +73,10 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     assertEquals(binding, resolveLastZ(f));
 
     edit(f, "%% typed\n");
+    int tables = ErlangMacroLayer.TABLES_BUILT.get();
     assertEquals("master's answer while the file changes", "null", resolveLastZ(f));
     assertEquals("no build by the other caller", 1, builds().size());
+    assertEquals("no table build by the other caller either", tables, ErlangMacroLayer.TABLES_BUILT.get());
     assertEquals(1, count("SKIPPED"));
 
     myFixture.doHighlighting();

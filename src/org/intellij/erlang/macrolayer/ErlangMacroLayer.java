@@ -685,6 +685,16 @@ public final class ErlangMacroLayer {
     Table valid = validTable(file, cache, psi, vfs, roots);
     if (valid != null) return valid;
     if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return null;
+    // round 5: the rules of a copy build hold for a table build too (in xmerl_scan.erl, about 15 ms of include
+    // resolution, which the next key press cancelled): an uncancellable caller neither starts one nor waits for one,
+    // and while the file changes only its highlighting starts one (another caller waits for a running one)
+    String refusal = nonCancellableCaller();
+    if (refusal == null && cache.building.get() == null) refusal = buildRefusal(file);
+    if (refusal != null) {
+      ErlangMacroLayerStats.phase("table-skipped:" + refusal, file.getName(), 0);
+      ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, refusal, "table");
+      return null;
+    }
     return buildTable(file, cache, psi, vfs, roots);
   }
 

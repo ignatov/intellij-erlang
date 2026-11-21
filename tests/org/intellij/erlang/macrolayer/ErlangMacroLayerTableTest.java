@@ -4,6 +4,8 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -65,6 +67,7 @@ public class ErlangMacroLayerTableTest extends ErlangLightPlatformCodeInsightFix
   }
 
   public void testOneTableBuildPerEditForConcurrentAskers() throws Exception {
+    ErlangMacroLayer.setQuietMillisForTests(0, getTestRootDisposable()); // the askers come after the user paused
     PsiFile f = includer();
     inBackground(() -> ErlangMacroLayer.table((ErlangFile)f));
     for (int round = 0; round < 5; round++) {
@@ -75,7 +78,8 @@ public class ErlangMacroLayerTableTest extends ErlangLightPlatformCodeInsightFix
       for (int i = 0; i < 8; i++) {
         futures.add(ApplicationManager.getApplication().executeOnPooledThread(() -> {
           start.await();
-          return ReadAction.compute(() -> ErlangMacroLayer.table((ErlangFile)f));
+          return ProgressManager.getInstance().runProcess(() -> ReadAction.compute(() -> ErlangMacroLayer.table((ErlangFile)f)),
+                                                          new EmptyProgressIndicator());
         }));
       }
       start.countDown();
