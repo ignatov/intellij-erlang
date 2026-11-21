@@ -930,6 +930,13 @@ public final class ErlangMacroLayer {
     while (true) {
       Copy copy = holder.get();
       if (copy != null) return copy;
+      String uncancellable = nonCancellableCaller();
+      if (uncancellable != null) {
+        // round 5, fix 6: such a caller neither builds nor waits for another thread's build
+        ErlangMacroLayerStats.phase("build-skipped:" + uncancellable, file.getName(), 0);
+        ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, uncancellable, trigger);
+        return null;
+      }
       Build running = holder.building.get();
       if (running == null) {
         String refusal = buildRefusal(file);
@@ -1015,6 +1022,20 @@ public final class ErlangMacroLayer {
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
     if (tt != null && quiet > 0 && tt.changedWithin(quiet)) return "typing";
+    return null;
+  }
+
+  /**
+   * Round 5, fix 6: the caller cannot be cancelled: it runs in a non-cancellable section, or with no progress indicator
+   * (a plain read action on a pooled thread). A key press is a write action: it waits until every read action ends,
+   * and a caller that cannot be cancelled would hold it for a whole build (or a wait for one). Such a caller gets the
+   * copy that is there, or master's answer. Null when the caller is cancellable (or builds are allowed anywhere).
+   */
+  private static @Nullable String nonCancellableCaller() {
+    if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
+    ProgressManager pm = ProgressManager.getInstance();
+    if (pm.isInNonCancelableSection()) return "non-cancellable";
+    if (ProgressManager.getGlobalProgressIndicator() == null) return "no-indicator";
     return null;
   }
 

@@ -81,8 +81,17 @@ final class LayerTestSupport {
                          s.size(), v.stream().map(d -> String.format(Locale.ROOT, "%.0f", d)).toList());
   }
 
-  /** Runs in a pooled thread inside a read action (like highlighting and navigation in the IDE). */
+  /**
+   * Runs in a pooled thread inside a read action (like highlighting and navigation in the IDE). Round 5: under a
+   * progress indicator, as background work in the IDE runs (a caller without one cannot be cancelled, and the layer
+   * gives it master's answer instead of building a copy).
+   */
   static <T> T inBackground(Callable<T> c) throws Exception {
+    return inBackgroundWithIndicator(c);
+  }
+
+  /** Round 5: a pooled thread, a plain read action, no progress indicator: a caller that cannot be cancelled. */
+  static <T> T inBackgroundWithoutIndicator(Callable<T> c) throws Exception {
     return ApplicationManager.getApplication().executeOnPooledThread(() -> ReadAction.compute(c::call)).get();
   }
 
