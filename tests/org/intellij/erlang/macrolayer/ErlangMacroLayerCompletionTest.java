@@ -248,6 +248,53 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
     assertTrue("no target is kept", made.functions().values().stream().allMatch(Objects::isNull));
   }
 
+  /**
+   * 3d: time to the main tree's items and to the end, after a fragment use (the copy's items come last) and in an
+   * ordinary function of the same file (no copy parsed), with the layer on and off (master's completion), in a file
+   * of about 140 KB; 5 completions each, after one warm-up. Printed; the ordinary function must not take over.
+   */
+  public void testTimeToTheItems() {
+    StringBuilder big = new StringBuilder(HEAD);
+    for (int i = 0; i < 2000; i++) big.append("g").append(i).append("(X) ->\n  case X of\n    {a, Y} -> Y + ").append(i).append(";\n    _ -> [X, X]\n  end.\n");
+    String fragment = big + "f(Abc1, Abc2) ->\n  foo?PAR,\n  X1 = Ab<caret>,\n  X1.\nh(Abc3, Abc4) -> {Abc3, Abc4}.\n";
+    String ordinary = big + "f(Abc1, Abc2) ->\n  foo?PAR,\n  X1 = Abc1,\n  X1.\nh(Abc3, Abc4) -> Ab<caret>.\n";
+    for (String mode : List.of("layer", "off")) {
+      com.intellij.openapi.Disposable d = com.intellij.openapi.util.Disposer.newDisposable();
+      ErlangMacroLayer.setModeForTests("off".equals(mode) ? ErlangMacroLayer.Mode.OFF : ErlangMacroLayer.Mode.LAYER, d);
+      for (String[] c : new String[][]{{"after a fragment", fragment}, {"ordinary function", ordinary}}) {
+        List<Long> total = new ArrayList<>(), main = new ArrayList<>(), all = new ArrayList<>();
+        int taken0 = takenOver();
+        List<String> got = null;
+        for (int i = 0; i < 6; i++) {
+          ErlangMacroLayerCompletionContributor.ourLastMainNanos = 0;
+          ErlangMacroLayerCompletionContributor.ourLastTotalNanos = 0;
+          String text = c[1];
+          int caret = text.indexOf("<caret>");
+          String module = "t" + (myN++);
+          PsiFile f = myFixture.addFileToProject("c/" + module + ".erl", text.replace("<caret>", "").replace("-module(m).", "-module(" + module + ")."));
+          myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+          myFixture.doHighlighting();
+          myFixture.getEditor().getCaretModel().moveToOffset(caret + module.length() - 1);
+          long t0 = System.nanoTime();
+          LookupElement[] items = myFixture.complete(CompletionType.BASIC);
+          long t = System.nanoTime() - t0;
+          if (myFixture.getLookup() != null) myFixture.getLookup().hideLookup(true);
+          if (i == 0) continue;
+          total.add(t / 1_000_000);
+          main.add(ErlangMacroLayerCompletionContributor.ourLastMainNanos / 1_000_000);
+          all.add(ErlangMacroLayerCompletionContributor.ourLastTotalNanos / 1_000_000);
+          got = new ArrayList<>();
+          if (items != null) for (LookupElement e : items) if (e.getLookupString().startsWith("Ab")) got.add(e.getLookupString());
+        }
+        Collections.sort(total);
+        System.out.println("LAYER-COMPLETION-TIME mode=" + mode + " " + c[0] + ": completion ms " + total + ", contributor to main items ms " + main +
+                           ", contributor to end ms " + all + ", through the copy " + (takenOver() - taken0) + ", items " + got);
+        if (c[0].startsWith("ordinary")) assertEquals("no copy in an ordinary function", taken0, takenOver());
+      }
+      com.intellij.openapi.util.Disposer.dispose(d);
+    }
+  }
+
   /** A form that the main tree parses: the layer does not take part, and completion is master's. */
   public void testAFormTheMainTreeParsesIsLeftToMaster() {
     int taken0 = takenOver();

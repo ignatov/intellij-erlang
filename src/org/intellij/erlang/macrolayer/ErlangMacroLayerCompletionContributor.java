@@ -12,6 +12,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -78,16 +79,57 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     if (parameters.getCompletionType() != CompletionType.BASIC || !ErlangMacroLayer.isEnabled()) return;
     if (parameters.getPosition().getContainingFile().getUserData(ORIGIN) != null) return; // already the layer's text
     boolean auto = parameters.isAutoPopup();
+    long t0 = System.nanoTime();
+    if (!mayTakeOver(parameters)) {
+      Made made = made(parameters);
+      if (made != null && !made.isEmpty()) addMadeNames(parameters, result, made);
+      return;
+    }
+    // round 6 (next), item 3d: the main tree's items first, as fast as on master; the copy's items after them
+    Set<String> seen = new HashSet<>();
+    result.runRemainingContributors(parameters, r -> {
+      seen.add(r.getLookupElement().getLookupString());
+      result.passResult(r);
+    });
+    ourLastMainNanos = System.nanoTime() - t0;
     Position p = auto ? ErlangMacroLayer.asPassiveQuery(() -> position(parameters)) : position(parameters);
     if (p != null) {
       TAKEN_OVER.incrementAndGet();
-      result.runRemainingContributors(parameters.withPosition(p.position, p.offset),
-                                      r -> result.passResult(r.withLookupElement(realLookup(p, r.getLookupElement()))));
-      result.stopHere();
-      return;
+      result.runRemainingContributors(parameters.withPosition(p.position, p.offset), r -> {
+        if (seen.add(r.getLookupElement().getLookupString())) result.passResult(r.withLookupElement(realLookup(p, r.getLookupElement())));
+      });
     }
-    Made made = made(parameters);
-    if (made != null && !made.isEmpty()) addMadeNames(parameters, result, made);
+    ourLastTotalNanos = System.nanoTime() - t0;
+    result.stopHere();
+  }
+
+  /** Nanoseconds to the main tree's items and to the end of the last completion that could take over (tests, measurements). */
+  static volatile long ourLastMainNanos, ourLastTotalNanos;
+
+  /**
+   * The cheap part of {@link #position}: the caret's place in the main tree may be lost (no table, no copy asked):
+   * its top-level element is a bare token, an error or a dummy block, the rest of a split form, or a form with a
+   * syntax error before the caret. A syntax error after the caret does not count: there the main tree's position is
+   * whole, and no copy is parsed.
+   */
+  private static boolean mayTakeOver(@NotNull CompletionParameters parameters) {
+    if (!(parameters.getOriginalFile() instanceof ErlangFile real) || ErlangMacroLayer.layerFile(real) != real) return false;
+    int offset = parameters.getOffset();
+    PsiElement at = real.findElementAt(Math.max(0, offset - 1));
+    PsiElement top = at == null ? null : ErlangMacroLayer.topForm(at);
+    if (top == null || isMacroNamePosition(at)) return false;
+    if (!(top instanceof ErlangCompositeElement) || !afterADot(top)) return true;
+    for (PsiErrorElement e : PsiTreeUtil.findChildrenOfType(top, PsiErrorElement.class)) {
+      if (e.getTextRange().getStartOffset() < offset) return true;
+    }
+    return boundByMacrosCandidate(real, top);
+  }
+
+  /** The form may bind a variable through a macro (see {@link #boundByMacros}); a cached table only. */
+  private static boolean boundByMacrosCandidate(@NotNull ErlangFile real, @NotNull PsiElement top) {
+    ErlangMacroLayer.Table t = ErlangMacroLayer.cachedTable(real);
+    return t != null && t.refusal == null && !t.names.isEmpty() && ErlangMacroLayer.formNeedsCopy(t, top) &&
+           !(ErlangMacroLayer.formFreeBodyVars(t, top).isEmpty() && ErlangMacroLayer.substitutedArgumentVars(t, top).isEmpty());
   }
 
   // ------------------------------------------------------------------------------------------------ item 3: made names
@@ -235,7 +277,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     // the main tree lost the caret's place: its top-level element is a bare token, an error or a dummy block (the
     // recovery after a fragment use left the rest of the clause there), a form with a syntax error, or the rest of a
     // form that the recovery split (the element before it does not end with a dot: ?ID(Ab) after foo?PAR,)
-    boolean lost = !(top instanceof ErlangCompositeElement) || PsiTreeUtil.hasErrorElements(top) || !afterADot(top);
+    boolean lost = !(top instanceof ErlangCompositeElement) || !afterADot(top) || errorBefore(top, offset);
     if (!lost) return boundByMacros(parameters, real, top, offset);
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(real);
     if (t == null || t.refusal != null || t.names.isEmpty()) return skip(real, t == null ? "no-table" : "table-refused-or-empty");
@@ -304,6 +346,13 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     if (before.getNode().getElementType() == ErlangTypes.ERL_QMARK) return true;
     PsiElement prev = PsiTreeUtil.prevVisibleLeaf(before);
     return prev != null && prev.getNode().getElementType() == ErlangTypes.ERL_QMARK && prev.getTextRange().getEndOffset() == before.getTextRange().getStartOffset();
+  }
+
+  private static boolean errorBefore(@NotNull PsiElement top, int offset) {
+    for (PsiErrorElement e : PsiTreeUtil.findChildrenOfType(top, PsiErrorElement.class)) {
+      if (e.getTextRange().getStartOffset() < offset) return true;
+    }
+    return false;
   }
 
   /** The element before the top-level element ends a form (or there is none). */
