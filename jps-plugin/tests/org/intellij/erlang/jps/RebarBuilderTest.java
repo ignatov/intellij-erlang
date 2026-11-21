@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Builds a rebar3 application with "Compile project with rebar" turned on. The tests that run rebar need the rebar3
@@ -97,6 +99,49 @@ public class RebarBuilderTest extends ErlangJpsBuildTestCase {
     rebuildAll();
 
     assertSameElements(listFiles(appPath("_build/default/lib/app1/ebin")), "app1.app", "app1_mod.beam");
+  }
+
+  // Stop in the IDE only sets the canceled status of the build session; the builder has to poll it and stop rebar (#1404).
+  public void testCancelStopsRebar() throws Exception {
+    getErlangSdkPath();
+    File pidFile = new File(getAbsolutePath("rebar.pid"));
+    // A rebar that hangs: it writes the OS pid of its emulator and sleeps for ten minutes.
+    String rebar = createFile("rebar_bin/rebar3",
+                              "#!/usr/bin/env escript\n" +
+                              "main(_) ->\n" +
+                              "  io:format(\"hanging rebar~n\"),\n" +
+                              "  ok = file:write_file(\"" + FileUtil.toSystemIndependentName(pidFile.getPath()) + "\", os:getpid()),\n" +
+                              "  timer:sleep(600000).\n");
+    useRebar(rebar);
+    createRebarApp("{erl_opts, []}.");
+
+    AtomicBoolean canceled = new AtomicBoolean();
+    AtomicReference<BuildResult> result = new AtomicReference<>();
+    Thread build = new Thread(() -> result.set(rebuildAllWithoutAssertions(canceled::get)), "rebar build");
+    build.start();
+    long pid = -1;
+    try {
+      long deadline = System.currentTimeMillis() + 60_000;
+      while (!(pidFile.isFile() && pidFile.length() > 0) && build.isAlive() && System.currentTimeMillis() < deadline) {
+        Thread.sleep(100);
+      }
+      assertTrue("the hanging rebar did not start", pidFile.isFile() && pidFile.length() > 0);
+      pid = Long.parseLong(FileUtil.loadFile(pidFile).trim());
+
+      canceled.set(true);
+      build.join(10_000);
+      boolean buildReturned = !build.isAlive();
+      boolean rebarAlive = ProcessHandle.of(pid).map(ProcessHandle::isAlive).orElse(false);
+      assertTrue("the build did not return within 10 seconds after cancel; rebar (pid " + pid + ") alive: " + rebarAlive,
+                 buildReturned);
+      assertFalse("rebar (pid " + pid + ") is still running after the build was canceled", rebarAlive);
+    }
+    finally {
+      if (pid != -1) {
+        ProcessHandle.of(pid).ifPresent(ProcessHandle::destroyForcibly);
+      }
+      build.join(30_000);
+    }
   }
 
   public void testRebarPathNotSetFailsBuild() {

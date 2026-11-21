@@ -181,6 +181,10 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
     return doBuild(CompileScopeTestBuilder.rebuild().all());
   }
 
+  protected BuildResult rebuildAllWithoutAssertions(CanceledStatus canceledStatus) {
+    return doBuild(CompileScopeTestBuilder.rebuild().all(), canceledStatus);
+  }
+
   protected BuildResult makeAll() {
     BuildResult result = doBuild(CompileScopeTestBuilder.make().all());
     result.assertSuccessful();
@@ -188,18 +192,22 @@ public abstract class JpsBuildTestCase extends UsefulTestCase {
   }
 
   private BuildResult doBuild(CompileScopeTestBuilder scope) {
+    return doBuild(scope, CanceledStatus.NULL);
+  }
+
+  private BuildResult doBuild(CompileScopeTestBuilder scope, CanceledStatus canceledStatus) {
     ProjectDescriptor descriptor = createProjectDescriptor(new BuildLoggingManager(myLogger));
     try {
       myLogger.clear();
-      return doBuild(descriptor, scope);
+      return doBuild(descriptor, scope, canceledStatus);
     }
     finally {
       descriptor.release();
     }
   }
 
-  private BuildResult doBuild(ProjectDescriptor descriptor, CompileScopeTestBuilder scopeBuilder) {
-    IncProjectBuilder builder = new IncProjectBuilder(descriptor, BuilderRegistry.getInstance(), myBuildParams, CanceledStatus.NULL, true);
+  private BuildResult doBuild(ProjectDescriptor descriptor, CompileScopeTestBuilder scopeBuilder, CanceledStatus canceledStatus) {
+    IncProjectBuilder builder = new IncProjectBuilder(descriptor, BuilderRegistry.getInstance(), myBuildParams, canceledStatus, true);
     BuildResult result = new BuildResult();
     builder.addMessageHandler(result);
     try {
