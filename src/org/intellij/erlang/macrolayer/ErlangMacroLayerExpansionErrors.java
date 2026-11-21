@@ -23,7 +23,9 @@ import org.intellij.erlang.psi.ErlangParenthesizedExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -265,6 +267,30 @@ public final class ErlangMacroLayerExpansionErrors {
    * error just after it counts for it, as in the copy), or the ')' of an empty parenthesized expression, which the
    * plugin's parser accepts silently and erlc rejects.
    */
+  /**
+   * Round 6 (next), item 5: the first {@code =>} of the element whose innermost open bracket is not {@code #{}: erlc
+   * rejects it ("syntax error before: '=>'"), the plugin's parser accepts it (39 missed mutants of map-field macros,
+   * {@code -define(P, p => utf8string())} used outside a map). In Erlang {@code =>} stands only directly inside
+   * {@code #{...}} (maps, map updates, map comprehensions, map patterns and map types).
+   */
+  private static @Nullable PsiElement misplacedAssociation(@NotNull PsiElement e) {
+    Deque<Boolean> open = new ArrayDeque<>();
+    int end = e.getTextRange().getEndOffset();
+    for (PsiElement leaf = PsiTreeUtil.firstChild(e); leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
+      IElementType t = leaf.getNode().getElementType();
+      if (t == ErlangTypes.ERL_CURLY_LEFT) {
+        PsiElement prev = PsiTreeUtil.prevVisibleLeaf(leaf);
+        open.push(prev != null && prev.getNode().getElementType() == ErlangTypes.ERL_RADIX);
+      }
+      else if (t == ErlangTypes.ERL_PAR_LEFT || t == ErlangTypes.ERL_BRACKET_LEFT || t == ErlangTypes.ERL_BIN_START) open.push(false);
+      else if (t == ErlangTypes.ERL_CURLY_RIGHT || t == ErlangTypes.ERL_PAR_RIGHT || t == ErlangTypes.ERL_BRACKET_RIGHT || t == ErlangTypes.ERL_BIN_END) {
+        if (!open.isEmpty()) open.pop();
+      }
+      else if (t == ErlangTypes.ERL_ASSOC && (open.isEmpty() || !open.peek())) return leaf;
+    }
+    return null;
+  }
+
   private static @Nullable PsiElement firstBrokenToken(@NotNull ErlangMacroLayer.Copy copy, @NotNull Form f) {
     PsiElement best = null;
     PsiElement start = copy.copyFile.findElementAt(f.expStart);
@@ -276,6 +302,7 @@ public final class ErlangMacroLayerExpansionErrors {
       for (ErlangParenthesizedExpression p : PsiTreeUtil.findChildrenOfType(e, ErlangParenthesizedExpression.class)) {
         if (p.getExpression() == null) candidates.add(p.getLastChild());
       }
+      candidates.add(misplacedAssociation(e));
       for (PsiElement c : candidates) {
         if (c != null && (best == null || c.getTextRange().getStartOffset() < best.getTextRange().getStartOffset())) best = c;
       }

@@ -725,6 +725,8 @@ public final class ErlangMacroExpander {
         else top.head = top.type == ERL_RECEIVE;
       }
       else if (t == ERL_COMMA && stack.isEmpty()) plain = false;
+      // round 6 (next), item 5: a map field (p => utf8string()) is no expression: its use goes through the copy
+      else if (t == ERL_ASSOC && stack.isEmpty()) plain = false;
       else if (t == ERL_OP_OR && (top == null || top.type != ERL_BRACKET_LEFT)) plain = false;
       else if (t == ERL_OP_EQ && (top == null || !top.recordBrace || !isFieldNameBefore(body, i))) plain = false;
       else if (t == ERL_DOT && !(i >= 2 && body.get(i - 2).type == ERL_RADIX ||
