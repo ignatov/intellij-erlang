@@ -1057,12 +1057,17 @@ public final class ErlangMacroExpander {
         }
         case "include", "include_lib" -> {
           if (resolver == null || owner != null) return; // a header's own includes are replayed by replay()
-          replay(resolver.resolve(null, attribute, new Directive(attribute, toks).includeString()));
+          HeaderSummary h = resolver.resolve(null, attribute, new Directive(attribute, toks).includeString());
+          if (h == null) incompleteIncludes = true;
+          replay(h);
         }
         default -> {
         }
       }
     }
+
+    /** Q2: an include before this point did not resolve. */
+    boolean incompleteIncludes;
 
     void replay(@Nullable HeaderSummary h) {
       if (h == null || replayDepth > MAX_DEPTH) return;
@@ -1070,7 +1075,9 @@ public final class ErlangMacroExpander {
       try {
         for (Directive d : h.directives) {
           if (isInclude(d.attribute)) {
-            replay(resolver.resolve(h, d.attribute, d.includeString()));
+            HeaderSummary child = resolver.resolve(h, d.attribute, d.includeString());
+            if (child == null) incompleteIncludes = true;
+            replay(child);
             continue;
           }
           directive(d.attribute, d.tokens, h);
@@ -1151,7 +1158,8 @@ public final class ErlangMacroExpander {
       Def def = new Def(name, arity, params, body, isFragment(body, params));
       def.branch = branch;
       def.fromHeader = fromHeader;
-      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition)) branch.transparent = true;
+      // Q2: not after an include that does not resolve: the missing header may define the name, and then epp skips this
+      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition) && !incompleteIncludes) branch.transparent = true;
       if (branch != null) branch.defined.add(def);
       defs.computeIfAbsent(name, k -> new ArrayList<>()).add(def);
     }

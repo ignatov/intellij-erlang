@@ -523,6 +523,13 @@ public final class ErlangMacroLayer {
     final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Set<String>> formSubstitutedArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
+    /**
+     * Q2: an include of the file or of one of its headers does not resolve. The layer still works; a form that uses a
+     * macro the file cannot see ({@link #usesUnseen}) gets master's behaviour, since that macro may come from there.
+     */
+    volatile boolean missingInclude;
+    /** Q2: the visible macros whose bodies use, directly or through other macros, a macro the file cannot see. */
+    final Set<String> usesUnseen = new HashSet<>();
     /** Round 5: some top-level form of the file needs the copy ({@link #anyFormNeedsCopy}). */
     volatile Boolean anyFormNeedsCopy;
     /** Round 5: the forms that need the copy need it only because they are broken ({@link #onlyBrokenFormsNeedCopy}). */
@@ -906,10 +913,15 @@ public final class ErlangMacroLayer {
     Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested = new IdentityHashMap<>();
     List<VirtualFile> headers = new ArrayList<>();
     String refusal = null;
+    boolean[] missing = {false};
     try {
       for (Map.Entry<String, ErlangFile> e : direct.get(file).entrySet()) {
-        if (e.getValue() == null) throw new Refusal("unresolved-include");
-        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, shapes, direct));
+        // Q2: an include that does not resolve no longer turns the layer off for the whole file
+        if (e.getValue() == null || e.getValue().getOriginalFile().getVirtualFile() == null) {
+          missing[0] = true;
+          continue;
+        }
+        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, shapes, direct, missing));
       }
     }
     catch (Refusal r) {
@@ -917,6 +929,7 @@ public final class ErlangMacroLayer {
     }
     for (VirtualFile h : headers) deps.add(ErlangMacroLayerRetention.getInstance(project).tracker(h));
     Table t = new Table(refusal, deps.toArray(), includes, file.getOriginalFile().getVirtualFile());
+    t.missingInclude = missing[0];
     if (refusal == null) {
       t.names.addAll(names);
       t.bodyVars.addAll(bodyVars);
@@ -976,6 +989,22 @@ public final class ErlangMacroLayer {
               changed = true;
               break uses;
             }
+          }
+        }
+      }
+    }
+    // Q2: with an unresolved include, the macros whose bodies reach a macro the file cannot see
+    changed = true;
+    while (changed) {
+      changed = false;
+      for (String name : t.names) {
+        if (t.usesUnseen.contains(name)) continue;
+        for (String used : t.macroNestedUses.getOrDefault(name, Set.of())) {
+          if (ErlangMacroExpander.PREDEFINED.contains(used)) continue;
+          if (!t.names.contains(used) || t.usesUnseen.contains(used)) {
+            t.usesUnseen.add(name);
+            changed = true;
+            break;
           }
         }
       }
@@ -1053,7 +1082,7 @@ public final class ErlangMacroLayer {
     @NotNull Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested,
     @NotNull List<VirtualFile> headers, @NotNull Set<String> names, @NotNull Set<String> bodyVars,
     @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes,
-    @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct) throws Refusal {
+    @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct, boolean @NotNull [] missing) throws Refusal {
     VirtualFile vf = header.getOriginalFile().getVirtualFile();
     if (vf == null) throw new Refusal("unresolved-include");
     if (path.contains(vf)) throw new Refusal("include-cycle");
@@ -1078,8 +1107,11 @@ public final class ErlangMacroLayer {
       for (ErlangMacroExpander.Directive d : s.includes()) {
         String k = key(d.attribute, d.includeString());
         ErlangFile child = resolved.get(k);
-        if (child == null) throw new Refusal("unresolved-include");
-        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, shapes, direct));
+        if (child == null || child.getOriginalFile().getVirtualFile() == null) {
+          missing[0] = true;
+          continue;
+        }
+        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, shapes, direct, missing));
       }
     }
     finally {
@@ -1864,6 +1896,27 @@ public final class ErlangMacroLayer {
 
   /** The text has a use {@code ?NAME} of a name the file can see. Superset: strings and comments count too. */
   public static boolean usesKnownMacro(@NotNull CharSequence s, @NotNull Set<String> names) {
+    return anyMacroName(s, names::contains);
+  }
+
+  /**
+   * Q2: the text uses a macro that the file cannot see (with an unresolved include it may come from there), or a
+   * visible macro whose body reaches one. Strings and comments count too: a refusal too many, never a wrong answer.
+   */
+  static boolean usesUnseenMacro(@NotNull CharSequence s, @NotNull Table t) {
+    return anyMacroName(s, name -> !ErlangMacroExpander.PREDEFINED.contains(name) && (!t.names.contains(name) || t.usesUnseen.contains(name)));
+  }
+
+  /** Q2: the piece and the pieces after it up to the end of its source form (the recovery may split a form). */
+  private static boolean sourceFormUsesUnseenMacro(@NotNull PsiElement form, @NotNull Table t) {
+    for (PsiElement e = form; e != null; e = PsiTreeUtil.skipWhitespacesAndCommentsForward(e)) {
+      if (usesUnseenMacro(e.getNode().getChars(), t)) return true;
+      if (endsSourceForm(e)) return false;
+    }
+    return false;
+  }
+
+  private static boolean anyMacroName(@NotNull CharSequence s, @NotNull java.util.function.Predicate<String> test) {
     int n = s.length();
     for (int i = 0; i < n; i++) {
       if (s.charAt(i) != '?') continue;
@@ -1886,7 +1939,7 @@ public final class ErlangMacroLayer {
         if (k == j) continue;
         name = s.subSequence(j, k).toString();
       }
-      if (names.contains(name)) return true;
+      if (test.test(name)) return true;
     }
     return false;
   }
@@ -1898,6 +1951,8 @@ public final class ErlangMacroLayer {
     Boolean b = t.formUse.get(at);
     if (b == null) {
       b = formUsesNames(t.names, form);
+      // Q2: a form that uses a macro the file cannot see: master's behaviour (the macro may be in a missing header)
+      if (b && t.missingInclude && sourceFormUsesUnseenMacro(form, t)) b = false;
       t.formUse.put(at, b);
     }
     return b;
