@@ -1,0 +1,16 @@
+# answers:25 src/errors/err_undefined.erl arm=master layer=false
+## highlights
+## references
+215 PsiMultiReference -> []
+227 PsiMultiReference -> []
+257 ErlangMacrosReferenceImpl -> [null]
+263 PsiMultiReference -> []
+287 ErlangMacrosReferenceImpl -> [src/errors/err_undefined.erl:257:ErlangMacrosDefinitionImpl]
+287 ErlangMacrosReferenceImpl -> [src/errors/err_undefined.erl:257:ErlangMacrosDefinitionImpl]
+## completion
+258 [FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE_STRING]
+257 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, begin, case, catch, fun, if, maybe, receive, try]
+251 [define, export_record, ifdef, ifndef, import_record, include, include_lib, module, on_load, record, undef]
+206 [behavior, behaviour, callback, define, else, export, export_record, export_type, if, ifdef, ifndef, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec, type, undef]
+261 []
+293 []

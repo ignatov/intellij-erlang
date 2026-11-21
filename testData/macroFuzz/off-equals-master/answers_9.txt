@@ -1,0 +1,18 @@
+# answers:9 src/errors/err_arity.erl arm=master layer=false
+## highlights
+## references
+277 PsiMultiReference -> []
+289 PsiMultiReference -> []
+319 ErlangMacrosReferenceImpl -> [null]
+322 ErlangVariableReferenceImpl -> []
+326 ErlangVariableReferenceImpl -> [src/errors/err_arity.erl:322:ErlangQVarImpl]
+340 ErlangFunctionReferenceImpl -> []
+341 ErlangMacrosReferenceImpl -> [src/errors/err_arity.erl:319:ErlangMacrosDefinitionImpl]
+341 ErlangMacrosReferenceImpl -> [src/errors/err_arity.erl:319:ErlangMacrosDefinitionImpl]
+## completion
+326 [X, begin, case, catch, fun, if, maybe, receive, try]
+327 [<single or none>]
+313 [define, export_record, ifdef, ifndef, import_record, include, include_lib, module, on_load, record, undef]
+288 [begin, case, catch, fun, if, maybe, receive, try]
+324 [X, begin, case, catch, fun, if, maybe, receive, try]
+323 [<single or none>]

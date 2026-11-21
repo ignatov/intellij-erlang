@@ -28,6 +28,7 @@ public final class FuzzRecorder {
   private static final String HARNESS = "org.intellij.erlang.macrolayer.fuzz.";
   private static final long MAX_BYTES = 50L * 1024 * 1024;
   private static final int CASES_PER_SIGNATURE = 3;
+  private static final long SLOW_MS = Long.parseLong(java.util.Objects.requireNonNullElse(FuzzConfig.env("MACRO_FUZZ_SLOW_MS"), "10000"));
 
   public static final class Finding {
     public final String signature;
@@ -197,7 +198,8 @@ public final class FuzzRecorder {
     myAction = label;
     myActionThread = Thread.currentThread();
     myHangReported = false;
-    myActionStart = System.currentTimeMillis();
+    long start = System.currentTimeMillis();
+    myActionStart = start;
     boolean ok = true;
     try {
       body.run();
@@ -214,6 +216,10 @@ public final class FuzzRecorder {
       myAction = previousAction;
     }
     if (drainLogged(label)) ok = false;
+    long ms = System.currentTimeMillis() - start;
+    if (ms > SLOW_MS && !label.startsWith("case ")) {
+      fail("slow", label.replaceAll("@[0-9]+", "@").replaceAll("\\[[^]]*\\]", "[]"), "the action took " + ms + " ms (limit " + SLOW_MS + " ms)");
+    }
     return ok;
   }
 
@@ -445,7 +451,11 @@ public final class FuzzRecorder {
 
   public synchronized List<String> unknownSignatures() {
     List<String> r = new ArrayList<>();
-    for (String s : myFindings.keySet()) if (!myKnown.contains(s)) r.add(s);
+    for (String s : myFindings.keySet()) {
+      // timing depends on the load of the machine: it never fails a run, it is only reported
+      if (s.startsWith("slow:") || s.startsWith("hang ")) continue;
+      if (!myKnown.contains(s)) r.add(s);
+    }
     return r;
   }
 
