@@ -151,6 +151,10 @@ public final class ErlangMacroExpander {
     "FILE", "FUNCTION_NAME", "FUNCTION_ARITY", "LINE", "MODULE", "MODULE_STRING", "BASE_MODULE", "BASE_MODULE_STRING",
     "MACHINE", "BEAM", "OTP_RELEASE", "FEATURE_AVAILABLE", "FEATURE_ENABLED");
 
+  /** Predefined macros that {@code -ifdef} sees as defined everywhere (OTP 29.1). */
+  static final Set<String> PREDEFINED_DEFINED = Set.of("FILE", "LINE", "MACHINE", "BEAM", "OTP_RELEASE", "FEATURE_AVAILABLE",
+                                                       "FEATURE_ENABLED");
+
   /** What happened to a macro use in the text (outside {@code -define} bodies). */
   public enum Outcome {
     SUBSTITUTED, PREDEFINED, NOT_IN_FILE, AMBIGUOUS, ARITY_MISMATCH, CONDITIONAL,
@@ -892,15 +896,19 @@ public final class ErlangMacroExpander {
   }
 
   /**
-   * A branch of a conditional directive. Conditions are not evaluated. A definition made inside a branch is visible
-   * only to uses inside the same branch, except in an {@code -ifndef(N)} branch that itself defines N (an include
-   * guard or a default value): such a branch is "transparent".
+   * A branch of a conditional directive. A definition made inside a branch is visible only to uses inside the same
+   * branch, except in an {@code -ifndef(N)} branch that itself defines N (an include guard or a default value): such a
+   * branch is "transparent". The condition of {@code -ifdef(N)}/{@code -ifndef(N)} is known when N is visibly
+   * defined, or is a predefined macro whose definedness epp knows: the branch is then {@link #TRUE} (as transparent)
+   * or {@link #FALSE} (dead: what it defines is visible only inside it, its {@code -undef} and includes do nothing).
    */
   static final class Branch {
+    static final int UNKNOWN = 0, TRUE = 1, FALSE = -1;
     final String attribute;
     final String condition;
     final Branch parent;
     boolean transparent;
+    int state = UNKNOWN;
     /** Round 6 (next): the branch before this {@code -elif}/{@code -else} in the same conditional. */
     Branch previous;
     /** Round 6 (next): the definitions made directly in this branch. */
@@ -1039,6 +1047,8 @@ public final class ErlangMacroExpander {
         Form form = new Form(b.start[sig[formStart]], b.end[sig[formEnd]]);
         String attribute = attributeName(formStart, formEnd);
         boolean directive = attribute != null && DIRECTIVES.contains(attribute);
+        if ("module".equals(attribute)) moduleSeen = true;
+        else if ("extends".equals(attribute)) extendsSeen = true;
         List<Use> uses = new ArrayList<>();
         boolean ambiguous = false, refused = false, rejected = false, unknown = false;
         nestedLeft = false;
@@ -1124,14 +1134,33 @@ public final class ErlangMacroExpander {
 
     /** One directive of the file (owner null) or of a replayed header. */
     void directive(String attribute, List<Tok> toks, @Nullable HeaderSummary owner) {
+      acyclic.clear();
       switch (attribute) {
         case "define" -> define(toks, owner != null);
         case "undef" -> undef(toks);
-        case "ifdef", "ifndef", "if" -> branch = new Branch(attribute, toks.size() > 3 ? toks.get(3).text() : "", branch);
+        case "ifdef", "ifndef", "if" -> {
+          Name n = "if".equals(attribute) ? null : conditionName(toks);
+          Branch next = new Branch(attribute, n == null ? "" : n.name, branch);
+          if (dead(branch)) next.state = Branch.FALSE;
+          else if (n != null) {
+            int defined = definedness(n.name);
+            next.state = "ifdef".equals(attribute) ? defined : -defined;
+          }
+          branch = next;
+        }
         case "elif", "else" -> {
           if (branch != null) {
             Branch next = new Branch(attribute, "", branch.parent);
             next.previous = branch;
+            if (dead(branch.parent)) next.state = Branch.FALSE;
+            else {
+              boolean anyTrue = false, allFalse = true;
+              for (Branch x = branch; x != null; x = x.previous) {
+                anyTrue |= x.state == Branch.TRUE;
+                allFalse &= x.state == Branch.FALSE;
+              }
+              next.state = anyTrue ? Branch.FALSE : allFalse && "else".equals(attribute) ? Branch.TRUE : Branch.UNKNOWN;
+            }
             branch = next;
           }
         }
@@ -1142,7 +1171,7 @@ public final class ErlangMacroExpander {
           }
         }
         case "include", "include_lib" -> {
-          if (resolver == null || owner != null) return; // a header's own includes are replayed by replay()
+          if (resolver == null || owner != null || dead(branch)) return; // a header's own includes are replayed by replay()
           HeaderSummary h = resolver.resolve(null, attribute, new Directive(attribute, toks).includeString());
           if (h == null) incompleteIncludes = true;
           replay(h);
@@ -1168,6 +1197,7 @@ public final class ErlangMacroExpander {
         for (Directive d : h.directives) {
           if ((++replayed & 255) == 0) ProgressManager.checkCanceled();
           if (isInclude(d.attribute)) {
+            if (dead(branch)) continue;
             HeaderSummary child = resolver.resolve(h, d.attribute, d.includeString());
             if (child == null) incompleteIncludes = true;
             replay(child);
@@ -1183,6 +1213,40 @@ public final class ErlangMacroExpander {
 
     /** Header directives replayed so far. */
     int replayed;
+    /** A {@code -module} and an {@code -extends} attribute came before (epp then defines MODULE, BASE_MODULE). */
+    boolean moduleSeen, extendsSeen;
+
+    /** The branch is known not to be taken, or lies inside one that is. */
+    static boolean dead(@Nullable Branch b) {
+      for (Branch x = b; x != null; x = x.parent) if (x.state == Branch.FALSE) return true;
+      return false;
+    }
+
+    /** Every branch around this point is known to be taken (or is a transparent guard). */
+    boolean certainPath() {
+      for (Branch x = branch; x != null; x = x.parent) if (!x.transparent && x.state != Branch.TRUE) return false;
+      return true;
+    }
+
+    /** Whether epp sees the macro as defined here: {@link Branch#TRUE}, {@link Branch#FALSE} or unknown (a -D flag). */
+    int definedness(String name) {
+      if (PREDEFINED_DEFINED.contains(name)) return Branch.TRUE;
+      switch (name) {
+        case "FUNCTION_NAME", "FUNCTION_ARITY" -> {
+          return Branch.FALSE;
+        }
+        case "MODULE", "MODULE_STRING" -> {
+          return moduleSeen ? Branch.TRUE : Branch.FALSE;
+        }
+        case "BASE_MODULE", "BASE_MODULE_STRING" -> {
+          return extendsSeen ? Branch.TRUE : Branch.FALSE;
+        }
+        default -> {
+        }
+      }
+      for (Def d : defs.getOrDefault(name, List.of())) if (visible(d)) return Branch.TRUE;
+      return Branch.UNKNOWN;
+    }
 
     /**
      * The header is guarded ({@code -ifndef(G).} first, its {@code -endif} last) and G is visible: epp skips its whole
@@ -1205,7 +1269,7 @@ public final class ErlangMacroExpander {
 
     boolean visible(Def d) {
       for (Branch x = d.branch; x != null; x = x.parent) {
-        if (x.transparent) continue;
+        if (x.transparent || x.state == Branch.TRUE) continue;
         boolean enclosing = false;
         for (Branch y = branch; y != null; y = y.parent) {
           if (y == x) {
@@ -1274,7 +1338,10 @@ public final class ErlangMacroExpander {
       def.branch = branch;
       def.fromHeader = fromHeader;
       // Q2: not after an include that does not resolve: the missing header may define the name, and then epp skips this
-      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition) && !incompleteIncludes) branch.transparent = true;
+      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition) && !incompleteIncludes &&
+          branch.state == Branch.UNKNOWN && !dead(branch)) {
+        branch.transparent = true;
+      }
       if (branch != null) branch.defined.add(def);
       defs.computeIfAbsent(name, k -> new ArrayList<>()).add(def);
     }
@@ -1282,14 +1349,16 @@ public final class ErlangMacroExpander {
     /**
      * Round 6 (next), item 4: a conditional closed by {@code -else} covers every configuration. When each of its
      * branches defines a name with the same arity, one definition is made visible after {@code -endif}: the common one
-     * when all bodies are the same (epp gives that text whatever the condition), else the one of the active branch
-     * when {@code -ifdef(X)}/{@code -ifndef(X)} can be decided (X predefined or defined earlier outside any branch;
-     * a name the file does not define may be a build flag, so that branch stays unknown and nothing is made visible).
+     * when all bodies are the same (epp gives that text whatever the condition). A conditional whose branches are
+     * known ({@link Branch#state}) needs nothing: the definitions of the taken branch are visible already; a name the
+     * file does not define may be a build flag, so its branches stay unknown.
      */
     void promoteAlternatives(Branch last) {
       if (!"else".equals(last.attribute)) return;
       List<Branch> chain = new ArrayList<>();
       for (Branch x = last; x != null; x = x.previous) chain.add(0, x);
+      // a known branch: its definitions are visible (or dead) already
+      for (Branch x : chain) if (x.state != Branch.UNKNOWN || dead(x)) return;
       Map<String, Def[]> per = new LinkedHashMap<>();
       for (int i = 0; i < chain.size(); i++) {
         for (Def d : chain.get(i).defined) per.computeIfAbsent(d.name + "/" + d.arity, k -> new Def[chain.size()])[i] = d;
@@ -1300,9 +1369,8 @@ public final class ErlangMacroExpander {
           if (d == null) all = false;
           else if (!d.key.equals(alternatives[0] == null ? null : alternatives[0].key)) same = false;
         }
-        if (!all) continue;
-        Def chosen = same ? alternatives[0] : activeAlternative(chain, alternatives);
-        if (chosen == null) continue;
+        if (!all || !same) continue;
+        Def chosen = alternatives[0];
         Def promoted = new Def(chosen.name, chosen.arity, chosen.params, chosen.body, chosen.fragment);
         promoted.branch = last.parent;
         promoted.fromHeader = chosen.fromHeader;
@@ -1311,20 +1379,10 @@ public final class ErlangMacroExpander {
       }
     }
 
-    private @Nullable Def activeAlternative(List<Branch> chain, Def[] alternatives) {
-      if (chain.size() != 2) return null;
-      Branch first = chain.get(0);
-      boolean ifdef = "ifdef".equals(first.attribute);
-      if (!ifdef && !"ifndef".equals(first.attribute)) return null;
-      boolean defined = PREDEFINED.contains(first.condition);
-      for (Def d : defs.getOrDefault(first.condition, List.of())) if (d.branch == null) defined = true;
-      if (!defined) return null;
-      return ifdef ? alternatives[0] : alternatives[1];
-    }
-
+    /** epp's -undef, where every branch around it is taken (or a transparent guard); else nothing is known. */
     void undef(List<Tok> t) {
-      if (branch != null || type(t, 2) != ERL_PAR_LEFT) return;
-      Name n = tokName(t, 3);
+      if (!certainPath()) return;
+      Name n = conditionName(t);
       if (n != null) defs.remove(n.name);
     }
 
@@ -1389,7 +1447,7 @@ public final class ErlangMacroExpander {
 
     /** No definition of the name, visible or not, takes this many arguments: epp says "argument mismatch". */
     boolean noDefinitionWithArity(String name, int arity) {
-      for (Def d : defs.getOrDefault(name, List.of())) if (d.arity == arity) return false;
+      for (Def d : defs.getOrDefault(name, List.of())) if (d.arity == arity && !dead(d.branch)) return false;
       return true;
     }
 
