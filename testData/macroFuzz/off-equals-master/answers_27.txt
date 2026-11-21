@@ -1,0 +1,15 @@
+# answers:27 src/errors/err_undefined_fragment.erl arm=master layer=false
+## highlights
+360-361 ERROR(400) '.' unexpected
+## references
+306 PsiMultiReference -> []
+318 PsiMultiReference -> []
+349 PsiMultiReference -> []
+374 PsiMultiReference -> []
+## completion
+363 []
+352 [err_par_alone:foo, err_undefined_fragment:foo, foo]
+353 [CamelCase, erl_eval, erlang, err_arity, err_bad_argument, err_circular, err_form_in_expr, err_header_macro, err_map_field, err_par_alone, err_redefine, err_undefined, err_undefined_fragment, err_unterminated, eunit, file, gap_function_twice, gap_module_prefix, gap_par_with_args, gap_stringify_non_param, gap_unbound_after_expansion, io, io_lib, io_lib_format, lists, m_basics, m_chain, m_counter_server, m_counter_server_tests, m_debug_flag, m_forms, m_fragments, m_if_release, m_ifdef, m_include_dir, m_made_by_macro, m_mylib_user, m_near, m_otp_assert, m_otp_eunit, m_otp_file, m_otp_logger, m_otp_merl, m_otp_ms, m_otp_public_key, m_otp_qlc, m_otp_xmerl, m_positions, m_redefine, m_scan, m_shared_a, m_shared_b, main, mylib]
+64 []
+296 []
+378 []

@@ -29,6 +29,10 @@ import java.util.concurrent.Future;
 public abstract class MacroFuzzTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
   protected FuzzRecorder rec;
 
+  public com.intellij.testFramework.fixtures.CodeInsightTestFixture fixture() {
+    return myFixture;
+  }
+
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
     return new DefaultLightProjectDescriptor() {

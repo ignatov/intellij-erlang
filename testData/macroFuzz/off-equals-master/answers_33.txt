@@ -1,0 +1,20 @@
+# answers:33 src/gaps/gap_module_prefix.erl arm=master layer=false
+## highlights
+541-542 WARNING(300) Unused variable 'L'
+560-561 ERROR(400) 'reverse' unexpected
+561-568 WARNING(300) Unused function 'reverse/1'
+569-570 WARNING(300) Unused variable 'L'
+571-572 ERROR(400) '->' or when expected, got '.'
+## references
+507 ErlangFunctionReferenceImpl -> []
+525 ErlangMacrosReferenceImpl -> [null]
+541 ErlangVariableReferenceImpl -> []
+549 PsiMultiReference -> []
+569 ErlangVariableReferenceImpl -> []
+## completion
+534 []
+530 []
+517 []
+560 []
+554 [lists, lists:all, lists:any, lists:append, lists:concat, lists:delete, lists:dropwhile, lists:duplicate, lists:filter, lists:flatlength, lists:flatmap, lists:flatten, lists:foldl, lists:foldr, lists:foreach, lists:keydelete, lists:keymap, lists:keymerge, lists:keyreplace, lists:keysort, lists:keystore, lists:keytake, lists:last, lists:map, lists:mapfoldl, lists:mapfoldr, lists:max, lists:merge, lists:merge3, lists:min, lists:nth, lists:nthtail, lists:partition, lists:prefix, lists:reverse, lists:rkeymerge, lists:rmerge, lists:rmerge3, lists:rukeymerge, lists:rumerge, lists:rumerge3, lists:seq, lists:sort, lists:split, lists:splitwith, lists:sublist, lists:subtract, lists:suffix, lists:sum, lists:takewhile, lists:ukeymerge, lists:ukeysort, lists:umerge, lists:umerge3, lists:unzip, lists:unzip3, lists:usort, lists:zf, lists:zip, lists:zip3, lists:zipwith, lists:zipwith3]
+526 [FUNCTION_ARITY, FUNCTION_NAME, MACHINE]
