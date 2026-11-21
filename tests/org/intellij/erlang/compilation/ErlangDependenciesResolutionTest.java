@@ -115,6 +115,21 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertSameErlangFiles(moduleBuildOrder, "src_parse_transform", "test_parse_transform", "test");
   }
 
+  public void testLargeModuleDoesNotBreakBuildOrder() throws Exception {
+    // A module above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
+    String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";
+    StringBuilder text = new StringBuilder("-module(big).\n-export([f/0]).\n\nf() -> ok.\n");
+    String commentLine = "%" + "x".repeat(99) + "\n";
+    while (text.length() < 3_000_000) text.append(commentLine);
+    File bigFile = new File(moduleSourceDirPath, "big.erl");
+    FileUtil.writeToFile(bigFile, text.toString());
+    VfsUtil.markDirtyAndRefresh(false, true, true, new File(moduleSourceDirPath));
+
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), path -> FileUtil.getNameWithoutExtension(new File(path)));
+    assertSameElements(actualModules, "big", "module1");
+  }
+
   private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleBuildOrder,
                                             String... expectedModules) {
     List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), path -> FileUtil.getNameWithoutExtension(new File(path)));
