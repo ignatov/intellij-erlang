@@ -2,8 +2,11 @@ package org.intellij.erlang.macrolayer;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.WrappedProgressIndicator;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -508,9 +511,19 @@ public final class ErlangMacroLayer {
    */
   static final class TextTracker implements ModificationTracker {
     private final AtomicLong myVersion = new AtomicLong();
+    /** Round 5: System.nanoTime() of the last change; valid when {@link #myChanged}. */
+    private volatile long myLastChange;
+    private volatile boolean myChanged;
 
     void changed() {
+      myLastChange = System.nanoTime();
+      myChanged = true;
       myVersion.incrementAndGet();
+    }
+
+    /** The file changed less than the given time ago. */
+    boolean changedWithin(long millis) {
+      return myChanged && System.nanoTime() - myLastChange < millis * 1_000_000L;
     }
 
     @Override
@@ -844,6 +857,15 @@ public final class ErlangMacroLayer {
     while (true) {
       Copy copy = holder.get();
       if (copy != null) return copy;
+      Build running = holder.building.get();
+      if (running == null) {
+        String refusal = buildRefusal(file);
+        if (refusal != null) {
+          ErlangMacroLayerStats.phase("build-skipped:" + refusal, file.getName(), 0);
+          ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, refusal, trigger);
+          return null;
+        }
+      }
       Build mine = new Build(Thread.currentThread(), new CompletableFuture<>());
       Build other = holder.building.compareAndExchange(null, mine);
       if (other == null) {
@@ -906,6 +928,47 @@ public final class ErlangMacroLayer {
         return null; // not completed exceptionally; a failed build completes with null
       }
     }
+  }
+
+  /**
+   * Round 5, fix 2: after an edit of a file, only its highlighting starts a copy build for {@link #quietMillis()}; other
+   * callers (the target-element search, {@code isReferenceTo} of the identifier highlighting, ... which the next key
+   * press cancels) use a copy that is there or being built, else they get master's answer. Highlighting is a caller
+   * under the daemon's progress indicator (also through the wrappers of the inspection threads).
+   */
+  private static @Nullable String buildRefusal(@NotNull PsiFile file) {
+    if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
+    if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return null;
+    TextTracker tt = textTrackerIfAny(file);
+    long quiet = quietMillis();
+    if (tt != null && quiet > 0 && tt.changedWithin(quiet)) return "typing";
+    return null;
+  }
+
+  static boolean isHighlighting(@Nullable ProgressIndicator indicator) {
+    ProgressIndicator p = indicator;
+    for (int depth = 0; p != null && depth < 16; depth++) {
+      if (p instanceof DaemonProgressIndicator) return true;
+      p = p instanceof WrappedProgressIndicator w ? w.getOriginalProgressIndicator() : null;
+    }
+    return false;
+  }
+
+  /** Round 5: {@code erlang.macro.layer.quiet} / {@code ERLANG_MACRO_LAYER_QUIET}, ms, default 1,000. */
+  private static final int QUIET_MS = readInt("erlang.macro.layer.quiet", "ERLANG_MACRO_LAYER_QUIET", 1000);
+  private static volatile @Nullable Integer ourTestQuiet;
+
+  static long quietMillis() {
+    Integer q = ourTestQuiet;
+    return q != null ? q : QUIET_MS;
+  }
+
+  /** Sets the quiet time after an edit during which only highlighting builds the copy (0: any caller builds). */
+  @TestOnly
+  public static void setQuietMillisForTests(int millis, @NotNull Disposable parent) {
+    Integer previous = ourTestQuiet;
+    ourTestQuiet = millis;
+    Disposer.register(parent, () -> ourTestQuiet = previous);
   }
 
   /** The cached copy of a real file; built lazily from the PSI text. */

@@ -4,6 +4,8 @@ import com.intellij.codeInspection.InspectionProfileEntry;
 import com.intellij.codeInspection.LocalInspectionEP;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -82,6 +84,25 @@ final class LayerTestSupport {
   /** Runs in a pooled thread inside a read action (like highlighting and navigation in the IDE). */
   static <T> T inBackground(Callable<T> c) throws Exception {
     return ApplicationManager.getApplication().executeOnPooledThread(() -> ReadAction.compute(c::call)).get();
+  }
+
+  /**
+   * Round 5: runs in a pooled thread inside a read action under a progress indicator that is not the daemon's (like the
+   * target-element search or find usages in the IDE).
+   */
+  static <T> T inBackgroundWithIndicator(Callable<T> c) throws Exception {
+    return ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ProgressManager.getInstance().runProcess(() -> ReadAction.compute(() -> {
+        try {
+          return c.call();
+        }
+        catch (RuntimeException e) {
+          throw e;
+        }
+        catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }), new EmptyProgressIndicator())).get();
   }
 
   /** Resolves every reference of the file in a background read action; returns the number resolved. */

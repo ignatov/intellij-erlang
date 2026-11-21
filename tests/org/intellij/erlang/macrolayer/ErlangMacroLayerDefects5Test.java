@@ -160,6 +160,8 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
    * must not keep answers that point to the replaced elements, and an unrelated move must still rebuild nothing.
    */
   public void testTextBackToAnEarlierTextGivesValidAnswers() throws Exception {
+    // round 5: the question comes after the user paused (right after an edit only highlighting builds the copy)
+    ErlangMacroLayer.setQuietMillisForTests(0, getTestRootDisposable());
     PsiFile a = myFixture.addFileToProject("d1b/a.erl", "-module(a).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Q), Q.\n");
     highlight(a);
     assertEquals("ErlangQVarImpl@/src/d1b/a.erl", resolved(a, "Q.\n"));
