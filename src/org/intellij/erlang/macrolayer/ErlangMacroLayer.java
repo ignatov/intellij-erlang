@@ -1855,10 +1855,32 @@ public final class ErlangMacroLayer {
     Copy copy = getCopy(file, "rename-target");
     if (copy == null) {
       Table t = file.getUserData(TABLE_KEY) == null ? null : table(file);
-      if (t != null && (t.refusal != null || !anyFormNeedsCopy(file, t))) return element;
+      if (t != null && (t.refusal != null || !anyFormNeedsCopy(file, t)) || !mayMakeAName(leaf)) return element;
       return null;
     }
     return copy.madeNameKinds().containsKey(leaf.getTextRange()) ? leaf : element;
+  }
+
+  /**
+   * Round 6: the token may be a name that an expansion makes: an argument of a top-level form that starts with a macro
+   * use, or a token of a -define body that can make a top-level form (it starts with {@code -} or has a {@code ->}) or
+   * that uses another macro. A token of any other body (a field fragment such as {@code id :: atom()}, a constant) is
+   * renamed by master's path, which resolves it itself.
+   */
+  private static boolean mayMakeAName(@NotNull PsiElement leaf) {
+    ErlangMacrosBody body = PsiTreeUtil.getParentOfType(leaf, ErlangMacrosBody.class);
+    if (body == null) return true; // a top-level macro form
+    PsiElement first = PsiTreeUtil.firstChild(body);
+    while (first != null && (first instanceof PsiWhiteSpace || first instanceof PsiComment || first.getTextLength() == 0)) {
+      first = PsiTreeUtil.nextLeaf(first);
+    }
+    if (first != null && "-".equals(first.getText())) return true;
+    int end = body.getTextRange().getEndOffset();
+    for (PsiElement l = PsiTreeUtil.firstChild(body); l != null && l.getTextRange().getStartOffset() < end; l = PsiTreeUtil.nextLeaf(l)) {
+      String t = l.getText();
+      if ("->".equals(t) || "?".equals(t)) return true;
+    }
+    return false;
   }
 
   /** Round 6: a variable of a header macro body that is not a parameter of its macro: the uses in the includers see it. */
