@@ -478,6 +478,11 @@ public final class ErlangMacroLayer {
     final Set<String> nonPlain = new HashSet<>();
     /** Round 5: the variables of macro bodies that are not parameters of their macro. */
     final Set<String> freeBodyVars = new HashSet<>();
+    /** Round 6: per visible macro, the free variables of all its definitions, and the macros those bodies use. */
+    final Map<String, Set<String>> macroFreeVars = new HashMap<>();
+    final Map<String, Set<String>> macroNestedUses = new HashMap<>();
+    /** Round 6: per form, the free variables of the macros it uses ({@link #formFreeBodyVars}). */
+    final ConcurrentHashMap<Integer, Set<String>> formFreeVars = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formUse = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formNeedsCopy = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formError = new ConcurrentHashMap<>();
@@ -877,6 +882,8 @@ public final class ErlangMacroLayer {
       }
       for (ErlangMacroExpander.DefineShape shape : list) {
         t.freeBodyVars.addAll(shape.freeVars());
+        t.macroFreeVars.computeIfAbsent(name, k -> new HashSet<>()).addAll(shape.freeVars());
+        t.macroNestedUses.computeIfAbsent(name, k -> new HashSet<>()).addAll(shape.nestedUses());
         if (!shape.plainBody()) t.nonPlain.add(name);
       }
     }
@@ -1619,6 +1626,54 @@ public final class ErlangMacroLayer {
     return b;
   }
 
+  /**
+   * Round 6: the free variables (not parameters) of every definition of every macro that the form uses, directly or
+   * through the macros those bodies use. Only these variables can occur in the form's expansion besides the form's
+   * own tokens. A superset: every {@code ?NAME} of the form's text counts, strings and comments too.
+   */
+  private static @NotNull Set<String> formFreeBodyVars(@NotNull Table t, @NotNull PsiElement form) {
+    return t.formFreeVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
+      Set<String> r = new HashSet<>();
+      ArrayDeque<String> queue = new ArrayDeque<>(macroNamesIn(form.getNode().getChars(), t.names));
+      Set<String> seen = new HashSet<>(queue);
+      while (!queue.isEmpty()) {
+        String m = queue.poll();
+        r.addAll(t.macroFreeVars.getOrDefault(m, Set.of()));
+        for (String n : t.macroNestedUses.getOrDefault(m, Set.of())) if (t.names.contains(n) && seen.add(n)) queue.add(n);
+      }
+      return r;
+    });
+  }
+
+  /** The names of the text's uses {@code ?NAME} that are in {@code names} (as {@link #usesKnownMacro} finds them). */
+  static @NotNull Set<String> macroNamesIn(@NotNull CharSequence s, @NotNull Set<String> names) {
+    Set<String> r = new HashSet<>();
+    int n = s.length();
+    for (int i = 0; i < n; i++) {
+      if (s.charAt(i) != '?') continue;
+      int j = i + 1;
+      if (j < n && s.charAt(j) == '?') {
+        i = j;
+        continue;
+      }
+      while (j < n && Character.isWhitespace(s.charAt(j))) j++;
+      String name;
+      if (j < n && s.charAt(j) == '\'') {
+        int k = j + 1;
+        while (k < n && s.charAt(k) != '\'') k++;
+        name = s.subSequence(j + 1, Math.min(k, n)).toString();
+      }
+      else {
+        int k = j;
+        while (k < n && (Character.isLetterOrDigit(s.charAt(k)) || s.charAt(k) == '_' || s.charAt(k) == '@')) k++;
+        if (k == j) continue;
+        name = s.subSequence(j, k).toString();
+      }
+      if (names.contains(name)) r.add(name);
+    }
+    return r;
+  }
+
   /** Names of the variables inside macro calls (their arguments) of the form. */
   private static @NotNull Set<String> argumentVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
@@ -2290,10 +2345,11 @@ public final class ErlangMacroLayer {
     }
     // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form;
     // round 5 (narrow gate): only a free variable of a body (not a parameter), and only the arguments of a use that
-    // needs substitution (a plain use puts its arguments in value slots: their bindings are master's)
+    // needs substitution (a plain use puts its arguments in value slots: their bindings are master's); round 6: only a
+    // free variable of a body of a macro that this form uses (directly or through the macros of that body)
     boolean wide = isGateWide();
     String name = element.getText();
-    boolean body = wide ? t.bodyVars.contains(name) : t.freeBodyVars.contains(name);
+    boolean body = wide ? t.bodyVars.contains(name) : formFreeBodyVars(t, form).contains(name);
     boolean arg = !body && (wide ? argumentVars(t, form) : substitutedArgumentVars(t, form)).contains(name);
     boolean err = !body && !arg && formHasError(t, form);
     if (!body && !arg && !err) {
