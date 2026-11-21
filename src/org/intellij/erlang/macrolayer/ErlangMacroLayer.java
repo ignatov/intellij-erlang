@@ -985,7 +985,7 @@ public final class ErlangMacroLayer {
       if (running == null) {
         String refusal = buildRefusal(file);
         if (refusal == null && !isEdtBuildAllowed() && !isHighlighting(ProgressManager.getGlobalProgressIndicator()) &&
-            onlyBrokenFormsNeedCopy(file, table)) {
+            onlyBrokenFormsNeedCopy(file, table) && !isExplicitUserAction()) {
           // round 5: a form broken while the user types, with plain macros only: only highlighting builds for it
           refusal = "broken-plain";
         }
@@ -1070,9 +1070,33 @@ public final class ErlangMacroLayer {
     if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return null;
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
-    if (tt != null && quiet > 0 && tt.changedWithin(quiet)) return "typing";
-    if (quiet > 0 && isBeingTyped(file, quiet)) return "typing";
+    if (tt != null && quiet > 0 && tt.changedWithin(quiet) || quiet > 0 && isBeingTyped(file, quiet)) {
+      return isExplicitUserAction() ? null : "typing";
+    }
     return null;
+  }
+
+  /** Caller classes of a search or navigation that the user started: rename and other refactorings, find usages, go to. */
+  private static final String[] EXPLICIT_CALLERS = {
+    "com.intellij.refactoring.", "com.intellij.find.", "com.intellij.codeInsight.navigation.actions."};
+  /** Caller classes of passive queries: the identifier highlighting at the caret, highlight usages, ctrl-hover, hints. */
+  private static final String[] PASSIVE_CALLERS = {"IdentifierHighlight", "HighlightUsages", "CtrlMouse", "com.intellij.codeInsight.hint."};
+
+  /**
+   * Round 5 follow-up: the caller is a search or a navigation the user started (rename, find usages, go to declaration),
+   * told by the classes on the thread's stack: one of {@link #EXPLICIT_CALLERS} and none of {@link #PASSIVE_CALLERS}.
+   * Such a caller builds the copy and waits for it while the file changes; giving it master's answer would make a
+   * rename edit only part of the code. Asked only when a build would otherwise be refused.
+   */
+  static boolean isExplicitUserAction() {
+    boolean[] explicit = {false};
+    boolean passive = StackWalker.getInstance().walk(frames -> frames.limit(400).anyMatch(f -> {
+      String c = f.getClassName();
+      for (String p : PASSIVE_CALLERS) if (c.contains(p)) return true;
+      if (!explicit[0]) for (String p : EXPLICIT_CALLERS) if (c.startsWith(p)) explicit[0] = true;
+      return false;
+    }));
+    return explicit[0] && !passive;
   }
 
   /**
