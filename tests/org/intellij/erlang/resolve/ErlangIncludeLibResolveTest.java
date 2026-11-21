@@ -39,6 +39,14 @@ public class ErlangIncludeLibResolveTest extends ErlangLightPlatformCodeInsightF
     doTestAppResolveTest("testapp-2.0");
   }
 
+  public void testLatestVersionIsUsedWhenComponentGainsDigit() {
+    myFixture.configureByFiles("testappuser.erl",
+      "testapp-1.9/ebin/testapp.app", "testapp-1.9/include/testapp.hrl",
+      "testapp-1.10/ebin/testapp.app", "testapp-1.10/include/testapp.hrl");
+
+    doTestAppResolveTest("testapp-1.10");
+  }
+
   public void testNoVersionIsUsed() {
     myFixture.configureByFiles("testappuser.erl",
       "testapp-1.0/ebin/testapp.app", "testapp-1.0/include/testapp.hrl",

@@ -22,6 +22,7 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRemoveDuplicateFunctionExportFix;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,9 +38,8 @@ public class ErlangDuplicateFunctionExportInspection extends ErlangInspectionBas
       if (exportFunctions == null) continue;
       List<ErlangExportFunction> list = exportFunctions.getExportFunctionList();
       for (ErlangExportFunction exportFunction : list) {
-        PsiElement integer = exportFunction.getInteger();
-        if (integer == null) continue;
-        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + integer.getText();
+        String s = getSignature(exportFunction);
+        if (s == null) continue;
         if (exported.contains(s)) {
           problemsHolder.registerProblem(exportFunction, "Function " + "'" + s + "' has been already exported.",
             new ErlangRemoveDuplicateFunctionExportFix());
@@ -49,5 +49,13 @@ public class ErlangDuplicateFunctionExportInspection extends ErlangInspectionBas
         }
       }
     }
+  }
+
+  @Nullable
+  public static String getSignature(@NotNull ErlangExportFunction exportFunction) {
+    PsiElement integer = exportFunction.getInteger();
+    if (integer == null) return null;
+    int arity = ErlangPsiImplUtil.getArity(integer);
+    return ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + (arity >= 0 ? arity : integer.getText());
   }
 }

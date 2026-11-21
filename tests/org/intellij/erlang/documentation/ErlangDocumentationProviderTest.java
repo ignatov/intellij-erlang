@@ -17,6 +17,8 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.codeInsight.navigation.CtrlMouseHandler;
+import com.intellij.navigation.ItemPresentation;
+import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -24,10 +26,12 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.usageView.UsageViewTypeLocation;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
@@ -772,6 +776,62 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
         });
       }
     };
+  }
+
+  // #1396: the documentation hover builds the presentation of the target that the reference resolves to
+  public void testPresentationOfBifInFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  public void testPresentationOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  public void testPresentationOfModuleInfoInExport() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([module_<caret>info/0]).
+                               """);
+  }
+
+  public void testPresentationOfBifInSpec() {
+    doTestTargetDescriptions("abs", """
+                               -module(test).
+                               -spec ab<caret>s(integer()) -> integer().
+                               """);
+  }
+
+  public void testDescriptionsOfBifInFunWithArity() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertInstanceOf(element, NavigationItem.class);
+    ItemPresentation presentation = ((NavigationItem) element).getPresentation();
+    assertNotNull(presentation);
+    assertEquals(expectedName, presentation.getPresentableText());
+    assertEquals("function", ElementDescriptionUtil.getElementDescription(element, UsageViewTypeLocation.INSTANCE));
+  }
+
+  private void doTestTargetPresentation(@NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertInstanceOf(element, NavigationItem.class);
+    ItemPresentation presentation = ((NavigationItem) element).getPresentation();
+    assertNotNull(presentation);
+    assertFalse("<unknown>".equals(presentation.getPresentableText()));
   }
 
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {

@@ -113,9 +113,18 @@ public class RebarConfigurationForm {
   static void validateRebarPath(String rebarPath, @Nullable Project project, Consumer<String> consumer) {
     ApplicationManager.getApplication().executeOnPooledThread(
       () -> {
+        // Since JDK 25 the empty path is the current directory, so it must not get to the checks of the file below.
+        if (StringUtil.isEmptyOrSpaces(rebarPath)) {
+          updateUI(consumer, "N/A");
+          return;
+        }
         File rebarFile = new File(rebarPath);
         if (!rebarFile.exists()) {
           updateUI(consumer, "File " + rebarPath + " not found");
+          return;
+        }
+        if (rebarFile.isDirectory()) {
+          updateUI(consumer, "Path " + rebarPath + " is a directory, not a file");
           return;
         }
 

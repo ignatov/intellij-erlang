@@ -1,0 +1,5 @@
+-module(bSeparators).
+-callback on_receive(Data :: term()) -> term().
+-callback ready(Args :: term()) -> ok.
+-callback done(Args :: term()) -> ok.
+-optional_callbacks([{ready, 0_1}, done/0_1]).

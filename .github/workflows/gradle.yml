@@ -173,7 +173,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
-      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml; change the pins together in both files.
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml and scripts/smoke/inputs.sh (the release
+      # smoke); change the pins together in all three.
       env:
         OTP_VERSION: '27.3.4.9'
       run: |
@@ -335,8 +336,9 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
-      # The erlef/otp_builds build of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change
-      # the pins together in all three. The sha256 comes from the list of builds of erlef/otp_builds.
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 comes from the list of builds of
+      # erlef/otp_builds.
       if: runner.os == 'macOS'
       env:
         OTP_VERSION: '27.3.4.9'
@@ -360,9 +362,9 @@ jobs:
         tar -xzf "$archive" -C "$root"
         echo "$root/bin" >> "$GITHUB_PATH"
     - name: Install Erlang/OTP on Windows
-      # The official archive of the same OTP as the compilation-tests job and copilot-setup-steps.yml; change the pins
-      # together in all three. The sha256 is the one GitHub publishes for the release asset; SHA256.txt of the release
-      # does not list the Windows builds.
+      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 is the one GitHub publishes for the
+      # release asset; SHA256.txt of the release does not list the Windows builds.
       if: runner.os == 'Windows'
       env:
         OTP_VERSION: '27.3.4.9'
@@ -444,6 +446,93 @@ jobs:
           jps-plugin/build/reports/tests/testCompilation
           jps-plugin/build/test-results/testCompilation
           .intellijPlatform/sandbox/*/*/log_testCompilation/build-log
+        if-no-files-found: ignore
+
+  release-smoke:
+    # The machine half of the release smoke, scripts/smoke/run.sh, on the archive of the build job: the contents of the
+    # archive, the headless inspections with the archive installed in IntelliJ IDEA 2026.2 and 2026.3 on
+    # testData/smoke/smoke_app and a pinned cowboy, and the parser on pinned real sources against
+    # scripts/smoke/parser-baseline.txt. Pushes to master only. The release gate requires this job by its name; a
+    # skipped run of it is not a pass.
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Test the smoke scripts
+      run: python3 -m unittest discover -s scripts/smoke -p 'test_*.py'
+    - name: Set up JDK 25
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '25'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Download Plugin Artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: intellij-erlang-plugin
+        path: ${{ runner.temp }}/plugin
+    - name: Set up the smoke
+      env:
+        # The build number of the build job, so the archive check expects its version.
+        BUILD_NUMBER: SNAPSHOT-${{ github.run_number }}
+      run: |
+        shopt -s nullglob
+        zips=("$RUNNER_TEMP"/plugin/*.zip)
+        if (( ${#zips[@]} != 1 )); then
+          echo "::error::Expected one plugin archive, found ${#zips[@]}"
+          exit 1
+        fi
+        {
+          echo "SMOKE_ZIP=${zips[0]}"
+          echo "SMOKE_BUILD_NUMBER=$BUILD_NUMBER"
+          echo "SMOKE_WORK=$RUNNER_TEMP/smoke"
+        } >> "$GITHUB_ENV"
+    - name: Cache the pinned inputs
+      # inputs.sh takes the cached Erlang/OTP only with its marker of the pinned version and sha256, and the cached
+      # cowboy only at the pinned commit, and downloads again what does not match. Without a cache entry and without
+      # the hosts the next step fails.
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/smoke/inputs
+        key: release-smoke-inputs-${{ hashFiles('scripts/smoke/inputs.sh') }}
+    - name: Download the pinned inputs
+      run: scripts/smoke/run.sh inputs
+    - name: Check the archive
+      if: ${{ !cancelled() }}
+      run: scripts/smoke/run.sh archive
+    - name: Run the headless inspections
+      if: ${{ !cancelled() }}
+      timeout-minutes: 30
+      run: scripts/smoke/run.sh inspect
+    - name: Check the parser on real sources
+      if: ${{ !cancelled() }}
+      timeout-minutes: 20
+      run: scripts/smoke/run.sh parser
+    - name: Summarize the smoke
+      if: ${{ !cancelled() }}
+      run: scripts/smoke/run.sh report
+    - name: Upload the smoke logs
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-smoke-logs
+        path: |
+          ${{ runner.temp }}/smoke/results
+          ${{ runner.temp }}/smoke/logs
+          ${{ runner.temp }}/smoke/corpus-report.json
+          ${{ runner.temp }}/smoke/insp/*/log
+          ${{ runner.temp }}/smoke/insp/*/res
+          ${{ runner.temp }}/smoke/insp/*/stdout.txt
         if-no-files-found: ignore
 
   nightly:
