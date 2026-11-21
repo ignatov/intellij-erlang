@@ -109,6 +109,17 @@ class WrapperTest(unittest.TestCase):
         self.assertIn('Tests run with coverage: ATest.\nPlanned, but no test of it ran: ErlangBifParser.\n', out)
         self.assertIn('Failed in this run: ATest.\n', out)
 
+    def test_unknown_base_replaces_the_files_of_an_earlier_run(self):
+        for name in ('result.txt', 'result.json', 'plan.json'):
+            self.write('build/coverage-pr/' + name, '{"text": "changed lines: 3 of 3 executed."}')
+        out = self.run_script('no-such-commit')
+        text = "changed lines: not measured, because the base commit 'no-such-commit' is not known."
+        self.assertEqual(text + '\n', out)
+        self.assertEqual(out, self.read('build/coverage-pr/result.txt'))
+        self.assertEqual({'text': text}, json.loads(self.read('build/coverage-pr/result.json')))
+        self.assertFalse(os.path.exists(os.path.join(self.repo, 'build/coverage-pr/plan.json')))
+        self.assertEqual([], self.gradle_calls())
+
 
 if __name__ == '__main__':
     unittest.main()

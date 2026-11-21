@@ -26,8 +26,13 @@ if [[ -n "$clean" ]]; then
   ./gradlew --no-daemon clean > /dev/null 2>&1 || true
 fi
 mkdir -p "$out"
+# The files of an earlier run must not be read as the result of this one.
+rm -f "$out/result.txt" "$out/result.json" "$out/plan.json" "$out/classes.txt" "$out/changes.diff" "$out/gradle.log"
 if [[ -z "$base" ]] || ! git rev-parse --verify --quiet "$base^{commit}" > /dev/null; then
-  echo "changed lines: not measured, because the base commit '${1:-merge base of origin/master}' is not known." | tee "$out/result.txt"
+  text="changed lines: not measured, because the base commit '${1:-merge base of origin/master}' is not known."
+  echo "$text" | tee "$out/result.txt"
+  python3 -c 'import json, sys; json.dump({"text": sys.argv[1]}, open(sys.argv[2], "w", encoding="utf-8"))' \
+    "$text" "$out/result.json"
   exit 0
 fi
 git diff --find-renames -U0 --no-color "$base" HEAD > "$out/changes.diff"
