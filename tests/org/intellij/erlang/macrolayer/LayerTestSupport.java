@@ -17,6 +17,8 @@ import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +35,22 @@ final class LayerTestSupport {
   static String env(String name) {
     String v = System.getenv(name);
     return v == null || v.isBlank() ? null : v.trim();
+  }
+
+  /**
+   * The root of an Erlang/OTP installation for the tests that read a real one (the corpus and sample checks): the
+   * environment variable {@code MACRO_LAYER_OTP_ROOT}, for example {@code $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')}.
+   * Null when it is not set; those tests then do nothing and the SDK is the mock one.
+   */
+  static @Nullable String otpRoot() {
+    String v = System.getenv("MACRO_LAYER_OTP_ROOT");
+    return v == null || v.isEmpty() ? null : v;
+  }
+
+  /** The OTP 29 SDK of {@link #otpRoot()} when set (and {@code active}), else the mock one. */
+  static Sdk otpOrMockSdk(boolean active) {
+    String root = otpRoot();
+    return ErlangSdkType.createMockSdk(active && root != null ? root : "testData/mockSdk-R29/", ErlangSdkRelease.V_29_0);
   }
 
   static LightProjectDescriptor descriptor() {

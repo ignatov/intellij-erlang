@@ -16,16 +16,15 @@ import java.util.stream.Stream;
 import static org.intellij.erlang.macrolayer.LayerTestSupport.*;
 
 /**
- * Round 5: the soundness check of the narrow gate on real files. For each file: the problems (warnings and above) of a
- * highlighting from scratch and every resolve target (single and poly-variant), with the narrow gate and with the wide
- * gate of round 4; any difference is printed. Also the forms that need the copy and the copy builds per gate.
- * Runs only when {@code S5_SOUND} is set: a file of lines "label TAB path" (the round-4 list), or "default" for
+ * The narrow gate gives the answers of the wide gate on real files. For each file: the problems (warnings and above) of
+ * a highlighting from scratch and every resolve target (single and poly-variant), with the narrow and the wide gate;
+ * any difference is printed. Also the forms that need the copy and the copy builds per gate.
+ * Runs only when {@code S5_SOUND} and {@code MACRO_LAYER_OTP_ROOT} ({@link LayerTestSupport#otpRoot()}) are set: a file of lines "label TAB path" (the round-4 list), or "default" for
  * {@code erl_types.erl} and {@code xmerl_scan.erl}. {@code S5_SOUND_EXTRA}: more paths, comma-separated.
  * Output: lines "S5-SOUND ..." and, with {@code S5_SOUND_OUT}, a TSV file.
  */
 public class ErlangMacroLayerSoundnessTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  static final String OTP_ROOT = "/opt/homebrew/Cellar/erlang/29.1/lib/erlang";
-  static final String OTP = OTP_ROOT + "/lib";
+  static final String OTP = LayerTestSupport.otpRoot() + "/lib";
 
   public ErlangMacroLayerSoundnessTest() {
     super(true);
@@ -36,7 +35,7 @@ public class ErlangMacroLayerSoundnessTest extends ErlangLightPlatformCodeInsigh
     return new com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor() {
       @Override
       public com.intellij.openapi.projectRoots.Sdk getSdk() {
-        return org.intellij.erlang.sdk.ErlangSdkType.createMockSdk(OTP_ROOT, org.intellij.erlang.sdk.ErlangSdkRelease.V_29_0);
+        return LayerTestSupport.otpOrMockSdk(System.getenv("S5_SOUND") != null);
       }
     };
   }
@@ -72,7 +71,7 @@ public class ErlangMacroLayerSoundnessTest extends ErlangLightPlatformCodeInsigh
 
   public void testSoundness() throws Exception {
     String list = env("S5_SOUND");
-    if (list == null) return;
+    if (list == null || LayerTestSupport.otpRoot() == null) return;
     List<String> paths = new ArrayList<>();
     if (!list.equals("default")) {
       for (String l : Files.readAllLines(Paths.get(list))) {

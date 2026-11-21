@@ -18,9 +18,9 @@ import java.util.stream.Stream;
 import static org.intellij.erlang.macrolayer.LayerTestSupport.*;
 
 /**
- * Round 6: how many "the expansion of ?M is not valid Erlang" errors the layer shows on a corpus of files that erlc
- * compiles (each one is a false red). Runs only when {@code RED_CORPUS} is set: "otp" (every application of the OTP
- * 29.1 installation) or a directory (a project: every .erl, .hrl, .app.src under it; {@code RED_DEPS}: a directory of
+ * The layer shows no "the expansion of ?M is not valid Erlang" error on a corpus of files that erlc compiles (each one
+ * would be a false red); fails on any. Does nothing unless {@code RED_CORPUS} and {@code MACRO_LAYER_OTP_ROOT} (see
+ * {@link LayerTestSupport#otpRoot()}) are set. {@code RED_CORPUS}: "otp" (every application of that installation) or a directory (a project: every .erl, .hrl, .app.src under it; {@code RED_DEPS}: a directory of
  * dependency checkouts copied too, not counted). Output: lines "RED ..." and, with {@code RED_OUT}, a TSV file of the
  * errors and of the files the layer refuses (with the reason).
  */
@@ -34,8 +34,7 @@ public class ErlangMacroLayerRedCorpusTest extends ErlangLightPlatformCodeInsigh
     return new com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor() {
       @Override
       public com.intellij.openapi.projectRoots.Sdk getSdk() {
-        return org.intellij.erlang.sdk.ErlangSdkType.createMockSdk(ErlangMacroLayerSoundnessTest.OTP_ROOT,
-                                                                   org.intellij.erlang.sdk.ErlangSdkRelease.V_29_0);
+        return LayerTestSupport.otpOrMockSdk(System.getenv("RED_CORPUS") != null);
       }
     };
   }
@@ -86,7 +85,7 @@ public class ErlangMacroLayerRedCorpusTest extends ErlangLightPlatformCodeInsigh
 
   public void testRedCorpus() throws Exception {
     String corpus = env("RED_CORPUS");
-    if (corpus == null) return;
+    if (corpus == null || LayerTestSupport.otpRoot() == null) return;
     setUpProjectSdk();
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     ErlangMacroLayer.setEdtBuildForTests(true, getTestRootDisposable());
@@ -174,5 +173,6 @@ public class ErlangMacroLayerRedCorpusTest extends ErlangLightPlatformCodeInsigh
         " false reds=" + errors + " time=" + (System.nanoTime() - t0) / 1_000_000 + " ms");
     String o = env("RED_OUT");
     if (o != null) Files.write(Paths.get(o), rows, StandardCharsets.UTF_8);
+    assertEquals("false reds (expansion errors on files that erlc compiles); see the RED lines", 0, errors);
   }
 }

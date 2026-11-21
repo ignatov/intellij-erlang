@@ -24,11 +24,12 @@ import java.util.stream.Stream;
  * Round 6 (next), item 1c: what the layer keeps after many files are highlighted, and after they are closed. Runs only
  * when {@code S6_MEMORY} is set. {@code S6_MODE}: {@code layer} (default) or {@code off}. {@code S6_FILES}: how many
  * .erl files (default 100) of the OTP apps xmerl, ssh and inets, copied into the project with the include files of the
- * libraries they use; the installed OTP 29.1 is the SDK. Every Erlang inspection is on. A class histogram (after a
+ * libraries they use; the OTP 29 installation of {@code MACRO_LAYER_OTP_ROOT} is the SDK (nothing runs without it, or without
+ * {@code S6_MEMORY}). Every Erlang inspection is on. A class histogram (after a
  * full GC) counts the layer's objects; the heap in use after that GC is printed too.
  */
 public class ErlangMacroLayerMemoryTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
-  private static final String OTP = "/opt/homebrew/Cellar/erlang/29.1/lib/erlang";
+  private static final String OTP = LayerTestSupport.otpRoot();
   private final Set<String> myCopied = new HashSet<>();
 
   public ErlangMacroLayerMemoryTest() {
@@ -40,7 +41,7 @@ public class ErlangMacroLayerMemoryTest extends ErlangLightPlatformCodeInsightFi
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk(System.getenv("S6_MEMORY") != null ? OTP : "testData/mockSdk-R29/", ErlangSdkRelease.V_29_0);
+        return LayerTestSupport.otpOrMockSdk(System.getenv("S6_MEMORY") != null);
       }
     };
   }
@@ -118,7 +119,7 @@ public class ErlangMacroLayerMemoryTest extends ErlangLightPlatformCodeInsightFi
   }
 
   public void testManyFiles() throws Exception {
-    if (System.getenv("S6_MEMORY") == null) return;
+    if (System.getenv("S6_MEMORY") == null || OTP == null) return;
     String mode = Objects.requireNonNullElse(System.getenv("S6_MODE"), "layer");
     ErlangMacroLayer.setModeForTests("off".equals(mode) ? ErlangMacroLayer.Mode.OFF : ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     int n = Integer.parseInt(Objects.requireNonNullElse(System.getenv("S6_FILES"), "100"));
