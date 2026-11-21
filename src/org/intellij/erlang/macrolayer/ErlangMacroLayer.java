@@ -423,6 +423,8 @@ public final class ErlangMacroLayer {
     final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Set<String>> formSubstitutedArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
+    /** Round 5: some top-level form of the file needs the copy ({@link #anyFormNeedsCopy}). */
+    volatile Boolean anyFormNeedsCopy;
 
     /** Round 5: the copy of this version of the file (a new table, a new holder: the same dependencies). */
     final @NotNull CopyHolder holder;
@@ -1420,6 +1422,29 @@ public final class ErlangMacroLayer {
    * ({@link #isPlainPosition}). A directive ({@code -define}, {@code -include}, {@code -ifdef}, ...) never needs it:
    * the copy keeps directives as they are and never answers inside them. With the wide gate: every form with a use.
    */
+  /**
+   * Round 5: some top-level form of the file needs the copy (computed once per table, with every form's answer). When
+   * none does, every question is answered "none" after this one check: no form can be answered by the copy, and no
+   * form can make a name (a form that could, a top-level macro use or a broken form with a macro use, needs the copy).
+   */
+  static boolean anyFormNeedsCopy(@NotNull ErlangFile file, @NotNull Table t) {
+    Boolean b = t.anyFormNeedsCopy;
+    if (b != null) return b;
+    b = false;
+    if (!t.names.isEmpty()) {
+      for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+        if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+        ProgressManager.checkCanceled();
+        if (formNeedsCopy(t, c)) {
+          b = true;
+          break;
+        }
+      }
+    }
+    t.anyFormNeedsCopy = b;
+    return b;
+  }
+
   static boolean formNeedsCopy(@NotNull Table t, @Nullable PsiElement form) {
     if (!formUsesMacro(t, form)) return false;
     if (isGateWide()) return true;
@@ -1644,6 +1669,8 @@ public final class ErlangMacroLayer {
     if (!t.names.isEmpty()) {
       for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
         if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+        // round 5 (narrow gate): only a form with a use of a visible macro can make a name; another form is copied as it is
+        if (!isGateWide() && !formUsesMacro(t, c)) continue;
         if (c instanceof PsiErrorElement) {
           b = true;
           break;
@@ -1723,6 +1750,10 @@ public final class ErlangMacroLayer {
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
+      return null;
+    }
+    if (!isGateWide() && !anyFormNeedsCopy(file, t)) {
+      mark(o, "gate:file-needs-no-copy");
       return null;
     }
     PsiElement form = topForm(element);
@@ -1874,6 +1905,10 @@ public final class ErlangMacroLayer {
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    if (!isGateWide() && !anyFormNeedsCopy(file, t)) {
+      mark(o, "gate:file-needs-no-copy");
       return ResolveResult.EMPTY_ARRAY;
     }
     if ("_".equals(element.getText())) {

@@ -146,6 +146,23 @@ public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsigh
     assertEquals("queries beyond the gate", List.of(), asked);
   }
 
+  /** A top-level parse error without a macro use cannot make a name: unresolved calls build no copy. */
+  public void testBrokenFormWithoutMacroUseNeedsNoCopy() throws Exception {
+    PsiFile f = myFixture.addFileToProject("te.erl", """
+      -module(te).
+      -define(A, a).
+      -export([f/0]).
+      f() -> {?A, undefined_fun(), Unbound}.
+      this is not erlang.
+      """);
+    ErlangMacroLayerLog.enableForTests(true);
+    ErlangMacroLayerLog.reset();
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    resolveAll(f);
+    assertEquals("copy builds", 0, builds().size());
+  }
+
   /** The soundness check on the fixture: problems and resolve targets with the narrow gate equal those of the wide gate. */
   public void testNarrowGateGivesTheAnswersOfTheWideGate() throws Exception {
     PsiFile f = myFixture.addFileToProject("pg.erl", FIXTURE);
