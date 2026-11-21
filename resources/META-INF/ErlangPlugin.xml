@@ -298,6 +298,7 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
+        <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerExpansionErrorAnnotator"/>
         <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>

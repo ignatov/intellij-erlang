@@ -156,6 +156,11 @@ public final class ErlangMacroExpander {
     public int expandedTokens;
     /** All substituted uses have a body that is not one complete expression (the "fragments" class of spikes 1, 2). */
     public boolean allFragments = true;
+    /**
+     * Round 6: every macro use of the form, nested ones included, was substituted (or is a predefined macro), and the
+     * form is not inside an {@code -ifdef}, {@code -ifndef} or {@code -if} branch: its expanded text is what epp gives.
+     */
+    public boolean complete;
 
     Form(int srcStart, int srcEnd) {
       this.srcStart = srcStart;
@@ -318,6 +323,25 @@ public final class ErlangMacroExpander {
       int end = mySrcStart[last] + (expEnd - myExpStart[last]);
       if (end > mySrcEnd[last] || start > mySrcEnd[first]) return null;
       return TextRange.create(start, end);
+    }
+
+    /**
+     * Round 6: the source range of the outermost macro use that produced the expanded offset (a body, header or
+     * argument token): the source between the copied (verbatim) text before and after it, without the spaces at its
+     * ends. Null for an offset in copied text.
+     */
+    public @Nullable TextRange useSourceRange(int expOffset) {
+      int s = segmentAt(expOffset);
+      if (s < 0 || myKind[s] == SRC_VERBATIM) return null;
+      int p = s - 1;
+      while (p >= 0 && myKind[p] != SRC_VERBATIM) p--;
+      int n = s + 1;
+      while (n < mySegments && myKind[n] != SRC_VERBATIM) n++;
+      if (p < 0 || n >= mySegments) return null;
+      int start = mySrcEnd[p], end = mySrcStart[n];
+      while (start < end && Character.isWhitespace(sourceText.charAt(start))) start++;
+      while (end > start && Character.isWhitespace(sourceText.charAt(end - 1))) end--;
+      return start < end ? TextRange.create(start, end) : null;
     }
 
     public @Nullable Form formAtSource(int srcOffset) {
@@ -667,6 +691,11 @@ public final class ErlangMacroExpander {
         if (open == null || !open.block) plain = false;
         continue;
       }
+      if (t == ERL_PAR_LEFT && i + 1 < body.size() && body.get(i + 1).type == ERL_PAR_RIGHT && !isCallee(body, i - 1)) {
+        // round 6: "()" alone is no expression (erlc: syntax error before: ')'); the plugin's parser accepts it silently
+        plain = false;
+        continue;
+      }
       if (t == ERL_PAR_LEFT || t == ERL_BRACKET_LEFT || t == ERL_CURLY_LEFT || t == ERL_BIN_START) {
         stack.push(new Open(t, false, t == ERL_CURLY_LEFT && isRecordBrace(body, i), top != null && top.head));
         continue;
@@ -703,6 +732,14 @@ public final class ErlangMacroExpander {
     if (ANY_OPERATOR_OR_DANGLING.contains(body.get(body.size() - 1).type)) return false;
     return !(body.size() >= 3 && body.get(0).type == ERL_OP_MINUS && body.get(1).type == ERL_ATOM_NAME &&
              body.get(2).type == ERL_PAR_LEFT);
+  }
+
+  /** The token at i can be followed by an argument list: a name, a quoted atom, or a closing bracket. */
+  private static boolean isCallee(@NotNull List<Tok> body, int i) {
+    if (i < 0) return false;
+    IElementType t = body.get(i).type;
+    return t == ERL_ATOM_NAME || t == ERL_VAR || t == ERL_SINGLE_QUOTE || t == ERL_PAR_RIGHT || t == ERL_CURLY_RIGHT ||
+           t == ERL_BRACKET_RIGHT || t == ERL_BIN_END || t == ERL_END;
   }
 
   /**
@@ -819,6 +856,8 @@ public final class ErlangMacroExpander {
     int expandedDelta;
     /** The last {@link #handleUse} met a use that epp rejects (an empty argument, no ')', no definition of its arity). */
     boolean useRejected;
+    /** Round 6: a nested use in the current form was left as it is (no definition to substitute). */
+    boolean nestedLeft;
 
     Run(Base b, int formCap, @Nullable IncludeResolver resolver) {
       this.b = b;
@@ -897,7 +936,9 @@ public final class ErlangMacroExpander {
         String attribute = attributeName(formStart, formEnd);
         boolean directive = attribute != null && DIRECTIVES.contains(attribute);
         List<Use> uses = new ArrayList<>();
-        boolean ambiguous = false, refused = false, rejected = false;
+        boolean ambiguous = false, refused = false, rejected = false, unknown = false;
+        nestedLeft = false;
+        boolean inBranch = branch != null;
         if (!directive) {
           for (int q = formStart; q <= formEnd; q++) {
             if (st(q) != ERL_QMARK) continue;
@@ -910,8 +951,10 @@ public final class ErlangMacroExpander {
             }
             else if (r == Outcome.AMBIGUOUS) ambiguous = true;
             else if (r instanceof Outcome o && o != Outcome.PREDEFINED && o != Outcome.NOT_IN_FILE) refused = true;
+            else if (r == Outcome.NOT_IN_FILE) unknown = true;
           }
         }
+        boolean complete = !ambiguous && !refused && !unknown && !nestedLeft && !inBranch;
         if (rejected && !uses.isEmpty()) {
           // epp rejects a use of this form, so erlc rejects the file: the form is not expanded, and its syntax
           // errors stay as master shows them
@@ -932,6 +975,7 @@ public final class ErlangMacroExpander {
           }
           else {
             form.status = FormStatus.EXPANDED;
+            form.complete = complete;
             expandedDelta += size - (formEnd - formStart + 1);
             form.substitutedUses = uses.size();
             for (Use u : uses) if (!u.def.fragment) form.allFragments = false;
@@ -1310,6 +1354,7 @@ public final class ErlangMacroExpander {
         }
         Selection selection = select(name, arity);
         if (selection.def == null || parsed == null && arity != -1) {
+          if (selection.outcome != Outcome.PREDEFINED) nestedLeft = true;
           out.add(t);
           continue; // left as it is; the name follows as a plain token
         }

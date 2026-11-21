@@ -181,7 +181,7 @@ public final class ErlangMacroLayer {
     });
   }
 
-  private static @Nullable String read(String property, String env) {
+  static @Nullable String read(String property, String env) {
     String value = System.getProperty(property);
     if (value == null || value.isEmpty()) value = System.getenv(env);
     return value == null || value.isEmpty() ? null : value.trim().toLowerCase(Locale.ROOT);
@@ -1667,12 +1667,12 @@ public final class ErlangMacroLayer {
   }
 
   /** The form (or, for a top-level error, the form before it) uses a macro the file can see. Never builds a copy. */
-  private static boolean formUsesMacro(@NotNull Table t, @Nullable PsiElement form) {
+  static boolean formUsesMacro(@NotNull Table t, @Nullable PsiElement form) {
     if (form == null || t.names.isEmpty()) return false;
     int at = form.getTextRange().getStartOffset();
     Boolean b = t.formUse.get(at);
     if (b == null) {
-      b = usesKnownMacro(form.getNode().getChars(), t.names);
+      b = usesKnownMacro(form.getNode().getChars(), t.names) || splitUseAtEdge(form, t.names);
       if (!b && (form instanceof PsiErrorElement || PsiTreeUtil.firstChild(form) instanceof PsiErrorElement)) {
         PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
         b = prev != null && usesKnownMacro(prev.getNode().getChars(), t.names);
@@ -1728,6 +1728,29 @@ public final class ErlangMacroLayer {
       if (names.contains(name)) r.add(name);
     }
     return r;
+  }
+
+  /**
+   * Round 6: the main tree split a use {@code ?name(...)} between two top-level forms: error recovery stops before
+   * {@code atom (}, so {@code foo?is_timeout(a)} ends one form with the bare {@code ?} and starts the next with
+   * {@code is_timeout(a)}. Both forms use the macro.
+   */
+  private static boolean splitUseAtEdge(@NotNull PsiElement form, @NotNull Set<String> names) {
+    PsiElement last = PsiTreeUtil.lastChild(form);
+    while (last != null && (last instanceof PsiWhiteSpace || last instanceof PsiComment || last.getTextLength() == 0)) last = PsiTreeUtil.prevLeaf(last);
+    if (last != null && last.textMatches("?")) {
+      PsiElement name = PsiTreeUtil.nextVisibleLeaf(last);
+      if (name != null && names.contains(StringUtil.unquoteString(name.getText(), '\''))) return true;
+    }
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    while (first != null && (first instanceof PsiWhiteSpace || first instanceof PsiComment || first.getTextLength() == 0)) first = PsiTreeUtil.nextLeaf(first);
+    PsiElement prev = first == null ? null : PsiTreeUtil.prevVisibleLeaf(first);
+    if (prev != null && prev.textMatches("?") && names.contains(StringUtil.unquoteString(first.getText(), '\''))) return true;
+    // the form ends broken right before a form that starts with a use: f(_) ?ARROW ok. (with -define(ARROW, ->))
+    PsiElement next = last == null ? null : PsiTreeUtil.nextVisibleLeaf(last);
+    if (next == null || !next.textMatches("?") || PsiTreeUtil.isAncestor(form, next, false) || !PsiTreeUtil.hasErrorElements(form)) return false;
+    PsiElement name = PsiTreeUtil.nextVisibleLeaf(next);
+    return name != null && names.contains(StringUtil.unquoteString(name.getText(), '\''));
   }
 
   /** Names of the variables inside macro calls (their arguments) of the form. */
