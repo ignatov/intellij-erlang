@@ -530,10 +530,12 @@ public final class ErlangMacroLayer {
   /**
    * Round 5: what the includes of a file, and of its headers transitively, resolve to. Its count changes only when one
    * of them resolves to another file or to none. Include resolution ({@link ErlangPsiImplUtil#getDirectlyIncludedFiles})
-   * reads only the file tree, the project roots, the application index and the include attributes. The attributes are
-   * covered by the other dependencies (the file's own text and the header directive trackers); the rest can change only
-   * with a VFS structure event (creation, deletion, move, rename, copy) or a roots change. So the tracker re-runs
-   * master's resolution, once, when the VFS structure count or the roots count moved since its last check, and compares
+   * reads only the file tree, the project roots, the application index, the include paths of {@code rebar.config} (in
+   * a small IDE) and the include attributes. The attributes are covered by the other dependencies (the file's own text
+   * and the header directive trackers); the rest can change only with a VFS structure event (creation, deletion, move,
+   * rename, copy), a roots change, or (round 6) an edit of a {@code rebar.config}. So the tracker re-runs master's
+   * resolution, once, when the VFS structure count, the roots count or the {@code rebar.config} count
+   * ({@link ErlangMacroLayerRetention#buildConfigVersion}) moved since its last check, and compares
    * the result with the last one. A header that appears or disappears changes the result (an include now resolves, or
    * no longer does, or resolves elsewhere); an unrelated file event does not. Where it cannot check (the UI thread,
    * which must not query indices; no read access; dumb mode), it answers a fresh stamp, so the caller sees the cached
@@ -543,6 +545,7 @@ public final class ErlangMacroLayer {
     private final @NotNull ErlangFile myFile;
     private long myVfs = -1;
     private long myRoots = -1;
+    private long myConfig = -1;
     private @Nullable List<Object> myResolution;
     private long myVersion;
 
@@ -555,23 +558,25 @@ public final class ErlangMacroLayer {
       Project project = myFile.getProject();
       long vfs = VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount();
       long roots = ProjectRootManager.getInstance(project).getModificationCount();
+      long config = ErlangMacroLayerRetention.getInstance(project).buildConfigVersion();
       synchronized (this) {
-        if (vfs == myVfs && roots == myRoots) return myVersion;
+        if (vfs == myVfs && roots == myRoots && config == myConfig) return myVersion;
       }
       var app = ApplicationManager.getApplication();
       if (app.isDispatchThread() && !isEdtBuildAllowed() || !app.isReadAccessAllowed() || project.isDisposed() ||
           DumbService.isDumb(project) || !myFile.isValid()) {
         return -UNCHECKED_STAMPS.incrementAndGet();
       }
-      return update(resolveIncludes(myFile, new HashMap<>()), vfs, roots);
+      return update(resolveIncludes(myFile, new HashMap<>()), vfs, roots, config);
     }
 
-    /** Records the resolution seen with the given VFS structure and roots counts; returns the version. */
-    synchronized long update(@NotNull List<Object> resolution, long vfs, long roots) {
+    /** Records the resolution seen with the given VFS structure, roots and rebar.config counts; returns the version. */
+    synchronized long update(@NotNull List<Object> resolution, long vfs, long roots, long config) {
       if (myResolution != null && !myResolution.equals(resolution)) myVersion++;
       myResolution = resolution;
       myVfs = vfs;
       myRoots = roots;
+      myConfig = config;
       return myVersion;
     }
   }
@@ -810,9 +815,10 @@ public final class ErlangMacroLayer {
     // the counts first: a change during the resolution below makes the tracker check again
     long vfs = VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount();
     long roots = ProjectRootManager.getInstance(project).getModificationCount();
+    long config = ErlangMacroLayerRetention.getInstance(project).buildConfigVersion();
     Map<ErlangFile, Map<String, ErlangFile>> direct = new HashMap<>();
     IncludeTracker includes = includeTracker(file);
-    includes.update(resolveIncludes(file, direct), vfs, roots);
+    includes.update(resolveIncludes(file, direct), vfs, roots, config);
     deps.add(includes);
     // own macros
     Set<String> names = new HashSet<>();

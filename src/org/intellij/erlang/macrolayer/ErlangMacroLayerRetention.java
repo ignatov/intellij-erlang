@@ -60,7 +60,9 @@ public final class ErlangMacroLayerRetention implements Disposable {
         // a replacement by the same text (as a test fixture's setText) is no key press
         if (!StringUtil.equals(event.getOldFragment(), event.getNewFragment())) {
           ErlangMacroLayer.documentChanged(event.getDocument());
-          noteChanged(FileDocumentManager.getInstance().getFile(event.getDocument()));
+          VirtualFile file = FileDocumentManager.getInstance().getFile(event.getDocument());
+          noteChanged(file);
+          if (file != null && isBuildConfig(file.getName())) myBuildConfigVersion.incrementAndGet();
         }
       }
     }, this);
@@ -98,6 +100,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
 
       private void changed(@NotNull PsiTreeChangeEvent event) {
         PsiFile file = event.getFile();
+        if (file != null && isBuildConfig(file.getName())) myBuildConfigVersion.incrementAndGet();
         ErlangMacroLayer.TextTracker t = file == null ? null : ErlangMacroLayer.textTrackerIfAny(file);
         if (t != null) {
           t.changed();
@@ -105,6 +108,18 @@ public final class ErlangMacroLayerRetention implements Disposable {
         }
       }
     }, this);
+  }
+
+  /** Round 6: changes of the rebar.config files of the project (their include paths take part in include resolution). */
+  private final AtomicLong myBuildConfigVersion = new AtomicLong();
+
+  private static boolean isBuildConfig(@NotNull String name) {
+    return "rebar.config".equals(name);
+  }
+
+  /** Round 6: moves with every change of a rebar.config (a document change or a PSI change). */
+  long buildConfigVersion() {
+    return myBuildConfigVersion.get();
   }
 
   /** Round 6: System.nanoTime() of the last change of each .erl file (a document change or a PSI change). */
