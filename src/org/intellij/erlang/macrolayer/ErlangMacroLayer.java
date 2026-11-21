@@ -3,6 +3,8 @@ package org.intellij.erlang.macrolayer;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator;
+import com.intellij.openapi.application.ApplicationListener;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
@@ -745,6 +747,10 @@ public final class ErlangMacroLayer {
     // resolution, which the next key press cancelled): an uncancellable caller neither starts one nor waits for one,
     // and while the file changes only its highlighting starts one (another caller waits for a running one)
     String refusal = nonCancellableCaller();
+    if (NO_INDICATOR.equals(refusal)) {
+      // round 6: under an indicator of its own that a write action cancels
+      return underOwnIndicator(() -> table0(file, explicit), file, "table");
+    }
     if (refusal == null && cache.building.get() == null && !explicit) refusal = buildRefusal(file);
     if (refusal != null) {
       ErlangMacroLayerStats.phase("table-skipped:" + refusal, file.getName(), 0);
@@ -1024,6 +1030,10 @@ public final class ErlangMacroLayer {
       Copy copy = holder.get();
       if (copy != null) return copy;
       String uncancellable = nonCancellableCaller();
+      if (NO_INDICATOR.equals(uncancellable)) {
+        // round 6: under an indicator of its own that a write action cancels
+        return underOwnIndicator(() -> obtain(holder, file, table, trigger, explicit), file, trigger);
+      }
       if (uncancellable != null) {
         // round 5, fix 6: such a caller neither builds nor waits for another thread's build
         ErlangMacroLayerStats.phase("build-skipped:" + uncancellable, file.getName(), 0);
@@ -1287,17 +1297,59 @@ public final class ErlangMacroLayer {
 
   /**
    * Round 5, fix 6: the caller cannot be cancelled: it runs in a non-cancellable section, or with no progress indicator
-   * (a plain read action on a pooled thread). A key press is a write action: it waits until every read action ends,
-   * and a caller that cannot be cancelled would hold it for a whole build (or a wait for one). Such a caller gets the
-   * copy that is there, or master's answer. Null when the caller is cancellable (or builds are allowed anywhere).
+   * (a plain read action on a pooled thread, or a coroutine read action such as the update of the rename action). A
+   * key press is a write action: it waits until every read action ends, and a caller that cannot be cancelled would
+   * hold it for a whole build (or a wait for one). In a non-cancellable section the caller gets the copy that is
+   * there, or master's answer. Round 6: a caller with no indicator builds and waits under an indicator of its own that
+   * a write action cancels ({@link #underOwnIndicator}). Null when the caller is cancellable (or builds are allowed anywhere).
    */
   private static @Nullable String nonCancellableCaller() {
     if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
     ProgressManager pm = ProgressManager.getInstance();
     if (pm.isInNonCancelableSection()) return "non-cancellable";
-    if (ProgressManager.getGlobalProgressIndicator() == null) return "no-indicator";
+    if (ProgressManager.getGlobalProgressIndicator() == null) return NO_INDICATOR;
     return null;
   }
+
+  private static final String NO_INDICATOR = "no-indicator";
+
+  /**
+   * Round 6: runs a table or copy request of a caller that has no progress indicator (not the UI thread, not a
+   * non-cancellable section) under a new indicator, which an application listener cancels before a write action
+   * starts. So the caller gets the layer's answer, and a key press waits for no build: the build or the wait stops at
+   * its next cancellation check, and the caller gets master's answer for this question. The platform's own helpers for
+   * this ({@code ProgressIndicatorUtils.runInReadActionWithWriteActionPriority}) are deprecated, and the coroutine job of
+   * the thread can be read only through experimental API ({@code ThreadContext}), so the layer does not use them.
+   * A write action that already waited for the read lock before the listener was added is not seen; it waits for
+   * this one build at most.
+   */
+  private static <T> @Nullable T underOwnIndicator(@NotNull java.util.function.Supplier<T> request, @NotNull PsiFile file,
+                                                  @NotNull String trigger) {
+    var app = ApplicationManager.getApplication();
+    EmptyProgressIndicator indicator = new EmptyProgressIndicator();
+    Disposable listening = Disposer.newDisposable("macro layer: a request without a progress indicator");
+    try {
+      app.addApplicationListener(new ApplicationListener() {
+        @Override
+        public void beforeWriteActionStart(@NotNull Object action) {
+          indicator.cancel();
+        }
+      }, listening);
+      OWN_INDICATOR_REQUESTS.incrementAndGet();
+      return ProgressManager.getInstance().runProcess(request::get, indicator);
+    }
+    catch (ProcessCanceledException e) {
+      if (!indicator.isCanceled()) throw e;
+      ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, "no-indicator:write-action", trigger);
+      return null;
+    }
+    finally {
+      Disposer.dispose(listening);
+    }
+  }
+
+  /** Round 6: requests run by {@link #underOwnIndicator}, for tests and measurements. */
+  static final AtomicInteger OWN_INDICATOR_REQUESTS = new AtomicInteger();
 
   static boolean isHighlighting(@Nullable ProgressIndicator indicator) {
     ProgressIndicator p = indicator;
