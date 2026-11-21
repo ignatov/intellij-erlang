@@ -165,6 +165,14 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     doTestRebuildInSingleModule(largeHeader, sourceFileWithDependency);
   }
 
+  public void testBuildWithLargeHeaderAndParseTransformInHeader() throws Exception {
+    addSourceFile(myModule, "h.hrl", "-compile({parse_transform, pt}).\n");
+    addSourceFile(myModule, "pt.erl", ErlangModuleTextGenerator.pt("pt").build());
+    addSourceFile(myModule, "m.erl", ErlangModuleTextGenerator.module("m").include("h.hrl").build());
+    addSourceFile(myModule, "big.hrl", aboveSizeLimit("-define(X, 1)."));
+    compileAndAssertOutput(false);
+  }
+
   @NotNull
   private static String aboveSizeLimit(@NotNull String text) {
     StringBuilder builder = new StringBuilder(text).append('\n');
