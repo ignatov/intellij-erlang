@@ -26,9 +26,11 @@ public interface ErlangDebuggerEventListener {
   void failedToInterpretModules(String nodeName, List<String> modules);
   void failedToDebugRemoteNode(String nodeName, String error);
   void unknownMessage(String messageText);
+  void failedToReceiveMessage(String error);
   void failedToSetBreakpoint(String module, int line, String errorMessage);
   void breakpointIsSet(String module, int line);
   void breakpointReached(OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots);
   void debuggerStopped();
   void handleEvaluationResponse(OtpErlangObject response);
+  void evaluationFailed(String errorMessage);
 }

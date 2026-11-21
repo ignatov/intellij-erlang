@@ -1,0 +1,3 @@
+-module(quoted_attribute_names).
+-'атрибут'(1).
+-'attribute'(2).

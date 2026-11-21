@@ -1,0 +1,11 @@
+# The expected problems of the project smoke_app in the release smoke (scripts/smoke/run.sh, job release-smoke of
+# .github/workflows/gradle.yml), with every Erlang inspection and the annotators on, the same in IntelliJ IDEA 2026.2
+# and 2026.3.
+# mode exact: the run must report these problems per inspection and file, no more and no fewer.
+# A change of the plugin that changes these problems on purpose refreshes this file from the root of the checkout:
+#   scripts/smoke/run.sh inputs build inspect-baseline
+# and the pull request says why the problems changed.
+inputs cowboy 2.19.0 79e3fb02b31d, Erlang/OTP 27.3.4.9
+mode exact
+1 ErlangSingleClauseCase src/smoke_canary.erl
+1 ErlangUnusedFunction src/smoke_canary.erl

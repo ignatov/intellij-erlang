@@ -1,0 +1,19 @@
+# The expected problems of the project cowboy in the release smoke (scripts/smoke/run.sh, job release-smoke of
+# .github/workflows/gradle.yml), with every Erlang inspection and the annotators on, the same in IntelliJ IDEA 2026.2
+# and 2026.3.
+# mode limit: no inspection may report more problems than here; one not listed must report none.
+# A change of the plugin that changes these problems on purpose refreshes this file from the root of the checkout:
+#   scripts/smoke/run.sh inputs build inspect-baseline
+# and the pull request says why the problems changed.
+inputs cowboy 2.19.0 79e3fb02b31d, Erlang/OTP 27.3.4.9
+mode limit
+8 ErlangDuplicateFunction
+9 ErlangSingleClauseCase
+2 ErlangUnboundVariable
+2 ErlangUndefinedBehaviour
+4285 ErlangUnresolvedFunction
+6 ErlangUnresolvedIncludeLib
+88 ErlangUnresolvedMacros
+5 ErlangUnresolvedRecord
+32 ErlangUnusedFunction
+9 ErlangUnusedVariable

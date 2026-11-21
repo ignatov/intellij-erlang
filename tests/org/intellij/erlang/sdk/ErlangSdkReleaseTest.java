@@ -32,6 +32,16 @@ public class ErlangSdkReleaseTest extends TestCase {
     assertFalse(ErlangSdkRelease.V_17_0.isNewerThan(ErlangSdkRelease.V_17_0));
   }
 
+  public void testOtp27_0IsAtLeastV27() {
+    ErlangSdkRelease otp27_0 = new ErlangSdkRelease("27.0", "15.0");
+    ErlangSdkRelease otp27_0_1 = new ErlangSdkRelease("27.0.1", "15.0.1");
+    assertTrue(otp27_0.isNewerOrEqualTo(ErlangSdkRelease.V_27_0));
+    assertFalse(ErlangSdkRelease.V_27_0.isNewerThan(otp27_0));
+    assertTrue(otp27_0_1.isNewerOrEqualTo(ErlangSdkRelease.V_27_0));
+    assertFalse(ErlangSdkRelease.V_27_0.isNewerThan(otp27_0_1));
+    assertEquals("https://www.erlang.org/docs/27", ErlangSdkType.getDefaultDocumentationUrl(otp27_0));
+  }
+
   public void testDocumentationUrl() {
     assertEquals("https://www.erlang.org/docs/29", ErlangSdkType.getDefaultDocumentationUrl(ErlangSdkRelease.V_29_0));
     assertEquals("https://www.erlang.org/docs/29",

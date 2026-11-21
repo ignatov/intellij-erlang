@@ -45,7 +45,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
             if (resolve != null) return;
 
             Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
-            for (PsiReference ref : search) {
+            for (PsiReference ref : search.findAll()) {
               PsiElement element = ref.getElement();
               if (ErlangPsiImplUtil.fromTheSameCaseExpression(o, element)) {
                 PsiReference reference1 = element.getReference();

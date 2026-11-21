@@ -1,0 +1,2 @@
+{ok, [ErlOpts]} = file:consult(filename:join(filename:dirname(SCRIPT), "erl_opts.config")),
+CONFIG ++ [{erl_opts, ErlOpts}, {eunit_opts, [verbose, {report, {eunit_progress, []}}]}].
