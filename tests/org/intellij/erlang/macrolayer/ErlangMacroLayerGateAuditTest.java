@@ -160,6 +160,7 @@ public class ErlangMacroLayerGateAuditTest extends ErlangLightPlatformCodeInsigh
     on.forEach(gone::remove);
     Set<String> added = new TreeSet<>(on);
     off.forEach(added::remove);
+    out(n + " errors: off=" + off.stream().filter(x -> x.startsWith("ERROR|")).count() + " on=" + on.stream().filter(x -> x.startsWith("ERROR|")).count());
     out(n + " highlighting: problems off=" + off.size() + " on=" + on.size() + " removed by the layer=" + gone.size() +
         " added=" + added.size() + " layer answers=" + answered + " errors hidden=" + hidden);
     gone.stream().limit(10).forEach(g -> out(n + "   removed " + g));
