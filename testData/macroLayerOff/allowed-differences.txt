@@ -1,0 +1,3 @@
+# The differences from master 2a6160fc that stay with the macro layer off. Format: file TAB master's line TAB the branch's line.
+# ErlangMacroResolve picks the definition by the number of arguments: ?M(2) goes to -define(M(X), ...), not to -define(M, 1).
+src/one_file/m_basics.erl	REF 43:8 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_basics.erl:29:1:-define(M, 1)., ErlangMacrosReferenceImpl:m_basics.erl:29:1:-define(M, 1).	REF 43:8 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_basics.erl:30:1:-define(M(X), X + 100)., ErlangMacrosReferenceImpl:m_basics.erl:30:1:-define(M(X), X + 100).

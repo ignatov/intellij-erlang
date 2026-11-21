@@ -1,0 +1,437 @@
+HIGHLIGHT 15:2-15:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 15:2-15:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:10-17:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:10-17:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:2-17:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:2-17:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:2-19:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:2-19:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:28-19:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:28-19:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:9-19:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:9-19:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 1:1-93:1 WARNING(300) Some 'include' folders are not marked as include directories. WARNING_ATTRIBUTES
+HIGHLIGHT 20:27-20:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 20:27-20:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 21:32-21:37 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 21:32-21:37 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:1-23:2 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:1-23:2 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:19-23:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:19-23:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:2-23:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:2-23:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:28-23:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:28-23:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:43-23:54 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:43-23:54 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:59-23:63 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:59-23:63 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:7-23:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:7-23:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:2-26:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:2-26:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:29-26:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:29-26:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:43-26:47 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:43-26:47 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:9-26:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:9-26:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:2-27:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:2-27:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:27-27:31 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:27-27:31 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:42-27:46 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:42-27:46 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:9-27:18 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:9-27:18 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:2-30:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:2-30:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:22-30:26 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:22-30:26 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:36-30:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:36-30:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:9-30:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:9-30:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 31:2-31:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 31:2-31:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 31:9-31:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 31:9-31:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:12-32:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:12-32:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:35-32:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:35-32:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:56-32:60 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 32:56-32:60 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 35:2-35:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 35:2-35:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 35:9-35:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 35:9-35:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 36:2-36:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 36:2-36:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 36:9-36:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 36:9-36:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 37:2-37:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 37:2-37:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 37:9-37:18 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 37:9-37:18 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:2-40:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:2-40:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:27-40:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:27-40:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:9-40:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 40:9-40:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 43:2-43:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 43:2-43:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 43:9-43:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 43:9-43:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:16-44:21 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:16-44:21 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:23-44:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:23-44:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:44-44:47 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:44-44:47 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:9-44:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 44:9-44:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:14-46:20 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:14-46:20 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:2-46:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:2-46:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:28-46:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:28-46:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:7-46:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 46:7-46:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 47:1-47:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 47:1-47:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 48:15-48:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 48:15-48:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 48:3-48:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 48:3-48:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 50:1-50:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 50:1-50:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:20-51:24 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:20-51:24 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:3-51:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:3-51:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:9-51:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:9-51:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 51:9-51:16 WARNING(300) Unresolved function reverse/1 WARNING_ATTRIBUTES
+HIGHLIGHT 52:1-52:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 52:1-52:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 52:17-52:19 WARNING(300) Unused variable 'S0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 53:4-53:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 53:4-53:13 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 54:11-54:12 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 54:3-54:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 54:3-54:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 55:1-55:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 55:1-55:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 55:15-55:17 WARNING(300) Unused variable 'S0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 55:25-55:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 55:25-55:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 56:4-56:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 56:4-56:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 57:11-57:12 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 57:3-57:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 57:3-57:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 58:1-58:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 58:1-58:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 58:30-58:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 58:30-58:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 59:24-59:30 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 59:24-59:30 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 60:4-60:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 60:4-60:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:15-61:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:15-61:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:20-61:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:20-61:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:3-61:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:3-61:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:36-61:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:36-61:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:47-61:48 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 61:49-61:53 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 61:49-61:53 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 62:1-62:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 62:1-62:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 62:30-62:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 62:30-62:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 63:3-63:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 63:3-63:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 64:1-64:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 64:1-64:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 65:4-65:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 65:4-65:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:12-66:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:12-66:16 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:17-66:22 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:17-66:22 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:3-66:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:3-66:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:31-66:35 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:31-66:35 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:42-66:43 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 66:44-66:48 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 66:44-66:48 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 67:1-67:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 67:1-67:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 68:11-68:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 68:11-68:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 68:4-68:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 68:4-68:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 70:1-70:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 70:1-70:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:18-71:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:18-71:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:24-71:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:24-71:33 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:24-71:33 WARNING(300) Unresolved function splitwith/2 WARNING_ATTRIBUTES
+HIGHLIGHT 71:48-71:55 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 71:48-71:55 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 72:13-72:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 72:13-72:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 72:13-72:19 WEAK WARNING(200) Unresolved function length/1 INFO_ATTRIBUTES
+HIGHLIGHT 72:4-72:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 72:4-72:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:19-73:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:19-73:23 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:24-73:28 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:24-73:28 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:3-73:11 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:3-73:11 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:30-73:42 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:30-73:42 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:30-73:42 WEAK WARNING(200) Unresolved function list_to_atom/1 INFO_ATTRIBUTES
+HIGHLIGHT 73:54-73:58 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:54-73:58 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:65-73:66 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 73:67-73:71 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 73:67-73:71 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 75:1-75:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 75:1-75:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 75:10-75:12 WARNING(300) Unused variable 'T0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 75:14-75:16 WARNING(300) Unused variable 'S0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 76:4-76:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 76:4-76:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 77:12-77:14 ERROR(400) Variable 'S1' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 77:3-77:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 77:3-77:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 77:8-77:10 ERROR(400) Variable 'T1' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 79:1-79:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 79:1-79:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 79:22-79:24 WARNING(300) Unused variable 'S0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 79:32-79:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 79:32-79:40 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 80:4-80:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 80:4-80:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 81:18-81:19 ERROR(400) Variable 'S' is unbound ERRORS_ATTRIBUTES
+HIGHLIGHT 81:3-81:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 81:3-81:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 82:1-82:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 82:1-82:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 85:1-85:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 85:1-85:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 85:33-85:41 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 85:33-85:41 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 86:3-86:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 86:3-86:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 87:1-87:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 87:1-87:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:1-90:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:1-90:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:18-90:27 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:18-90:27 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:34-90:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 90:34-90:39 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:1-91:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:1-91:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:18-91:26 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:18-91:26 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:33-91:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 91:33-91:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 92:1-92:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 92:1-92:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 92:15-92:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 92:15-92:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+REF 15:2 module -> none
+REF 15:9 m_scan -> none
+REF 17:2 export -> none
+REF 17:10 string -> ErlangFunctionReferenceImpl:m_scan.erl:47:1:string(Text) ->
+REF 19:2 record -> none
+REF 19:9 scan -> none
+REF 19:16 line -> none
+REF 19:28 pos_integer -> ErlangTypeReferenceImpl:unresolved
+REF 20:16 col -> none
+REF 20:27 pos_integer -> ErlangTypeReferenceImpl:unresolved
+REF 21:16 tokens -> none
+REF 21:32 token -> ErlangTypeReferenceImpl:m_scan.erl:23:1:-type token() :: {atom(), {pos_integer()...
+REF 23:2 type -> none
+REF 23:7 token -> none
+REF 23:19 atom -> ErlangTypeReferenceImpl:unresolved
+REF 23:28 pos_integer -> ErlangTypeReferenceImpl:unresolved
+REF 23:43 pos_integer -> ErlangTypeReferenceImpl:unresolved
+REF 23:59 term -> ErlangTypeReferenceImpl:unresolved
+REF 26:2 define -> none
+REF 26:9 bump_col -> ErlangMacrosReferenceImpl:unresolved
+REF 26:29 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 26:34 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 26:43 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 26:48 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 27:2 define -> none
+REF 27:9 bump_line -> ErlangMacrosReferenceImpl:unresolved
+REF 27:27 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 27:32 line -> :m_scan.erl:19:16:line = 1 :: pos_integer()
+REF 27:42 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 27:47 line -> :m_scan.erl:19:16:line = 1 :: pos_integer()
+REF 27:57 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 30:2 define -> none
+REF 30:9 pos -> ErlangMacrosReferenceImpl:unresolved
+REF 30:22 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 30:27 line -> :m_scan.erl:19:16:line = 1 :: pos_integer()
+REF 30:36 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 30:41 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 31:2 define -> none
+REF 31:9 emit -> ErlangMacrosReferenceImpl:unresolved
+REF 32:12 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 32:17 tokens -> :m_scan.erl:21:16:tokens = [] :: [token()]
+REF 32:34 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan...., ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan....
+REF 32:35 pos -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan...., ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan....
+REF 32:56 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 32:61 tokens -> :m_scan.erl:21:16:tokens = [] :: [token()]
+REF 35:2 define -> none
+REF 35:9 is_digit -> ErlangMacrosReferenceImpl:unresolved
+REF 36:2 define -> none
+REF 36:9 is_space -> ErlangMacrosReferenceImpl:unresolved
+REF 37:2 define -> none
+REF 37:9 is_letter -> ErlangMacrosReferenceImpl:unresolved
+REF 40:2 define -> none
+REF 40:9 strip -> ErlangMacrosReferenceImpl:unresolved
+REF 40:27 skip_spaces -> ErlangFunctionReferenceImpl:m_scan.erl:79:1:skip_spaces([C | T], S0) when ?is_space(...
+REF 43:2 define -> none
+REF 43:9 fatal -> ErlangMacrosReferenceImpl:unresolved
+REF 44:9 erlang -> ErlangModuleReferenceImpl:unresolved
+REF 44:16 error -> ErlangFunctionReferenceImpl:m_scan.erl:44:16:error({scan_error, Reason, ?pos(St)})
+REF 44:23 scan_error -> :unresolved
+REF 44:43 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan...., ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan....
+REF 44:44 pos -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan...., ErlangMacrosReferenceImpl:m_scan.erl:30:1:-define(pos(St), {St#scan.line, St#scan....
+REF 46:2 spec -> none
+REF 46:7 string -> ErlangFunctionReferenceImpl:m_scan.erl:47:1:string(Text) ->
+REF 46:14 string -> ErlangTypeReferenceImpl:unresolved
+REF 46:28 token -> ErlangTypeReferenceImpl:m_scan.erl:23:1:-type token() :: {atom(), {pos_integer()...
+REF 47:1 string -> none
+REF 48:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 48:15 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 50:1 scan -> none
+REF 51:3 lists -> ErlangModuleReferenceImpl:unresolved
+REF 51:9 reverse -> ErlangFunctionReferenceImpl:unresolved
+REF 51:20 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 51:25 tokens -> :m_scan.erl:21:16:tokens = [] :: [token()]
+REF 52:1 scan -> none
+REF 53:3 ? -> ErlangMacrosReferenceImpl:m_scan.erl:27:1:-define(bump_line, S = S0#scan{line = S0..., ErlangMacrosReferenceImpl:m_scan.erl:27:1:-define(bump_line, S = S0#scan{line = S0...
+REF 53:4 bump_line -> ErlangMacrosReferenceImpl:m_scan.erl:27:1:-define(bump_line, S = S0#scan{line = S0..., ErlangMacrosReferenceImpl:m_scan.erl:27:1:-define(bump_line, S = S0#scan{line = S0...
+REF 54:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 55:1 scan -> none
+REF 55:24 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)..., ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)...
+REF 55:25 is_space -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)..., ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)...
+REF 56:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 56:4 bump_col -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 57:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 58:1 scan -> none
+REF 58:29 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 58:30 is_digit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 59:24 number -> ErlangFunctionReferenceImpl:m_scan.erl:85:1:number([C | T], Acc, Len) when ?is_digit...
+REF 60:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 60:4 bump_col -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 61:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 61:14 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 61:15 emit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 61:20 int -> :unresolved
+REF 61:36 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 61:41 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 61:49 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 61:54 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 62:1 scan -> none
+REF 62:29 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ..., ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ...
+REF 62:30 is_letter -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ..., ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ...
+REF 63:3 word -> ErlangFunctionReferenceImpl:m_scan.erl:70:1:word(T0, S0) ->
+REF 64:1 scan -> none
+REF 65:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 65:4 bump_col -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 66:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 66:11 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 66:12 emit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 66:17 punct -> :unresolved
+REF 66:31 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 66:36 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 66:44 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 66:49 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 67:1 scan -> none
+REF 68:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:43:1:-define(fatal(Reason, St),, ErlangMacrosReferenceImpl:m_scan.erl:43:1:-define(fatal(Reason, St),
+REF 68:4 fatal -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:43:1:-define(fatal(Reason, St),, ErlangMacrosReferenceImpl:m_scan.erl:43:1:-define(fatal(Reason, St),
+REF 68:11 bad_char -> :unresolved
+REF 70:1 word -> none
+REF 71:18 lists -> ErlangModuleReferenceImpl:unresolved
+REF 71:24 splitwith -> ErlangFunctionReferenceImpl:unresolved
+REF 71:48 is_stop -> ErlangFunctionReferenceImpl:m_scan.erl:90:1:is_stop(C) when ?is_letter(C) -> false;
+REF 72:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 72:4 bump_col -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 72:13 length -> ErlangFunctionReferenceImpl:unresolved
+REF 73:3 word_end -> ErlangFunctionReferenceImpl:m_scan.erl:75:1:word_end(T0, S0) ->
+REF 73:18 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 73:19 emit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),, ErlangMacrosReferenceImpl:m_scan.erl:31:1:-define(emit(Kind, Value, St),
+REF 73:24 word -> :unresolved
+REF 73:30 list_to_atom -> ErlangFunctionReferenceImpl:unresolved
+REF 73:54 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 73:59 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 73:67 scan -> ErlangRecordReferenceImpl:m_scan.erl:19:1:-record(scan, {line = 1 :: pos_integer()...
+REF 73:72 col -> :m_scan.erl:20:16:col = 1 :: pos_integer()
+REF 75:1 word_end -> none
+REF 76:3 ? -> ErlangMacrosReferenceImpl:m_scan.erl:40:1:-define(strip, {T1, S1} = skip_spaces(T0..., ErlangMacrosReferenceImpl:m_scan.erl:40:1:-define(strip, {T1, S1} = skip_spaces(T0...
+REF 76:4 strip -> ErlangMacrosReferenceImpl:m_scan.erl:40:1:-define(strip, {T1, S1} = skip_spaces(T0..., ErlangMacrosReferenceImpl:m_scan.erl:40:1:-define(strip, {T1, S1} = skip_spaces(T0...
+REF 77:3 scan -> ErlangFunctionReferenceImpl:m_scan.erl:50:1:scan([], S0) ->
+REF 79:1 skip_spaces -> none
+REF 79:31 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)..., ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)...
+REF 79:32 is_space -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)..., ErlangMacrosReferenceImpl:m_scan.erl:36:1:-define(is_space(C), C == $\s; C == $\t)...
+REF 80:3 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 80:4 bump_col -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S..., ErlangMacrosReferenceImpl:m_scan.erl:26:1:-define(bump_col(N), S = S0#scan{col = S...
+REF 81:3 skip_spaces -> ErlangFunctionReferenceImpl:m_scan.erl:79:1:skip_spaces([C | T], S0) when ?is_space(...
+REF 82:1 skip_spaces -> none
+REF 85:1 number -> none
+REF 85:32 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 85:33 is_digit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 86:3 number -> ErlangFunctionReferenceImpl:m_scan.erl:85:1:number([C | T], Acc, Len) when ?is_digit...
+REF 87:1 number -> none
+REF 90:1 is_stop -> none
+REF 90:17 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ..., ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ...
+REF 90:18 is_letter -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ..., ErlangMacrosReferenceImpl:m_scan.erl:37:1:-define(is_letter(C), C >= $a, C =< $z; ...
+REF 90:34 false -> :unresolved
+REF 91:1 is_stop -> none
+REF 91:17 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 91:18 is_digit -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9)., ErlangMacrosReferenceImpl:m_scan.erl:35:1:-define(is_digit(C), C >= $0, C =< $9).
+REF 91:33 false -> :unresolved
+REF 92:1 is_stop -> none
+REF 92:15 true -> :unresolved
+COMPLETE 19:29 -> 30 c82af078 err_form_in_expr err_map_field err_par_alone gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_otp_assert m_otp_eunit m_otp_file m_otp_logger m_otp_merl m_otp_ms m_otp_public_key m_otp_qlc m_otp_xmerl m_positions map maybe_improper_list none...
+COMPLETE 20:28 -> 30 c82af078 err_form_in_expr err_map_field err_par_alone gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_otp_assert m_otp_eunit m_otp_file m_otp_logger m_otp_merl m_otp_ms m_otp_public_key m_otp_qlc m_otp_xmerl m_positions map maybe_improper_list none...
+COMPLETE 21:33 -> 49 180fbc77 arity atom bitstring byte err_arity err_bad_argument err_undefined_fragment err_unterminated float function gap_function_twice gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion identifier integer iodata iolist list m_counter_server m_counter_server_tests m_fragments m_otp_assert ...
+COMPLETE 32:35 -> 3 d99bb5de Kind St Value
+COMPLETE 44:44 -> 3 cbbf6fbd Reason St when
+COMPLETE 53:4 -> 19 fdfa9d8a FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 55:25 -> 20 fd542ec7 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 56:4 -> 20 fd542ec7 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 58:30 -> 20 48136383 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 60:4 -> 23 15dc1c0f C FILE FUNCTION_ARITY FUNCTION_NAME LINE Len MACHINE MODULE MODULE_STRING OTP_RELEASE Rest S0 T0 Value bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 61:15 -> 24 16e8b0ab C FILE FUNCTION_ARITY FUNCTION_NAME LINE Len MACHINE MODULE MODULE_STRING OTP_RELEASE Rest S0 T0 Value bump_col bump_line emit fatal is_digit is_letter is_space pos strip when
+COMPLETE 62:30 -> 20 48136383 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 65:4 -> 20 fd542ec7 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 66:12 -> 21 ba790f3 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip when
+COMPLETE 68:4 -> 19 35581613 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 72:4 -> 21 a419a783 FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING Name OTP_RELEASE Rest S0 T0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 73:19 -> 22 de5c2db7 FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING Name OTP_RELEASE Rest S0 T0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip when
+COMPLETE 76:4 -> 19 5c3acd20 FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T0 bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 79:32 -> 20 fd542ec7 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 80:4 -> 20 fd542ec7 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE S0 T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 85:33 -> 21 d0e37684 Acc C FILE FUNCTION_ARITY FUNCTION_NAME LINE Len MACHINE MODULE MODULE_STRING OTP_RELEASE T bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 90:18 -> 18 35846944 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE bump_col bump_line emit fatal is_digit is_letter is_space pos strip
+COMPLETE 91:18 -> 18 35846944 C FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MODULE MODULE_STRING OTP_RELEASE bump_col bump_line emit fatal is_digit is_letter is_space pos strip

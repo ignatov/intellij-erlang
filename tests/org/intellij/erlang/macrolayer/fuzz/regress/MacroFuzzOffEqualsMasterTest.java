@@ -18,8 +18,7 @@ import java.util.regex.Pattern;
  * sample files (highlighting, references, completion at the same seeded offsets) must equal master's, stored in
  * {@code testData/macroFuzz/off-equals-master/answers_<case>.txt} (dumped on master 2a6160fc). Accepted differences: a
  * reference whose targets include master's (every definition in conditional branches, D2), and the lines of
- * {@code allowed.txt} (D3 cases where epp agrees with the branch). Runs only with {@code MACRO_FUZZ_OPEN=1} until the
- * switch lands.
+ * {@code allowed.txt} (D3 cases where epp agrees with the branch, and the F5 rule for directive names).
  */
 public class MacroFuzzOffEqualsMasterTest extends MacroFuzzAnswersTest {
   private static final Path GOLDEN = Paths.get("testData", "macroFuzz", "off-equals-master");
@@ -31,7 +30,6 @@ public class MacroFuzzOffEqualsMasterTest extends MacroFuzzAnswersTest {
   }
 
   public void testLayerOffEqualsMaster() throws Throwable {
-    if (FuzzConfig.env("MACRO_FUZZ_OPEN") == null) return;
     LayerHooks.setEnabled(false, getTestRootDisposable());
     Set<String> allowed = new HashSet<>();
     for (String l : Files.readAllLines(GOLDEN.resolve("allowed.txt"), StandardCharsets.UTF_8)) {

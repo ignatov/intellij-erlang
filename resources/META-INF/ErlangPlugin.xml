@@ -25,6 +25,8 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <registryKey key="erlang.macro.layer" defaultValue="true" restartRequired="false"
+                     description="Erlang: the macro expansion layer (references, completion, rename and error checks in code that uses macros). Off gives the plugin's behaviour without the layer."/>
         <!-- spike 3: syntax errors of forms whose macro expansion parses -->
         <highlightErrorFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerErrorFilter"/>
         <!-- round 5: names inside -define bodies, resolved through the expanded uses of the macro -->

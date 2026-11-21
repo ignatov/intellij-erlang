@@ -503,7 +503,8 @@ public class ErlangPsiImplUtil {
   @Nullable
   public static PsiReference getReference(@Nullable ErlangMacrosName o) {
     // round 6 (next), item 3c: inside ?NAME the use element carries the reference over the same name: one usage per use
-    if (o != null && o.getParent() instanceof ErlangMacros) return null;
+    // (M2: with the macro layer off, master's second reference stays)
+    if (o != null && o.getParent() instanceof ErlangMacros && org.intellij.erlang.macrolayer.ErlangMacroLayer.isEnabled()) return null;
     return o!= null ? getReference(o, o) : null;
   }
 

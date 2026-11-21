@@ -21,18 +21,14 @@ import java.util.stream.Stream;
 
 /**
  * D4: the owner's samples project (set {@code S6_SAMPLES} to its folder; nothing runs without it). Every .erl and .hrl
- * of {@code src/}, {@code include/} and {@code libs/} is copied into the project, OTP 29.1 is the SDK, every Erlang
- * inspection is on. A file with a {@code %% erlc: L:C: message} comment is wrong: the plugin must show an error on
+ * of {@code src/}, {@code include/} and {@code libs/} is copied into the project ({@code include/} is an include root,
+ * as {@code -I include} in check.sh), OTP 29.1 is the SDK, every Erlang inspection is on. A file with a {@code %% erlc: L:C: message} comment is wrong: the plugin must show an error on
  * that line. Every other file is valid: the plugin must show no error. Prints one line per file; fails on a mismatch
  * unless the file is listed in {@code S6_SAMPLES_KNOWN} (comma separated).
  */
 public class ErlangMacroLayerSamplesTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   private static final String OTP = "/opt/homebrew/Cellar/erlang/29.1/lib/erlang";
   private static final Pattern ERLC = Pattern.compile("%%\\s*erlc:\\s*(?:\\S+?\\.erl:)?(\\d+):(\\d+):\\s*(.*)");
-
-  public ErlangMacroLayerSamplesTest() {
-    super(true);
-  }
 
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
@@ -66,6 +62,12 @@ public class ErlangMacroLayerSamplesTest extends ErlangLightPlatformCodeInsightF
           if (rel.endsWith(".erl") && !rel.equals("src/main.erl")) erl.add(rel);
         }
       }
+    }
+    // check.sh compiles with -I include: the same folder as an include root
+    com.intellij.openapi.vfs.VirtualFile include = myFixture.findFileInTempDir("include");
+    if (include != null) {
+      com.intellij.testFramework.PsiTestUtil.addSourceRoot(getModule(), include, org.intellij.erlang.jps.model.ErlangIncludeSourceRootType.INSTANCE);
+      com.intellij.openapi.util.Disposer.register(getTestRootDisposable(), () -> com.intellij.testFramework.PsiTestUtil.removeSourceRoot(getModule(), include));
     }
     LayerTestSupport.enableAll(myFixture);
     List<String> mismatches = new ArrayList<>();

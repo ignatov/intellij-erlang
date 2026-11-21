@@ -38,6 +38,7 @@ import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -59,6 +60,9 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       /** D1: epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+        if (!ErlangMacroLayer.isEnabled()) return;
+        ErlangMacrosName name = o.getMacrosName();
+        if (name != null && ErlangMacroResolve.isRedefinition(o)) registerProblem(holder, name, "Redefining macro '" + o.getName() + "'");
         ErlangArgumentDefinitionList list = o.getArgumentDefinitionList();
         if (list == null) return;
         Set<String> seen = new HashSet<>();
@@ -113,6 +117,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
        * resolves, so that no definition is out of sight.
        */
       private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (!ErlangMacroLayer.isEnabled()) return;
         if (!(target.getContainingFile() instanceof ErlangFile file) || !ErlangMacroResolve.allIncludesResolve(file)) return;
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);
         if (arity == ErlangMacroResolve.UNKNOWN) return;

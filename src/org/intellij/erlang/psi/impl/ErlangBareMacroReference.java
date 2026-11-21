@@ -55,6 +55,8 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
     // round 6 (next), N3: no read access (a platform listener outside a read action): master's answer, no exception
     if (org.intellij.erlang.macrolayer.ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
+    // M2: with the layer off, master's references only
+    if (!org.intellij.erlang.macrolayer.ErlangMacroLayer.isEnabled()) return PsiReference.EMPTY_ARRAY;
     if (host instanceof StubBasedPsiElement<?> s && s.getStub() != null) return PsiReference.EMPTY_ARRAY; // no AST: no text search here
     ASTNode node = host.getNode();
     if (node == null) return PsiReference.EMPTY_ARRAY;

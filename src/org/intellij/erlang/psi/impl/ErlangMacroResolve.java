@@ -157,6 +157,41 @@ public final class ErlangMacroResolve {
     return r;
   }
 
+  /** F5: the attribute when the name is the one of {@code -ifdef(X)}, {@code -ifndef(X)} or {@code -undef(X)}, else null. */
+  public static @Nullable ErlangAttribute directiveOf(@NotNull ErlangMacrosName name) {
+    if (!(name.getParent() instanceof ErlangAtomAttribute atom) || !(atom.getParent() instanceof ErlangAttribute attribute)) return null;
+    String n = atom.getName();
+    return "ifdef".equals(n) || "ifndef".equals(n) || "undef".equals(n) ? attribute : null;
+  }
+
+  /**
+   * F5: epp tests the name of a directive against what is defined at that point, any arity: the definitions before the
+   * directive in the file, and those of the headers included before it. None: no target (not a definition after it).
+   */
+  public static @NotNull List<ErlangMacrosDefinition> definedBefore(@NotNull ErlangFile file, @NotNull PsiElement directive, @NotNull String name) {
+    int at = directive.getTextRange().getStartOffset();
+    List<ErlangMacrosDefinition> r = new ArrayList<>();
+    for (ErlangMacrosDefinition d : file.getMacroses()) {
+      if (name.equals(d.getName()) && d.getTextRange().getStartOffset() < at) r.add(d);
+    }
+    List<List<ErlangFile>> included = new ArrayList<>();
+    for (org.intellij.erlang.psi.ErlangInclude inc : file.getIncludes()) {
+      if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
+    }
+    for (org.intellij.erlang.psi.ErlangIncludeLib inc : file.getIncludeLibs()) {
+      if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
+    }
+    for (List<ErlangFile> headers : included) {
+      for (ErlangFile h : headers) {
+        for (ErlangMacrosDefinition d : h.getMacroses()) if (name.equals(d.getName()) && !r.contains(d)) r.add(d);
+        for (ErlangMacrosDefinition d : ErlangPsiImplUtil.getErlangMacrosFromIncludes(h, true, "")) {
+          if (name.equals(d.getName()) && !r.contains(d)) r.add(d);
+        }
+      }
+    }
+    return r;
+  }
+
   /** The definitions of the name that the file sees: its own, then those of the headers it includes. */
   public static @NotNull List<ErlangMacrosDefinition> candidates(@NotNull ErlangFile file, @NotNull String name) {
     List<ErlangMacrosDefinition> r = new ArrayList<>();
@@ -204,6 +239,55 @@ public final class ErlangMacroResolve {
       if (r.isEmpty() || !allIncludesResolve(r.get(0), seen)) return false;
     }
     return true;
+  }
+
+  /**
+   * D4: epp's "redefining macro": a second definition of the same name and arity. Only where it is certain: both
+   * definitions in this file, outside any conditional, with no {@code -undef} of the name (at any depth) and no
+   * include between them (a header may undefine it).
+   */
+  public static boolean isRedefinition(@NotNull ErlangMacrosDefinition d) {
+    if (!(d.getContainingFile() instanceof ErlangFile file)) return false;
+    return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+      computeRedefinitions(file), file)).contains(d);
+  }
+
+  private static @NotNull Set<ErlangMacrosDefinition> computeRedefinitions(@NotNull ErlangFile file) {
+    Set<ErlangMacrosDefinition> r = new HashSet<>();
+    Map<String, Set<Integer>> seen = new HashMap<>();
+    int depth = 0;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof ErlangMacrosDefinition d) {
+        String name = d.getName();
+        if (name != null && depth == 0 && !seen.computeIfAbsent(name, k -> new HashSet<>()).add(arity(d))) r.add(d);
+        continue;
+      }
+      if (c instanceof org.intellij.erlang.psi.ErlangInclude || c instanceof org.intellij.erlang.psi.ErlangIncludeLib ||
+          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangInclude.class) != null ||
+          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangIncludeLib.class) != null) {
+        seen.clear();
+        continue;
+      }
+      if (!(c instanceof ErlangAttribute attribute)) continue;
+      if (attribute.getIfAtomAttribute() != null) {
+        depth++;
+        continue;
+      }
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      if (atom == null) continue;
+      switch (atom.getName()) {
+        case "ifdef", "ifndef" -> depth++;
+        case "endif" -> depth = Math.max(0, depth - 1);
+        case "undef" -> {
+          ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+          if (m == null) seen.clear();
+          else seen.remove(com.intellij.openapi.util.text.StringUtil.unquoteString(m.getText(), '\''));
+        }
+        default -> {
+        }
+      }
+    }
+    return r;
   }
 
   /** Number of parameters, or {@link #NO_ARGUMENTS} without a parameter list. */

@@ -78,7 +78,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
 
   private static @NotNull List<PsiElement> candidates(@NotNull PsiElement host) {
     if (host instanceof ErlangAtom atom) {
-      if (!(atom.getParent() instanceof ErlangQAtom q) || !ErlangPsiImplUtil.standaloneAtom(q)) return List.of();
+      if (!(atom.getParent() instanceof ErlangQAtom q) || !ErlangPsiImplUtil.standaloneAtom(q) && !isNameOfASplitPiece(q)) return List.of();
       PsiElement name = atom.getNameIdentifier();
       return name.getNode().getElementType() == ErlangTypes.ERL_ATOM_NAME ? List.of(name) : List.of();
     }
@@ -100,6 +100,18 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
       r.add(n.getPsi());
     }
     return r;
+  }
+
+  /**
+   * D2: the name of a function clause in a top-level piece that continues a form the recovery split
+   * ({@code reverse} in {@code lists?COLON reverse(L).} or {@code ?LISTS reverse(L).}): no function of the source is
+   * declared there; in the expansion the name is a call.
+   */
+  private static boolean isNameOfASplitPiece(@NotNull ErlangQAtom q) {
+    if (!(q.getParent() instanceof ErlangFunctionClause clause) || clause.getQAtom() != q) return false;
+    PsiElement form = ErlangMacroLayer.topForm(q);
+    PsiElement prev = form == null ? null : PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
+    return prev != null && !ErlangMacroLayer.endsSourceForm(prev);
   }
 
   /** {@code export} in {@code -export(...)}: the name of an attribute, a keyword of the form. */
@@ -256,10 +268,10 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, trigger);
     if (copy == null || copy.copyFile == null) return null;
     String key = "t" + leaf.getTextRange().getStartOffset();
-    Object cached = copy.answers.get(key);
+    Object cached = copy.answers().get(key);
     if (cached != null) return cached == NONE ? null : (Answer)cached;
     Answer a = compute(copy, leaf, file);
-    copy.answers.put(key, a == null ? NONE : a);
+    copy.answers().put(key, a == null ? NONE : a);
     return a;
   }
 
