@@ -194,14 +194,26 @@ public class ErlangApplicationIndex extends ScalarIndexExtension<String> {
       VirtualFile libDir = getLibraryDirectory(appFile);
       if (libDir == null) return true;
       String appName = getApplicationName(appFile);
-      //applications with no version specification have higher priority
-      if (myPath == null || appName.equals(libDir.getName())) {
+      if (myPath == null || compareLibraryDirectories(appName, libDir, myPath) > 0) {
         myPath = libDir;
-        return true;
       }
-      if (appName.equals(myPath.getName())) return true;
-      myPath = compareLibraryDirectoryNames(appName, myPath.getName(), libDir.getName()) < 0 ? libDir : myPath;
       return true;
+    }
+
+    // the result does not depend on the order the directories are processed in
+    private static int compareLibraryDirectories(@NotNull String appName, @NotNull VirtualFile dir1, @NotNull VirtualFile dir2) {
+      //applications with no version specification have higher priority
+      boolean dir1IsUnversioned = appName.equals(dir1.getName());
+      boolean dir2IsUnversioned = appName.equals(dir2.getName());
+      if (dir1IsUnversioned != dir2IsUnversioned) return dir1IsUnversioned ? 1 : -1;
+      if (!dir1IsUnversioned) {
+        int result = compareLibraryDirectoryNames(appName, dir1.getName(), dir2.getName());
+        if (result != 0) return result;
+      }
+      String path1 = dir1.getPath();
+      String path2 = dir2.getPath();
+      if (path1.length() != path2.length()) return path2.length() - path1.length();
+      return path2.compareTo(path1);
     }
 
     private static int compareLibraryDirectoryNames(@NotNull String appName, @NotNull String name1, @NotNull String name2) {
