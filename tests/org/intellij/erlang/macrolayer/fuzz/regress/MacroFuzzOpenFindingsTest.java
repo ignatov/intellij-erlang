@@ -4,6 +4,7 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.macrolayer.fuzz.EditorActionProbe;
+import org.intellij.erlang.macrolayer.fuzz.FuzzConfig;
 import org.intellij.erlang.macrolayer.fuzz.LayerHooks;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -16,6 +17,11 @@ import java.util.List;
  * asked for with the layer off.
  */
 public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  /** Open findings still gated on {@code MACRO_FUZZ_OPEN=1} until their fix lands (F6, F7 at the time of writing). */
+  private static boolean open() {
+    return FuzzConfig.env("MACRO_FUZZ_OPEN") != null;
+  }
+
   private void layerOff() {
     LayerHooks.setEnabled(false, getTestRootDisposable());
   }
