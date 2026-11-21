@@ -141,15 +141,22 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
-    ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myName.getText(), ErlangMacroResolve.arityAfter(myName));
+    int arity = ErlangMacroResolve.arityAfter(myName);
+    List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myName.getText(), arity);
+    if (!all.isEmpty()) return PsiElementResolveResult.createResults(all); // round 6 (next), item 4
+    ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myName.getText(), arity);
     return d == null ? ResolveResult.EMPTY_ARRAY : new ResolveResult[]{new PsiElementResolveResult(d)};
   }
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
     if (!(element instanceof ErlangMacrosDefinition d) || !myName.getText().equals(d.getName())) return false;
+    if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
+    // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
+    List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myName.getText(), ErlangMacroResolve.arityAfter(myName));
+    if (!m.isEmpty()) return m.contains(d);
     // a header may use a macro that only its includers define: then any definition of the name may be meant
-    return !(myElement.getContainingFile() instanceof ErlangFile file) || ErlangMacroResolve.isVisibleOrUnknown(file, d);
+    return ErlangMacroResolve.isVisibleOrUnknown(file, d);
   }
 
   @Override

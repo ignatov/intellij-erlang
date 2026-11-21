@@ -827,6 +827,10 @@ public final class ErlangMacroExpander {
     final String condition;
     final Branch parent;
     boolean transparent;
+    /** Round 6 (next): the branch before this {@code -elif}/{@code -else} in the same conditional. */
+    Branch previous;
+    /** Round 6 (next): the definitions made directly in this branch. */
+    final List<Def> defined = new ArrayList<>();
 
     Branch(String attribute, String condition, Branch parent) {
       this.attribute = attribute;
@@ -1018,10 +1022,17 @@ public final class ErlangMacroExpander {
         case "undef" -> undef(toks);
         case "ifdef", "ifndef", "if" -> branch = new Branch(attribute, toks.size() > 3 ? toks.get(3).text() : "", branch);
         case "elif", "else" -> {
-          if (branch != null) branch = new Branch(attribute, "", branch.parent);
+          if (branch != null) {
+            Branch next = new Branch(attribute, "", branch.parent);
+            next.previous = branch;
+            branch = next;
+          }
         }
         case "endif" -> {
-          if (branch != null) branch = branch.parent;
+          if (branch != null) {
+            promoteAlternatives(branch);
+            branch = branch.parent;
+          }
         }
         case "include", "include_lib" -> {
           if (resolver == null || owner != null) return; // a header's own includes are replayed by replay()
@@ -1120,7 +1131,51 @@ public final class ErlangMacroExpander {
       def.branch = branch;
       def.fromHeader = fromHeader;
       if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition)) branch.transparent = true;
+      if (branch != null) branch.defined.add(def);
       defs.computeIfAbsent(name, k -> new ArrayList<>()).add(def);
+    }
+
+    /**
+     * Round 6 (next), item 4: a conditional closed by {@code -else} covers every configuration. When each of its
+     * branches defines a name with the same arity, one definition is made visible after {@code -endif}: the common one
+     * when all bodies are the same (epp gives that text whatever the condition), else the one of the active branch
+     * when {@code -ifdef(X)}/{@code -ifndef(X)} can be decided (X predefined or defined earlier outside any branch;
+     * a name the file does not define may be a build flag, so that branch stays unknown and nothing is made visible).
+     */
+    void promoteAlternatives(Branch last) {
+      if (!"else".equals(last.attribute)) return;
+      List<Branch> chain = new ArrayList<>();
+      for (Branch x = last; x != null; x = x.previous) chain.add(0, x);
+      Map<String, Def[]> per = new LinkedHashMap<>();
+      for (int i = 0; i < chain.size(); i++) {
+        for (Def d : chain.get(i).defined) per.computeIfAbsent(d.name + "/" + d.arity, k -> new Def[chain.size()])[i] = d;
+      }
+      for (Def[] alternatives : per.values()) {
+        boolean all = true, same = true;
+        for (Def d : alternatives) {
+          if (d == null) all = false;
+          else if (!d.key.equals(alternatives[0] == null ? null : alternatives[0].key)) same = false;
+        }
+        if (!all) continue;
+        Def chosen = same ? alternatives[0] : activeAlternative(chain, alternatives);
+        if (chosen == null) continue;
+        Def promoted = new Def(chosen.name, chosen.arity, chosen.params, chosen.body, chosen.fragment);
+        promoted.branch = last.parent;
+        promoted.fromHeader = chosen.fromHeader;
+        if (last.parent != null) last.parent.defined.add(promoted);
+        defs.computeIfAbsent(chosen.name, k -> new ArrayList<>()).add(promoted);
+      }
+    }
+
+    private @Nullable Def activeAlternative(List<Branch> chain, Def[] alternatives) {
+      if (chain.size() != 2) return null;
+      Branch first = chain.get(0);
+      boolean ifdef = "ifdef".equals(first.attribute);
+      if (!ifdef && !"ifndef".equals(first.attribute)) return null;
+      boolean defined = PREDEFINED.contains(first.condition);
+      for (Def d : defs.getOrDefault(first.condition, List.of())) if (d.branch == null) defined = true;
+      if (!defined) return null;
+      return ifdef ? alternatives[0] : alternatives[1];
     }
 
     void undef(List<Tok> t) {

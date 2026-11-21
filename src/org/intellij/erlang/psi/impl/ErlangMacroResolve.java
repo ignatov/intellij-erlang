@@ -2,20 +2,22 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
+import org.intellij.erlang.psi.ErlangAtomAttribute;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Round 6: the {@code -define} a macro use names, chosen by arity as {@code epp} does: the definition with as many
@@ -35,13 +37,124 @@ public final class ErlangMacroResolve {
   }
 
   public static @Nullable ErlangMacrosDefinition resolve(@NotNull ErlangFile file, @NotNull String name, int arity) {
+    List<ErlangMacrosDefinition> all = resolveAll(file, name, arity);
+    if (!all.isEmpty()) return all.get(0);
     List<ErlangMacrosDefinition> candidates = candidates(file, name);
-    if (candidates.isEmpty()) return null;
-    if (arity != UNKNOWN) {
-      for (ErlangMacrosDefinition d : candidates) if (arity(d) == arity) return d;
+    return candidates.isEmpty() ? null : candidates.get(0);
+  }
+
+  /**
+   * Round 6 (next), item 3b: the definitions that epp may choose for a use with this many arguments, in every
+   * conditional branch: those with the same number of parameters, else those without a parameter list (epp then
+   * leaves the parentheses as a call); with an unclosed argument list, every definition. Empty when none fits (epp:
+   * argument mismatch). A use refers to each of them; a use of another arity refers to none of them.
+   */
+  public static @NotNull List<ErlangMacrosDefinition> matching(@NotNull ErlangFile file, @NotNull String name, int arity) {
+    List<ErlangMacrosDefinition> candidates = candidates(file, name);
+    if (candidates.isEmpty() || arity == UNKNOWN) return candidates;
+    List<ErlangMacrosDefinition> same = new ArrayList<>();
+    for (ErlangMacrosDefinition d : candidates) if (arity(d) == arity) same.add(d);
+    if (!same.isEmpty()) return same;
+    List<ErlangMacrosDefinition> none = new ArrayList<>();
+    for (ErlangMacrosDefinition d : candidates) if (arity(d) == NO_ARGUMENTS) none.add(d);
+    return none;
+  }
+
+  /**
+   * Round 6 (next), item 4: the definitions a use resolves to: of {@link #matching}, the one in the active branch when
+   * the file tells it (see {@link #branchState}), else all of them except those in a branch known to be inactive (go to
+   * declaration then offers them all).
+   */
+  public static @NotNull List<ErlangMacrosDefinition> resolveAll(@NotNull ErlangFile file, @NotNull String name, int arity) {
+    List<ErlangMacrosDefinition> m = matching(file, name, arity);
+    if (m.size() <= 1) return m;
+    List<ErlangMacrosDefinition> active = new ArrayList<>(), possible = new ArrayList<>();
+    for (ErlangMacrosDefinition d : m) {
+      int state = branchState(d);
+      if (state == ACTIVE) active.add(d);
+      if (state != INACTIVE) possible.add(d);
     }
-    for (ErlangMacrosDefinition d : candidates) if (arity(d) == NO_ARGUMENTS) return d;
-    return candidates.get(0);
+    if (active.size() == 1) return active;
+    return possible.isEmpty() ? m : possible;
+  }
+
+  public static final int ACTIVE = 1, INACTIVE = 2, UNKNOWN_BRANCH = 3;
+
+  /**
+   * Round 6 (next), item 4: whether the branch of a definition is active, as far as its own file tells: every
+   * enclosing {@code -ifdef(X)}/{@code -ifndef(X)} (and its {@code -else}) is decided when X is predefined or defined
+   * earlier in the file outside any branch; a macro that the file does not define may come from a build flag
+   * ({@code -DTEST}), so its branch stays unknown, as does every {@code -if}/{@code -elif} and every header definition.
+   * A definition outside any branch is active.
+   */
+  public static int branchState(@NotNull ErlangMacrosDefinition d) {
+    PsiFile file = d.getContainingFile();
+    if (!(file instanceof ErlangFile ef) || d.getParent() != file) return UNKNOWN_BRANCH;
+    Integer s = com.intellij.psi.util.CachedValuesManager.getCachedValue(ef, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+      computeBranchStates(ef), ef)).get(d);
+    return s == null ? UNKNOWN_BRANCH : s;
+  }
+
+  private record Condition(@Nullable String macro, boolean ifdef, boolean decidable, boolean inElse) {
+    Condition toElse() {
+      return new Condition(macro, ifdef, decidable, true);
+    }
+  }
+
+  private static @NotNull Map<ErlangMacrosDefinition, Integer> computeBranchStates(@NotNull ErlangFile file) {
+    Map<ErlangMacrosDefinition, Integer> r = new HashMap<>();
+    Set<String> defined = new HashSet<>();
+    Deque<Condition> stack = new ArrayDeque<>();
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof ErlangMacrosDefinition d) {
+        int state = ACTIVE;
+        for (Condition k : stack) {
+          if (!k.decidable() || k.macro() == null) {
+            state = state == INACTIVE ? INACTIVE : UNKNOWN_BRANCH;
+            continue;
+          }
+          boolean isDefined = defined.contains(k.macro()) || org.intellij.erlang.parser.macro.ErlangMacroExpander.PREDEFINED.contains(k.macro());
+          if (!isDefined) {
+            state = state == INACTIVE ? INACTIVE : UNKNOWN_BRANCH;
+            continue;
+          }
+          boolean branchActive = k.ifdef() != k.inElse();
+          if (!branchActive) state = INACTIVE;
+        }
+        r.put(d, state);
+        if (stack.isEmpty() && d.getName() != null) defined.add(d.getName());
+        continue;
+      }
+      if (!(c instanceof ErlangAttribute attribute)) continue;
+      if (attribute.getElseAtomAttribute() != null) {
+        Condition top = stack.poll();
+        if (top != null) stack.push(top.toElse());
+        continue;
+      }
+      if (attribute.getIfAtomAttribute() != null) {
+        stack.push(new Condition(null, true, false, false));
+        continue;
+      }
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      if (atom == null) continue;
+      ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+      String macro = m == null ? null : com.intellij.openapi.util.text.StringUtil.unquoteString(m.getText(), '\'');
+      switch (atom.getName()) {
+        case "ifdef" -> stack.push(new Condition(macro, true, true, false));
+        case "ifndef" -> stack.push(new Condition(macro, false, true, false));
+        case "elif" -> {
+          stack.poll();
+          stack.push(new Condition(null, true, false, false));
+        }
+        case "endif" -> stack.poll();
+        case "undef" -> {
+          if (macro != null) defined.remove(macro);
+        }
+        default -> {
+        }
+      }
+    }
+    return r;
   }
 
   /** The definitions of the name that the file sees: its own, then those of the headers it includes. */
