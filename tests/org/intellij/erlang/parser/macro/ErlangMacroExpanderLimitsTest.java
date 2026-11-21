@@ -6,11 +6,14 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Expansion;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander.HeaderSummary;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.IncludeResolver;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Outcome;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -99,5 +102,29 @@ public class ErlangMacroExpanderLimitsTest extends ErlangLightPlatformCodeInsigh
     assertEquals(Integer.valueOf(1), x.outcomes.get(Outcome.LIMIT_TOKENS));
     // tokens added and scanned: bounded by the limits, not hundreds of millions
     assertTrue(String.valueOf(x.work), x.work <= ErlangMacroExpander.MAX_WORK_PER_FORM + ErlangMacroExpander.MAX_TOKENS_PER_FORM);
+  }
+
+  /**
+   * B3: a chain of 22 guarded headers, each including the next one twice. epp reads the guarded body of each header
+   * once; the expander replays each header's directives a bounded number of times and has one definition per macro.
+   */
+  public void testDoubleIncludeChainOfGuardedHeaders() throws Exception {
+    int n = 22;
+    Map<String, HeaderSummary> headers = new HashMap<>();
+    for (int k = 1; k <= n; k++) {
+      StringBuilder h = new StringBuilder();
+      h.append("-ifndef(H").append(k).append(").\n-define(H").append(k).append(", true).\n-define(M").append(k).append(", ").append(k).append(").\n");
+      if (k < n) for (int twice = 0; twice < 2; twice++) h.append("-include(\"h").append(k + 1).append(".hrl\").\n");
+      h.append("-endif.\n");
+      String name = "h" + k + ".hrl";
+      headers.put(name, ErlangMacroExpander.summarize(h, new ErlangLexer(getProject()), name));
+    }
+    IncludeResolver resolver = (owner, attribute, string) -> headers.get(string);
+    String text = "-module(m).\n-include(\"h1.hrl\").\nf() -> {?M1, ?M" + n + "}.\n";
+    Expansion x = expandWithin(text, resolver);
+    assertEquals(Integer.valueOf(2), x.outcomes.get(Outcome.SUBSTITUTED));
+    assertTrue(x.text, x.text.contains("1 ") && x.text.contains(" " + n + " "));
+    // each header's body is replayed once: its second include is skipped
+    assertTrue(String.valueOf(x.replayedDirectives), x.replayedDirectives <= 6 * n);
   }
 }

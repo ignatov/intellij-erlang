@@ -36,6 +36,8 @@ public final class ErlangMacroExpander {
   public static final long MAX_WORK_PER_FORM = 4_000_000;
   /** The work of all forms of a file; after it every use gets {@link Outcome#LIMIT_TOKENS}. */
   public static final long MAX_WORK_PER_FILE = 40_000_000;
+  /** The header directives replayed for one file (include chains and diamonds); after it no header is replayed. */
+  public static final int MAX_REPLAYED_DIRECTIVES = 100_000;
   private static volatile long ourWorkPerForm = MAX_WORK_PER_FORM;
   private static volatile long ourWorkPerFile = MAX_WORK_PER_FILE;
 
@@ -218,8 +220,9 @@ public final class ErlangMacroExpander {
     public int sourceTokens, expandedTokens;
     /** Spike 5: time of the base lexing inside {@link #expand} (measurement only). */
     public long lexNanos;
-    /** The work of all expansions (see {@link #MAX_WORK_PER_FORM}). */
+    /** The work of all expansions (see {@link #MAX_WORK_PER_FORM}) and the header directives replayed. */
     public long work;
+    public int replayedDirectives;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
     private Map<Integer, int[]> myArgumentCopies;
@@ -476,6 +479,7 @@ public final class ErlangMacroExpander {
     e.expandedTokens = run.sigCount + run.expandedDelta;
     e.lexNanos = lexNanos;
     e.work = run.fileWork + run.work;
+    e.replayedDirectives = run.replayed;
     return e;
   }
 
@@ -1122,9 +1126,16 @@ public final class ErlangMacroExpander {
 
     void replay(@Nullable HeaderSummary h) {
       if (h == null || replayDepth > MAX_DEPTH) return;
+      if (replayed > MAX_REPLAYED_DIRECTIVES) {
+        // a pathological include graph: what was not replayed may define anything
+        incompleteIncludes = true;
+        return;
+      }
+      if (guardedAndDefined(h)) return; // epp skips the whole body of a guarded header included again
       replayDepth++;
       try {
         for (Directive d : h.directives) {
+          if ((++replayed & 255) == 0) ProgressManager.checkCanceled();
           if (isInclude(d.attribute)) {
             HeaderSummary child = resolver.resolve(h, d.attribute, d.includeString());
             if (child == null) incompleteIncludes = true;
@@ -1137,6 +1148,28 @@ public final class ErlangMacroExpander {
       finally {
         replayDepth--;
       }
+    }
+
+    /** Header directives replayed so far. */
+    int replayed;
+
+    /**
+     * The header is guarded ({@code -ifndef(G).} first, its {@code -endif} last) and G is visible: epp skips its whole
+     * body. Without this, a chain of headers that each include the next one twice is replayed 2^n times.
+     */
+    boolean guardedAndDefined(HeaderSummary h) {
+      List<Directive> ds = h.directives;
+      if (ds.size() < 2 || !"ifndef".equals(ds.get(0).attribute) || !"endif".equals(ds.get(ds.size() - 1).attribute)) return false;
+      int depth = 0;
+      for (int i = 0; i < ds.size(); i++) {
+        String a = ds.get(i).attribute;
+        if ("ifdef".equals(a) || "ifndef".equals(a) || "if".equals(a)) depth++;
+        else if ("endif".equals(a) && --depth == 0 && i != ds.size() - 1) return false;
+      }
+      Name g = conditionName(ds.get(0).tokens);
+      if (g == null) return false;
+      for (Def d : defs.getOrDefault(g.name, List.of())) if (visible(d)) return true;
+      return false;
     }
 
     boolean visible(Def d) {
@@ -1514,6 +1547,11 @@ public final class ErlangMacroExpander {
   }
 
   private record Name(String name, int last) {
+  }
+
+  /** The name of {@code -ifdef(Name)}, {@code -ifndef(Name)}, {@code -undef(Name)} or {@code -define(Name...)}, or null. */
+  static @Nullable Name conditionName(List<Tok> directive) {
+    return directive.size() > 3 && directive.get(2).type == ERL_PAR_LEFT ? tokName(directive, 3) : null;
   }
 
   /** A macro name in a token list at index i (an atom, a variable or a quoted atom), or null. */
