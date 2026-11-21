@@ -6,6 +6,7 @@ import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiFile;
@@ -57,7 +58,7 @@ public class ErlangMacroLayerExpansionErrorAnnotator
     for (int attempt = 0; ; attempt++) {
       ProgressManager.checkCanceled();
       List<ErlangMacroLayerExpansionErrors.Problem> problems = edt
-        ? ReadAction.compute(() -> compute(info))
+        ? ApplicationManager.getApplication().runReadAction((Computable<List<ErlangMacroLayerExpansionErrors.Problem>>)() -> compute(info))
         : ReadAction.nonBlocking(() -> compute(info)).executeSynchronously();
       if (problems != null) return new Result(info.stamp(), problems);
       // the layer gave no copy: refused while the file was typed in; the pass runs after the typing, so wait once
