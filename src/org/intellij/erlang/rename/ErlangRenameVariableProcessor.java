@@ -30,6 +30,7 @@ import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosBody;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
@@ -101,6 +102,13 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
     }
     if (variableNameIsInvalid) {
       throw new IncorrectOperationException("Invalid variable name");
+    }
+    if (ErlangConsoleView.isConsoleVariable(element)) {
+      for (UsageInfo usage : usages) {
+        PsiReference reference = usage.getReference();
+        if (reference != null) reference.handleElementRename(newName);
+      }
+      return;
     }
     super.renameElement(element, newName, usages, listener);
   }

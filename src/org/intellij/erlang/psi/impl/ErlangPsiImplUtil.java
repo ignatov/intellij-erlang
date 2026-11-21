@@ -103,6 +103,7 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static final Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  private static final Pattern DECIMAL_WITH_SEPARATORS = Pattern.compile("[0-9]+(_[0-9]+)*");
   @NotNull
   private static final Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
 
@@ -492,7 +493,9 @@ public class ErlangPsiImplUtil {
   }
 
   public static int getArity(@Nullable PsiElement arity) {
-    return StringUtil.parseInt(arity == null ? "" : arity.getText(), -1);
+    String text = arity == null ? "" : arity.getText();
+    if (!DECIMAL_WITH_SEPARATORS.matcher(text).matches()) return -1;
+    return StringUtil.parseInt(StringUtil.replace(text, "_", ""), -1);
   }
 
   @Nullable
@@ -1706,8 +1709,8 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static String getName(@NotNull ErlangBehaviour o) {
-    String fromStub = getNameFromStub(o);
-    if (fromStub != null) return fromStub;
+    ErlangBehaviourStub stub = ObjectUtils.tryCast(o.getStub(), ErlangBehaviourStub.class);
+    if (stub != null) return StringUtil.notNullize(stub.getName());
 
     ErlangModuleRef moduleRef = o.getModuleRef();
     ErlangQAtom atom = moduleRef != null ? moduleRef.getQAtom() : null;

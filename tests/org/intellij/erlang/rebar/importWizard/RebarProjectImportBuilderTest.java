@@ -117,6 +117,7 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
 
   public void testRebarlessDeps() throws Exception { doTest(null); }
   public void testRebarDependencies() throws Exception { doTest(null); }
+  public void testRebarBareAtomDependency() throws Exception { doTest(null); }
   public void testTransitiveRebarDependencies() throws Exception { doTest(null); }
   public void testIncludePathsInRebarConfig1() throws Exception { doTest(null); }
   public void testIncludePathsInRebarConfig2() throws Exception { doTest(null); }

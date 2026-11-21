@@ -66,6 +66,17 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     }
   }
 
+  @NotNull
+  @Override
+  public List<File> createCodePathDirectories() throws ExecutionException {
+    try {
+      return List.of(new File(createReporterModuleDirectory()));
+    }
+    catch (IOException e) {
+      throw new ExecutionException("Failed to setup eunit reports environment", e);
+    }
+  }
+
   @Override
   protected boolean useTestCodePath() {
     return true;
@@ -152,7 +163,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append("fun ").append(toAtom(moduleName)).append(':').append(toAtom(function)).append("/0")
                 .append(isGenerator ? "}" : "")
                 .append(", ");
         }
@@ -168,6 +179,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
       throw new ExecutionException("Unknown run config kind");
     }
     return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
+  }
+
+  @NotNull
+  private static String toAtom(@NotNull String name) {
+    return StringUtil.notNullize(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {

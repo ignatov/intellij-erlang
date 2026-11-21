@@ -26,6 +26,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 import java.io.File;
@@ -149,6 +150,35 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     VirtualFile headerFile = addFileToDirectory(includeSourceRoot, "header.hrl", "");
     VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").include("header.hrl").build());
     doTestRebuildInSingleModule(headerFile, sourceFileWithDependency);
+  }
+
+  // #1410: a file above the code assistance size limit gets no Erlang PSI, so its includes can't be read.
+  public void testRebuildLargeModuleWithInclude() throws Exception {
+    VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
+    VirtualFile largeModule = addSourceFile(myModule, "big.erl", aboveSizeLimit(ErlangModuleTextGenerator.module("big").include("header.hrl").build()));
+    doTestRebuildInSingleModule(headerFile, largeModule);
+  }
+
+  public void testRebuildWithLargeInclude() throws Exception {
+    VirtualFile largeHeader = addSourceFile(myModule, "big.hrl", aboveSizeLimit(""));
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").include("big.hrl").build());
+    doTestRebuildInSingleModule(largeHeader, sourceFileWithDependency);
+  }
+
+  public void testBuildWithLargeHeaderAndParseTransformInHeader() throws Exception {
+    addSourceFile(myModule, "h.hrl", "-compile({parse_transform, pt}).\n");
+    addSourceFile(myModule, "pt.erl", ErlangModuleTextGenerator.pt("pt").build());
+    addSourceFile(myModule, "m.erl", ErlangModuleTextGenerator.module("m").include("h.hrl").build());
+    addSourceFile(myModule, "big.hrl", aboveSizeLimit("-define(X, 1)."));
+    compileAndAssertOutput(false);
+  }
+
+  @NotNull
+  private static String aboveSizeLimit(@NotNull String text) {
+    StringBuilder builder = new StringBuilder(text).append('\n');
+    String commentLine = "%" + "x".repeat(99) + "\n";
+    while (builder.length() < 3_000_000) builder.append(commentLine);
+    return builder.toString();
   }
 
   public void testRebuildWithTransitiveDependencies() throws Exception {

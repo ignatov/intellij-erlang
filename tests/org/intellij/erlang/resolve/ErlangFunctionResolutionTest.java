@@ -26,6 +26,7 @@ import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangFunctionWithArity;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -61,6 +62,7 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testPreferImportFromUserModule() { doFunctionCallTest("test.erl", "incl.erl"); }
   public void testPreferLocalFunction()        { doFunctionCallTest("test.erl", "test.erl", "incl.erl"); }
   public void testPreferFirstImport()          { doFunctionCallTest("test.erl", "incl.erl", "another_incl.erl"); }
+  public void testImportArityWithDigitSeparators() { doFunctionCallTest("test.erl", "incl.erl"); }
 
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
@@ -70,6 +72,24 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testExportOfAutoImportedBif()       { doUnresolvedExportTest("test.erl"); }
   public void testExportOfLocalImportedFunction() { doExportTest("test.erl", "test.erl", "incl.erl"); }
   public void testExportOfIncludedFunction()      { doExportTest("test.erl", "incl.hrl"); }
+
+  public void testExportArityWithDigitSeparators() {
+    myFixture.configureByText("test.erl", """
+      -export([<caret>g/1_0]).
+      g(_, _, _, _, _, _, _, _, _, _) -> ok.
+      g() -> ok.
+      """);
+    assertResolvesTo(getElementAtCaret(ErlangExportFunction.class).getReference(), "test.erl", "g", 10);
+  }
+
+  public void testFunArityWithDigitSeparators() {
+    myFixture.configureByText("test.erl", """
+      g(_, _, _, _, _, _, _, _, _, _) -> ok.
+      g() -> ok.
+      h() -> fun <caret>g/1_0.
+      """);
+    assertResolvesTo(getElementAtCaret(ErlangFunctionWithArity.class).getReference(), "test.erl", "g", 10);
+  }
 
   private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
     String[] files = {focusedFile, expectedFile};

@@ -400,7 +400,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       for (ErlangExportFunction exportFunction : list) {
         PsiElement integer = exportFunction.getInteger();
         if (integer == null) continue;
-        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + integer.getText();
+        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + ErlangPsiImplUtil.getArity(integer);
         result.add(s);
       }
     }

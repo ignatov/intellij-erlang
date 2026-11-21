@@ -1,0 +1,2 @@
+-module(module2).
+-include("header1.hrl").

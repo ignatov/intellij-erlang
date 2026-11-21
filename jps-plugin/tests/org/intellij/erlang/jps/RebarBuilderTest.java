@@ -17,6 +17,7 @@
 
 package org.intellij.erlang.jps;
 
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.util.containers.ContainerUtil;
@@ -99,12 +100,59 @@ public class RebarBuilderTest extends ErlangJpsBuildTestCase {
     assertSameElements(listFiles(appPath("_build/default/lib/app1/ebin")), "app1.app", "app1_mod.beam");
   }
 
+  // `rebar3 local install` writes ~/.cache/rebar3/bin/rebar3, a sh script that runs erl, not an escript (#1233). The build
+  // runs it directly. rebar3 has no local install on Windows, and Windows has no sh, so there is nothing to build there.
+  public void testRebar3LocalInstallScriptCompilesApplication() throws IOException {
+    String rebarPath = requireRebarPath();
+    if (SystemInfo.isWindows) return;
+    File cacheDirectory = new File(getAbsolutePath("rebar_cache"));
+    String escript = JpsErlangSdkType.getScriptInterpreterExecutable(getErlangSdkPath()).getAbsolutePath();
+    ProcessBuilder localInstall = new ProcessBuilder(escript, rebarPath, "local", "install").redirectErrorStream(true);
+    localInstall.environment().put("REBAR_CACHE_DIR", cacheDirectory.getPath());
+    assertProcessSucceeds(localInstall);
+    String script = FileUtil.loadFile(new File(cacheDirectory, "bin/rebar3"));
+    assertTrue(script, script.startsWith("#!/usr/bin/env sh"));
+
+    useRebar(new File(cacheDirectory, "bin/rebar3").getPath());
+    createRebarApp("{erl_opts, []}.");
+    rebuildAll();
+
+    assertSameElements(listFiles(appPath("_build/default/lib/app1/ebin")), "app1.app", "app1_mod.beam");
+  }
+
+  // A rebar script that runs erl gets the bin directory of the module's Erlang SDK first on PATH. Not on Windows: no sh.
+  public void testRebarScriptRunsErlOfSdk() throws IOException {
+    if (SystemInfo.isWindows) return;
+    File script = new File(getAbsolutePath("rebar_bin/rebar3"));
+    FileUtil.writeToFile(script, "#!/bin/sh\ncommand -v erl > erl_path.txt\n");
+    FileUtil.setExecutable(script);
+    useRebar(script.getPath());
+    createRebarApp("{erl_opts, []}.");
+    rebuildAllWithoutAssertions();
+
+    File erlPath = new File(appPath("erl_path.txt"));
+    assertTrue("The rebar script did not run", erlPath.isFile());
+    assertEquals(JpsErlangSdkType.getByteCodeInterpreterExecutable(getErlangSdkPath()).getPath(), FileUtil.loadFile(erlPath).trim());
+  }
+
   public void testRebarPathNotSetFailsBuild() {
     useRebar("");
     createRebarApp("{erl_opts, []}.");
     BuildResult result = rebuildAllWithoutAssertions();
     assertTrue(ContainerUtil.exists(result.getErrorMessages(), m -> m.getMessageText().equals("Rebar path is not set")));
     assertEmpty(listFiles(getAbsolutePath("out/production/m")));
+  }
+
+  private static void assertProcessSucceeds(@NotNull ProcessBuilder processBuilder) throws IOException {
+    Process process = processBuilder.start();
+    try {
+      String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+      assertEquals(output, 0, process.waitFor());
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException(e);
+    }
   }
 
   @NotNull

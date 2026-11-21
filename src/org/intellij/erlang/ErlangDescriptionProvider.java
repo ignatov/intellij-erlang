@@ -52,7 +52,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       }
       return o.getText();
     }
-    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || o instanceof ErlangFunctionCallExpression)) {
+    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || isFunctionReferenceOwner(o))) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
     if (location == UsageViewShortNameLocation.INSTANCE ||
@@ -62,7 +62,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
       if (o instanceof ErlangTypeRef) return o.getText();
-      if (o instanceof ErlangFunctionCallExpression) return o.getText();
+      if (isFunctionReferenceOwner(o)) return o.getText();
       if (o instanceof ErlangAttribute) {
         ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
         if (spec != null) return spec.getName();
@@ -85,12 +85,21 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       else if (o instanceof ErlangAttribute) return "attribute";
       else if (o instanceof ErlangQAtom) return "atom";
       else if (o instanceof ErlangTypeRef) return "type";
-      else if (o instanceof ErlangFunctionCallExpression) return "function";
+      else if (isFunctionReferenceOwner(o)) return "function";
       else if (o instanceof ErlangSpecification) return "specification";
     }
     // any other element or location: the platform's default description (master logged an error and said "<unknown>",
     // which the platform's presentation of a documentation or navigation target can reach with any Erlang element)
     LOG.debug("No description of " + o.getClass().getSimpleName() + " for " + location.getClass().getSimpleName());
     return null;
+  }
+
+  private static boolean isFunctionReferenceOwner(@NotNull PsiElement o) {
+    return o instanceof ErlangFunctionCallExpression ||
+           o instanceof ErlangFunctionWithArity ||
+           o instanceof ErlangExportFunction ||
+           o instanceof ErlangImportFunction ||
+           o instanceof ErlangCallbackFunction ||
+           o instanceof ErlangSpecFun;
   }
 }
