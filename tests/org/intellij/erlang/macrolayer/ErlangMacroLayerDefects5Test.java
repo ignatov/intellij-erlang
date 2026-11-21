@@ -221,4 +221,81 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     assertEquals("variable", inBackground(() -> com.intellij.usageView.UsageViewUtil.getType(t)));
     assertTrue(texts, texts.startsWith("variable Xh | "));
   }
+
+  // ------------------------------------------------------------------------------------------------ defect 2
+
+  private String usagesText(java.util.Collection<? extends com.intellij.usageView.UsageInfo> usages) throws Exception {
+    return inBackground(() -> {
+      List<String> r = new java.util.ArrayList<>();
+      for (com.intellij.usageView.UsageInfo u : usages) {
+        PsiElement e = u.getElement();
+        PsiFile f = e == null ? null : e.getContainingFile();
+        int line = f == null ? -1 : com.intellij.openapi.util.text.StringUtil.offsetToLineNumber(f.getText(), e.getTextRange().getStartOffset()) + 1;
+        r.add((f == null ? "?" : f.getName()) + ":" + line + ":" + (e == null ? null : e.getText()));
+      }
+      java.util.Collections.sort(r);
+      return r.toString();
+    });
+  }
+
+  /**
+   * The Find Usages action as the IDE runs it: the platform picks the handler, then the search runs on a pooled thread.
+   * (The fixture's findUsages searches on the UI thread, where the layer answers only from up-to-date caches.)
+   */
+  private String findUsagesLikeTheIde(PsiElement t) throws Exception {
+    com.intellij.find.findUsages.FindUsagesManager manager =
+      ((com.intellij.find.impl.FindManagerImpl)com.intellij.find.FindManager.getInstance(getProject())).getFindUsagesManager();
+    com.intellij.find.findUsages.FindUsagesHandler handler =
+      manager.getFindUsagesHandler(t, com.intellij.find.findUsages.FindUsagesHandlerFactory.OperationMode.USAGES_WITH_DEFAULT_OPTIONS);
+    assertNotNull("Cannot find handler for: " + t, handler);
+    com.intellij.find.findUsages.FindUsagesOptions options = handler.getFindUsagesOptions(null);
+    return usagesText(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      com.intellij.util.CommonProcessors.CollectProcessor<com.intellij.usageView.UsageInfo> p =
+        new com.intellij.util.CommonProcessors.CollectProcessor<>(java.util.Collections.synchronizedList(new java.util.ArrayList<>()));
+      for (PsiElement e : handler.getPrimaryElements()) handler.processElementUsages(e, p, options);
+      return p.getResults();
+    }).get());
+  }
+
+  /** P6: find usages on a name whose target is in the body of a header macro finds the uses in every includer. */
+  public void testFindUsagesOfAHeaderTarget() throws Exception {
+    myFixture.addFileToProject("d2/h.hrl", "-define(H_X, Xh = 1).\n");
+    PsiFile a = myFixture.addFileToProject("d2/a.erl",
+      "-module(a).\n-include(\"h.hrl\").\n-export([g/0, k/0]).\ng() -> ?H_X, Xh.\nk() -> ?H_X,\n  {Xh, Xh}.\n");
+    PsiFile a2 = myFixture.addFileToProject("d2/a2.erl", "-module(a2).\n-include(\"h.hrl\").\n-export([f/0]).\nf() -> ?H_X, Xh + 1.\n");
+    PsiFile b = myFixture.addFileToProject("d2/b.erl", "-module(b).\n-export([z/0]).\nz() -> Xh = 2, Xh.\n");
+    highlight(a, a2, b);
+    PsiElement t = headerTarget(a, "Xh.\n");
+    // in the IDE: the search runs in the background
+    String background = usagesText(inBackground(() -> {
+      List<com.intellij.usageView.UsageInfo> r = new java.util.ArrayList<>();
+      for (PsiReference ref : com.intellij.psi.search.searches.ReferencesSearch.search(t).findAll()) r.add(new com.intellij.usageView.UsageInfo(ref));
+      return r;
+    }));
+    out("D2 references search: " + background);
+    String action = findUsagesLikeTheIde(t);
+    out("D2 find usages: " + action);
+    assertEquals("[a.erl:4:Xh, a.erl:6:Xh, a.erl:6:Xh, a2.erl:4:Xh]", action);
+    assertEquals(action, background);
+  }
+
+  /** P6: find usages on a function made by a header macro ({@code ?GEN(foo).}) finds its local calls. */
+  public void testFindUsagesOfAFunctionMadeByAHeaderMacro() throws Exception {
+    myFixture.addFileToProject("d2f/h.hrl", "-define(GEN(N), N() -> ok).\n");
+    PsiFile a = myFixture.addFileToProject("d2f/a.erl",
+      "-module(a).\n-include(\"h.hrl\").\n-export([g/0, foo/0]).\n?GEN(foo).\ng() -> foo().\nk() ->\n  {foo(), foo}.\n");
+    PsiFile b = myFixture.addFileToProject("d2f/b.erl", "-module(b).\n-export([foo/0]).\nfoo() -> foo.\nz() -> foo().\n");
+    highlight(a, b);
+    PsiElement t = inBackground(() -> refAt(a, "foo().\nk").resolve());
+    assertNotNull(t);
+    assertEquals(a.getText().indexOf("?GEN(foo)") + 5, (int)inBackground(() -> t.getTextRange().getStartOffset()));
+    String action = findUsagesLikeTheIde(t);
+    out("D2 find usages of foo: " + action);
+    // the find usages view: "Usages of function foo", not of a "Leaf Psi Element"
+    String names = inBackground(() -> com.intellij.usageView.UsageViewUtil.getType(t) + " " + com.intellij.lang.findUsages.DescriptiveNameUtil.getDescriptiveName(t) +
+                                      " | " + com.intellij.refactoring.util.RefactoringUIUtil.getDescription(t, false));
+    out("D2 names of foo: " + names);
+    assertEquals("function foo | function <b><code>foo</code></b>", names);
+    assertEquals("[a.erl:3:foo/0, a.erl:5:foo(), a.erl:7:foo()]", action);
+  }
 }

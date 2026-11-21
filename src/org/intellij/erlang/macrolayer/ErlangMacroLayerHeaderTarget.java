@@ -3,6 +3,7 @@ package org.intellij.erlang.macrolayer;
 import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
 import com.intellij.ide.util.DeleteNameDescriptionLocation;
 import com.intellij.ide.util.DeleteTypeDescriptionLocation;
+import com.intellij.lang.Language;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
@@ -19,6 +20,7 @@ import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewShortNameLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangQAtom;
@@ -78,6 +80,12 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
   @Override
   public @Nullable PsiFile getContainingFile() {
     return headerFile();
+  }
+
+  /** Erlang: find usages and the other language services take the target as an Erlang element. */
+  @Override
+  public @NotNull Language getLanguage() {
+    return ErlangLanguage.INSTANCE;
   }
 
   @Override
@@ -181,11 +189,16 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
    * (refactoring texts) are left to the platform's default, which combines the kind and the name.
    */
   public @Nullable String describe(@NotNull ElementDescriptionLocation location) {
-    if (location == UsageViewTypeLocation.INSTANCE || location instanceof DeleteTypeDescriptionLocation) return getKind();
+    return describe(getKind(), myText, location);
+  }
+
+  /** A description of a layer target by its kind and name; null for the locations left to the platform's default. */
+  static @Nullable String describe(@NotNull String kind, @NotNull String name, @NotNull ElementDescriptionLocation location) {
+    if (location == UsageViewTypeLocation.INSTANCE || location instanceof DeleteTypeDescriptionLocation) return kind;
     if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE ||
         location == UsageViewNodeTextLocation.INSTANCE || location == HighlightUsagesDescriptionLocation.INSTANCE ||
         location instanceof DeleteNameDescriptionLocation) {
-      return myText;
+      return name;
     }
     return null;
   }

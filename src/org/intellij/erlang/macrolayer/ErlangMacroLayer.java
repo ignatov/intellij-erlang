@@ -18,6 +18,7 @@ import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiFileImpl;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
@@ -870,6 +871,31 @@ public final class ErlangMacroLayer {
 
   private static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
     return t.formError.computeIfAbsent(form.getTextRange().getStartOffset(), k -> PsiTreeUtil.hasErrorElements(form));
+  }
+
+  /**
+   * Round 5: the element is what the layer gives as the declaration of a function made by a macro, such as
+   * {@code foo} in {@code ?GEN(foo).}: an atom name in a top-level form that starts with a macro use or is broken.
+   * A structural check only; it asks no copy, so the UI thread may call it.
+   */
+  public static boolean isNameOfFunctionMadeByMacro(@Nullable PsiElement element) {
+    if (!(element instanceof LeafPsiElement leaf) || leaf.getElementType() != org.intellij.erlang.ErlangTypes.ERL_ATOM_NAME) return false;
+    if (!isEnabled() || realFile(element) == null) return false;
+    PsiElement form = topForm(element);
+    if (form == null) return false;
+    if (form instanceof PsiErrorElement) return true;
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    return first != element && first != null && "?".equals(first.getText());
+  }
+
+  /**
+   * The description of a target that only the layer gives (a header target, the name of a function made by a macro),
+   * for the Erlang description provider; null for other elements.
+   */
+  public static @Nullable String describeLayerTarget(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
+    if (element instanceof ErlangMacroLayerHeaderTarget target) return target.describe(location);
+    if (isNameOfFunctionMadeByMacro(element)) return ErlangMacroLayerHeaderTarget.describe("function", element.getText(), location);
+    return null;
   }
 
   // ------------------------------------------------------------------------------------------------ resolve

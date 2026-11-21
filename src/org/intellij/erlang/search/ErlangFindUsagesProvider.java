@@ -31,6 +31,7 @@ import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.Processor;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -74,6 +75,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
       || o instanceof ErlangRecordDefinition || o instanceof ErlangModule
       || o instanceof ErlangMacrosDefinition || o instanceof ErlangTypedExpr
       || o instanceof ErlangTypeDefinition || o instanceof ErlangQAtom
+      || o instanceof ErlangMacroLayerHeaderTarget
       ;
   }
 

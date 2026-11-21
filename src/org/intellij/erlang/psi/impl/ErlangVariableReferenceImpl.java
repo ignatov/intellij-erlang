@@ -23,6 +23,7 @@ import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,6 +70,13 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
+    if (element instanceof ErlangMacroLayerHeaderTarget) {
+      // round 5: a variable bound in the body of a header macro (the macro layer's answer)
+      for (ResolveResult result : multiResolve(false)) {
+        if (element.isEquivalentTo(result.getElement())) return true;
+      }
+      return false;
+    }
     if (!(element instanceof ErlangQVar)) return false;
     for (ResolveResult result : multiResolve(false)) {
       PsiElement resultElement = result.getElement();
