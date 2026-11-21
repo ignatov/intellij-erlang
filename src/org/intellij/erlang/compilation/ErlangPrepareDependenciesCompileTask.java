@@ -164,7 +164,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     for (Collection<String> component : builder.getComponents()) {
       for (String filePath : component) {
         if (semiGraph.isHeader(filePath)) continue;
-        for (String dependency : semiGraph.getDependencies(filePath)) {
+        for (String dependency : semiGraph.getOrderingDependencies(filePath)) {
           if (component.contains(dependency)) {
             throw new CyclicDependencyFoundException(Map.entry(filePath, dependency));
           }
@@ -182,14 +182,18 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   private static class ErlangFilesDependencyGraph implements InboundSemiGraph<String> {
     private final Project myProject;
     private final PsiManager myPsiManager;
-    private final Set<String> myHeaders;
+    private final Set<String> myHeaders = new HashSet<>();
+    private final Set<String> myHeadersWithoutPsi = new HashSet<>();
     private final Map<String, List<String>> myPathsToDependenciesMap = new HashMap<>();
+    // The dependencies that order the build and are checked for cycles: myPathsToDependenciesMap without the guessed edges
+    // into and out of headers without Erlang PSI, which could close a cycle through a parse transform or behaviour.
+    private final Map<String, List<String>> myPathsToOrderingDependenciesMap = new HashMap<>();
 
     private ErlangFilesDependencyGraph(@NotNull Module[] modulesToCompile) {
       assert modulesToCompile.length > 0;
       myProject = modulesToCompile[0].getProject();
       myPsiManager = PsiManager.getInstance(myProject);
-      myHeaders = collectHeaderPaths(modulesToCompile);
+      collectHeaderPaths(modulesToCompile);
       for (Module module : modulesToCompile) {
         buildDependenciesMap(module);
       }
@@ -200,19 +204,21 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       return new ErlangFilesDependencyGraph(modulesToCompile);
     }
 
-    @NotNull
-    private static Set<String> collectHeaderPaths(@NotNull Module[] modulesToCompile) {
-      Set<String> erlangHeaders = new HashSet<>();
+    private void collectHeaderPaths(@NotNull Module[] modulesToCompile) {
       for (Module module : modulesToCompile) {
-        erlangHeaders.addAll(getHeaders(module, false));
-        erlangHeaders.addAll(getHeaders(module, true));
+        collectHeaderPaths(getErlangHeaderFiles(module, false));
+        collectHeaderPaths(getErlangHeaderFiles(module, true));
       }
-      return erlangHeaders;
     }
 
-    @NotNull
-    private static List<String> getHeaders(Module module, boolean onlyTestModules) {
-      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), ErlangPrepareDependenciesCompileTask::getPath);
+    private void collectHeaderPaths(@NotNull Collection<VirtualFile> headers) {
+      for (VirtualFile header : headers) {
+        String path = getPath(header);
+        myHeaders.add(path);
+        if (getErlangFile(header) == null) {
+          myHeadersWithoutPsi.add(path);
+        }
+      }
     }
 
     @NotNull
@@ -224,7 +230,12 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     @Override
     @NotNull
     public Iterator<String> getIn(@NotNull String filePath) {
-      return myPathsToDependenciesMap.get(filePath).iterator();
+      return myPathsToOrderingDependenciesMap.get(filePath).iterator();
+    }
+
+    @NotNull
+    public List<String> getOrderingDependencies(@NotNull String filePath) {
+      return Objects.requireNonNull(myPathsToOrderingDependenciesMap.get(filePath));
     }
 
     public boolean isHeader(@NotNull String filePath) {
@@ -249,17 +260,38 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
                                       @NotNull List<String> globalParseTransforms) {
       for (VirtualFile file : erlangFiles) {
         Set<String> dependencies = new HashSet<>();
+        Set<String> guessedDependencies = new HashSet<>();
+        String path = getPath(file);
+        boolean isHeader = myHeaders.contains(path);
         ErlangFile psi = getErlangFile(file);
-        addDeclaredDependencies(module, psi, dependencies);
+        if (psi != null) {
+          addDeclaredDependencies(module, psi, dependencies);
+        }
+        else if (isHeader) {
+          // The includes of a file without Erlang PSI (e.g. above the size limit) are unknown: depend on every header that has PSI.
+          for (String header : myHeaders) {
+            if (!myHeadersWithoutPsi.contains(header)) guessedDependencies.add(header);
+          }
+        }
+        else {
+          // A module is never the target of an edge, so these edges order the build without closing a cycle.
+          dependencies.addAll(myHeaders);
+        }
+        if (!isHeader) {
+          // Includes of a header without Erlang PSI can't be resolved, so every module depends on it.
+          guessedDependencies.addAll(myHeadersWithoutPsi);
+        }
         dependencies.addAll(globalParseTransforms);
-        myPathsToDependenciesMap.put(getPath(file), new ArrayList<>(dependencies));
+        myPathsToOrderingDependenciesMap.put(path, new ArrayList<>(dependencies));
+        guessedDependencies.addAll(dependencies);
+        myPathsToDependenciesMap.put(path, new ArrayList<>(guessedDependencies));
       }
     }
 
-    @NotNull
+    @Nullable
     private ErlangFile getErlangFile(@NotNull VirtualFile virtualFile) {
       PsiFile psiFile = myPsiManager.findFile(virtualFile);
-      return Objects.requireNonNull(ObjectUtils.tryCast(psiFile, ErlangFile.class));
+      return ObjectUtils.tryCast(psiFile, ErlangFile.class);
     }
 
     private void addDeclaredDependencies(@NotNull Module module,
