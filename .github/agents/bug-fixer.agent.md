@@ -20,7 +20,8 @@ If the task needs anything from the "Stop and ask the maintainer" list in `AGENT
 The platform replaces the pull request description with its own summary when the session ends. Post the evidence as a pull request comment as well:
 - what failed and how to reproduce it;
 - the root cause and the fix;
-- the tests, as `Class.testMethod`, and that you saw each new test fail without the fix;
+- the tests that reproduce the bug, as `Class.testMethod`, and that you saw each of them fail without the fix;
+- the tests of neighbouring behaviour (step 5), listed separately: they may pass with and without the fix;
 - the commands you ran and their results;
 - what was not verified.
 
