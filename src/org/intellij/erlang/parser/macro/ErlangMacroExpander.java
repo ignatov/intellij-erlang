@@ -599,7 +599,8 @@ public final class ErlangMacroExpander {
    *   {@code receive}, {@code try ... of / catch}, {@code fun (...)}, {@code maybe ... else} or {@code if} to its
    *   {@code when} or {@code ->}; so the patterns of the body bind nothing;</li>
    *   <li>it has no {@code || <- <= <:- <:= ?= ! :: .. ... &&} (no comprehension generator, maybe match, send or type);
-   *   {@code =} occurs only directly inside the braces of a record ({@code #r{f = A}});</li>
+   *   {@code =} occurs only directly inside the braces of a record, right after a field name ({@code #r{f = A}}; not
+   *   the match of {@code #r{f = A = B}});</li>
    *   <li>{@code ,} occurs only inside brackets or blocks, {@code |} only directly inside a list; {@code ; -> when of
    *   after catch else} only directly inside a block; {@code .} only after {@code #name} (record field access);
    *   {@code fun} is followed by {@code (} only as a fun with clauses (a block);</li>
@@ -690,7 +691,7 @@ public final class ErlangMacroExpander {
       }
       else if (t == ERL_COMMA && stack.isEmpty()) plain = false;
       else if (t == ERL_OP_OR && (top == null || top.type != ERL_BRACKET_LEFT)) plain = false;
-      else if (t == ERL_OP_EQ && (top == null || !top.recordBrace)) plain = false;
+      else if (t == ERL_OP_EQ && (top == null || !top.recordBrace || !isFieldNameBefore(body, i))) plain = false;
       else if (t == ERL_DOT && !(i >= 2 && body.get(i - 2).type == ERL_RADIX ||
                                  i >= 3 && body.get(i - 3).type == ERL_RADIX && body.get(i - 2).type == ERL_QMARK)) {
         plain = false;
@@ -702,6 +703,31 @@ public final class ErlangMacroExpander {
     if (ANY_OPERATOR_OR_DANGLING.contains(body.get(body.size() - 1).type)) return false;
     return !(body.size() >= 3 && body.get(0).type == ERL_OP_MINUS && body.get(1).type == ERL_ATOM_NAME &&
              body.get(2).type == ERL_PAR_LEFT);
+  }
+
+  /**
+   * The '=' at i follows a field name that starts a field of a record brace: {@code {name =}, {@code , name =}, with
+   * the name an atom, a quoted atom, {@code _} or {@code ?NAME}. Any other '=' in a record brace is a match (for
+   * example the second '=' of {@code #r{a = V = W}}), so the body is not plain.
+   */
+  private static boolean isFieldNameBefore(@NotNull List<Tok> body, int i) {
+    int start;
+    IElementType prev = i >= 1 ? body.get(i - 1).type : null;
+    if (prev == ERL_ATOM_NAME || prev == ERL_VAR) {
+      start = i - 1;
+      if (i >= 2 && body.get(i - 2).type == ERL_QMARK) start = i - 2;
+      else if (prev == ERL_VAR && !body.get(i - 1).text.equals("_")) return false;
+    }
+    else if (prev == ERL_SINGLE_QUOTE && i >= 3 && body.get(i - 2).type == ERL_ATOM_NAME &&
+             body.get(i - 3).type == ERL_SINGLE_QUOTE) {
+      start = i - 3;
+    }
+    else {
+      return false;
+    }
+    if (start < 1) return false;
+    IElementType before = body.get(start - 1).type;
+    return before == ERL_CURLY_LEFT || before == ERL_COMMA;
   }
 
   /** The '{' at i opens a record: {@code #name{}, #'name'{}, #?NAME{}}. */
