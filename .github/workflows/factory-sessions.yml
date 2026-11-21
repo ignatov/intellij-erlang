@@ -44,6 +44,7 @@ jobs:
   sessions:
     runs-on: ubuntu-24.04
     # The archiver stops reading after its budget of 20 minutes; the rest is the fetch and the pushes.
+    # Keep it equal to SESSION_ARCHIVE_JOB_MINUTES of the step "Archive".
     timeout-minutes: 30
     environment:
       name: factory-dispatch
@@ -132,6 +133,8 @@ jobs:
           # For git, through the askpass script: the archiver reads and pushes its branch of the private repository.
           DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
           PYTHONUNBUFFERED: '1'
+          # The job's time limit for the archiver; it must stay equal to timeout-minutes of the job.
+          SESSION_ARCHIVE_JOB_MINUTES: '30'
           MODE: ${{ steps.mode.outputs.mode }}
         run: |
           export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
