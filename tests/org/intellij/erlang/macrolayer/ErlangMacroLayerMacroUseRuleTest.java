@@ -63,6 +63,9 @@ public class ErlangMacroLayerMacroUseRuleTest extends ErlangLightPlatformCodeIns
     super.setUp();
     setUpProjectSdk();
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    // "still typing" for the whole test: a passive query never stops waiting by the clock, only by a key press or a copy
+    ErlangMacroLayer.setQuietMillisForTests(600_000, getTestRootDisposable());
+    ErlangMacroLayer.setPassiveWaitMillisForTests(600_000, getTestRootDisposable());
     ErlangMacroLayerLog.enableForTests(true);
     ErlangMacroLayerLog.reset();
   }
@@ -94,7 +97,8 @@ public class ErlangMacroLayerMacroUseRuleTest extends ErlangLightPlatformCodeIns
   private static void assertInsideTheQuietTime(long typedAt, String what) {
     long ms = (System.nanoTime() - typedAt) / 1_000_000;
     System.out.println("MERGED-RULE " + what + " ended " + ms + " ms after the key press");
-    assertTrue(what + " must end inside the quiet time: " + ms + " ms", ms < ErlangMacroLayer.quietMillis());
+    // the quiet time is 600 s in this test: a caller that waited for it would take that long; 60 s is only a safety bound
+    assertTrue(what + " waited for the quiet time (it took " + ms + " ms)", ms < 60_000);
   }
 
   private int offset(String marker) {

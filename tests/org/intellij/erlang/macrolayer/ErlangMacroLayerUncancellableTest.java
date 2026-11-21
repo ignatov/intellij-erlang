@@ -83,7 +83,8 @@ public class ErlangMacroLayerUncancellableTest extends ErlangLightPlatformCodeIn
     assertEquals("during another thread's build: master's answer at once", "null", inBackgroundWithIndicator(
       () -> ProgressManager.getInstance().computeInNonCancelableSection(() -> lastZ(f))));
     long waitedMs = (System.nanoTime() - t0) / 1_000_000;
-    assertTrue("the uncancellable caller waited " + waitedMs + " ms", waitedMs < 5_000);
+    // the build is held until after this line: a caller that waited for it would never return; 30 s is a safety bound
+    assertTrue("the uncancellable caller waited for the build (" + waitedMs + " ms)", waitedMs < 30_000);
     release.countDown();
     assertEquals(binding, builder.get(30, TimeUnit.SECONDS));
     assertEquals(1, builds().size());

@@ -172,6 +172,9 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
     myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
     myFixture.doHighlighting();
     int builds0 = builds().size();
+    // "still typing" whatever the clock says: the popup waits until the next key press
+    ErlangMacroLayer.setQuietMillisForTests(600_000, getTestRootDisposable());
+    ErlangMacroLayer.setPassiveWaitMillisForTests(600_000, getTestRootDisposable());
     com.intellij.openapi.editor.Document d = com.intellij.psi.PsiDocumentManager.getInstance(getProject()).getDocument(f);
     for (int i = 0; i < 3; i++) {
       com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%"));

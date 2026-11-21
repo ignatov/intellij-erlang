@@ -41,6 +41,9 @@ public class ErlangMacroLayerRenameAfterTypingTest extends ErlangLightPlatformCo
     super.setUp();
     setUpProjectSdk();
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    // "still typing" for the whole test: a passive query never stops waiting by the clock, only by a key press or a copy
+    ErlangMacroLayer.setQuietMillisForTests(600_000, getTestRootDisposable());
+    ErlangMacroLayer.setPassiveWaitMillisForTests(600_000, getTestRootDisposable());
     for (String n : List.of("h.hrl", "i.erl", "i2.erl", "s.erl")) {
       myFiles.put(n, myFixture.addFileToProject("nav/" + n, read(Paths.get("testData/macroLayer/nav", n))));
     }
@@ -108,7 +111,8 @@ public class ErlangMacroLayerRenameAfterTypingTest extends ErlangLightPlatformCo
   private static void assertInsideTheQuietTime(long typedAt) {
     long ms = (System.nanoTime() - typedAt) / 1_000_000;
     System.out.println("LAYER-RAT search ended " + ms + " ms after the key press");
-    assertTrue("the search must end inside the quiet time: " + ms + " ms", ms < ErlangMacroLayer.quietMillis());
+    // the quiet time is 600 s in this test: a search that waited for it would take that long; 60 s is only a safety bound
+    assertTrue("the search waited for the quiet time (it took " + ms + " ms)", ms < 60_000);
   }
 
   public void testRenameOfAHeaderBodyVariableRightAfterTyping() throws Exception {

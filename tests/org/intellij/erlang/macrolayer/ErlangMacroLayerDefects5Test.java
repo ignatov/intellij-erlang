@@ -383,10 +383,10 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
       waiterIndicator.cancel();
       String w;
       try {
-        w = waiter.get(5, java.util.concurrent.TimeUnit.SECONDS);
+        w = waiter.get(30, java.util.concurrent.TimeUnit.SECONDS);
       }
       catch (java.util.concurrent.TimeoutException e) {
-        w = "still waiting after 5 s";
+        w = "still waiting after 30 s (safety bound)";
       }
       double ms = (System.nanoTime() - t0) / 1e6;
       out("D6 cancelled waiter: " + w + " after " + String.format(java.util.Locale.ROOT, "%.1f", ms) + " ms; builder done=" + builder.isDone());

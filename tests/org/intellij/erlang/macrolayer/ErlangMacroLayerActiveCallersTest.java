@@ -56,6 +56,9 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
     super.setUp();
     setUpProjectSdk();
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    // "still typing" for the whole test: a passive query never stops waiting by the clock, only by a key press or a copy
+    ErlangMacroLayer.setQuietMillisForTests(600_000, getTestRootDisposable());
+    ErlangMacroLayer.setPassiveWaitMillisForTests(600_000, getTestRootDisposable());
     ErlangMacroLayerLog.enableForTests(true);
     for (String n : List.of("h.hrl", "i.erl", "i2.erl", "s.erl")) {
       myFiles.put(n, myFixture.addFileToProject("nav/" + n, read(Paths.get("testData/macroLayer/nav", n))));
@@ -147,7 +150,8 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
   private static void assertInsideTheQuietTime(long typedAt) {
     long ms = (System.nanoTime() - typedAt) / 1_000_000;
     System.out.println("LAYER-AC search ended " + ms + " ms after the key press");
-    assertTrue("the search must end inside the quiet time: " + ms + " ms", ms < ErlangMacroLayer.quietMillis());
+    // the quiet time is 600 s in this test: a search that waited for it would take that long; 60 s is only a safety bound
+    assertTrue("the search waited for the quiet time (it took " + ms + " ms)", ms < 60_000);
   }
 
   /** The usage search of rename, as BaseRefactoringProcessor runs it: findUsages() in the background. */
@@ -291,7 +295,8 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
     long keyMs = (System.nanoTime() - k0) / 1_000_000;
     ihc.get(30, java.util.concurrent.TimeUnit.SECONDS);
     System.out.println("LAYER-AC the key press during the wait took " + keyMs + " ms");
-    assertTrue("the key press did not wait for the query: " + keyMs + " ms", keyMs < 500);
+    // the passive wait is 600 s in this test: a key press that waited for the query would take that long (safety bound)
+    assertTrue("the key press waited for the query (" + keyMs + " ms)", keyMs < 30_000);
     assertTrue("it gave up on the key press", ErlangMacroLayerLog.events().stream().anyMatch(
       e -> e.kind().equals("WAITED") && e.line().contains("write-action")));
     long skipped = ErlangMacroLayerLog.events().stream().filter(e -> e.kind().equals("SKIPPED") && e.line().contains("typing")).count();

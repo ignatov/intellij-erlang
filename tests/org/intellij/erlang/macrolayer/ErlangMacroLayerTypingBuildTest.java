@@ -107,13 +107,14 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
    * change is older than the quiet time, while the document changes with every key: it still starts no build.
    */
   public void testNoBuildWhileTheDocumentChangesAheadOfThePsi() throws Exception {
-    ErlangMacroLayer.setQuietMillisForTests(300, getTestRootDisposable());
+    // 3 s: the next key below comes about 100 ms after the last one, far inside it even on a slow machine
+    ErlangMacroLayer.setQuietMillisForTests(3_000, getTestRootDisposable());
     PsiFile f = myFixture.addFileToProject("u.erl", "-module(u).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Z), Z.\n");
     myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
     myFixture.doHighlighting();
     assertEquals(1, builds().size());
     edit(f, "%% typed\n");
-    Thread.sleep(400); // the last commit is older than the quiet time
+    Thread.sleep(3_100); // the last commit is older than the quiet time
     Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
     WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%% more keys, not committed yet\n"));
     // round 6 (next), item 1: the caller waits for the copy instead of answering at once; the next key press, here
