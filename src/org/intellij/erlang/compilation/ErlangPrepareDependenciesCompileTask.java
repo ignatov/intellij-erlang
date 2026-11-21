@@ -231,16 +231,18 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       for (VirtualFile file : erlangFiles) {
         Set<String> dependencies = new HashSet<>();
         ErlangFile psi = getErlangFile(file);
-        addDeclaredDependencies(module, psi, dependencies);
+        if (psi != null) {
+          addDeclaredDependencies(module, psi, dependencies);
+        }
         dependencies.addAll(globalParseTransforms);
         myPathsToDependenciesMap.put(getPath(file), new ArrayList<>(dependencies));
       }
     }
 
-    @NotNull
+    @Nullable
     private ErlangFile getErlangFile(@NotNull VirtualFile virtualFile) {
       PsiFile psiFile = myPsiManager.findFile(virtualFile);
-      return Objects.requireNonNull(ObjectUtils.tryCast(psiFile, ErlangFile.class));
+      return ObjectUtils.tryCast(psiFile, ErlangFile.class);
     }
 
     private void addDeclaredDependencies(@NotNull Module module,
