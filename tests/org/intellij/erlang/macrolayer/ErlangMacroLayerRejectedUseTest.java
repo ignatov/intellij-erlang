@@ -58,7 +58,15 @@ public class ErlangMacroLayerRejectedUseTest extends ErlangLightPlatformCodeInsi
     List<String> master = errors(f, ErlangMacroLayer.Mode.OFF);
     List<String> layer = errors(f, ErlangMacroLayer.Mode.LAYER);
     assertFalse(name + ": master shows a syntax error", master.isEmpty());
-    assertTrue(name + ": hidden by the layer: master " + master + ", layer " + layer, layer.containsAll(master));
+    // D1: an error inside the body of a well-formed -define (another form, which epp accepts) is hidden on purpose;
+    // the rule here is about the form with the rejected use
+    String[] lines = text.split("\n", -1);
+    List<String> outsideDefines = new java.util.ArrayList<>();
+    for (String e : master) {
+      int line = Integer.parseInt(e.substring(0, e.indexOf(':')));
+      if (!lines[line - 1].startsWith("-define(")) outsideDefines.add(e);
+    }
+    assertTrue(name + ": hidden by the layer: master " + master + ", layer " + layer, layer.containsAll(outsideDefines));
   }
 
   /** The verifier's h04 (from erl_scan.erl): "badly formed argument for macro 'STR'". */

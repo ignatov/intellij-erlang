@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangMacroLayerErrorFilter extends HighlightErrorFilter {
   @Override
   public boolean shouldHighlightErrorElement(@NotNull PsiErrorElement element) {
-    return !ErlangMacroLayer.isErrorExplainedByExpansion(element) && !ErlangMacroLayerExpansionErrors.isReplacedByExpansionError(element);
+    return !ErlangMacroLayer.isInWellFormedDefineBody(element) && !ErlangMacroLayer.isErrorExplainedByExpansion(element) &&
+           !ErlangMacroLayerExpansionErrors.isReplacedByExpansionError(element);
   }
 }

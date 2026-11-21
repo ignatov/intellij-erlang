@@ -954,6 +954,32 @@ public final class ErlangMacroLayer {
     return new ErlangMacroExpander.DefineShape(name, -1, List.of(), false, Set.of(), Set.of());
   }
 
+  /**
+   * D1: the error lies in the body of a {@code -define} that epp accepts. For epp a body is any sequence of tokens up
+   * to the {@code )} before the {@code .} that ends the form, so a parser error there is false: the define reads as a
+   * well-formed define to the expander ({@link ErlangMacroExpander#defineShape}: a macro name, a parameter list of
+   * distinct variables, a {@code ,} and the closing {@code )}), and a {@code .} follows it. A define without its
+   * {@code )} or its {@code .}, with a bad name or a bad parameter list, keeps its errors. Main tree only, no copy.
+   */
+  public static boolean isInWellFormedDefineBody(@NotNull PsiErrorElement error) {
+    if (!isEnabled() || noReadAccess()) return false;
+    ErlangMacrosDefinition d = PsiTreeUtil.getParentOfType(error, ErlangMacrosDefinition.class);
+    if (d == null || !(d.getParent() instanceof PsiFile)) return false;
+    // the error is after the parameter list: in the body or at its closing parenthesis
+    ErlangArgumentDefinitionList params = d.getArgumentDefinitionList();
+    ErlangMacrosName name = d.getMacrosName();
+    PsiElement head = params != null ? params : name;
+    if (head == null || error.getTextRange().getStartOffset() < head.getTextRange().getEndOffset()) return false;
+    // the form ends with "." (the define element ends with it, or it is the next token)
+    PsiElement last = PsiTreeUtil.getDeepestVisibleLast(d);
+    PsiElement next = PsiTreeUtil.nextVisibleLeaf(d);
+    boolean dot = last != null && last.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_DOT ||
+                  next != null && next.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_DOT;
+    if (!dot) return false;
+    ErlangMacroExpander.DefineShape shape = ErlangMacroExpander.defineShape(leafTokens(d));
+    return shape != null && shape.params().size() == new HashSet<>(shape.params()).size();
+  }
+
   /** The significant leaves of an element as expander tokens (types and texts only). */
   private static @NotNull List<ErlangMacroExpander.Tok> leafTokens(@NotNull PsiElement element) {
     List<ErlangMacroExpander.Tok> r = new ArrayList<>();

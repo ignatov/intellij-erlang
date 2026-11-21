@@ -25,7 +25,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
+import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
+import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
@@ -53,6 +56,23 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
+      /** D1: epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
+      @Override
+      public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+        ErlangArgumentDefinitionList list = o.getArgumentDefinitionList();
+        if (list == null) return;
+        Set<String> seen = new HashSet<>();
+        for (ErlangArgumentDefinition a : list.getArgumentDefinitionList()) {
+          String text = a.getText();
+          if (!(a.getExpression() instanceof ErlangMaxExpression m) || m.getQVar() == null || !m.getQVar().getText().equals(text)) {
+            registerProblem(holder, a, "Badly formed 'define': a parameter must be a variable");
+          }
+          else if (!seen.add(text)) {
+            registerProblem(holder, a, "Argument '" + text + "' already used");
+          }
+        }
+      }
+
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
