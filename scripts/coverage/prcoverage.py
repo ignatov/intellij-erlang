@@ -33,19 +33,66 @@ COMPILATION_CODE = ['jps-plugin/src/', 'src/org/intellij/erlang/compilation/',
 MAX_LISTED = 12
 
 
+QUOTED = r'"(?:[^"\\]|\\.)*"'
+ESCAPES = {'a': 7, 'b': 8, 't': 9, 'n': 10, 'v': 11, 'f': 12, 'r': 13, '"': 34, '\\': 92}
+
+
+def unquote(name):
+    """A path as git prints it: in double quotes with C escapes (\\303\\251 for é) when it has unusual bytes."""
+    if len(name) < 2 or not (name.startswith('"') and name.endswith('"')):
+        return name
+    body, out, i = name[1:-1], bytearray(), 0
+    while i < len(body):
+        if body[i] == '\\' and re.match(r'[0-7]{3}', body[i + 1:i + 4]):
+            out.append(int(body[i + 1:i + 4], 8))
+            i += 4
+        elif body[i] == '\\' and body[i + 1:i + 2] in ESCAPES:
+            out.append(ESCAPES[body[i + 1]])
+            i += 2
+        else:
+            out.extend(body[i].encode('utf-8'))
+            i += 1
+    return out.decode('utf-8', errors='replace')
+
+
+def header_path(name):
+    """The path of a ---/+++ line without a/ or b/, None for /dev/null. Git ends a name with a space with a tab."""
+    if name.endswith('\t'):
+        name = name[:-1]
+    if name == '/dev/null':
+        return None
+    name = unquote(name)
+    return name[2:] if name[:2] in ('a/', 'b/') else name
+
+
+def git_header_paths(rest):
+    """(old, new) of the part after "diff --git ", or None when it cannot be split."""
+    m = re.match(r'(%s) (%s)$' % (QUOTED, QUOTED), rest)
+    if m:
+        return header_path(m.group(1)), header_path(m.group(2))
+    half = (len(rest) - 1) // 2
+    if rest[:2] == 'a/' and rest[half:half + 3] == ' b/' and rest[2:half] == rest[half + 3:]:
+        return rest[2:half], rest[half + 3:]
+    m = re.match(r'a/(.*) b/(.*)$', rest)
+    return (m.group(1), m.group(2)) if m else None
+
+
 def parse_diff(text):
     """[{"path", "old_path", "status", "added": [line numbers in the new file]}] of a git diff with -U0.
 
-    status is "added", "deleted", "renamed" or "modified"; path is the new path (the old one for a deleted file)."""
-    files, current = [], None
+    status is "added", "deleted", "renamed" or "modified"; path is the new path (the old one for a deleted file).
+    Header lines are read only before the first hunk of a file: in a hunk, "+++ x" is an added line "++ x"."""
+    files, current, in_hunks = [], None, False
     for line in text.splitlines():
         if line.startswith('diff --git '):
-            current = {'path': None, 'old_path': None, 'status': 'modified', 'added': []}
+            current, in_hunks = {'path': None, 'old_path': None, 'status': 'modified', 'added': []}, False
             files.append(current)
-            m = re.match(r'diff --git a/(.*) b/(.*)$', line)
-            if m:
-                current['old_path'], current['path'] = m.group(1), m.group(2)
+            paths = git_header_paths(line[len('diff --git '):])
+            if paths:
+                current['old_path'], current['path'] = paths
         elif current is None:
+            continue
+        elif in_hunks and not line.startswith('@@'):
             continue
         elif line.startswith('new file mode'):
             current['status'] = 'added'
@@ -53,18 +100,18 @@ def parse_diff(text):
             current['status'] = 'deleted'
         elif line.startswith('rename from '):
             current['status'] = 'renamed'
-            current['old_path'] = line[len('rename from '):]
+            current['old_path'] = unquote(line[len('rename from '):])
         elif line.startswith('rename to '):
-            current['path'] = line[len('rename to '):]
+            current['path'] = unquote(line[len('rename to '):])
         elif line.startswith('--- '):
-            if line != '--- /dev/null':
-                current['old_path'] = line[len('--- a/'):]
+            path = header_path(line[len('--- '):])
+            if path is not None:
+                current['old_path'] = path
         elif line.startswith('+++ '):
-            if line == '+++ /dev/null':
-                current['path'] = current['old_path']
-            else:
-                current['path'] = line[len('+++ b/'):]
+            path = header_path(line[len('+++ '):])
+            current['path'] = current['old_path'] if path is None else path
         elif line.startswith('@@'):
+            in_hunks = True
             m = re.match(r'@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@', line)
             if m:
                 start, count = int(m.group(1)), int(m.group(2) if m.group(2) is not None else 1)

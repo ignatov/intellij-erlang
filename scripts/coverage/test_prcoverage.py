@@ -144,6 +144,47 @@ class ParseDiffTest(unittest.TestCase):
                           ('src/org/intellij/erlang/D.java', 'renamed', [])],
                          [(f['path'], f['status'], f['added']) for f in files])
 
+    def test_names_with_a_space_quoted_names_and_header_like_added_lines(self):
+        # As git prints them: a name with a space ends with a tab, a non-ASCII name is quoted with octal escapes,
+        # and an added line "++ x" appears as "+++ x" in the hunk.
+        text = diff(r"""
+            diff --git "a/src/Caf\303\251.java" "b/src/Caf\303\251.java"
+            index 7898192..422c2b7 100644
+            --- "a/src/Caf\303\251.java"
+            +++ "b/src/Caf\303\251.java"
+            @@ -1,0 +2 @@ a
+            +b
+            diff --git a/src/My File.java b/src/My File.java
+            index 7898192..58474f6 100644
+            --- a/src/My File.java<TAB>
+            +++ b/src/My File.java<TAB>
+            @@ -1,0 +2,2 @@ a
+            +++ x
+            +--- y
+            diff --git a/src/R.java "b/src/R \303\251.java"
+            similarity index 60%
+            rename from src/R.java
+            rename to "src/R \303\251.java"
+            index 7898192..488bdfa 100644
+            --- a/src/R.java
+            +++ "b/src/R \303\251.java"<TAB>
+            @@ -1,0 +2 @@ a
+            +c
+            diff --git a/src/Only Mode.java b/src/Only Mode.java
+            old mode 100644
+            new mode 100755
+            """).replace('<TAB>', '\t')
+        self.assertEqual([('src/Café.java', 'src/Café.java', 'modified', [2]),
+                          ('src/My File.java', 'src/My File.java', 'modified', [2, 3]),
+                          ('src/R é.java', 'src/R.java', 'renamed', [2]),
+                          ('src/Only Mode.java', 'src/Only Mode.java', 'modified', [])],
+                         [(f['path'], f['old_path'], f['status'], f['added']) for f in prcoverage.parse_diff(text)])
+
+    def test_unquote(self):
+        self.assertEqual('plain', prcoverage.unquote('plain'))
+        self.assertEqual('a/q"b\\c\td', prcoverage.unquote(r'"a/q\"b\\c\td"'))
+        self.assertEqual('a/é', prcoverage.unquote(r'"a/\303\251"'))
+
 
 class Checkout(unittest.TestCase):
     def setUp(self):
