@@ -70,13 +70,26 @@ public final class ErlangMacroLayerExpansionErrors {
     ErlangFile f = ErlangMacroLayer.layerFile(file);
     if (f == null) return false;
     if (checksPlainForms()) return true;
-    if (!com.intellij.openapi.application.ApplicationManager.getApplication().isDispatchThread() && !DumbService.isDumb(f.getProject())) {
-      // the daemon creates its passes off the UI thread: the table of this version (the main highlighting needs it too)
-      ErlangMacroLayer.Table t = ErlangMacroLayer.table(f);
-      if (t != null) return t.refusal == null && !t.names.isEmpty() && ErlangMacroLayer.anyFormNeedsCopy(f, t);
-    }
+    // the daemon creates its passes off the UI thread: the table of this version (the main highlighting needs it too);
+    // on the UI thread only a table that is there
+    ErlangMacroLayer.Table t = com.intellij.openapi.application.ApplicationManager.getApplication().isDispatchThread() || DumbService.isDumb(f.getProject())
+                               ? ErlangMacroLayer.cachedTable(f) : ErlangMacroLayer.table(f);
+    if (t != null) return t.refusal == null && !t.names.isEmpty() && ErlangMacroLayer.anyFormNeedsCopy(f, t) && hasCandidateForm(f, t);
     Boolean known = ErlangMacroLayer.anyFormNeedsCopyNoWait(f);
     return known == null || known;
+  }
+
+  /**
+   * Some form is one that {@link #problems} checks: it needs the copy and has no syntax error of its own (a form that
+   * needs the copy only because it is broken, as an unfinished call in erl_types.erl, gives the pass nothing to check).
+   */
+  private static boolean hasCandidateForm(@NotNull ErlangFile file, @NotNull ErlangMacroLayer.Table t) {
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof PsiErrorElement || c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+      ProgressManager.checkCanceled();
+      if (ErlangMacroLayer.formNeedsCopy(t, c) && onlyMacroErrors(c)) return true;
+    }
+    return false;
   }
 
   public static @Nullable List<Problem> problems(@NotNull ErlangFile file) {

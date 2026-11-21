@@ -114,6 +114,37 @@ public class ErlangMacroLayerIdeFindingsTest extends ErlangLightPlatformCodeInsi
     assertEquals(builds0, builds().size());
   }
 
+  /**
+   * Audit after the recheck: the file keeps its own bare macro references in a cached value. A call without read
+   * access must not leave an empty list there for the later callers that have read access.
+   */
+  public void testNoReadAccessAnswerIsNotKept() throws Exception {
+    PsiFile f = myFixture.addFileToProject("p/split.erl", "-module(split).\n-export([f/1]).\n-define(is_timeout(X), (X =:= timeout)).\n" +
+                                                          "foo(X) -> X.\nf(X) ->\n  foo?is_timeout(X).\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    // a change, so that the first call after it is the one without read access
+    com.intellij.openapi.editor.Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%"));
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> f.getReferences()).get();
+    String refs = inBackgroundWithIndicator(() -> java.util.Arrays.toString(f.getReferences()));
+    assertTrue("the file's bare macro reference: " + refs, refs.contains("ErlangBareMacroReference"));
+  }
+
+  /**
+   * Audit after the recheck: a form that needs the copy only because it is broken with plain macros (an unfinished
+   * call, as in erl_types.erl) gives the expansion-error pass nothing to check: no external-tool pass either.
+   */
+  public void testNoExpansionErrorPassForAFormBrokenWithPlainMacros() {
+    PsiFile f = myFixture.addFileToProject("p/broken3f.erl", "-module(broken3f).\n-define(A, 1).\n-export([f/1]).\nf(X) -> Y = X + ?A, g(Y, \n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertFalse("no expansion-error pass for a form broken with plain macros",
+                com.intellij.lang.ExternalLanguageAnnotators.allForFile(org.intellij.erlang.ErlangLanguage.INSTANCE, f).stream()
+                  .anyMatch(a -> a instanceof ErlangMacroLayerExpansionErrorAnnotator));
+  }
+
   /** 1d: an unresolved macro used where error recovery left bare tokens is reported once per use (rebar_fetch.erl). */
   public void testUnresolvedBareMacroIsReportedOnce() {
     String text = """
