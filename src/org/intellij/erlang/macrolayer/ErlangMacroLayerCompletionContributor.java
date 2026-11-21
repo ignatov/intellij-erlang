@@ -243,8 +243,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     PsiElement first = top;
     for (PsiElement p = top.getPrevSibling(); p != null; p = p.getPrevSibling()) {
       if (p instanceof PsiWhiteSpace || p instanceof PsiComment) continue;
-      PsiElement last = PsiTreeUtil.getDeepestVisibleLast(p);
-      if (last != null && last.getNode().getElementType() == ErlangTypes.ERL_DOT) break;
+      if (endsForm(p)) break;
       first = p;
     }
     CharSequence region = real.getViewProvider().getContents().subSequence(first.getTextRange().getStartOffset(), offset);
@@ -307,12 +306,22 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     return prev != null && prev.getNode().getElementType() == ErlangTypes.ERL_QMARK && prev.getTextRange().getEndOffset() == before.getTextRange().getStartOffset();
   }
 
-  /** The element before the top-level element ends with a dot (or there is none). */
+  /** The element before the top-level element ends a form (or there is none). */
   private static boolean afterADot(@NotNull PsiElement top) {
     PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(top);
-    if (prev == null) return true;
-    PsiElement last = PsiTreeUtil.getDeepestVisibleLast(prev);
-    return last != null && last.getNode().getElementType() == ErlangTypes.ERL_DOT;
+    return prev == null || endsForm(prev);
+  }
+
+  /**
+   * The element ends with the dot that ends a form: not the dot of a record field access ({@code R#rec.field}, which
+   * the main tree's recovery may take for the end of the form after a fragment use), as the expander tells them apart.
+   */
+  private static boolean endsForm(@NotNull PsiElement e) {
+    PsiElement last = PsiTreeUtil.getDeepestVisibleLast(e);
+    if (last == null || last.getNode().getElementType() != ErlangTypes.ERL_DOT) return false;
+    PsiElement name = PsiTreeUtil.prevVisibleLeaf(last);
+    PsiElement radix = name == null ? null : PsiTreeUtil.prevVisibleLeaf(name);
+    return radix == null || radix.getNode().getElementType() != ErlangTypes.ERL_RADIX;
   }
 
   private static @Nullable Position skip(@NotNull ErlangFile file, @NotNull String why) {

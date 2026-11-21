@@ -127,6 +127,20 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
           HEAD + "f(R, _) ->\n  foo(),\n  X1 = R#rec_one{fie<caret>},\n  X1.\n", "field_a", "field_b");
   }
 
+  /** 3e (from the real IDE): a field access after a fragment use. */
+  public void testRecordFieldAccess() {
+    check("record field access", HEAD + "f(R, _) ->\n  foo?PAR,\n  X1 = R#rec_one.fie<caret>,\n  X1.\n",
+          HEAD + "f(R, _) ->\n  foo(),\n  X1 = R#rec_one.fie<caret>,\n  X1.\n", "field_a", "field_b");
+  }
+
+  /** 3e: a record being typed, its brace not closed yet. */
+  public void testRecordFieldInAnUnclosedRecord() {
+    check("record field, brace not closed", HEAD + "f(_, _) ->\n  foo?PAR,\n  X1 = #rec_one{fie<caret>\n  X1.\n",
+          HEAD + "f(_, _) ->\n  foo(),\n  X1 = #rec_one{fie<caret>\n  X1.\n", "field_a", "field_b");
+    check("record update, brace not closed", HEAD + "f(R, _) ->\n  foo?PAR,\n  X1 = R#rec_one{fie<caret>\n  X1.\n",
+          HEAD + "f(R, _) ->\n  foo(),\n  X1 = R#rec_one{fie<caret>\n  X1.\n", "field_a", "field_b");
+  }
+
   public void testRemoteFunction() {
     check("module:function", HEAD + "f(L, _) ->\n  foo?PAR,\n  X1 = mylists:rev<caret>,\n  X1.\n",
           HEAD + "f(L, _) ->\n  foo(),\n  X1 = mylists:rev<caret>,\n  X1.\n", "reverse");
