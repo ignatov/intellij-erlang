@@ -160,7 +160,9 @@ def plan(files, repository):
             left_out.append({'class': name, 'why': 'not found in the checkout'})
             continue
         simple = os.path.basename(path)[:-len('.java')]
-        if re.search(r'\babstract\s+class\s+' + re.escape(simple) + r'\b', text):
+        # The modifiers in any order: `public abstract class` and `abstract public class` are both in tests/.
+        if re.search(r'\babstract\s+(?:(?:public|protected|private|static|final|strictfp)\s+)*class\s+'
+                     + re.escape(simple) + r'\b', text):
             left_out.append({'class': name, 'why': 'an abstract base class: its subclasses are not run'})
         elif not (simple.endswith('Test') or re.search(r'\bpublic\s+void\s+test\w*\s*\(', text)):
             left_out.append({'class': name, 'why': 'not a test class (no name ending with Test, no test method)'})

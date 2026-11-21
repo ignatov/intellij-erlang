@@ -244,6 +244,18 @@ class PlanTest(Checkout):
                            'why': 'no changed line in the Java files of src/ or jps-plugin/src/ to measure'}],
                          result['left_out'])
 
+    def test_abstract_before_other_modifiers(self):
+        self.write('tests/org/intellij/erlang/completion/ErlangCompletionTestBase.java', """
+            abstract public class ErlangCompletionTestBase extends ErlangLightPlatformCodeInsightFixtureTestCase {
+              public void testHelper() {}
+            }""")
+        files = [self.change('tests/org/intellij/erlang/completion/ErlangCompletionTestBase.java'),
+                 self.change('src/org/intellij/erlang/sdk/ErlangSdkType.java')]
+        result = prcoverage.plan(files, self.repository)
+        self.assertEqual([], result['run'])
+        self.assertEqual([{'class': 'org.intellij.erlang.completion.ErlangCompletionTestBase',
+                           'why': 'an abstract base class: its subclasses are not run'}], result['left_out'])
+
     def test_jps_plugin_test_is_named_by_its_class(self):
         files = [self.change('jps-plugin/tests/org/intellij/erlang/jps/RebarBuilderTest.java'),
                  self.change('src/org/intellij/erlang/sdk/ErlangSdkType.java')]
