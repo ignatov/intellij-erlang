@@ -116,6 +116,22 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertContainsElements(actualModules, "m");
   }
 
+  public void testGuardedMutualIncludesWithParseTransform() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "pt", "m");
+  }
+
+  public void testMutualIncludesThroughModule() {
+    try {
+      ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+      fail("Expected a cyclic dependency exception to be thrown.");
+    }
+    catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
+    }
+  }
+
   public void testTestsDependency() throws Exception {
     List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
     assertSameErlangFiles(moduleBuildOrder, "src_parse_transform", "test_parse_transform", "test");
