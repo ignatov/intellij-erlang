@@ -135,7 +135,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     catch (CyclicDependencyFoundException e) {
       String message = "Cyclic erlang module dependency detected. Check files " +
                        e.getFirstFileInCycle() + " and " + e.getLastFileInCycle() +
-                       "or their dependencies(parse_transform, behaviour, include)";
+                       " or their dependencies(parse_transform, behaviour, include)";
       LOG.debug(message, e);
       context.addMessage(CompilerMessageCategory.ERROR, message, null, -1, -1);
       return null;
@@ -153,9 +153,24 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
     DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.generate(semiGraph));
     if (!builder.isAcyclic()) {
-      throw new CyclicDependencyFoundException(builder.getCircularDependency());
+      checkOnlyHeadersAreInCycles(builder, semiGraph);
     }
     return ContainerUtil.map(builder.getSortedNodes(), filePath -> new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath)));
+  }
+
+  // Headers are not compiled, and guarded headers may include each other, so only cycles through modules are errors.
+  private static void checkOnlyHeadersAreInCycles(@NotNull DFSTBuilder<String> builder,
+                                                  @NotNull ErlangFilesDependencyGraph semiGraph) throws CyclicDependencyFoundException {
+    for (Collection<String> component : builder.getComponents()) {
+      for (String filePath : component) {
+        if (semiGraph.isHeader(filePath)) continue;
+        for (String dependency : semiGraph.getDependencies(filePath)) {
+          if (component.contains(dependency)) {
+            throw new CyclicDependencyFoundException(Map.entry(filePath, dependency));
+          }
+        }
+      }
+    }
   }
 
   @NotNull
@@ -213,6 +228,10 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     @NotNull
     public Iterator<String> getIn(@NotNull String filePath) {
       return myPathsToDependenciesMap.get(filePath).iterator();
+    }
+
+    public boolean isHeader(@NotNull String filePath) {
+      return myHeaders.contains(filePath);
     }
 
     @NotNull
