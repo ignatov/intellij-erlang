@@ -828,6 +828,37 @@ public final class ErlangMacroExpander {
     final boolean fragment;
     Branch branch;
     boolean fromHeader;
+    private List<Ref> myUses;
+
+    /** A use of a macro in a body: its name and its number of arguments as epp counts them (-1: none). */
+    record Ref(String name, int arity) {
+    }
+
+    /** epp's macro_uses: the macros the body uses ({@code ?M}, {@code ?M(...)}; not {@code ??P}). */
+    List<Ref> uses() {
+      if (myUses == null) {
+        Set<Ref> r = new LinkedHashSet<>();
+        for (int i = 0; i < body.size(); i++) {
+          if (body.get(i).type != ERL_QMARK) continue;
+          if (i + 1 < body.size() && body.get(i + 1).type == ERL_QMARK) {
+            i++;
+            continue;
+          }
+          Name n = tokName(body, i + 1);
+          if (n == null) continue;
+          int next = n.last + 1;
+          int arity = -1;
+          if (next < body.size() && body.get(next).type == ERL_PAR_LEFT) {
+            ArgsResult parsed = parseArgs(body, next);
+            if (parsed == null) continue; // epp rejects such a -define ("badly formed argument")
+            arity = parsed.args.size();
+          }
+          r.add(new Ref(n.name, arity));
+        }
+        myUses = List.copyOf(r);
+      }
+      return myUses;
+    }
 
     Def(String name, int arity, List<String> params, List<Tok> body, boolean fragment) {
       this.name = name;
@@ -1439,7 +1470,7 @@ public final class ErlangMacroExpander {
         args = null;
       }
       try {
-        List<Tok> result = expand(def, args, 1, new ArrayDeque<>());
+        List<Tok> result = expand(def, args, 1);
         if (formSubstitutedTokens + result.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
         formSubstitutedTokens += result.size();
         count(Outcome.SUBSTITUTED);
@@ -1460,62 +1491,64 @@ public final class ErlangMacroExpander {
     @Nullable String circularMacro;
     int circularStart, circularEnd;
 
-    List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth, Deque<String> active) throws LimitException {
+    /**
+     * The expansion of a use, as epp's expand_macros does it: the raw argument tokens are put in place of the parameters
+     * and the result is scanned again (the arguments are not expanded before), after epp's check that the macro graph
+     * from this macro has no cycle ({@link #checkUses}).
+     */
+    List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth) throws LimitException {
       tick(1 + def.body.size());
       if (depth > MAX_DEPTH) throw new LimitException(Outcome.LIMIT_DEPTH);
-      String activeKey = def.name + "/" + def.arity;
-      if (active.contains(activeKey)) throw new LimitException(Outcome.LIMIT_RECURSION, def.name);
-      // the arguments are expanded first, in the context of the use (epp rescans them after the substitution and only
-      // rejects macros whose own bodies are circular)
-      List<List<Tok>> expandedArgs = null;
-      if (args != null) {
-        expandedArgs = new ArrayList<>(args.size());
-        for (List<Tok> arg : args) expandedArgs.add(rescan(arg, depth, active));
-      }
-      List<Tok> substituted = new ArrayList<>();
+      checkUses(def.name, def.arity);
+      return rescan(substitute(def, args), depth);
+    }
+
+    /** epp's expand_macro: the body with the raw arguments in place of the parameters; {@code ??P} is a string. */
+    List<Tok> substitute(Def def, @Nullable List<List<Tok>> args) throws LimitException {
+      List<Tok> substituted = new ArrayList<>(def.body.size());
       List<Tok> body = def.body;
       for (int i = 0; i < body.size(); i++) {
         Tok t = body.get(i);
-        if (args != null && t.type == ERL_QMARK && i + 2 < body.size() && body.get(i + 1).type == ERL_QMARK &&
-            body.get(i + 2).type == ERL_VAR) {
-          int index = def.params.indexOf(body.get(i + 2).text);
-          if (index >= 0) {
-            add(substituted, new Tok(ERL_STRING, stringify(args.get(index))));
-            i += 2;
-            continue;
-          }
+        if (t.type == ERL_QMARK && i + 2 < body.size() && body.get(i + 1).type == ERL_QMARK && body.get(i + 2).type == ERL_VAR) {
+          int index = args == null ? -1 : def.params.indexOf(body.get(i + 2).text);
+          // epp: ??V of a name that is not a parameter is the variable V
+          add(substituted, index >= 0 ? new Tok(ERL_STRING, stringify(args.get(index))) : body.get(i + 2));
+          i += 2;
+          continue;
         }
         if (args != null && t.type == ERL_VAR) {
           int index = def.params.indexOf(t.text);
           if (index >= 0) {
-            addAll(substituted, expandedArgs.get(index));
+            addAll(substituted, args.get(index));
             continue;
           }
         }
         add(substituted, t);
       }
-      active.push(activeKey);
-      try {
-        return rescan(substituted, depth, active);
-      }
-      finally {
-        active.pop();
-      }
+      return substituted;
     }
 
-    /** Expands the nested uses of same-file macros in a substitution result. */
-    List<Tok> rescan(List<Tok> tokens, int depth, Deque<String> active) throws LimitException {
+    /**
+     * Expands the nested uses in a substitution result. As in epp, the result of a use with arguments is scanned again
+     * together with the tokens after it (a body may end with {@code ?M} whose arguments follow the use); the result of
+     * a use without arguments is expanded alone first.
+     */
+    List<Tok> rescan(List<Tok> tokens, int depth) throws LimitException {
+      Frames in = new Frames(tokens);
       List<Tok> out = new ArrayList<>(tokens.size());
-      for (int i = 0; i < tokens.size(); i++) {
-        Tok t = tokens.get(i);
-        if (t.type == ERL_QMARK && i + 1 < tokens.size() && tokens.get(i + 1).type == ERL_QMARK) {
+      List<Tok> view = in.view();
+      while (in.size() > 0) {
+        Tok t = view.get(0);
+        if (t.type == ERL_QMARK && view.size() > 1 && view.get(1).type == ERL_QMARK) {
           add(out, t);
-          add(out, tokens.get(++i));
+          add(out, view.get(1));
+          in.skip(2);
           continue;
         }
-        Name n = t.type == ERL_QMARK ? tokName(tokens, i + 1) : null;
+        Name n = t.type == ERL_QMARK ? tokName(view, 1) : null;
         if (n == null) {
           add(out, t);
+          in.skip(1);
           continue;
         }
         String name = n.name;
@@ -1523,26 +1556,163 @@ public final class ErlangMacroExpander {
         List<List<Tok>> args = null;
         int arity = -1;
         ArgsResult parsed = null;
-        if (next < tokens.size() && tokens.get(next).type == ERL_PAR_LEFT) {
-          parsed = parseArgs(tokens, next);
+        if (next < view.size() && view.get(next).type == ERL_PAR_LEFT) {
+          parsed = parseArgs(view, next);
           if (parsed != null) {
             args = parsed.args;
             arity = args.size();
           }
         }
         Selection selection = select(name, arity);
-        if (selection.def == null || parsed == null && arity != -1) {
+        if (selection.def == null || parsed != null && parsed.hasEmptyArgument() && selection.def.arity != -1) {
           if (selection.outcome != Outcome.PREDEFINED) nestedLeft = true;
           add(out, t);
+          in.skip(1);
           continue; // left as it is; the name follows as a plain token
         }
         Def def = selection.def;
-        List<Tok> expanded = expand(def, def.arity == -1 ? null : args, depth + 1, active);
-        addAll(out, expanded);
+        if (def.arity == -1) {
+          addAll(out, expand(def, null, depth + 1));
+          in.skip(n.last + 1);
+        }
+        else {
+          tick(1 + def.body.size());
+          checkUses(def.name, def.arity);
+          List<Tok> substituted = substitute(def, args);
+          in.skip(next + parsed.closeIndex + 1);
+          in.push(substituted);
+        }
         if (formSubstitutedTokens + out.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
-        i = def.arity == -1 || parsed == null ? n.last : next + parsed.closeIndex;
       }
       return out;
+    }
+
+    /** The macro keys (name/arity) whose part of the macro graph has no cycle; cleared at every directive. */
+    final Set<String> acyclic = new HashSet<>();
+
+    /**
+     * epp's check_uses: no cycle is reachable from the macro in the graph of the uses that the bodies of the visible
+     * definitions make ({@code ?M} and {@code ?M(...)}, counted as epp counts them; a name with more than one visible
+     * body is not followed). A cycle stops the use with {@link Outcome#LIMIT_RECURSION} and the macro where it closes
+     * (epp: "circular macro"). A recursion that only arguments make is no cycle for epp; the work limit stops it.
+     */
+    void checkUses(String name, int arity) throws LimitException {
+      if (!acyclic.contains(name + "/" + arity)) visitUses(name, arity, new ArrayList<>());
+    }
+
+    private void visitUses(String name, int arity, List<String> path) throws LimitException {
+      String key = name + "/" + arity;
+      if (path.contains(key)) throw new LimitException(Outcome.LIMIT_RECURSION, name);
+      if (acyclic.contains(key)) return;
+      tick(1);
+      if (path.size() > 1000) throw new LimitException(Outcome.LIMIT_DEPTH);
+      Def d = graphNode(name, arity);
+      if (d != null) {
+        path.add(key);
+        for (Def.Ref u : d.uses()) visitUses(u.name(), u.arity(), path);
+        path.remove(path.size() - 1);
+      }
+      acyclic.add(key);
+    }
+
+    /** epp's get_macro_uses: the visible definition of the arity, else the one without parameters; null if not one. */
+    private @Nullable Def graphNode(String name, int arity) {
+      if (PREDEFINED.contains(name)) return null;
+      Def exact = null, none = null;
+      boolean exactMany = false, noneMany = false;
+      for (Def d : defs.getOrDefault(name, List.of())) {
+        if (!visible(d)) continue;
+        if (d.arity == arity) {
+          if (exact != null && !exact.key.equals(d.key)) exactMany = true;
+          exact = d;
+        }
+        else if (d.arity == -1) {
+          if (none != null && !none.key.equals(d.key)) noneMany = true;
+          none = d;
+        }
+      }
+      if (exact != null) return exactMany ? null : exact;
+      return noneMany ? null : none;
+    }
+  }
+
+  /**
+   * The tokens still to scan: a stack of token lists, the top one first. A use with arguments is replaced by its
+   * substitution result without copying the rest.
+   */
+  private static final class Frames {
+    private final List<List<Tok>> myLists = new ArrayList<>();
+    private int[] myPos = new int[8];
+    private int mySize;
+
+    Frames(List<Tok> first) {
+      push(first);
+    }
+
+    int size() {
+      return mySize;
+    }
+
+    void push(List<Tok> tokens) {
+      if (tokens.isEmpty()) return;
+      if (myLists.size() == myPos.length) myPos = Arrays.copyOf(myPos, myPos.length * 2);
+      myPos[myLists.size()] = 0;
+      myLists.add(tokens);
+      mySize += tokens.size();
+      myModCount++;
+    }
+
+    void skip(int k) {
+      mySize -= k;
+      while (k > 0) {
+        int top = myLists.size() - 1;
+        int rest = myLists.get(top).size() - myPos[top];
+        if (k < rest) {
+          myPos[top] += k;
+          break;
+        }
+        k -= rest;
+        myLists.remove(top);
+      }
+      myModCount++;
+    }
+
+    private int myModCount;
+
+    /** The tokens still to scan, as a list (sequential reads from the start are cheap). */
+    List<Tok> view() {
+      return new AbstractList<>() {
+        int at = -1, frame, pos, mod = -1;
+
+        @Override
+        public Tok get(int i) {
+          if (i < 0 || i >= mySize) throw new IndexOutOfBoundsException(i);
+          if (mod != myModCount || i < at) {
+            mod = myModCount;
+            at = 0;
+            frame = myLists.size() - 1;
+            pos = myPos[frame];
+          }
+          while (at < i) {
+            int step = Math.min(i - at, myLists.get(frame).size() - 1 - pos);
+            if (step > 0) {
+              pos += step;
+              at += step;
+            }
+            else {
+              frame--;
+              pos = myPos[frame];
+              at++;
+            }
+          }
+          return myLists.get(frame).get(pos);
+        }
+
+        @Override
+        public int size() {
+          return mySize;
+        }
+      };
     }
   }
 
