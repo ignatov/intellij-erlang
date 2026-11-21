@@ -134,8 +134,9 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
 
   @Override
   public @Nullable PsiElement resolve() {
+    // round 6 (next), N2: several possible definitions (conditional branches): no single target, go to declaration offers all
     ResolveResult[] r = multiResolve(false);
-    return r.length == 0 ? null : r[0].getElement();
+    return r.length == 1 ? r[0].getElement() : null;
   }
 
   @Override

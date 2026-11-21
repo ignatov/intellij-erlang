@@ -51,6 +51,14 @@ public class ErlangTargetElementEvaluator extends TargetElementEvaluatorEx2 impl
   @Override
   public PsiElement getElementByReference(@NotNull PsiReference ref, int flags) {
     if ((flags & TargetElementUtil.ELEMENT_NAME_ACCEPTED) == 0) return null;
+    // round 6 (next), N2: a macro with several possible definitions (conditional branches) has no single target, so go
+    // to declaration (which does not accept the name) offers them all; rename (which does) starts from the first, and
+    // renames the other branches' definitions too (ErlangRenameMacroProcessor)
+    if ((ref instanceof org.intellij.erlang.psi.impl.ErlangMacrosReferenceImpl || ref instanceof org.intellij.erlang.psi.impl.ErlangBareMacroReference) &&
+        ref.resolve() == null) {
+      PsiElement first = org.intellij.erlang.psi.impl.ErlangMacroResolve.firstTarget(ref);
+      if (first != null) return first;
+    }
     PsiElement element = ref.getElement();
     return element instanceof ErlangQAtom && ref.resolve() == null ? element : null;
   }

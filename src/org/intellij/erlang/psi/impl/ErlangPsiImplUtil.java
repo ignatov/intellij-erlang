@@ -201,7 +201,7 @@ public class ErlangPsiImplUtil {
     if (resolve == null && recordExpression != null) {
       ErlangMacros macros = recordExpression.getMacros();
       PsiReference macrosReference = macros != null ? macros.getReference() : null;
-      PsiElement macroDefinition = macrosReference != null ? macrosReference.resolve() : null;
+      PsiElement macroDefinition = ErlangMacroResolve.firstTarget(macrosReference);
       if (macroDefinition instanceof ErlangMacrosDefinition) {
         ErlangMacrosBody body = ((ErlangMacrosDefinition) macroDefinition).getMacrosBody();
         final Ref<ErlangRecordRef> ref = Ref.create();
@@ -258,7 +258,7 @@ public class ErlangPsiImplUtil {
                                           @NotNull List<ErlangQAtom> atoms,
                                           @NotNull Set<ErlangMacrosDefinition> visited) {
     PsiReference psiReference = macros.getReference();
-    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+    PsiElement macrosDefinition = ErlangMacroResolve.firstTarget(psiReference);
     if (macrosDefinition instanceof ErlangMacrosDefinition && visited.add((ErlangMacrosDefinition) macrosDefinition)) {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
       List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.emptyList();

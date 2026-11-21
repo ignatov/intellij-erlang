@@ -59,7 +59,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
-        if (reference != null && reference.resolve() == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
+        if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
         else if (reference != null) {
@@ -78,7 +78,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           String name = bare.getCanonicalText();
           if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
-          if (bare.resolve() == null) {
+          if (ErlangMacroResolve.firstTarget(bare) == null) {
             if (!isDefinedByEnclosingCondition(o, name)) registerProblem(holder, o, "Unresolved macros '?" + name + "'", range, null);
           }
           else {

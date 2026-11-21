@@ -165,6 +165,20 @@ public final class ErlangMacroResolve {
     return r;
   }
 
+  /**
+   * Round 6 (next), N2: the target of a macro reference for code that needs one definition (parameter info, record
+   * fields of a macro body, the inspections): its single target, else the first of its possible definitions.
+   */
+  public static @Nullable PsiElement firstTarget(@Nullable com.intellij.psi.PsiReference ref) {
+    if (ref == null) return null;
+    PsiElement single = ref.resolve();
+    if (single != null) return single;
+    if (ref instanceof com.intellij.psi.PsiPolyVariantReference p) {
+      for (com.intellij.psi.ResolveResult r : p.multiResolve(false)) if (r.getElement() != null) return r.getElement();
+    }
+    return null;
+  }
+
   /** The file sees the definition, or sees no definition of its name at all. */
   public static boolean isVisibleOrUnknown(@NotNull ErlangFile file, @NotNull ErlangMacrosDefinition d) {
     String name = d.getName();

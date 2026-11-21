@@ -72,7 +72,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(args);
     ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
     PsiReference reference = macros != null ? macros.getReference() : null;
-    PsiElement resolve = reference != null ? reference.resolve() : null;
+    PsiElement resolve = org.intellij.erlang.psi.impl.ErlangMacroResolve.firstTarget(reference);
     if (!(resolve instanceof ErlangMacrosDefinition) || !(resolve.getContainingFile() instanceof ErlangFile)) return Collections.emptyList();
     ErlangMacrosDefinition resolved = (ErlangMacrosDefinition) resolve;
     ErlangFile file = (ErlangFile) resolve.getContainingFile();

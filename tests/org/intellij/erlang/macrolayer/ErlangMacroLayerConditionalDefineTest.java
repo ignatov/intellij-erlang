@@ -100,6 +100,21 @@ public class ErlangMacroLayerConditionalDefineTest extends ErlangLightPlatformCo
     assertEquals("[9:LOG]", usages(1));
   }
 
+  /** N2 (from the real IDE): the go-to-declaration action's targets (the path of GotoDeclarationAction), not only multiResolve. */
+  public void testGoToDeclarationActionOffersBothDefinitions() {
+    open("ifd.erl", "-module(ifd).\n-export([f/0]).\n\n-ifdef(X).\n-define(A, 1).\n-else.\n-define(A, 2).\n-endif.\n\nf() -> ?A.\n");
+    int at = myFile.getText().indexOf("?A.") + 1;
+    myFixture.getEditor().getCaretModel().moveToOffset(at);
+    // the targets that the action (GotoDeclarationOrUsageHandler2) goes to: the symbols at the caret
+    List<String> lines = new ArrayList<>();
+    for (com.intellij.model.Symbol sym : com.intellij.model.psi.impl.TargetsKt.targetSymbols(myFile, at)) {
+      PsiElement t = com.intellij.model.psi.PsiSymbolService.getInstance().extractElementFromSymbol(sym);
+      if (t != null) lines.add(line(t));
+    }
+    Collections.sort(lines);
+    assertEquals("[5, 7]", lines.toString());
+  }
+
   public void testKnownBranchGoesToTheActiveDefinition() {
     open("k4.erl", """
       -module(k4).

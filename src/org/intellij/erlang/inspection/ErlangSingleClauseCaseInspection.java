@@ -67,7 +67,7 @@ public class ErlangSingleClauseCaseInspection extends ErlangInspectionBase {
 
   private static boolean bodyHasTopLevelSemicolon(@NotNull ErlangMacros macros) {
     PsiReference reference = macros.getReference();
-    ErlangMacrosDefinition definition = ObjectUtils.tryCast(reference != null ? reference.resolve() : null, ErlangMacrosDefinition.class);
+    ErlangMacrosDefinition definition = ObjectUtils.tryCast(org.intellij.erlang.psi.impl.ErlangMacroResolve.firstTarget(reference), ErlangMacrosDefinition.class);
     ErlangMacrosBody body = definition != null ? definition.getMacrosBody() : null;
     return body != null && SyntaxTraverser.psiApi().children(body).filter(e -> PsiUtilCore.getElementType(e) == ErlangTypes.ERL_SEMI).isNotEmpty();
   }
