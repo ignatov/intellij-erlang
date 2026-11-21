@@ -135,8 +135,15 @@ public final class TargetProbe {
         });
       });
     }
+    for (Pair<String, PsiElement> t : found) {
+      if (!t.second.isValid()) {
+        myRec.fail("wrong-answer", "invalid " + t.first + " " + t.second.getClass().getSimpleName(),
+                   "the " + t.first + " answer at " + offset + " is an invalid element " + t.second.getClass().getName());
+      }
+    }
     int n = 0;
     for (Pair<String, PsiElement> t : found) {
+      if (!t.second.isValid()) continue;
       if (!mySeen.add(t.second)) continue;
       String kind = t.first + ":" + t.second.getClass().getSimpleName();
       boolean firstOfKind = mySeenKinds.add(kind);

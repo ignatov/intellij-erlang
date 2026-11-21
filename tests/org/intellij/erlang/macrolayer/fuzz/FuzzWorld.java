@@ -35,6 +35,7 @@ public final class FuzzWorld {
   public final VirtualFile rootDir;
   public final Map<String, VirtualFile> files = new LinkedHashMap<>();
   private final Map<String, String> myTexts = new LinkedHashMap<>();
+  private final List<VirtualFile> myIncludeRoots = new ArrayList<>();
 
   public FuzzWorld(@NotNull CodeInsightTestFixture fixture, @NotNull Map<String, String> erlangFiles, boolean extras) {
     this.fixture = fixture;
@@ -99,7 +100,22 @@ public final class FuzzWorld {
     return r;
   }
 
+  /** Marks a directory of the case as an Erlang include root of the module, as the sample project's settings do. */
+  public void addIncludeRoot(@NotNull String path) {
+    VirtualFile d = rootDir.findFileByRelativePath(path);
+    if (d == null || !d.isDirectory()) return;
+    com.intellij.testFramework.PsiTestUtil.addSourceRoot(fixture.getModule(), d, org.intellij.erlang.jps.model.ErlangIncludeSourceRootType.INSTANCE);
+    myIncludeRoots.add(d);
+  }
+
   public void dispose() {
+    for (VirtualFile d : myIncludeRoots) {
+      try {
+        com.intellij.testFramework.PsiTestUtil.removeSourceRoot(fixture.getModule(), d);
+      }
+      catch (Throwable ignored) {
+      }
+    }
     try {
       WriteAction.runAndWait(() -> {
         if (rootDir.isValid()) rootDir.delete(this);

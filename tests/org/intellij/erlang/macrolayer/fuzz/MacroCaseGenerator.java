@@ -22,6 +22,10 @@ public final class MacroCaseGenerator {
   private final Map<String, Set<Integer>> myMacros = new LinkedHashMap<>();
   private final List<String> myFunctions = new ArrayList<>();
   private final Set<String> myMadeFunctions = new LinkedHashSet<>();
+  /** fragment macro name -> an expression (or statement) that uses it where its expansion parses */
+  private final Map<String, String> myFragmentUses = new LinkedHashMap<>();
+  /** forms that use fragment macros at the top level (a clause made with an arrow macro) */
+  private final List<String> myFragmentForms = new ArrayList<>();
   private int myNames;
 
   public MacroCaseGenerator(@NotNull Random r) {
@@ -59,6 +63,9 @@ public final class MacroCaseGenerator {
       files.put("lib/applib/ebin/applib.app", "{application, applib, [{vsn, \"1\"}]}.\n");
       files.put("lib/applib/include/app.hrl", define("APP", true) + "\n" + define("APP", true) + "\n");
     }
+    if (chance(60)) {
+      files.put("b.erl", "-module(b).\n-export([g/0, h/1]).\n-include(\"h1.hrl\").\n-record(br, {x = 1}).\ng() -> ok.\nh(X) -> {X, #br{}}.\n");
+    }
     String main = module("m", files);
     files.put("m.erl", main);
     if (chance(50)) {
@@ -84,6 +91,7 @@ public final class MacroCaseGenerator {
     else if (chance(70)) sb.append("-include(\"h1.hrl\").\n");
     if (files.containsKey("lib/applib/include/app.hrl") && chance(70)) sb.append("-include_lib(\"applib/include/app.hrl\").\n");
     if (chance(15)) sb.append("-include_lib(\"eunit/include/eunit.hrl\").\n");
+    if (chance(10)) sb.append("-include(\"missing.hrl\").\n");             // an include that does not resolve
     // the header macros are visible (approximately: the generator does not track the -ifndef guard)
     for (String d : myDefines) noteDefine(d);
     int nd = 2 + r.nextInt(7);
@@ -92,6 +100,8 @@ public final class MacroCaseGenerator {
     int nf = 1 + r.nextInt(4);
     for (int i = 0; i < nf; i++) forms.add(function());
     if (chance(40)) forms.add(conditional());
+    forms.addAll(myFragmentForms);
+    myFragmentForms.clear();
     if (chance(30)) forms.add(madeForm());
     if (chance(20)) forms.add(wrongUse());
     // keep -define before use most of the time, sometimes shuffle (use before define is an error epp reports)
@@ -125,7 +135,7 @@ public final class MacroCaseGenerator {
   private String define(String prefix, boolean header) {
     String n = fresh(prefix);
     String d;
-    switch (r.nextInt(16)) {
+    switch (r.nextInt(22)) {
       case 0 -> d = "-define(" + n + ", " + r.nextInt(100) + ").";
       case 1 -> d = "-define(" + n + "(A, B), A + B).";
       case 2 -> d = "-define(" + n + "(X), {X, ?MODULE}).\n-define(" + n + "(X, Y), [X | Y]).";
@@ -141,6 +151,30 @@ public final class MacroCaseGenerator {
       case 12 -> d = "-define(" + n + ", -record(" + n.toLowerCase(Locale.ROOT) + "_rec, {a = 1, b}).).";
       case 13 -> d = "-define(" + n + "(V), V = 42).";                    // binds a variable
       case 14 -> d = "-define(" + n + "(), zero_args).";
+      case 16 -> {                                                       // a list tail fragment with an argument
+        d = "-define(" + n + "(X), , X]).";
+        myFragmentUses.put(n, "[1 ?" + n + "(2)");
+      }
+      case 17 -> {                                                       // an arrow
+        d = "-define(" + n + ", ->).";
+        String fn = fresh("arrow");
+        myFragmentForms.add(fn + "() ?" + n + " ok.");
+        myFunctions.add(fn + "/0");
+      }
+      case 18 -> {                                                       // a module prefix with the colon
+        d = "-define(" + n + ", lists:).";
+        myFragmentUses.put(n, "?" + n + " reverse([1, 2])");
+      }
+      case 19 -> {                                                       // a remote call through a macro
+        d = "-define(" + n + "(M, F), M:F(), ok).";
+        myFragmentUses.put(n, "?" + n + "(b, g)");
+      }
+      case 20 -> {                                                       // a guard fragment
+        d = "-define(" + n + "(X), when is_integer(X)).";
+        String fn = fresh("guarded");
+        myFragmentForms.add(fn + "(X) ?" + n + "(X) -> X.");
+        myFunctions.add(fn + "/1");
+      }
       default -> d = "-define(" + n + ", " + pick(PREDEFINED) + ").";
     }
     if (header) myDefines.add(d);
@@ -154,6 +188,8 @@ public final class MacroCaseGenerator {
   private String use(boolean expressionOnly) {
     if (myMacros.isEmpty() || chance(15)) return pick(PREDEFINED);
     List<String> names = new ArrayList<>(myMacros.keySet());
+    names.removeAll(myFragmentUses.keySet());
+    if (names.isEmpty()) return pick(PREDEFINED);
     String n = pick(names);
     int arity = pick(new ArrayList<>(myMacros.get(n)));
     if (chance(5)) arity = arity + 1;                                     // wrong arity
@@ -208,6 +244,7 @@ public final class MacroCaseGenerator {
 
   /** A use of a fragment macro in a position where the expansion parses, if such a macro is visible. */
   private String fragmentUse() {
+    if (!myFragmentUses.isEmpty() && chance(60)) return pick(new ArrayList<>(myFragmentUses.values()));
     for (Map.Entry<String, Set<Integer>> e : myMacros.entrySet()) {
       String n = e.getKey();
       if (!chance(30)) continue;

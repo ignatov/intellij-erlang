@@ -15,7 +15,7 @@ import java.util.*;
  */
 public class MacroFuzzSelectionTest extends MacroFuzzTestBase {
   public void testActionUpdateOnSelections() throws Throwable {
-    runCases("selection", 2, (index, rnd, caseId) -> {
+    runCases("selection", 1, (index, rnd, caseId) -> {
       Map<String, String> files = new MacroCaseGenerator(rnd).project();
       FuzzWorld w = world(files, true);
       try {

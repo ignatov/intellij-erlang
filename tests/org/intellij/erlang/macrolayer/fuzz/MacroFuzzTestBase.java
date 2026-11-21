@@ -34,7 +34,10 @@ public abstract class MacroFuzzTestBase extends ErlangLightPlatformCodeInsightFi
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return ErlangSdkType.createMockSdk("testData/mockSdk-R15B02/", ErlangSdkRelease.V_29_0);
+        // MACRO_FUZZ_SDK: an SDK folder with more OTP headers (lib/<app>-<vsn>/include), for example the mini SDK of
+        // the fuzz scratch folder; by default the headers of the default mock SDK
+        String home = FuzzConfig.env("MACRO_FUZZ_SDK");
+        return ErlangSdkType.createMockSdk(home != null ? home : "testData/mockSdk-R15B02/", ErlangSdkRelease.V_29_0);
       }
     };
   }

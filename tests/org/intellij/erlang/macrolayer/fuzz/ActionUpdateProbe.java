@@ -93,8 +93,12 @@ public final class ActionUpdateProbe {
 
   /** Expands each group as its popup or menu does, with the selection's context. */
   public void expandGroups(@NotNull String label, @NotNull DataContext raw, @NotNull String place) {
+    expandGroups(label, raw, place, GROUPS);
+  }
+
+  public void expandGroups(@NotNull String label, @NotNull DataContext raw, @NotNull String place, String... groups) {
     ActionManager am = ActionManager.getInstance();
-    for (String id : GROUPS) {
+    for (String id : groups) {
       AnAction a = am.getAction(id);
       if (!(a instanceof ActionGroup group)) continue;
       myRec.guard(label + " expand " + id, () -> {

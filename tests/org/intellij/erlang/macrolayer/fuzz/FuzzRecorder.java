@@ -330,7 +330,10 @@ public final class FuzzRecorder {
 
   private synchronized void add(String sig, String kind, Throwable t, String label, boolean plugin) {
     if (!plugin) {
-      myNoise.merge(sig + "  [" + label.replaceAll("@[0-9]+", "") + "]", 1, Integer::sum);
+      String key = sig + "  [" + label.replaceAll("@[0-9]+", "") + "]";
+      if (myNoise.merge(key, 1, Integer::sum) == 1 && myNoise.size() <= 200 && myBytes.get() < MAX_BYTES) {
+        writeCase("noise " + sig, t, label, 0);
+      }
       return;
     }
     Finding f = myFindings.get(sig);
@@ -359,7 +362,7 @@ public final class FuzzRecorder {
   private Path writeCase(String sig, Throwable t, String label, int n) {
     try {
       Files.createDirectories(myOut.resolve("cases"));
-      String id = Integer.toHexString(sig.hashCode()) + "-" + n;
+      String id = (sig.startsWith("noise ") ? "noise-" : "") + Integer.toHexString(sig.hashCode()) + "-" + n;
       Path p = myOut.resolve("cases").resolve(id + ".txt");
       StringBuilder sb = new StringBuilder();
       sb.append("signature: ").append(sig).append('\n');

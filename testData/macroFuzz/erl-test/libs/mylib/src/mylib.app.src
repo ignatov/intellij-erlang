@@ -1,0 +1,10 @@
+%% Описание приложения mylib. По этому файлу плагин узнаёт, что
+%% libs/mylib это приложение mylib, и находит
+%% -include_lib("mylib/include/mylib.hrl").
+{application, mylib,
+ [{description, "Sample library with a header"},
+  {vsn, "0.1.0"},
+  {modules, [mylib]},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env, []}]}.
