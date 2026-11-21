@@ -298,4 +298,129 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     assertEquals("function foo | function <b><code>foo</code></b>", names);
     assertEquals("[a.erl:3:foo/0, a.erl:5:foo(), a.erl:7:foo()]", action);
   }
+
+  // ------------------------------------------------------------------------------------------------ defect 6
+
+  private static <T> java.util.concurrent.Future<T> pooled(java.util.concurrent.Callable<T> c) {
+    return com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(c);
+  }
+
+  /** A pooled thread asks for the copy in a read action under its own progress indicator: "copy", "none" or "cancelled". */
+  private static java.util.concurrent.Future<String> askUnder(com.intellij.openapi.progress.ProgressIndicator indicator, PsiFile f) {
+    return pooled(() -> {
+      try {
+        ErlangMacroLayer.Copy[] c = new ErlangMacroLayer.Copy[1];
+        com.intellij.openapi.progress.ProgressManager.getInstance().runProcess(
+          () -> c[0] = com.intellij.openapi.application.ReadAction.compute(() -> ErlangMacroLayer.getCopy(f)), indicator);
+        return c[0] != null ? "copy" : "none";
+      }
+      catch (com.intellij.openapi.progress.ProcessCanceledException e) {
+        return "cancelled";
+      }
+    });
+  }
+
+  /**
+   * C5/P3: a thread that waits for another thread's build of the same copy stays cancellable, and the copy is built once.
+   * A waiter holds a read action; a write action must be able to cancel it at once, not after the other thread's build.
+   */
+  public void testWaitingForAnotherThreadsBuildIsCancellable() throws Exception {
+    PsiFile f = myFixture.addFileToProject("d6/a.erl", "-module(a).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Q), Q.\n");
+    java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+    java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+    java.util.concurrent.atomic.AtomicInteger hookRuns = new java.util.concurrent.atomic.AtomicInteger();
+    ErlangMacroLayer.setBuildHookForTests(() -> {
+      if (hookRuns.incrementAndGet() > 1) return;
+      entered.countDown();
+      try {
+        // the first build hangs until released (a slow build), but reacts to cancellation like a real one
+        while (!release.await(5, java.util.concurrent.TimeUnit.MILLISECONDS)) com.intellij.openapi.progress.ProgressManager.checkCanceled();
+      }
+      catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }, getTestRootDisposable());
+    com.intellij.openapi.progress.util.ProgressIndicatorBase builderIndicator = new com.intellij.openapi.progress.util.ProgressIndicatorBase();
+    com.intellij.openapi.progress.util.ProgressIndicatorBase waiterIndicator = new com.intellij.openapi.progress.util.ProgressIndicatorBase();
+    java.util.concurrent.Future<String> builder = askUnder(builderIndicator, f);
+    java.util.concurrent.Future<String> waiter = null;
+    java.util.concurrent.Future<String> second = null;
+    try {
+      assertTrue("the build did not start", entered.await(30, java.util.concurrent.TimeUnit.SECONDS));
+      waiter = askUnder(waiterIndicator, f);
+      Thread.sleep(300); // the waiter reaches the wait
+      assertFalse("the waiter did not wait for the build", waiter.isDone());
+      long t0 = System.nanoTime();
+      waiterIndicator.cancel();
+      String w;
+      try {
+        w = waiter.get(5, java.util.concurrent.TimeUnit.SECONDS);
+      }
+      catch (java.util.concurrent.TimeoutException e) {
+        w = "still waiting after 5 s";
+      }
+      double ms = (System.nanoTime() - t0) / 1e6;
+      out("D6 cancelled waiter: " + w + " after " + String.format(java.util.Locale.ROOT, "%.1f", ms) + " ms; builder done=" + builder.isDone());
+      assertEquals("cancelled", w);
+      assertFalse("the build ended before the waiter", builder.isDone());
+      // a second waiter, not cancelled, gets the copy of the first build when it ends
+      second = askUnder(new com.intellij.openapi.progress.util.ProgressIndicatorBase(), f);
+      Thread.sleep(100);
+      release.countDown();
+      assertEquals("copy", builder.get(30, java.util.concurrent.TimeUnit.SECONDS));
+      assertEquals("copy", second.get(30, java.util.concurrent.TimeUnit.SECONDS));
+      out("D6 builds=" + buildsOf("a.erl") + " " + reasons());
+      assertEquals(1, buildsOf("a.erl"));
+    }
+    finally {
+      release.countDown();
+      for (java.util.concurrent.Future<String> x : java.util.Arrays.asList(builder, waiter, second)) {
+        if (x != null) {
+          try {
+            x.get(30, java.util.concurrent.TimeUnit.SECONDS);
+          }
+          catch (Exception ignored) {
+          }
+        }
+      }
+    }
+  }
+
+  /** When the building thread is cancelled, a waiting thread builds the copy itself; 8 threads at once build once. */
+  public void testCancelledBuildIsTakenOverAndConcurrentAsksBuildOnce() throws Exception {
+    PsiFile f = myFixture.addFileToProject("d6b/a.erl", "-module(a).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Q), Q.\n");
+    java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+    java.util.concurrent.atomic.AtomicInteger hookRuns = new java.util.concurrent.atomic.AtomicInteger();
+    ErlangMacroLayer.setBuildHookForTests(() -> {
+      if (hookRuns.incrementAndGet() > 1) return;
+      entered.countDown();
+      long until = System.nanoTime() + 30_000_000_000L;
+      while (System.nanoTime() < until) {
+        com.intellij.openapi.progress.ProgressManager.checkCanceled();
+        Thread.onSpinWait();
+      }
+    }, getTestRootDisposable());
+    com.intellij.openapi.progress.util.ProgressIndicatorBase builderIndicator = new com.intellij.openapi.progress.util.ProgressIndicatorBase();
+    java.util.concurrent.Future<String> builder = askUnder(builderIndicator, f);
+    assertTrue(entered.await(30, java.util.concurrent.TimeUnit.SECONDS));
+    java.util.concurrent.Future<String> waiter = askUnder(new com.intellij.openapi.progress.util.ProgressIndicatorBase(), f);
+    Thread.sleep(200);
+    builderIndicator.cancel();
+    assertEquals("cancelled", builder.get(30, java.util.concurrent.TimeUnit.SECONDS));
+    assertEquals("copy", waiter.get(30, java.util.concurrent.TimeUnit.SECONDS));
+    assertEquals(1, buildsOf("a.erl"));
+    // 8 threads ask a fresh file at once
+    PsiFile g = myFixture.addFileToProject("d6b/b.erl", "-module(b).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Q), Q.\n");
+    java.util.concurrent.CyclicBarrier start = new java.util.concurrent.CyclicBarrier(8);
+    List<java.util.concurrent.Future<String>> all = new java.util.ArrayList<>();
+    for (int i = 0; i < 8; i++) {
+      all.add(pooled(() -> {
+        start.await(30, java.util.concurrent.TimeUnit.SECONDS);
+        return askUnder(new com.intellij.openapi.progress.util.ProgressIndicatorBase(), g).get(30, java.util.concurrent.TimeUnit.SECONDS);
+      }));
+    }
+    for (java.util.concurrent.Future<String> x : all) assertEquals("copy", x.get(60, java.util.concurrent.TimeUnit.SECONDS));
+    out("D6 eight threads: builds=" + buildsOf("b.erl") + " " + reasons());
+    assertEquals(1, buildsOf("b.erl"));
+  }
 }

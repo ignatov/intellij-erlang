@@ -3,6 +3,7 @@ package org.intellij.erlang.macrolayer;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -41,7 +42,12 @@ import org.jetbrains.annotations.TestOnly;
 import java.util.*;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -647,6 +653,8 @@ public final class ErlangMacroLayer {
     volatile @Nullable Copy strong;
     volatile @NotNull WeakReference<Copy> weak = new WeakReference<>(null);
     volatile boolean everBuilt;
+    /** The build in progress, if any: its thread and the copy it will give (null when it ends without one). */
+    final AtomicReference<Build> building = new AtomicReference<>();
 
     CopyHolder(@Nullable VirtualFile file) {
       this.file = file;
@@ -655,6 +663,64 @@ public final class ErlangMacroLayer {
     @Nullable Copy get() {
       Copy c = strong;
       return c != null ? c : weak.get();
+    }
+  }
+
+  record Build(@NotNull Thread thread, @NotNull CompletableFuture<Copy> result) {
+  }
+
+  /**
+   * Round 5: the copy of a holder, built once. Highlighting asks from several threads at once: one thread builds, the
+   * others wait for its result. A waiter holds a read action, which a write action must be able to cancel, so the wait
+   * checks for cancellation (a monitor wait cannot). A build that ends without a copy (cancelled or failed) completes
+   * with null; then a waiter that is still running builds itself. Null also when the building thread asks again
+   * inside its own build (the layer then gives master's answer).
+   */
+  private static @Nullable Copy obtain(@NotNull CopyHolder holder, @NotNull ErlangFile file, @NotNull Table table,
+                                       @NotNull String trigger) {
+    while (true) {
+      Copy copy = holder.get();
+      if (copy != null) return copy;
+      Build mine = new Build(Thread.currentThread(), new CompletableFuture<>());
+      Build other = holder.building.compareAndExchange(null, mine);
+      if (other == null) {
+        Copy built = null;
+        try {
+          built = holder.get(); // another build may have ended just before
+          if (built == null) {
+            built = build(file, table, trigger, holder.everBuilt ? "collected" : null);
+            holder.weak = new WeakReference<>(built);
+            holder.everBuilt = true;
+          }
+          return built;
+        }
+        finally {
+          holder.building.set(null);
+          mine.result().complete(built);
+        }
+      }
+      if (other.thread() == Thread.currentThread()) return null;
+      copy = awaitCancellably(other.result());
+      if (copy != null) return copy;
+    }
+  }
+
+  /** Waits for a build of another thread; throws {@link ProcessCanceledException} as soon as this thread is cancelled. */
+  private static @Nullable Copy awaitCancellably(@NotNull CompletableFuture<Copy> build) {
+    while (true) {
+      ProgressManager.checkCanceled();
+      try {
+        return build.get(10, TimeUnit.MILLISECONDS);
+      }
+      catch (TimeoutException ignored) {
+      }
+      catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new ProcessCanceledException(e);
+      }
+      catch (ExecutionException e) {
+        return null; // not completed exceptionally; a failed build completes with null
+      }
     }
   }
 
@@ -693,18 +759,8 @@ public final class ErlangMacroLayer {
       return c;
     }
     CopyHolder holder = cv.getValue();
-    Copy copy = holder.get();
-    if (copy == null) {
-      // highlighting asks from several threads at once; build once per file and let the others wait
-      synchronized (holder) {
-        copy = holder.get();
-        if (copy == null) {
-          copy = build(file, table, trigger, holder.everBuilt ? "collected" : null);
-          holder.weak = new WeakReference<>(copy);
-          holder.everBuilt = true;
-        }
-      }
-    }
+    Copy copy = obtain(holder, file, table, trigger);
+    if (copy == null) return null;
     ErlangMacroLayerRetention.getInstance(project).touch(holder, copy);
     return copy;
   }
@@ -748,6 +804,14 @@ public final class ErlangMacroLayer {
   }
 
   private static final Key<long[]> LAST_BUILD_STATE = Key.create("erlang.macro.layer.last.build");
+  private static volatile @Nullable Runnable ourBuildHookForTests;
+
+  /** Runs at the start of every cached build (not of {@link #build(PsiFile)}), on the building thread. */
+  @TestOnly
+  public static void setBuildHookForTests(@Nullable Runnable hook, @NotNull Disposable parent) {
+    ourBuildHookForTests = hook;
+    Disposer.register(parent, () -> ourBuildHookForTests = null);
+  }
 
   private static @NotNull Copy build(@NotNull PsiFile file, @Nullable Table table, @NotNull String trigger, @Nullable String why) {
     long t0 = System.nanoTime();
@@ -758,6 +822,8 @@ public final class ErlangMacroLayer {
     String reason = why != null ? why : last == null ? "first" : last[0] != now[0] ? "own-text" :
                                         last[1] != now[1] ? "header-directives" :
                                         last[2] != now[2] ? "include-resolution" : "same-state";
+    Runnable hook = ourBuildHookForTests;
+    if (hook != null && !"direct".equals(trigger)) hook.run();
     if (!"direct".equals(trigger)) file.putUserData(LAST_BUILD_STATE, now);
     EXPANSIONS_BUILT.incrementAndGet();
     CharSequence text = file.getViewProvider().getContents();
