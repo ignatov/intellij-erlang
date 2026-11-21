@@ -52,7 +52,8 @@ import java.util.stream.Stream;
  * {@code S5_READER}: {@code nc} adds a background reader that resolves the reference at the caret every 50 ms in a plain
  * (not cancellable) read action on a pooled thread, {@code c} the same in a cancellable non-blocking read action; it
  * stands for a consumer such as the target-element search of the IDE. An arm name may carry the reader as a suffix
- * ({@code layer+nc}); then it overrides {@code S5_READER}.
+ * ({@code layer+nc}); then it overrides {@code S5_READER}. {@code S5_HOG=<n>}: n threads spin during each run
+ * (CPU starvation, as on a loaded host).
  */
 public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   static final String OTP = "/opt/homebrew/Cellar/erlang/29.1/lib/erlang/lib";
@@ -66,7 +67,10 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
   private volatile long myLastFinished;
   private volatile FileEditor myWatched;
   private volatile int myCaret;
+  private volatile long myLastStarting;
+  private volatile int myStartingCount, myFinishedCount, myCanceledCount;
   private volatile boolean myReading;
+  private volatile boolean myHogging;
   private final List<Long> myReaderNanos = Collections.synchronizedList(new ArrayList<>());
 
   public ErlangMacroLayerTypingHarnessTest() {
@@ -280,7 +284,25 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       @Override
       public void daemonFinished(Collection<? extends FileEditor> fileEditors) {
         FileEditor w = myWatched;
-        if (w != null && fileEditors.contains(w)) myLastFinished = System.currentTimeMillis();
+        if (w != null && fileEditors.contains(w)) {
+          myLastFinished = System.currentTimeMillis();
+          myFinishedCount++;
+        }
+      }
+
+      @Override
+      public void daemonStarting(Collection<? extends FileEditor> fileEditors) {
+        FileEditor w = myWatched;
+        if (w != null && fileEditors.contains(w)) {
+          myLastStarting = System.currentTimeMillis();
+          myStartingCount++;
+        }
+      }
+
+      @Override
+      public void daemonCanceled(String reason, Collection<? extends FileEditor> fileEditors) {
+        FileEditor w = myWatched;
+        if (w != null && fileEditors.contains(w)) myCanceledCount++;
       }
     });
     String xmerl = copyApp("xmerl", true);
@@ -299,7 +321,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     out("start arms=" + arms + " files=" + fileKeys + " texts=" + texts + " rounds=" + rounds + " chars=" + chars + " gap=" + gap +
         " layerClasses=" + (LAYER != null) + " cpus=" + Runtime.getRuntime().availableProcessors());
     myRows.add("round\tfile\ttext\tarm\tfirst_hl_ms\tlast_key_to_hl_ms\ttyping_s\tmax_edt_key_ms\tcpu_ms\tgc_ms\tbuilds\tbuild_ms\tcancelled\t" +
-               "lock_wait_ms\tlayer_excl_ms\tlayer_incl_ms\tload\tmax_build_ms\tmax_lock_wait_ms\tlock_waits\treader");
+               "lock_wait_ms\tlayer_excl_ms\tlayer_incl_ms\tload\tmax_build_ms\tmax_lock_wait_ms\tlock_waits\treader\tfinal_pass_ms\tdaemon");
     daemon.setUpdateByTimerEnabled(true);
     // warm-up: one run per arm and file, not recorded
     for (String fk : fileKeys) {
@@ -401,6 +423,19 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     long tStart = System.currentTimeMillis();
     long tLast = 0;
     myCaret = editor.getCaretModel().getOffset();
+    int hogs = Integer.parseInt(env("S5_HOG", "0"));
+    myHogging = hogs > 0;
+    List<Thread> hogThreads = new ArrayList<>();
+    for (int i = 0; i < hogs; i++) {
+      Thread h = new Thread(() -> {
+        long x = 0;
+        while (myHogging) x += System.nanoTime() & 7;
+        if (x == 42) System.out.print("");
+      }, "s5 hog " + i);
+      h.setDaemon(true);
+      h.start();
+      hogThreads.add(h);
+    }
     Thread readerThread = startReader(file, reader);
     for (char c : typed.toCharArray()) {
       long k0 = System.nanoTime();
@@ -413,12 +448,17 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       if (rest > 0) pump(rest);
     }
     myLastFinished = 0;
+    myStartingCount = myFinishedCount = myCanceledCount = 0;
     long done = waitHighlighted(file, 600_000);
+    long finalPass = done > 0 && myLastStarting > 0 ? done - myLastStarting : -1;
+    String daemonRuns = "starts=" + myStartingCount + " finishes=" + myFinishedCount + " cancels=" + myCanceledCount + " final_pass_ms=" + finalPass;
     long hl = done > 0 ? done - tLast : -1;
     if (readerThread != null) {
       myReading = false;
       readerThread.join(30_000);
     }
+    myHogging = false;
+    for (Thread h : hogThreads) h.join(5_000);
     long cpu = (cpuNanos() - cpu0) / 1_000_000, gc = gcMillis() - gc0;
     Map<String, long[]> s1 = statsSnapshot();
     // layer counters of this run
@@ -463,6 +503,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       row += "\treader=" + reader + " reads=" + rn.size() + " max_read_ms=" + rmax / 1_000_000;
     }
     else row += "\t-";
+    row += "\t" + finalPass + "\t" + daemonRuns;
     row = row.replaceFirst("\t" + Pattern.quote(arm) + "\t", "\t" + Matcher.quoteReplacement(armName) + "\t");
     myRows.add(row);
     out("run " + row + " events+" + (events().size() - e0));
