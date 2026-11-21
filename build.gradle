@@ -391,6 +391,35 @@ tasks.register('verifyGeneratedSources') {
   }
 }
 
+// Line and branch coverage of the plugin's classes by `test`, only with -Pcoverage:
+// ./gradlew test -Pcoverage writes build/reports/jacoco/test/{html,jacocoTestReport.xml,jacocoTestReport.csv}.
+// The tests load the plugin through the IDE's PathClassLoader from the test sandbox, so the agent must include classes
+// without a code source location, and the report must read the instrumented classes that the sandbox jars contain.
+// JaCoCo 0.8.16 supports class files and runtimes of Java 25, the JetBrains Runtime the tests run on.
+if (providers.gradleProperty('coverage').isPresent()) {
+  apply plugin: 'jacoco'
+  jacoco {
+    toolVersion = '0.8.16'
+  }
+  tasks.named('test') {
+    jacoco {
+      includeNoLocationClasses = true
+      includes = ['org.intellij.erlang.*']
+      excludes = ['jdk.internal.*']
+    }
+    finalizedBy 'jacocoTestReport'
+  }
+  tasks.named('jacocoTestReport', JacocoReport) {
+    classDirectories.setFrom(tasks.named('instrumentCode'), project(':jps-plugin').tasks.named('instrumentCode'))
+    sourceDirectories.setFrom('src', 'gen', 'jps-plugin/src')
+    reports {
+      xml.required = true
+      csv.required = true
+      html.required = true
+    }
+  }
+}
+
 apply plugin: 'idea'
 idea {
   project {
