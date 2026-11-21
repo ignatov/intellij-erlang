@@ -167,14 +167,15 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   private static class ErlangFilesDependencyGraph implements InboundSemiGraph<String> {
     private final Project myProject;
     private final PsiManager myPsiManager;
-    private final Set<String> myHeaders;
+    private final Set<String> myHeaders = new HashSet<>();
+    private final Set<String> myHeadersWithoutPsi = new HashSet<>();
     private final Map<String, List<String>> myPathsToDependenciesMap = new HashMap<>();
 
     private ErlangFilesDependencyGraph(@NotNull Module[] modulesToCompile) {
       assert modulesToCompile.length > 0;
       myProject = modulesToCompile[0].getProject();
       myPsiManager = PsiManager.getInstance(myProject);
-      myHeaders = collectHeaderPaths(modulesToCompile);
+      collectHeaderPaths(modulesToCompile);
       for (Module module : modulesToCompile) {
         buildDependenciesMap(module);
       }
@@ -185,19 +186,21 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       return new ErlangFilesDependencyGraph(modulesToCompile);
     }
 
-    @NotNull
-    private static Set<String> collectHeaderPaths(@NotNull Module[] modulesToCompile) {
-      Set<String> erlangHeaders = new HashSet<>();
+    private void collectHeaderPaths(@NotNull Module[] modulesToCompile) {
       for (Module module : modulesToCompile) {
-        erlangHeaders.addAll(getHeaders(module, false));
-        erlangHeaders.addAll(getHeaders(module, true));
+        collectHeaderPaths(getErlangHeaderFiles(module, false));
+        collectHeaderPaths(getErlangHeaderFiles(module, true));
       }
-      return erlangHeaders;
     }
 
-    @NotNull
-    private static List<String> getHeaders(Module module, boolean onlyTestModules) {
-      return ContainerUtil.map(getErlangHeaderFiles(module, onlyTestModules), ErlangPrepareDependenciesCompileTask::getPath);
+    private void collectHeaderPaths(@NotNull Collection<VirtualFile> headers) {
+      for (VirtualFile header : headers) {
+        String path = getPath(header);
+        myHeaders.add(path);
+        if (getErlangFile(header) == null) {
+          myHeadersWithoutPsi.add(path);
+        }
+      }
     }
 
     @NotNull
@@ -230,12 +233,28 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
                                       @NotNull List<String> globalParseTransforms) {
       for (VirtualFile file : erlangFiles) {
         Set<String> dependencies = new HashSet<>();
+        String path = getPath(file);
+        boolean isHeader = myHeaders.contains(path);
         ErlangFile psi = getErlangFile(file);
         if (psi != null) {
           addDeclaredDependencies(module, psi, dependencies);
         }
+        else if (isHeader) {
+          // The includes of a file without Erlang PSI (e.g. above the size limit) are unknown: depend on every header that has PSI.
+          // Headers with PSI never depend on headers without it, so this adds no cycle.
+          for (String header : myHeaders) {
+            if (!myHeadersWithoutPsi.contains(header)) dependencies.add(header);
+          }
+        }
+        else {
+          dependencies.addAll(myHeaders);
+        }
+        if (!isHeader) {
+          // Includes of a header without Erlang PSI can't be resolved, so every module depends on it.
+          dependencies.addAll(myHeadersWithoutPsi);
+        }
         dependencies.addAll(globalParseTransforms);
-        myPathsToDependenciesMap.put(getPath(file), new ArrayList<>(dependencies));
+        myPathsToDependenciesMap.put(path, new ArrayList<>(dependencies));
       }
     }
 

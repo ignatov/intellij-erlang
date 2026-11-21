@@ -31,7 +31,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
   @Override
@@ -128,6 +130,42 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
     List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), path -> FileUtil.getNameWithoutExtension(new File(path)));
     assertSameElements(actualModules, "big", "module1");
+  }
+
+  public void testLargeModuleDependsOnAllHeaders() throws Exception {
+    writeAboveSizeLimit("big.erl", "-module(big).\n-include(\"header1.hrl\").\n");
+    Map<String, List<String>> dependencies = getDependencies(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule));
+    assertSameElements(dependencies.get("big.erl"), "header1.hrl", "header2.hrl");
+    assertEmpty(dependencies.get("module1.erl"));
+  }
+
+  public void testLargeHeaderIsDependencyOfAllModules() throws Exception {
+    writeAboveSizeLimit("big.hrl", "-include(\"header1.hrl\").\n");
+    Map<String, List<String>> dependencies = getDependencies(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule));
+    assertSameElements(dependencies.get("big.hrl"), "header1.hrl");
+    assertEmpty(dependencies.get("header1.hrl"));
+    assertSameElements(dependencies.get("module1.erl"), "big.hrl");
+    assertSameElements(dependencies.get("module2.erl"), "header1.hrl", "big.hrl");
+  }
+
+  private void writeAboveSizeLimit(String fileName, String text) throws IOException {
+    // A file above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
+    String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";
+    StringBuilder builder = new StringBuilder(text);
+    String commentLine = "%" + "x".repeat(99) + "\n";
+    while (builder.length() < 3_000_000) builder.append(commentLine);
+    FileUtil.writeToFile(new File(moduleSourceDirPath, fileName), builder.toString());
+    VfsUtil.markDirtyAndRefresh(false, true, true, new File(moduleSourceDirPath));
+  }
+
+  @NotNull
+  private static Map<String, List<String>> getDependencies(List<ErlangFileDescriptor> buildOrder) {
+    Map<String, List<String>> dependencies = new HashMap<>();
+    for (ErlangFileDescriptor descriptor : buildOrder) {
+      dependencies.put(new File(descriptor.myPath).getName(),
+                       ContainerUtil.map(descriptor.myDependencies, path -> new File(path).getName()));
+    }
+    return dependencies;
   }
 
   private static void assertSameErlangFiles(List<ErlangFileDescriptor> moduleBuildOrder,
