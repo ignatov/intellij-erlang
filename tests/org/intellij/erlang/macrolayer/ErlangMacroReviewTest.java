@@ -1,0 +1,192 @@
+package org.intellij.erlang.macrolayer;
+
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.openapi.util.registry.Registry;
+import com.intellij.psi.*;
+import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.testFramework.LightProjectDescriptor;
+import org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.intellij.erlang.macrolayer.LayerTestSupport.*;
+
+/**
+ * Remarks of the code review of the macro references, resolve, find usages and rename (C1-C11), and the fuzz finding
+ * F7. Each expectation follows epp (erlc 29.1): the definition in force at a use, macro names as directives see them.
+ */
+public class ErlangMacroReviewTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  @Override
+  protected LightProjectDescriptor getProjectDescriptor() {
+    return descriptor();
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setUpProjectSdk();
+    // A2 switches the layer through the Registry key, the user's way
+    if (!getName().startsWith("testA2")) ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+  }
+
+  private int myCount;
+
+  private PsiFile open(String text) {
+    PsiFile f = myFixture.addFileToProject("r" + myCount++ + "/m.erl", text);
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    return f;
+  }
+
+  private void caretAt(String marker) {
+    String text = myFixture.getFile().getText();
+    myFixture.getEditor().getCaretModel().moveToOffset(text.indexOf(marker.replace("|", "")) + marker.indexOf('|'));
+  }
+
+  private static List<String> targets(PsiFile f, String marker) throws Exception {
+    int at = f.getText().indexOf(marker.replace("|", "")) + marker.indexOf('|');
+    return inBackgroundWithIndicator(() -> {
+      PsiReference ref = f.findReferenceAt(at);
+      List<String> r = new ArrayList<>();
+      if (ref == null) return r;
+      List<PsiReference> refs = ref instanceof com.intellij.psi.impl.source.resolve.reference.impl.PsiMultiReference m ? List.of(m.getReferences()) : List.of(ref);
+      for (PsiReference one : refs) {
+        if (!(one.resolve() instanceof ErlangMacrosDefinition) && !(one instanceof PsiPolyVariantReference)) continue;
+        if (one instanceof PsiPolyVariantReference p) {
+          for (ResolveResult rr : p.multiResolve(false)) if (rr.getElement() instanceof ErlangMacrosDefinition d) r.add(d.getText());
+        }
+        else r.add(one.resolve().getText());
+      }
+      return new ArrayList<>(new java.util.LinkedHashSet<>(r));
+    });
+  }
+
+  // C1: rename from a use of a macro defined in both branches of -ifdef
+  public void testC1RenameFromAUseOfAMacroInBothBranches() {
+    open("-module(m).\n-export([f/0]).\n-ifdef(TEST).\n-define(LOG(X), {t, X}).\n-else.\n-define(LOG(X), {p, X}).\n-endif.\nf() -> ?LOG(1).\n");
+    caretAt("?L|OG(1)");
+    myFixture.renameElementAtCaret("TRACE");
+    assertEquals("-module(m).\n-export([f/0]).\n-ifdef(TEST).\n-define(TRACE(X), {t, X}).\n-else.\n-define(TRACE(X), {p, X}).\n-endif.\nf() -> ?TRACE(1).\n",
+                 myFixture.getFile().getText());
+  }
+
+  // C1, layer off: ?A has two references in master's tree (the use and its name)
+  public void testC1RenameFromAUseWithTheLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    open("-module(m).\n-export([f/0]).\n-define(A, 1).\nf() -> ?A.\n");
+    caretAt("?|A.");
+    myFixture.renameElementAtCaret("B");
+    assertEquals("-module(m).\n-export([f/0]).\n-define(B, 1).\nf() -> ?B.\n", myFixture.getFile().getText());
+  }
+
+  // C4: the definition in force at the use
+  public void testC4DefinitionInForceAtTheUse() throws Exception {
+    PsiFile f = open("-module(m).\n-export([f/0, g/0]).\n-define(V, 1).\nf() -> ?V.\n-undef(V).\n-define(V, 2).\ng() -> ?V.\n");
+    assertEquals(List.of("-define(V, 1)."), targets(f, "f() -> ?|V"));
+    assertEquals(List.of("-define(V, 2)."), targets(f, "g() -> ?|V"));
+    ErlangMacrosDefinition first = ((ErlangFile)f).getMacroses().get(0);
+    List<Integer> uses = inBackgroundWithIndicator(() -> ReferencesSearch.search(first).findAll().stream()
+      .map(r -> r.getElement().getTextRange().getStartOffset() + r.getRangeInElement().getStartOffset()).toList());
+    // f's use and the -undef that ends the definition; not g's use
+    assertEquals(uses.toString(), 2, uses.size());
+    for (int u : uses) assertTrue("no usage after the second definition: " + uses, u < f.getText().indexOf("-define(V, 2)"));
+  }
+
+  // C2: renaming a macro leaves a header's definition of the same name alone (it is not an alternative of it)
+  public void testC2RenameDoesNotTouchAHeaderDefinitionOfTheSameName() {
+    PsiFile h = myFixture.addFileToProject("r2/h.hrl", "-define(EQ(A, B), A =:= B).\n");
+    myFixture.addFileToProject("r2/m.erl", "-module(m).\n-include(\"h.hrl\").\n-export([f/0]).\n-undef(EQ).\n-define(EQ(A, B), my:eq(A, B)).\nf() -> ?EQ(1, 2).\n");
+    myFixture.configureFromExistingVirtualFile(myFixture.findFileInTempDir("r2/m.erl"));
+    caretAt("define(E|Q(A, B), my");
+    myFixture.renameElementAtCaret("SAME");
+    assertEquals("-define(EQ(A, B), A =:= B).\n", h.getText());
+    assertTrue(myFixture.getFile().getText(), myFixture.getFile().getText().contains("-define(SAME(A, B), my:eq(A, B)).\nf() -> ?SAME(1, 2)."));
+  }
+
+  // C3: a directive names every arity; renaming one arity renames the name everywhere in the file, never half of it
+  public void testC3RenameOfOneArityWithADirective() {
+    open("-module(m).\n-export([f/0, g/0]).\n-define(M(), z).\n-define(M(X), {X}).\nf() -> ?M(1).\n-undef(M).\n-define(M(), two).\ng() -> ?M().\n");
+    caretAt("?|M(1)");
+    myFixture.renameElementAtCaret("N");
+    assertEquals("-module(m).\n-export([f/0, g/0]).\n-define(N(), z).\n-define(N(X), {X}).\nf() -> ?N(1).\n-undef(N).\n-define(N(), two).\ng() -> ?N().\n",
+                 myFixture.getFile().getText());
+  }
+
+  // A2: when the Registry key goes off, the kept copies are let go at once
+  public void testA2SwitchOffReleasesKeptCopies() throws Exception {
+    PsiFile f = open("-module(m).\n-export([f/0]).\n-define(CALL(M, F), M:F(), ok).\nf() -> ?CALL(b, g).\n");
+    assertNotNull(inBackgroundWithIndicator(() -> ErlangMacroLayer.getCopy((ErlangFile)f, "test")));
+    ErlangMacroLayerRetention retention = ErlangMacroLayerRetention.getInstance(getProject());
+    assertTrue(retention.strongCount() > 0);
+    Registry.get(ErlangMacroLayer.REGISTRY_KEY).setValue(false, getTestRootDisposable());
+    assertEquals(0, retention.strongCount());
+  }
+
+  // C6: a bare use inside a conditional on the same name is not "unresolved" (the name comes from -D)
+  public void testC6BareUseInsideItsOwnConditionalIsNotUnresolved() {
+    //noinspection unchecked
+    myFixture.enableInspections(ErlangUnresolvedMacrosInspection.class);
+    open("-module(m).\n-export([f/0]).\n-ifdef(mac).\nf() -> foo?mac(a).\n-endif.\nfoo(X) -> X.\n");
+    for (HighlightInfo h : myFixture.doHighlighting()) {
+      assertFalse(h.getDescription(), String.valueOf(h.getDescription()).startsWith("Unresolved macros"));
+    }
+  }
+
+  // C9: a rename to a name that needs quotes renames every use, or nothing; never half
+  public void testC9RenameToAQuotedNameIsNeverHalfDone() {
+    String text = "-module(m).\n-export([f/0, foo/0]).\n-define(PAR, ()).\nf() -> foo?PAR.\nfoo() -> ok.\n";
+    open(text);
+    caretAt("define(P|AR");
+    try {
+      myFixture.renameElementAtCaret("p q");
+    }
+    catch (RuntimeException e) {
+      // a refusal before any change is fine
+      assertEquals(text, myFixture.getFile().getText());
+      return;
+    }
+    assertEquals("-module(m).\n-export([f/0, foo/0]).\n-define('p q', ()).\nf() -> foo?'p q'.\nfoo() -> ok.\n", myFixture.getFile().getText());
+  }
+
+  // C11: a header guard's name goes to the definition in the conditional body (none exists before it)
+  public void testC11HeaderGuardGoesToItsDefinition() throws Exception {
+    PsiFile f = open("-module(m).\n-ifndef(GUARD).\n-define(GUARD, 1).\n-endif.\n");
+    assertEquals(List.of("-define(GUARD, 1)."), targets(f, "-ifndef(G|UARD"));
+  }
+
+  // F7: rename of a function whose first clause a fragment macro makes, from its name in -export
+  public void testF7RenameFromExportOfAFunctionWithAClauseMadeByAMacro() {
+    open("-module(m).\n-export([sign/1]).\n-define(HEAD(N), sign(N) when N > 0 ->).\n?HEAD(X) positive;\nsign(0) -> zero;\nsign(_) -> negative.\n");
+    myFixture.doHighlighting();
+    caretAt("-export([s|ign/1])");
+    myFixture.renameElementAtCaret("renamed_sign");
+    assertEquals("-module(m).\n-export([renamed_sign/1]).\n-define(HEAD(N), renamed_sign(N) when N > 0 ->).\n?HEAD(X) positive;\nrenamed_sign(0) -> zero;\nrenamed_sign(_) -> negative.\n",
+                 myFixture.getFile().getText());
+  }
+
+  // A1: the platform's copy of a file (as completion makes) is not a layer file: its caches would answer for old text
+  public void testA1PlatformCopyOfAFileIsNotALayerFile() throws Exception {
+    PsiFile f = open("-module(m).\n-export([f/0]).\n-define(CALL(M, F), M:F(), ok).\nf() -> ?CALL(b, g).\n");
+    PsiFile copy = (PsiFile)f.copy();
+    assertNotNull(inBackgroundWithIndicator(() -> ErlangMacroLayer.layerFile(f)));
+    assertNull(inBackgroundWithIndicator(() -> ErlangMacroLayer.layerFile(copy)));
+  }
+
+  // A3: after a header changes, a UI-thread caller does not read and lex the header
+  public void testA3NoHeaderSummaryOnTheUiThread() throws Exception {
+    PsiFile h = myFixture.addFileToProject("r3/h.hrl", "-define(CALL(M, F), M:F(), ok).\n");
+    PsiFile f = myFixture.addFileToProject("r3/m.erl", "-module(m).\n-include(\"h.hrl\").\n-export([f/0]).\nf() -> ?CALL(b, g).\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    assertNotNull(inBackgroundWithIndicator(() -> ErlangMacroLayer.table((ErlangFile)f)));
+    com.intellij.openapi.editor.Document d = PsiDocumentManager.getInstance(getProject()).getDocument(h);
+    com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(0, "%% changed\n"));
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    int before = ErlangMacroLayer.SUMMARIES_BUILT.get();
+    ErlangMacroLayer.table((ErlangFile)f);
+    assertEquals("no summary built on the UI thread", before, ErlangMacroLayer.SUMMARIES_BUILT.get());
+  }
+}

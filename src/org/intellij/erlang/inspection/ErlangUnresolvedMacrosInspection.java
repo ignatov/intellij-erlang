@@ -103,7 +103,9 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
           if (ErlangMacroResolve.firstTarget(bare) == null) {
-            if (!isDefinedByEnclosingCondition(o, name)) registerProblem(holder, o, "Unresolved macros '?" + name + "'", range, null);
+            // the conditionals around the use itself: for a file host, the host has no enclosing form
+            PsiElement use = bare.getNameElement();
+            if (!isDefinedByEnclosingCondition(use, name)) registerProblem(holder, o, "Unresolved macros '?" + name + "'", range, null);
           }
           else {
             checkArity(o, bare.getNameElement(), name, range);
