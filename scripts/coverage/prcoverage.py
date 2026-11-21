@@ -191,6 +191,22 @@ def report_lines(report_path):
     return result
 
 
+def test_results(directory, classes):
+    """(classes of which a test ran, simple names of the classes with a failed test) from the JUnit XML files of
+    Gradle. A class without a file, or with only skipped tests (an @Ignore'd class), did not run."""
+    ran, failed = [], []
+    for name in classes:
+        try:
+            root = ET.parse(os.path.join(directory, 'TEST-%s.xml' % name)).getroot()
+        except (OSError, ET.ParseError):
+            continue
+        if any(case.find('skipped') is None for case in root.iter('testcase')):
+            ran.append(name)
+        if any(True for _ in root.iter('failure')) or any(True for _ in root.iter('error')):
+            failed.append(name.rsplit('.', 1)[-1])
+    return ran, failed
+
+
 def key_of(path):
     for root in SOURCE_ROOTS:
         if path.startswith(root):
@@ -221,14 +237,17 @@ def places(entries):
     return ', '.join(out)
 
 
-def report(files, lines, the_plan, with_compilation, gradle_status=None, failed_tests=None):
-    """The result as a dict; its "text" is what people read."""
+def report(files, lines, the_plan, with_compilation, gradle_status=None, failed_tests=None, ran_tests=None):
+    """The result as a dict; its "text" is what people read. ran_tests are the planned classes of which a test ran,
+    from the test results: a class that is planned is not always run (an @Ignore'd class runs no test)."""
+    ran = set(ran_tests or []) if lines is not None else set()
     sources = [f for f in files if is_source(f['path'])]
     deleted = [f['path'] for f in sources if f['status'] == 'deleted']
     changed = [f for f in sources if f['status'] != 'deleted' and f['added']]
     result = {'measured': ['test', 'testCompilation'] if with_compilation else ['test'],
               'planned': the_plan.get('run', []),
-              'tests_run': the_plan.get('run', []) if lines is not None else [],
+              'tests_run': [c for c in the_plan.get('run', []) if c in ran],
+              'tests_not_run': [c for c in the_plan.get('run', []) if c not in ran] if lines is not None else [],
               'tests_left_out': the_plan.get('left_out', []), 'notes': list(the_plan.get('notes', [])),
               'deleted_files': deleted, 'files': [], 'gradle_status': gradle_status,
               'failed_tests': failed_tests or []}
@@ -283,6 +302,9 @@ def text_of(result, measured):
             out.append('Not in the coverage report: ' + places(unknown) + '.')
     if result['tests_run']:
         out.append('Tests run with coverage: ' + ', '.join(n.rsplit('.', 1)[-1] for n in result['tests_run']) + '.')
+    if result['tests_not_run']:
+        out.append('Planned, but no test of it ran: '
+                   + ', '.join(n.rsplit('.', 1)[-1] for n in result['tests_not_run']) + '.')
     for left in result['tests_left_out']:
         out.append('Not run: %s (%s).' % (left['class'].rsplit('.', 1)[-1], left['why']))
     if result['failed_tests']:
@@ -310,7 +332,7 @@ def main(argv=None):
     r.add_argument('--plan', help='the JSON that `plan` wrote')
     r.add_argument('--with-test-compilation', action='store_true', help='the run included testCompilation')
     r.add_argument('--gradle-status', type=int)
-    r.add_argument('--failed-test', action='append', default=[], help='a test class that failed in the run')
+    r.add_argument('--test-results', help='the JUnit XML files of the run (build/test-results/test)')
     r.add_argument('--json', help='write the result here')
     args = parser.parse_args(argv)
     with open(args.diff, encoding='utf-8', errors='replace') as f:
@@ -328,7 +350,8 @@ def main(argv=None):
         with open(args.plan, encoding='utf-8') as f:
             the_plan = json.load(f)
     lines = report_lines(args.report) if args.report and os.path.isfile(args.report) else None
-    result = report(files, lines, the_plan, args.with_test_compilation, args.gradle_status, args.failed_test)
+    ran, failed = test_results(args.test_results, the_plan.get('run', [])) if args.test_results else ([], [])
+    result = report(files, lines, the_plan, args.with_test_compilation, args.gradle_status, failed, ran)
     if args.json:
         with open(args.json, 'w', encoding='utf-8') as f:
             json.dump(result, f, indent=2)

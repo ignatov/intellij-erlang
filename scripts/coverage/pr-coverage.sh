@@ -35,7 +35,7 @@ git diff --find-renames -U0 --no-color "$base" HEAD > "$out/changes.diff"
 python3 scripts/coverage/prcoverage.py plan --diff "$out/changes.diff" --json "$out/plan.json" > "$out/classes.txt" || true
 report=build/reports/jacoco/coverageReport/coverageReport.xml
 status=""
-failed=()
+results=""
 if grep -q . "$out/classes.txt"; then
   # A report left from an earlier run must not be read as the result of this one.
   [[ -f "$report" ]] && mv -f "$report" "$report.old"
@@ -49,17 +49,13 @@ if grep -q . "$out/classes.txt"; then
   echo "Running with coverage: $(tr '\n' ' ' < "$out/classes.txt")"
   ./gradlew --no-daemon --no-build-cache test -Pcoverage "${filters[@]}" > "$out/gradle.log" 2>&1
   status=$?
-  while IFS= read -r class; do
-    file="build/test-results/test/TEST-$class.xml"
-    if [[ -f "$file" ]] && grep -q -E '<(failure|error)[ >]' "$file"; then
-      failed+=(--failed-test "${class##*.}")
-    fi
-  done < "$out/classes.txt"
+  # What ran and what failed comes from these files, not from the plan.
+  results=build/test-results/test
 else
   report=""
 fi
 
 python3 scripts/coverage/prcoverage.py report --diff "$out/changes.diff" --plan "$out/plan.json" \
-  ${report:+--report "$report"} ${status:+--gradle-status "$status"} "${failed[@]+"${failed[@]}"}" \
+  ${report:+--report "$report"} ${status:+--gradle-status "$status"} ${results:+--test-results "$results"} \
   --json "$out/result.json" | tee "$out/result.txt"
 exit 0

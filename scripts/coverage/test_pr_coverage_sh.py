@@ -81,6 +81,34 @@ class WrapperTest(unittest.TestCase):
                       'measure).', out)
         self.assertEqual(out, self.read('build/coverage-pr/result.txt'))
 
+    def test_what_ran_comes_from_the_test_results(self):
+        self.write('src/org/intellij/erlang/A.java', 'class A {\n  int a;\n}\n')
+        for name in ('bif/ErlangBifParser', 'sdk/ATest'):
+            self.write('tests/org/intellij/erlang/%s.java' % name,
+                       'public class %s {\n  public void testX() {}\n}\n' % name.split('/')[1])
+        self.commit('change')
+        # The fake run writes a report and the results: ATest ran and failed, ErlangBifParser is @Ignore'd.
+        self.write('fake-gradle.sh', """\
+            mkdir -p build/reports/jacoco/coverageReport build/test-results/test
+            cat > build/reports/jacoco/coverageReport/coverageReport.xml <<'XML'
+            <report name="r"><package name="org/intellij/erlang"><sourcefile name="A.java">
+            <line nr="2" mi="0" ci="1" mb="0" cb="0"/></sourcefile></package></report>
+            XML
+            cat > build/test-results/test/TEST-org.intellij.erlang.sdk.ATest.xml <<'XML'
+            <testsuite name="org.intellij.erlang.sdk.ATest"><testcase name="testX"><failure>boom</failure></testcase>
+            </testsuite>
+            XML
+            cat > build/test-results/test/TEST-org.intellij.erlang.bif.ErlangBifParser.xml <<'XML'
+            <testsuite name="org.intellij.erlang.bif.ErlangBifParser"><testcase name="testX"><skipped/></testcase>
+            </testsuite>
+            XML
+            """)
+        out = self.run_script('HEAD^')
+        self.assertEqual(1, len(self.gradle_calls()))
+        self.assertIn('changed lines: 1 of 1 executed.\n', out)
+        self.assertIn('Tests run with coverage: ATest.\nPlanned, but no test of it ran: ErlangBifParser.\n', out)
+        self.assertIn('Failed in this run: ATest.\n', out)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -283,7 +283,8 @@ class ReportTest(Checkout):
 
     def test_executed_and_not_executed_lines(self):
         files = prcoverage.parse_diff(diff(MODIFIED_SDK, RENAMED_SOURCE, DELETED_SOURCE, ADDED_TEST))
-        result = prcoverage.report(files, self.lines, self.plan, False)
+        result = prcoverage.report(files, self.lines, self.plan, False,
+                                   ran_tests=['org.intellij.erlang.sdk.ErlangSdkTypeTest'])
         # Line 13 holds no code; 11 and B.java:5 ran; 12 and 43 did not.
         self.assertEqual({'changed': 4, 'executed': 2, 'not_executed': 2, 'not_measured': 0, 'unknown': 0},
                          result['totals'])
@@ -341,6 +342,39 @@ class ReportTest(Checkout):
         self.assertIn('Gradle ended with status 1.', result['text'])
         # A pure rename adds no line and is not listed.
         self.assertNotIn('D.java', result['text'])
+
+    def test_a_planned_class_that_ran_no_test(self):
+        files = prcoverage.parse_diff(diff(MODIFIED_SDK))
+        the_plan = {'run': ['org.intellij.erlang.bif.ErlangBifParser', 'org.intellij.erlang.sdk.ErlangSdkTypeTest'],
+                    'left_out': [], 'notes': []}
+        result = prcoverage.report(files, self.lines, the_plan, False,
+                                   ran_tests=['org.intellij.erlang.sdk.ErlangSdkTypeTest'])
+        self.assertEqual(['org.intellij.erlang.sdk.ErlangSdkTypeTest'], result['tests_run'])
+        self.assertIn('Tests run with coverage: ErlangSdkTypeTest.\nPlanned, but no test of it ran: ErlangBifParser.',
+                      result['text'])
+
+    def test_test_results(self):
+        self.write('results/TEST-org.intellij.erlang.bif.ErlangBifParser.xml', """\
+            <?xml version="1.0" encoding="UTF-8"?>
+            <testsuite name="org.intellij.erlang.bif.ErlangBifParser" tests="1" skipped="1" failures="0" errors="0">
+              <testcase name="testSomething" classname="org.intellij.erlang.bif.ErlangBifParser" time="0.0">
+                <skipped/>
+              </testcase>
+            </testsuite>""")
+        self.write('results/TEST-org.intellij.erlang.sdk.ErlangSdkTypeTest.xml', """\
+            <?xml version="1.0" encoding="UTF-8"?>
+            <testsuite name="org.intellij.erlang.sdk.ErlangSdkTypeTest" tests="2" skipped="0" failures="1" errors="0">
+              <testcase name="testA" classname="org.intellij.erlang.sdk.ErlangSdkTypeTest" time="0.1"/>
+              <testcase name="testB" classname="org.intellij.erlang.sdk.ErlangSdkTypeTest" time="0.1">
+                <failure message="boom" type="junit.framework.AssertionFailedError">boom</failure>
+              </testcase>
+            </testsuite>""")
+        self.write('results/TEST-org.intellij.erlang.Broken.xml', '<testsuite')
+        ran, failed = prcoverage.test_results(os.path.join(self.repository, 'results'), [
+            'org.intellij.erlang.bif.ErlangBifParser', 'org.intellij.erlang.sdk.ErlangSdkTypeTest',
+            'org.intellij.erlang.Broken', 'org.intellij.erlang.Missing'])
+        self.assertEqual(['org.intellij.erlang.sdk.ErlangSdkTypeTest'], ran)
+        self.assertEqual(['ErlangSdkTypeTest'], failed)
 
     def test_many_places_are_cut(self):
         entries = [('src/a/F%d.java' % i, [[1, 1]]) for i in range(20)]
