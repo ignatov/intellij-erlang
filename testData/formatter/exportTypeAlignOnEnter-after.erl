@@ -1,0 +1,3 @@
+-module(test).
+-export_type([t/0,
+              <caret>]).
