@@ -2808,10 +2808,10 @@ public final class ErlangMacroLayer {
         if (real != null) result.add(real);
       }
       // D4: in the copy the variable binds itself (a parameter of a function that a top-level macro use makes, the left
-      // side of a match): the real variable is a binding too, not an unbound one
+      // side of a match), while the main tree does not see a binding there: the real variable is a binding, not an
+      // unbound one (where the main tree sees the binding, master's answer, none, stays)
       PsiElement v = c.getElement();
-      if (rrs.length == 0 && v instanceof ErlangQVar &&
-          (ErlangPsiImplUtil.inArgumentDefinition(v) && !ErlangPsiImplUtil.inArgumentList(v) || ErlangPsiImplUtil.inLeftPartOfAssignment(v))) {
+      if (rrs.length == 0 && isBinding(v) && !isBinding(element)) {
         PsiElement real = exit(copy.toReal(v), file);
         if (real != null) result.add(real);
       }
@@ -2819,6 +2819,11 @@ public final class ErlangMacroLayer {
     if (result.isEmpty()) return ResolveResult.EMPTY_ARRAY;
     FALLBACK_ANSWERED.incrementAndGet();
     return PsiElementResolveResult.createResults(result);
+  }
+
+  private static boolean isBinding(@NotNull PsiElement v) {
+    return v instanceof ErlangQVar &&
+           (ErlangPsiImplUtil.inArgumentDefinition(v) && !ErlangPsiImplUtil.inArgumentList(v) || ErlangPsiImplUtil.inLeftPartOfAssignment(v));
   }
 
   /** Remote call m:f() where f is made by a macro in m: the per-file table of m's file. Off by default. */
