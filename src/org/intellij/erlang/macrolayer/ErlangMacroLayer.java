@@ -1569,6 +1569,10 @@ public final class ErlangMacroLayer {
       mark(o, isRemoteEnabled() ? "remote" : "gate:remote-off");
       return isRemoteEnabled() ? remoteFallback(file, element, fr) : null;
     }
+    if (!isGateWide() && isMacroNameReference(ref, element)) {
+      mark(o, "gate:macro-name");
+      return null;
+    }
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
@@ -1627,6 +1631,18 @@ public final class ErlangMacroLayer {
   }
 
   private static final Object NO_ANSWER = new Object();
+
+  /**
+   * Round 5, fix 3: the reference's own name is a macro use ({@code ?NAME(...)}, {@code fun ?F/1}, {@code #?R{}}, ...).
+   * The copy replaces that name with the macro's body, so no reference of the copy stands at the name: the copy can
+   * never answer for it.
+   */
+  private static boolean isMacroNameReference(@NotNull PsiReference ref, @NotNull PsiElement element) {
+    TextRange range = ref.getRangeInElement();
+    if (range.isEmpty()) return false;
+    PsiElement leaf = element.findElementAt(range.getStartOffset());
+    return leaf != null && leaf.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_QMARK;
+  }
 
   /** A record, record field or local type reference: the names a macro can make besides functions. */
   private static boolean isMadeNameReference(@NotNull PsiReference ref) {
