@@ -35,7 +35,7 @@ compare(L, ByLine) ->
                         true -> io:format("OK ~p~n", [Line]);
                         false ->
                             Joined = join_upto(length(Plugin), [], EppForms),
-                            I = first_diff(Plugin, Joined, 1),
+                            I = case mismatch(Plugin, Joined, 1) of none -> first_diff(Plugin, Joined, 1); X -> X end,
                             io:format("DIFF ~p\tat token ~p: plugin ~w\tepp ~w~n",
                                       [Line, I, window(Plugin, I), window(Joined, I)])
                     end;
@@ -65,9 +65,29 @@ match_joined(Plugin, Acc, [F | Rest]) ->
     match(Plugin, Joined) orelse (length(Joined) < length(Plugin) andalso match_joined(Plugin, Joined, Rest));
 match_joined(_, _, []) -> false.
 
-%% the plugin may leave a predefined macro as it is: it matches any one token of epp
-match([], []) -> true;
-match(['?', {var, N} | P], [_ | E]) -> lists:member(N, ?PREDEFINED) andalso match(P, E) orelse false;
-match(['?', {atom, N} | P], [_ | E]) -> lists:member(N, ?PREDEFINED) andalso match(P, E) orelse false;
-match([T | P], [T | E]) -> match(P, E);
-match(_, _) -> false.
+%% the plugin may leave a predefined macro as it is: it matches any one token of epp, and
+%% ?FEATURE_AVAILABLE(F) / ?FEATURE_ENABLED(F) match any run of epp tokens
+match(P, E) -> mismatch(P, E, 1) =:= none.
+
+%% none, or the index (in the plugin's tokens) where the match fails
+mismatch([], [], _) -> none;
+mismatch(['?', {var, N}, '(' | P], E, I) when N =:= 'FEATURE_AVAILABLE'; N =:= 'FEATURE_ENABLED' ->
+    Rest = skip_args(P, 1),
+    Skipped = length(P) - length(Rest) + 3,
+    case lists:any(fun(K) -> mismatch(Rest, lists:nthtail(K, E), I + Skipped) =:= none end, lists:seq(1, length(E))) of
+        true -> none;
+        false -> I
+    end;
+mismatch(['?', {Cat, N} | P], [_ | E], I) when Cat =:= var; Cat =:= atom ->
+    case lists:member(N, ?PREDEFINED) of
+        true -> mismatch(P, E, I + 2);
+        false -> I
+    end;
+mismatch([T | P], [T | E], I) -> mismatch(P, E, I + 1);
+mismatch(_, _, I) -> I.
+
+skip_args(P, 0) -> P;
+skip_args(['(' | P], D) -> skip_args(P, D + 1);
+skip_args([')' | P], D) -> skip_args(P, D - 1);
+skip_args([_ | P], D) -> skip_args(P, D);
+skip_args([], _) -> [].

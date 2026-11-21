@@ -162,6 +162,25 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
     }
   }
 
+  /**
+   * F7 (exception, branch only; open): Rename of a function whose first clause is made by a fragment macro
+   * ({@code -define(HEAD(N), sign(N) when N > 0 ->).} then {@code ?HEAD(X) positive;}), started from its name in
+   * {@code -export}, throws {@code RuntimeException: IncorrectOperationException: The declaration of the name was not
+   * found} from {@code ErlangMacroLayerRenameProcessor.renameDeclaration} (via {@code renameElement}). Found in the sample
+   * {@code src/one_file/m_fragments.erl} at offset 728 ({@code MacroFuzzSamplesTest}, seed 101, case 39); master renames
+   * without an exception.
+   */
+  public void testF7RenameFunctionWithClauseMadeByMacroFromExport() {
+    if (!open()) return;
+    myFixture.configureByText("m.erl", "-module(m).\n-export([<caret>sign/1]).\n-define(HEAD(N), sign(N) when N > 0 ->).\n" +
+                                       "?HEAD(X) positive;\nsign(0) -> zero;\nsign(_) -> negative.\n");
+    myFixture.doHighlighting();
+    PsiElement target = com.intellij.codeInsight.TargetElementUtil.findTargetElement(myFixture.getEditor(),
+      com.intellij.codeInsight.TargetElementUtil.getInstance().getAllAccepted());
+    assertNotNull(target);
+    myFixture.renameElement(target, "renamed_sign");
+  }
+
   /** Every target of every reference of the open file is valid. */
   private void allTargets(boolean check) {
     for (PsiElement e : PsiTreeUtil.collectElements(myFixture.getFile(), x -> true)) {
