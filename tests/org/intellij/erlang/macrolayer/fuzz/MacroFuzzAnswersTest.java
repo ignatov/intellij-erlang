@@ -24,7 +24,9 @@ public class MacroFuzzAnswersTest extends MacroFuzzTestBase {
     List<String> sampleFiles = new ArrayList<>();
     for (String p : samples.keySet()) if (p.endsWith(".erl")) sampleFiles.add(p);
     EditorActionProbe.enableInspections(myFixture);
-    int cases = dump == null ? 1 : FuzzConfig.isLongRun() ? Integer.MAX_VALUE : 40 + sampleFiles.size();
+    // MACRO_FUZZ_DUMP_CASES: the number of cases of a dump (default: every sample file and 40 generated projects)
+    String n = FuzzConfig.env("MACRO_FUZZ_DUMP_CASES");
+    int cases = dump == null ? 1 : n != null ? Integer.parseInt(n) : FuzzConfig.isLongRun() ? Integer.MAX_VALUE : 40 + sampleFiles.size();
     runCases("answers", Math.min(cases, 100000), (index, rnd, caseId) -> {
       String out = AnswerDump.compute(this, index, rnd, caseId, samples, sampleFiles);
       if (dump != null) {

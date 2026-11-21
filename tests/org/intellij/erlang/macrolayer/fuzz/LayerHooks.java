@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 public final class LayerHooks {
   private static final String LAYER = "org.intellij.erlang.macrolayer.ErlangMacroLayer";
   private static final Class<?> ourLayer = load(LAYER);
+  public static final String REGISTRY_KEY = "erlang.macro.layer";
 
   private LayerHooks() {
   }
@@ -50,6 +51,16 @@ public final class LayerHooks {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public static void setEnabled(boolean on, @NotNull Disposable parent) {
     if (ourLayer == null) return;
+    // the user's switch (the Registry key), when the branch has it: it survives moves of the layer's classes
+    try {
+      com.intellij.openapi.util.registry.RegistryValue v = com.intellij.openapi.util.registry.Registry.get(REGISTRY_KEY);
+      v.asBoolean();
+      v.setValue(on, parent);
+      return;
+    }
+    catch (Throwable ignored) {
+      // no such key: the test switch below
+    }
     try {
       Class<? extends Enum> mode = (Class<? extends Enum>)load(LAYER + "$Mode");
       Object value = Enum.valueOf(mode, on ? "LAYER" : "OFF");
