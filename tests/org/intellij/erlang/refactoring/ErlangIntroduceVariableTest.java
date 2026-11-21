@@ -16,6 +16,10 @@
 
 package org.intellij.erlang.refactoring;
 
+import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
+import com.intellij.codeInsight.template.impl.TemplateState;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
@@ -35,8 +39,25 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testFunctionClauseScope()     { doTest(); }
   public void testParenthesesElimination()  { doTest(); }
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
+  public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
+  public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
 
   private void doTest() { doTest(ALL); }
+
+  private void doTestWithRename(String newName) {
+    TemplateManagerImpl.setTemplateTesting(getTestRootDisposable());
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
+    new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    TemplateState state = TemplateManagerImpl.getTemplateState(myFixture.getEditor());
+    assertNotNull(state);
+    TextRange range = state.getCurrentVariableRange();
+    assertNotNull(range);
+    WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () ->
+      myFixture.getEditor().getDocument().replaceString(range.getStartOffset(), range.getEndOffset(), newName));
+    state.gotoEnd(false);
+    myFixture.checkResultByFile(name + "-after.erl");
+  }
 
   private void doTest(ReplaceStrategy replaceStrategy)  {
     String name = getTestName(true);
