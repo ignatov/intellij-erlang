@@ -110,6 +110,12 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertSameErlangFiles(moduleBuildOrder, "parse_transform1", "header1", "behaviour1", "header2", "module1");
   }
 
+  public void testGuardedMutualIncludes() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> actualModules = ContainerUtil.map(getModulePaths(moduleBuildOrder), path -> FileUtil.getNameWithoutExtension(new File(path)));
+    assertContainsElements(actualModules, "m");
+  }
+
   public void testTestsDependency() throws Exception {
     List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
     assertSameErlangFiles(moduleBuildOrder, "src_parse_transform", "test_parse_transform", "test");
