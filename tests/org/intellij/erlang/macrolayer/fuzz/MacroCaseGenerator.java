@@ -291,4 +291,37 @@ public final class MacroCaseGenerator {
       default -> f + "() -> ?.";
     };
   }
+
+  /** Fragment macros: name -> {define, use as a whole form}. Every use is valid Erlang after expansion. */
+  static final String[][] FRAGMENTS = {
+    {"-define(TAIL(X), , X]).", "tail(L) -> [1 ?TAIL(2) | L]."},
+    {"-define(ARROW, ->).", "arrow() ?ARROW ok."},
+    {"-define(LISTS, lists:).", "prefix(L) -> ?LISTS reverse(L)."},
+    {"-define(COLON, :).", "colon(L) -> lists?COLON reverse(L)."},
+    {"-define(GUARD(X), when is_integer(X)).", "guarded(X) ?GUARD(X) -> X."},
+    {"-define(HEAD(N), head(N) when N > 0 ->).", "?HEAD(X) X;\nhead(_) -> negative."},
+    {"-define(B, begin).\n-define(E, end).", "block() -> ?B 1, 2 ?E."},
+    {"-define(OP, +).", "plus(X) -> X ?OP 2."},
+    {"-define(ARGS, (1, 2)).", "args() -> max?ARGS."},
+    {"-define(SEP, ;).", "sep(X) -> case X of 1 -> a ?SEP _ -> b end."},
+    {"-define(FIELDS, a = 1, b).", "-record(fr, {?FIELDS}).\nfields() -> #fr{}."},
+    {"-define(PAIR(K, V), K => V).", "pair() -> #{?PAIR(a, 1)}."},
+    {"-define(OPEN, [).\n-define(CLOSE, ]).", "brackets() -> ?OPEN 1, 2 ?CLOSE."},
+    {"-define(FUNHEAD, fun(X) ->).", "funhead() -> ?FUNHEAD X end."},
+    {"-define(CALLM(M), M:).", "callm(L) -> ?CALLM(lists)reverse(L)."},
+  };
+
+  /** A module made of fragment macros and their uses (most of them compile with erlc), with an export of every function. */
+  public @NotNull String fragmentModule() {
+    List<String[]> picked = new ArrayList<>();
+    for (String[] f : FRAGMENTS) if (chance(60)) picked.add(f);
+    if (picked.isEmpty()) picked.add(FRAGMENTS[r.nextInt(FRAGMENTS.length)]);
+    Collections.shuffle(picked, r);
+    StringBuilder sb = new StringBuilder("-module(m).\n-compile([export_all, nowarn_export_all]).\n");
+    if (chance(20)) sb.append("-include(\"missing.hrl\").\n");
+    for (String[] f : picked) sb.append(f[0]).append('\n');
+    for (String[] f : picked) sb.append(f[1]).append('\n');
+    if (chance(30)) sb.append("other(X) -> ?FROM_MISSING(X).\n");
+    return sb.toString();
+  }
 }

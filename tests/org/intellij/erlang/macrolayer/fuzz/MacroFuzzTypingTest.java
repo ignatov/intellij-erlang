@@ -63,6 +63,7 @@ public class MacroFuzzTypingTest extends MacroFuzzTestBase {
         rec.guard("final references edt", () -> refs[1] = Answers.references(file, root));
         typedRefs = refs[0];
         typedEdtRefs = refs[1];
+        finalTexts.putAll(files);                         // the other files too (an .app file makes an include_lib resolve)
         for (String p : w.erlangPaths()) {
           PsiFile f = w.psi(p);
           if (f != null) finalTexts.put(p, f.getText());

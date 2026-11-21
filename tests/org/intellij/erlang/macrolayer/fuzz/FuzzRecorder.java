@@ -71,7 +71,15 @@ public final class FuzzRecorder {
   private final Thread myWatchdog;
   private volatile boolean myStopped;
 
+  private final boolean myWrite;
+
   public FuzzRecorder(@NotNull String testId) {
+    this(testId, true);
+  }
+
+  /** With {@code write} false nothing goes to disk or to the log (the trials of the minimiser). */
+  public FuzzRecorder(@NotNull String testId, boolean write) {
+    myWrite = write;
     myTestId = testId;
     myOut = FuzzConfig.out().resolve(testId.replaceAll("[^A-Za-z0-9_.-]", "_"));
     myKnown = readKnown();
@@ -264,6 +272,8 @@ public final class FuzzRecorder {
     String exClass = root.getClass().getSimpleName();
     String sig;
     boolean plugin = frame != null || mentionsPlugin(t);
+    // an invalid element met by platform code only (a race of a platform action with typing): not the plugin's
+    if (frame == null && root instanceof com.intellij.psi.PsiInvalidElementAccessException) plugin = false;
     // an element made invalid on purpose may be refused with the platform's own exception
     if (label.contains("[invalid ") && root instanceof com.intellij.psi.PsiInvalidElementAccessException) plugin = false;
     if (kind.equals("log-error")) {
@@ -369,7 +379,7 @@ public final class FuzzRecorder {
     if (f == null) {
       f = new Finding(sig, kind, caseDesc, replayCommand());
       myFindings.put(sig, f);
-      System.err.println("MACRO-FUZZ: new failure " + sig + " in " + caseDesc);
+      if (myWrite) System.err.println("MACRO-FUZZ: new failure " + sig + " in " + caseDesc);
     }
     f.count++;
     if (f.via.size() < 40) f.via.add(label.replaceAll("@[0-9]+", "@").replaceAll("case [a-z]+:[0-9]+", "case"));
@@ -388,6 +398,7 @@ public final class FuzzRecorder {
   }
 
   private Path writeCase(String sig, Throwable t, String label, int n) {
+    if (!myWrite) return null;
     try {
       Files.createDirectories(myOut.resolve("cases"));
       String id = (sig.startsWith("noise ") ? "noise-" : "") + Integer.toHexString(sig.hashCode()) + "-" + n;
@@ -432,15 +443,17 @@ public final class FuzzRecorder {
       }
       long start = myActionStart;
       Thread th = myActionThread;
-      if (start == 0 || th == null || myHangReported) continue;
+      // the case itself is not an action: its time is the sum of its actions
+      if (start == 0 || th == null || myHangReported || myAction.startsWith("case ")) continue;
       long ms = System.currentTimeMillis() - start;
       if (ms > myActionMillis) {
         myHangReported = true;
         Throwable dump = new Throwable("action '" + myAction + "' runs for " + ms + " ms (limit " + myActionMillis + " ms)");
         dump.setStackTrace(th.getStackTrace());
-        String frame = firstPluginFrame(dump);
-        add("hang @ " + (frame != null ? frame : firstFrame(dump)) + " [" + myAction.replaceAll("@[0-9]+", "") + "]", "hang", dump,
-            myAction, true);
+        String frame = pluginFrames(dump);
+        // a stack without a plugin frame is the platform (or the load of the machine): reported apart, not as a finding
+        add("hang @ " + (frame != null ? frame : firstFrame(dump)) + " [" + myAction.replaceAll("@[0-9]+", "@").replaceAll("\\[[^]]*\\]", "[]") + "]",
+            "hang", dump, myAction, frame != null);
       }
     }
   }

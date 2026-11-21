@@ -79,7 +79,14 @@ public final class EditorActionProbe {
       LookupManager.hideActiveLookup(project());
     }));
     myActs.add(new Act("intention", false, r -> {
-      List<IntentionAction> all = myFixture.getAvailableIntentions();
+      // the inspection-management intentions of the platform change the test profile or open settings: left out
+      List<IntentionAction> all = new ArrayList<>();
+      for (IntentionAction ia : myFixture.getAvailableIntentions()) {
+        String text = ia.getText();
+        if (text.startsWith("Disable") || text.startsWith("Suppress") || text.startsWith("Edit inspection") || text.startsWith("Run inspection") ||
+            text.startsWith("Fix all") || text.startsWith("Edit intention") || text.startsWith("Configure") || text.contains("inspection")) continue;
+        all.add(ia);
+      }
       if (!all.isEmpty()) myFixture.launchAction(all.get(r.nextInt(all.size())));
     }));
     myActs.add(new Act("rename-at-caret", false, r -> {

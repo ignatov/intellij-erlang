@@ -4,6 +4,7 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.macrolayer.fuzz.EditorActionProbe;
+import org.intellij.erlang.macrolayer.fuzz.FuzzConfig;
 import org.intellij.erlang.macrolayer.fuzz.LayerHooks;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -16,6 +17,11 @@ import java.util.List;
  * asked for with the layer off.
  */
 public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  /** Open findings still gated on {@code MACRO_FUZZ_OPEN=1} until their fix lands (F6, F7 at the time of writing). */
+  private static boolean open() {
+    return FuzzConfig.env("MACRO_FUZZ_OPEN") != null;
+  }
+
   private void layerOff() {
     LayerHooks.setEnabled(false, getTestRootDisposable());
   }
@@ -113,6 +119,73 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
       }
       finally {
         com.intellij.openapi.util.Disposer.dispose(d);
+      }
+    }
+  }
+
+  /**
+   * F6 (wrong answer, branch only; open; the T1 shape of the architecture review): after an edit of ANOTHER file, a layer
+   * reference in a macro argument ({@code ErlangMacroLayerTokenReference} at {@code g} in {@code ?M1(b, g)}) resolves to
+   * an invalid element: the kept answer still points into the old tree of b.erl. Found by
+   * {@code MacroFuzzTypingTest} (seed 201, cases typing:387 and typing:1655): edit b.erl, highlight m.erl, resolve on the
+   * UI thread. The same with b.erl's function deleted and with the edit not committed before the highlighting.
+   */
+  public void testF6NoInvalidTargetAfterEditOfOtherFile() {
+    if (!open()) return;
+    for (String change : new String[]{"rename", "delete", "touch"}) {
+      PsiFile b = myFixture.addFileToProject("f6" + change + "/b.erl", "-module(b).\n-export([g/0]).\ng() -> ok.\n");
+      myFixture.configureByText("m.erl", "-module(m).\n-export([f3/1]).\n-define(M1(M, F), M:F(), ok).\nf3(X) ->\n    ?M1(b, g),\n    X.\n");
+      myFixture.doHighlighting();
+      allTargets(true);
+      com.intellij.openapi.editor.Document d = PsiDocumentManager.getInstance(getProject()).getDocument(b);
+      String text = change.equals("rename") ? "-module(b).\n-export([g_renamed/0]).\ng_renamed() -> ok.\n"
+                    : change.equals("delete") ? "-module(b).\n-export([g/0]).\n" : "-module(b).\n-export([g/0]).\n\ng() -> ok.\n";
+      com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> d.setText(text));
+      PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+      myFixture.doHighlighting();
+      allTargets(true);
+      com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+        try {
+          b.getVirtualFile().getParent().delete(this);
+        }
+        catch (java.io.IOException e) {
+          throw new RuntimeException(e);
+        }
+      });
+    }
+  }
+
+  /**
+   * F7 (exception, branch only; open): Rename of a function whose first clause is made by a fragment macro
+   * ({@code -define(HEAD(N), sign(N) when N > 0 ->).} then {@code ?HEAD(X) positive;}), started from its name in
+   * {@code -export}, throws {@code RuntimeException: IncorrectOperationException: The declaration of the name was not
+   * found} from {@code ErlangMacroLayerRenameProcessor.renameDeclaration} (via {@code renameElement}). Found in the sample
+   * {@code src/one_file/m_fragments.erl} at offset 728 ({@code MacroFuzzSamplesTest}, seed 101, case 39); master renames
+   * without an exception.
+   */
+  public void testF7RenameFunctionWithClauseMadeByMacroFromExport() {
+    if (!open()) return;
+    myFixture.configureByText("m.erl", "-module(m).\n-export([<caret>sign/1]).\n-define(HEAD(N), sign(N) when N > 0 ->).\n" +
+                                       "?HEAD(X) positive;\nsign(0) -> zero;\nsign(_) -> negative.\n");
+    myFixture.doHighlighting();
+    PsiElement target = com.intellij.codeInsight.TargetElementUtil.findTargetElement(myFixture.getEditor(),
+      com.intellij.codeInsight.TargetElementUtil.getInstance().getAllAccepted());
+    assertNotNull(target);
+    myFixture.renameElement(target, "renamed_sign");
+  }
+
+  /** Every target of every reference of the open file is valid. */
+  private void allTargets(boolean check) {
+    for (PsiElement e : PsiTreeUtil.collectElements(myFixture.getFile(), x -> true)) {
+      for (PsiReference ref : e.getReferences()) {
+        List<PsiElement> ts = new ArrayList<>();
+        if (ref instanceof PsiPolyVariantReference pv) {
+          for (ResolveResult rr : pv.multiResolve(false)) if (rr.getElement() != null) ts.add(rr.getElement());
+        }
+        else if (ref.resolve() != null) ts.add(ref.resolve());
+        for (PsiElement t : ts) {
+          if (check) assertTrue(ref.getClass().getSimpleName() + " at " + e.getTextOffset() + " -> invalid " + t.getClass().getSimpleName(), t.isValid());
+        }
       }
     }
   }
