@@ -396,7 +396,8 @@ tasks.register('verifyGeneratedSources') {
 // The tests load the plugin through the IDE's PathClassLoader from the test sandbox, so the agent must include classes
 // without a code source location, and the report must read the instrumented classes that the sandbox jars contain.
 // JaCoCo 0.8.16 supports class files and runtimes of Java 25, the JetBrains Runtime the tests run on.
-if (providers.gradleProperty('coverage').isPresent()) {
+// A bare -Pcoverage turns it on, -Pcoverage=false keeps it off.
+if (providers.gradleProperty('coverage').map { it != 'false' }.getOrElse(false)) {
   [project, project(':jps-plugin')].each { p ->
     p.apply plugin: 'jacoco'
     p.jacoco.toolVersion = '0.8.16'

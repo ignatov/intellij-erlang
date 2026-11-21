@@ -24,6 +24,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
     - name: Test the coverage scripts
       run: python3 -m unittest discover -s scripts/coverage -p 'test_*.py'
     - name: Set up JDK 21
@@ -92,7 +94,7 @@ jobs:
       run: |
         report=build/reports/jacoco/coverageReport/coverageReport.xml
         {
-          echo "## Coverage of master at ${GITHUB_SHA:0:8}"
+          echo "## Coverage of ${GITHUB_REF_NAME} at ${GITHUB_SHA:0:8}"
           echo
           if [[ -f "$report" ]]; then
             python3 scripts/coverage/totals.py "$report"
