@@ -134,6 +134,38 @@ public class ErlangCompilerOptionsConfigurableTest extends ErlangLightPlatformCo
     }
   }
 
+  public void testRevisitAfterConfiguringRebarRestoresStoredRebarCompiler() {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    ErlangCompilerSettings compilerSettings = ErlangCompilerSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    boolean oldUseRebar = compilerSettings.isUseRebarCompilerEnabled();
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      rebarSettings.setRebarPath("");
+      compilerSettings.setUseRebarCompilerEnabled(true);
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      fireShown(component);
+      JCheckBox useRebar = findCheckBox(component, "rebar");
+      assertFalse(useRebar.isSelected());
+      assertFalse(useRebar.isEnabled());
+
+      rebarSettings.setRebarPath("/usr/bin/rebar3");
+      fireShown(component);
+
+      assertTrue(useRebar.isEnabled());
+      assertTrue(useRebar.isSelected());
+      assertFalse(configurable.isModified());
+      configurable.apply();
+      assertTrue(compilerSettings.isUseRebarCompilerEnabled());
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+      compilerSettings.setUseRebarCompilerEnabled(oldUseRebar);
+      configurable.disposeUIResources();
+    }
+  }
+
   private static void fireShown(JComponent component) {
     AncestorEvent shown = new AncestorEvent(component, AncestorEvent.ANCESTOR_ADDED, component, component.getParent());
     for (AncestorListener listener : component.getAncestorListeners()) {
