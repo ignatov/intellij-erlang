@@ -42,6 +42,6 @@ public class ErlangStubbedPsiElementBase<T extends StubElement<?>> extends StubB
 
   @Override
   public String toString() {
-    return getElementType().toString();
+    return getElementTypeImpl().toString();
   }
 }

@@ -17,7 +17,6 @@
 package org.intellij.erlang.formatter.settings;
 
 import com.intellij.application.options.IndentOptionsEditor;
-import com.intellij.application.options.SmartIndentOptionsEditor;
 import com.intellij.lang.Language;
 import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizable;
 import com.intellij.psi.codeStyle.CodeStyleSettingsCustomizableOptions;
@@ -50,19 +49,15 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
 
   @Override
   public IndentOptionsEditor getIndentOptionsEditor() {
-    return new SmartIndentOptionsEditor();
+    return new ErlangIndentOptionsEditor();
   }
 
-  @NotNull
   @Override
-  public CommonCodeStyleSettings getDefaultCommonSettings() {
-    CommonCodeStyleSettings defaultSettings = new CommonCodeStyleSettings(getLanguage());
-    CommonCodeStyleSettings.IndentOptions indentOptions = defaultSettings.initIndentOptions();
+  protected void customizeDefaults(@NotNull CommonCodeStyleSettings commonSettings,
+                                   @NotNull CommonCodeStyleSettings.IndentOptions indentOptions) {
     indentOptions.INDENT_SIZE = 2;
     indentOptions.CONTINUATION_INDENT_SIZE = 4;
     indentOptions.TAB_SIZE = 2;
-
-    return defaultSettings;
   }
 
   @Override
@@ -198,5 +193,9 @@ public class ErlangLanguageCodeStyleSettingsProvider extends LanguageCodeStyleSe
           List = [
             1,
             2
-          ].""";
+          ].
+
+      bar(X)
+          when is_integer(X) ->
+          X.""";
 }

@@ -1,0 +1,40 @@
+[
+  {
+    "title": "REWA: PsiManagerImpl.findFile",
+    "reportCount": 3,
+    "firstSeenSecret": "unknown fields are never copied",
+    "reports": [
+      {"id": 9007199254740993, "timestamp": 1763337600000, "appBuild": "IU-263.7307.44", "osName": "Mac OS X",
+       "pluginVersion": "0.11.1301", "comment": "my project secret-project broke", "email": "user@example.com",
+       "hostId": "device-1234", "attachments": [{"name": "report.txt", "content": "private"}]},
+      {"id": 9007199254740995, "timestamp": 1763251200000, "appBuild": "IC-262.4852.20", "osName": "Linux",
+       "pluginVersion": "0.11.1300"},
+      {"id": 1234567, "timestamp": 1760659200000, "appBuild": "IU-262.4852.20", "osName": "Windows 11",
+       "pluginVersion": "0.11.1200"}
+    ]
+  },
+  {
+    "title": "NPE: ErlangPsiImplUtil.getName",
+    "reportCount": 1,
+    "reports": [
+      {"id": 42, "timestamp": 1763251200000, "appBuild": "IU-263.7307.44", "osName": "Linux",
+       "pluginVersion": "0.11.1301"}
+    ]
+  },
+  {
+    "title": "IAE: ErlangFormattingModelBuilder.createModel",
+    "reportCount": 7,
+    "reports": [
+      {"id": 43, "timestamp": 1700000000000, "appBuild": "IU-241.14494.240", "osName": "Linux",
+       "pluginVersion": "0.11.1150"}
+    ]
+  },
+  {
+    "title": "RE: ErlangSdkType.getVersionString",
+    "reportCount": 2,
+    "reports": [
+      {"id": 44, "timestamp": 1763251200000, "appBuild": "IU-263.7307.44", "osName": "Linux",
+       "pluginVersion": "0.11.1301"}
+    ]
+  }
+]

@@ -26,13 +26,16 @@ import org.intellij.erlang.jps.rebar.RebarBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.builders.BuildOutputConsumer;
+import org.jetbrains.jps.builders.BuildRootIndex;
 import org.jetbrains.jps.builders.DirtyFilesHolder;
+import org.jetbrains.jps.cmdline.ProjectDescriptor;
 import org.jetbrains.jps.incremental.CompileContext;
 import org.jetbrains.jps.incremental.ProjectBuildException;
 import org.jetbrains.jps.incremental.TargetBuilder;
 import org.jetbrains.jps.incremental.messages.BuildMessage;
 import org.jetbrains.jps.incremental.messages.CompilerMessage;
 import org.jetbrains.jps.incremental.resources.ResourcesBuilder;
+import org.jetbrains.jps.indices.ModuleExcludeIndex;
 import org.jetbrains.jps.model.JpsDummyElement;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
@@ -44,12 +47,24 @@ import org.jetbrains.jps.util.JpsPathUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiPredicate;
 
 import static org.intellij.erlang.jps.builder.ErlangBuilderUtil.LOG;
 import static org.intellij.erlang.jps.builder.ErlangBuilderUtil.isSource;
 
 public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
   public static final String NAME = "erlc";
+
+  // Writes the application term of the .app.src file (first argument) to the .app file (second argument) with
+  // {modules, ...} set to the remaining arguments, as rebar3 does. Exits with 2 if the file is not an application term.
+  private static final String FILL_IN_MODULES_SCRIPT =
+    "[Src, Dst | Ms] = init:get_plain_arguments(), " +
+    "Code = try case file:consult(Src) of " +
+    "{ok, [{application, App, Props}]} when is_list(Props) -> " +
+    "Term = {application, App, lists:keystore(modules, 1, Props, {modules, [list_to_atom(M) || M <- Ms]})}, " +
+    "ok = file:write_file(Dst, unicode:characters_to_binary(io_lib:format('~tp.~n', [Term]))), 0; " +
+    "_ -> 2 end catch _:_ -> 1 end, " +
+    "halt(Code).";
 
   public ErlangBuilder() {
     super(Collections.singletonList(ErlangTargetType.INSTANCE));
@@ -78,7 +93,7 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     buildSources(target, context, compilerOptions, outputConsumer, sourceOutput, false);
     buildSources(target, context, compilerOptions, outputConsumer, testOutput, true);
 
-    processAppConfigFiles(holder, outputConsumer, context, sourceOutput, testOutput);
+    processAppConfigFiles(target, holder, outputConsumer, context, sourceOutput, testOutput);
   }
 
   @NotNull
@@ -134,26 +149,141 @@ public class ErlangBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erl
     return outputDirectory;
   }
 
-  private static void processAppConfigFiles(DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
+  private static void processAppConfigFiles(ErlangTarget target,
+                                            DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder,
                                             BuildOutputConsumer outputConsumer,
                                             CompileContext context,
-                                            File... outputDirectories) throws IOException {
-    List<File> appConfigFiles = new DirtyFilesProcessor<File, ErlangTarget>() {
+                                            File... outputDirectories) throws IOException, ProjectBuildException {
+    Set<File> appConfigFiles = new LinkedHashSet<>(new DirtyFilesProcessor<File, ErlangTarget>() {
       @Nullable
       @Override
       protected File getDirtyElement(@NotNull File file) {
         return ErlangBuilderUtil.isAppConfigFileName(file.getName()) ? file : null;
       }
-    }.collectDirtyElements(holder);
+    }.collectDirtyElements(holder));
+    // The modules list of an .app.src file changes when a module is added or removed.
+    if (haveSourcesChanged(target, holder)) {
+      collectFiles(target, context, (file, root) -> isAppSrc(file), appConfigFiles);
+    }
+    if (appConfigFiles.isEmpty()) return;
 
+    List<String> moduleNames = getSourceModuleNames(target, context);
     for (File appConfigSrc : appConfigFiles) {
       for (File outputDir : outputDirectories) {
         File appConfigDst = getDestinationAppConfig(outputDir, appConfigSrc.getName());
-        FileUtil.copy(appConfigSrc, appConfigDst);
+        if (isAppSrc(appConfigSrc)) {
+          writeAppFileWithModules(target, context, appConfigSrc, appConfigDst, moduleNames);
+        }
+        else {
+          FileUtil.copy(appConfigSrc, appConfigDst);
+        }
         reportMessage(context, String.format("Copy %s to %s", ErlangBuilderUtil.getPath(appConfigSrc), ErlangBuilderUtil.getPath(outputDir)));
         outputConsumer.registerOutputFile(appConfigDst, Collections.singletonList(ErlangBuilderUtil.getPath(appConfigSrc)));
       }
     }
+  }
+
+  private static boolean haveSourcesChanged(ErlangTarget target,
+                                            DirtyFilesHolder<ErlangSourceRootDescriptor, ErlangTarget> holder) throws IOException {
+    if (ContainerUtil.exists(holder.getRemovedFiles(target), path -> isSource(path))) return true;
+    boolean[] changed = {false};
+    holder.processDirtyFiles((t, file, root) -> {
+      changed[0] = !root.isTests() && isSource(file.getName());
+      return !changed[0];
+    });
+    return changed[0];
+  }
+
+  // Collects the files of the target as the build sees them: excluded directories are skipped and each file belongs to
+  // its nearest source root, so a test root nested in a source root is a test root for its files.
+  private static void collectFiles(@NotNull ErlangTarget target,
+                                   @NotNull CompileContext context,
+                                   @NotNull BiPredicate<File, ErlangSourceRootDescriptor> filter,
+                                   @NotNull Collection<File> result) {
+    ProjectDescriptor projectDescriptor = context.getProjectDescriptor();
+    BuildRootIndex rootIndex = projectDescriptor.getBuildRootIndex();
+    ModuleExcludeIndex excludeIndex = projectDescriptor.getModuleExcludeIndex();
+    List<ErlangTargetType> targetTypes = Collections.singletonList(ErlangTargetType.INSTANCE);
+    for (ErlangSourceRootDescriptor root : rootIndex.getTargetRoots(target, context)) {
+      FileUtil.processFilesRecursively(root.getRootFile(), file -> {
+        if (file.isFile() && !excludeIndex.isExcluded(file)) {
+          ErlangSourceRootDescriptor fileRoot = rootIndex.findParentDescriptor(file, targetTypes, context);
+          if (fileRoot != null && fileRoot.getTarget().equals(target) && filter.test(file, fileRoot)) result.add(file);
+        }
+        return true;
+      }, dir -> !excludeIndex.isExcluded(dir));
+    }
+  }
+
+  private static boolean isAppSrc(@NotNull File file) {
+    return file.getName().endsWith(".app.src");
+  }
+
+  @NotNull
+  private static List<String> getSourceModuleNames(@NotNull ErlangTarget target, @NotNull CompileContext context) {
+    Set<File> sources = new HashSet<>();
+    collectFiles(target, context, (file, root) -> !root.isTests() && isSource(file.getName()), sources);
+    Set<String> moduleNames = new TreeSet<>();
+    for (File source : sources) {
+      moduleNames.add(FileUtil.getNameWithoutExtension(source));
+    }
+    return new ArrayList<>(moduleNames);
+  }
+
+  private static void writeAppFileWithModules(@NotNull ErlangTarget target,
+                                              @NotNull CompileContext context,
+                                              @NotNull File appSrc,
+                                              @NotNull File appDst,
+                                              @NotNull List<String> moduleNames) throws IOException, ProjectBuildException {
+    String path = ErlangBuilderUtil.getPath(appSrc);
+    JpsSdk<JpsDummyElement> sdk = target.getModule().getSdk(JpsErlangSdkType.INSTANCE);
+    if (sdk == null) {
+      String message = "No Erlang SDK for module " + target.getModule().getName() + "; " + path + " is copied without filling in the modules list.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, message, path));
+      FileUtil.copy(appSrc, appDst);
+      return;
+    }
+    List<String> command = new ArrayList<>();
+    command.add(JpsErlangSdkType.getByteCodeInterpreterExecutable(sdk.getHomePath()).getAbsolutePath());
+    command.add("-noshell");
+    command.add("-eval");
+    command.add(FILL_IN_MODULES_SCRIPT);
+    command.add("-extra");
+    command.add(ErlangBuilderUtil.getPath(appSrc));
+    command.add(ErlangBuilderUtil.getPath(appDst));
+    command.addAll(moduleNames);
+
+    StringBuilder output = new StringBuilder();
+    BuilderProcessAdapter adapter = new BuilderProcessAdapter(context, NAME, "") {
+      @Override
+      public void onTextAvailable(@NotNull String text) {
+        output.append(text).append('\n');
+      }
+    };
+    int exitCode;
+    try {
+      exitCode = ProcessRunner.runProcess(command, appDst.getParentFile(), null, adapter);
+    }
+    catch (ProjectBuildException e) {
+      if (Thread.currentThread().isInterrupted()) throw e;
+      Throwable cause = e.getCause() != null ? e.getCause() : e;
+      String message = "Failed to start erl of the SDK of module " + target.getModule().getName() + " (" + cause.getMessage() + "); " +
+                       path + " is copied without filling in the modules list.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, message, path));
+      FileUtil.copy(appSrc, appDst);
+      return;
+    }
+    if (exitCode == 0) return;
+
+    if (exitCode == 2) {
+      String message = path + " does not contain a single {application, Name, Properties} term; it is copied without filling in the modules list.";
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.WARNING, message, path));
+    }
+    else {
+      String message = "Failed to fill in the modules list of " + path + ". erl exited with code " + exitCode + ":\n" + output;
+      context.processMessage(new CompilerMessage(NAME, BuildMessage.Kind.ERROR, message, path));
+    }
+    FileUtil.copy(appSrc, appDst);
   }
 
   @NotNull

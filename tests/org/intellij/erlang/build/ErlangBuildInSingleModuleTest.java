@@ -16,15 +16,22 @@
 
 package org.intellij.erlang.build;
 
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.compiler.CompilerMessage;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.assertNotEquals;
@@ -145,6 +152,35 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     doTestRebuildInSingleModule(headerFile, sourceFileWithDependency);
   }
 
+  // #1410: a file above the code assistance size limit gets no Erlang PSI, so its includes can't be read.
+  public void testRebuildLargeModuleWithInclude() throws Exception {
+    VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
+    VirtualFile largeModule = addSourceFile(myModule, "big.erl", aboveSizeLimit(ErlangModuleTextGenerator.module("big").include("header.hrl").build()));
+    doTestRebuildInSingleModule(headerFile, largeModule);
+  }
+
+  public void testRebuildWithLargeInclude() throws Exception {
+    VirtualFile largeHeader = addSourceFile(myModule, "big.hrl", aboveSizeLimit(""));
+    VirtualFile sourceFileWithDependency = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").include("big.hrl").build());
+    doTestRebuildInSingleModule(largeHeader, sourceFileWithDependency);
+  }
+
+  public void testBuildWithLargeHeaderAndParseTransformInHeader() throws Exception {
+    addSourceFile(myModule, "h.hrl", "-compile({parse_transform, pt}).\n");
+    addSourceFile(myModule, "pt.erl", ErlangModuleTextGenerator.pt("pt").build());
+    addSourceFile(myModule, "m.erl", ErlangModuleTextGenerator.module("m").include("h.hrl").build());
+    addSourceFile(myModule, "big.hrl", aboveSizeLimit("-define(X, 1)."));
+    compileAndAssertOutput(false);
+  }
+
+  @NotNull
+  private static String aboveSizeLimit(@NotNull String text) {
+    StringBuilder builder = new StringBuilder(text).append('\n');
+    String commentLine = "%" + "x".repeat(99) + "\n";
+    while (builder.length() < 3_000_000) builder.append(commentLine);
+    return builder.toString();
+  }
+
   public void testRebuildWithTransitiveDependencies() throws Exception {
     VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
     ErlangModuleTextGenerator.BehaviourBuilder behaviour = ErlangModuleTextGenerator.behaviour("behaviour1").callback("foo", 0);
@@ -171,6 +207,47 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     });
     compileAndAssertOutput(false);
     assertFalse(beam.exists());
+  }
+
+  public void testAppSrcModulesSkipExcludedDirectory() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addSourceFile(myModule, "a.app.src", "{application, a, []}.");
+    VirtualFile excluded = createSourceSubdirectory("excl");
+    addFileToDirectory(excluded, "excl_mod.erl", ErlangModuleTextGenerator.module("excl_mod").build());
+    PsiTestUtil.addExcludedRoot(myModule, excluded);
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  public void testAppSrcModulesSkipNestedTestRoot() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addSourceFile(myModule, "a.app.src", "{application, a, []}.");
+    VirtualFile nested = createSourceSubdirectory("nested");
+    addFileToDirectory(nested, "one_tests.erl", ErlangModuleTextGenerator.module("one_tests").build());
+    PsiTestUtil.addSourceRoot(myModule, nested, true);
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  public void testAppSrcInTestRootFollowsAddedModules() throws Exception {
+    addSourceFile(myModule, "one.erl", ErlangModuleTextGenerator.module("one").build());
+    addTestFile(myModule, "a.app.src", "{application, a, []}.");
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one]}]}.\n", loadOutputFile("a.app"));
+
+    addSourceFile(myModule, "two.erl", ErlangModuleTextGenerator.module("two").build());
+    myCompilationRunner.compile();
+    assertEquals("{application,a,[{modules,[one,two]}]}.\n", loadOutputFile("a.app"));
+  }
+
+  private VirtualFile createSourceSubdirectory(String name) throws IOException {
+    VirtualFile sourceRoot = ContainerUtil.getFirstItem(ModuleRootManager.getInstance(myModule).getSourceRoots(JavaSourceRootType.SOURCE));
+    assertNotNull(sourceRoot);
+    return WriteAction.computeAndWait(() -> sourceRoot.createChildDirectory(this, name));
+  }
+
+  private String loadOutputFile(String name) throws IOException {
+    return FileUtil.loadFile(new File(getOutputDirectory(myModule, false), name), StandardCharsets.UTF_8);
   }
 
   private void doTestRebuildInSingleModule(VirtualFile dependency,

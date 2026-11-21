@@ -45,6 +45,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private JLabel myAdditionalErlcArgumentsLabel;
   private final ErlangCompilerSettings mySettings;
   private final Project myProject;
+  private boolean myRestoreUseRebarCompiler;
 
   public ErlangCompilerOptionsConfigurable(Project project) {
     super(project);
@@ -65,7 +66,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myRootPanel.addAncestorListener(new AncestorAdapter() {
       @Override
       public void ancestorAdded(AncestorEvent event) {
-        reset();
+        updateRebarState();
       }
     });
     myUseRebarCompilerCheckBox.addItemListener(e -> setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected()));
@@ -89,12 +90,25 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   @Override
   public void reset() {
+    myRestoreUseRebarCompiler = false;
+    setUseRebarCompiler(mySettings.isUseRebarCompilerEnabled());
+    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
+    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    updateRebarState();
+  }
+
+  private void updateRebarState() {
     boolean rebarPathIsSet = StringUtil.isNotEmpty(RebarSettings.getInstance(myProject).getRebarPath());
     myUseRebarCompilerCheckBox.setEnabled(rebarPathIsSet);
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
-    setUseRebarCompiler(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
-    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
-    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    if (!rebarPathIsSet && myUseRebarCompilerCheckBox.isSelected()) {
+      myRestoreUseRebarCompiler = true;
+      setUseRebarCompiler(false);
+    }
+    else if (rebarPathIsSet && myRestoreUseRebarCompiler) {
+      myRestoreUseRebarCompiler = false;
+      setUseRebarCompiler(true);
+    }
   }
 
   @Override

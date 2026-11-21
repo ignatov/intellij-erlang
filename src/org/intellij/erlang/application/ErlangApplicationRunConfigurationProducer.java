@@ -17,6 +17,7 @@
 package org.intellij.erlang.application;
 
 import com.intellij.execution.actions.ConfigurationContext;
+import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.util.text.StringUtil;
@@ -31,8 +32,10 @@ import org.intellij.erlang.runconfig.ErlangDebuggableRunConfigurationProducer;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableRunConfigurationProducer<ErlangApplicationConfiguration> {
-  public ErlangApplicationRunConfigurationProducer() {
-    super(ErlangApplicationRunConfigurationType.getInstance());
+  @NotNull
+  @Override
+  public ConfigurationFactory getConfigurationFactory() {
+    return ErlangApplicationRunConfigurationType.getInstance().getConfigurationFactories()[0];
   }
 
   @Override

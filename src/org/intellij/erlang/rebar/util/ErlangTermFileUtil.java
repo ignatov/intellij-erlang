@@ -127,10 +127,10 @@ public final class ErlangTermFileUtil {
     ASTNode whatNode = what.getNode();
     ASTNode commaAfterElement = TreeUtil.findSibling(whatNode, ErlangTypes.ERL_COMMA);
     ASTNode commaBeforeElement = TreeUtil.findSiblingBackward(whatNode, ErlangTypes.ERL_COMMA);
-    PsiElement firstElementToDelete = commaBeforeElement != null && shouldDeleteComma(commaBeforeElement, whatNode) ?
-      commaBeforeElement.getPsi() : what;
-    PsiElement lastElementToDelete = commaAfterElement != null && shouldDeleteComma(commaAfterElement, whatNode) ?
-      commaAfterElement.getPsi() : what;
+    boolean deleteCommaBefore = commaBeforeElement != null && shouldDeleteComma(commaBeforeElement, whatNode);
+    boolean deleteCommaAfter = !deleteCommaBefore && commaAfterElement != null && shouldDeleteComma(commaAfterElement, whatNode);
+    PsiElement firstElementToDelete = deleteCommaBefore ? commaBeforeElement.getPsi() : what;
+    PsiElement lastElementToDelete = deleteCommaAfter ? commaAfterElement.getPsi() : what;
     what.getParent().deleteChildRange(firstElementToDelete, lastElementToDelete);
   }
 

@@ -56,8 +56,8 @@ public class ErlangMethodSeparatorProviderTest extends ErlangLightPlatformCodeIn
 
   /**
    * The line markers that the highlighting left in the editor. 2026.3 removed DaemonCodeAnalyzerImpl.getLineMarkers();
-   * LineMarkersPass.getDisplayedLineMarkers(), which the platform's test fixture uses there, does not exist in 2026.1
-   * and 2026.2. This branch is tested against all three, so the method is looked up by name.
+   * LineMarkersPass.getDisplayedLineMarkers(), which the platform's test fixture uses there, does not exist in 2026.2.
+   * This branch is tested against both, so the method is looked up by name.
    */
   @SuppressWarnings("unchecked")
   private List<? extends LineMarkerInfo<?>> getLineMarkers() throws Exception {

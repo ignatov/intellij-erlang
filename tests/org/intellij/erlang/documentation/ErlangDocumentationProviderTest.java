@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.documentation;
 
+import com.intellij.codeInsight.navigation.CtrlMouseHandler;
+import com.intellij.navigation.ItemPresentation;
+import com.intellij.navigation.NavigationItem;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
@@ -23,10 +26,12 @@ import com.intellij.openapi.roots.JavadocOrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.usageView.UsageViewTypeLocation;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
@@ -693,6 +698,67 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
+  public void testQuickNavigateInfoLocalFunctionWithSpec() {
+    doTestQuickNavigateInfo("test:foo/1<br/>-spec foo(integer()) -&gt; ok.",
+                            """
+                              -module(test).
+                              -spec foo(integer()) -> ok.
+                              foo(_) -> ok.
+                              bar() -> fo<caret>o(1).
+                              """);
+  }
+
+  public void testQuickNavigateInfoLocalFunctionWithoutSpec() {
+    doTestQuickNavigateInfo("test:foo/0",
+                            """
+                              -module(test).
+                              foo() -> ok.
+                              bar() -> fo<caret>o().
+                              """);
+  }
+
+  public void testQuickNavigateInfoQuotedFunctionName() {
+    doTestQuickNavigateInfo("test:&#39;my-foo&#39;/0",
+                            """
+                              -module(test).
+                              'my-foo'() -> ok.
+                              bar() -> 'my-f<caret>oo'().
+                              """);
+  }
+
+  public void testQuickNavigateInfoSdkFunction() {
+    doTestQuickNavigateInfo("lists:foreach/2<br/>" +
+                            "-spec foreach(Fun, List) -&gt; ok when<br/>" +
+                            "      Fun :: fun((Elem :: T) -&gt; term()),<br/>" +
+                            "      List :: [T],<br/>" +
+                            "      T :: term().",
+                            """
+                              -module(test).
+                              test() ->
+                                  lists:for<caret>each(foo, bar).
+                              """);
+  }
+
+  public void testQuickNavigateInfoCtrlHover() {
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -spec foo(integer()) -> ok.
+      foo(_) -> ok.
+      bar() -> fo<caret>o(1).
+      """);
+    assertEquals("test:foo/1<br/>-spec foo(integer()) -&gt; ok.",
+                 CtrlMouseHandler.getGoToDeclarationOrUsagesText(myFixture.getEditor()));
+  }
+
+  public void testQuickNavigateInfoNotFunction() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(test).
+                                                 test() ->
+                                                     lis<caret>ts:foreach(foo, bar).
+                                                 """);
+    assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
@@ -712,9 +778,70 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     };
   }
 
+  // #1396: the documentation hover builds the presentation of the target that the reference resolves to
+  public void testPresentationOfBifInFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  public void testPresentationOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetPresentation("""
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  public void testPresentationOfModuleInfoInExport() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([module_<caret>info/0]).
+                               """);
+  }
+
+  public void testPresentationOfBifInSpec() {
+    doTestTargetDescriptions("abs", """
+                               -module(test).
+                               -spec ab<caret>s(integer()) -> integer().
+                               """);
+  }
+
+  public void testDescriptionsOfBifInFunWithArity() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertInstanceOf(element, NavigationItem.class);
+    ItemPresentation presentation = ((NavigationItem) element).getPresentation();
+    assertNotNull(presentation);
+    assertEquals(expectedName, presentation.getPresentableText());
+    assertEquals("function", ElementDescriptionUtil.getElementDescription(element, UsageViewTypeLocation.INSTANCE));
+  }
+
+  private void doTestTargetPresentation(@NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertInstanceOf(element, NavigationItem.class);
+    ItemPresentation presentation = ((NavigationItem) element).getPresentation();
+    assertNotNull(presentation);
+    assertFalse("<unknown>".equals(presentation.getPresentableText()));
+  }
+
   private void doTestGetUrls(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.getUrlFor(element, null).getFirst());
+  }
+
+  private void doTestQuickNavigateInfo(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
   private void doTestExternalDoc(@NotNull String expected, @NotNull String text) {

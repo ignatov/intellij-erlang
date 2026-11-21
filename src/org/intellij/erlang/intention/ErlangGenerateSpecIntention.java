@@ -23,6 +23,7 @@ import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangGenerateSpecFix;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,6 +46,7 @@ public class ErlangGenerateSpecIntention extends ErlangBaseNamedElementIntention
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countIntention(project, getClass());
     if (!(file instanceof ErlangFile)) {
       throw new IncorrectOperationException("Only applicable to Erlang files.");
     }
