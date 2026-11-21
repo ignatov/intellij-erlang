@@ -111,6 +111,22 @@ public class ErlangMacroLayerRejectedUseTest extends ErlangLightPlatformCodeInsi
                               "f() -> ?OPEN ?PAIR(, 2) end.\n");
   }
 
+  /** Round 6, the verifier's h02: "badly formed argument for macro 'P'", with definitions of two arities. */
+  public void testEmptyFirstArgumentWithTwoArities() {
+    assertNoErrorHidden("h02", "-module(h02).\n-export([f/1]).\n-define(P(A, B), {A, B}).\n-define(P(A, B, C), {A, B, C}).\n" +
+                               "f(X) -> ?P(, a, X).\n");
+  }
+
+  /** Round 6, the verifier's h03: "badly formed argument for macro 'P'", the last argument empty. */
+  public void testEmptyLastArgument() {
+    assertNoErrorHidden("h03", "-module(h03).\n-export([f/1]).\n-define(P(A, B), {A, B}).\nf(X) -> ?P(X, ).\n");
+  }
+
+  /** Round 6, the verifier's h05: "badly formed argument for macro 'W'", a body that puts the argument in brackets. */
+  public void testEmptyArgumentInBrackets() {
+    assertNoErrorHidden("h05", "-module(h05).\n-export([f/1]).\n-define(W(Cl, S), ((Cl), S)).\nf(X) -> ?W(, X).\n");
+  }
+
   /** The control: erlc compiles it, and the layer still hides master's error. */
   public void testValidUsesStillExplainTheError() {
     PsiFile f = myFixture.addFileToProject("c8.erl", "-module(c8).\n-export([f/0]).\n-define(OPEN, begin).\n" +

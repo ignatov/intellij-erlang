@@ -1,6 +1,12 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.codeInsight.daemon.impl.IdentifierHighlightingComputer;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.ProperTextRange;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Disposer;
@@ -137,5 +143,55 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     assertEquals("null", target);
     assertEquals("no build by the caret-driven caller", 0, builds().size());
     assertTrue(ErlangMacroLayerLog.events().stream().anyMatch(e -> e.kind().equals("SKIPPED") && e.line().contains("broken-plain")));
+  }
+
+  /**
+   * Round 6, the part of G4 that round 5 moved out (G4 now types its new form at the end of the file): typing inside a
+   * function that uses a binding macro, with the counts of the round-6 rule pinned. While the user types, the editor
+   * and the platform's identifier highlighting at the caret (a passive query, run after every key) build nothing;
+   * highlighting builds the copy once; a caller that is not passive (here a resolve on a pooled thread) builds it
+   * right after a key press and gets the layer's answer, and highlighting then reuses that copy.
+   */
+  public void testTypingInsideAFunctionThatUsesAMacro() throws Exception {
+    PsiFile f = myFixture.addFileToProject("w.erl", "-module(w).\n-define(BIND(V), V = 1).\n-export([f/0]).\nf() -> ?BIND(Z), Z.\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals(1, builds().size());
+    String binding = String.valueOf(f.getText().indexOf("Z)"));
+    com.intellij.openapi.editor.Editor editor = myFixture.getEditor();
+    editor.getCaretModel().moveToOffset(f.getText().lastIndexOf("Z."));
+    for (char c : "Y = Z + 1, ".toCharArray()) {
+      myFixture.type(c);
+      PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+      int caret = editor.getCaretModel().getOffset();
+      ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> ReadAction.run(
+        () -> new IdentifierHighlightingComputer(f, editor, ProperTextRange.create(0, f.getTextLength()), caret).computeRanges()),
+                                                                                                             new EmptyProgressIndicator())).get();
+    }
+    assertEquals("f() -> ?BIND(Z), Y = Z + 1, Z.", f.getText().substring(f.getText().indexOf("f() ->")).trim());
+    assertEquals("no build while typing: the editor and the identifier highlighting", 1, builds().size());
+    assertTrue("the identifier highlighting was refused", count("SKIPPED") > 0);
+
+    myFixture.doHighlighting();
+    assertEquals("highlighting builds once", 2, builds().size());
+    assertEquals(binding, resolveInBackground(f, "Z + 1"));
+    assertEquals(binding, resolveInBackground(f, "Z."));
+    assertEquals("the other callers use that copy", 2, builds().size());
+
+    myFixture.type(' ');
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    assertEquals("a caller that is not passive builds right after a key press", binding, resolveInBackground(f, "Z."));
+    assertEquals(3, builds().size());
+    myFixture.doHighlighting();
+    assertEquals("highlighting reuses that copy", 3, builds().size());
+  }
+
+  /** The target of the reference at the marker, from a pooled thread under a progress indicator (not a passive query). */
+  private static String resolveInBackground(PsiFile f, String marker) throws Exception {
+    return inBackgroundWithIndicator(() -> {
+      PsiReference ref = f.findReferenceAt(f.getText().lastIndexOf(marker));
+      PsiElement t = ref == null ? null : ref.resolve();
+      return t == null ? "null" : t.getTextOffset() + "";
+    });
   }
 }
