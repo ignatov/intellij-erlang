@@ -1,0 +1,86 @@
+name: Compatibility watch
+
+# Notices new IntelliJ IDEA builds and Erlang/OTP versions, starts the compatibility check (compat.yml) for them and
+# files one issue for each version in which it finds problems that the default configuration of the plugin does not
+# have (see AGENTS.md). All the logic is in scripts/compat/watch.py; its state is the issue "Compatibility watch".
+# On pull_request only the unit tests and one dry run run, with a read-only token; the job that can start runs and
+# write issues never runs on pull_request.
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Read everything and print what would be started, written and filed; write nothing.
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/compat-watch.yml
+      - scripts/compat/**
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    # Only in this repository and only on its default branch (a schedule always runs there): a fork or another branch
+    # never starts runs or writes issues.
+    if: >-
+      ${{ github.event_name != 'pull_request' && github.repository == 'ignatov/intellij-erlang'
+      && (github.event_name == 'schedule' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+    # Two watchers never run at once; a new one waits for the running one.
+    concurrency:
+      group: compat-watch
+      cancel-in-progress: false
+    steps:
+    - name: Check out the watcher
+      uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        # watch.py imports compat.py and reads the pinned Erlang/OTP version from gradle.yml.
+        sparse-checkout: |
+          scripts/compat
+          .github/workflows
+    - name: Watch
+      env:
+        GH_TOKEN: ${{ github.token }}
+        DRY_RUN: ${{ inputs.dry_run }}
+      run: |
+        if [ "$DRY_RUN" = true ]; then set -- --dry-run; fi
+        python3 scripts/compat/watch.py "$@"
+
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # The dry run reads the state issue, the runs and their artifacts.
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+    steps:
+    - name: Check out the watcher
+      uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        # What the unit tests of scripts/compat read besides the scripts (see REPOSITORY_PATHS in test_compat.py).
+        sparse-checkout: |
+          scripts/compat
+          .github/workflows
+          src/org/intellij/erlang/sdk
+          testData/mockSdk-R27
+    - name: Test the scripts
+      run: python3 -m unittest discover -s scripts/compat -p 'test_*.py' -v
+    - name: Dry run
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: python3 scripts/compat/watch.py --dry-run
