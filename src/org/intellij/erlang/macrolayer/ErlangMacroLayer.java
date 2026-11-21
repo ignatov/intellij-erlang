@@ -2118,6 +2118,20 @@ public final class ErlangMacroLayer {
     return null;
   }
 
+  /**
+   * Round 6 (next), item 3a: the token is the name that a macro makes ({@code hfoo} in {@code ?HGEN(hfoo).}, {@code mr}
+   * in {@code -define(R, -record(mr, {mf})).}), as the copy tells; it is then its own declaration (the uses resolve to
+   * it). A structural check first; the copy only for such tokens, under the layer's build rule (a passive query waits).
+   */
+  public static boolean isMadeNameDeclaration(@NotNull PsiElement leaf) {
+    if (!isNameMadeByMacro(leaf)) return false;
+    ErlangFile file = layerFile(leaf);
+    Copy copy = file == null ? null : getCopy(file, "named-element");
+    String kind = copy == null ? null : copy.madeNameKinds().get(leaf.getTextRange());
+    // a local type made by a macro is left out: no rename is offered at its token (ErlangMacroLayerRename6Test)
+    return "function".equals(kind) || "record".equals(kind) || "record field".equals(kind);
+  }
+
   /** Round 6: the kind of a name made by a macro at this token of a real .erl file, from a copy that is there; or null. */
   private static @Nullable String madeNameKind(@NotNull PsiElement token) {
     ErlangFile file = layerFile(token);

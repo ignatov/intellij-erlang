@@ -28,6 +28,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.ReferenceRange;
 import com.intellij.psi.search.PsiSearchHelper;
 import com.intellij.psi.search.SearchScope;
@@ -38,6 +39,10 @@ import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   @Override
@@ -81,6 +86,25 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
       if (!options.isUsages) return true;
       SearchScope scope = read(() -> options.searchScope.intersectWith(element.getUseScope()));
       return processReferencesToNameMadeByMacro(element, scope, ref -> processor.process(new UsageInfo(ref)));
+    }
+
+    /**
+     * Round 6 (next), item 3a: the identifier highlighting and highlight usages ask this method, not
+     * {@link #processElementUsages}; the platform's reference search has no word for the leaf, so it found nothing.
+     */
+    @Override
+    public @NotNull Collection<PsiReference> findReferencesToHighlight(@NotNull PsiElement target, @NotNull SearchScope searchScope) {
+      List<PsiReference> r = new ArrayList<>();
+      // the name itself: the platform finds no declaration range for a leaf, so it is given as a reference to itself
+      PsiFile file = target.getContainingFile();
+      if (file != null && file.getVirtualFile() != null && searchScope.contains(file.getVirtualFile())) {
+        r.add(new PsiReferenceBase.Immediate<>(target, TextRange.from(0, target.getTextLength()), target));
+      }
+      processReferencesToNameMadeByMacro(target, searchScope, ref -> {
+        r.add(ref);
+        return true;
+      });
+      return r;
     }
   }
 

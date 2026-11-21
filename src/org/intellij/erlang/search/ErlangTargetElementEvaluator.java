@@ -17,15 +17,26 @@
 package org.intellij.erlang.search;
 
 import com.intellij.codeInsight.TargetElementEvaluatorEx;
+import com.intellij.codeInsight.TargetElementEvaluatorEx2;
 import com.intellij.codeInsight.TargetElementUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErlangTargetElementEvaluator implements TargetElementEvaluatorEx {
+public class ErlangTargetElementEvaluator extends TargetElementEvaluatorEx2 implements TargetElementEvaluatorEx {
+  /**
+   * Round 6 (next), item 3a: the name that a macro makes is its own declaration, so the identifier highlighting with
+   * the caret on it (the argument of {@code ?HGEN(hfoo).}, a name in a {@code -define} body) paints it and its uses.
+   */
+  @Override
+  public @Nullable PsiElement getNamedElement(@NotNull PsiElement element) {
+    return ErlangMacroLayer.isMadeNameDeclaration(element) ? element : null;
+  }
+
   @Override
   public boolean isIdentifierPart(@NotNull PsiFile element, @NotNull CharSequence text, int offset) {
     return false;
