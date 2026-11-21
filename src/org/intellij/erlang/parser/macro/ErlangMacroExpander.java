@@ -28,6 +28,27 @@ public final class ErlangMacroExpander {
   public static final int MAX_DEPTH = 32;
   /** A hard limit of the engine, independent of the form cap. */
   public static final int MAX_TOKENS_PER_FORM = 50_000;
+  /**
+   * The work of the expansions of one form: expansions, tokens scanned and tokens added. Above it the use gets
+   * {@link Outcome#LIMIT_TOKENS}. Empty bodies make no tokens, so the token limit alone does not stop
+   * {@code -define(L2, ?L1 ?L1)}-style chains (2^n expansions); a 50,000-token form at depth 32 is far below.
+   */
+  public static final long MAX_WORK_PER_FORM = 4_000_000;
+  /** The work of all forms of a file; after it every use gets {@link Outcome#LIMIT_TOKENS}. */
+  public static final long MAX_WORK_PER_FILE = 40_000_000;
+  private static volatile long ourWorkPerForm = MAX_WORK_PER_FORM;
+  private static volatile long ourWorkPerFile = MAX_WORK_PER_FILE;
+
+  /** Tests: other work limits (to check that a cancelled indicator stops a long expansion). */
+  @org.jetbrains.annotations.TestOnly
+  public static void setWorkLimitsForTests(long perForm, long perFile, @NotNull com.intellij.openapi.Disposable parent) {
+    ourWorkPerForm = perForm;
+    ourWorkPerFile = perFile;
+    com.intellij.openapi.util.Disposer.register(parent, () -> {
+      ourWorkPerForm = MAX_WORK_PER_FORM;
+      ourWorkPerFile = MAX_WORK_PER_FILE;
+    });
+  }
 
   public static final int SRC_NONE = 0;
   public static final int SRC_ARGUMENT = 1;
@@ -197,6 +218,8 @@ public final class ErlangMacroExpander {
     public int sourceTokens, expandedTokens;
     /** Spike 5: time of the base lexing inside {@link #expand} (measurement only). */
     public long lexNanos;
+    /** The work of all expansions (see {@link #MAX_WORK_PER_FORM}). */
+    public long work;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
     private Map<Integer, int[]> myArgumentCopies;
@@ -452,6 +475,7 @@ public final class ErlangMacroExpander {
     e.sourceTokens = run.sigCount;
     e.expandedTokens = run.sigCount + run.expandedDelta;
     e.lexNanos = lexNanos;
+    e.work = run.fileWork + run.work;
     return e;
   }
 
@@ -919,6 +943,30 @@ public final class ErlangMacroExpander {
       outcomes.merge(o, 1, Integer::sum);
     }
 
+    /** The work of the current form, and of the forms before it. */
+    long work, fileWork;
+    private int myTicks;
+
+    /** Counts n steps of work; checks for cancellation; stops the use above the limits. */
+    void tick(int n) throws LimitException {
+      work += n;
+      if ((++myTicks & 1023) == 0) ProgressManager.checkCanceled();
+      if (work > ourWorkPerForm || fileWork + work > ourWorkPerFile) throw new LimitException(Outcome.LIMIT_TOKENS);
+    }
+
+    /** Adds the tokens to a result list within the limits. */
+    void addAll(List<Tok> to, List<Tok> tokens) throws LimitException {
+      tick(tokens.size());
+      if (to.size() + tokens.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
+      to.addAll(tokens);
+    }
+
+    void add(List<Tok> to, Tok token) throws LimitException {
+      tick(1);
+      if (to.size() >= MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
+      to.add(token);
+    }
+
     void flushTo(int srcOffset) {
       if (srcOffset <= cursor) return;
       int es = out.text.length();
@@ -951,6 +999,8 @@ public final class ErlangMacroExpander {
         int formEnd = p;
         while (formEnd < sigCount - 1 && !isFormEnd(formEnd)) formEnd++;
         formSubstitutedTokens = 0;
+        fileWork += work;
+        work = 0;
         Form form = new Form(b.start[sig[formStart]], b.end[sig[formEnd]]);
         String attribute = attributeName(formStart, formEnd);
         boolean directive = attribute != null && DIRECTIVES.contains(attribute);
@@ -960,6 +1010,7 @@ public final class ErlangMacroExpander {
         boolean inBranch = branch != null;
         if (!directive) {
           for (int q = formStart; q <= formEnd; q++) {
+            if ((q & 1023) == 0) ProgressManager.checkCanceled();
             if (st(q) != ERL_QMARK) continue;
             useRejected = false;
             Object r = handleUse(q, formEnd);
@@ -1377,6 +1428,7 @@ public final class ErlangMacroExpander {
     int circularStart, circularEnd;
 
     List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth, Deque<String> active) throws LimitException {
+      tick(1 + def.body.size());
       if (depth > MAX_DEPTH) throw new LimitException(Outcome.LIMIT_DEPTH);
       String activeKey = def.name + "/" + def.arity;
       if (active.contains(activeKey)) throw new LimitException(Outcome.LIMIT_RECURSION, def.name);
@@ -1395,7 +1447,7 @@ public final class ErlangMacroExpander {
             body.get(i + 2).type == ERL_VAR) {
           int index = def.params.indexOf(body.get(i + 2).text);
           if (index >= 0) {
-            substituted.add(new Tok(ERL_STRING, stringify(args.get(index))));
+            add(substituted, new Tok(ERL_STRING, stringify(args.get(index))));
             i += 2;
             continue;
           }
@@ -1403,11 +1455,11 @@ public final class ErlangMacroExpander {
         if (args != null && t.type == ERL_VAR) {
           int index = def.params.indexOf(t.text);
           if (index >= 0) {
-            substituted.addAll(expandedArgs.get(index));
+            addAll(substituted, expandedArgs.get(index));
             continue;
           }
         }
-        substituted.add(t);
+        add(substituted, t);
       }
       active.push(activeKey);
       try {
@@ -1424,13 +1476,13 @@ public final class ErlangMacroExpander {
       for (int i = 0; i < tokens.size(); i++) {
         Tok t = tokens.get(i);
         if (t.type == ERL_QMARK && i + 1 < tokens.size() && tokens.get(i + 1).type == ERL_QMARK) {
-          out.add(t);
-          out.add(tokens.get(++i));
+          add(out, t);
+          add(out, tokens.get(++i));
           continue;
         }
         Name n = t.type == ERL_QMARK ? tokName(tokens, i + 1) : null;
         if (n == null) {
-          out.add(t);
+          add(out, t);
           continue;
         }
         String name = n.name;
@@ -1448,12 +1500,12 @@ public final class ErlangMacroExpander {
         Selection selection = select(name, arity);
         if (selection.def == null || parsed == null && arity != -1) {
           if (selection.outcome != Outcome.PREDEFINED) nestedLeft = true;
-          out.add(t);
+          add(out, t);
           continue; // left as it is; the name follows as a plain token
         }
         Def def = selection.def;
         List<Tok> expanded = expand(def, def.arity == -1 ? null : args, depth + 1, active);
-        out.addAll(expanded);
+        addAll(out, expanded);
         if (formSubstitutedTokens + out.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
         i = def.arity == -1 || parsed == null ? n.last : next + parsed.closeIndex;
       }
