@@ -51,7 +51,10 @@ import java.util.stream.Stream;
  * {@code S5_ROUNDS} (10), {@code S5_CHARS} (80), {@code S5_GAP_MS} (80), {@code S5_OUT} (a TSV file of the results).
  * {@code S5_READER}: {@code nc} adds a background reader that resolves the reference at the caret every 50 ms in a plain
  * (not cancellable) read action on a pooled thread, {@code c} the same in a cancellable non-blocking read action; it
- * stands for a consumer such as the target-element search of the IDE. An arm name may carry the reader as a suffix
+ * stands for a consumer such as the target-element search of the IDE; {@code ih} (round 5) does what the IDE's
+ * highlighting of the identifier at the caret does, in a cancellable non-blocking read action: it resolves the
+ * reference at the caret and asks every reference of the file with the same text whether it refers to that target
+ * ({@code isReferenceTo}). An arm name may carry the reader as a suffix
  * ({@code layer+nc}); then it overrides {@code S5_READER}. {@code S5_HOG=<n>}: n threads spin during each run
  * (CPU starvation, as on a loaded host).
  */
@@ -321,7 +324,8 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     out("start arms=" + arms + " files=" + fileKeys + " texts=" + texts + " rounds=" + rounds + " chars=" + chars + " gap=" + gap +
         " layerClasses=" + (LAYER != null) + " cpus=" + Runtime.getRuntime().availableProcessors());
     myRows.add("round\tfile\ttext\tarm\tfirst_hl_ms\tlast_key_to_hl_ms\ttyping_s\tmax_edt_key_ms\tcpu_ms\tgc_ms\tbuilds\tbuild_ms\tcancelled\t" +
-               "lock_wait_ms\tlayer_excl_ms\tlayer_incl_ms\tload\tmax_build_ms\tmax_lock_wait_ms\tlock_waits\treader\tfinal_pass_ms\tdaemon");
+               "lock_wait_ms\tlayer_excl_ms\tlayer_incl_ms\tload\tmax_build_ms\tmax_lock_wait_ms\tlock_waits\treader\tfinal_pass_ms\tdaemon\t" +
+               "asked\tcomputed\tgated\ttable_builds\ttable_gets");
     daemon.setUpdateByTimerEnabled(true);
     // warm-up: one run per arm and file, not recorded
     for (String fk : fileKeys) {
@@ -371,7 +375,15 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
         try {
           java.util.concurrent.Callable<Object> c = () -> {
             PsiReference ref = file.isValid() ? file.findReferenceAt(Math.max(0, myCaret - 1)) : null;
-            return ref == null ? null : ref.resolve();
+            Object target = ref == null ? null : ref.resolve();
+            if (kind.equals("ih") && target instanceof com.intellij.psi.PsiElement te) {
+              String name = ref.getCanonicalText();
+              for (com.intellij.psi.PsiElement e : PsiTreeUtil.collectElements(file, x -> x.getReferences().length > 0)) {
+                com.intellij.openapi.progress.ProgressManager.checkCanceled();
+                for (PsiReference r : e.getReferences()) if (name.equals(r.getCanonicalText())) r.isReferenceTo(te);
+              }
+            }
+            return target;
           };
           if (kind.equals("nc")) com.intellij.openapi.application.ReadAction.compute(c::call);
           else com.intellij.openapi.application.ReadAction.nonBlocking(c).executeSynchronously();
@@ -464,6 +476,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     // layer counters of this run
     long buildMs = 0, lockMs = 0, excl = 0, incl = 0;
     int builds = 0, cancelled = 0;
+    long asked = 0, computed = 0, gated = 0, tableBuilds = 0, tableGets = 0;
     for (Map.Entry<String, long[]> e : s1.entrySet()) {
       long[] b = s0.getOrDefault(e.getKey(), new long[4]);
       String[] k = e.getKey().split("\t");
@@ -477,7 +490,15 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       else if (k[1].startsWith("resolve") || k[1].startsWith("variable") || k[1].startsWith("error-filter") || k[1].startsWith("header-target")) {
         excl += dx;
         incl += dn;
+        // round 5: questions that passed the gate (outermost calls only), of which computed in the copy, and gate stops
+        if (k[2].startsWith("gate:") || k[2].equals("ablated")) gated += dc;
+        else if (!k[2].startsWith("nested:")) {
+          asked += dc;
+          if (k[2].contains("computed") || k[2].startsWith("function-table:") || k[2].startsWith("asked:hidden") || k[2].startsWith("asked:shown")) computed += dc;
+        }
       }
+      else if (k[1].equals("table-build")) tableBuilds += dc;
+      else if (k[1].equals("table-get")) tableGets += dc;
     }
     double maxBuild = 0, maxWait = 0;
     int waits = 0;
@@ -503,7 +524,7 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
       row += "\treader=" + reader + " reads=" + rn.size() + " max_read_ms=" + rmax / 1_000_000;
     }
     else row += "\t-";
-    row += "\t" + finalPass + "\t" + daemonRuns;
+    row += "\t" + finalPass + "\t" + daemonRuns + "\t" + asked + "\t" + computed + "\t" + gated + "\t" + tableBuilds + "\t" + tableGets;
     row = row.replaceFirst("\t" + Pattern.quote(arm) + "\t", "\t" + Matcher.quoteReplacement(armName) + "\t");
     myRows.add(row);
     out("run " + row + " events+" + (events().size() - e0));
