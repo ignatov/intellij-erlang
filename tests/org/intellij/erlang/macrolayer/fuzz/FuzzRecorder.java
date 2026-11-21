@@ -447,9 +447,10 @@ public final class FuzzRecorder {
         myHangReported = true;
         Throwable dump = new Throwable("action '" + myAction + "' runs for " + ms + " ms (limit " + myActionMillis + " ms)");
         dump.setStackTrace(th.getStackTrace());
-        String frame = firstPluginFrame(dump);
-        add("hang @ " + (frame != null ? frame : firstFrame(dump)) + " [" + myAction.replaceAll("@[0-9]+", "") + "]", "hang", dump,
-            myAction, true);
+        String frame = pluginFrames(dump);
+        // a stack without a plugin frame is the platform (or the load of the machine): reported apart, not as a finding
+        add("hang @ " + (frame != null ? frame : firstFrame(dump)) + " [" + myAction.replaceAll("@[0-9]+", "@").replaceAll("\\[[^]]*\\]", "[]") + "]",
+            "hang", dump, myAction, frame != null);
       }
     }
   }
