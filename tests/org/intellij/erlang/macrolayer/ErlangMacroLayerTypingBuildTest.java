@@ -15,6 +15,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
+import java.util.List;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import static org.intellij.erlang.macrolayer.LayerTestSupport.*;
@@ -193,5 +194,43 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
       PsiElement t = ref == null ? null : ref.resolve();
       return t == null ? "null" : t.getTextOffset() + "";
     });
+  }
+
+  /**
+   * Round 6, item 10 (the one build per IDE session of erl_types.erl): a file whose macros are all plain, with a form
+   * broken while the user types an unfinished call. The copy of that form would be broken too, so the copy could answer
+   * nothing: highlighting builds no copy for it either, and shows the same errors as with the layer off.
+   */
+  public void testHighlightingBuildsNoCopyForAFormBrokenWithPlainMacrosOnly() throws Exception {
+    PsiFile f = myFixture.addFileToProject("p.erl", "-module(p).\n-define(A, a).\n-define(P(X), {X, ?A}).\n-export([f/1]).\n" +
+                                                    "f(X) -> Y = ?P(X), Y.\n");
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals(0, builds().size());
+    myFixture.getEditor().getCaretModel().moveToOffset(f.getText().indexOf("Y.\n"));
+    myFixture.type("lists:map(fun(Q) -> Q + Q, ");
+    PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
+    List<String> layer = errors();
+    assertEquals("no build by highlighting for a form broken with plain macros only", 0, builds().size());
+    Disposable off = Disposer.newDisposable();
+    try {
+      ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, off);
+      com.intellij.psi.PsiManager.getInstance(getProject()).dropPsiCaches();
+      com.intellij.codeInsight.daemon.DaemonCodeAnalyzer.getInstance(getProject()).restart();
+      assertEquals("the errors of master", errors(), layer);
+    }
+    finally {
+      Disposer.dispose(off);
+    }
+    assertFalse(layer.isEmpty());
+  }
+
+  private List<String> errors() {
+    List<String> r = new java.util.ArrayList<>();
+    for (com.intellij.codeInsight.daemon.impl.HighlightInfo i : myFixture.doHighlighting()) {
+      if (i.getSeverity().compareTo(com.intellij.lang.annotation.HighlightSeverity.ERROR) >= 0) r.add(i.getStartOffset() + ":" + i.getDescription());
+    }
+    java.util.Collections.sort(r);
+    return r;
   }
 }

@@ -1043,9 +1043,10 @@ public final class ErlangMacroLayer {
       Build running = holder.building.get();
       if (running == null && !explicit) {
         String refusal = buildRefusal(file);
-        if (refusal == null && !isEdtBuildAllowed() && !isHighlighting(ProgressManager.getGlobalProgressIndicator()) &&
-            onlyBrokenFormsNeedCopy(file, table) && isPassiveCaller()) {
-          // round 5: a form broken while the user types, with plain macros only: a passive query does not build for it
+        if (refusal == null && !isEdtBuildAllowed() && onlyBrokenFormsNeedCopy(file, table)) {
+          // round 5: a form broken while the user types, with plain macros only; round 6: no caller builds for it, not
+          // even highlighting. The copy of such a form is broken too, so the copy answers nothing in the whole file:
+          // a question needs a clean form (resolve), and the error filter hides an error only in a clean form.
           refusal = "broken-plain";
         }
         if (refusal != null) {
@@ -1133,7 +1134,7 @@ public final class ErlangMacroLayer {
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
     if (tt != null && quiet > 0 && tt.changedWithin(quiet) || quiet > 0 && isBeingTyped(file, quiet)) {
-      return isPassiveCaller() ? "typing" : null;
+      return isPassiveCaller(file) ? "typing" : null;
     }
     return null;
   }
@@ -1170,14 +1171,17 @@ public final class ErlangMacroLayer {
    * {@link #PASSIVE_MEMO} without a walk. The answer "not passive" is not kept: such a caller builds the copy, and
    * then no longer asks.
    */
-  static boolean isPassiveCaller() {
+  static boolean isPassiveCaller(@Nullable PsiFile file) {
     ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
     WeakReference<ProgressIndicator> memo = root == null ? null : PASSIVE_MEMO.get();
     if (memo != null && memo.get() == root) return true;
     STACK_WALKS.incrementAndGet();
     long w0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
     boolean passive = hasPassiveFrame();
-    if (w0 != 0) ErlangMacroLayerStats.phase(passive ? "stack-walk:passive" : "stack-walk:not-passive", null, System.nanoTime() - w0);
+    if (w0 != 0) {
+      ErlangMacroLayerStats.phase(passive ? "stack-walk:passive" : "stack-walk:not-passive", file == null ? null : file.getName(),
+                                  System.nanoTime() - w0);
+    }
     if (passive && root != null) PASSIVE_MEMO.set(new WeakReference<>(root));
     return passive;
   }
