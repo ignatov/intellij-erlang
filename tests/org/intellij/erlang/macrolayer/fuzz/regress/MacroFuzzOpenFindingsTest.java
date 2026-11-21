@@ -131,7 +131,6 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
    * UI thread. The same with b.erl's function deleted and with the edit not committed before the highlighting.
    */
   public void testF6NoInvalidTargetAfterEditOfOtherFile() {
-    if (!open()) return;
     for (String change : new String[]{"rename", "delete", "touch"}) {
       PsiFile b = myFixture.addFileToProject("f6" + change + "/b.erl", "-module(b).\n-export([g/0]).\ng() -> ok.\n");
       myFixture.configureByText("m.erl", "-module(m).\n-export([f3/1]).\n-define(M1(M, F), M:F(), ok).\nf3(X) ->\n    ?M1(b, g),\n    X.\n");
@@ -164,7 +163,6 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
    * without an exception.
    */
   public void testF7RenameFunctionWithClauseMadeByMacroFromExport() {
-    if (!open()) return;
     myFixture.configureByText("m.erl", "-module(m).\n-export([<caret>sign/1]).\n-define(HEAD(N), sign(N) when N > 0 ->).\n" +
                                        "?HEAD(X) positive;\nsign(0) -> zero;\nsign(_) -> negative.\n");
     myFixture.doHighlighting();
