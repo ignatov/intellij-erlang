@@ -179,7 +179,7 @@ public final class ErlangMacroLayer {
     });
   }
 
-  private static @Nullable String read(String property, String env) {
+  static @Nullable String read(String property, String env) {
     String value = System.getProperty(property);
     if (value == null || value.isEmpty()) value = System.getenv(env);
     return value == null || value.isEmpty() ? null : value.trim().toLowerCase(Locale.ROOT);
@@ -1466,7 +1466,7 @@ public final class ErlangMacroLayer {
   }
 
   /** The form (or, for a top-level error, the form before it) uses a macro the file can see. Never builds a copy. */
-  private static boolean formUsesMacro(@NotNull Table t, @Nullable PsiElement form) {
+  static boolean formUsesMacro(@NotNull Table t, @Nullable PsiElement form) {
     if (form == null || t.names.isEmpty()) return false;
     int at = form.getTextRange().getStartOffset();
     Boolean b = t.formUse.get(at);

@@ -33,8 +33,9 @@ import java.util.List;
  * <p>
  * Candidates (structure only, no copy): the name of a standalone atom (the main tree's atom reference resolves to
  * nothing), and a bare atom or variable token (no element of its own) that is not the name of a bare macro use. Only
- * in a top-level form the round-5 gate sends to the copy, outside {@code -define}. The copy is asked only when the
- * reference is resolved, through the same entry point and refusal rules as the other questions of the layer.
+ * in a top-level form with a use of a visible macro, outside {@code -define}. The copy is asked only when the reference
+ * is resolved and the round-5 gate sends the form to the copy, through the same entry point and refusal rules as the
+ * other questions of the layer.
  */
 public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenceBase<PsiElement> {
   private static final TokenSet SKIPPED = TokenSet.orSet(ErlangParserDefinition.COMMENTS, TokenSet.create(TokenType.WHITE_SPACE));
@@ -62,7 +63,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
       if (first || form != lastForm) {
         first = false;
         lastForm = form;
-        lastAnswer = inFormThatNeedsCopy(leaf, form);
+        lastAnswer = inFormWithUse(leaf, form);
       }
       if (lastAnswer) r.add(new ErlangMacroLayerTokenReference(host, leaf));
     }
@@ -138,16 +139,27 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     }
   }
 
-  /** The token lies in a top-level form, outside -define, that the round-5 gate sends to the copy. Never builds a copy. */
-  private static boolean inFormThatNeedsCopy(@NotNull PsiElement leaf, @Nullable PsiElement form) {
+  /**
+   * The token lies in a top-level form, outside -define, with a use of a macro the file sees: the reference exists
+   * there whatever the gate says (so that the narrow and the wide gate give the same references), and resolves through
+   * the copy only when the gate sends the form to it ({@link #answer}). Never builds a copy.
+   */
+  private static boolean inFormWithUse(@NotNull PsiElement leaf, @Nullable PsiElement form) {
     if (form == null) return false;
     ErlangFile file = ErlangMacroLayer.layerFile(leaf);
     if (file == null) return false;
     if (PsiTreeUtil.getParentOfType(leaf, ErlangMacrosDefinition.class, false) != null) return false;
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) return false;
-    if (!ErlangMacroLayer.anyFormNeedsCopy(file, t)) return false;
-    return ErlangMacroLayer.formNeedsCopy(t, form);
+    return ErlangMacroLayer.formUsesMacro(t, form);
+  }
+
+  /** The round-5 gate sends the token's form to the copy. Never builds a copy. */
+  private static boolean formNeedsCopy(@NotNull ErlangFile file, @NotNull PsiElement leaf) {
+    ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
+    if (t == null || t.refusal != null || t.names.isEmpty()) return false;
+    if (!ErlangMacroLayer.isGateWide() && !ErlangMacroLayer.anyFormNeedsCopy(file, t)) return false;
+    return ErlangMacroLayer.formNeedsCopy(t, ErlangMacroLayer.topForm(leaf));
   }
 
   public @NotNull PsiElement getToken() {
@@ -223,7 +235,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
    */
   static @Nullable Answer answer(@NotNull PsiElement leaf, @NotNull String trigger) {
     ErlangFile file = ErlangMacroLayer.layerFile(leaf);
-    if (file == null) return null;
+    if (file == null || !formNeedsCopy(file, leaf)) return null;
     ErlangMacroLayerLog.query(trigger, file.getName());
     ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, trigger);
     if (copy == null || copy.copyFile == null) return null;
