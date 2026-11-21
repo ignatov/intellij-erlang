@@ -156,6 +156,37 @@ public class RebarConfigurationFormTest extends BasePlatformTestCase {
     }
   }
 
+  // #1416: an empty path is not a rebar; since JDK 25 it is the current directory, which the check used to run.
+  public void testEmptyPathStartsNoProcess() {
+    assertEquals("N/A", checkedVersion(""));
+  }
+
+  public void testBlankPathStartsNoProcess() {
+    assertEquals("N/A", checkedVersion("  "));
+  }
+
+  // #1416: a directory is not run, directly or with escript.
+  public void testDirectoryStartsNoProcess() throws IOException {
+    File directory = FileUtil.createTempDirectory("rebarDirectory", null, true);
+    try {
+      assertEquals("Path " + directory.getPath() + " is a directory, not a file", checkedVersion(directory.getPath()));
+    }
+    finally {
+      FileUtil.delete(directory);
+    }
+  }
+
+  private static String checkedVersion(String rebarPath) {
+    AtomicReference<String> version = new AtomicReference<>();
+    RebarConfigurationForm.validateRebarPath(rebarPath, null, version::set);
+    long deadline = System.currentTimeMillis() + 20000;
+    while (version.get() == null && System.currentTimeMillis() < deadline) {
+      PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+      PlatformTestUtil.waitForAlarm(10);
+    }
+    return version.get();
+  }
+
   private static void dispatchEventsFor(long millis) {
     long end = System.currentTimeMillis() + millis;
     while (System.currentTimeMillis() < end) {
