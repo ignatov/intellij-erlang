@@ -89,6 +89,25 @@ public final class ErlangMacroLayer {
   /** Diagnostic only: {@code erlang.macro.layer.edt=allow} lets the UI thread build a copy (default: never). */
   private static final boolean EDT_BUILD_DEFAULT = "allow".equals(read("erlang.macro.layer.edt", "ERLANG_MACRO_LAYER_EDT"));
   private static volatile @Nullable Boolean ourTestEdtBuild;
+  /**
+   * Round 5: {@code erlang.macro.layer.gate} / {@code ERLANG_MACRO_LAYER_GATE} = {@code wide} restores the gate of round 4
+   * (a form asks the copy as soon as it uses a visible macro; for the soundness check of the narrow gate). Default:
+   * narrow (only forms that need substitution ask).
+   */
+  private static final boolean GATE_WIDE_DEFAULT = "wide".equals(read("erlang.macro.layer.gate", "ERLANG_MACRO_LAYER_GATE"));
+  private static volatile @Nullable Boolean ourTestGateWide;
+
+  static boolean isGateWide() {
+    Boolean b = ourTestGateWide;
+    return b != null ? b : GATE_WIDE_DEFAULT;
+  }
+
+  @TestOnly
+  public static void setGateWideForTests(boolean wide, @NotNull Disposable parent) {
+    Boolean previous = ourTestGateWide;
+    ourTestGateWide = wide;
+    Disposer.register(parent, () -> ourTestGateWide = previous);
+  }
 
   static boolean isEdtBuildAllowed() {
     Boolean b = ourTestEdtBuild;
@@ -391,7 +410,12 @@ public final class ErlangMacroLayer {
     final List<VirtualFile> headers = new ArrayList<>();
     final Object[] deps;
     final @NotNull IncludeTracker includes;
+    /** Round 5: the visible macros that are not plain (see {@link #classify}); the others need no substitution. */
+    final Set<String> nonPlain = new HashSet<>();
+    /** Round 5: the variables of macro bodies that are not parameters of their macro. */
+    final Set<String> freeBodyVars = new HashSet<>();
     final ConcurrentHashMap<Integer, Boolean> formUse = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<Integer, Boolean> formNeedsCopy = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formError = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Set<String>> formArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
@@ -627,12 +651,17 @@ public final class ErlangMacroLayer {
     // own macros
     Set<String> names = new HashSet<>();
     Set<String> bodyVars = new HashSet<>();
+    Map<String, List<ErlangMacroExpander.DefineShape>> shapes = new HashMap<>();
     for (ErlangMacrosDefinition d : file.getMacroses()) {
       ProgressManager.checkCanceled();
       String n = d.getName();
       if (n != null) names.add(n);
       ErlangMacrosBody body = d.getMacrosBody();
       if (body != null) for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(body, ErlangQVar.class)) bodyVars.add(v.getText());
+      if (n != null) {
+        ErlangMacroExpander.DefineShape shape = ErlangMacroExpander.defineShape(leafTokens(d));
+        shapes.computeIfAbsent(n, k -> new ArrayList<>()).add(shape != null && shape.name().equals(n) ? shape : unknownShape(n));
+      }
     }
     // headers, the way master resolves includes
     Map<String, ErlangMacroExpander.HeaderSummary> top = new HashMap<>();
@@ -642,7 +671,7 @@ public final class ErlangMacroLayer {
     try {
       for (Map.Entry<String, ErlangFile> e : direct.get(file).entrySet()) {
         if (e.getValue() == null) throw new Refusal("unresolved-include");
-        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, direct));
+        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, shapes, direct));
       }
     }
     catch (Refusal r) {
@@ -653,11 +682,68 @@ public final class ErlangMacroLayer {
     if (refusal == null) {
       t.names.addAll(names);
       t.bodyVars.addAll(bodyVars);
+      classify(t, shapes);
       t.top.putAll(top);
       t.nested.putAll(nested);
     }
     t.headers.addAll(headers);
     return t;
+  }
+
+  /**
+   * Round 5: which visible macros need substitution. A macro is plain when every definition of its name (in the file and
+   * in its headers, any arity, any conditional branch) has a locally plain body ({@link ErlangMacroExpander#isPlainBody})
+   * and every macro name used in those bodies is predefined or is itself plain (transitively); a name used in a body
+   * that the file cannot see makes the macro not plain.
+   */
+  private static void classify(@NotNull Table t, @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes) {
+    for (String name : t.names) {
+      List<ErlangMacroExpander.DefineShape> list = shapes.get(name);
+      if (list == null || list.isEmpty()) {
+        t.nonPlain.add(name);
+        continue;
+      }
+      for (ErlangMacroExpander.DefineShape shape : list) {
+        t.freeBodyVars.addAll(shape.freeVars());
+        if (!shape.plainBody()) t.nonPlain.add(name);
+      }
+    }
+    boolean changed = true;
+    while (changed) {
+      changed = false;
+      for (String name : t.names) {
+        if (t.nonPlain.contains(name)) continue;
+        uses:
+        for (ErlangMacroExpander.DefineShape shape : shapes.get(name)) {
+          for (String used : shape.nestedUses()) {
+            if (ErlangMacroExpander.PREDEFINED.contains(used)) continue;
+            if (!t.names.contains(used) || t.nonPlain.contains(used)) {
+              t.nonPlain.add(name);
+              changed = true;
+              break uses;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private static @NotNull ErlangMacroExpander.DefineShape unknownShape(@NotNull String name) {
+    return new ErlangMacroExpander.DefineShape(name, -1, List.of(), false, Set.of(), Set.of());
+  }
+
+  /** The significant leaves of an element as expander tokens (types and texts only). */
+  private static @NotNull List<ErlangMacroExpander.Tok> leafTokens(@NotNull PsiElement element) {
+    List<ErlangMacroExpander.Tok> r = new ArrayList<>();
+    int end = element.getTextRange().getEndOffset();
+    for (PsiElement leaf = PsiTreeUtil.firstChild(element); leaf != null; leaf = PsiTreeUtil.nextLeaf(leaf)) {
+      int start = leaf.getTextRange().getStartOffset();
+      if (start >= end) break;
+      if (leaf instanceof PsiWhiteSpace || leaf instanceof PsiComment || leaf.getTextLength() == 0) continue;
+      r.add(new ErlangMacroExpander.Tok(leaf.getNode().getElementType(), leaf.getText(), ErlangMacroExpander.SRC_NONE, start,
+                                        start + leaf.getTextLength(), null));
+    }
+    return r;
   }
 
   private static final class Refusal extends Exception {
@@ -686,6 +772,7 @@ public final class ErlangMacroLayer {
     @NotNull ErlangFile header, @NotNull List<VirtualFile> path,
     @NotNull Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested,
     @NotNull List<VirtualFile> headers, @NotNull Set<String> names, @NotNull Set<String> bodyVars,
+    @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes,
     @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct) throws Refusal {
     VirtualFile vf = header.getOriginalFile().getVirtualFile();
     if (vf == null) throw new Refusal("unresolved-include");
@@ -701,6 +788,7 @@ public final class ErlangMacroLayer {
       }
     }
     if (nested.containsKey(s)) return s;
+    for (ErlangMacroExpander.DefineShape shape : s.defineShapes()) shapes.computeIfAbsent(shape.name(), k -> new ArrayList<>()).add(shape);
     Map<String, ErlangMacroExpander.HeaderSummary> children = new HashMap<>();
     nested.put(s, children);
     if (s.includes().isEmpty()) return s;
@@ -711,7 +799,7 @@ public final class ErlangMacroLayer {
         String k = key(d.attribute, d.includeString());
         ErlangFile child = resolved.get(k);
         if (child == null) throw new Refusal("unresolved-include");
-        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, direct));
+        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, shapes, direct));
       }
     }
     finally {
@@ -885,6 +973,11 @@ public final class ErlangMacroLayer {
            " formUses=" + (form != null && formUsesMacro(t, form)) + " argVars=" + (form == null ? null : argumentVars(t, form)) +
            " refClass=" + ref.getClass().getSimpleName() + " copy=" + (c == null ? null : c.expansion.text.length()) +
            " answers=" + (c == null ? null : c.answers.keySet());
+  }
+
+  @TestOnly
+  static boolean formUsesMacroForTests(@NotNull Table t, @Nullable PsiElement form) {
+    return formUsesMacro(t, form);
   }
 
   /** Why the layer gives master's behaviour for the whole file (unresolved include, cycle, ...), or null. */
@@ -1108,6 +1201,79 @@ public final class ErlangMacroLayer {
 
   private static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
     return t.formError.computeIfAbsent(form.getTextRange().getStartOffset(), k -> PsiTreeUtil.hasErrorElements(form));
+  }
+
+  /**
+   * Round 5: the form uses a visible macro and needs substitution: the copy may answer for it. That is the case when
+   * the form is broken in the main tree, or starts with {@code ?}, or has a use {@code ?NAME} of a visible macro that
+   * is not plain ({@link #classify}), or of a plain macro in a position other than a plain expression slot
+   * ({@link #isPlainPosition}). A directive ({@code -define}, {@code -include}, {@code -ifdef}, ...) never needs it:
+   * the copy keeps directives as they are and never answers inside them. With the wide gate: every form with a use.
+   */
+  static boolean formNeedsCopy(@NotNull Table t, @Nullable PsiElement form) {
+    if (!formUsesMacro(t, form)) return false;
+    if (isGateWide()) return true;
+    return t.formNeedsCopy.computeIfAbsent(form.getTextRange().getStartOffset(), k -> computeFormNeedsCopy(t, form));
+  }
+
+  private static boolean computeFormNeedsCopy(@NotNull Table t, @NotNull PsiElement form) {
+    if (form instanceof PsiErrorElement) return true;
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    if (first == null || first instanceof PsiErrorElement || "?".equals(first.getText())) return true;
+    if (formHasError(t, form)) return true;
+    if ("-".equals(first.getText())) {
+      PsiElement attribute = PsiTreeUtil.nextVisibleLeaf(first);
+      if (attribute != null && ErlangMacroExpander.isDirectiveName(attribute.getText())) return false;
+    }
+    int end = form.getTextRange().getEndOffset();
+    for (PsiElement leaf = first; leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
+      if (leaf.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_QMARK) continue;
+      PsiElement parent = leaf.getParent();
+      if (parent instanceof ErlangMacrosArg) continue; // ??X: the expander leaves it as it is
+      if (!(parent instanceof ErlangMacros m) || leaf != m.getFirstChild()) return true;
+      ErlangMacrosName nameElement = m.getMacrosName();
+      if (nameElement == null) return true;
+      String name = StringUtil.unquoteString(nameElement.getText(), '\'');
+      if (!t.names.contains(name)) continue; // predefined or invisible: never substituted
+      if (t.nonPlain.contains(name) || !isPlainPosition(m)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Round 5: the macro use stands alone in a slot of a value: a whole expression ({@code ?M}), the callee of a local
+   * call ({@code ?M(...)}), a whole type operand, or the module of a remote call ({@code ?M:f(...)}: the remote function
+   * reference never asks the layer). It is not next to {@code #} (a record name), and not before {@code :} or
+   * {@code (} unless it is the callee or the module of a call. In any other position (a record name, the module of a
+   * fun or of a remote type, a field name, an arity, a string concatenation, an export entry, ...) the body gives the
+   * context of other names, so the use needs substitution even when its macro is plain.
+   */
+  private static boolean isPlainPosition(@NotNull ErlangMacros m) {
+    PsiElement prev = PsiTreeUtil.prevVisibleLeaf(m);
+    if (prev != null && "#".equals(prev.getText())) return false;
+    PsiElement unit = m;
+    PsiElement parent = m.getParent();
+    if (parent instanceof ErlangQAtom && onlyChild(parent, m)) {
+      unit = parent;
+      parent = parent.getParent();
+    }
+    if (parent instanceof ErlangFunctionCallExpression call && unit instanceof ErlangQAtom && call.getQAtom() == unit) return true;
+    if (parent instanceof ErlangModuleRef && unit instanceof ErlangQAtom && parent.getParent() instanceof ErlangGlobalFunctionCallExpression) {
+      return true;
+    }
+    boolean slot = parent instanceof ErlangMaxExpression && onlyChild(parent, unit) ||
+                   unit == m && parent instanceof ErlangIntType && onlyChild(parent, m);
+    if (!slot) return false;
+    PsiElement next = PsiTreeUtil.nextVisibleLeaf(m);
+    return next == null || !":".equals(next.getText()) && !"(".equals(next.getText());
+  }
+
+  private static boolean onlyChild(@NotNull PsiElement parent, @NotNull PsiElement child) {
+    for (PsiElement c = parent.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c == child || c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -1345,7 +1511,13 @@ public final class ErlangMacroLayer {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
       return null;
     }
-    boolean formHasUse = formUsesMacro(t, topForm(element));
+    PsiElement form = topForm(element);
+    boolean formHasUse = formUsesMacro(t, form);
+    if (formHasUse && !formNeedsCopy(t, form) && !hasTopLevelMacroForm(file, t)) {
+      // round 5: the form's macros need no substitution, and no top-level form can make a name: the copy has no answer
+      mark(o, "gate:plain-form");
+      return null;
+    }
     if (!formHasUse) {
       if (!hasTopLevelMacroForm(file, t)) {
         mark(o, "gate:form-no-use");
@@ -1485,6 +1657,10 @@ public final class ErlangMacroLayer {
     PsiElement form = topForm(element);
     if (form == null || !formUsesMacro(t, form)) {
       mark(o, "gate:form-no-use");
+      return ResolveResult.EMPTY_ARRAY;
+    }
+    if (!formNeedsCopy(t, form)) {
+      mark(o, "gate:plain-form");
       return ResolveResult.EMPTY_ARRAY;
     }
     // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form

@@ -92,6 +92,23 @@ public final class ErlangMacroExpander {
       this.defines = defines;
     }
 
+    private volatile List<DefineShape> myShapes;
+
+    /** Round 5: the shapes of the header's {@code -define} directives (for the "needs substitution" gate); cached. */
+    public @NotNull List<DefineShape> defineShapes() {
+      List<DefineShape> r = myShapes;
+      if (r == null) {
+        r = new ArrayList<>();
+        for (Directive d : directives) {
+          if (!"define".equals(d.attribute)) continue;
+          DefineShape shape = defineShape(d.tokens);
+          r.add(shape != null ? shape : DefineShape.unknown(d.name()));
+        }
+        myShapes = r = List.copyOf(r);
+      }
+      return r;
+    }
+
     /** The include directives in text order. */
     public @NotNull List<Directive> includes() {
       List<Directive> r = new ArrayList<>();
@@ -486,6 +503,171 @@ public final class ErlangMacroExpander {
       p = formEnd + 1;
     }
     return new HeaderSummary(header, List.copyOf(directives), hash, run.sigCount, defines);
+  }
+
+  /**
+   * Round 5: what the "needs substitution" gate of the macro layer knows of one {@code -define}: its name, its
+   * parameters, whether its body alone is "locally plain" (see {@link #isPlainBody}), the macro names its body uses
+   * (to be checked transitively by the caller), and the variables of its body that are not parameters.
+   */
+  public record DefineShape(@NotNull String name, int arity, @NotNull List<String> params, boolean plainBody,
+                            @NotNull Set<String> nestedUses, @NotNull Set<String> freeVars) {
+    /** A definition that could not be read: never plain. */
+    static @NotNull DefineShape unknown(@NotNull String name) {
+      return new DefineShape(name, -1, List.of(), false, Set.of(), Set.of());
+    }
+  }
+
+  /**
+   * Round 5: the shape of a {@code -define} directive given as its significant tokens ({@code - define ( Name ... ) .}),
+   * as the expander reads it; null when the expander would ignore it (a malformed or a predefined name).
+   */
+  public static @Nullable DefineShape defineShape(@NotNull List<Tok> t) {
+    int to = t.size() - 1;
+    int p = 3;
+    if (p > to || Run.type(t, 2) != ERL_PAR_LEFT) return null;
+    Name n = tokName(t, p);
+    if (n == null) return null;
+    p = n.last + 1;
+    int arity = -1;
+    List<String> params = new ArrayList<>();
+    if (Run.type(t, p) == ERL_PAR_LEFT) {
+      p++;
+      if (Run.type(t, p) == ERL_PAR_RIGHT) {
+        p++;
+      }
+      else {
+        while (true) {
+          if (Run.type(t, p) != ERL_VAR) return null;
+          params.add(t.get(p).text());
+          p++;
+          if (Run.type(t, p) == ERL_COMMA) {
+            p++;
+            continue;
+          }
+          if (Run.type(t, p) == ERL_PAR_RIGHT) {
+            p++;
+            break;
+          }
+          return null;
+        }
+      }
+      arity = params.size();
+    }
+    int bodyEnd = Run.type(t, to) == ERL_DOT ? to - 1 : to;
+    if (Run.type(t, bodyEnd) != ERL_PAR_RIGHT) return null;
+    List<Tok> body;
+    if (Run.type(t, p) == ERL_COMMA) body = t.subList(p + 1, bodyEnd);
+    else if (p == bodyEnd) body = List.of();
+    else return null;
+    if (PREDEFINED.contains(n.name)) return null;
+    Set<String> nested = new HashSet<>();
+    Set<String> free = new HashSet<>();
+    boolean plain = isPlainBody(body, params, nested, free);
+    return new DefineShape(n.name, arity, List.copyOf(params), plain, nested, free);
+  }
+
+  /** Tokens that never occur in a plain body: they make clauses, patterns, scopes or sequences. */
+  private static final TokenSet NOT_IN_PLAIN_BODY = TokenSet.create(
+    ERL_END, ERL_ARROW, ERL_OR_OR, ERL_OP_LT_MINUS, ERL_OP_LT_EQ, ERL_OP_LT_COLON_MINUS, ERL_OP_LT_COLON_EQ, ERL_OP_MAYBE_EQ,
+    ERL_WHEN, ERL_OF, ERL_AFTER, ERL_CATCH, ERL_OP_EXL, ERL_SEMI, ERL_BEGIN, ERL_CASE, ERL_IF, ERL_RECEIVE, ERL_TRY,
+    ERL_MAYBE, ERL_ELSE, ERL_COLON_COLON, ERL_DOT_DOT, ERL_DOT_DOT_DOT, ERL_OP_AND_AND);
+
+  /**
+   * Round 5: a body is "locally plain" when, read as tokens, it cannot bind, scope or capture anything around it:
+   * <ul>
+   *   <li>it is not empty, and its only variables are its parameters ({@code ??P} only for a parameter P; {@code _}
+   *   counts as a variable that is not a parameter);</li>
+   *   <li>it has no token that makes a clause, a pattern, a scope or a sequence: {@code end -> || <- <= <:- <:= ?= when
+   *   of after catch ! ; begin case if receive try maybe else :: .. ... &&}; so no block, fun clause, comprehension,
+   *   match on a parameter or send;</li>
+   *   <li>{@code =} occurs only directly inside the braces of a record ({@code #r{f = A}}), {@code ,} only inside
+   *   brackets, {@code |} only directly inside a list, {@code .} only after {@code #name} (record field access),
+   *   {@code fun} only as {@code fun Name/Arity} or {@code fun M:F/A} (not followed by {@code (});</li>
+   *   <li>its brackets ({@code () [] {} << >>}) are balanced, it does not start with a binary-only operator and does
+   *   not end with an operator, and it does not look like an attribute ({@code -name(});</li>
+   *   <li>every {@code ?} starts a nested macro use {@code ?Name} (collected in {@code nestedUses}, which the caller
+   *   checks transitively) or a stringified parameter {@code ??P}.</li>
+   * </ul>
+   * The variables of the body that are not parameters go to {@code freeVars} in every case.
+   */
+  static boolean isPlainBody(@NotNull List<Tok> body, @NotNull List<String> params, @NotNull Set<String> nestedUses,
+                             @NotNull Set<String> freeVars) {
+    boolean plain = !body.isEmpty();
+    Deque<IElementType> stack = new ArrayDeque<>();
+    Deque<Boolean> recordBrace = new ArrayDeque<>();
+    for (int i = 0; i < body.size(); i++) {
+      Tok tok = body.get(i);
+      IElementType t = tok.type;
+      if (t == ERL_QMARK) {
+        if (i + 1 < body.size() && body.get(i + 1).type == ERL_QMARK) {
+          // ??P: the stringified argument; only for a parameter
+          if (!(i + 2 < body.size() && body.get(i + 2).type == ERL_VAR && params.contains(body.get(i + 2).text))) plain = false;
+          else i += 2;
+          continue;
+        }
+        Name nested = tokName(body, i + 1);
+        if (nested == null) plain = false;
+        else {
+          nestedUses.add(nested.name);
+          i = nested.last;
+        }
+        continue;
+      }
+      if (t == ERL_VAR) {
+        if (!params.contains(tok.text)) {
+          freeVars.add(tok.text);
+          plain = false;
+        }
+        continue;
+      }
+      if (!plain) continue; // keep collecting the free variables and nested uses
+      if (NOT_IN_PLAIN_BODY.contains(t)) {
+        plain = false;
+        continue;
+      }
+      if (t == ERL_PAR_LEFT || t == ERL_BRACKET_LEFT || t == ERL_CURLY_LEFT || t == ERL_BIN_START) {
+        recordBrace.push(t == ERL_CURLY_LEFT && isRecordBrace(body, i));
+        stack.push(t);
+        continue;
+      }
+      if (t == ERL_PAR_RIGHT || t == ERL_BRACKET_RIGHT || t == ERL_CURLY_RIGHT || t == ERL_BIN_END) {
+        IElementType open = stack.isEmpty() ? null : stack.pop();
+        if (!recordBrace.isEmpty()) recordBrace.pop();
+        if (open == null || Run.matching(open) != t) plain = false;
+        continue;
+      }
+      if (t == ERL_COMMA && stack.isEmpty()) plain = false;
+      else if (t == ERL_OP_OR && stack.peek() != ERL_BRACKET_LEFT) plain = false;
+      else if (t == ERL_OP_EQ && (stack.peek() != ERL_CURLY_LEFT || !Boolean.TRUE.equals(recordBrace.peek()))) plain = false;
+      else if (t == ERL_DOT && !(i >= 2 && body.get(i - 2).type == ERL_RADIX ||
+                                 i >= 3 && body.get(i - 3).type == ERL_RADIX && body.get(i - 2).type == ERL_QMARK)) {
+        plain = false;
+      }
+      else if (t == ERL_FUN && i + 1 < body.size() && body.get(i + 1).type == ERL_PAR_LEFT) plain = false;
+    }
+    if (!plain) return false;
+    if (!stack.isEmpty()) return false;
+    if (BINARY_ONLY_OPERATORS.contains(body.get(0).type)) return false;
+    if (ANY_OPERATOR_OR_DANGLING.contains(body.get(body.size() - 1).type)) return false;
+    return !(body.size() >= 3 && body.get(0).type == ERL_OP_MINUS && body.get(1).type == ERL_ATOM_NAME &&
+             body.get(2).type == ERL_PAR_LEFT);
+  }
+
+  /** The '{' at i opens a record: {@code #name{}, #'name'{}, #?NAME{}}. */
+  private static boolean isRecordBrace(@NotNull List<Tok> body, int i) {
+    if (i >= 2 && body.get(i - 1).type == ERL_ATOM_NAME && body.get(i - 2).type == ERL_RADIX) return true;
+    if (i >= 4 && body.get(i - 1).type == ERL_SINGLE_QUOTE && body.get(i - 3).type == ERL_SINGLE_QUOTE &&
+        body.get(i - 4).type == ERL_RADIX) {
+      return true;
+    }
+    return i >= 3 && (body.get(i - 1).type == ERL_ATOM_NAME || body.get(i - 1).type == ERL_VAR) &&
+           body.get(i - 2).type == ERL_QMARK && body.get(i - 3).type == ERL_RADIX;
+  }
+
+  /** Round 5: the name is the name of a directive ({@code -define}, {@code -include}, {@code -ifdef}, ...). */
+  public static boolean isDirectiveName(@Nullable String attribute) {
+    return attribute != null && DIRECTIVES.contains(attribute);
   }
 
   static final class Def {
