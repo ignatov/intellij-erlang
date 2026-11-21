@@ -659,6 +659,106 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> fun <caret>", "foo() -> fun foo/0", Lookup.NORMAL_SELECT_CHAR);
   }
 
+  public void testRemoteFunctionExpressionQuotedWithStartQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>'", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotesAscii() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionCallQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:dec_<caret>'", "dec_D-1", "foo() -> mymodule:'dec_D-1'(<caret>)");
+  }
+
+  public void testModuleCompletionQuotedWithEndQuote() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResultWithItem("foo() -> quo<caret>'", "quoted-behaviour", "foo() -> 'quoted-behaviour':<caret>");
+  }
+
+  public void testRemoteFunctionExpressionPlainNameWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'ba<caret>'.", "bar", "foo() -> fun mymodule:'bar'/1<caret>.");
+  }
+
+  public void testRemoteFunctionCallPlainNameWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:ba<caret>'.", "bar", "foo() -> mymodule:'bar'(<caret>).");
+  }
+
+  public void testModuleCompletionPlainNameWithEndQuote() {
+    myFixture.configureByText("plain_module.erl", "-module(plain_module).");
+    doCheckResultWithItem("foo() -> plain_mod<caret>'.", "plain_module", "foo() -> 'plain_module':<caret>.");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> mymod<caret>'dec_D-1'(1, 2).", "mymodule", "foo() -> mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  public void testModuleCompletionInFunExpressionBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymod<caret>'dec_D-1'/2.", "mymodule", "foo() -> fun mymodule:<caret>'dec_D-1'/2.");
+  }
+
+  public void testRemoteFunctionCallBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:ba<caret>'my-atom'.", "bar", "foo() -> mymodule:bar(<caret>)'my-atom'.");
+  }
+
+  public void testLocalFunctionCallBeforeQuotedAtom() {
+    doCheckResultWithItem("bar() -> ok. foo() -> ba<caret>'my-atom'.", "bar", "bar() -> ok. foo() -> bar()<caret>'my-atom'.");
+  }
+
+  public void testLocalFunctionCallAfterQuotedAtom() {
+    doCheckResultWithItem("bar() -> ok. foo() -> 'a'ba<caret>", "bar", "bar() -> ok. foo() -> 'a'bar()<caret>");
+  }
+
+  public void testRemoteFunctionExpressionAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionWithBothQuotesAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'те<caret>'.", "тест",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'тест'/3<caret>.");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = \"a\nit's\", mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  public void testRemoteFunctionExpressionAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = 'a\nb', fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = 'a\nb', mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  private void doCheckQuotedRemoteFunction(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("mymodule.erl",
+                              "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2, bar/1]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok. bar(A) -> ok.");
+    doCheckResultWithItem(before, item, after);
+  }
+
+  private void doCheckResultWithItem(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("a.erl", before);
+    if (myFixture.completeBasic() != null) {
+      LookupElement element = ContainerUtil.find(myFixture.getLookupElements(), e -> item.equals(e.getLookupString()));
+      assertNotNull(element);
+      myFixture.getLookup().setCurrentItem(element);
+      myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    }
+    myFixture.checkResult(after);
+  }
+
   public void test211() {
     doTestInclude("-module(test, [Id, Name::string()]). foo() -> <caret>", "Id", "Name");
   }
