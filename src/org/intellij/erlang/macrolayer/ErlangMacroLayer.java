@@ -67,7 +67,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * Switch: system property {@code erlang.macro.layer}, else the environment variable {@code ERLANG_MACRO_LAYER}:
  * {@code off} or {@code layer} (default). Form cap: {@code erlang.macro.layer.cap} / {@code ERLANG_MACRO_LAYER_CAP},
- * default 2,000 significant tokens per expanded form. Remote fallback ({@code m:f()} to a function made by a macro
+ * default 4,000 significant tokens per expanded form. Remote fallback ({@code m:f()} to a function made by a macro
  * in m): {@code erlang.macro.layer.remote} / {@code ERLANG_MACRO_LAYER_REMOTE} = {@code on}, default off.
  */
 public final class ErlangMacroLayer {
@@ -85,7 +85,29 @@ public final class ErlangMacroLayer {
   public static final AtomicInteger REMOTE_ANSWERED = new AtomicInteger();
 
   private static final Mode DEFAULT_MODE = readMode();
-  public static final int FORM_CAP = readInt("erlang.macro.layer.cap", "ERLANG_MACRO_LAYER_CAP", 2000);
+  /**
+   * Round 5, fix 7: 4,000 (it was 2,000). With the narrow gate a file pays for the copy only when it needs substitution,
+   * and a big function with few expanded tokens (scan_entity_value/7 of xmerl_scan.erl: 2,354) no longer stays broken.
+   * Expansion bombs stay out: a form over the cap is not expanded, and the expander itself stops at
+   * {@link ErlangMacroExpander#MAX_TOKENS_PER_FORM} substituted tokens per form and {@link ErlangMacroExpander#MAX_DEPTH}
+   * nested macro levels.
+   */
+  public static final int FORM_CAP = readInt("erlang.macro.layer.cap", "ERLANG_MACRO_LAYER_CAP", 4000);
+  private static volatile @Nullable Integer ourTestFormCap;
+
+  /** The form cap in force ({@link #FORM_CAP}, or the value a measurement set). */
+  public static int formCap() {
+    Integer c = ourTestFormCap;
+    return c != null ? c : FORM_CAP;
+  }
+
+  @TestOnly
+  public static void setFormCapForTests(int cap, @NotNull Disposable parent) {
+    Integer previous = ourTestFormCap;
+    ourTestFormCap = cap;
+    Disposer.register(parent, () -> ourTestFormCap = previous);
+  }
+
   private static final boolean REMOTE_DEFAULT = "on".equals(read("erlang.macro.layer.remote", "ERLANG_MACRO_LAYER_REMOTE"));
   private static volatile @Nullable Mode ourTestMode;
   private static volatile @Nullable Boolean ourTestRemote;
@@ -1257,7 +1279,7 @@ public final class ErlangMacroLayer {
     CharSequence text = file.getViewProvider().getContents();
     if (file.getTextLength() != text.length() || !file.textMatches(text)) text = file.getText();
     if (probe != null) probe.phase = "expand";
-    Expansion expansion = ErlangMacroExpander.expand(text, new ErlangLexer(project), FORM_CAP,
+    Expansion expansion = ErlangMacroExpander.expand(text, new ErlangLexer(project), formCap(),
                                                      table != null ? table.resolver() : null);
     long p0 = System.nanoTime();
     if (probe != null) {

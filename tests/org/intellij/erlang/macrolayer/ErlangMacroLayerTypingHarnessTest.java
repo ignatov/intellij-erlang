@@ -54,7 +54,8 @@ import java.util.stream.Stream;
  * stands for a consumer such as the target-element search of the IDE; {@code ih} (round 5) does what the IDE's
  * highlighting of the identifier at the caret does, in a cancellable non-blocking read action: it resolves the
  * reference at the caret and asks every reference of the file with the same text whether it refers to that target
- * ({@code isReferenceTo}); {@code form} (round 5) resolves every reference of the top-level form at the caret in a
+ * ({@code isReferenceTo}); an arm name with {@code -cap<N>} (round 5) runs the layer with a form cap of N tokens;
+ * {@code form} (round 5) resolves every reference of the top-level form at the caret in a
  * cancellable non-blocking read action, a stand-in for the IDE's caret-driven callers that ask the layer in a form
  * that needs the copy. An arm name may carry the reader as a suffix
  * ({@code layer+nc}); then it overrides {@code S5_READER}. {@code S5_HOG=<n>}: n threads spin during each run
@@ -146,6 +147,9 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
     Class<Enum> mode = (Class<Enum>)cls("ErlangMacroLayer$Mode");
     call(LAYER, "setModeForTests", Enum.valueOf(mode, arm.startsWith("layer") ? "LAYER" : "OFF"), myArm);
     call(LAYER, "setAblationForTests", arm.contains("noresolve"), arm.contains("novar"), arm.contains("noerr"), myArm);
+    // round 5: "-cap<N>" in the arm name sets the form cap of the layer (fix 7 measurement)
+    Matcher cap = Pattern.compile("-cap(\\d+)").matcher(arm);
+    if (cap.find()) call(LAYER, "setFormCapForTests", Integer.parseInt(cap.group(1)), myArm);
   }
 
   @SuppressWarnings("unchecked")
