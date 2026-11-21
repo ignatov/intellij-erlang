@@ -187,7 +187,7 @@ class PlanTest(Checkout):
                               'not a test class (no name ending with Test, no test method)',
                           'org.intellij.erlang.build.ErlangRebarBuildTest':
                               'a compilation test: only testCompilation runs it',
-                          'jps-plugin/tests/org/intellij/erlang/jps/ErlangBuilderTest.java':
+                          'org.intellij.erlang.jps.ErlangBuilderTest':
                               'a compilation test: only testCompilation runs it',
                           'org.intellij.erlang.GoneTest': 'deleted'},
                          {x['class']: x['why'] for x in result['left_out']})
@@ -202,6 +202,15 @@ class PlanTest(Checkout):
         self.assertEqual([{'class': 'org.intellij.erlang.parser.ErlangParserTest',
                            'why': 'no changed line in the Java files of src/ or jps-plugin/src/ to measure'}],
                          result['left_out'])
+
+    def test_jps_plugin_test_is_named_by_its_class(self):
+        files = [self.change('jps-plugin/tests/org/intellij/erlang/jps/RebarBuilderTest.java'),
+                 self.change('src/org/intellij/erlang/sdk/ErlangSdkType.java')]
+        the_plan = prcoverage.plan(files, self.repository)
+        self.assertEqual([{'class': 'org.intellij.erlang.jps.RebarBuilderTest',
+                           'why': 'a compilation test: only testCompilation runs it'}], the_plan['left_out'])
+        text = prcoverage.report(files, None, the_plan, False)['text']
+        self.assertIn('Not run: RebarBuilderTest (a compilation test: only testCompilation runs it).', text)
 
     def test_no_test_change(self):
         result = prcoverage.plan([self.change('src/org/intellij/erlang/sdk/ErlangSdkType.java')], self.repository)

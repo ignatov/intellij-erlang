@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 
 REPOSITORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 SOURCE_ROOTS = ['src/', 'jps-plugin/src/']
-TEST_ROOT = 'tests/'
+TEST_ROOTS = ['tests/', 'jps-plugin/tests/']
 # Tests that only testCompilation runs (the `test` task excludes them, see build.gradle).
 COMPILATION_TESTS = ['tests/org/intellij/erlang/build/', 'tests/org/intellij/erlang/jps/', 'jps-plugin/tests/']
 # Code that mainly the compilation tests run. A line here that a run without testCompilation did not execute is
@@ -81,8 +81,9 @@ def is_compilation_code(path):
 
 
 def class_name(path):
-    """org.intellij.erlang.X of tests/org/intellij/erlang/X.java."""
-    return path[len(TEST_ROOT):-len('.java')].replace('/', '.')
+    """org.intellij.erlang.X of tests/org/intellij/erlang/X.java or jps-plugin/tests/org/intellij/erlang/X.java."""
+    root = next(r for r in TEST_ROOTS if path.startswith(r))
+    return path[len(root):-len('.java')].replace('/', '.')
 
 
 def has_changed_source_lines(files):
@@ -95,11 +96,10 @@ def plan(files, repository):
     Without a changed line in the Java files of src/ or jps-plugin/src/ nothing is run: there is nothing to measure."""
     run, left_out, notes = [], [], []
     measurable = has_changed_source_lines(files)
-    tests = [f for f in files if f['path'].endswith('.java')
-             and (f['path'].startswith(TEST_ROOT) or f['path'].startswith('jps-plugin/tests/'))]
+    tests = [f for f in files if f['path'].endswith('.java') and any(f['path'].startswith(r) for r in TEST_ROOTS)]
     for f in tests:
         path = f['path']
-        name = class_name(path) if path.startswith(TEST_ROOT) else path
+        name = class_name(path)
         if f['status'] == 'deleted':
             left_out.append({'class': name, 'why': 'deleted'})
             continue
