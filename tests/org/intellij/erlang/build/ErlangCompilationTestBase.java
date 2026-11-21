@@ -308,7 +308,14 @@ public abstract class ErlangCompilationTestBase extends HeavyPlatformTestCase {
     }
 
     public List<CompilerMessage> compile() {
-      List<CompilerMessage> messages = compileWithoutAssertions();
+      return assertNoErrors(compileWithoutAssertions());
+    }
+
+    public List<CompilerMessage> compile(@NotNull Module... modules) {
+      return assertNoErrors(myTester.make(createModulesCompileScope(modules)));
+    }
+
+    private List<CompilerMessage> assertNoErrors(List<CompilerMessage> messages) {
       for (CompilerMessage message : messages) {
         switch (message.getCategory()) {
           case ERROR:

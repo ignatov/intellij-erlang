@@ -83,6 +83,15 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     doTestCrossModulesDependency(headerFile, sourceFile);
   }
 
+  public void testModuleOutsideScopeIsCompiledByLaterBuild() throws Exception {
+    addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
+    addSourceFile(myOtherModule, "module2.erl", ErlangModuleTextGenerator.module("module2").build());
+    compileAndAssertOutput();
+    addSourceFile(myModule, "module3.erl", ErlangModuleTextGenerator.module("module3").build());
+    myCompilationRunner.compile(myOtherModule);
+    compileAndAssertOutput();
+  }
+
   private void compileAndAssertOutput() {
     myCompilationRunner.compile();
     assertSourcesCompiled(myModule, false);
