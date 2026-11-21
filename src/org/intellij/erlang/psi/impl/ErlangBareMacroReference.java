@@ -53,6 +53,8 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
    * looking for a {@code ?} token, an error element or a dummy block.
    */
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
+    // round 6 (next), N3: no read access (a platform listener outside a read action): master's answer, no exception
+    if (org.intellij.erlang.macrolayer.ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
     if (host instanceof StubBasedPsiElement<?> s && s.getStub() != null) return PsiReference.EMPTY_ARRAY; // no AST: no text search here
     ASTNode node = host.getNode();
     if (node == null) return PsiReference.EMPTY_ARRAY;

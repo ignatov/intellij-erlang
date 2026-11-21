@@ -50,7 +50,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
 
   /** The references of the host's candidate tokens (empty when the layer is off or the token's form needs no copy). */
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
-    if (!ErlangMacroLayer.isEnabled()) return PsiReference.EMPTY_ARRAY;
+    if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
     List<PsiElement> leaves = host instanceof PsiFile file
                               ? CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(candidates(file), file))
                               : candidates(host);

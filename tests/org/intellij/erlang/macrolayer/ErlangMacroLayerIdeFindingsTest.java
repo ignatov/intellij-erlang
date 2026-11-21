@@ -94,6 +94,26 @@ public class ErlangMacroLayerIdeFindingsTest extends ErlangLightPlatformCodeInsi
                  .anyMatch(a -> a instanceof ErlangMacroLayerExpansionErrorAnnotator));
   }
 
+  /**
+   * N3 (from the real IDE): a platform listener asked the references of an element on the UI thread without a read
+   * action, and the layer's hosted references threw "Read access is allowed from inside read-action only". Outside a
+   * read action they now answer what master answers (none), without an exception and without a build.
+   */
+  public void testHostedReferencesOutsideAReadAction() throws Exception {
+    PsiFile f = myFixture.addFileToProject("p/nora.erl", ErlangMacroUseTest.OWNER.replace("-module(main).", "-module(nora)."));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    int at = f.getText().indexOf("foo?PAR");
+    com.intellij.psi.PsiElement atom = f.findElementAt(at).getParent();
+    com.intellij.psi.PsiElement body = com.intellij.psi.util.PsiTreeUtil.getParentOfType(atom, org.intellij.erlang.psi.ErlangClauseBody.class);
+    int builds0 = builds().size();
+    String r = com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ErlangMacroLayerTokenReference.find(atom).length + " " + ErlangMacroLayerTokenReference.find(body).length + " " +
+            org.intellij.erlang.psi.impl.ErlangBareMacroReference.find(body).length).get();
+    assertEquals("0 0 0", r);
+    assertEquals(builds0, builds().size());
+  }
+
   /** 1d: an unresolved macro used where error recovery left bare tokens is reported once per use (rebar_fetch.erl). */
   public void testUnresolvedBareMacroIsReportedOnce() {
     String text = """

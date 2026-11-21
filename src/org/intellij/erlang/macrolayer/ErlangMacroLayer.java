@@ -669,7 +669,7 @@ public final class ErlangMacroLayer {
 
   /** A real .erl file the layer may work on: enabled, not a copy, not a console, not a header, not during indexing. */
   static @Nullable ErlangFile layerFile(@Nullable PsiElement element) {
-    if (!isEnabled()) return null;
+    if (!isEnabled() || noReadAccess()) return null;
     ErlangFile file = realFile(element);
     if (file == null) return null;
     VirtualFile vf = file.getOriginalFile().getVirtualFile();
@@ -677,6 +677,22 @@ public final class ErlangMacroLayer {
     if (!name.endsWith(".erl")) return null;
     if (DumbService.isDumb(file.getProject())) return null;
     return file;
+  }
+
+  private static final java.util.concurrent.atomic.AtomicBoolean NO_READ_ACCESS_LOGGED = new java.util.concurrent.atomic.AtomicBoolean();
+
+  /**
+   * Round 6 (next), N3: the caller holds no read access (a platform listener on the UI thread outside a read action,
+   * as the next-edit rename listener does). The layer then answers what master answers: nothing. Logged once.
+   */
+  public static boolean noReadAccess() {
+    var app = ApplicationManager.getApplication();
+    if (app == null || app.isReadAccessAllowed()) return false;
+    if (NO_READ_ACCESS_LOGGED.compareAndSet(false, true)) {
+      com.intellij.openapi.diagnostic.Logger.getInstance(ErlangMacroLayer.class).info(
+        "macro layer: asked without read access (" + Thread.currentThread().getName() + "); master's answer");
+    }
+    return true;
   }
 
   /** The summary of a header, made by lexing its text; cached on the header, one per header text. */
