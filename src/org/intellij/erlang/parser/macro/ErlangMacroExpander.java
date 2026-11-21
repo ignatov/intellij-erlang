@@ -817,6 +817,8 @@ public final class ErlangMacroExpander {
     int headerUses, headerAmbiguous, headerConditional;
     int replayDepth;
     int expandedDelta;
+    /** The last {@link #handleUse} met a use that epp rejects (an empty argument, no ')', no definition of its arity). */
+    boolean useRejected;
 
     Run(Base b, int formCap, @Nullable IncludeResolver resolver) {
       this.b = b;
@@ -895,11 +897,13 @@ public final class ErlangMacroExpander {
         String attribute = attributeName(formStart, formEnd);
         boolean directive = attribute != null && DIRECTIVES.contains(attribute);
         List<Use> uses = new ArrayList<>();
-        boolean ambiguous = false, refused = false;
+        boolean ambiguous = false, refused = false, rejected = false;
         if (!directive) {
           for (int q = formStart; q <= formEnd; q++) {
             if (st(q) != ERL_QMARK) continue;
+            useRejected = false;
             Object r = handleUse(q, formEnd);
+            rejected |= useRejected;
             if (r instanceof Use u) {
               uses.add(u);
               q = u.last;
@@ -907,6 +911,12 @@ public final class ErlangMacroExpander {
             else if (r == Outcome.AMBIGUOUS) ambiguous = true;
             else if (r instanceof Outcome o && o != Outcome.PREDEFINED && o != Outcome.NOT_IN_FILE) refused = true;
           }
+        }
+        if (rejected && !uses.isEmpty()) {
+          // epp rejects a use of this form, so erlc rejects the file: the form is not expanded, and its syntax
+          // errors stay as master shows them
+          outcomes.merge(Outcome.SUBSTITUTED, -uses.size(), Integer::sum);
+          uses.clear();
         }
         if (!uses.isEmpty()) {
           int size = formEnd - formStart + 1;
@@ -1134,6 +1144,12 @@ public final class ErlangMacroExpander {
       return ERL_END;
     }
 
+    /** No definition of the name, visible or not, takes this many arguments: epp says "argument mismatch". */
+    boolean noDefinitionWithArity(String name, int arity) {
+      for (Def d : defs.getOrDefault(name, List.of())) if (d.arity == arity) return false;
+      return true;
+    }
+
     Selection select(String name, int arity) {
       if (PREDEFINED.contains(name)) return new Selection(null, Outcome.PREDEFINED);
       List<Def> all = defs.get(name);
@@ -1181,7 +1197,9 @@ public final class ErlangMacroExpander {
           }
         };
         ArgsResult parsed = parseArgs(tokens, 0);
-        if (parsed == null) {
+        if (parsed == null || parsed.hasEmptyArgument()) {
+          // no closing ')' in the form, or an empty argument: epp says "badly formed argument" or "argument mismatch"
+          useRejected = true;
           count(Outcome.BAD_ARGUMENTS);
           return Outcome.BAD_ARGUMENTS;
         }
@@ -1191,6 +1209,7 @@ public final class ErlangMacroExpander {
       }
       Selection selection = select(name, arity);
       if (selection.def == null) {
+        if (selection.outcome == Outcome.ARITY_MISMATCH && noDefinitionWithArity(name, arity)) useRejected = true;
         count(selection.outcome);
         if (selection.outcome == Outcome.AMBIGUOUS || selection.outcome == Outcome.CONDITIONAL) {
           boolean header = false;
@@ -1320,6 +1339,11 @@ public final class ErlangMacroExpander {
   }
 
   record ArgsResult(List<List<Tok>> args, int closeIndex) {
+    /** {@code ?M(, A)}, {@code ?M(A, )}, {@code ?M(A, , B)}: epp rejects an empty argument. */
+    boolean hasEmptyArgument() {
+      for (List<Tok> a : args) if (a.isEmpty()) return true;
+      return false;
+    }
   }
 
   /**
