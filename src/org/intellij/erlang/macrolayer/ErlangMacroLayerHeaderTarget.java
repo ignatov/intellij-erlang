@@ -1,17 +1,28 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
+import com.intellij.ide.util.DeleteNameDescriptionLocation;
+import com.intellij.ide.util.DeleteTypeDescriptionLocation;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
+import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.impl.FakePsiElement;
+import com.intellij.usageView.UsageViewLongNameLocation;
+import com.intellij.usageView.UsageViewNodeTextLocation;
+import com.intellij.usageView.UsageViewShortNameLocation;
+import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.ErlangQVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -155,6 +166,28 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
     PsiFile f = another.getContainingFile();
     TextRange r = currentRange();
     return f != null && myHeader.equals(f.getVirtualFile()) && r != null && r.equals(another.getTextRange());
+  }
+
+  /** What the name is, for the rename dialog, usage views and conflict texts: as for the same element in the header. */
+  public @NotNull String getKind() {
+    if (ErlangQVar.class.isAssignableFrom(myPreferred)) return "variable";
+    if (ErlangFunction.class.isAssignableFrom(myPreferred)) return "function";
+    if (ErlangQAtom.class.isAssignableFrom(myPreferred)) return "atom";
+    return "name";
+  }
+
+  /**
+   * The description of the target for the Erlang description provider: its kind or its name. Other locations
+   * (refactoring texts) are left to the platform's default, which combines the kind and the name.
+   */
+  public @Nullable String describe(@NotNull ElementDescriptionLocation location) {
+    if (location == UsageViewTypeLocation.INSTANCE || location instanceof DeleteTypeDescriptionLocation) return getKind();
+    if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE ||
+        location == UsageViewNodeTextLocation.INSTANCE || location == HighlightUsagesDescriptionLocation.INSTANCE ||
+        location instanceof DeleteNameDescriptionLocation) {
+      return myText;
+    }
+    return null;
   }
 
   @Override

@@ -198,4 +198,27 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     assertFalse(withoutReadAction(t::isValid));
     assertFalse(inBackground(t::isValid));
   }
+
+  // ------------------------------------------------------------------------------------------------ defect 4
+
+  /** P6: the rename dialog, conflict texts and usage views name a header target by its kind, not by a class name. */
+  public void testHeaderTargetHasAHumanName() throws Exception {
+    myFixture.addFileToProject("d4/h.hrl", "-define(H_X, Xh = 1).\n");
+    PsiFile a = myFixture.addFileToProject("d4/a.erl", "-module(a).\n-include(\"h.hrl\").\n-export([g/0]).\ng() -> ?H_X, Xh.\n");
+    highlight(a);
+    PsiElement t = headerTarget(a, "Xh.\n");
+    String texts = inBackground(() -> String.join(" | ",
+      // the label of the rename dialog: RenameDialog.getFullName()
+      com.intellij.usageView.UsageViewUtil.getType(t) + " " + com.intellij.lang.findUsages.DescriptiveNameUtil.getDescriptiveName(t),
+      com.intellij.refactoring.util.RefactoringUIUtil.getDescription(t, true),
+      com.intellij.refactoring.util.RefactoringUIUtil.getDescription(t, false),
+      com.intellij.usageView.UsageViewUtil.getLongName(t),
+      com.intellij.usageView.UsageViewUtil.getShortName(t),
+      com.intellij.psi.ElementDescriptionUtil.getElementDescription(t, com.intellij.usageView.UsageViewNodeTextLocation.INSTANCE),
+      com.intellij.psi.ElementDescriptionUtil.getElementDescription(t, com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation.INSTANCE)));
+    out("D4 " + texts);
+    assertFalse(texts, texts.contains("Macro Layer") || texts.contains("Header Target") || texts.contains("HeaderTarget"));
+    assertEquals("variable", inBackground(() -> com.intellij.usageView.UsageViewUtil.getType(t)));
+    assertTrue(texts, texts.startsWith("variable Xh | "));
+  }
 }
