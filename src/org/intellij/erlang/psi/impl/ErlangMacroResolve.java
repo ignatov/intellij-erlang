@@ -157,6 +157,41 @@ public final class ErlangMacroResolve {
     return r;
   }
 
+  /** F5: the attribute when the name is the one of {@code -ifdef(X)}, {@code -ifndef(X)} or {@code -undef(X)}, else null. */
+  public static @Nullable ErlangAttribute directiveOf(@NotNull ErlangMacrosName name) {
+    if (!(name.getParent() instanceof ErlangAtomAttribute atom) || !(atom.getParent() instanceof ErlangAttribute attribute)) return null;
+    String n = atom.getName();
+    return "ifdef".equals(n) || "ifndef".equals(n) || "undef".equals(n) ? attribute : null;
+  }
+
+  /**
+   * F5: epp tests the name of a directive against what is defined at that point, any arity: the definitions before the
+   * directive in the file, and those of the headers included before it. None: no target (not a definition after it).
+   */
+  public static @NotNull List<ErlangMacrosDefinition> definedBefore(@NotNull ErlangFile file, @NotNull PsiElement directive, @NotNull String name) {
+    int at = directive.getTextRange().getStartOffset();
+    List<ErlangMacrosDefinition> r = new ArrayList<>();
+    for (ErlangMacrosDefinition d : file.getMacroses()) {
+      if (name.equals(d.getName()) && d.getTextRange().getStartOffset() < at) r.add(d);
+    }
+    List<List<ErlangFile>> included = new ArrayList<>();
+    for (org.intellij.erlang.psi.ErlangInclude inc : file.getIncludes()) {
+      if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
+    }
+    for (org.intellij.erlang.psi.ErlangIncludeLib inc : file.getIncludeLibs()) {
+      if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
+    }
+    for (List<ErlangFile> headers : included) {
+      for (ErlangFile h : headers) {
+        for (ErlangMacrosDefinition d : h.getMacroses()) if (name.equals(d.getName()) && !r.contains(d)) r.add(d);
+        for (ErlangMacrosDefinition d : ErlangPsiImplUtil.getErlangMacrosFromIncludes(h, true, "")) {
+          if (name.equals(d.getName()) && !r.contains(d)) r.add(d);
+        }
+      }
+    }
+    return r;
+  }
+
   /** The definitions of the name that the file sees: its own, then those of the headers it includes. */
   public static @NotNull List<ErlangMacrosDefinition> candidates(@NotNull ErlangFile file, @NotNull String name) {
     List<ErlangMacrosDefinition> r = new ArrayList<>();

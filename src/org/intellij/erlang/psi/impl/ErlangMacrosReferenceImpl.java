@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
@@ -65,6 +66,9 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     ErlangMacrosDefinition definition = PsiTreeUtil.getParentOfType(myNameElement, ErlangMacrosDefinition.class);
     if (definition != null && definition.getMacrosName() == myNameElement) return ResolveResult.EMPTY_ARRAY;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
+    // F5: the name of -ifdef/-ifndef/-undef: what is defined at that point, any arity
+    ErlangAttribute directive = ErlangMacroResolve.directiveOf(myNameElement);
+    if (directive != null) return PsiElementResolveResult.createResults(ErlangMacroResolve.definedBefore(file, directive, myReferenceName));
     int arity = ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement));
     List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myReferenceName, arity);
     if (all.isEmpty()) {
@@ -88,6 +92,8 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     // round 6 (next): the name of another -define (another branch, another arity) is a definition, not a use
     if (myNameElement.getParent() instanceof ErlangMacrosDefinition d && d.getMacrosName() == myNameElement) return false;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
+    // F5: a directive's name is about the macro of any arity (a rename of the macro renames it too)
+    if (ErlangMacroResolve.directiveOf(myNameElement) != null) return ErlangMacroResolve.isVisibleOrUnknown(file, definition);
     // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
     List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myReferenceName,
                                                                  ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement)));
