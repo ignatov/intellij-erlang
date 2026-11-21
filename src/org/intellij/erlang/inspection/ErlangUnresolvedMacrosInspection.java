@@ -60,8 +60,11 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       /** D1: epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+        if (!ErlangMacroLayer.isEnabled()) return;
+        ErlangMacrosName name = o.getMacrosName();
+        if (name != null && ErlangMacroResolve.isRedefinition(o)) registerProblem(holder, name, "Redefining macro '" + o.getName() + "'");
         ErlangArgumentDefinitionList list = o.getArgumentDefinitionList();
-        if (list == null || !ErlangMacroLayer.isEnabled()) return;
+        if (list == null) return;
         Set<String> seen = new HashSet<>();
         for (ErlangArgumentDefinition a : list.getArgumentDefinitionList()) {
           String text = a.getText();

@@ -206,6 +206,55 @@ public final class ErlangMacroResolve {
     return true;
   }
 
+  /**
+   * D4: epp's "redefining macro": a second definition of the same name and arity. Only where it is certain: both
+   * definitions in this file, outside any conditional, with no {@code -undef} of the name (at any depth) and no
+   * include between them (a header may undefine it).
+   */
+  public static boolean isRedefinition(@NotNull ErlangMacrosDefinition d) {
+    if (!(d.getContainingFile() instanceof ErlangFile file)) return false;
+    return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+      computeRedefinitions(file), file)).contains(d);
+  }
+
+  private static @NotNull Set<ErlangMacrosDefinition> computeRedefinitions(@NotNull ErlangFile file) {
+    Set<ErlangMacrosDefinition> r = new HashSet<>();
+    Map<String, Set<Integer>> seen = new HashMap<>();
+    int depth = 0;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof ErlangMacrosDefinition d) {
+        String name = d.getName();
+        if (name != null && depth == 0 && !seen.computeIfAbsent(name, k -> new HashSet<>()).add(arity(d))) r.add(d);
+        continue;
+      }
+      if (c instanceof org.intellij.erlang.psi.ErlangInclude || c instanceof org.intellij.erlang.psi.ErlangIncludeLib ||
+          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangInclude.class) != null ||
+          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangIncludeLib.class) != null) {
+        seen.clear();
+        continue;
+      }
+      if (!(c instanceof ErlangAttribute attribute)) continue;
+      if (attribute.getIfAtomAttribute() != null) {
+        depth++;
+        continue;
+      }
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      if (atom == null) continue;
+      switch (atom.getName()) {
+        case "ifdef", "ifndef" -> depth++;
+        case "endif" -> depth = Math.max(0, depth - 1);
+        case "undef" -> {
+          ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+          if (m == null) seen.clear();
+          else seen.remove(com.intellij.openapi.util.text.StringUtil.unquoteString(m.getText(), '\''));
+        }
+        default -> {
+        }
+      }
+    }
+    return r;
+  }
+
   /** Number of parameters, or {@link #NO_ARGUMENTS} without a parameter list. */
   public static int arity(@NotNull ErlangMacrosDefinition d) {
     ErlangArgumentDefinitionList list = d.getArgumentDefinitionList();
