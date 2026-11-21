@@ -265,7 +265,9 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
   /**
    * The identifier highlighting of the platform ({@code IdentifierHighlightingComputer}, the caller of every refused
    * question in the IDE measurement) is a passive query: right after a key press it starts no copy build and no table
-   * build. It is recognised by the real stack, read once for its questions on its thread.
+   * build. It is recognised by the real stack, read once for its questions on its thread. Round 6 (next), item 1: it
+   * waits for the copy instead of answering at once; the next key press (a write action) makes it give up at once,
+   * here in a blocking read action that the write action does not cancel, and the key press does not wait for it.
    */
   public void testTheIdentifierHighlightingIsRefusedByItsStack() throws Exception {
     PsiFile s = myFiles.get("s.erl");
@@ -277,10 +279,21 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
     int searchWalks0 = ErlangMacroLayer.SEARCH_STACK_WALKS.get();
     int tables0 = ErlangMacroLayer.TABLES_BUILT.get();
     ProgressIndicator indicator = new EmptyProgressIndicator();
-    ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> ReadAction.run(() -> {
-      new IdentifierHighlightingComputer(s, editor, ProperTextRange.create(0, s.getTextLength()), caret).computeRanges();
-      new IdentifierHighlightingComputer(s, editor, ProperTextRange.create(0, s.getTextLength()), caret).computeRanges();
-    }), indicator)).get();
+    java.util.concurrent.Future<?> ihc =
+      ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> ReadAction.run(() -> {
+        new IdentifierHighlightingComputer(s, editor, ProperTextRange.create(0, s.getTextLength()), caret).computeRanges();
+        new IdentifierHighlightingComputer(s, editor, ProperTextRange.create(0, s.getTextLength()), caret).computeRanges();
+      }), indicator));
+    Thread.sleep(200);
+    assertFalse("it waits for the copy", ihc.isDone());
+    long k0 = System.nanoTime();
+    typeInto("s.erl"); // the next key press
+    long keyMs = (System.nanoTime() - k0) / 1_000_000;
+    ihc.get(30, java.util.concurrent.TimeUnit.SECONDS);
+    System.out.println("LAYER-AC the key press during the wait took " + keyMs + " ms");
+    assertTrue("the key press did not wait for the query: " + keyMs + " ms", keyMs < 500);
+    assertTrue("it gave up on the key press", ErlangMacroLayerLog.events().stream().anyMatch(
+      e -> e.kind().equals("WAITED") && e.line().contains("write-action")));
     long skipped = ErlangMacroLayerLog.events().stream().filter(e -> e.kind().equals("SKIPPED") && e.line().contains("typing")).count();
     int walks = ErlangMacroLayer.STACK_WALKS.get() - walks0;
     int searchWalks = ErlangMacroLayer.SEARCH_STACK_WALKS.get() - searchWalks0;
@@ -293,8 +306,12 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
     assertTrue("the layer's searcher reads it at most once per search: " + searchWalks, searchWalks <= 2);
   }
 
-  /** The memo of a passive call is bound to its thread and indicator: another call on the same thread walks again. */
+  /**
+   * The memo of a passive call is bound to its thread and indicator: another call on the same thread walks again.
+   * Round 6 (next): the passive call is refused at once (no wait), so that the resolve must build the copy itself.
+   */
   public void testAPassiveMarkDoesNotOutliveItsIndicator() throws Exception {
+    ErlangMacroLayer.setPassiveWaitMillisForTests(0, getTestRootDisposable());
     PsiFile s = myFiles.get("s.erl");
     myFixture.configureFromExistingVirtualFile(s.getVirtualFile());
     Editor editor = myFixture.getEditor();

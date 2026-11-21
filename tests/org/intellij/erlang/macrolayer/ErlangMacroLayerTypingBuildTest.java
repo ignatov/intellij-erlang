@@ -116,7 +116,12 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     Thread.sleep(400); // the last commit is older than the quiet time
     Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
     WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%% more keys, not committed yet\n"));
-    assertEquals("master's answer", "null", resolveLastZ(f));
+    // round 6 (next), item 1: the caller waits for the copy instead of answering at once; the next key press, here
+    // less than the quiet time later and not committed either, makes it give up with master's answer
+    java.util.concurrent.Future<String> query = ApplicationManager.getApplication().executeOnPooledThread(() -> resolveLastZ(f));
+    Thread.sleep(100);
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%% the next key\n"));
+    assertEquals("master's answer", "null", query.get(30, java.util.concurrent.TimeUnit.SECONDS));
     assertEquals("no build by the caret-driven caller", 1, builds().size());
     PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
   }
@@ -161,20 +166,25 @@ public class ErlangMacroLayerTypingBuildTest extends ErlangLightPlatformCodeInsi
     String binding = String.valueOf(f.getText().indexOf("Z)"));
     com.intellij.openapi.editor.Editor editor = myFixture.getEditor();
     editor.getCaretModel().moveToOffset(f.getText().lastIndexOf("Z."));
+    // round 6 (next), item 1: the identifier highlighting after each key waits for the copy; the next key, 80 ms
+    // later, makes it give up (a blocking read action here, so it gives up rather than being cancelled)
+    List<java.util.concurrent.Future<?>> queries = new java.util.ArrayList<>();
     for (char c : "Y = Z + 1, ".toCharArray()) {
       myFixture.type(c);
       PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
       int caret = editor.getCaretModel().getOffset();
-      ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> ReadAction.run(
+      queries.add(ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> ReadAction.run(
         () -> new IdentifierHighlightingComputer(f, editor, ProperTextRange.create(0, f.getTextLength()), caret).computeRanges()),
-                                                                                                             new EmptyProgressIndicator())).get();
+                                                                                                             new EmptyProgressIndicator())));
+      Thread.sleep(80);
     }
     assertEquals("f() -> ?BIND(Z), Y = Z + 1, Z.", f.getText().substring(f.getText().indexOf("f() ->")).trim());
     assertEquals("no build while typing: the editor and the identifier highlighting", 1, builds().size());
     assertTrue("the identifier highlighting was refused", count("SKIPPED") > 0);
 
     myFixture.doHighlighting();
-    assertEquals("highlighting builds once", 2, builds().size());
+    for (java.util.concurrent.Future<?> q : queries) q.get(30, java.util.concurrent.TimeUnit.SECONDS);
+    assertEquals("highlighting builds once; the last identifier highlighting waited for that copy", 2, builds().size());
     assertEquals(binding, resolveInBackground(f, "Z + 1"));
     assertEquals(binding, resolveInBackground(f, "Z."));
     assertEquals("the other callers use that copy", 2, builds().size());

@@ -166,9 +166,9 @@ public class ErlangMacroLayerMacroUseRuleTest extends ErlangLightPlatformCodeIns
 
   /**
    * {@code foo} in {@code foo?PAR}: only the copy makes it the name of a call of foo/0. The identifier highlighting at
-   * it is a passive query: right after a key press it builds nothing and shows master's answer. It is not run again
-   * when the daemon has built the copy (in 262 it runs on caret, selection and document events only); its next run,
-   * still inside the quiet time, uses the daemon's copy and shows all three foo.
+   * it is a passive query: right after a key press it builds nothing. Round 6 (next), item 1: it does not answer at
+   * once with master's answer (the platform would keep that answer until the next edit); it waits until the daemon's
+   * highlighting has built the copy, and then shows all three foo.
    */
   public void testIdentifierHighlightingOfACopyRoleTokenRightAfterAKeyPress() throws Exception {
     open("main.erl", ErlangMacroUseTest.OWNER);
@@ -180,25 +180,25 @@ public class ErlangMacroLayerMacroUseRuleTest extends ErlangLightPlatformCodeIns
     assertTrue(before, before.startsWith(all));
 
     long typed = typeAKey();
-    String refused = identifierHighlighting("f|oo?PAR");
-    System.out.println("MERGED-RULE ihc at foo right after a key press: " + refused + " refusals=" + refusedAsTyping());
-    assertEquals("no build by the identifier highlighting", builds0, builds().size());
-    assertTrue("it was refused as a passive query", refusedAsTyping() > 0);
-    assertFalse("master's answer: not the copy's three foo", refused.startsWith(all));
     // the bare macro use resolves in the main tree: right after the key press too, without a copy
     String par = identifierHighlighting("foo?P|AR");
     System.out.println("MERGED-RULE ihc at PAR right after a key press: " + par);
     assertTrue(par, par.startsWith("occurrences=[12:PAR, 8:PAR]"));
     assertEquals(builds0, builds().size());
+    java.util.concurrent.Future<String> atFoo = ApplicationManager.getApplication().executeOnPooledThread(() -> identifierHighlighting("f|oo?PAR"));
+    Thread.sleep(200);
+    assertFalse("it waits for the copy", atFoo.isDone());
+    assertEquals("no build by the identifier highlighting", builds0, builds().size());
 
     myFixture.doHighlighting();
     System.out.println("MERGED-RULE builds after the daemon's pass: " + buildTriggers());
     assertEquals("the daemon's highlighting builds the copy", builds0 + 1, builds().size());
-    String after = identifierHighlighting("f|oo?PAR");
-    assertInsideTheQuietTime(typed, "the next identifier highlighting");
-    System.out.println("MERGED-RULE ihc at foo after the daemon's pass: " + after);
+    String after = atFoo.get(30, java.util.concurrent.TimeUnit.SECONDS);
+    assertInsideTheQuietTime(typed, "the identifier highlighting right after the key press");
+    System.out.println("MERGED-RULE ihc at foo right after a key press, after the daemon's pass: " + after);
     assertEquals(before, after);
     assertEquals("it used the daemon's copy", builds0 + 1, builds().size());
+    assertTrue("it waited", ErlangMacroLayerLog.events().stream().anyMatch(e -> e.kind().equals("WAITED") && e.line().contains("ready")));
   }
 
   /**

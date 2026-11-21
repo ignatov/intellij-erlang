@@ -1,6 +1,8 @@
 package org.intellij.erlang.macrolayer;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationListener;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
@@ -66,6 +68,24 @@ public final class ErlangMacroLayerRetention implements Disposable {
         }
       }
     }, this);
+    // round 6 (next): a write action waits to start (a key press): a passive query that waits for the copy gives up
+    ApplicationManager.getApplication().addApplicationListener(new ApplicationListener() {
+      @Override
+      public void beforeWriteActionStart(@NotNull Object action) {
+        myWritePendingSince = System.nanoTime();
+        myWritePending = true;
+      }
+
+      @Override
+      public void writeActionStarted(@NotNull Object action) {
+        myWritePending = false;
+      }
+
+      @Override
+      public void afterWriteActionFinished(@NotNull Object action) {
+        myWritePending = false;
+      }
+    }, this);
     // round 5: the own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
     PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
       @Override
@@ -108,6 +128,17 @@ public final class ErlangMacroLayerRetention implements Disposable {
         }
       }
     }, this);
+  }
+
+  private volatile boolean myWritePending;
+  private volatile long myWritePendingSince;
+
+  /**
+   * Round 6 (next): a write action announced its start and has not started yet (it waits for the read actions to end).
+   * A flag older than 5 s is taken as stale (a write action that never started).
+   */
+  boolean isWriteActionPending() {
+    return myWritePending && System.nanoTime() - myWritePendingSince < 5_000_000_000L;
   }
 
   /** Round 6: changes of the rebar.config files of the project (their include paths take part in include resolution). */

@@ -752,6 +752,13 @@ public final class ErlangMacroLayer {
       return underOwnIndicator(() -> table0(file, explicit), file, "table");
     }
     if (refusal == null && cache.building.get() == null && !explicit) refusal = buildRefusal(file);
+    if (TYPING.equals(refusal) && lastTableNeedsCopy(cache)) {
+      // round 6 (next), item 1: a passive query waits for the table of this version (the daemon builds it) rather
+      // than give an answer that the platform would keep (see awaitWhileTyped); only in a file whose last table had a
+      // form that needs the copy: elsewhere master's answer is the layer's answer
+      TableEntry before = cache.entry;
+      if (awaitWhileTyped(file, () -> cache.building.get() != null || cache.entry != before, "table")) return table0(file, explicit);
+    }
     if (refusal != null) {
       ErlangMacroLayerStats.phase("table-skipped:" + refusal, file.getName(), 0);
       ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, refusal, "table");
@@ -1043,6 +1050,10 @@ public final class ErlangMacroLayer {
       Build running = holder.building.get();
       if (running == null && !explicit) {
         String refusal = buildRefusal(file);
+        if (TYPING.equals(refusal) && !onlyBrokenFormsNeedCopy(file, table) &&
+            awaitWhileTyped(file, () -> holder.get() != null || holder.building.get() != null, trigger)) {
+          continue; // round 6 (next), item 1: the copy is there, a build runs, or the quiet time is over
+        }
         if (refusal == null && !isEdtBuildAllowed() && onlyBrokenFormsNeedCopy(file, table)) {
           // round 5: a form broken while the user types, with plain macros only; round 6: no caller builds for it, not
           // even highlighting. The copy of such a form is broken too, so the copy answers nothing in the whole file:
@@ -1131,12 +1142,120 @@ public final class ErlangMacroLayer {
   private static @Nullable String buildRefusal(@NotNull PsiFile file) {
     if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
     if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return null;
+    if (typedWithinQuietTime(file)) return isPassiveCaller(file) ? TYPING : null;
+    return null;
+  }
+
+  private static final String TYPING = "typing";
+
+  /** The file's PSI or its document changed less than {@link #quietMillis()} ago. */
+  private static boolean typedWithinQuietTime(@NotNull PsiFile file) {
     TextTracker tt = textTrackerIfAny(file);
     long quiet = quietMillis();
-    if (tt != null && quiet > 0 && tt.changedWithin(quiet) || quiet > 0 && isBeingTyped(file, quiet)) {
-      return isPassiveCaller(file) ? "typing" : null;
+    return quiet > 0 && (tt != null && tt.changedWithin(quiet) || isBeingTyped(file, quiet));
+  }
+
+  /** The last table of the file had a form that needs the copy (a passive query may then wait for the new one). */
+  private static boolean lastTableNeedsCopy(@NotNull TableCache cache) {
+    TableEntry e = cache.entry;
+    return e != null && e.table.refusal == null && Boolean.TRUE.equals(e.table.anyFormNeedsCopy) &&
+           !Boolean.TRUE.equals(e.table.onlyBrokenFormsNeedCopy);
+  }
+
+  /**
+   * Round 6 (next), item 1: the longest wait of a passive query for the copy, ms ({@code erlang.macro.layer.passive.wait},
+   * default 2,000). The wait ends earlier when the quiet time is over (by default 1 s after the last change).
+   */
+  private static final int PASSIVE_WAIT_MS = readInt("erlang.macro.layer.passive.wait", "ERLANG_MACRO_LAYER_PASSIVE_WAIT", 2000);
+  private static volatile @Nullable Integer ourTestPassiveWait;
+
+  static int passiveWaitMillis() {
+    Integer w = ourTestPassiveWait;
+    return w != null ? w : PASSIVE_WAIT_MS;
+  }
+
+  /** Sets the longest wait of a passive query for the copy (0: a passive query is refused at once, as in round 6). */
+  @TestOnly
+  public static void setPassiveWaitMillisForTests(int millis, @NotNull Disposable parent) {
+    Integer previous = ourTestPassiveWait;
+    ourTestPassiveWait = millis;
+    Disposer.register(parent, () -> ourTestPassiveWait = previous);
+  }
+  /** Round 6 (next): waits of passive queries, and those that ended with the copy or the table there, for tests and measurements. */
+  static final AtomicInteger PASSIVE_WAITS = new AtomicInteger();
+  static final AtomicInteger PASSIVE_WAITS_READY = new AtomicInteger();
+
+  /**
+   * Round 6 (next), item 1: a passive query that the layer refuses while the file is typed in waits for the copy (or
+   * the table) of this version of the file instead of answering at once. The platform keeps the answer of the
+   * identifier highlighting at the caret on range markers of its targets, and drops it only on a change of the
+   * document or of the PSI of the file, or when the editor closes ({@code IdentifierHighlightingManagerImpl} of 262 and
+   * 263); a copy build changes none of these, and the platform runs the identifier highlighting again only on caret,
+   * selection, document and similar events. So an answer given before the copy is there would stay until the next
+   * edit. The wait builds nothing and ends, returning true (ask again), as soon as {@code ready} holds (the daemon's
+   * highlighting, which is never refused, builds the copy soon after typing stops) or the quiet time is over (then the
+   * query builds itself, as every caller does after the quiet time). It is cancellable: the next key press is a write
+   * action, which cancels the read action of the query (in the IDE the platform then runs the query again), so a wait
+   * starts no build and nothing per key press. When a write action waits to start and the wait is not cancelled (a
+   * blocking read action), it gives up within 50 ms and returns false (master's answer), so a key press never waits
+   * for it. It returns false also after {@link #PASSIVE_WAIT_MS}. After a give-up, the later questions of the same
+   * query (the same root progress indicator) do not wait again. No restart of anything: it cannot loop.
+   */
+  private static boolean awaitWhileTyped(@NotNull PsiFile file, @NotNull java.util.function.BooleanSupplier ready, @NotNull String trigger) {
+    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
+    if (root == null || gaveUp(root)) return false;
+    ErlangMacroLayerRetention retention = ErlangMacroLayerRetention.getInstance(file.getProject());
+    long w0 = System.nanoTime();
+    long cap = Math.max(0, passiveWaitMillis()) * 1_000_000L;
+    String outcome = "cancelled";
+    PASSIVE_WAITS.incrementAndGet();
+    try {
+      while (true) {
+        ProgressManager.checkCanceled();
+        if (retention.isWriteActionPending()) {
+          // a non-blocking read action is being cancelled now: let it see that, so that no answer of it is kept
+          long g0 = System.nanoTime();
+          while (System.nanoTime() - g0 < 50_000_000L) {
+            ProgressManager.checkCanceled();
+            java.util.concurrent.locks.LockSupport.parkNanos(1_000_000L);
+          }
+          outcome = "write-action";
+          giveUp(root);
+          return false;
+        }
+        if (ready.getAsBoolean() || !typedWithinQuietTime(file)) {
+          outcome = "ready";
+          PASSIVE_WAITS_READY.incrementAndGet();
+          return true;
+        }
+        if (System.nanoTime() - w0 >= cap) {
+          outcome = "cap";
+          giveUp(root);
+          return false;
+        }
+        java.util.concurrent.locks.LockSupport.parkNanos(10_000_000L);
+        if (Thread.interrupted()) {
+          Thread.currentThread().interrupt();
+          throw new ProcessCanceledException();
+        }
+      }
     }
-    return null;
+    finally {
+      long dt = System.nanoTime() - w0;
+      ErlangMacroLayerStats.phase("passive-wait:" + outcome, file.getName(), dt);
+      ErlangMacroLayerLog.event("WAITED", file.getName(), dt, 0, 0, outcome, trigger);
+    }
+  }
+
+  /** Round 6 (next): root progress indicators of passive queries whose wait gave up (weak keys, identity). */
+  private static final Map<ProgressIndicator, Boolean> GAVE_UP = Collections.synchronizedMap(new WeakHashMap<>());
+
+  private static boolean gaveUp(@NotNull ProgressIndicator root) {
+    return GAVE_UP.containsKey(root);
+  }
+
+  private static void giveUp(@NotNull ProgressIndicator root) {
+    GAVE_UP.put(root, Boolean.TRUE);
   }
 
   /**
