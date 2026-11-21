@@ -37,12 +37,18 @@ intellijPlatformTesting.testIde.register('generateParserFromSources') {
     outputs.upToDateWhen { false }
     outputs.cacheIf { false }
     def systemDir = sandboxSystemDirectory
+    def genDir = new File(erlangProjectDir, 'gen')
     doFirst {
       // Rules that were removed must not leave their PSI behind.
       outputDir.deleteDir()
       // Start with an empty VFS and empty indices: the stubs kept from the last run go stale when src/ or gen/ changes,
-      // and Grammar-Kit then fails with "Outdated stub in index".
+      // and Grammar-Kit then fails with "Outdated stub in index". The directory must exist again when the IDE starts:
+      // the IntelliJ Platform Gradle Plugin passes idea.system.path only for an existing directory, and without it the
+      // IDE uses the caches of the IntelliJ IDEA installed on this machine, which keep the VFS of earlier runs.
       systemDir.get().asFile.deleteDir()
+      systemDir.get().asFile.mkdirs()
+      // gen/ is a source root of the generator's project. After gen/ was deleted, generation starts from an empty one.
+      genDir.mkdirs()
     }
   }
 }
