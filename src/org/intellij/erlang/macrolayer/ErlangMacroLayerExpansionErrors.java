@@ -277,9 +277,9 @@ public final class ErlangMacroLayerExpansionErrors {
 
   /**
    * Every macro the use goes through (its own definition and, transitively, the macros of its body) has a body that
-   * the main tree parsed as expressions or typed fields, not as raw tokens. The plugin's parser falls back to raw
-   * tokens when it cannot read a body; a parse error of such a body's expansion is then most likely one of the
-   * parser's own gaps (measured on the corpus: char literals such as {@code $\)}, based integers with '_'), not erlc's.
+   * the main tree parsed as expressions or typed fields, or a raw body without the tokens of the parser's known gaps
+   * ({@link #rawBodyIsReadable}). The plugin's parser falls back to raw tokens when it cannot read a body; a parse
+   * error of such a body's expansion may then be one of the parser's own gaps, not erlc's.
    */
   private static boolean bodiesParsed(@NotNull ErlangFile file, @NotNull TextRange use, @NotNull String name) {
     PsiElement q = file.findElementAt(use.getStartOffset());
@@ -294,13 +294,31 @@ public final class ErlangMacroLayerExpansionErrors {
     if (depth > ErlangMacroExpander.MAX_DEPTH) return false;
     ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, name, arity);
     ErlangMacrosBody body = d == null ? null : d.getMacrosBody();
-    if (body == null || PsiTreeUtil.getChildOfType(body, ErlangCompositeElement.class) == null) return false;
+    if (body == null) return false;
+    if (PsiTreeUtil.getChildOfType(body, ErlangCompositeElement.class) == null && !rawBodyIsReadable(body)) return false;
     for (ErlangMacros m : PsiTreeUtil.findChildrenOfType(body, ErlangMacros.class)) {
       ErlangMacrosName mn = m.getMacrosName();
       if (mn == null) return false;
       PsiElement id = ErlangPsiImplUtil.getNameIdentifier(mn);
       String nested = id.getText();
       if (!bodiesParsed(file, nested, ErlangMacroResolve.arityAfter(id), seen, depth + 1)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * A body the parser keeps as raw tokens (a fragment: a separator, clauses, map fields, ...) without the tokens where
+   * the parser's own gaps were found on the corpus: a based integer with '_' ({@code 16#FFFF_FFFF}) and char literals
+   * ({@code $\)}, {@code $;}, ...). Of the 16 false errors that raw bodies gave on 6,017 corpus files, all 16 came from
+   * these two kinds of token.
+   */
+  private static boolean rawBodyIsReadable(@NotNull ErlangMacrosBody body) {
+    for (PsiElement leaf = PsiTreeUtil.firstChild(body); leaf != null && PsiTreeUtil.isAncestor(body, leaf, false); leaf = PsiTreeUtil.nextLeaf(leaf)) {
+      IElementType t = leaf.getNode().getElementType();
+      if (t == ErlangTypes.ERL_CHAR) return false;
+      // the lexer reads 16#FFFF_FFFF as 16#FFFF and a variable _FFFF: any based integer counts
+      if (t == ErlangTypes.ERL_INTEGER && (leaf.getText().contains("#") || leaf.getText().contains("_"))) return false;
+      if (t == com.intellij.psi.TokenType.BAD_CHARACTER) return false;
     }
     return true;
   }

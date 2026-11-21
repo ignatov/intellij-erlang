@@ -173,8 +173,21 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
 
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
+    if (mainTreeResolves(myElement)) return ResolveResult.EMPTY_ARRAY;
     Answer a = answer(myLeaf, "token");
     return a == null ? ResolveResult.EMPTY_ARRAY : a.results;
+  }
+
+  /**
+   * The main tree already gives the atom a target (a reference of a provider: the function of {@code rpc:call(N, m, f,
+   * [])}, the record of {@code is_record(X, r)}, ...): the token reference answers only where the main tree has none.
+   */
+  private static boolean mainTreeResolves(@NotNull PsiElement host) {
+    if (!(host instanceof ErlangAtom) || !(host.getParent() instanceof ErlangQAtom q)) return false;
+    PsiReference r = q.getReference();
+    if (r == null) return false;
+    if (r instanceof PsiPolyVariantReference p) return p.multiResolve(false).length > 0;
+    return r.resolve() != null;
   }
 
   @Override
@@ -255,21 +268,26 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     for (int e : copy.toCopyOffsets(abs)) {
       Form form = copy.expansion.formAtExpanded(e);
       if (!copy.isClean(form)) continue;
-      PsiReference c = copy.copyFile.findReferenceAt(e);
-      if (c == null) continue;
-      TextRange cabs = c.getRangeInElement().shiftRight(c.getElement().getTextRange().getStartOffset());
-      if (cabs.getStartOffset() != e || !text.contentEquals(cabs.subSequence(copy.expansion.text))) continue;
-      if (first == null) first = c;
-      // resolve() first: the multiResolve of a function reference is not the same answer (round 5)
-      PsiElement single = c.resolve();
-      if (single != null) {
-        PsiElement real = ErlangMacroLayer.exit(copy.toReal(single), file);
-        if (real != null) targets.add(real);
-      }
-      else if (c instanceof PsiPolyVariantReference p) {
-        for (ResolveResult r : p.multiResolve(false)) {
-          PsiElement real = ErlangMacroLayer.exit(copy.toReal(r.getElement()), file);
+      PsiReference found = copy.copyFile.findReferenceAt(e);
+      if (found == null) continue;
+      for (PsiReference c : found instanceof PsiMultiReference m ? m.getReferences() : new PsiReference[]{found}) {
+        // the atom's own reference (its providers: rpc:call(N, m, f, A), is_record(X, r), ...) is master's, also in the
+        // main tree: only the roles that the expansion gives count
+        if (c instanceof PsiMultiReference || c.getElement() instanceof ErlangQAtom) continue;
+        TextRange cabs = c.getRangeInElement().shiftRight(c.getElement().getTextRange().getStartOffset());
+        if (cabs.getStartOffset() != e || !text.contentEquals(cabs.subSequence(copy.expansion.text))) continue;
+        if (first == null) first = c;
+        // resolve() first: the multiResolve of a function reference is not the same answer (round 5)
+        PsiElement single = c.resolve();
+        if (single != null) {
+          PsiElement real = ErlangMacroLayer.exit(copy.toReal(single), file);
           if (real != null) targets.add(real);
+        }
+        else if (c instanceof PsiPolyVariantReference p) {
+          for (ResolveResult r : p.multiResolve(false)) {
+            PsiElement real = ErlangMacroLayer.exit(copy.toReal(r.getElement()), file);
+            if (real != null) targets.add(real);
+          }
         }
       }
     }
@@ -288,15 +306,15 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     boolean candidate = false;
     for (PsiReference r : find(host)) if (r instanceof ErlangMacroLayerTokenReference t && t.myLeaf == leaf) candidate = true;
     if (!candidate) return null;
+    if (mainTreeResolves(host)) return null;
     Answer a = answer(leaf, "token-inspection");
     if (a == null || a.results.length > 0) return null;
     PsiReference c = a.copyReference;
-    if (c instanceof PsiMultiReference m) {
-      for (PsiReference r : m.getReferences()) if (r instanceof ErlangFunctionReference) c = r;
-    }
     if (!(c instanceof ErlangFunctionReference fr)) return null;
     PsiElement e = c.getElement();
-    if (e.getParent() instanceof ErlangGlobalFunctionCallExpression || c.resolve() != null) return null;
+    // only a local call that the expansion makes of the token (not the reference of a provider, not m:f())
+    if (!(e instanceof ErlangFunctionCallExpression) || e.getParent() instanceof ErlangGlobalFunctionCallExpression) return null;
+    if (fr.getArity() < 0 || c.resolve() != null) return null;
     return fr.getName() + "/" + fr.getArity();
   }
 }

@@ -116,12 +116,20 @@ public class ErlangMacroLayerExpansionErrorTest extends ErlangLightPlatformCodeI
   }
 
   /**
-   * Not shown, on purpose: the body {@code #r.N, N} is raw tokens in the main tree (the parser cannot read
-   * {@code #r.N}), and a parse error of a raw body's expansion may be the parser's own gap (see
-   * ErlangMacroLayerExpansionErrors#bodiesParsed). erlc: syntax error before: 1.
+   * A raw body (the parser cannot read {@code #r.N} as an expression) without the tokens of the parser's known gaps:
+   * checked too. erlc: syntax error before: 1.
    */
-  public void testRawBodyIsNotReported() {
-    doTest("-module(main).\n-export([a/1]).\n-record(r, {f}).\n-define(PAIRF(N), #r.N, N).\na(X) -> {X, ?PAIRF(1)}.\n");
+  public void testRawBodyWithoutKnownGapsIsChecked() {
+    doTest("-module(main).\n-export([a/1]).\n-record(r, {f}).\n-define(PAIRF(N), #r.N, N).\na(X) -> {X, ?PAIRF(" + err("PAIRF", "1", "1") + ")}.\n");
+  }
+
+  /**
+   * Not shown, on purpose: a raw body with a based integer, where the parser has a gap of its own (it reads 16#FF_FF as
+   * 16#FF and a variable _FF); the expansion's parse error is then the parser's (16 such false errors on the corpus).
+   * erlc compiles this file.
+   */
+  public void testRawBodyWithABasedIntegerIsNotChecked() {
+    doTest("-module(main).\n-export([a/1]).\n-define(MASK, 16#FF_FF).\na(X) -> X band ?MASK.\n");
   }
 
   /** The inner macro of a nested use is the broken part: the error is on the outermost use in the file. */
