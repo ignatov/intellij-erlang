@@ -1,16 +1,28 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.codeInsight.highlighting.HighlightUsagesDescriptionLocation;
+import com.intellij.ide.util.DeleteNameDescriptionLocation;
+import com.intellij.ide.util.DeleteTypeDescriptionLocation;
+import com.intellij.lang.Language;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
+import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.impl.FakePsiElement;
+import com.intellij.usageView.UsageViewLongNameLocation;
+import com.intellij.usageView.UsageViewNodeTextLocation;
+import com.intellij.usageView.UsageViewShortNameLocation;
+import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,15 +42,19 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
   private final int myIndex;
   private final String myText;
   private final Class<?> myPreferred;
+  private final @NotNull String myKind;
+  /** The last answer of {@link #isValid()} under read access; it was valid when the layer made it. */
+  private volatile boolean myLastValid = true;
 
   ErlangMacroLayerHeaderTarget(@NotNull Project project, @NotNull VirtualFile header, int directive, int index,
-                               @NotNull String text, @NotNull Class<?> preferred) {
+                               @NotNull String text, @NotNull Class<?> preferred, @NotNull String kind) {
     myProject = project;
     myHeader = header;
     myDirective = directive;
     myIndex = index;
     myText = text;
     myPreferred = preferred;
+    myKind = kind;
   }
 
   private @Nullable PsiFile headerFile() {
@@ -76,14 +92,30 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
     return headerFile();
   }
 
+  /** Erlang: find usages and the other language services take the target as an Erlang element. */
+  @Override
+  public @NotNull Language getLanguage() {
+    return ErlangLanguage.INSTANCE;
+  }
+
   @Override
   public @NotNull Project getProject() {
     return myProject;
   }
 
+  /**
+   * Like {@code PsiFileImpl.isValid()}, this may be called without read access (listeners and expiration checks do).
+   * Then it reads no PSI: it checks the header's virtual file and returns the last answer given under read access.
+   * The answer cannot be fresher anyway: without read access a write action may change the header at any moment.
+   * Under read access it checks that the header's directive still has the token.
+   */
   @Override
   public boolean isValid() {
-    return currentRange() != null;
+    if (myProject.isDisposed() || !myHeader.isValid()) return false;
+    if (!ApplicationManager.getApplication().isReadAccessAllowed()) return myLastValid;
+    boolean valid = currentRange() != null;
+    myLastValid = valid;
+    return valid;
   }
 
   @Override
@@ -152,6 +184,42 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
     PsiFile f = another.getContainingFile();
     TextRange r = currentRange();
     return f != null && myHeader.equals(f.getVirtualFile()) && r != null && r.equals(another.getTextRange());
+  }
+
+  /** What the name is, for the rename dialog, usage views and conflict texts: as for the same element in the header. */
+  public @NotNull String getKind() {
+    return myKind;
+  }
+
+  /** The kind of the element of the copy that a target stands for. */
+  static @NotNull String kindOf(@NotNull PsiElement copyElement) {
+    if (copyElement instanceof ErlangQVar) return "variable";
+    if (copyElement instanceof ErlangFunction) return "function";
+    if (copyElement instanceof ErlangRecordDefinition) return "record";
+    if (copyElement instanceof ErlangTypedExpr) return "record field";
+    if (copyElement instanceof ErlangTypeDefinition) return "type";
+    if (copyElement instanceof ErlangMacrosDefinition) return "macro";
+    if (copyElement instanceof ErlangQAtom) return "atom";
+    return "name";
+  }
+
+  /**
+   * The description of the target for the Erlang description provider: its kind or its name. Other locations
+   * (refactoring texts) are left to the platform's default, which combines the kind and the name.
+   */
+  public @Nullable String describe(@NotNull ElementDescriptionLocation location) {
+    return describe(getKind(), myText, location);
+  }
+
+  /** A description of a layer target by its kind and name; null for the locations left to the platform's default. */
+  static @Nullable String describe(@NotNull String kind, @NotNull String name, @NotNull ElementDescriptionLocation location) {
+    if (location == UsageViewTypeLocation.INSTANCE || location instanceof DeleteTypeDescriptionLocation) return kind;
+    if (location == UsageViewShortNameLocation.INSTANCE || location == UsageViewLongNameLocation.INSTANCE ||
+        location == UsageViewNodeTextLocation.INSTANCE || location == HighlightUsagesDescriptionLocation.INSTANCE ||
+        location instanceof DeleteNameDescriptionLocation) {
+      return name;
+    }
+    return null;
   }
 
   @Override

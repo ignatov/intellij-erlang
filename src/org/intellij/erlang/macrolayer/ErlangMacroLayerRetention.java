@@ -9,6 +9,8 @@ import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiTreeChangeAdapter;
+import com.intellij.psi.PsiTreeChangeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 
@@ -41,6 +43,44 @@ public final class ErlangMacroLayerRetention implements Disposable {
         release(file);
       }
     });
+    // round 5: the own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
+    PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
+      @Override
+      public void childAdded(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      @Override
+      public void childRemoved(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      @Override
+      public void childReplaced(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      @Override
+      public void childMoved(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      @Override
+      public void childrenChanged(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      @Override
+      public void propertyChanged(@NotNull PsiTreeChangeEvent event) {
+        changed(event);
+      }
+
+      private static void changed(@NotNull PsiTreeChangeEvent event) {
+        PsiFile file = event.getFile();
+        ErlangMacroLayer.TextTracker t = file == null ? null : ErlangMacroLayer.textTrackerIfAny(file);
+        if (t != null) t.changed();
+      }
+    }, this);
   }
 
   public static @NotNull ErlangMacroLayerRetention getInstance(@NotNull Project project) {

@@ -28,6 +28,8 @@ import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewShortNameLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +39,9 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
 
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
+    if (o instanceof ErlangMacroLayerHeaderTarget || ErlangMacroLayer.isNameMadeByMacro(o)) {
+      return ErlangMacroLayer.describeLayerTarget(o, location);
+    }
     if (!(o instanceof ErlangCompositeElement)) return null;
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || o instanceof ErlangFunctionCallExpression)) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
