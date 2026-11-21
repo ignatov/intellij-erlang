@@ -1340,6 +1340,24 @@ public final class ErlangMacroLayer {
   }
 
   /**
+   * Round 6 (next), item 2: runs the computation as a passive query of the caller's progress indicator (the completion
+   * auto-popup, which runs after every key and whose answer is only shown): while the file is typed in, it builds
+   * nothing and waits for the copy (see {@link #awaitWhileTyped}). The mark lasts only for the computation.
+   */
+  static <T> T asPassiveQuery(@NotNull java.util.function.Supplier<T> computation) {
+    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
+    if (root == null) return computation.get();
+    WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
+    PASSIVE_MEMO.set(new WeakReference<>(root));
+    try {
+      return computation.get();
+    }
+    finally {
+      PASSIVE_MEMO.set(previous);
+    }
+  }
+
+  /**
    * Round 6: called by the layer's reference searcher ({@link ErlangMacroLayerReferencesSearcher}) and by the search of
    * names made by macros, on the thread that starts a search, before any answer is read. For every Erlang file of the
    * search scope that changed within {@link #quietMillis()} (the only files for which a build can be refused) and that
@@ -1945,7 +1963,7 @@ public final class ErlangMacroLayer {
     });
   }
 
-  private static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
+  static boolean formHasError(@NotNull Table t, @NotNull PsiElement form) {
     return t.formError.computeIfAbsent(form.getTextRange().getStartOffset(), k -> PsiTreeUtil.hasErrorElements(form));
   }
 

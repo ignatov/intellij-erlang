@@ -77,6 +77,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>
         <lang.namesValidator language="Erlang" implementationClass="org.intellij.erlang.ErlangNamesValidator"/>
         <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactoring.ErlangSafeDeleteProcessor" />
+        <!-- macro layer, round 6 (next): completion in a part of a form that the main tree lost, through the expanded copy -->
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor" id="ErlangMacroLayerCompletion" order="first"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangVariableCompletionContributor" id="ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor" id="ErlangCompletion" order="after ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor" order="before ErlangCompletion"/>
