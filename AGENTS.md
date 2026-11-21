@@ -29,6 +29,7 @@ The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts
 | Regenerate `gen/` | `./gradlew generateLexerAndParser` |
 | Check that `gen/` is up to date (CI runs it) | `./gradlew verifyGeneratedSources` |
 | Coverage report of the tests (`build/reports/jacoco/coverageReport/`) | `./gradlew --no-daemon clean test -Pcoverage`; add `testCompilation` with its `-D` options to measure the build and JPS classes too |
+| Changed lines of `src/` that the test classes of a branch execute (runs only the test classes it adds or changes) | `scripts/coverage/pr-coverage.sh` |
 | Build, test and verify against another IDE | `./gradlew test buildPlugin verifyPlugin -PplatformVersion=263.7307.44` (or `2026.3.1`, `263-EAP-SNAPSHOT`) |
 | Parse every `.erl`/`.hrl` under a directory (corpus check) | `CORPUS_DIR=/usr/local/lib/erlang CORPUS_REPORT=/tmp/corpus.json ./gradlew test --tests 'org.intellij.erlang.parser.ErlangCorpusParsingTest' --rerun` |
 | Unit tests of the compatibility check scripts | `python3 -m unittest discover -s scripts/compat -p 'test_*.py' -v` |
@@ -106,6 +107,7 @@ You may change `grammars/erlang.bnf` and `Erlang.flex` to fix a parser or lexer 
 
 ## Definition of done
 - A bug fix comes with a test that fails before the fix and passes after it. Run it both ways.
+- `scripts/coverage/pr-coverage.sh` tells whether the tests of the change execute its changed lines. The number adds to the rule above and does not replace it: "executed" is not "asserted".
 - A behaviour change or new feature comes with tests and `testData` for the new behaviour.
 - `./gradlew test` passes. Run `testCompilation` too when you touch `build/`, `jps/` or `jps-plugin/` and Erlang is available.
 - Keep the diff small and about the task only. No drive-by refactors, reformatting, import reshuffles, renames, dependency or tool bumps, and no documentation churn.
