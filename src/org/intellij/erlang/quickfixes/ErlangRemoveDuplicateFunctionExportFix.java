@@ -43,6 +43,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
     ErlangExportFunction function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangExportFunction.class, false);
     if (function == null) return;
     String signature = ErlangDuplicateFunctionExportInspection.getSignature(function);
+    if (signature == null) return;
     PsiFile file = function.getContainingFile();
     if (!(file instanceof ErlangFile)) return;
     List<ErlangAttribute> attributes = ((ErlangFile) file).getAttributes();
