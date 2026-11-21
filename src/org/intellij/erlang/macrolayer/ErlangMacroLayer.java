@@ -2554,6 +2554,13 @@ public final class ErlangMacroLayer {
       mark(o, "gate:macro-name");
       return null;
     }
+    if (ref instanceof ErlangRecordReferenceImpl rr) {
+      PsiElement named = recordNamedByMacro(file, rr.getCanonicalText());
+      if (named != null) {
+        mark(o, "record-named-by-macro");
+        return named;
+      }
+    }
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
@@ -2616,6 +2623,28 @@ public final class ErlangMacroLayer {
   }
 
   private static final Object NO_ANSWER = new Object();
+
+  /**
+   * D4: {@code -record(?REC, {...})} with {@code -define(REC, item).}: the record that {@code #item{}} means (the main
+   * tree names it "?REC"). Only a macro without parameters whose body is one atom, and only the file's own records.
+   */
+  private static @Nullable PsiElement recordNamedByMacro(@NotNull ErlangFile file, @NotNull String name) {
+    if (name.isEmpty() || name.startsWith("?")) return null;
+    for (ErlangRecordDefinition r : file.getRecords()) {
+      ProgressManager.checkCanceled();
+      ErlangQAtom q = r.getQAtom();
+      ErlangMacros m = q == null ? null : q.getMacros();
+      ErlangMacrosName macroName = m == null ? null : m.getMacrosName();
+      if (macroName == null) continue;
+      ErlangMacrosDefinition d = org.intellij.erlang.psi.impl.ErlangMacroResolve.resolve(file, StringUtil.unquoteString(macroName.getText(), '\''), org.intellij.erlang.psi.impl.ErlangMacroResolve.NO_ARGUMENTS);
+      ErlangMacrosBody body = d == null || d.getArgumentDefinitionList() != null ? null : d.getMacrosBody();
+      if (body == null) continue;
+      String atom = body.getText().trim();
+      if (!atom.matches("[a-z][A-Za-z0-9_@]*|'[^']*'")) continue;
+      if (name.equals(StringUtil.unquoteString(atom, '\'')) || name.equals(atom)) return r;
+    }
+    return null;
+  }
 
   /**
    * Round 5, fix 3: the reference's own name is a macro use ({@code ?NAME(...)}, {@code fun ?F/1}, {@code #?R{}}, ...).
@@ -2773,8 +2802,17 @@ public final class ErlangMacroLayer {
     for (int i = 0; i < copies; i++) {
       PsiReference c = correspondingReference(copy, ref, i);
       if (!(c instanceof PsiPolyVariantReference pc)) continue;
-      for (ResolveResult rr : pc.multiResolve(false)) {
+      ResolveResult[] rrs = pc.multiResolve(false);
+      for (ResolveResult rr : rrs) {
         PsiElement real = exit(copy.toReal(rr.getElement()), file);
+        if (real != null) result.add(real);
+      }
+      // D4: in the copy the variable binds itself (a parameter of a function that a top-level macro use makes, the left
+      // side of a match): the real variable is a binding too, not an unbound one
+      PsiElement v = c.getElement();
+      if (rrs.length == 0 && v instanceof ErlangQVar &&
+          (ErlangPsiImplUtil.inArgumentDefinition(v) && !ErlangPsiImplUtil.inArgumentList(v) || ErlangPsiImplUtil.inLeftPartOfAssignment(v))) {
+        PsiElement real = exit(copy.toReal(v), file);
         if (real != null) result.add(real);
       }
     }
