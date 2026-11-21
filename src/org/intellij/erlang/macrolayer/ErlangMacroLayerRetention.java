@@ -12,6 +12,9 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.ModificationTracker;
+import com.intellij.openapi.util.registry.Registry;
+import com.intellij.openapi.util.registry.RegistryValue;
+import com.intellij.openapi.util.registry.RegistryValueListener;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -49,6 +52,13 @@ public final class ErlangMacroLayerRetention implements Disposable {
 
   public ErlangMacroLayerRetention(@NotNull Project project) {
     myProject = project;
+    // the switch goes off: no copy is kept strongly while the layer gives no answer
+    Registry.get(ErlangMacroLayer.REGISTRY_KEY).addListener(new RegistryValueListener() {
+      @Override
+      public void afterValueChanged(@NotNull RegistryValue value) {
+        if (!ErlangMacroLayer.isEnabled()) releaseAll();
+      }
+    }, this);
     project.getMessageBus().connect(this).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
       @Override
       public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
@@ -233,6 +243,9 @@ public final class ErlangMacroLayerRetention implements Disposable {
    * Changes only when the directive lines of the header change. Asking it re-lexes the header if its text changed
    * (once per header text, shared by all includers): so an includer notices a directive change when it is next asked.
    */
+  /** Stamps that never repeat, for a directive tracker that could not check its header now. */
+  private static final AtomicLong UNCHECKED = new AtomicLong();
+
   private final class DirectiveTracker implements ModificationTracker {
     private final VirtualFile myHeader;
     private final AtomicLong myVersion = new AtomicLong();
@@ -248,6 +261,11 @@ public final class ErlangMacroLayerRetention implements Disposable {
       DIRECTIVE_CHECKS.incrementAndGet();
       PsiFile f = myHeader.isValid() && !myProject.isDisposed() ? PsiManager.getInstance(myProject).findFile(myHeader) : null;
       if (f == null) return myVersion.get();
+      // on the UI thread no header is read and lexed: a summary not computed for the current text gives an unchecked
+      // stamp (the table then counts as not valid there, and the UI thread builds nothing)
+      if (ApplicationManager.getApplication().isDispatchThread() && !ErlangMacroLayer.isEdtBuildAllowed() && !ErlangMacroLayer.hasUpToDateSummary(f)) {
+        return -UNCHECKED.incrementAndGet();
+      }
       long hash = ErlangMacroLayer.summaryOf(f).hash;
       synchronized (this) {
         if (!myKnown) {

@@ -740,6 +740,12 @@ public final class ErlangMacroLayer {
   }
 
   /** The summary of a header, made by lexing its text; cached on the header, one per header text. */
+  /** The header's summary is computed for its current text (asking for it costs nothing). */
+  static boolean hasUpToDateSummary(@NotNull PsiFile header) {
+    CachedValue<ErlangMacroExpander.HeaderSummary> v = header.getUserData(SUMMARY_KEY);
+    return v != null && v.hasUpToDateValue();
+  }
+
   public static @NotNull ErlangMacroExpander.HeaderSummary summaryOf(@NotNull PsiFile header) {
     return CachedValuesManager.getManager(header.getProject()).getCachedValue(header, SUMMARY_KEY, () -> {
       long t0 = System.nanoTime();
