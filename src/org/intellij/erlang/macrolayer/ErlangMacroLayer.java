@@ -1452,7 +1452,16 @@ public final class ErlangMacroLayer {
   static boolean anyFormNeedsCopy(@NotNull ErlangFile file, @NotNull Table t) {
     Boolean b = t.anyFormNeedsCopy;
     if (b != null) return b;
-    b = false;
+    // one thread computes it (about 25 ms in erl_types.erl); the others wait instead of repeating the walk
+    synchronized (t) {
+      b = t.anyFormNeedsCopy;
+      if (b != null) return b;
+      return computeAnyFormNeedsCopy(file, t);
+    }
+  }
+
+  private static boolean computeAnyFormNeedsCopy(@NotNull ErlangFile file, @NotNull Table t) {
+    boolean b = false;
     if (!t.names.isEmpty()) {
       for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
         if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
