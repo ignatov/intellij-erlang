@@ -159,6 +159,18 @@ public class ErlangBuildInSingleModuleTest extends ErlangCompilationTestBase {
     doTestRebuildInSingleModule(headerFile, sourceFileWithDependency);
   }
 
+  // #1403: after a failed build, the next build without changes reported success and compiled nothing.
+  public void testFailedFileIsCompiledAgainOnNextBuild() throws Exception {
+    addSourceFile(myModule, "module1.erl", "-module(module1).\nfoo( ->\n");
+    assertTrue(hasErrors(myCompilationRunner.compileWithoutAssertions()));
+    List<CompilerMessage> secondBuild = myCompilationRunner.compileWithoutAssertions();
+    assertTrue("The second build reported no error: " + secondBuild, hasErrors(secondBuild));
+  }
+
+  private static boolean hasErrors(List<CompilerMessage> messages) {
+    return ContainerUtil.exists(messages, m -> m.getCategory() == CompilerMessageCategory.ERROR);
+  }
+
   public void testBeamsForDeletedSourcesAreDeleted() throws Exception {
     final VirtualFile erl = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").build());
 
