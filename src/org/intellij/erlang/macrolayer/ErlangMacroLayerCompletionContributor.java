@@ -18,9 +18,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import org.intellij.erlang.completion.ErlangCompletionContributor;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
 
 /**
  * Round 6 (next), item 2: completion in a part of a form that the main tree lost. In
@@ -71,13 +77,147 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
   public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
     if (parameters.getCompletionType() != CompletionType.BASIC || !ErlangMacroLayer.isEnabled()) return;
     if (parameters.getPosition().getContainingFile().getUserData(ORIGIN) != null) return; // already the layer's text
-    Position p = parameters.isAutoPopup() ? ErlangMacroLayer.asPassiveQuery(() -> position(parameters)) : position(parameters);
-    if (p == null) return;
-    TAKEN_OVER.incrementAndGet();
-    result.runRemainingContributors(parameters.withPosition(p.position, p.offset),
-                                    r -> result.passResult(r.withLookupElement(realLookup(p, r.getLookupElement()))));
+    boolean auto = parameters.isAutoPopup();
+    Position p = auto ? ErlangMacroLayer.asPassiveQuery(() -> position(parameters)) : position(parameters);
+    if (p != null) {
+      TAKEN_OVER.incrementAndGet();
+      result.runRemainingContributors(parameters.withPosition(p.position, p.offset),
+                                      r -> result.passResult(r.withLookupElement(realLookup(p, r.getLookupElement()))));
+      result.stopHere();
+      return;
+    }
+    Made made = made(parameters);
+    if (made != null && !made.isEmpty()) addMadeNames(parameters, result, made);
+  }
+
+  // ------------------------------------------------------------------------------------------------ item 3: made names
+
+  /**
+   * Round 6 (next), item 3: the functions (by name/arity), records and record fields that only the expansions of the
+   * file make, with their real targets (null when the list is one edit old). Kept on the file from the last copy
+   * (strings only, see {@link #MADE_NAMES}).
+   */
+  record Made(@NotNull Map<String, PsiElement> functions, @NotNull Map<String, PsiElement> records,
+              @NotNull Map<String, List<String>> fields) {
+    boolean isEmpty() {
+      return functions.isEmpty() && records.isEmpty();
+    }
+
+    static @NotNull Made of(@NotNull ErlangMacroLayer.Copy copy) {
+      Map<String, List<String>> fields = new LinkedHashMap<>();
+      Map<String, PsiElement> records = copy.recordsMadeByMacros();
+      if (copy.copyFile != null) {
+        for (String name : records.keySet()) {
+          ErlangRecordDefinition d = copy.copyFile.getRecord(name);
+          ErlangTypedRecordFields f = d == null ? null : d.getTypedRecordFields();
+          if (f == null) continue;
+          List<String> names = new ArrayList<>();
+          for (ErlangTypedExpr t : f.getTypedExprList()) names.add(t.getQAtom().getText());
+          for (ErlangQAtom q : PsiTreeUtil.getChildrenOfTypeAsList(f, ErlangQAtom.class)) names.add(q.getText());
+          fields.put(name, names);
+        }
+      }
+      return new Made(copy.functionsMadeByMacros(), records, fields);
+    }
+
+    @NotNull Made namesOnly() {
+      Map<String, PsiElement> fn = new LinkedHashMap<>(), rec = new LinkedHashMap<>();
+      for (String k : functions.keySet()) fn.put(k, null);
+      for (String k : records.keySet()) rec.put(k, null);
+      return new Made(fn, rec, fields);
+    }
+  }
+
+  /**
+   * The names only, from the last copy of the file: what the auto-popup uses when the copy of this version is not
+   * there (the names that top-level macro forms make rarely change while one types inside a function). A few strings
+   * per file that has a top-level macro form.
+   */
+  static final Key<Made> MADE_NAMES = Key.create("erlang.macro.layer.completion.made.names");
+
+  /** The names that expansions make in the completion's file, or null; never builds for the auto-popup. */
+  private static @Nullable Made made(@NotNull CompletionParameters parameters) {
+    ErlangFile real = ErlangMacroLayer.layerFile(parameters.getOriginalFile());
+    if (real == null || real != parameters.getOriginalFile()) return null;
+    boolean auto = parameters.isAutoPopup();
+    ErlangMacroLayer.Table t = auto ? ErlangMacroLayer.cachedTable(real) : ErlangMacroLayer.table(real);
+    if (t == null) return auto ? real.getUserData(MADE_NAMES) : null;
+    if (t.refusal != null || t.names.isEmpty()) return null;
+    // only a top-level form that starts with a macro use, or a broken one, can make a name (and then it needs the copy)
+    if (!ErlangMacroLayer.anyFormNeedsCopy(real, t) || !ErlangMacroLayer.hasTopLevelMacroForm(real, t)) return null;
+    ErlangMacroLayer.Copy copy = auto ? ErlangMacroLayer.cachedCopy(real) : ErlangMacroLayer.getCopy(real, "completion-names");
+    if (copy == null) return auto ? real.getUserData(MADE_NAMES) : null;
+    Made m = Made.of(copy);
+    real.putUserData(MADE_NAMES, m.namesOnly());
+    return m;
+  }
+
+  /**
+   * Runs the remaining contributors at the main tree's position and adds the names that expansions make where those
+   * contributors offer that kind of name: functions where they offer a function of the file (or in an export list),
+   * records after {@code #} or where they offer a record, and the fields of a record that a macro makes in its braces.
+   */
+  private static void addMadeNames(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result, @NotNull Made made) {
+    PsiElement position = parameters.getPosition();
+    boolean export = PsiTreeUtil.getParentOfType(position, ErlangExportFunctions.class) != null;
+    boolean withArity = export || PsiTreeUtil.getParentOfType(position, ErlangFunctionWithArityVariables.class) != null;
+    PsiElement prev = PsiTreeUtil.prevVisibleLeaf(position);
+    boolean afterRadix = prev != null && prev.getNode().getElementType() == ErlangTypes.ERL_RADIX;
+    ErlangRecordExpression record = PsiTreeUtil.getParentOfType(position, ErlangRecordExpression.class);
+    ErlangRecordRef recordRef = record == null ? null : record.getRecordRef();
+    boolean inBraces = PsiTreeUtil.getParentOfType(position, ErlangRecordTuple.class, ErlangRecordField.class) != null;
+    List<String> fields = inBraces && recordRef != null ? made.fields().get(recordRef.getText()) : null;
+    Set<String> seen = new HashSet<>();
+    boolean[] saw = new boolean[2];
+    result.runRemainingContributors(parameters, r -> {
+      PsiElement psi = r.getLookupElement().getPsiElement();
+      if (psi instanceof ErlangFunction) saw[0] = true;
+      if (psi instanceof ErlangRecordDefinition) saw[1] = true;
+      seen.add(r.getLookupElement().getLookupString());
+      result.passResult(r);
+    });
+    ErlangFile real = (ErlangFile)parameters.getOriginalFile();
+    if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces) {
+      for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
+        int slash = e.getKey().lastIndexOf('/');
+        String name = e.getKey().substring(0, slash);
+        int arity = Integer.parseInt(e.getKey().substring(slash + 1));
+        LookupElement l = ErlangPsiImplUtil.createFunctionLookupElement(name, arity, withArity, ErlangCompletionContributor.MODULE_FUNCTIONS_PRIORITY);
+        result.addElement(new RealTarget(l, realTarget(e.getValue(), real)));
+      }
+    }
+    if ((afterRadix || saw[1]) && !inBraces) {
+      for (Map.Entry<String, PsiElement> e : made.records().entrySet()) {
+        if (seen.contains(e.getKey())) continue;
+        result.addElement(new RealTarget(LookupElementBuilder.create(e.getKey()).withIcon(ErlangIcons.RECORD), realTarget(e.getValue(), real)));
+      }
+    }
+    if (fields != null) {
+      for (String f : fields) if (!seen.contains(f)) result.addElement(LookupElementBuilder.create(f).withIcon(ErlangIcons.FIELD));
+    }
+    MADE_ADDED.incrementAndGet();
     result.stopHere();
   }
+
+  /**
+   * The position where the main provider offers the local functions: an expression in a function, not after
+   * {@code module:} (its condition; the results that reach this contributor are only those that match the prefix, so
+   * a function offered there may not be seen).
+   */
+  private static boolean functionPosition(@NotNull PsiElement position) {
+    PsiElement parent = position.getParent();
+    if (parent instanceof ErlangAtom) parent = parent.getParent();
+    PsiElement grandPa = parent == null ? null : parent.getParent();
+    return grandPa instanceof ErlangExpression && PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class) == null &&
+           PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
+
+  private static @Nullable PsiElement realTarget(@Nullable PsiElement e, @NotNull ErlangFile real) {
+    return e == null || !e.isValid() ? null : ErlangMacroLayer.exit(e, real);
+  }
+
+  /** Completions that added names made by expansions (tests and measurements). */
+  static final java.util.concurrent.atomic.AtomicInteger MADE_ADDED = new java.util.concurrent.atomic.AtomicInteger();
 
   private record Position(@NotNull PsiElement position, int offset, @NotNull ErlangMacroLayer.Copy copy, @NotNull ErlangFile real,
                           @NotNull PsiFile parsed) {
@@ -96,7 +236,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     // recovery after a fragment use left the rest of the clause there), a form with a syntax error, or the rest of a
     // form that the recovery split (the element before it does not end with a dot: ?ID(Ab) after foo?PAR,)
     boolean lost = !(top instanceof ErlangCompositeElement) || PsiTreeUtil.hasErrorElements(top) || !afterADot(top);
-    if (!lost) return null;
+    if (!lost) return boundByMacros(parameters, real, top, offset);
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(real);
     if (t == null || t.refusal != null || t.names.isEmpty()) return skip(real, t == null ? "no-table" : "table-refused-or-empty");
     // the broken form: back to the last element that ends with a dot; it must use a macro the file sees
@@ -111,6 +251,34 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     if (!ErlangMacroLayer.usesKnownMacro(region, t.names)) return skip(real, "no-macro-use-before-the-caret");
     ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(real, "completion");
     if (copy == null || copy.copyFile == null) return skip(real, "no-copy");
+    return inCopy(parameters, real, copy, offset);
+  }
+
+  /**
+   * Round 6 (next), item 3: a variable that only a macro binds ({@code ?BIND(X), X<caret>}, or the free {@code Xh} of
+   * {@code -define(HX, Xh = 5)}) in a form that the main tree parses: the form needs the copy and has a candidate
+   * (a free variable of a body it uses, or a variable in a substituted argument), and the prefix is a variable's (or
+   * empty). The auto-popup only uses a copy that is there.
+   */
+  private static @Nullable Position boundByMacros(@NotNull CompletionParameters parameters, @NotNull ErlangFile real,
+                                                  @NotNull PsiElement top, int offset) {
+    CharSequence text = real.getViewProvider().getContents();
+    int s = offset;
+    while (s > 0 && (Character.isLetterOrDigit(text.charAt(s - 1)) || text.charAt(s - 1) == '_' || text.charAt(s - 1) == '@')) s--;
+    if (s < offset && !Character.isUpperCase(text.charAt(s)) && text.charAt(s) != '_') return null;
+    if (PsiTreeUtil.getParentOfType(real.findElementAt(Math.max(0, offset - 1)), ErlangClauseBody.class) == null) return null;
+    boolean auto = parameters.isAutoPopup();
+    ErlangMacroLayer.Table t = auto ? ErlangMacroLayer.cachedTable(real) : ErlangMacroLayer.table(real);
+    if (t == null || t.refusal != null || t.names.isEmpty() || !ErlangMacroLayer.formNeedsCopy(t, top)) return null;
+    if (ErlangMacroLayer.formFreeBodyVars(t, top).isEmpty() && ErlangMacroLayer.substitutedArgumentVars(t, top).isEmpty()) return null;
+    ErlangMacroLayer.Copy copy = auto ? ErlangMacroLayer.cachedCopy(real) : ErlangMacroLayer.getCopy(real, "completion");
+    if (copy == null || copy.copyFile == null) return skip(real, "bound:no-copy");
+    return inCopy(parameters, real, copy, offset);
+  }
+
+  /** The position at the caret's place in the copy's text with the dummy identifier, or null. */
+  private static @Nullable Position inCopy(@NotNull CompletionParameters parameters, @NotNull ErlangFile real,
+                                           @NotNull ErlangMacroLayer.Copy copy, int offset) {
     ErlangMacroExpander.Form f = copy.expansion.formAtSource(offset);
     if (f == null || f.status != ErlangMacroExpander.FormStatus.EXPANDED) return skip(real, "form-not-expanded");
     int e = caretInCopy(copy, real, offset);

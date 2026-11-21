@@ -187,6 +187,53 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
     assertTrue(got.toString(), got.containsAll(List.of("Abc1", "Abc2")));
   }
 
+  // ------------------------------------------------------------------------------------------------ item 3
+
+  private static final String MADE = "-module(m).\n-export([f/1, g/1]).\n-define(DEF(N), N() -> ok).\n-define(BIND(V), V = 1).\n" +
+                                     "-define(HX, Xh = 5).\n-define(R, -record(mr, {mf1, mf2})).\n?DEF(zqhello).\n?R.\n";
+  /** The same names written out, as erlc sees them. */
+  private static final String WRITTEN = "-module(m).\n-export([f/1, g/1]).\nzqhello() -> ok.\n-record(mr, {mf1, mf2}).\n";
+
+  public void testFunctionMadeByAMacro() {
+    check("function made by ?DEF", MADE + "g(_) -> zqh<caret>.\nf(_) -> ok.\n", WRITTEN + "g(_) -> zqh<caret>.\nf(_) -> ok.\n", "zqhello");
+  }
+
+  public void testExportOfAFunctionMadeByAMacro() {
+    check("export of a function made by ?DEF", MADE + "-export([zqh<caret>]).\ng(_) -> ok.\nf(_) -> ok.\n",
+          WRITTEN + "-export([zqh<caret>]).\ng(_) -> ok.\nf(_) -> ok.\n", "zqhello");
+  }
+
+  public void testVariableBoundThroughAMacroArgument() {
+    check("variable bound by ?BIND(Xyz)", MADE + "f(_) -> ?BIND(Xyz), Xy<caret>.\ng(_) -> ok.\n",
+          WRITTEN + "f(_) -> Xyz = 1, Xy<caret>.\ng(_) -> ok.\n", "Xyz");
+  }
+
+  public void testFreeVariableOfAMacroBody() {
+    check("free variable of ?HX", MADE + "f(_) -> ?HX, X<caret>.\ng(_) -> ok.\n",
+          WRITTEN + "f(_) -> Xh = 5, X<caret>.\ng(_) -> ok.\n", "Xh");
+  }
+
+  public void testRecordMadeByAMacro() {
+    check("record made by ?R", MADE + "f(_) -> #m<caret>.\ng(_) -> ok.\n", WRITTEN + "f(_) -> #m<caret>.\ng(_) -> ok.\n", "mr");
+  }
+
+  public void testFieldOfARecordMadeByAMacro() {
+    check("field of a record made by ?R", MADE + "f(X) -> X#mr{m<caret>}.\ng(_) -> ok.\n",
+          WRITTEN + "f(X) -> X#mr{m<caret>}.\ng(_) -> ok.\n", "mf1", "mf2");
+  }
+
+  /** The names are kept on the file (strings only) for the auto-popup, which uses them when the copy is one edit old. */
+  public void testMadeNamesAreKeptOnTheFile() {
+    complete(MADE + "g(_) -> zqh<caret>.\nf(_) -> ok.\n");
+    PsiFile f = myFixture.getFile();
+    ErlangMacroLayerCompletionContributor.Made made = f.getUserData(ErlangMacroLayerCompletionContributor.MADE_NAMES);
+    assertNotNull(made);
+    assertEquals(Set.of("zqhello/0"), made.functions().keySet());
+    assertEquals(Set.of("mr"), made.records().keySet());
+    assertEquals(List.of("mf1", "mf2"), made.fields().get("mr"));
+    assertTrue("no target is kept", made.functions().values().stream().allMatch(Objects::isNull));
+  }
+
   /** A form that the main tree parses: the layer does not take part, and completion is master's. */
   public void testAFormTheMainTreeParsesIsLeftToMaster() {
     int taken0 = takenOver();

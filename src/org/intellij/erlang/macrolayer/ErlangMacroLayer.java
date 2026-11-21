@@ -1850,7 +1850,7 @@ public final class ErlangMacroLayer {
    * through the macros those bodies use. Only these variables can occur in the form's expansion besides the form's
    * own tokens. A superset: every {@code ?NAME} of the form's text counts, strings and comments too.
    */
-  private static @NotNull Set<String> formFreeBodyVars(@NotNull Table t, @NotNull PsiElement form) {
+  static @NotNull Set<String> formFreeBodyVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formFreeVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
       Set<String> r = new HashSet<>();
       ArrayDeque<String> queue = new ArrayDeque<>(macroNamesIn(form.getNode().getChars(), t.names));
@@ -1939,7 +1939,7 @@ public final class ErlangMacroLayer {
    * macro is not plain, or the use is not in a plain slot). Every enclosing use counts: {@code ?PLAIN(?OTHER(X))}
    * counts X for ?OTHER. An element that starts with {@code ?} but is not a macro use counts too (a superset).
    */
-  private static @NotNull Set<String> substitutedArgumentVars(@NotNull Table t, @NotNull PsiElement form) {
+  static @NotNull Set<String> substitutedArgumentVars(@NotNull Table t, @NotNull PsiElement form) {
     return t.formSubstitutedArgVars.computeIfAbsent(form.getTextRange().getStartOffset(), k -> {
       Set<String> r = new HashSet<>();
       for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(form, ErlangQVar.class)) {
@@ -2125,8 +2125,17 @@ public final class ErlangMacroLayer {
     return copy == null ? null : copy.madeNameKinds().get(token.getTextRange());
   }
 
+  /** Round 6 (next): the table of the file if it is up to date; never computes one, never waits. */
+  static @Nullable Table cachedTable(@NotNull ErlangFile file) {
+    if (file.getUserData(TABLE_KEY) == null) return null;
+    Project project = file.getProject();
+    return validTable(file, tableCache(file), PsiModificationTracker.getInstance(project).getModificationCount(),
+                      VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
+                      ProjectRootManager.getInstance(project).getModificationCount());
+  }
+
   /** The copy of the file if it is built and up to date; never builds, never computes a table. */
-  private static @Nullable Copy cachedCopy(@NotNull ErlangFile file) {
+  static @Nullable Copy cachedCopy(@NotNull ErlangFile file) {
     if (file.getUserData(TABLE_KEY) == null) return null;
     Project project = file.getProject();
     Table t = validTable(file, tableCache(file), PsiModificationTracker.getInstance(project).getModificationCount(),
@@ -2323,7 +2332,7 @@ public final class ErlangMacroLayer {
   }
 
   /** Some top-level form of the main tree starts with '?' or is broken: only such forms can make a function. */
-  private static boolean hasTopLevelMacroForm(@NotNull ErlangFile file, @NotNull Table t) {
+  static boolean hasTopLevelMacroForm(@NotNull ErlangFile file, @NotNull Table t) {
     Boolean b = t.topLevelMacroForm;
     if (b != null) return b;
     b = false;
