@@ -155,6 +155,30 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
     assertEquals(1, buildsOf("b.erl"));
   }
 
+  /**
+   * An edit and its exact reverse (as undo does): the text is the old one, but the reparse made new elements. The copy
+   * must not keep answers that point to the replaced elements, and an unrelated move must still rebuild nothing.
+   */
+  public void testTextBackToAnEarlierTextGivesValidAnswers() throws Exception {
+    PsiFile a = myFixture.addFileToProject("d1b/a.erl", "-module(a).\n-define(B(X), X = 1).\n-export([f/0]).\nf() -> ?B(Q), Q.\n");
+    highlight(a);
+    assertEquals("ErlangQVarImpl@/src/d1b/a.erl", resolved(a, "Q.\n"));
+    com.intellij.openapi.editor.Document d = com.intellij.psi.PsiDocumentManager.getInstance(getProject()).getDocument(a);
+    String text = a.getText();
+    com.intellij.openapi.command.WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      d.setText("-module(a).\n");
+      com.intellij.psi.PsiDocumentManager.getInstance(getProject()).commitDocument(d);
+      d.setText(text);
+      com.intellij.psi.PsiDocumentManager.getInstance(getProject()).commitDocument(d);
+    });
+    String valid = inBackground(() -> {
+      PsiElement t = refAt(a, "Q.\n").resolve();
+      return t == null ? "null" : t.isValid() ? "valid" : "INVALID " + t;
+    });
+    out("D1b after edit and reverse: " + valid + " " + reasons());
+    assertEquals("valid", valid);
+  }
+
   // ------------------------------------------------------------------------------------------------ defect 3
 
   /** Runs on a pooled thread without a read action, like listeners and expiration checks. */

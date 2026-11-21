@@ -1,6 +1,5 @@
 package org.intellij.erlang.macrolayer;
 
-import com.intellij.lang.ASTNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProcessCanceledException;
@@ -446,59 +445,34 @@ public final class ErlangMacroLayer {
 
   /**
    * Round 5: the file's own text and tree. The PSI modification stamp of a file also moves when the platform clears the
-   * caches of every PSI file (a file moved or a directory deleted anywhere in the project does that), so the tracker
-   * checks, when the stamp moved, whether the text (its length and 64-bit hash) or the tree (the identity of the file
-   * element) changed, and changes only then. Cached answers keep real elements, so a new tree with the same text counts.
+   * caches of every PSI file (a file moved or a directory deleted anywhere in the project does that), so the copy does
+   * not depend on it. This tracker counts the PSI tree change events of the file itself instead
+   * ({@link ErlangMacroLayerRetention} listens): every reparse and every PSI edit fires them, a cache clearing does not.
+   * A text that comes back to an earlier text (undo) still counts: its reparse made new elements, and cached answers
+   * keep elements.
    */
   static final class TextTracker implements ModificationTracker {
-    private final @NotNull PsiFile myFile;
-    private long myStamp = -1;
-    private long myHash;
-    private int myLength = -1;
-    private @NotNull WeakReference<ASTNode> myTree = new WeakReference<>(null);
-    private long myVersion;
+    private final AtomicLong myVersion = new AtomicLong();
 
-    TextTracker(@NotNull PsiFile file) {
-      myFile = file;
+    void changed() {
+      myVersion.incrementAndGet();
     }
 
     @Override
     public long getModificationCount() {
-      long stamp = myFile.getModificationStamp();
-      synchronized (this) {
-        if (stamp == myStamp) return myVersion;
-      }
-      // the UI thread does not load or hash the text: the caller sees the copy as stale and gets master's answer
-      if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed() || !myFile.isValid()) {
-        return -UNCHECKED_STAMPS.incrementAndGet();
-      }
-      ASTNode tree = myFile.getNode();
-      CharSequence text = tree.getChars();
-      long hash = hash64(text);
-      synchronized (this) {
-        if (stamp == myStamp) return myVersion;
-        if (myLength >= 0 && (myLength != text.length() || myHash != hash || myTree.get() != tree)) myVersion++;
-        myStamp = stamp;
-        myHash = hash;
-        myLength = text.length();
-        myTree = new WeakReference<>(tree);
-        return myVersion;
-      }
+      return myVersion.get();
     }
   }
 
-  private static long hash64(@NotNull CharSequence s) {
-    long h = 0xcbf29ce484222325L; // FNV-1a
-    for (int i = 0, n = s.length(); i < n; i++) {
-      h ^= s.charAt(i);
-      h *= 0x100000001b3L;
-    }
-    return h;
+  static @Nullable TextTracker textTrackerIfAny(@NotNull PsiFile file) {
+    return file.getUserData(TEXT_TRACKER_KEY);
   }
 
   static @NotNull TextTracker textTracker(@NotNull PsiFile file) {
     TextTracker t = file.getUserData(TEXT_TRACKER_KEY);
-    return t != null ? t : ((UserDataHolderEx)file).putUserDataIfAbsent(TEXT_TRACKER_KEY, new TextTracker(file));
+    if (t != null) return t;
+    ErlangMacroLayerRetention.getInstance(file.getProject()); // its listener counts the changes from now on
+    return ((UserDataHolderEx)file).putUserDataIfAbsent(TEXT_TRACKER_KEY, new TextTracker());
   }
 
   static @NotNull IncludeTracker includeTracker(@NotNull ErlangFile file) {
