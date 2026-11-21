@@ -27,6 +27,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.ui.ColorUtil;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.ActionLink;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
@@ -286,6 +287,8 @@ public final class ErlangUsageAskDialog extends DialogWrapper {
     JPanel content = new JPanel(new BorderLayout(0, JBUI.scale(6)));
     // no frame: the example is a darker field inside the box, with its own margins
     myExampleText.setBackground(UIUtil.getPanelBackground());
+    // read from the theme when painted: the closed example is not in the window, so a change of the theme does not reach it
+    myExampleText.setForeground(JBColor.namedColor("TextArea.foreground", UIUtil.getLabelForeground()));
     myExampleText.setBorder(JBUI.Borders.empty(6, 8));
     JBScrollPane scroll = new JBScrollPane(myExampleText);
     scroll.setBorder(JBUI.Borders.empty());
