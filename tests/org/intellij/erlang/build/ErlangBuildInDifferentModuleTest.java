@@ -16,10 +16,18 @@
 
 package org.intellij.erlang.build;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.module.JavaModuleType;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.util.ThrowableComputable;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.testFramework.PsiTestUtil;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 
+import java.io.IOException;
 import java.util.Collections;
 
 import static org.junit.Assert.assertNotEquals;
@@ -81,6 +89,31 @@ public class ErlangBuildInDifferentModuleTest extends ErlangCompilationTestBase 
     VirtualFile headerFile = addSourceFile(myModule, "header.hrl", "");
     VirtualFile sourceFile = addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").include("header.hrl").build());
     doTestCrossModulesDependency(headerFile, sourceFile);
+  }
+
+  public void testErlFileInNonErlangModuleDoesNotStopBuild() throws Exception {
+    VirtualFile toolsSourceRoot = createJavaModuleWithSourceRoot("tools");
+    Module toolsModule = ModuleManager.getInstance(myProject).findModuleByName("tools");
+    assertNotNull(toolsModule);
+    ModuleRootModificationUtil.addDependency(myModule, toolsModule);
+    ErlangModuleTextGenerator.BehaviourBuilder behaviour = ErlangModuleTextGenerator.behaviour("z").callback("foo", 0);
+    addFileToDirectory(toolsSourceRoot, "z.erl", behaviour.build());
+    addSourceFile(myModule, "module1.erl", ErlangModuleTextGenerator.module("module1").behaviour(behaviour).build());
+    addSourceFile(myModule, "module2.erl", ErlangModuleTextGenerator.module("module2").behaviour(behaviour).build());
+    new CompilationRunner(myModule, myOtherModule, toolsModule).compile();
+    assertSourcesCompiled(myModule, false);
+  }
+
+  private VirtualFile createJavaModuleWithSourceRoot(String moduleName) throws IOException {
+    return ApplicationManager.getApplication().runWriteAction((ThrowableComputable<VirtualFile, IOException>) () -> {
+      VirtualFile moduleDir = VfsUtil.createDirectoryIfMissing(ProjectUtil.guessProjectDir(myProject), moduleName);
+      Module module = ModuleManager.getInstance(myProject).newModule(moduleDir.toNioPath().resolve(moduleName + ".iml"),
+                                                                     JavaModuleType.getModuleType().getId());
+      PsiTestUtil.addContentRoot(module, moduleDir);
+      VirtualFile sourceDir = moduleDir.createChildDirectory(this, "src");
+      PsiTestUtil.addSourceRoot(module, sourceDir);
+      return sourceDir;
+    });
   }
 
   private void compileAndAssertOutput() {
