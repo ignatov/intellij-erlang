@@ -2114,9 +2114,13 @@ public final class ErlangMacroLayer {
    * asks no copy, so the UI thread may call it.
    */
   public static boolean isNameMadeByMacro(@Nullable PsiElement element) {
+    // the owner's finding: the platform asks with any element (a directory, a binary file, another language's element),
+    // whose text range or first child's text range may be null: only an Erlang leaf or Erlang element can be such a name
+    if (!(element instanceof LeafPsiElement) && !(element instanceof ErlangCompositeElement)) return false;
     // the layer maps to the topmost element with the token's range: it may be an expression around the leaf
-    PsiElement first = element instanceof LeafPsiElement || element == null ? element : PsiTreeUtil.firstChild(element);
-    if (first == null || !first.getTextRange().equals(element.getTextRange())) return false;
+    PsiElement first = element instanceof LeafPsiElement ? element : PsiTreeUtil.firstChild(element);
+    TextRange range = element.getTextRange();
+    if (first == null || range == null || !range.equals(first.getTextRange())) return false;
     if (!(first instanceof LeafPsiElement leaf) || leaf.getElementType() != org.intellij.erlang.ErlangTypes.ERL_ATOM_NAME) return false;
     if (element instanceof PsiNamedElement || element instanceof ErlangQAtom) return false; // master's own handlers
     if (!isEnabled() || realFile(element) == null) return false;
