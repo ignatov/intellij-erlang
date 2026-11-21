@@ -71,7 +71,15 @@ public final class FuzzRecorder {
   private final Thread myWatchdog;
   private volatile boolean myStopped;
 
+  private final boolean myWrite;
+
   public FuzzRecorder(@NotNull String testId) {
+    this(testId, true);
+  }
+
+  /** With {@code write} false nothing goes to disk or to the log (the trials of the minimiser). */
+  public FuzzRecorder(@NotNull String testId, boolean write) {
+    myWrite = write;
     myTestId = testId;
     myOut = FuzzConfig.out().resolve(testId.replaceAll("[^A-Za-z0-9_.-]", "_"));
     myKnown = readKnown();
@@ -369,7 +377,7 @@ public final class FuzzRecorder {
     if (f == null) {
       f = new Finding(sig, kind, caseDesc, replayCommand());
       myFindings.put(sig, f);
-      System.err.println("MACRO-FUZZ: new failure " + sig + " in " + caseDesc);
+      if (myWrite) System.err.println("MACRO-FUZZ: new failure " + sig + " in " + caseDesc);
     }
     f.count++;
     if (f.via.size() < 40) f.via.add(label.replaceAll("@[0-9]+", "@").replaceAll("case [a-z]+:[0-9]+", "case"));
@@ -388,6 +396,7 @@ public final class FuzzRecorder {
   }
 
   private Path writeCase(String sig, Throwable t, String label, int n) {
+    if (!myWrite) return null;
     try {
       Files.createDirectories(myOut.resolve("cases"));
       String id = (sig.startsWith("noise ") ? "noise-" : "") + Integer.toHexString(sig.hashCode()) + "-" + n;
