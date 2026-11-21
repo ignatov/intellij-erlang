@@ -227,4 +227,27 @@ public class ErlangMacroReviewTest extends ErlangLightPlatformCodeInsightFixture
     long bars = java.util.Arrays.stream(items).filter(e -> e.getLookupString().equals("bar")).count();
     assertEquals(java.util.Arrays.stream(items).map(e -> e.getLookupString()).toList().toString(), 2, bars);
   }
+
+  // A4 / T5: the search in a header's macro body: one word search per change, at most the retention's number of copies
+  public void testA4HeaderBodySearchIsBounded() throws Exception {
+    myFixture.addFileToProject("r4/h.hrl", "-define(CALL(), target()).\n");
+    List<PsiFile> users = new ArrayList<>();
+    for (int i = 0; i < 30; i++) {
+      users.add(myFixture.addFileToProject("r4/u" + i + ".erl", "-module(u" + i + ").\n-include(\"h.hrl\").\n-export([f/0, target/0]).\n" +
+                                                                 "f() -> ?CALL().\ntarget() -> ok.\n"));
+    }
+    org.intellij.erlang.psi.ErlangFunction target = inBackgroundWithIndicator(() -> ((ErlangFile)users.get(0)).getFunction("target", 0));
+    int searches0 = ErlangMacroLayer.INCLUDER_SEARCHES.get(), builds0 = ErlangMacroLayer.EXPANSIONS_BUILT.get();
+    inBackgroundWithIndicator(() -> ReferencesSearch.search(target).findAll().size());
+    int searches = ErlangMacroLayer.INCLUDER_SEARCHES.get() - searches0, builds = ErlangMacroLayer.EXPANSIONS_BUILT.get() - builds0;
+    assertTrue("word searches for the includers: " + searches, searches <= 1);
+    assertTrue("copies built: " + builds, builds <= ErlangMacroLayerRetention.STRONG + 1);
+  }
+
+  // T5: a file larger than the copy cap gets master's behaviour
+  public void testT5FileOverTheCopyCapIsRefused() throws Exception {
+    ErlangMacroLayer.setMaxCopyCharsForTests(200, getTestRootDisposable());
+    PsiFile f = open("-module(m).\n-export([f/0]).\n-define(CALL(M, F), M:F(), ok).\n%% " + "x".repeat(300) + "\nf() -> ?CALL(b, g).\n");
+    assertEquals("too-large", inBackgroundWithIndicator(() -> ErlangMacroLayer.refusalForTests(f)));
+  }
 }

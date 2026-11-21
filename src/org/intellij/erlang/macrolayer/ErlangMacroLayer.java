@@ -2,6 +2,7 @@ package org.intellij.erlang.macrolayer;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator;
 import com.intellij.openapi.application.ApplicationListener;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
@@ -277,16 +278,25 @@ public final class ErlangMacroLayer {
       return myAnswers;
     }
 
+    /** The position of each form in {@code expansion.forms} (a list search per question was quadratic in large files). */
+    private final Map<Form, Integer> myFormIndex = new IdentityHashMap<>();
+
+    private int indexOf(@NotNull Form f) {
+      Integer i = myFormIndex.get(f);
+      return i == null ? -1 : i;
+    }
+
     Copy(@NotNull PsiFile realFile, @NotNull Expansion expansion, @Nullable ErlangFile copyFile, long buildNanos) {
       this.realFile = realFile;
       this.expansion = expansion;
       this.copyFile = copyFile;
       this.buildNanos = buildNanos;
+      for (int i = 0; i < expansion.forms.size(); i++) myFormIndex.put(expansion.forms.get(i), i);
       if (copyFile != null) {
         for (PsiErrorElement e : PsiTreeUtil.collectElementsOfType(copyFile, PsiErrorElement.class)) {
           Form f = expansion.formAtExpanded(e.getTextRange().getStartOffset());
           if (f == null) f = previousForm(e.getTextRange().getStartOffset());
-          if (f != null) myBroken.set(expansion.forms.indexOf(f));
+          if (f != null) myBroken.set(indexOf(f));
         }
       }
     }
@@ -302,11 +312,11 @@ public final class ErlangMacroLayer {
 
     /** The form is expanded and its expanded text parses without errors. */
     public boolean isClean(@Nullable Form f) {
-      return f != null && f.status == FormStatus.EXPANDED && copyFile != null && !myBroken.get(expansion.forms.indexOf(f));
+      return f != null && f.status == FormStatus.EXPANDED && copyFile != null && !myBroken.get(indexOf(f));
     }
 
     public boolean isBroken(@NotNull Form f) {
-      return myBroken.get(expansion.forms.indexOf(f));
+      return myBroken.get(indexOf(f));
     }
 
     /** A target in the copy may be used when it lies in a form that is not expanded, or in a clean expanded form. */
@@ -733,7 +743,7 @@ public final class ErlangMacroLayer {
     var app = ApplicationManager.getApplication();
     if (app == null || app.isReadAccessAllowed()) return false;
     if (NO_READ_ACCESS_LOGGED.compareAndSet(false, true)) {
-      com.intellij.openapi.diagnostic.Logger.getInstance(ErlangMacroLayer.class).info(
+      Logger.getInstance(ErlangMacroLayer.class).info(
         "macro layer: asked without read access (" + Thread.currentThread().getName() + "); master's answer");
     }
     return true;
@@ -881,6 +891,33 @@ public final class ErlangMacroLayer {
     return s == null ? null : StringUtil.unquoteString(s.getText());
   }
 
+  /**
+   * The largest text the layer copies and parses, in characters: four times the largest real module of the corpus
+   * (OTP's erl_parse.erl, 956,504 bytes). A larger file or expansion (a generated module) gets master's behaviour.
+   */
+  public static final int MAX_COPY_CHARS = 4_000_000;
+  private static volatile int ourTestMaxCopyChars;
+  private static final Set<String> TOO_LARGE_LOGGED = ConcurrentHashMap.newKeySet();
+
+  static int maxCopyChars() {
+    int t = ourTestMaxCopyChars;
+    return t > 0 ? t : MAX_COPY_CHARS;
+  }
+
+  @TestOnly
+  public static void setMaxCopyCharsForTests(int chars, @NotNull Disposable parent) {
+    ourTestMaxCopyChars = chars;
+    Disposer.register(parent, () -> ourTestMaxCopyChars = 0);
+  }
+
+  /** Logs once per file that it is too large for the layer; the refusal reason. */
+  private static @NotNull String tooLarge(@NotNull PsiFile file, int chars) {
+    VirtualFile vf = file.getOriginalFile().getVirtualFile();
+    String path = vf != null ? vf.getPath() : file.getName();
+    if (TOO_LARGE_LOGGED.add(path)) Logger.getInstance(ErlangMacroLayer.class).info("Macro layer: " + path + " is too large (" + chars + " characters): master's behaviour");
+    return "too-large";
+  }
+
   private static @NotNull Table computeTable(@NotNull ErlangFile file) {
     long c0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
     try {
@@ -926,7 +963,7 @@ public final class ErlangMacroLayer {
     Map<String, ErlangMacroExpander.HeaderSummary> top = new HashMap<>();
     Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested = new IdentityHashMap<>();
     List<VirtualFile> headers = new ArrayList<>();
-    String refusal = null;
+    String refusal = file.getTextLength() > maxCopyChars() ? tooLarge(file, file.getTextLength()) : null;
     boolean[] missing = {false};
     try {
       for (Map.Entry<String, ErlangFile> e : direct.get(file).entrySet()) {
@@ -1865,7 +1902,8 @@ public final class ErlangMacroLayer {
       probe.phase = "parse";
     }
     ErlangFile copyFile = null;
-    if (expansion.hasExpansions()) {
+    if (expansion.hasExpansions() && expansion.text.length() > maxCopyChars()) tooLarge(file, expansion.text.length());
+    else if (expansion.hasExpansions()) {
       COPIES_PARSED.incrementAndGet();
       PsiFile parsed = PsiFileFactory.getInstance(project)
         .createFileFromText(file.getName(), ErlangLanguage.INSTANCE, expansion.text, false, false);
@@ -2481,8 +2519,14 @@ public final class ErlangMacroLayer {
 
   // ------------------------------------------------------------------------------------------------ macro bodies
 
-  /** Includers searched for the uses of a header macro, at most. */
-  private static final int MAX_BODY_USERS = 50;
+  /**
+   * Includers searched for the uses of a header macro, at most: as many copies as the retention keeps strongly, so that
+   * one search does not build copies that the next one builds again.
+   */
+  private static final int MAX_BODY_USERS = ErlangMacroLayerRetention.STRONG;
+  /** Project-wide word searches for the includers of a header macro (tests). */
+  public static final AtomicInteger INCLUDER_SEARCHES = new AtomicInteger();
+  private static final Key<ConcurrentHashMap<String, Object[]>> INCLUDERS_KEY = Key.create("erlang.macro.layer.includers");
 
   /**
    * Round 5: resolves a name inside a {@code -define} body through the expanded copies of the macro's uses: in the
@@ -2509,6 +2553,8 @@ public final class ErlangMacroLayer {
       if (origin == null) return List.of();
       users.addAll(includersUsing(ef.getProject(), vf, def.getName()));
     }
+    // the includers whose copy is there first: their answers cost nothing
+    users.sort(Comparator.comparingInt(u -> cachedCopy(u) != null ? 0 : 1));
     LinkedHashSet<PsiElement> result = new LinkedHashSet<>();
     for (ErlangFile user : users) {
       ProgressManager.checkCanceled();
@@ -2554,8 +2600,33 @@ public final class ErlangMacroLayer {
     return includersUsing(header.getProject(), vf, macro);
   }
 
-  /** The .erl files of the project that contain the macro's name and include the header (directly or not). */
+  /**
+   * The .erl files of the project that contain the macro's name and include the header (directly or not), at most
+   * {@link #MAX_BODY_USERS}; kept until the next PSI change (a search asks it for every occurrence of a word).
+   */
   private static @NotNull List<ErlangFile> includersUsing(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
+    long stamp = PsiModificationTracker.getInstance(project).getModificationCount();
+    ConcurrentHashMap<String, Object[]> cache = project.getUserData(INCLUDERS_KEY);
+    if (cache == null) cache = ((UserDataHolderEx)project).putUserDataIfAbsent(INCLUDERS_KEY, new ConcurrentHashMap<>());
+    String key = header.getUrl() + "|" + macro;
+    Object[] kept = cache.get(key);
+    if (kept != null && (Long)kept[0] == stamp) {
+      List<ErlangFile> r = new ArrayList<>();
+      PsiManager manager = PsiManager.getInstance(project);
+      for (Object o : (List<?>)kept[1]) {
+        if (o instanceof VirtualFile vf && vf.isValid() && manager.findFile(vf) instanceof ErlangFile ef) r.add(ef);
+      }
+      return r;
+    }
+    List<ErlangFile> r = includersUsing0(project, header, macro);
+    List<VirtualFile> files = new ArrayList<>();
+    for (ErlangFile f : r) if (f.getVirtualFile() != null) files.add(f.getVirtualFile());
+    cache.put(key, new Object[]{stamp, files});
+    return r;
+  }
+
+  private static @NotNull List<ErlangFile> includersUsing0(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
+    INCLUDER_SEARCHES.incrementAndGet();
     List<ErlangFile> r = new ArrayList<>();
     PsiSearchHelper.getInstance(project).processAllFilesWithWord(macro, GlobalSearchScope.projectScope(project), f -> {
       ProgressManager.checkCanceled();
