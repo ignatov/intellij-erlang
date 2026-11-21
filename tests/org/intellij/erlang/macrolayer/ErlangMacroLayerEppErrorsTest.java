@@ -32,10 +32,10 @@ public class ErlangMacroLayerEppErrorsTest extends ErlangLightPlatformCodeInsigh
     return inBackgroundWithIndicator(() -> {
       List<String> r = new ArrayList<>();
       List<ErlangMacroLayerExpansionErrors.Problem> ps = ErlangMacroLayerExpansionErrors.problems((ErlangFile)f);
-      if (ps != null) {
-        for (ErlangMacroLayerExpansionErrors.Problem p : ps) {
-          r.add((StringUtil.offsetToLineNumber(text, p.range().getStartOffset()) + 1) + ":" + p.range().substring(text) + " " + p.message());
-        }
+      // null: the pass gave no answer (no table or no copy); a negative case must not pass by that
+      assertNotNull("the pass answered", ps);
+      for (ErlangMacroLayerExpansionErrors.Problem p : ps) {
+        r.add((StringUtil.offsetToLineNumber(text, p.range().getStartOffset()) + 1) + ":" + p.range().substring(text) + " " + p.message());
       }
       return r;
     });
@@ -50,9 +50,7 @@ public class ErlangMacroLayerEppErrorsTest extends ErlangLightPlatformCodeInsigh
   /** 5.2: a map field macro used outside a map (erlc mq.erl:5:21 "syntax error before: '=>'"). */
   public void testMapAssociationOutsideAMap() throws Exception {
     List<String> p = problems("mq.erl", "-module(mq).\n-export([f/1]).\n-define(A, a => 1).\n-define(ID(Y), Y).\nf(X) -> _ = X, ?ID(?A).\n");
-    assertEquals(1, p.size());
-    assertTrue(p.toString(), p.get(0).startsWith("5:?ID(?A) The expansion of ?ID is not valid Erlang: syntax error before: '=>'") ||
-                             p.get(0).contains("syntax error before: '=>'"));
+    assertEquals(List.of("5:?ID(?A) The expansion of ?ID is not valid Erlang: syntax error before: '=>'"), p);
   }
 
   /** The same macro inside a map and a map update: erlc compiles it (mp.erl). */
