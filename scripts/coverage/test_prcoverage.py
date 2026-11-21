@@ -298,6 +298,13 @@ class MainTest(Checkout):
         with open(result_file, encoding='utf-8') as f:
             self.assertEqual(1, json.load(f)['totals']['executed'])
 
+    def test_plan_prints_nothing_without_a_test_class(self):
+        changes = self.write('changes.diff', diff(MODIFIED_SDK))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            prcoverage.main(['plan', '--diff', changes, '--repository', self.repository])
+        self.assertEqual('', out.getvalue())
+
     def test_missing_report_file_means_nothing_measured(self):
         changes = self.write('changes.diff', diff(MODIFIED_SDK))
         out = io.StringIO()
