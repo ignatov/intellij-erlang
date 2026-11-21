@@ -1,0 +1,101 @@
+/*
+ * Copyright 2012-2026 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.eunit;
+
+import com.intellij.execution.ExecutionException;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.intellij.erlang.runconfig.ErlangRunningState;
+
+import java.util.Set;
+
+public class ErlangUnitRunningStateTest extends BasePlatformTestCase {
+  public void testFunctionNameWithoutModuleDoesNotThrow() {
+    doTestMalformedFunctionName("my_test");
+  }
+
+  public void testFunctionNameWithTrailingColonDoesNotThrow() {
+    doTestMalformedFunctionName("my_tests:");
+  }
+
+  public void testMalformedFunctionNameIsReported() {
+    assertInvalidName("my_test", false);
+    assertInvalidName("my_tests:", false);
+    assertInvalidName(":my_test", false);
+  }
+
+  public void testMalformedFunctionNameIsReportedInDebug() {
+    assertInvalidName("my_test", true);
+  }
+
+  public void testWellFormedFunctionNames() throws ExecutionException {
+    ErlangUnitRunningState state = createState(Set.of("my_tests:my_test", "my_tests:gen_test_"));
+    String tests = state.getEntryPoint().getArgsList().get(0);
+    assertTrue(tests, tests.startsWith("[{\"module 'my_tests'\", ["));
+    assertTrue(tests, tests.contains("fun my_tests:my_test/0"));
+    assertTrue(tests, tests.contains("{generator, fun my_tests:gen_test_/0}"));
+  }
+
+  // a quoted function name may contain a colon: -module(m). 'a:b_test'() -> ok.
+  public void testFunctionNameWithColon() throws ExecutionException {
+    String tests = createState(Set.of("m:a:b_test", "m:ok_test")).getEntryPoint().getArgsList().get(0);
+    assertTrue(tests, tests.contains("fun m:'a:b_test'/0"));
+    assertTrue(tests, tests.contains("fun m:ok_test/0"));
+  }
+
+  public void testFunctionNameWithSpacesAroundColon() throws ExecutionException {
+    String tests = createState(Set.of("m : ok_test")).getEntryPoint().getArgsList().get(0);
+    assertEquals("[{\"module 'm'\", [fun m:ok_test/0]}]", tests);
+    assertInvalidName("m: ", false);
+  }
+
+  private void assertInvalidName(String functionName, boolean debug) {
+    ErlangUnitRunningState state = createState(Set.of(functionName));
+    try {
+      if (debug) state.getDebugEntryPoint();
+      else state.getEntryPoint();
+      fail("ExecutionException expected for " + functionName);
+    }
+    catch (ExecutionException e) {
+      assertEquals("Invalid test function name '" + functionName + "': expected module:function", e.getMessage());
+    }
+  }
+
+  private ErlangUnitRunningState createState(Set<String> functionNames) {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+    configuration.getConfigData().setFunctionNames(functionNames);
+    return new ErlangUnitRunningState(null, getModule(), configuration);
+  }
+
+  private void doTestMalformedFunctionName(String functionName) {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+    configuration.getConfigData().setFunctionNames(Set.of(functionName));
+    ErlangUnitRunningState state = new ErlangUnitRunningState(null, getModule(), configuration);
+    try {
+      ErlangRunningState.ErlangEntryPoint entryPoint = state.getEntryPoint();
+      assertEquals("eunit", entryPoint.getModuleName());
+      assertEquals("test", entryPoint.getFunctionName());
+      assertFalse(String.valueOf(entryPoint.getArgsList()), entryPoint.getArgsList().get(0).contains("my_test"));
+    }
+    catch (ExecutionException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains(functionName));
+    }
+  }
+}
