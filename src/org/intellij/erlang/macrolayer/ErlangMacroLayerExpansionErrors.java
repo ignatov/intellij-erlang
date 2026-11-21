@@ -140,10 +140,10 @@ public final class ErlangMacroLayerExpansionErrors {
     }
     if (copy.copyFile == null || f == null || f.status != ErlangMacroExpander.FormStatus.EXPANDED || !f.complete) return null;
     String key = "x" + f.srcStart;
-    Object cached = copy.answers.get(key);
+    Object cached = copy.answers().get(key);
     if (cached != null) return cached instanceof Problem p ? p : null;
     Problem p = compute(copy, file, f);
-    copy.answers.put(key, p == null ? NONE : p);
+    copy.answers().put(key, p == null ? NONE : p);
     ErlangMacroLayerLog.query("expansion-errors", file.getName());
     return p;
   }

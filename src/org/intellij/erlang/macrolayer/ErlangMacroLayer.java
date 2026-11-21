@@ -242,8 +242,30 @@ public final class ErlangMacroLayer {
     private final BitSet myBroken = new BitSet();
     public final long buildNanos;
     private volatile Map<String, PsiElement> myFunctionsMadeByMacros;
-    /** Answers of the oracle for this copy, by kind and real offset; valid as long as the copy. */
-    final ConcurrentHashMap<String, Object> answers = new ConcurrentHashMap<>();
+    /**
+     * Answers of the oracle for this copy, by kind and real offset. Read and write them only through {@link #answers()}:
+     * an answer can point into another file, which can change while this copy stays (M1).
+     */
+    private final ConcurrentHashMap<String, Object> myAnswers = new ConcurrentHashMap<>();
+    private volatile long myAnswersStamp = -1;
+
+    /**
+     * The kept answers, valid until the next PSI change in any file: the map is cleared when the PSI modification count
+     * moved since it was filled, like the platform's resolve cache. The copy itself stays, so an unrelated edit rebuilds
+     * no copy; only its answers are computed again (a deleted target gives none, a new target is found).
+     */
+    @NotNull Map<String, Object> answers() {
+      long now = PsiModificationTracker.getInstance(realFile.getProject()).getModificationCount();
+      if (now != myAnswersStamp) {
+        synchronized (myAnswers) {
+          if (now != myAnswersStamp) {
+            myAnswers.clear();
+            myAnswersStamp = now;
+          }
+        }
+      }
+      return myAnswers;
+    }
 
     Copy(@NotNull PsiFile realFile, @NotNull Expansion expansion, @Nullable ErlangFile copyFile, long buildNanos) {
       this.realFile = realFile;
@@ -1634,7 +1656,7 @@ public final class ErlangMacroLayer {
     return "refusal=" + t.refusal + " names=" + t.names + " bodyVars=" + t.bodyVars + " form=" + (form == null ? null : form.getClass().getSimpleName()) +
            " formUses=" + (form != null && formUsesMacro(t, form)) + " argVars=" + (form == null ? null : argumentVars(t, form)) +
            " refClass=" + ref.getClass().getSimpleName() + " copy=" + (c == null ? null : c.expansion.text.length()) +
-           " answers=" + (c == null ? null : c.answers.keySet());
+           " answers=" + (c == null ? null : c.myAnswers.keySet());
   }
 
   /** Why a form needs the copy (the first reason found), or null; for tests and measurements. */
@@ -2570,7 +2592,7 @@ public final class ErlangMacroLayer {
       return null;
     }
     String answerKey = "r" + element.getTextRange().getStartOffset() + ref.getClass().getSimpleName();
-    Object cached = copy.answers.get(answerKey);
+    Object cached = copy.answers().get(answerKey);
     if (cached != null) {
       mark(o, cached == NO_ANSWER ? "asked:cached-none" : "asked:cached-answer");
       return cached == NO_ANSWER ? null : (PsiElement)cached;
@@ -2578,7 +2600,7 @@ public final class ErlangMacroLayer {
     long q0 = System.nanoTime();
     PsiElement answer = resolveInCopy(copy, ref, element, file, t);
     ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
-    copy.answers.put(answerKey, answer == null ? NO_ANSWER : answer);
+    copy.answers().put(answerKey, answer == null ? NO_ANSWER : answer);
     mark(o, answer == null ? "asked:computed-none" : "asked:computed-answer");
     return answer;
   }
@@ -2617,7 +2639,7 @@ public final class ErlangMacroLayer {
     Copy copy = getCopy(file, "made-name");
     if (copy == null || copy.copyFile == null) return null;
     String answerKey = "m" + element.getTextRange().getStartOffset() + ref.getClass().getName();
-    Object cached = copy.answers.get(answerKey);
+    Object cached = copy.answers().get(answerKey);
     if (cached != null) return cached == NO_ANSWER ? null : (PsiElement)cached;
     PsiElement answer = null;
     if (ref instanceof ErlangRecordReferenceImpl rr) answer = exit(copy.recordsMadeByMacros().get(rr.getCanonicalText()), file);
@@ -2628,7 +2650,7 @@ public final class ErlangMacroLayer {
       if (c != null) answer = exit(copy.toReal(c.resolve()), file);
     }
     if (answer != null) FALLBACK_ANSWERED.incrementAndGet();
-    copy.answers.put(answerKey, answer == null ? NO_ANSWER : answer);
+    copy.answers().put(answerKey, answer == null ? NO_ANSWER : answer);
     return answer;
   }
 
@@ -2721,7 +2743,7 @@ public final class ErlangMacroLayer {
       return ResolveResult.EMPTY_ARRAY;
     }
     String answerKey = "v" + element.getTextRange().getStartOffset();
-    Object cached = copy.answers.get(answerKey);
+    Object cached = copy.answers().get(answerKey);
     if (cached instanceof ResolveResult[] rr) {
       mark(o, "asked(" + why + "):cached-" + (rr.length > 0 ? "answer" : "none"));
       return rr;
@@ -2729,7 +2751,7 @@ public final class ErlangMacroLayer {
     long q0 = System.nanoTime();
     ResolveResult[] answer = multiResolveInCopy(copy, ref, element, file);
     ErlangMacroLayerLog.queryNanos(System.nanoTime() - q0);
-    copy.answers.put(answerKey, answer);
+    copy.answers().put(answerKey, answer);
     mark(o, "asked(" + why + "):computed-" + (answer.length > 0 ? "answer" : "none"));
     return answer;
   }

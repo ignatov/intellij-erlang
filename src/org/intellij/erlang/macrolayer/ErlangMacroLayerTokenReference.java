@@ -268,10 +268,10 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, trigger);
     if (copy == null || copy.copyFile == null) return null;
     String key = "t" + leaf.getTextRange().getStartOffset();
-    Object cached = copy.answers.get(key);
+    Object cached = copy.answers().get(key);
     if (cached != null) return cached == NONE ? null : (Answer)cached;
     Answer a = compute(copy, leaf, file);
-    copy.answers.put(key, a == null ? NONE : a);
+    copy.answers().put(key, a == null ? NONE : a);
     return a;
   }
 
