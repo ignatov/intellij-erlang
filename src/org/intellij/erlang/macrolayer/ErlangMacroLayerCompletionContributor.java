@@ -92,7 +92,9 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       result.passResult(r);
     });
     ourLastMainNanos = System.nanoTime() - t0;
-    Position p = auto ? ErlangMacroLayer.asPassiveQuery(() -> position(parameters)) : position(parameters);
+    // round 6 (next), N1: the auto-popup too builds the copy if it is not there, under the completion's own indicator
+    // (the next key cancels it): as a passive query it waited for the daemon's copy and opened empty for about 1 s
+    Position p = position(parameters);
     if (p != null) {
       TAKEN_OVER.incrementAndGet();
       result.runRemainingContributors(parameters.withPosition(p.position, p.offset), r -> {

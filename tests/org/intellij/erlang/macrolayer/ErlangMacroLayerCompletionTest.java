@@ -162,9 +162,9 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
   }
 
   /**
-   * The auto-popup asks for the copy as a passive query (the same mark the contributor puts on it): right after a key
-   * press it builds nothing; it waits for the copy, and the next key press makes it give up. The explicit completion is
-   * not passive (tested above, through the platform's completion on the UI thread with the copy there).
+   * A query under the passive mark ({@code ErlangMacroLayer.asPassiveQuery}): right after a key press it builds
+   * nothing; it waits for the copy, and the next key press makes it give up. (N1: the completion contributor no longer
+   * puts this mark on the auto-popup; ErlangMacroLayerAutoPopupTest covers the auto-popup itself.)
    */
   public void testAutoPopupBuildsNothingWhileTyping() throws Exception {
     PsiFile f = myFixture.addFileToProject("c/auto.erl", HEAD.replace("-module(m).", "-module(auto).") +
