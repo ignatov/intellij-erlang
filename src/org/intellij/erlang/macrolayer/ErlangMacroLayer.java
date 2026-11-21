@@ -1877,7 +1877,22 @@ public final class ErlangMacroLayer {
       PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
       b = prev != null && usesKnownMacro(prev.getNode().getChars(), names);
     }
+    // D2: the rest of a form that the recovery split ("reverse(L)." after "?LISTS" or "lists?COLON"): the pieces
+    // before it, back to the one that ends the form, belong to the same form of the source
+    for (PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form); !b && prev != null && !endsSourceForm(prev);
+         prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(prev)) {
+      b = usesKnownMacro(prev.getNode().getChars(), names);
+    }
     return b;
+  }
+
+  /** The top-level element ends with the dot that ends a form (not the dot of a record field access, R#rec.f). */
+  static boolean endsSourceForm(@NotNull PsiElement e) {
+    PsiElement last = PsiTreeUtil.getDeepestVisibleLast(e);
+    if (last == null || last.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_DOT) return false;
+    PsiElement name = PsiTreeUtil.prevVisibleLeaf(last);
+    PsiElement radix = name == null ? null : PsiTreeUtil.prevVisibleLeaf(name);
+    return radix == null || radix.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_RADIX;
   }
 
   /**
