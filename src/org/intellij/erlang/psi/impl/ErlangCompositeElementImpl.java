@@ -20,6 +20,7 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.usageView.UsageViewUtil;
@@ -37,6 +38,12 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   @Override
   public String toString() {
     return getNode().getElementType().toString();
+  }
+
+  /** Round 6: also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}). */
+  @Override
+  public PsiReference @NotNull [] getReferences() {
+    return ErlangBareMacroReference.append(this, super.getReferences());
   }
 
   @Override

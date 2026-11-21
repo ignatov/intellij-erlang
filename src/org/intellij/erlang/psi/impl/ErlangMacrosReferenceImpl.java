@@ -23,7 +23,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
@@ -52,11 +51,9 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
 
     PsiFile containingFile = myElement.getContainingFile();
     if (containingFile instanceof ErlangFile) {
-      ErlangMacrosDefinition macros = ((ErlangFile) containingFile).getMacros(myReferenceName);
-      if (macros != null) {
-        return macros;
-      }
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangMacrosFromIncludes((ErlangFile) containingFile, false, myReferenceName));
+      // round 6: the definition with the use's arity, as epp chooses it
+      return ErlangMacroResolve.resolve((ErlangFile) containingFile, myReferenceName,
+                                        ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement)));
     }
     return null;
   }
@@ -71,6 +68,8 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> {
   public boolean isReferenceTo(@NotNull PsiElement element) {
     ErlangMacrosDefinition definition = ObjectUtils.tryCast(element, ErlangMacrosDefinition.class);
     String macroName = definition != null ? definition.getName() : null;
-    return macroName != null && macroName.equals(myReferenceName) && definition.getMacrosName() != myNameElement;
+    if (macroName == null || !macroName.equals(myReferenceName) || definition.getMacrosName() == myNameElement) return false;
+    // round 6: not a definition of the same name in an unrelated file (a header may use a macro only its includers define)
+    return !(myElement.getContainingFile() instanceof ErlangFile file) || ErlangMacroResolve.isVisibleOrUnknown(file, definition);
   }
 }

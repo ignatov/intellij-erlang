@@ -279,6 +279,19 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     super(viewProvider, ErlangLanguage.INSTANCE);
   }
 
+  /**
+   * Round 6: also the references of the bare macro uses between the top-level forms ({@link ErlangBareMacroReference}),
+   * cached until the file changes: a text search asks the file for its references at every occurrence of a word.
+   */
+  @Override
+  public PsiReference @NotNull [] getReferences() {
+    PsiReference[] own = super.getReferences();
+    if (!isContentsLoaded()) return own;
+    PsiReference[] bare = CachedValuesManager.getCachedValue(
+      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this));
+    return bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare);
+  }
+
   @Override
   public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
     if (FileTypeRegistry.getInstance().getFileTypeByFileName(name) != ErlangFileType.MODULE) {
