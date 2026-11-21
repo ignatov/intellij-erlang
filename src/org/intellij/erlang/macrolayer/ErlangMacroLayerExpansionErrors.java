@@ -76,7 +76,8 @@ public final class ErlangMacroLayerExpansionErrors {
     if (forms.isEmpty()) return List.of();
     ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(file, "expansion-errors");
     if (copy == null) return null;
-    if (copy.copyFile == null) return List.of();
+    // round 6 (next): a file whose only uses are circular has no expanded form, so no parsed copy, and still errors
+    if (copy.copyFile == null && copy.expansion.forms.stream().noneMatch(f -> f.circularMacro != null)) return List.of();
     Set<Problem> r = new LinkedHashSet<>();
     for (PsiElement form : forms) {
       ProgressManager.checkCanceled();
@@ -92,9 +93,18 @@ public final class ErlangMacroLayerExpansionErrors {
    * may then lie in another piece.
    */
   private static @Nullable Problem expansionProblem(@NotNull PsiElement form, @NotNull ErlangFile file, @NotNull ErlangMacroLayer.Copy copy) {
-    if (copy.copyFile == null || !onlyMacroErrors(form)) return null;
+    if (!onlyMacroErrors(form)) return null;
     Form f = copy.expansion.formAtSource(form.getTextRange().getStartOffset());
-    if (f == null || f.status != ErlangMacroExpander.FormStatus.EXPANDED || !f.complete) return null;
+    if (f != null && f.circularMacro != null && form.getTextRange().contains(f.circularStart)) {
+      // round 6 (next), item 5: epp's "circular macro", on the use
+      String use = copy.expansion.sourceText.subSequence(f.circularStart, f.circularEnd).toString();
+      java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\?\\s*('[^']*'|[A-Za-z_@][A-Za-z0-9_@]*)").matcher(use);
+      boolean found = m.lookingAt();
+      String name = found ? m.group(1) : f.circularMacro;
+      return new Problem(TextRange.create(f.circularStart, f.circularStart + (found ? m.end() : use.length())),
+                         "The expansion of ?" + name + " is not valid Erlang: circular macro '" + f.circularMacro + "'");
+    }
+    if (copy.copyFile == null || f == null || f.status != ErlangMacroExpander.FormStatus.EXPANDED || !f.complete) return null;
     String key = "x" + f.srcStart;
     Object cached = copy.answers.get(key);
     if (cached != null) return cached instanceof Problem p ? p : null;

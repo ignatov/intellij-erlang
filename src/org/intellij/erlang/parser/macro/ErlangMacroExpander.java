@@ -161,6 +161,12 @@ public final class ErlangMacroExpander {
      * form is not inside an {@code -ifdef}, {@code -ifndef} or {@code -if} branch: its expanded text is what epp gives.
      */
     public boolean complete;
+    /**
+     * Round 6 (next), item 5: a use of the form (not inside a conditional branch) that the expander refused because
+     * the body of {@link #circularMacro} comes back to itself (epp: "circular macro"), with its source range; else null.
+     */
+    public @Nullable String circularMacro;
+    public int circularStart = -1, circularEnd = -1;
 
     Form(int srcStart, int srcEnd) {
       this.srcStart = srcStart;
@@ -807,10 +813,17 @@ public final class ErlangMacroExpander {
 
   private static final class LimitException extends Exception {
     final Outcome outcome;
+    /** Round 6 (next): for {@link Outcome#LIMIT_RECURSION}, the macro whose body comes back to itself. */
+    final @Nullable String macro;
 
     LimitException(Outcome outcome) {
+      this(outcome, null);
+    }
+
+    LimitException(Outcome outcome, @Nullable String macro) {
       super(null, null, false, false);
       this.outcome = outcome;
+      this.macro = macro;
     }
   }
 
@@ -954,6 +967,12 @@ public final class ErlangMacroExpander {
               q = u.last;
             }
             else if (r == Outcome.AMBIGUOUS) ambiguous = true;
+            if (r == Outcome.LIMIT_RECURSION && !inBranch && form.circularMacro == null) {
+              // round 6 (next), item 5: epp's "circular macro", reported on the use by the expansion-error pass
+              form.circularMacro = circularMacro;
+              form.circularStart = circularStart;
+              form.circularEnd = circularEnd;
+            }
             else if (r instanceof Outcome o && o != Outcome.PREDEFINED && o != Outcome.NOT_IN_FILE) refused = true;
             else if (r == Outcome.NOT_IN_FILE) unknown = true;
           }
@@ -1334,14 +1353,23 @@ public final class ErlangMacroExpander {
       }
       catch (LimitException e) {
         count(e.outcome);
+        if (e.outcome == Outcome.LIMIT_RECURSION) {
+          circularMacro = e.macro;
+          circularStart = b.start[sig[q]];
+          circularEnd = b.end[sig[last]];
+        }
         return e.outcome;
       }
     }
 
+    /** Round 6 (next): the last use that {@link #handleUse} refused as circular, and the macro of the cycle. */
+    @Nullable String circularMacro;
+    int circularStart, circularEnd;
+
     List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth, Deque<String> active) throws LimitException {
       if (depth > MAX_DEPTH) throw new LimitException(Outcome.LIMIT_DEPTH);
       String activeKey = def.name + "/" + def.arity;
-      if (active.contains(activeKey)) throw new LimitException(Outcome.LIMIT_RECURSION);
+      if (active.contains(activeKey)) throw new LimitException(Outcome.LIMIT_RECURSION, def.name);
       // the arguments are expanded first, in the context of the use (epp rescans them after the substitution and only
       // rejects macros whose own bodies are circular)
       List<List<Tok>> expandedArgs = null;

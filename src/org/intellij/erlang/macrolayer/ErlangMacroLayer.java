@@ -900,6 +900,20 @@ public final class ErlangMacroLayer {
         if (!shape.plainBody()) t.nonPlain.add(name);
       }
     }
+    // round 6 (next), item 5: a macro whose bodies come back to itself is not plain (epp: "circular macro")
+    for (String name : t.names) {
+      if (t.nonPlain.contains(name)) continue;
+      ArrayDeque<String> queue = new ArrayDeque<>(t.macroNestedUses.getOrDefault(name, Set.of()));
+      Set<String> seen = new HashSet<>();
+      while (!queue.isEmpty()) {
+        String m = queue.poll();
+        if (m.equals(name)) {
+          t.nonPlain.add(name);
+          break;
+        }
+        if (seen.add(m)) queue.addAll(t.macroNestedUses.getOrDefault(m, Set.of()));
+      }
+    }
     boolean changed = true;
     while (changed) {
       changed = false;
