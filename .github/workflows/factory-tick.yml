@@ -213,7 +213,7 @@ jobs:
           for path in discovery/robustness-sweep/ledger.jsonl discovery/robustness-sweep/known-signatures.tsv \
               discovery/robustness-sweep/runs discovery/robustness-hunt dispatcher/steps.csv; do
             if [ -e "$path" ] && ! git add -- "$path" >> "$out" 2>&1; then
-              echo "::warning::A file of the robustness sweep or of the hypothesis hunt could not be added to the state commit."
+              echo "::warning::A file of the robustness sweep, of the hypothesis hunt or of the step record could not be added to the state commit."
             fi
           done
           if git diff --cached --quiet; then
