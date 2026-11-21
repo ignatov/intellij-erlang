@@ -27,6 +27,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -172,7 +173,10 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
-    return getElement().getManager().areElementsEquivalent(resolve(), element);
+    PsiElement target = resolve();
+    if (getElement().getManager().areElementsEquivalent(target, element)) return true;
+    // round 5: a call in a -define body that only the macro's uses resolve (a header body naming includer functions)
+    return target == null && ErlangMacroLayer.isReferenceThroughMacroUses(this, element);
   }
 
   @Nullable

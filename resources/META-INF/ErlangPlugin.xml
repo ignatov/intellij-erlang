@@ -27,6 +27,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- spike 3: syntax errors of forms whose macro expansion parses -->
         <highlightErrorFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerErrorFilter"/>
+        <!-- round 5: names inside -define bodies, resolved through the expanded uses of the macro -->
+        <gotoDeclarationHandler implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerGotoDeclarationHandler"/>
         <createFromTemplateHandler implementation="org.intellij.erlang.template.ErlangCreateFromTemplateHandler"/>
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>

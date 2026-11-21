@@ -39,7 +39,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
 
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
-    if (o instanceof ErlangMacroLayerHeaderTarget || ErlangMacroLayer.isNameOfFunctionMadeByMacro(o)) {
+    if (o instanceof ErlangMacroLayerHeaderTarget || ErlangMacroLayer.isNameMadeByMacro(o)) {
       return ErlangMacroLayer.describeLayerTarget(o, location);
     }
     if (!(o instanceof ErlangCompositeElement)) return null;

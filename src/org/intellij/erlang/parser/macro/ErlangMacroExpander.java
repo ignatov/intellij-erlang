@@ -231,6 +231,22 @@ public final class ErlangMacroExpander {
       return r == null ? new int[0] : r;
     }
 
+    /**
+     * Round 5: the expanded offsets of every copy of a {@code -define} body token: a same-file body token by its source
+     * offset ({@code origin} null), a header body token by its origin.
+     */
+    public int @NotNull [] bodyCopies(int srcOffset, @Nullable HeaderTok origin) {
+      int[] r = new int[0];
+      for (int i = 0; i < mySegments; i++) {
+        boolean match = origin == null ? myKind[i] == SRC_BODY && mySrcStart[i] == srcOffset
+                                       : myKind[i] == SRC_HEADER && origin.equals(myOrigin[i]);
+        if (!match) continue;
+        r = Arrays.copyOf(r, r.length + 1);
+        r[r.length - 1] = myExpStart[i];
+      }
+      return r;
+    }
+
     private int segmentAt(int expOffset) {
       int lo = 0, hi = mySegments - 1;
       while (lo <= hi) {

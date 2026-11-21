@@ -21,6 +21,7 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.PsiSearchHelper;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
@@ -988,13 +989,23 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the element is what the layer gives as the declaration of a function made by a macro, such as
-   * {@code foo} in {@code ?GEN(foo).}: an atom name in a top-level form that starts with a macro use or is broken.
-   * A structural check only; it asks no copy, so the UI thread may call it.
+   * Round 5: the element may be what the layer gives as the declaration of a name made by a macro: an atom name leaf
+   * in a top-level form that starts with a macro use or is broken (such as {@code foo} in {@code ?GEN(foo).}), or in a
+   * {@code -define} body (such as {@code mr} in {@code -define(R, -record(mr, {f})).}). A structural check only; it
+   * asks no copy, so the UI thread may call it.
    */
-  public static boolean isNameOfFunctionMadeByMacro(@Nullable PsiElement element) {
-    if (!(element instanceof LeafPsiElement leaf) || leaf.getElementType() != org.intellij.erlang.ErlangTypes.ERL_ATOM_NAME) return false;
+  public static boolean isNameMadeByMacro(@Nullable PsiElement element) {
+    // the layer maps to the topmost element with the token's range: it may be an expression around the leaf
+    PsiElement first = element instanceof LeafPsiElement || element == null ? element : PsiTreeUtil.firstChild(element);
+    if (first == null || !first.getTextRange().equals(element.getTextRange())) return false;
+    if (!(first instanceof LeafPsiElement leaf) || leaf.getElementType() != org.intellij.erlang.ErlangTypes.ERL_ATOM_NAME) return false;
+    if (element instanceof PsiNamedElement || element instanceof ErlangQAtom) return false; // master's own handlers
     if (!isEnabled() || realFile(element) == null) return false;
+    if (PsiTreeUtil.getParentOfType(element, ErlangMacrosBody.class) != null) return true;
+    return isInTopLevelMacroForm(element);
+  }
+
+  private static boolean isInTopLevelMacroForm(@NotNull PsiElement element) {
     PsiElement form = topForm(element);
     if (form == null) return false;
     if (form instanceof PsiErrorElement) return true;
@@ -1008,8 +1019,109 @@ public final class ErlangMacroLayer {
    */
   public static @Nullable String describeLayerTarget(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
     if (element instanceof ErlangMacroLayerHeaderTarget target) return target.describe(location);
-    if (isNameOfFunctionMadeByMacro(element)) return ErlangMacroLayerHeaderTarget.describe("function", element.getText(), location);
+    if (isNameMadeByMacro(element)) {
+      // a name in a macro use at the top level makes a function; in a -define body it may name anything
+      String kind = isInTopLevelMacroForm(element) ? "function" : "name";
+      return ErlangMacroLayerHeaderTarget.describe(kind, element.getText(), location);
+    }
     return null;
+  }
+
+  // ------------------------------------------------------------------------------------------------ macro bodies
+
+  /** Includers searched for the uses of a header macro, at most. */
+  private static final int MAX_BODY_USERS = 50;
+
+  /**
+   * Round 5: resolves a name inside a {@code -define} body through the expanded copies of the macro's uses: in the
+   * file itself, and for a header, in the .erl files that use the macro and include the header (at most
+   * {@link #MAX_BODY_USERS}). The body alone may not parse (a fragment), and a header body names things of its
+   * includers, so master cannot resolve it there. Every use contributes its answer, mapped back to real elements;
+   * different uses may resolve differently, and then all answers are returned. Never builds a copy on the UI thread.
+   */
+  public static @NotNull List<PsiElement> resolveInMacroBody(@NotNull PsiElement leaf) {
+    if (!isEnabled() || leaf.getTextLength() == 0) return List.of();
+    // the search for the includers queries the word index: never on the UI thread
+    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return List.of();
+    PsiFile file = leaf.getContainingFile();
+    if (!(file instanceof ErlangFile ef) || file.getUserData(COPY_OF) != null || DumbService.isDumb(file.getProject())) return List.of();
+    ErlangMacrosDefinition def = PsiTreeUtil.getParentOfType(leaf, ErlangMacrosDefinition.class);
+    if (def == null || def.getName() == null || !PsiTreeUtil.isAncestor(def.getMacrosBody(), leaf, false)) return List.of();
+    int start = leaf.getTextRange().getStartOffset();
+    VirtualFile vf = file.getOriginalFile().getVirtualFile();
+    ErlangMacroExpander.HeaderTok origin = null;
+    List<ErlangFile> users = new ArrayList<>();
+    if (layerFile(ef) != null) users.add(ef);
+    else if (vf != null) {
+      origin = headerOrigin(ef, vf, start, leaf.getText());
+      if (origin == null) return List.of();
+      users.addAll(includersUsing(ef.getProject(), vf, def.getName()));
+    }
+    LinkedHashSet<PsiElement> result = new LinkedHashSet<>();
+    for (ErlangFile user : users) {
+      ProgressManager.checkCanceled();
+      Copy copy = getCopy(user, "macro-body");
+      if (copy == null || copy.copyFile == null) continue;
+      for (int e : copy.expansion.bodyCopies(start, origin)) {
+        if (!copy.isClean(copy.expansion.formAtExpanded(e))) continue;
+        PsiReference ref = copy.copyFile.findReferenceAt(e);
+        if (ref == null) continue;
+        TextRange abs = ref.getRangeInElement().shiftRight(ref.getElement().getTextRange().getStartOffset());
+        if (abs.getStartOffset() != e || !leaf.textMatches(abs.subSequence(copy.expansion.text))) continue;
+        List<PsiElement> targets = new ArrayList<>();
+        if (ref instanceof PsiPolyVariantReference poly) for (ResolveResult rr : poly.multiResolve(false)) targets.add(rr.getElement());
+        if (targets.isEmpty()) targets.add(ref.resolve());
+        for (PsiElement t : targets) {
+          PsiElement real = exit(copy.toReal(t), user);
+          if (real != null) result.add(real);
+        }
+      }
+    }
+    return new ArrayList<>(result);
+  }
+
+  /** The origin of a header token in the header's summary, or null when it is not a token of a directive. */
+  private static @Nullable ErlangMacroExpander.HeaderTok headerOrigin(@NotNull ErlangFile header, @NotNull VirtualFile vf, int start,
+                                                                       @NotNull String text) {
+    List<ErlangMacroExpander.Directive> directives = summaryOf(header).directives;
+    for (int d = 0; d < directives.size(); d++) {
+      List<ErlangMacroExpander.Tok> toks = directives.get(d).tokens;
+      if (toks.isEmpty() || toks.getFirst().start() > start || toks.getLast().end() <= start) continue;
+      for (int i = 0; i < toks.size(); i++) {
+        if (toks.get(i).start() == start && toks.get(i).text().equals(text)) return new ErlangMacroExpander.HeaderTok(vf, d, i);
+      }
+    }
+    return null;
+  }
+
+  /** The .erl files of the project that contain the macro's name and include the header (directly or not). */
+  private static @NotNull List<ErlangFile> includersUsing(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
+    List<ErlangFile> r = new ArrayList<>();
+    PsiSearchHelper.getInstance(project).processAllFilesWithWord(macro, GlobalSearchScope.projectScope(project), f -> {
+      ProgressManager.checkCanceled();
+      ErlangFile ef = f instanceof ErlangFile x ? layerFile(x) : null;
+      Table t = ef == null ? null : table(ef);
+      if (t != null && t.refusal == null && t.headers.contains(header)) r.add(ef);
+      return r.size() < MAX_BODY_USERS;
+    }, true);
+    return r;
+  }
+
+  /**
+   * Round 5: the reference lies in a {@code -define} body, master resolves it to nothing, and one of the macro's uses
+   * resolves it to the element: for find usages and rename of that element.
+   */
+  public static boolean isReferenceThroughMacroUses(@NotNull PsiReference ref, @NotNull PsiElement element) {
+    PsiElement owner = ref.getElement();
+    if (!isEnabled() || PsiTreeUtil.getParentOfType(owner, ErlangMacrosBody.class) == null) return false;
+    PsiFile file = owner.getContainingFile();
+    PsiElement leaf = file == null ? null : file.findElementAt(owner.getTextRange().getStartOffset() + ref.getRangeInElement().getStartOffset());
+    if (leaf == null) return false;
+    PsiManager manager = owner.getManager();
+    for (PsiElement target : resolveInMacroBody(leaf)) {
+      if (manager.areElementsEquivalent(target, element)) return true;
+    }
+    return false;
   }
 
   // ------------------------------------------------------------------------------------------------ resolve
