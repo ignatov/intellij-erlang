@@ -102,10 +102,13 @@ jobs:
   changed-lines-coverage:
     # Which changed lines of src/ the test classes that a pull request adds or changes execute, written into the job
     # summary (scripts/coverage/pr-coverage.sh; the reviewer runs the same command). Information, not a check: no
-    # ruleset requires it and its steps end with success whatever they find. It needs no token and no secret.
+    # ruleset requires it, and continue-on-error keeps a failure or a timeout of any of its steps (a network error,
+    # a hang) from making the gradle.yml run red, whose conclusion the panel and the watch read. It needs no token
+    # and no secret.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    continue-on-error: true
 
     steps:
     - uses: actions/checkout@v7
@@ -126,6 +129,7 @@ jobs:
       uses: ./.github/actions/maven-central-mirror
     - name: Measure the changed lines
       continue-on-error: true
+      timeout-minutes: 20
       run: |
         scripts/coverage/pr-coverage.sh 'HEAD^1'
         {
