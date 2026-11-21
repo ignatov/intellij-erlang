@@ -54,7 +54,9 @@ import java.util.stream.Stream;
  * stands for a consumer such as the target-element search of the IDE; {@code ih} (round 5) does what the IDE's
  * highlighting of the identifier at the caret does, in a cancellable non-blocking read action: it resolves the
  * reference at the caret and asks every reference of the file with the same text whether it refers to that target
- * ({@code isReferenceTo}). An arm name may carry the reader as a suffix
+ * ({@code isReferenceTo}); {@code form} (round 5) resolves every reference of the top-level form at the caret in a
+ * cancellable non-blocking read action, a stand-in for the IDE's caret-driven callers that ask the layer in a form
+ * that needs the copy. An arm name may carry the reader as a suffix
  * ({@code layer+nc}); then it overrides {@code S5_READER}. {@code S5_HOG=<n>}: n threads spin during each run
  * (CPU starvation, as on a loaded host).
  */
@@ -374,6 +376,16 @@ public class ErlangMacroLayerTypingHarnessTest extends ErlangLightPlatformCodeIn
         long r0 = System.nanoTime();
         try {
           java.util.concurrent.Callable<Object> c = () -> {
+            if (kind.equals("form")) {
+              com.intellij.psi.PsiElement at = file.isValid() ? file.findElementAt(Math.max(0, myCaret - 1)) : null;
+              while (at != null && at.getParent() != null && !(at.getParent() instanceof PsiFile)) at = at.getParent();
+              if (at == null) return null;
+              for (com.intellij.psi.PsiElement e : PsiTreeUtil.collectElements(at, x -> x.getReferences().length > 0)) {
+                com.intellij.openapi.progress.ProgressManager.checkCanceled();
+                for (PsiReference r : e.getReferences()) r.resolve();
+              }
+              return null;
+            }
             PsiReference ref = file.isValid() ? file.findReferenceAt(Math.max(0, myCaret - 1)) : null;
             Object target = ref == null ? null : ref.resolve();
             if (kind.equals("ih") && target instanceof com.intellij.psi.PsiElement te) {
