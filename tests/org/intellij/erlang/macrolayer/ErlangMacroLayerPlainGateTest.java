@@ -24,7 +24,7 @@ import static org.intellij.erlang.macrolayer.LayerTestSupport.*;
 public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   static final String FIXTURE = """
     -module(pg).
-    -export([f1/1, f2/1, f3/1, g/1, h/2, k/1, spec_only/1]).
+    -export([f1/1, f2/1, f3/1, g/1, h/2, k/1, m/1, n/1, spec_only/1]).
     -record(rec, {f = 1, g}).
     -define(A, a).
     -define(T, integer()).
@@ -43,6 +43,13 @@ public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsigh
     -define(USES_BIND(X), ?BIND(X)).
     -define(USES_UNKNOWN, ?NOT_DEFINED).
     -define(LC(L), [E || E <- L]).
+    -ifdef(DEBUG).
+    -define(CASE(X, Y), case X of true -> Y; _ -> try Y catch _:_ -> fun(_) -> Y end end end).
+    -else.
+    -define(CASE(X, Y), ok).
+    -endif.
+    -define(MATCHES(X, P), case X of P -> true; _ -> false end).
+    -define(FUNARG(P), fun(P) -> ok end).
     -spec spec_only(?T) -> ?A.
     spec_only(X) -> X.
     f1(?F(X)) -> X;
@@ -53,6 +60,8 @@ public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsigh
     g(Q) -> ?BIND(R), R + Q, ?FREE, Y, ?USES_BIND(S), S, ?USES_UNKNOWN, ?LC(Q).
     h(A, B) -> case A of ?F(C) -> C; _ -> ?A end, [D || ?F(D) <- B], Unbound4.
     k(X) -> ?SEQ, X.
+    m(Q) -> ?CASE(Q, R = 1), {R, ?MATCHES(Q, {S}), S, ?FUNARG(T), T}.
+    n(Q) -> ?CASE(Q, R = 1), {R, Unbound5}.
     foo(X) -> X.
     """;
 
@@ -86,7 +95,7 @@ public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsigh
   public void testClassification() throws Exception {
     PsiFile f = myFixture.addFileToProject("pg.erl", FIXTURE);
     ErlangMacroLayer.Table t = table(f);
-    assertEquals(new TreeSet<>(List.of("BIND", "FREE", "SEQ", "USES_BIND", "USES_UNKNOWN", "LC")), new TreeSet<>(t.nonPlain));
+    assertEquals(new TreeSet<>(List.of("BIND", "FREE", "SEQ", "USES_BIND", "USES_UNKNOWN", "LC", "MATCHES", "FUNARG")), new TreeSet<>(t.nonPlain));
     assertTrue(t.freeBodyVars.toString(), t.freeBodyVars.containsAll(List.of("Y", "E")));
     assertFalse("a parameter is not a free variable", t.freeBodyVars.contains("X"));
     Map<String, Boolean> needs = inBackground(() -> {
@@ -97,7 +106,7 @@ public class ErlangMacroLayerPlainGateTest extends ErlangLightPlatformCodeInsigh
       }
       return m;
     });
-    assertEquals("{f1=false, f2=true, f3=true, foo=false, g=true, h=false, k=true, spec=false, spec_only=false}", needs.toString());
+    assertEquals("{f1=false, f2=true, f3=true, foo=false, g=true, h=false, k=true, m=true, n=false, spec=false, spec_only=false}", needs.toString());
   }
 
   public void testHeaderMacrosAreClassified() throws Exception {

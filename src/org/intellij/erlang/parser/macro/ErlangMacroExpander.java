@@ -567,38 +567,61 @@ public final class ErlangMacroExpander {
     return new DefineShape(n.name, arity, List.copyOf(params), plain, nested, free);
   }
 
-  /** Tokens that never occur in a plain body: they make clauses, patterns, scopes or sequences. */
+  /** Tokens that never occur in a plain body: they bind (comprehension generators, maybe match), send or type. */
   private static final TokenSet NOT_IN_PLAIN_BODY = TokenSet.create(
-    ERL_END, ERL_ARROW, ERL_OR_OR, ERL_OP_LT_MINUS, ERL_OP_LT_EQ, ERL_OP_LT_COLON_MINUS, ERL_OP_LT_COLON_EQ, ERL_OP_MAYBE_EQ,
-    ERL_WHEN, ERL_OF, ERL_AFTER, ERL_CATCH, ERL_OP_EXL, ERL_SEMI, ERL_BEGIN, ERL_CASE, ERL_IF, ERL_RECEIVE, ERL_TRY,
-    ERL_MAYBE, ERL_ELSE, ERL_COLON_COLON, ERL_DOT_DOT, ERL_DOT_DOT_DOT, ERL_OP_AND_AND);
+    ERL_OR_OR, ERL_OP_LT_MINUS, ERL_OP_LT_EQ, ERL_OP_LT_COLON_MINUS, ERL_OP_LT_COLON_EQ, ERL_OP_MAYBE_EQ, ERL_OP_EXL,
+    ERL_COLON_COLON, ERL_DOT_DOT, ERL_DOT_DOT_DOT, ERL_OP_AND_AND);
+  /** Tokens that open a block closed by {@code end}. */
+  private static final TokenSet PLAIN_BLOCK_OPENERS = TokenSet.create(ERL_BEGIN, ERL_CASE, ERL_IF, ERL_RECEIVE, ERL_TRY, ERL_MAYBE);
+
+  /** An open bracket or block of a body being classified. */
+  private static final class Open {
+    final IElementType type;
+    final boolean block;
+    final boolean recordBrace;
+    /** In a clause head (a pattern): from the start of a clause to its {@code when} or {@code ->}. */
+    boolean head;
+
+    Open(IElementType type, boolean block, boolean recordBrace, boolean head) {
+      this.type = type;
+      this.block = block;
+      this.recordBrace = recordBrace;
+      this.head = head;
+    }
+  }
 
   /**
-   * Round 5: a body is "locally plain" when, read as tokens, it cannot bind, scope or capture anything around it:
+   * Round 5: a body is "locally plain" when, read as tokens, it cannot bind or capture anything around it or in its
+   * arguments:
    * <ul>
-   *   <li>it is not empty, and its only variables are its parameters ({@code ??P} only for a parameter P; {@code _}
-   *   counts as a variable that is not a parameter);</li>
-   *   <li>it has no token that makes a clause, a pattern, a scope or a sequence: {@code end -> || <- <= <:- <:= ?= when
-   *   of after catch ! ; begin case if receive try maybe else :: .. ... &&}; so no block, fun clause, comprehension,
-   *   match on a parameter or send;</li>
-   *   <li>{@code =} occurs only directly inside the braces of a record ({@code #r{f = A}}), {@code ,} only inside
-   *   brackets, {@code |} only directly inside a list, {@code .} only after {@code #name} (record field access),
-   *   {@code fun} only as {@code fun Name/Arity} or {@code fun M:F/A} (not followed by {@code (});</li>
-   *   <li>its brackets ({@code () [] {} << >>}) are balanced, it does not start with a binary-only operator and does
-   *   not end with an operator, and it does not look like an attribute ({@code -name(});</li>
+   *   <li>it is not empty, and its only variables are its parameters and {@code _} ({@code ??P} only for a parameter P);</li>
+   *   <li>no parameter occurs in a clause head (a pattern): from the start of a clause of {@code case ... of},
+   *   {@code receive}, {@code try ... of / catch}, {@code fun (...)}, {@code maybe ... else} or {@code if} to its
+   *   {@code when} or {@code ->}; so the patterns of the body bind nothing;</li>
+   *   <li>it has no {@code || <- <= <:- <:= ?= ! :: .. ... &&} (no comprehension generator, maybe match, send or type);
+   *   {@code =} occurs only directly inside the braces of a record ({@code #r{f = A}});</li>
+   *   <li>{@code ,} occurs only inside brackets or blocks, {@code |} only directly inside a list; {@code ; -> when of
+   *   after catch else} only directly inside a block; {@code .} only after {@code #name} (record field access);
+   *   {@code fun} is followed by {@code (} only as a fun with clauses (a block);</li>
+   *   <li>its brackets ({@code () [] {} << >>}) and blocks ({@code ... end}) are balanced, it does not start with a
+   *   binary-only operator and does not end with an operator, and it does not look like an attribute
+   *   ({@code -name(});</li>
    *   <li>every {@code ?} starts a nested macro use {@code ?Name} (collected in {@code nestedUses}, which the caller
    *   checks transitively) or a stringified parameter {@code ??P}.</li>
    * </ul>
-   * The variables of the body that are not parameters go to {@code freeVars} in every case.
+   * Such a body put in place of a use cannot bind a variable (its patterns hold no variable), and its blocks only
+   * narrow the scope of the bindings of its arguments; blocks and brackets are primary expressions, and its other
+   * operators bind tighter than {@code =}, so the variables around the use stay on the same side of every match.
+   * The variables of the body that are neither parameters nor {@code _} go to {@code freeVars} in every case.
    */
   static boolean isPlainBody(@NotNull List<Tok> body, @NotNull List<String> params, @NotNull Set<String> nestedUses,
                              @NotNull Set<String> freeVars) {
     boolean plain = !body.isEmpty();
-    Deque<IElementType> stack = new ArrayDeque<>();
-    Deque<Boolean> recordBrace = new ArrayDeque<>();
+    Deque<Open> stack = new ArrayDeque<>();
     for (int i = 0; i < body.size(); i++) {
       Tok tok = body.get(i);
       IElementType t = tok.type;
+      Open top = stack.peek();
       if (t == ERL_QMARK) {
         if (i + 1 < body.size() && body.get(i + 1).type == ERL_QMARK) {
           // ??P: the stringified argument; only for a parameter
@@ -615,10 +638,12 @@ public final class ErlangMacroExpander {
         continue;
       }
       if (t == ERL_VAR) {
+        if (tok.text.equals("_")) continue;
         if (!params.contains(tok.text)) {
           freeVars.add(tok.text);
           plain = false;
         }
+        else if (top != null && top.head) plain = false; // a parameter in a pattern of the body
         continue;
       }
       if (!plain) continue; // keep collecting the free variables and nested uses
@@ -626,25 +651,50 @@ public final class ErlangMacroExpander {
         plain = false;
         continue;
       }
+      boolean inBlock = top != null && top.block;
+      if (PLAIN_BLOCK_OPENERS.contains(t)) {
+        // the clauses of receive, if and maybe ... else start at once (if: guards, counted as heads, conservatively)
+        stack.push(new Open(t, true, false, t == ERL_RECEIVE || t == ERL_IF));
+        continue;
+      }
+      if (t == ERL_FUN && i + 1 < body.size() && body.get(i + 1).type == ERL_PAR_LEFT) {
+        stack.push(new Open(t, true, false, true));
+        continue;
+      }
+      if (t == ERL_END) {
+        Open open = stack.isEmpty() ? null : stack.pop();
+        if (open == null || !open.block) plain = false;
+        continue;
+      }
       if (t == ERL_PAR_LEFT || t == ERL_BRACKET_LEFT || t == ERL_CURLY_LEFT || t == ERL_BIN_START) {
-        recordBrace.push(t == ERL_CURLY_LEFT && isRecordBrace(body, i));
-        stack.push(t);
+        stack.push(new Open(t, false, t == ERL_CURLY_LEFT && isRecordBrace(body, i), top != null && top.head));
         continue;
       }
       if (t == ERL_PAR_RIGHT || t == ERL_BRACKET_RIGHT || t == ERL_CURLY_RIGHT || t == ERL_BIN_END) {
-        IElementType open = stack.isEmpty() ? null : stack.pop();
-        if (!recordBrace.isEmpty()) recordBrace.pop();
-        if (open == null || Run.matching(open) != t) plain = false;
+        Open open = stack.isEmpty() ? null : stack.pop();
+        if (open == null || open.block || Run.matching(open.type) != t) plain = false;
         continue;
       }
-      if (t == ERL_COMMA && stack.isEmpty()) plain = false;
-      else if (t == ERL_OP_OR && stack.peek() != ERL_BRACKET_LEFT) plain = false;
-      else if (t == ERL_OP_EQ && (stack.peek() != ERL_CURLY_LEFT || !Boolean.TRUE.equals(recordBrace.peek()))) plain = false;
+      if (t == ERL_OF || t == ERL_CATCH || t == ERL_ELSE || t == ERL_SEMI) {
+        if (!inBlock) plain = false;
+        else top.head = true;
+      }
+      else if (t == ERL_ARROW || t == ERL_WHEN) {
+        if (!inBlock) plain = false;
+        else top.head = false;
+      }
+      else if (t == ERL_AFTER) {
+        // receive ... after Timeout -> (an expression, counted as a head, conservatively); try ... after Body end
+        if (!inBlock) plain = false;
+        else top.head = top.type == ERL_RECEIVE;
+      }
+      else if (t == ERL_COMMA && stack.isEmpty()) plain = false;
+      else if (t == ERL_OP_OR && (top == null || top.type != ERL_BRACKET_LEFT)) plain = false;
+      else if (t == ERL_OP_EQ && (top == null || !top.recordBrace)) plain = false;
       else if (t == ERL_DOT && !(i >= 2 && body.get(i - 2).type == ERL_RADIX ||
                                  i >= 3 && body.get(i - 3).type == ERL_RADIX && body.get(i - 2).type == ERL_QMARK)) {
         plain = false;
       }
-      else if (t == ERL_FUN && i + 1 < body.size() && body.get(i + 1).type == ERL_PAR_LEFT) plain = false;
     }
     if (!plain) return false;
     if (!stack.isEmpty()) return false;

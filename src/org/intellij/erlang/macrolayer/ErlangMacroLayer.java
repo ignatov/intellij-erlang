@@ -1124,6 +1124,38 @@ public final class ErlangMacroLayer {
            " answers=" + (c == null ? null : c.answers.keySet());
   }
 
+  /** Why a form needs the copy (the first reason found), or null; for tests and measurements. */
+  @TestOnly
+  static @Nullable String whyFormNeedsCopyForTests(@NotNull Table t, @NotNull PsiElement form) {
+    if (!formUsesMacro(t, form)) return null;
+    if (form instanceof PsiErrorElement) return "error-form";
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    if (first == null || first instanceof PsiErrorElement || "?".equals(first.getText())) return "starts-with-?";
+    if (formHasError(t, form)) return "parse-error";
+    if ("-".equals(first.getText())) {
+      PsiElement attribute = PsiTreeUtil.nextVisibleLeaf(first);
+      if (attribute != null && ErlangMacroExpander.isDirectiveName(attribute.getText())) return null;
+    }
+    int end = form.getTextRange().getEndOffset();
+    for (PsiElement leaf = first; leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
+      if (leaf.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_QMARK) continue;
+      PsiElement parent = leaf.getParent();
+      if (parent instanceof ErlangMacrosArg) continue;
+      if (!(parent instanceof ErlangMacros m) || leaf != m.getFirstChild()) return "odd-?:" + parent.getClass().getSimpleName();
+      ErlangMacrosName nameElement = m.getMacrosName();
+      if (nameElement == null) return "no-name";
+      String name = StringUtil.unquoteString(nameElement.getText(), '\'');
+      if (!t.names.contains(name)) continue;
+      if (t.nonPlain.contains(name)) return "not-plain:" + name;
+      if (!isPlainPosition(m)) {
+        StringBuilder chain = new StringBuilder();
+        for (PsiElement e = m.getParent(); e != null && e != form && chain.length() < 120; e = e.getParent()) chain.append(e.getClass().getSimpleName().replace("Erlang", "").replace("Impl", "")).append('<');
+        return "position:" + name + ":" + chain;
+      }
+    }
+    return null;
+  }
+
   @TestOnly
   static boolean formUsesMacroForTests(@NotNull Table t, @Nullable PsiElement form) {
     return formUsesMacro(t, form);
