@@ -39,6 +39,7 @@ import com.intellij.util.containers.MultiMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.stubs.ErlangCallbackSpecStub;
@@ -289,7 +290,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     if (!isContentsLoaded()) return own;
     PsiReference[] bare = CachedValuesManager.getCachedValue(
       this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this));
-    return bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare);
+    return ErlangMacroLayerTokenReference.append(this, bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare));
   }
 
   @Override

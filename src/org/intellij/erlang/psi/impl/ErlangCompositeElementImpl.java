@@ -24,6 +24,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.usageView.UsageViewUtil;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +41,13 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
     return getNode().getElementType().toString();
   }
 
-  /** Round 6: also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}). */
+  /**
+   * Round 6: also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}) and of its
+   * tokens that have a reference only in the expanded copy ({@link ErlangMacroLayerTokenReference}).
+   */
   @Override
   public PsiReference @NotNull [] getReferences() {
-    return ErlangBareMacroReference.append(this, super.getReferences());
+    return ErlangMacroLayerTokenReference.append(this, ErlangBareMacroReference.append(this, super.getReferences()));
   }
 
   @Override
