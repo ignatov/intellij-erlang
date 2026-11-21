@@ -113,4 +113,9 @@ public final class ErlangSdkRelease {
   public boolean erlangFeatureMaybe() {
     return this.erlangIsAtLeast25();
   }
+
+  // True, if \^ in strings must be followed by a control name (OTP 26, erts-14.0, and later); older releases take any character
+  public boolean erlangControlEscapeNeedsControlName() {
+    return VersionComparatorUtil.compare(myErtsVersion, "14") >= 0;
+  }
 }

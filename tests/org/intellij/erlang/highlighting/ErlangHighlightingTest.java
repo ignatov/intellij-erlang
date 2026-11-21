@@ -115,6 +115,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testFunVarArityInPredefinedMacroArguments() { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
+  public void testBasedIntegers()         { doTest(); }
+  public void testBasedIntegersErrors()   { doTest(); }
+  public void testHexEscapeCodePoints()   { doTest(); }
+  public void testHexEscapeCodePointsErrors() { doTest(); }
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982

@@ -47,6 +47,7 @@ public final class ErlangStubChanges {
     "#1296 the index parses broken files again in full, as the editor does",
     "#1169 binary comprehension templates",
     "#1236 digit separators in function arities",
+    "#1122 lexer escape and number fixes",
   };
 
   private ErlangStubChanges() {

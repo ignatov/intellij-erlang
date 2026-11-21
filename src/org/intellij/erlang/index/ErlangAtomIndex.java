@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class ErlangAtomIndex extends ScalarIndexExtension<String> {
   private static final ID<String, Void> ERLANG_ATOM_INDEX = ID.create("erlang.atom.index");
-  private static final int INDEX_VERSION = 1;
+  private static final int INDEX_VERSION = 2;
 
   @NotNull
   @Override
