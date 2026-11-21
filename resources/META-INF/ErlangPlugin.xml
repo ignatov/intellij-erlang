@@ -85,6 +85,8 @@
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameAtomProcessor"/>
+        <!-- round 5: names made or used by macros (macro layer), and their conflicts -->
+        <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangMacroLayerRenameProcessor"/>
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor" language="Erlang"/>
 

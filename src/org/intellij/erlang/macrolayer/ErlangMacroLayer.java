@@ -1094,6 +1094,14 @@ public final class ErlangMacroLayer {
     return null;
   }
 
+  /** Round 5: the .erl files of the project that use the macro of the header (for rename conflicts); never on the UI thread. */
+  public static @NotNull List<ErlangFile> includersOfHeader(@Nullable PsiFile header, @NotNull String macro) {
+    VirtualFile vf = header == null ? null : header.getOriginalFile().getVirtualFile();
+    if (vf == null || !isEnabled() || DumbService.isDumb(header.getProject())) return List.of();
+    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return List.of();
+    return includersUsing(header.getProject(), vf, macro);
+  }
+
   /** The .erl files of the project that contain the macro's name and include the header (directly or not). */
   private static @NotNull List<ErlangFile> includersUsing(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
     List<ErlangFile> r = new ArrayList<>();

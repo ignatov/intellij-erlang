@@ -78,22 +78,30 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
                                         @NotNull Processor<? super UsageInfo> processor,
                                         @NotNull FindUsagesOptions options) {
       if (!options.isUsages) return true;
-      String name = ReadAction.compute(element::getText);
       SearchScope scope = ReadAction.compute(() -> options.searchScope.intersectWith(element.getUseScope()));
-      PsiFile declarationFile = ReadAction.compute(element::getContainingFile);
-      TextRange declaration = ReadAction.compute(element::getTextRange);
-      return PsiSearchHelper.getInstance(getProject()).processElementsWithWord((occurrence, offsetInElement) -> {
-        boolean atDeclaration = occurrence.getContainingFile() == declarationFile &&
-                                declaration.contains(occurrence.getTextRange().getStartOffset() + offsetInElement);
-        if (atDeclaration) return true; // the name itself is not its usage
-        for (PsiReference ref : occurrence.getReferences()) {
-          if (ReferenceRange.containsOffsetInElement(ref, offsetInElement) && ref.isReferenceTo(element) &&
-              !processor.process(new UsageInfo(ref))) {
-            return false;
-          }
-        }
-        return true;
-      }, scope, name, UsageSearchContext.IN_CODE, true);
+      return processReferencesToNameMadeByMacro(element, scope, ref -> processor.process(new UsageInfo(ref)));
     }
+  }
+
+  /**
+   * Round 5: the references to a name made by a macro (see {@link ErlangMacroLayer#isNameMadeByMacro}): a search of
+   * its text that keeps the references resolving to it; the name itself is not its reference. Also used by rename.
+   */
+  public static boolean processReferencesToNameMadeByMacro(@NotNull PsiElement element, @NotNull SearchScope scope,
+                                                           @NotNull Processor<? super PsiReference> processor) {
+    String name = ReadAction.compute(element::getText);
+    PsiFile declarationFile = ReadAction.compute(element::getContainingFile);
+    TextRange declaration = ReadAction.compute(element::getTextRange);
+    return PsiSearchHelper.getInstance(ReadAction.compute(element::getProject)).processElementsWithWord((occurrence, offsetInElement) -> {
+      boolean atDeclaration = occurrence.getContainingFile() == declarationFile &&
+                              declaration.contains(occurrence.getTextRange().getStartOffset() + offsetInElement);
+      if (atDeclaration) return true;
+      for (PsiReference ref : occurrence.getReferences()) {
+        if (ReferenceRange.containsOffsetInElement(ref, offsetInElement) && ref.isReferenceTo(element) && !processor.process(ref)) {
+          return false;
+        }
+      }
+      return true;
+    }, scope, name, UsageSearchContext.IN_CODE, true);
   }
 }
