@@ -35,6 +35,7 @@ import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.util.TimeoutUtil;
 import com.intellij.util.concurrency.AppExecutorUtil;
+import com.intellij.util.ui.UIUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
@@ -45,6 +46,7 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.plaf.ColorUIResource;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
@@ -501,6 +503,68 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     finally {
       Disposer.dispose(dialog.getDisposable());
     }
+  }
+
+  // a switch of the theme puts the colours of the new theme into the defaults of the look and feel; the IDE then
+  // updates the components of its windows, but not the example, which is not in the window while it is closed
+  public void testExampleFollowsTheThemeThatChangedWhileItWasClosed() {
+    UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+    Object oldForeground = defaults.get("TextArea.foreground");
+    Object oldBackground = defaults.get("Panel.background");
+    Color darkForeground = new ColorUIResource(0xDFE1E5);
+    Color darkBackground = new ColorUIResource(0x191A1C);
+    Color lightForeground = new ColorUIResource(0x000000);
+    Color lightBackground = new ColorUIResource(0xF7F8FA);
+    ErlangUsageAskDialog dialog = null;
+    try {
+      defaults.put("TextArea.foreground", darkForeground);
+      defaults.put("Panel.background", darkBackground);
+      assertEquals(darkForeground, UIManager.getColor("TextArea.foreground"));
+      assertEquals(darkBackground, UIManager.getColor("Panel.background"));
+      dialog = new ErlangUsageAskDialog(getProject(), false);
+      // the theme changes while the example is closed
+      defaults.put("TextArea.foreground", lightForeground);
+      defaults.put("Panel.background", lightBackground);
+      dialog.toggleExampleForTests();
+      JTextArea text = UIUtil.findComponentOfType(dialog.getContentForTests(), JTextArea.class);
+      assertNotNull(text);
+      assertEquals(ErlangUsageAskDialog.exampleText(), text.getText());
+      assertColors(text, lightForeground, lightBackground);
+      // and back while it is open: the IDE updates the components of the window
+      defaults.put("TextArea.foreground", darkForeground);
+      defaults.put("Panel.background", darkBackground);
+      SwingUtilities.updateComponentTreeUI(dialog.getContentForTests());
+      assertColors(text, darkForeground, darkBackground);
+    }
+    finally {
+      defaults.put("TextArea.foreground", oldForeground);
+      defaults.put("Panel.background", oldBackground);
+      if (dialog != null) Disposer.dispose(dialog.getDisposable());
+    }
+  }
+
+  private static void assertColors(@NotNull JTextArea text, @NotNull Color foreground, @NotNull Color background) {
+    Color actualForeground = text.getForeground();
+    Color actualBackground = text.getBackground();
+    assertEquals("foreground", foreground.getRGB(), actualForeground.getRGB());
+    assertEquals("background", background.getRGB(), actualBackground.getRGB());
+    // the WCAG ratio for normal text
+    double contrast = contrast(actualForeground, actualBackground);
+    assertTrue("contrast " + contrast, contrast >= 4.5);
+  }
+
+  private static double contrast(@NotNull Color a, @NotNull Color b) {
+    double la = luminance(a);
+    double lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+
+  private static double luminance(@NotNull Color color) {
+    double[] c = {color.getRed() / 255.0, color.getGreen() / 255.0, color.getBlue() / 255.0};
+    for (int i = 0; i < c.length; i++) {
+      c[i] = c[i] <= 0.03928 ? c[i] / 12.92 : Math.pow((c[i] + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   }
 
   public void testAskWaitsAMinuteAfterTheProjectIsReady() {
