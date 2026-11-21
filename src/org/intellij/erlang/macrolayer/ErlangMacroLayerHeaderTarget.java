@@ -22,9 +22,7 @@ import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
-import org.intellij.erlang.psi.ErlangFunction;
-import org.intellij.erlang.psi.ErlangQAtom;
-import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,17 +42,19 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
   private final int myIndex;
   private final String myText;
   private final Class<?> myPreferred;
+  private final @NotNull String myKind;
   /** The last answer of {@link #isValid()} under read access; it was valid when the layer made it. */
   private volatile boolean myLastValid = true;
 
   ErlangMacroLayerHeaderTarget(@NotNull Project project, @NotNull VirtualFile header, int directive, int index,
-                               @NotNull String text, @NotNull Class<?> preferred) {
+                               @NotNull String text, @NotNull Class<?> preferred, @NotNull String kind) {
     myProject = project;
     myHeader = header;
     myDirective = directive;
     myIndex = index;
     myText = text;
     myPreferred = preferred;
+    myKind = kind;
   }
 
   private @Nullable PsiFile headerFile() {
@@ -178,9 +178,18 @@ public final class ErlangMacroLayerHeaderTarget extends FakePsiElement implement
 
   /** What the name is, for the rename dialog, usage views and conflict texts: as for the same element in the header. */
   public @NotNull String getKind() {
-    if (ErlangQVar.class.isAssignableFrom(myPreferred)) return "variable";
-    if (ErlangFunction.class.isAssignableFrom(myPreferred)) return "function";
-    if (ErlangQAtom.class.isAssignableFrom(myPreferred)) return "atom";
+    return myKind;
+  }
+
+  /** The kind of the element of the copy that a target stands for. */
+  static @NotNull String kindOf(@NotNull PsiElement copyElement) {
+    if (copyElement instanceof ErlangQVar) return "variable";
+    if (copyElement instanceof ErlangFunction) return "function";
+    if (copyElement instanceof ErlangRecordDefinition) return "record";
+    if (copyElement instanceof ErlangTypedExpr) return "record field";
+    if (copyElement instanceof ErlangTypeDefinition) return "type";
+    if (copyElement instanceof ErlangMacrosDefinition) return "macro";
+    if (copyElement instanceof ErlangQAtom) return "atom";
     return "name";
   }
 

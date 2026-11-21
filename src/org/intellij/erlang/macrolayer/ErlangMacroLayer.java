@@ -34,6 +34,10 @@ import org.intellij.erlang.parser.macro.ErlangMacroExpander.Form;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.FormStatus;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.psi.impl.ErlangModuleReferenceImpl;
+import org.intellij.erlang.psi.impl.ErlangQAtomBasedReferenceImpl;
+import org.intellij.erlang.psi.impl.ErlangRecordReferenceImpl;
+import org.intellij.erlang.psi.impl.ErlangTypeReferenceImpl;
 import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -233,6 +237,49 @@ public final class ErlangMacroLayer {
       return map;
     }
 
+    private volatile Map<String, PsiElement> myRecordsMadeByMacros;
+    private volatile Map<String, PsiElement> myTypesMadeByMacros;
+
+    /** Round 5: records whose definition exists only in an expansion, by name, with real targets (see functions). */
+    @NotNull Map<String, PsiElement> recordsMadeByMacros() {
+      Map<String, PsiElement> map = myRecordsMadeByMacros;
+      if (map == null) {
+        map = madeByMacros(copyFile == null ? List.of() : copyFile.getRecords(),
+                           name -> realFile instanceof ErlangFile rf && rf.getRecord(name) != null);
+        myRecordsMadeByMacros = map;
+      }
+      return map;
+    }
+
+    /** Round 5: local types whose definition exists only in an expansion, by name, with real targets. */
+    @NotNull Map<String, PsiElement> typesMadeByMacros() {
+      Map<String, PsiElement> map = myTypesMadeByMacros;
+      if (map == null) {
+        map = madeByMacros(copyFile == null ? List.of() : copyFile.getTypes(),
+                           name -> realFile instanceof ErlangFile rf && rf.getType(name) != null);
+        myTypesMadeByMacros = map;
+      }
+      return map;
+    }
+
+    private @NotNull Map<String, PsiElement> madeByMacros(@NotNull List<? extends PsiNameIdentifierOwner> defs,
+                                                          @NotNull java.util.function.Predicate<String> masterSees) {
+      Map<String, Integer> made = new HashMap<>();
+      for (PsiNameIdentifierOwner d : defs) made.merge(String.valueOf(d.getName()), 1, Integer::sum);
+      Map<String, PsiElement> map = new LinkedHashMap<>();
+      for (PsiNameIdentifierOwner d : defs) {
+        ProgressManager.checkCanceled();
+        String name = String.valueOf(d.getName());
+        PsiElement id = d.getNameIdentifier();
+        if (id == null || made.get(name) > 1 || masterSees.test(name)) continue;
+        int at = id.getTextRange().getStartOffset();
+        if (expansion.kindAt(at) == ErlangMacroExpander.SRC_VERBATIM || !isUsableTarget(at)) continue;
+        PsiElement real = toReal(d);
+        if (real != null) map.put(name, real);
+      }
+      return map;
+    }
+
     /** The copy elements that correspond to a real range: its verbatim copy, else every copy of an argument token. */
     int @NotNull [] toCopyOffsets(@NotNull TextRange real) {
       int e = expansion.toExpanded(real.getStartOffset());
@@ -247,21 +294,22 @@ public final class ErlangMacroLayer {
       if (file == null) return null;
       if (file != copyFile) return file.getUserData(COPY_OF) == null ? target : null;
       if (!isUsableTarget(target.getTextRange().getStartOffset())) return null;
-      PsiElement real = mapElement(target);
+      PsiElement real = mapElement(target, target);
       if (real != null) return real;
       if (target instanceof PsiNameIdentifierOwner owner) {
         PsiElement id = owner.getNameIdentifier();
-        if (id != null) return mapElement(id);
+        if (id != null) return mapElement(id, owner);
       }
       return null;
     }
 
-    private @Nullable PsiElement mapElement(@NotNull PsiElement copyElement) {
+    /** {@code owner}: the copy element the answer stands for (the element itself, or the owner of a name identifier). */
+    private @Nullable PsiElement mapElement(@NotNull PsiElement copyElement, @NotNull PsiElement owner) {
       TextRange r = copyElement.getTextRange();
       ErlangMacroExpander.HeaderTok h = expansion.headerOrigin(r.getStartOffset(), r.getEndOffset());
       if (h != null && h.header() instanceof VirtualFile vf) {
         return new ErlangMacroLayerHeaderTarget(realFile.getProject(), vf, h.directive(), h.index(), copyElement.getText(),
-                                                copyElement.getClass());
+                                                copyElement.getClass(), ErlangMacroLayerHeaderTarget.kindOf(owner));
       }
       TextRange src = expansion.toSource(r.getStartOffset(), r.getEndOffset());
       if (src == null || src.isEmpty()) return null;
@@ -994,12 +1042,20 @@ public final class ErlangMacroLayer {
   }
 
   private static @Nullable PsiReference correspondingReference(@NotNull Copy copy, @NotNull PsiReference ref, int occurrence) {
+    return correspondingReference(copy, ref, occurrence, false);
+  }
+
+  /** {@code verbatimForm}: the reference may also lie in a form that is not expanded (its copy text is the source text). */
+  private static @Nullable PsiReference correspondingReference(@NotNull Copy copy, @NotNull PsiReference ref, int occurrence,
+                                                               boolean verbatimForm) {
     PsiElement element = ref.getElement();
     TextRange abs = ref.getRangeInElement().shiftRight(element.getTextRange().getStartOffset());
     int[] offsets = copy.toCopyOffsets(abs);
     if (occurrence >= offsets.length || copy.copyFile == null) return null;
     int e = offsets[occurrence];
-    if (!copy.isClean(copy.expansion.formAtExpanded(e))) return null;
+    Form form = copy.expansion.formAtExpanded(e);
+    boolean usable = copy.isClean(form) || verbatimForm && form != null && form.status != FormStatus.EXPANDED;
+    if (!usable) return null;
     String refText = abs.subSequence(copy.expansion.sourceText).toString();
     PsiReference candidate = copy.copyFile.findReferenceAt(e);
     if (candidate == null || candidate.getClass() != ref.getClass()) return null;
@@ -1024,8 +1080,11 @@ public final class ErlangMacroLayer {
     if (t == null || t.refusal != null || t.names.isEmpty()) return null;
     boolean formHasUse = formUsesMacro(t, topForm(element));
     if (!formHasUse) {
+      if (!hasTopLevelMacroForm(file, t)) return null;
+      // round 5: a record, a record field or a local type may be made by a macro in another form
+      if (isMadeNameReference(ref)) return madeNameFallback(file, ref, element);
       // a local function may be made by a macro in another form: the per-file table
-      if (!(ref instanceof ErlangFunctionReference fr) || !hasTopLevelMacroForm(file, t)) return null;
+      if (!(ref instanceof ErlangFunctionReference fr)) return null;
       FALLBACK_ASKED.incrementAndGet();
       ErlangMacroLayerLog.query("function-table", file.getName());
       Copy copy = getCopy(file, "function-table");
@@ -1049,6 +1108,41 @@ public final class ErlangMacroLayer {
   }
 
   private static final Object NO_ANSWER = new Object();
+
+  /** A record, record field or local type reference: the names a macro can make besides functions. */
+  private static boolean isMadeNameReference(@NotNull PsiReference ref) {
+    if (!(ref instanceof ErlangQAtomBasedReferenceImpl) || ref instanceof ErlangModuleReferenceImpl) return false;
+    if (ref instanceof ErlangTypeReferenceImpl) {
+      // remote types (m:t()) are not made in this file
+      return PsiTreeUtil.getPrevSiblingOfType(ref.getElement(), ErlangModuleRef.class) == null;
+    }
+    return true;
+  }
+
+  /**
+   * Round 5: a record, field or type reference in a form without a macro use, in a file with a top-level macro form.
+   * The form is copied verbatim into the copy, so the same reference there sees the definitions the expansions made.
+   */
+  private static @Nullable PsiElement madeNameFallback(@NotNull ErlangFile file, @NotNull PsiReference ref, @NotNull PsiElement element) {
+    FALLBACK_ASKED.incrementAndGet();
+    ErlangMacroLayerLog.query("made-name", file.getName());
+    Copy copy = getCopy(file, "made-name");
+    if (copy == null || copy.copyFile == null) return null;
+    String answerKey = "m" + element.getTextRange().getStartOffset() + ref.getClass().getName();
+    Object cached = copy.answers.get(answerKey);
+    if (cached != null) return cached == NO_ANSWER ? null : (PsiElement)cached;
+    PsiElement answer = null;
+    if (ref instanceof ErlangRecordReferenceImpl rr) answer = exit(copy.recordsMadeByMacros().get(rr.getCanonicalText()), file);
+    else if (ref instanceof ErlangTypeReferenceImpl tr) answer = exit(copy.typesMadeByMacros().get(tr.getCanonicalText()), file);
+    else {
+      // a field: resolve the verbatim copy of the reference (its record is made by a macro)
+      PsiReference c = correspondingReference(copy, ref, 0, true);
+      if (c != null) answer = exit(copy.toReal(c.resolve()), file);
+    }
+    if (answer != null) FALLBACK_ANSWERED.incrementAndGet();
+    copy.answers.put(answerKey, answer == null ? NO_ANSWER : answer);
+    return answer;
+  }
 
   private static @Nullable PsiElement resolveInCopy(@NotNull Copy copy, @NotNull PsiReference ref, @NotNull PsiElement element,
                                                     @NotNull ErlangFile file, @NotNull Table t) {
