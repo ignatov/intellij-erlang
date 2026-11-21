@@ -481,12 +481,17 @@ public final class ErlangMacroLayer {
     return topmost;
   }
 
-  /** The real Erlang file of an element, or null for copies, consoles and non-Erlang files. */
+  /**
+   * The real Erlang file of an element, or null for the layer's copies, consoles, non-Erlang files and the platform's
+   * copies of a file (the one completion works on: the platform reuses it with new text each time, and the layer's caches
+   * on it would answer for an old text; the layer's completion contributor works on the original file).
+   */
   static @Nullable ErlangFile realFile(@Nullable PsiElement element) {
     if (element == null) return null;
     PsiFile file = element.getContainingFile();
     if (!(file instanceof ErlangFile ef)) return null;
     if (file.getUserData(COPY_OF) != null) return null;
+    if (file != file.getOriginalFile() || !file.getViewProvider().isEventSystemEnabled()) return null;
     if (file.getOriginalFile().getUserData(ErlangPsiImplUtil.ERLANG_CONSOLE) != null) return null;
     return ef;
   }
