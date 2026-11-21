@@ -21,7 +21,8 @@ import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.find.findUsages.FindUsagesOptions;
 import com.intellij.ide.DataManager;
-import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
@@ -78,9 +79,13 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
                                         @NotNull Processor<? super UsageInfo> processor,
                                         @NotNull FindUsagesOptions options) {
       if (!options.isUsages) return true;
-      SearchScope scope = ReadAction.compute(() -> options.searchScope.intersectWith(element.getUseScope()));
+      SearchScope scope = read(() -> options.searchScope.intersectWith(element.getUseScope()));
       return processReferencesToNameMadeByMacro(element, scope, ref -> processor.process(new UsageInfo(ref)));
     }
+  }
+
+  private static <T> T read(@NotNull Computable<T> computable) {
+    return ApplicationManager.getApplication().runReadAction(computable);
   }
 
   /**
@@ -89,10 +94,10 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
    */
   public static boolean processReferencesToNameMadeByMacro(@NotNull PsiElement element, @NotNull SearchScope scope,
                                                            @NotNull Processor<? super PsiReference> processor) {
-    String name = ReadAction.compute(element::getText);
-    PsiFile declarationFile = ReadAction.compute(element::getContainingFile);
-    TextRange declaration = ReadAction.compute(element::getTextRange);
-    return PsiSearchHelper.getInstance(ReadAction.compute(element::getProject)).processElementsWithWord((occurrence, offsetInElement) -> {
+    String name = read(element::getText);
+    PsiFile declarationFile = read(element::getContainingFile);
+    TextRange declaration = read(element::getTextRange);
+    return PsiSearchHelper.getInstance(read(element::getProject)).processElementsWithWord((occurrence, offsetInElement) -> {
       boolean atDeclaration = occurrence.getContainingFile() == declarationFile &&
                               declaration.contains(occurrence.getTextRange().getStartOffset() + offsetInElement);
       if (atDeclaration) return true;
