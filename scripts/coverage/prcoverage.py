@@ -261,7 +261,8 @@ def main(argv=None):
         if args.json:
             with open(args.json, 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent=2)
-        print('\n'.join(result['run']))
+        for name in result['run']:
+            print(name)
         return 0
     the_plan = {}
     if args.plan and os.path.isfile(args.plan):

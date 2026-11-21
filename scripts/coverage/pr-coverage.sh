@@ -21,6 +21,10 @@ if [[ -z "$base" ]]; then
   base="$(git merge-base origin/master HEAD 2>/dev/null)" || base=""
 fi
 out=build/coverage-pr
+if [[ -n "$clean" ]]; then
+  # Before the files of this run are written: clean deletes build/.
+  ./gradlew --no-daemon clean > /dev/null 2>&1 || true
+fi
 mkdir -p "$out"
 if [[ -z "$base" ]] || ! git rev-parse --verify --quiet "$base^{commit}" > /dev/null; then
   echo "changed lines: not measured, because the base commit '${1:-merge base of origin/master}' is not known." | tee "$out/result.txt"
@@ -32,15 +36,18 @@ python3 scripts/coverage/prcoverage.py plan --diff "$out/changes.diff" --json "$
 report=build/reports/jacoco/coverageReport/coverageReport.xml
 status=""
 failed=()
-if [[ -s "$out/classes.txt" ]]; then
+if grep -q . "$out/classes.txt"; then
   # A report left from an earlier run must not be read as the result of this one.
   [[ -f "$report" ]] && mv -f "$report" "$report.old"
   filters=()
   while IFS= read -r class; do
+    [[ -n "$class" ]] || continue
     filters+=(--tests "$class")
+    # A result of an earlier run must not be read as the result of this one.
+    rm -f "build/test-results/test/TEST-$class.xml"
   done < "$out/classes.txt"
   echo "Running with coverage: $(tr '\n' ' ' < "$out/classes.txt")"
-  ./gradlew --no-daemon --no-build-cache $clean test -Pcoverage "${filters[@]}" > "$out/gradle.log" 2>&1
+  ./gradlew --no-daemon --no-build-cache test -Pcoverage "${filters[@]}" > "$out/gradle.log" 2>&1
   status=$?
   while IFS= read -r class; do
     file="build/test-results/test/TEST-$class.xml"
