@@ -492,6 +492,7 @@ def analyze_log(log, console, inspection_names=()):
                 missing_descriptions += sorted(tools & set(inspection_names))
         elif LOG_WARN.match(entry) and PLUGIN_FRAME.search(entry):
             plugin_exceptions.append(entry[:TEXT_LIMIT])
+    report_attempts = [line[:300] for line in log.split('\n') if REPORT_ATTEMPT.search(line)]
     loaded = LOADED_PLUGIN.search(log)
     started = collections.Counter(m.group(1).strip() for m in DUMB_TASK_STARTED.finditer(log))
     finished = collections.Counter(m.group(1).strip() for m in DUMB_TASK_FINISHED.finditer(log))
@@ -502,6 +503,7 @@ def analyze_log(log, console, inspection_names=()):
         'pluginExceptions': len(plugin_exceptions),
         'pluginExceptionTexts': plugin_exceptions[:5],
         'missingDescriptions': sorted(set(missing_descriptions)),
+        'reportAttempts': report_attempts[:10],
         'consolePluginFrames': len(CONSOLE_PLUGIN_FRAME.findall(console)),
         'dumbTasks': sum(started.values()),
         'unfinishedDumbTasks': sorted((started - finished).elements()),
@@ -523,6 +525,8 @@ def inspect_failures(rc, timed_out, expected_version, log_info, erlang_problems)
         failures.append('%d exceptions of the plugin in the IDE log' % log_info['pluginExceptions'])
     if log_info['consolePluginFrames']:
         failures.append('%d stack frames of the plugin on the console' % log_info['consolePluginFrames'])
+    if log_info['reportAttempts']:
+        failures.append('the IDE tried to send an exception report: %s' % log_info['reportAttempts'][0])
     if log_info['missingDescriptions']:
         failures.append('the IDE found no description of %s' % ', '.join(log_info['missingDescriptions']))
     if log_info['unfinishedDumbTasks']:
@@ -625,12 +629,14 @@ def archive_version(zip_path):
     return match.group(1) if match else None
 
 
-def run_with_watchdog(command, stdout_path, timeout, thread_dump_path, jcmd):
-    """Runs `command`; after `timeout` seconds writes a thread dump and stops it. Returns (exit code, timed out)."""
+def run_with_watchdog(command, stdout_path, timeout, thread_dump_path, jcmd, env=None):
+    """Runs `command` (with `env` added to the environment); after `timeout` seconds writes a thread dump and stops
+    it. Returns (exit code, timed out)."""
     with open(stdout_path, 'w') as out:
         out.write('CMD: %s <%d JVM options> %s\n' % (command[0], len(command) - 1, ' '.join(command[-6:])))
         out.flush()
-        process = subprocess.Popen(command, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+        process = subprocess.Popen(command, stdout=out, stderr=subprocess.STDOUT, start_new_session=True,
+                                   env=dict(os.environ, **(env or {})))
         try:
             return process.wait(timeout=timeout), False
         except subprocess.TimeoutExpired:
@@ -647,6 +653,127 @@ def run_with_watchdog(command, stdout_path, timeout, thread_dump_path, jcmd):
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
             return process.returncode, True
+
+
+# The IDE must never send an exception report: the plugin registers JetBrainsMarketplaceErrorReportSubmitter, and the
+# reports of Marketplace become public issues. A headless `inspect` does not report automatically
+# (ExceptionAutoReportUtil.autoReportIsForbiddenForProduct is true in AppMode.isHeadless(), for 262 and 263), but the
+# smoke does not rely on that alone. Two more barriers, each enough on its own:
+# 1. The settings. The registry key that makes automatic error reporting available is false: ea.auto.report.allowed in
+#    263, ea.auto.report.feature.visible in 262 (RegistryValue reads a system property of the same name). The consent
+#    ea.auto.report ("Send error reports to JetBrains", Settings | Appearance & Behavior | System Settings | Data
+#    Sharing) and the usage statistics consent are rejected in the consent file. That file lives in the data directory
+#    common to all IDEs under the user home (PathManager.getCommonDataPath), so the IDE gets a home of its own in the
+#    sandbox (user.home, XDG_DATA_HOME), and the real home of the user is not read or changed.
+# 2. The network. HTTP and HTTPS go to a proxy on a closed local port, so a request is refused. And with
+#    jdk.net.hosts.file the JVM resolves host names only from a file of the sandbox that lists localhost and the name of
+#    this machine, so ea-report.jetbrains.com and every other host do not resolve; a missing file resolves nothing
+#    either. The IDE has no resolver of its own (no InetAddressResolverProvider).
+# check_no_report_options refuses to start an IDE without all of them, and analyze_log fails a run in which the IDE
+# tried to send a report all the same.
+NO_REPORT_CONSENTS = ['ea.auto.report', 'rsch.send.usage.stat']
+NO_REPORT_REGISTRY_KEYS = ['ea.auto.report.allowed', 'ea.auto.report.feature.visible']
+DEAD_PROXY = ('127.0.0.1', '9')
+# The proxy of the IDE (Settings | Appearance & Behavior | System Settings | HTTP Proxy, HttpConfigurable): the IDE
+# ignores -Dhttp.proxyHost and by default detects the proxy of the system. The JVM options are for a plain JDK client.
+DEAD_PROXY_SETTINGS = '''<application>
+  <component name="HttpConfigurable">
+    <option name="USE_HTTP_PROXY" value="true" />
+    <option name="PROXY_HOST" value="%s" />
+    <option name="PROXY_PORT" value="%s" />
+  </component>
+</application>
+''' % DEAD_PROXY
+REPORT_ATTEMPT = re.compile(r'#c\.i\.d\.ITNProxy|#c\.i\.d\.ITNReporter|ExceptionAutoReportService|report ID: \d|'
+                            r'Reported exception with id')
+
+
+def consent_versions(ide_home, ids):
+    """{id: version} of the consents `ids` that the IDE bundles (consents.json in its lib/*.jar), the highest one per
+    id; 1.0 for an id that it does not bundle."""
+    versions = {}
+    for jar_path in sorted(glob.glob(os.path.join(ide_home, 'lib', '*.jar'))):
+        try:
+            jar = zipfile.ZipFile(jar_path)
+        except (zipfile.BadZipFile, OSError):
+            continue
+        with jar:
+            if 'consents.json' not in jar.namelist():
+                continue
+            try:
+                consents = json.loads(jar.read('consents.json').decode('utf-8'))
+            except ValueError:
+                continue
+        for consent in consents if isinstance(consents, list) else []:
+            cid, version = consent.get('consentId'), consent.get('version')
+            if cid in ids and version:
+                old = versions.get(cid)
+                if old is None or [int(x) for x in re.findall(r'\d+', version)] > [int(x) for x in re.findall(r'\d+', old)]:
+                    versions[cid] = version
+    return {cid: versions.get(cid, '1.0') for cid in ids}
+
+
+def common_data_dir(home, os_name):
+    """The data directory common to all JetBrains IDEs for a user home (PathManager.getDefaultCommonDataPathFor)."""
+    if os_name == 'macOS':
+        return os.path.join(home, 'Library', 'Application Support', 'JetBrains')
+    if os_name == 'Windows':
+        return os.path.join(home, 'AppData', 'Roaming', 'JetBrains')
+    return os.path.join(home, '.local', 'share', 'JetBrains')
+
+
+def write_no_report_sandbox(out, ide_home, os_name, now_ms=None):
+    """Writes the hosts file, the home and the consent file of the sandbox `out`, and returns (the JVM options, the
+    environment) that keep the IDE from sending reports."""
+    hosts = os.path.join(out, 'hosts')
+    names = sorted({'localhost', platform.node()} - {''})
+    with open(hosts, 'w') as f:
+        f.write('127.0.0.1 %s\n::1 %s\n' % (' '.join(names), ' '.join(names)))
+    home = os.path.join(out, 'home')
+    data = common_data_dir(home, os_name)
+    os.makedirs(os.path.join(data, 'consentOptions'), exist_ok=True)
+    stamp = int(time.time() * 1000) if now_ms is None else now_ms
+    versions = consent_versions(ide_home, NO_REPORT_CONSENTS)
+    with open(os.path.join(data, 'consentOptions', 'accepted'), 'w') as f:
+        f.write(';'.join('%s:%s:0:%d' % (cid, versions[cid], stamp) for cid in NO_REPORT_CONSENTS))
+    os.makedirs(os.path.join(out, 'config', 'options'), exist_ok=True)
+    with open(os.path.join(out, 'config', 'options', 'proxy.settings.xml'), 'w') as f:
+        f.write(DEAD_PROXY_SETTINGS)
+    options = ['-D%s=false' % key for key in NO_REPORT_REGISTRY_KEYS]
+    for scheme in ('http', 'https'):
+        options += ['-D%s.proxyHost=%s' % (scheme, DEAD_PROXY[0]), '-D%s.proxyPort=%s' % (scheme, DEAD_PROXY[1])]
+    options += ['-Djdk.net.hosts.file=' + hosts, '-Duser.home=' + home]
+    return options, {'XDG_DATA_HOME': os.path.join(home, '.local', 'share'), 'HOME': home}
+
+
+def check_no_report_options(command, env, os_name):
+    """Raises SmokeError unless the IDE command line and environment have every barrier against exception reports."""
+    options = {}
+    for argument in command:
+        if argument.startswith('-D') and '=' in argument:
+            key, _, value = argument[2:].partition('=')
+            options[key] = value
+    missing = ['-D%s=false' % key for key in NO_REPORT_REGISTRY_KEYS if options.get(key) != 'false']
+    for scheme in ('http', 'https'):
+        if (options.get(scheme + '.proxyHost'), options.get(scheme + '.proxyPort')) != DEAD_PROXY:
+            missing.append('-D%s.proxyHost=%s -D%s.proxyPort=%s' % (scheme, DEAD_PROXY[0], scheme, DEAD_PROXY[1]))
+    config = options.get('idea.config.path')
+    proxy = read_text(os.path.join(config, 'options', 'proxy.settings.xml')) if config else None
+    if proxy != DEAD_PROXY_SETTINGS:
+        missing.append('-Didea.config.path with options/proxy.settings.xml of the closed proxy %s:%s' % DEAD_PROXY)
+    hosts = options.get('jdk.net.hosts.file')
+    if not hosts or not os.path.isfile(hosts) or 'jetbrains' in (read_text(hosts) or '').lower():
+        missing.append('-Djdk.net.hosts.file with a hosts file of the sandbox that lists no JetBrains host')
+    home = options.get('user.home')
+    consents = os.path.join(common_data_dir(home, os_name), 'consentOptions', 'accepted') if home else None
+    if not consents or 'ea.auto.report:' not in (read_text(consents) or '') or \
+            not re.search(r'(^|;)ea\.auto\.report:[^:;]*:0:', read_text(consents)):
+        missing.append('-Duser.home of the sandbox, with the consent ea.auto.report rejected')
+    if home and env.get('XDG_DATA_HOME') != os.path.join(home, '.local', 'share'):
+        missing.append('XDG_DATA_HOME in the home of the sandbox')
+    if missing:
+        raise SmokeError('refusing to start the IDE without the barriers against exception reports: %s'
+                         % '; '.join(missing))
 
 
 # The MCP server of the IDE listens on a fixed port, so the second of two IDEs that run at the same time logged a
@@ -712,6 +839,8 @@ def cmd_inspect(args):
         raise SmokeError('the IDE has no %s' % ide_vm_options)
     vm_options = [l.strip() for l in ide_vm_text.split('\n') if l.strip() and not l.strip().startswith('#')]
     vm_options += ['-Xmx%s' % args.heap] + ['-Didea.%s.path=%s' % kv for kv in paths.items()]
+    no_report_options, no_report_env = write_no_report_sandbox(out, ide_home, host_os_arch()[0])
+    vm_options += no_report_options
     vm_options += ['-Dide.no.platform.update=true', '-Didea.suppress.statistics.report=true',
                    '-XX:ErrorFile=' + os.path.join(out, 'java_error_%p.log')]
     vm_options_file = os.path.join(out, 'idea.vmoptions')
@@ -721,11 +850,12 @@ def cmd_inspect(args):
     command = launch_command(ide_home, info_path, launch, vm_options, properties,
                              ['inspect', project, profile, os.path.join(out, 'res'), '-v2', '-format', 'xml'])
     java = command[0]
+    check_no_report_options(command, no_report_env, host_os_arch()[0])
 
     start = time.time()
     rc, timed_out = run_with_watchdog(command, os.path.join(out, 'stdout.txt'), args.timeout,
                                       os.path.join(out, 'log', 'threaddump-timeout.txt'),
-                                      os.path.join(os.path.dirname(java), 'jcmd'))
+                                      os.path.join(os.path.dirname(java), 'jcmd'), no_report_env)
     result['seconds'] = int(time.time() - start)
     result['rc'] = rc
     result['timedOut'] = timed_out
