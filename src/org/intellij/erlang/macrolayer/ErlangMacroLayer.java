@@ -1471,7 +1471,7 @@ public final class ErlangMacroLayer {
     int at = form.getTextRange().getStartOffset();
     Boolean b = t.formUse.get(at);
     if (b == null) {
-      b = usesKnownMacro(form.getNode().getChars(), t.names);
+      b = usesKnownMacro(form.getNode().getChars(), t.names) || splitUseAtEdge(form, t.names);
       if (!b && (form instanceof PsiErrorElement || PsiTreeUtil.firstChild(form) instanceof PsiErrorElement)) {
         PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
         b = prev != null && usesKnownMacro(prev.getNode().getChars(), t.names);
@@ -1479,6 +1479,24 @@ public final class ErlangMacroLayer {
       t.formUse.put(at, b);
     }
     return b;
+  }
+
+  /**
+   * Round 6: the main tree split a use {@code ?name(...)} between two top-level forms: error recovery stops before
+   * {@code atom (}, so {@code foo?is_timeout(a)} ends one form with the bare {@code ?} and starts the next with
+   * {@code is_timeout(a)}. Both forms use the macro.
+   */
+  private static boolean splitUseAtEdge(@NotNull PsiElement form, @NotNull Set<String> names) {
+    PsiElement last = PsiTreeUtil.lastChild(form);
+    while (last != null && (last instanceof PsiWhiteSpace || last instanceof PsiComment || last.getTextLength() == 0)) last = PsiTreeUtil.prevLeaf(last);
+    if (last != null && last.textMatches("?")) {
+      PsiElement name = PsiTreeUtil.nextVisibleLeaf(last);
+      if (name != null && names.contains(StringUtil.unquoteString(name.getText(), '\''))) return true;
+    }
+    PsiElement first = PsiTreeUtil.firstChild(form);
+    while (first != null && (first instanceof PsiWhiteSpace || first instanceof PsiComment || first.getTextLength() == 0)) first = PsiTreeUtil.nextLeaf(first);
+    PsiElement prev = first == null ? null : PsiTreeUtil.prevVisibleLeaf(first);
+    return prev != null && prev.textMatches("?") && names.contains(StringUtil.unquoteString(first.getText(), '\''));
   }
 
   /** Names of the variables inside macro calls (their arguments) of the form. */

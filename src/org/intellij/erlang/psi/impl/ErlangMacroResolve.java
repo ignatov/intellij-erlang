@@ -60,6 +60,25 @@ public final class ErlangMacroResolve {
     return c.isEmpty() || c.contains(d);
   }
 
+  /** Every include of the file, and of the headers it includes, resolves to a file (cached until a PSI change). */
+  public static boolean allIncludesResolve(@NotNull ErlangFile file) {
+    return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+      allIncludesResolve(file, new java.util.HashSet<>()), com.intellij.psi.util.PsiModificationTracker.MODIFICATION_COUNT));
+  }
+
+  private static boolean allIncludesResolve(@NotNull ErlangFile file, @NotNull java.util.Set<ErlangFile> seen) {
+    if (!seen.add(file)) return true;
+    for (org.intellij.erlang.psi.ErlangInclude inc : file.getIncludes()) {
+      List<ErlangFile> r = ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file);
+      if (r.isEmpty() || !allIncludesResolve(r.get(0), seen)) return false;
+    }
+    for (org.intellij.erlang.psi.ErlangIncludeLib inc : file.getIncludeLibs()) {
+      List<ErlangFile> r = ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file);
+      if (r.isEmpty() || !allIncludesResolve(r.get(0), seen)) return false;
+    }
+    return true;
+  }
+
   /** Number of parameters, or {@link #NO_ARGUMENTS} without a parameter list. */
   public static int arity(@NotNull ErlangMacrosDefinition d) {
     ErlangArgumentDefinitionList list = d.getArgumentDefinitionList();

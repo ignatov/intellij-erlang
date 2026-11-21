@@ -20,6 +20,7 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
@@ -32,6 +33,9 @@ import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
 import org.jetbrains.annotations.NotNull;
@@ -57,11 +61,50 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (reference != null && reference.resolve() == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
+        else if (reference != null) {
+          checkArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+        }
+      }
+
+      /** Round 6: a macro use that the parser left as bare tokens ({@code foo?PAR}), hosted by this element. */
+      @Override
+      public void visitElement(@NotNull PsiElement o) {
+        for (PsiReference r : ErlangBareMacroReference.find(o)) {
+          if (!(r instanceof ErlangBareMacroReference bare)) continue;
+          String name = bare.getCanonicalText();
+          if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
+          TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
+          if (bare.resolve() == null) {
+            if (!isDefinedByEnclosingCondition(o, name)) registerProblem(holder, o, "Unresolved macros '?" + name + "'", range, null);
+          }
+          else {
+            checkArity(o, bare.getNameElement(), name, range);
+          }
+        }
+      }
+
+      /**
+       * Round 6: epp's "argument mismatch for macro": no definition takes as many arguments as the use has, and none
+       * takes no parameter list (then epp leaves the parentheses as a call). Only when every include of the file
+       * resolves, so that no definition is out of sight.
+       */
+      private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (!(target.getContainingFile() instanceof ErlangFile file) || !ErlangMacroResolve.allIncludesResolve(file)) return;
+        int arity = ErlangMacroResolve.arityAfter(nameLeaf);
+        if (arity == ErlangMacroResolve.UNKNOWN) return;
+        List<ErlangMacrosDefinition> candidates = ErlangMacroResolve.candidates(file, unquote(name));
+        if (candidates.isEmpty()) return;
+        for (ErlangMacrosDefinition d : candidates) {
+          int a = ErlangMacroResolve.arity(d);
+          if (a == arity || a == ErlangMacroResolve.NO_ARGUMENTS) return;
+        }
+        String uses = arity == ErlangMacroResolve.NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
+        registerProblem(holder, target, "Argument mismatch for macro '?" + unquote(name) + "': no definition takes " + uses, range, null);
       }
     };
   }
 
-  private static boolean isDefinedByEnclosingCondition(@NotNull ErlangMacros macros, @NotNull String name) {
+  private static boolean isDefinedByEnclosingCondition(@NotNull PsiElement macros, @NotNull String name) {
     PsiElement form = macros;
     while (form.getParent() != null && !(form.getParent() instanceof PsiFile)) {
       form = form.getParent();

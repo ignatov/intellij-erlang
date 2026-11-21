@@ -278,10 +278,61 @@ public class ErlangMacroUseTest extends ErlangLightPlatformCodeInsightFixtureTes
     assertEquals("[main.erl:5:CL]", usages("main.erl", "define(C|L"));
   }
 
+  /**
+   * A lowercase macro name with arguments in a fragment position: error recovery stops before {@code atom (}, so the
+   * main tree splits the use between two top-level forms. The file hosts the reference, and the layer hides the false
+   * errors of both pieces (erlc compiles the file; found by the differential run, mutant m0010).
+   */
+  public void testSplitUseOfALowercaseMacroWithArguments() throws Exception {
+    String t = "-module(main).\n-export([f/1]).\n-define(is_timeout(X), ((X) =:= infinity orelse (is_integer(X) andalso (X) >= 0))).\n" +
+               "f(X) -> foo?is_timeout(X).\nfoo(A) -> A.\n";
+    files("main.erl", t);
+    assertEquals("main.erl:3:-define(is_timeout(X), (..", gotoDeclaration("main.erl", "foo?is_|timeout(X)"));
+    myFixture.configureFromExistingVirtualFile(myFiles.get("main.erl").getVirtualFile());
+    myFixture.checkHighlighting(false, false, false);
+  }
+
   /** A macro of the same name in an unrelated file is not a usage (master listed its definition). */
   public void testSameNameInAnotherFileIsNotAUsage() throws Exception {
     files("main.erl", OWNER, "other.erl", "-module(other).\n-define(PAR, 1).\n-export([g/0]).\ng() -> ?PAR.\n");
     assertEquals("[main.erl:12:PAR]", usages("main.erl", "define(P|AR"));
   }
 
+  // ------------------------------------------------------------------------------------------------ completion
+
+  /** Macro names after '?' between clauses, in a broken form, and from a header. */
+  public void testCompletionOfMacroNamesInFragmentPositions() {
+    files("h.hrl", "-define(HPAR, ()).\n",
+          "main.erl", "-module(main).\n-include(\"h.hrl\").\n-export([f/1, g/0, h/0]).\n-define(SEP, ;).\n-define(PAR, ()).\n" +
+                      "f(1) -> a ?S f(2) -> b.\n" +
+                      "g() -> foo?H.\n" +
+                      "h() -> foo?P, X = , ok.\n" +
+                      "foo() -> ok.\n");
+    assertEquals("SEP", completeAt("main.erl", "a ?S| f(2)", "SEP"));
+    assertEquals("HPAR", completeAt("main.erl", "foo?H|.", "HPAR"));
+    assertEquals("PAR", completeAt("main.erl", "foo?P|, X", "PAR"));
+  }
+
+  /** Right after '?' in a fragment position: the file's macros and the predefined ones. */
+  public void testCompletionAfterBareQuestionMark() {
+    files("main.erl", "-module(main).\n-export([g/0]).\n-define(PAR, ()).\ng() -> foo?.\nfoo() -> ok.\n");
+    String list = completeList("main.erl", "foo?|.");
+    assertTrue(list, list.contains("PAR") && list.contains("MODULE"));
+  }
+
+  /** The lookup strings at the caret, sorted, or the line after a single item was inserted. */
+  private String completeList(String file, String marker) {
+    Editor editor = editorAt(file, caret(file, marker));
+    LookupElement[] items = myFixture.completeBasic();
+    if (items == null) {
+      int line = editor.getDocument().getLineNumber(editor.getCaretModel().getOffset());
+      String text = editor.getDocument().getText(new com.intellij.openapi.util.TextRange(editor.getDocument().getLineStartOffset(line),
+                                                                                         editor.getDocument().getLineEndOffset(line)));
+      return "inserted: " + text;
+    }
+    Set<String> names = new TreeSet<>();
+    for (LookupElement i : items) names.add(i.getLookupString());
+    if (myFixture.getLookup() != null) myFixture.getLookup().hideLookup(true);
+    return names.toString();
+  }
 }

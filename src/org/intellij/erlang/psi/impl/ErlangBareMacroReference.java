@@ -14,7 +14,9 @@ import com.intellij.util.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.psi.ErlangMacrosName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,10 +55,12 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
     if (host instanceof StubBasedPsiElement<?> s && s.getStub() != null) return PsiReference.EMPTY_ARRAY; // no AST: no text search here
     ASTNode node = host.getNode();
-    if (node == null || !mayHold(node)) return PsiReference.EMPTY_ARRAY;
+    if (node == null) return PsiReference.EMPTY_ARRAY;
+    List<PsiReference> result = new SmartList<>();
+    if (host instanceof PsiFile) addSplitUses(host, result);
+    if (!mayHold(node)) return result.isEmpty() ? PsiReference.EMPTY_ARRAY : result.toArray(PsiReference.EMPTY_ARRAY);
     List<ASTNode> seq = new ArrayList<>();
     collect(node, seq);
-    List<PsiReference> result = new SmartList<>();
     for (int i = 0; i + 1 < seq.size(); i++) {
       ASTNode q = seq.get(i);
       if (q == null || q.getElementType() != ErlangTypes.ERL_QMARK) continue;
@@ -73,6 +77,25 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
       result.add(new ErlangBareMacroReference(host, n.getPsi()));
     }
     return result.isEmpty() ? PsiReference.EMPTY_ARRAY : result.toArray(PsiReference.EMPTY_ARRAY);
+  }
+
+  /**
+   * A use split between two top-level forms: error recovery stops before {@code atom (}, so {@code foo?mac(a)} ends
+   * one form with the bare {@code ?} and starts the next with {@code mac(a)}. Only the file holds both tokens.
+   */
+  private static void addSplitUses(@NotNull PsiElement file, @NotNull List<PsiReference> result) {
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
+      PsiElement last = PsiTreeUtil.lastChild(c);
+      while (last != null && (last instanceof PsiWhiteSpace || last instanceof PsiComment || last.getTextLength() == 0)) last = PsiTreeUtil.prevLeaf(last);
+      if (last == null || last.getNode().getElementType() != ErlangTypes.ERL_QMARK || last.getParent() instanceof ErlangMacros) continue;
+      PsiElement prev = PsiTreeUtil.prevVisibleLeaf(last);
+      if (prev != null && prev.getNode().getElementType() == ErlangTypes.ERL_QMARK) continue;
+      PsiElement name = PsiTreeUtil.nextVisibleLeaf(last);
+      if (name == null || !NAMES.contains(name.getNode().getElementType()) || PsiTreeUtil.isAncestor(c, name, false)) continue;
+      if (PsiTreeUtil.getParentOfType(name, ErlangMacrosName.class) != null) continue;
+      result.add(new ErlangBareMacroReference(file, name));
+    }
   }
 
   private static boolean mayHold(@NotNull ASTNode node) {

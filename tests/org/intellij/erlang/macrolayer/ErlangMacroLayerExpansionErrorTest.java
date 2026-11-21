@@ -137,4 +137,24 @@ public class ErlangMacroLayerExpansionErrorTest extends ErlangLightPlatformCodeI
       assertFalse(info.getDescription(), String.valueOf(info.getDescription()).startsWith("The expansion of"));
     }
   }
+
+  // ------------------------------------------------------------------------------------------------ epp's own errors
+
+  /** erlc: undefined macro 'NOPE', also in a fragment position (the syntax error stays: nothing can expand the form). */
+  public void testUndefinedMacroInFragmentPosition() {
+    myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
+    doTest("-module(main).\n-export([a/0]).\na() -> foo<error descr=\"Unresolved macros '?NOPE'\">?NOPE</error><error descr=\"'.' unexpected\">.</error>\nfoo() -> ok.\n");
+  }
+
+  /** erlc: argument mismatch for macro 'ID'. */
+  public void testArgumentMismatch() {
+    myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
+    doTest("-module(main).\n-export([a/0]).\n-define(ID(X), X).\na() -> <error descr=\"Argument mismatch for macro '?ID': no definition takes 2 arguments\">?ID</error>(1, 2).\n");
+  }
+
+  /** A definition without parameters takes any argument list (epp leaves it as a call): no mismatch. */
+  public void testNoMismatchForADefinitionWithoutParameters() {
+    myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
+    doTest("-module(main).\n-export([a/0]).\n-define(F, fun(X) -> X end).\na() -> ?F(1).\n");
+  }
 }
