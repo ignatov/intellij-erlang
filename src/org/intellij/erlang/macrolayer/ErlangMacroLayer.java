@@ -22,6 +22,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -68,8 +69,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * file whose original file is the real file (the "copy"), and caches it on the real file. A caller asks the copy only
  * when master's path has no answer, and every answer is mapped back to an element of a real file.
  * <p>
- * Switch: system property {@code erlang.macro.layer}, else the environment variable {@code ERLANG_MACRO_LAYER}:
- * {@code off} or {@code layer} (default). Form cap: {@code erlang.macro.layer.cap} / {@code ERLANG_MACRO_LAYER_CAP},
+ * Switch: the Registry key {@code erlang.macro.layer} (default on), read at each call, so a user can turn the layer
+ * off in the IDE (Help | Find Action | Registry) without a restart. The system property {@code erlang.macro.layer}, else
+ * the environment variable {@code ERLANG_MACRO_LAYER} ({@code off} or {@code layer}), overrides it. Form cap: {@code erlang.macro.layer.cap} / {@code ERLANG_MACRO_LAYER_CAP},
  * default 4,000 significant tokens per expanded form. Remote fallback ({@code m:f()} to a function made by a macro
  * in m): {@code erlang.macro.layer.remote} / {@code ERLANG_MACRO_LAYER_REMOTE} = {@code on}, default off.
  */
@@ -87,7 +89,10 @@ public final class ErlangMacroLayer {
   public static final AtomicInteger GUARD_VIOLATIONS = new AtomicInteger();
   public static final AtomicInteger REMOTE_ANSWERED = new AtomicInteger();
 
-  private static final Mode DEFAULT_MODE = readMode();
+  /** The Registry key of the switch (registered in ErlangPlugin.xml). */
+  public static final String REGISTRY_KEY = "erlang.macro.layer";
+  /** The system property or the environment variable, when set: it overrides the Registry key. */
+  private static final @Nullable Mode OVERRIDE_MODE = readMode();
   /**
    * Round 5, fix 7: 4,000 (it was 2,000). With the narrow gate a file pays for the copy only when it needs substitution,
    * and a big function with few expanded tokens (scan_entity_value/7 of xmerl_scan.erl: 2,354) no longer stays broken.
@@ -197,14 +202,19 @@ public final class ErlangMacroLayer {
     }
   }
 
-  private static Mode readMode() {
+  private static @Nullable Mode readMode() {
     String v = read("erlang.macro.layer", "ERLANG_MACRO_LAYER");
+    if (v == null) return null;
     return "off".equals(v) || "none".equals(v) || "false".equals(v) ? Mode.OFF : Mode.LAYER;
   }
 
+  /** M2: read at each call: a test mode, else the system property or environment variable, else the Registry key. */
   public static @NotNull Mode getMode() {
     Mode m = ourTestMode;
-    return m != null ? m : DEFAULT_MODE;
+    if (m != null) return m;
+    if (OVERRIDE_MODE != null) return OVERRIDE_MODE;
+    if (ApplicationManager.getApplication() == null) return Mode.LAYER;
+    return Registry.is(REGISTRY_KEY, true) ? Mode.LAYER : Mode.OFF;
   }
 
   public static boolean isEnabled() {

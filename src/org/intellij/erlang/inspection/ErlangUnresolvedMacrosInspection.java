@@ -38,6 +38,7 @@ import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -60,7 +61,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
         ErlangArgumentDefinitionList list = o.getArgumentDefinitionList();
-        if (list == null) return;
+        if (list == null || !ErlangMacroLayer.isEnabled()) return;
         Set<String> seen = new HashSet<>();
         for (ErlangArgumentDefinition a : list.getArgumentDefinitionList()) {
           String text = a.getText();
@@ -113,6 +114,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
        * resolves, so that no definition is out of sight.
        */
       private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (!ErlangMacroLayer.isEnabled()) return;
         if (!(target.getContainingFile() instanceof ErlangFile file) || !ErlangMacroResolve.allIncludesResolve(file)) return;
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);
         if (arity == ErlangMacroResolve.UNKNOWN) return;
