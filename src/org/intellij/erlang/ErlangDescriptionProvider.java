@@ -43,6 +43,15 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       return ErlangMacroLayer.describeLayerTarget(o, location);
     }
     if (!(o instanceof ErlangCompositeElement)) return null;
+    // a macro use (?OTP_RELEASE, ?MODULE, an undefined macro): quick documentation takes it as its target when it
+    // resolves to no -define; master logged "Unexpected element" for it
+    if (o instanceof ErlangMacros || o instanceof ErlangMacrosName) {
+      if (location == UsageViewTypeLocation.INSTANCE || location == RefactoringDescriptionLocation.WITH_PARENT ||
+          location instanceof DeleteTypeDescriptionLocation) {
+        return "macro";
+      }
+      return o.getText();
+    }
     if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || o instanceof ErlangFunctionCallExpression)) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
@@ -79,9 +88,9 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       else if (o instanceof ErlangFunctionCallExpression) return "function";
       else if (o instanceof ErlangSpecification) return "specification";
     }
-    LOG.error("Unexpected element " + o.getText() +
-              ", class: " + o.getClass() +
-              ", location: " + location.getClass());
-    return "<unknown>";
+    // any other element or location: the platform's default description (master logged an error and said "<unknown>",
+    // which the platform's presentation of a documentation or navigation target can reach with any Erlang element)
+    LOG.debug("No description of " + o.getClass().getSimpleName() + " for " + location.getClass().getSimpleName());
+    return null;
   }
 }
