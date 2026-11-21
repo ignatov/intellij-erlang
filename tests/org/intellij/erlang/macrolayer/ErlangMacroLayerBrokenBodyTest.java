@@ -78,4 +78,17 @@ public class ErlangMacroLayerBrokenBodyTest extends ErlangLightPlatformCodeInsig
       assertFalse(h.getDescription(), h.getSeverity() == HighlightSeverity.ERROR);
     }
   }
+
+  public void testMissingArgumentAfterAComma() {
+    // review probe d1_used.erl: syntax error before: ')' at the use
+    assertErrorOnLine("-module(m).\n-export([f/0]).\n-define(M, foo(1,)).\nf() -> ?M.\nfoo(X) -> X.\n", 4);
+  }
+
+  public void testAnUnusedBrokenBodyShowsNothing() {
+    // review probe d1_unused.erl: erlc accepts it
+    open("-module(m).\n-export([f/0]).\n-define(M, foo(1,)).\nf() -> ok.\n");
+    for (HighlightInfo h : myFixture.doHighlighting()) {
+      assertFalse(h.getDescription(), h.getSeverity() == HighlightSeverity.ERROR);
+    }
+  }
 }

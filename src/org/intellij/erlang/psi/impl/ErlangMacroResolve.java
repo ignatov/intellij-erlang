@@ -368,6 +368,43 @@ public final class ErlangMacroResolve {
     return c.isEmpty() || c.contains(d);
   }
 
+  /** The element is in a top-level form inside an {@code -if}, {@code -ifdef} or {@code -ifndef} branch of its file. */
+  public static boolean isInConditional(@NotNull PsiElement element) {
+    if (!(element.getContainingFile() instanceof ErlangFile file)) return false;
+    int at = element.getTextRange().getStartOffset(), depth = 0;
+    for (PsiElement c = file.getFirstChild(); c != null && c.getTextRange().getStartOffset() <= at; c = c.getNextSibling()) {
+      if (!(c instanceof ErlangAttribute attribute)) continue;
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      String a = attribute.getIfAtomAttribute() != null ? "if" : atom != null ? atom.getName() : null;
+      if ("if".equals(a) || "ifdef".equals(a) || "ifndef".equals(a)) depth++;
+      else if ("endif".equals(a)) depth = Math.max(0, depth - 1);
+    }
+    return depth > 0;
+  }
+
+  /** An {@code -ifdef} or {@code -ifndef} of the file or of a header it includes (directly or not) tests the name. */
+  public static boolean isTestedByConditional(@NotNull ErlangFile file, @NotNull String name) {
+    return isTestedByConditional(file, name, new HashSet<>());
+  }
+
+  private static boolean isTestedByConditional(@NotNull ErlangFile file, @NotNull String name, @NotNull Set<ErlangFile> seen) {
+    if (!seen.add(file)) return false;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (!(c instanceof ErlangAttribute attribute) || attribute.getAtomAttribute() == null) continue;
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      if (!"ifdef".equals(atom.getName()) && !"ifndef".equals(atom.getName())) continue;
+      ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+      if (m != null && name.equals(StringUtil.unquoteString(m.getText(), '\''))) return true;
+    }
+    for (ErlangInclude inc : file.getIncludes()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (isTestedByConditional(h, name, seen)) return true;
+    }
+    for (ErlangIncludeLib inc : file.getIncludeLibs()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (isTestedByConditional(h, name, seen)) return true;
+    }
+    return false;
+  }
+
   /** Every include of the file, and of the headers it includes, resolves to a file (cached until a PSI change). */
   public static boolean allIncludesResolve(@NotNull ErlangFile file) {
     return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(

@@ -129,6 +129,8 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           int a = ErlangMacroResolve.arity(d);
           if (a == arity || a == ErlangMacroResolve.NO_ARGUMENTS) return;
         }
+        // never paint code that may be valid: a branch that may be skipped, or a name that a build flag (-D) may give
+        if (ErlangMacroResolve.isInConditional(nameLeaf) || ErlangMacroResolve.isTestedByConditional(file, unquote(name))) return;
         String uses = arity == ErlangMacroResolve.NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
         registerProblem(holder, target, "Argument mismatch for macro '?" + unquote(name) + "': no definition takes " + uses, range, null);
       }

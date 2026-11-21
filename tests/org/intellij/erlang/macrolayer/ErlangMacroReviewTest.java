@@ -189,4 +189,31 @@ public class ErlangMacroReviewTest extends ErlangLightPlatformCodeInsightFixture
     ErlangMacroLayer.table((ErlangFile)f);
     assertEquals("no summary built on the UI thread", before, ErlangMacroLayer.SUMMARIES_BUILT.get());
   }
+
+  private List<String> errorsOf(String text) {
+    //noinspection unchecked
+    myFixture.enableInspections(ErlangUnresolvedMacrosInspection.class);
+    open(text);
+    List<String> r = new ArrayList<>();
+    for (HighlightInfo h : myFixture.doHighlighting()) {
+      if (h.getSeverity() == com.intellij.lang.annotation.HighlightSeverity.ERROR) r.add(h.getDescription());
+    }
+    return r;
+  }
+
+  // D3: no argument mismatch inside a branch that may be skipped (review probe dead_branch.erl, erlc compiles it)
+  public void testD3NoArgumentMismatchInAConditionalBranch() {
+    assertEquals(List.of(), errorsOf("-module(m).\n-export([f/0]).\n-define(LOG(X), {log, X}).\n-ifdef(LEGACY_LOGGING).\ng() -> ?LOG(a, b).\n-endif.\nf() -> ?LOG(a).\n"));
+  }
+
+  // D3: no argument mismatch for a name a conditional tests (it may come from -D; probe dflag.erl with -DLOG=mylog)
+  public void testD3NoArgumentMismatchForANameTestedByAConditional() {
+    assertEquals(List.of(), errorsOf("-module(m).\n-export([f/0]).\n-ifndef(LOG).\n-define(LOG(Fmt, Args), io:format(Fmt, Args)).\n-endif.\nf() -> ?LOG(\"x~n\").\nmylog(_) -> ok.\n"));
+  }
+
+  // D3: the check still works where it is certain
+  public void testD3ArgumentMismatchStaysWhereCertain() {
+    assertEquals(List.of("Argument mismatch for macro '?LOG': no definition takes 2 arguments"),
+                 errorsOf("-module(m).\n-export([f/0]).\n-define(LOG(X), {log, X}).\nf() -> ?LOG(a, b).\n"));
+  }
 }
