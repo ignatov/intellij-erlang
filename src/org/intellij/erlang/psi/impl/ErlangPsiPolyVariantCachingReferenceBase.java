@@ -41,6 +41,13 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
     return result != null ? result : ErlangMacroLayer.resolveFallback(this);
   }
 
+  /** Round 6: master's answer alone (cached), without the macro layer's. */
+  @Nullable
+  protected final PsiElement resolveWithoutLayer() {
+    if (!getElement().isValid()) return null;
+    return ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
+  }
+
   @Nullable
   public abstract PsiElement resolveInner();
 
