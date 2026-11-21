@@ -272,6 +272,8 @@ public final class FuzzRecorder {
     String exClass = root.getClass().getSimpleName();
     String sig;
     boolean plugin = frame != null || mentionsPlugin(t);
+    // an invalid element met by platform code only (a race of a platform action with typing): not the plugin's
+    if (frame == null && root instanceof com.intellij.psi.PsiInvalidElementAccessException) plugin = false;
     // an element made invalid on purpose may be refused with the platform's own exception
     if (label.contains("[invalid ") && root instanceof com.intellij.psi.PsiInvalidElementAccessException) plugin = false;
     if (kind.equals("log-error")) {
@@ -441,7 +443,8 @@ public final class FuzzRecorder {
       }
       long start = myActionStart;
       Thread th = myActionThread;
-      if (start == 0 || th == null || myHangReported) continue;
+      // the case itself is not an action: its time is the sum of its actions
+      if (start == 0 || th == null || myHangReported || myAction.startsWith("case ")) continue;
       long ms = System.currentTimeMillis() - start;
       if (ms > myActionMillis) {
         myHangReported = true;

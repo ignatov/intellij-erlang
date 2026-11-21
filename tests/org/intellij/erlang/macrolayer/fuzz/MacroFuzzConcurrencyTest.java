@@ -204,6 +204,7 @@ public class MacroFuzzConcurrencyTest extends MacroFuzzTestBase {
         List<String>[] r = new List[1];
         rec.guard("references after", () -> r[0] = background(() -> Answers.references(file, w.root)));
         after = r[0];
+        finalTexts.putAll(files);                         // the other files too (an .app file makes an include_lib resolve)
         for (String p : w.erlangPaths()) {
           PsiFile f = w.psi(p);
           if (f != null) finalTexts.put(p, f.getText());
