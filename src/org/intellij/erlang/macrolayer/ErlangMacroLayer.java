@@ -896,11 +896,14 @@ public final class ErlangMacroLayer {
     // own macros
     Set<String> names = new HashSet<>();
     Set<String> bodyVars = new HashSet<>();
+    // the macros whose -define has a syntax error in the main tree (see classify)
+    Set<String> broken = new HashSet<>();
     Map<String, List<ErlangMacroExpander.DefineShape>> shapes = new HashMap<>();
     for (ErlangMacrosDefinition d : file.getMacroses()) {
       ProgressManager.checkCanceled();
       String n = d.getName();
       if (n != null) names.add(n);
+      if (n != null && hasSyntaxError(d)) broken.add(n);
       ErlangMacrosBody body = d.getMacrosBody();
       if (body != null) for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(body, ErlangQVar.class)) bodyVars.add(v.getText());
       if (n != null) {
@@ -921,7 +924,7 @@ public final class ErlangMacroLayer {
           missing[0] = true;
           continue;
         }
-        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, shapes, direct, missing));
+        top.put(e.getKey(), visitHeader(e.getValue(), new ArrayList<>(), nested, headers, names, bodyVars, shapes, direct, missing, broken));
       }
     }
     catch (Refusal r) {
@@ -933,7 +936,7 @@ public final class ErlangMacroLayer {
     if (refusal == null) {
       t.names.addAll(names);
       t.bodyVars.addAll(bodyVars);
-      classify(t, shapes);
+      classify(t, shapes, broken);
       t.top.putAll(top);
       t.nested.putAll(nested);
     }
@@ -947,7 +950,8 @@ public final class ErlangMacroLayer {
    * and every macro name used in those bodies is predefined or is itself plain (transitively); a name used in a body
    * that the file cannot see makes the macro not plain.
    */
-  private static void classify(@NotNull Table t, @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes) {
+  private static void classify(@NotNull Table t, @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes,
+                               @NotNull Set<String> broken) {
     for (String name : t.names) {
       List<ErlangMacroExpander.DefineShape> list = shapes.get(name);
       if (list == null || list.isEmpty()) {
@@ -958,7 +962,9 @@ public final class ErlangMacroLayer {
         t.freeBodyVars.addAll(shape.freeVars());
         t.macroFreeVars.computeIfAbsent(name, k -> new HashSet<>()).addAll(shape.freeVars());
         t.macroNestedUses.computeIfAbsent(name, k -> new HashSet<>()).addAll(shape.nestedUses());
-        if (!shape.plainBody()) t.nonPlain.add(name);
+        // a -define with a syntax error in the main tree: no error is shown inside a well-formed body (it may be a
+        // fragment that is valid where it is used), so each use is parsed in the copy and the error comes at the use
+        if (!shape.plainBody() || broken.contains(name)) t.nonPlain.add(name);
       }
     }
     // round 6 (next), item 5: a macro whose bodies come back to itself is not plain (epp: "circular macro")
@@ -1009,6 +1015,10 @@ public final class ErlangMacroLayer {
         }
       }
     }
+  }
+
+  private static boolean hasSyntaxError(@NotNull ErlangMacrosDefinition d) {
+    return PsiTreeUtil.findChildOfType(d, PsiErrorElement.class) != null;
   }
 
   private static @NotNull ErlangMacroExpander.DefineShape unknownShape(@NotNull String name) {
@@ -1082,7 +1092,7 @@ public final class ErlangMacroLayer {
     @NotNull Map<ErlangMacroExpander.HeaderSummary, Map<String, ErlangMacroExpander.HeaderSummary>> nested,
     @NotNull List<VirtualFile> headers, @NotNull Set<String> names, @NotNull Set<String> bodyVars,
     @NotNull Map<String, List<ErlangMacroExpander.DefineShape>> shapes,
-    @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct, boolean @NotNull [] missing) throws Refusal {
+    @NotNull Map<ErlangFile, Map<String, ErlangFile>> direct, boolean @NotNull [] missing, @NotNull Set<String> broken) throws Refusal {
     VirtualFile vf = header.getOriginalFile().getVirtualFile();
     if (vf == null) throw new Refusal("unresolved-include");
     if (path.contains(vf)) throw new Refusal("include-cycle");
@@ -1098,6 +1108,9 @@ public final class ErlangMacroLayer {
     }
     if (nested.containsKey(s)) return s;
     for (ErlangMacroExpander.DefineShape shape : s.defineShapes()) shapes.computeIfAbsent(shape.name(), k -> new ArrayList<>()).add(shape);
+    for (ErlangMacrosDefinition d : header.getMacroses()) {
+      if (d.getName() != null && hasSyntaxError(d)) broken.add(d.getName());
+    }
     Map<String, ErlangMacroExpander.HeaderSummary> children = new HashMap<>();
     nested.put(s, children);
     if (s.includes().isEmpty()) return s;
@@ -1111,7 +1124,7 @@ public final class ErlangMacroLayer {
           missing[0] = true;
           continue;
         }
-        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, shapes, direct, missing));
+        children.put(k, visitHeader(child, path, nested, headers, names, bodyVars, shapes, direct, missing, broken));
       }
     }
     finally {

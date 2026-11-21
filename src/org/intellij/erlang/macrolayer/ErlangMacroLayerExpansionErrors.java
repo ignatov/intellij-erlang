@@ -317,7 +317,10 @@ public final class ErlangMacroLayerExpansionErrors {
       }
       candidates.add(misplacedAssociation(e));
       for (PsiElement c : candidates) {
-        if (c != null && (best == null || c.getTextRange().getStartOffset() < best.getTextRange().getStartOffset())) best = c;
+        // an error before the form is not its own: the copy keeps a broken -define as it is, and its parser may join
+        // that define and the next form (an unclosed parenthesis in the body)
+        if (c == null || c.getTextRange().getStartOffset() < f.expStart) continue;
+        if (best == null || c.getTextRange().getStartOffset() < best.getTextRange().getStartOffset()) best = c;
       }
       if (best != null) break;
     }
