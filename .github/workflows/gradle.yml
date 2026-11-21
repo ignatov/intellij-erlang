@@ -173,8 +173,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
-      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml and scripts/smoke/inputs.sh (the release
-      # smoke); change the pins together in all three.
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml, coverage.yml and scripts/smoke/inputs.sh
+      # (the release smoke); change the pins together in all four.
       env:
         OTP_VERSION: '27.3.4.9'
       run: |
@@ -336,8 +336,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
-      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
-      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 comes from the list of builds of
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml, coverage.yml
+      # and scripts/smoke/inputs.sh; change the pins together in all five. The sha256 comes from the list of builds of
       # erlef/otp_builds.
       if: runner.os == 'macOS'
       env:
@@ -362,8 +362,8 @@ jobs:
         tar -xzf "$archive" -C "$root"
         echo "$root/bin" >> "$GITHUB_PATH"
     - name: Install Erlang/OTP on Windows
-      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
-      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 is the one GitHub publishes for the
+      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml, coverage.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all five. The sha256 is the one GitHub publishes for the
       # release asset; SHA256.txt of the release does not list the Windows builds.
       if: runner.os == 'Windows'
       env:
