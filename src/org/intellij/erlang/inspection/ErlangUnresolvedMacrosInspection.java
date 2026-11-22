@@ -50,6 +50,9 @@ import java.util.List;
 import java.util.Set;
 
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
+  // predefined since OTP 25, both with one argument
+  private static final Set<String> FEATURE_MACROS = Set.of("FEATURE_ENABLED", "FEATURE_AVAILABLE");
+
   @NotNull
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
@@ -67,6 +70,10 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
+        if (FEATURE_MACROS.contains(macrosName.getText()) && (reference == null || ErlangMacroResolve.firstTarget(reference) == null)) {
+          checkFeatureArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+          return;
+        }
         if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
@@ -84,8 +91,12 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         for (PsiReference r : ErlangBareMacroReference.find(o)) {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();
-          if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
+          if (FEATURE_MACROS.contains(name) && ErlangMacroResolve.firstTarget(bare) == null) {
+            checkFeatureArity(o, bare.getNameElement(), name, range);
+            continue;
+          }
+          if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
           if (ErlangMacroResolve.firstTarget(bare) == null) {
             // the conditionals around the use itself: for a file host, the host has no enclosing form
             PsiElement use = bare.getNameElement();
@@ -94,6 +105,18 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           else {
             checkArity(o, bare.getNameElement(), name, range);
           }
+        }
+      }
+
+      /**
+       * Epp's "argument mismatch for macro" for a use of a predefined feature macro (no -define of the name resolves)
+       * without exactly one argument, outside -define bodies.
+       */
+      private void checkFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
+        int arity = ErlangMacroResolve.arityAfter(nameLeaf);
+        if (arity != 1 && arity != ErlangMacroResolve.UNKNOWN) {
+          registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
         }
       }
 
