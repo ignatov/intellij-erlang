@@ -817,6 +817,25 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                """);
   }
 
+  // #1467: the title of a self-resolving reference is its name and arity, not the raw source text of the owner
+  public void testDescriptionsOfBifInFunWithArityOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s  /
+                                 1.
+                               """);
+  }
+
+  public void testDescriptionsOfBifCallOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(
+                                 1).
+                               """);
+  }
+
   private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertInstanceOf(element, NavigationItem.class);
