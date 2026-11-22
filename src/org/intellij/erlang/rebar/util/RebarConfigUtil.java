@@ -52,8 +52,12 @@ public final class RebarConfigUtil {
     return includePaths;
   }
 
+  /**
+   * Returns the deps of the top level and of the profiles. rebar3 applies only the prod profile to a dependency,
+   * so for the rebar.config of a dependency app only the deps of that profile are read.
+   */
   @NotNull
-  public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
+  public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig, boolean isDependencyApp) {
     final List<String> dependencyAppNames = new ArrayList<>();
     Consumer<ErlangExpression> depsConsumer = depsList -> {
       if (!(depsList instanceof ErlangListExpression)) return;
@@ -71,7 +75,8 @@ public final class RebarConfigUtil {
     ErlangTermFileUtil.processConfigSection(rebarConfig, "profiles", profilesList -> {
       if (!(profilesList instanceof ErlangListExpression)) return;
       for (ErlangExpression profile : ((ErlangListExpression) profilesList).getExpressionList()) {
-        if (ErlangTermFileUtil.getNameOfNamedTuple(profile) == null) continue;
+        String profileName = ErlangTermFileUtil.getNameOfNamedTuple(profile);
+        if (profileName == null || isDependencyApp && !"prod".equals(profileName)) continue;
         List<ErlangExpression> profileTuple = ((ErlangTupleExpression) profile).getExpressionList();
         if (profileTuple.size() >= 2) {
           ErlangTermFileUtil.processConfigSection(profileTuple.get(1), "deps", depsConsumer);
