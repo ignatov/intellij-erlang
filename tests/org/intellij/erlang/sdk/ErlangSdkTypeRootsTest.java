@@ -23,6 +23,7 @@ import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 // The homes are temporary directories of the test, which the test framework deletes in tearDown.
 public class ErlangSdkTypeRootsTest extends BasePlatformTestCase {
@@ -174,7 +176,7 @@ public class ErlangSdkTypeRootsTest extends BasePlatformTestCase {
     File scoopHome = new File(userHome, "scoop/apps/erlang/current");
     createFile(scoopHome, "bin/erl.exe");
     createFile(scoopHome, "bin/erlc.exe");
-    String expected = (SystemInfo.isWindows ? scoopHome : asdfHome).getAbsolutePath();
+    String expected = expectedSuggestedHome(asdfHome, scoopHome);
     String oldUserHome = System.getProperty("user.home");
     System.setProperty("user.home", userHome.getAbsolutePath());
     try {
@@ -183,6 +185,20 @@ public class ErlangSdkTypeRootsTest extends BasePlatformTestCase {
     finally {
       System.setProperty("user.home", oldUserHome);
     }
+  }
+
+  // an Erlang installed on the machine comes first: MacPorts on macOS, Program Files and %SCOOP% on Windows
+  private static String expectedSuggestedHome(File asdfHome, File scoopHome) {
+    if (SystemInfo.isWindows) {
+      List<String> programFiles = Stream.of("ProgramW6432", "ProgramFiles", "ProgramFiles(x86)")
+        .map(System::getenv).filter(StringUtil::isNotEmpty).distinct().toList();
+      String installed = ErlangSdkType.findWindowsErlangHome(programFiles);
+      if (installed != null) return installed;
+      String scoop = System.getenv("SCOOP");
+      return scoop == null ? scoopHome.getAbsolutePath() : ErlangSdkType.findWindowsErlangHome(List.of(scoop + "\\apps\\erlang\\current"));
+    }
+    File macPorts = new File("/opt/local/lib/erlang");
+    return (SystemInfo.isMac && macPorts.exists() ? macPorts : asdfHome).getAbsolutePath();
   }
 
   private static void assertVersionNotDetected(File home) {

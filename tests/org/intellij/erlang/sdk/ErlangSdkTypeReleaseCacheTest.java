@@ -191,7 +191,8 @@ public class ErlangSdkTypeReleaseCacheTest extends ErlangLightPlatformCodeInsigh
   }
 
   public void testReleaseOfModule() {
-    assertEquals("25", ErlangSdkType.getRelease(getModule()).getOtpRelease());
+    modifyProjectSdk(modificator -> modificator.setVersionString("OTP 27, erts-15.1"));
+    assertEquals("27", ErlangSdkType.getRelease(getModule()).getOtpRelease());
     assertSame(ErlangSdkRelease.DefaultRelease, ErlangSdkType.getRelease((Module)null));
   }
 
