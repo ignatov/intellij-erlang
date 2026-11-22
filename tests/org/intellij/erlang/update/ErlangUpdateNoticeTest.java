@@ -149,6 +149,38 @@ public class ErlangUpdateNoticeTest extends TestCase {
     assertEquals(0, myNotice.getState().lastShown);
   }
 
+  public void testOfferIsNotShownWhenPluginsStartToUpdateAutomaticallyBeforeItAppears() {
+    myUi.deferOffers = true;
+    myNotice.check(myUi);
+    // the offer waits for the EDT, for example until the Settings dialog closes
+    myPlatform.autoUpdate = true;
+    myUi.showQueuedOffers();
+    assertNothingShown();
+    assertEquals(START, myNotice.getState().lastCheck);
+    assertEquals(0, myNotice.getState().lastShown);
+  }
+
+  public void testOfferIsNotShownWhenTheUpdateIsInstalledBeforeItAppears() {
+    myUi.deferOffers = true;
+    myNotice.check(myUi);
+    myPlatform.pending = true;
+    myUi.showQueuedOffers();
+    assertNothingShown();
+    assertEquals(0, myNotice.getState().lastShown);
+  }
+
+  public void testOfferRecordsTheTimeWhenItAppears() {
+    myUi.deferOffers = true;
+    myNotice.check(myUi);
+    assertNothingShown();
+    assertEquals(0, myNotice.getState().lastShown);
+    myNow += HOUR;
+    myUi.showQueuedOffers();
+    assertEquals(List.of("offer 0.11.1500"), myUi.events);
+    assertEquals(List.of(ErlangUsageKey.UPDATE_NOTICE_SHOWN), myUi.counted);
+    assertEquals(START + HOUR, myNotice.getState().lastShown);
+  }
+
   public void testStoredTimesFromAWrongClockDoNotBlockForever() {
     ErlangUpdateNoticeState state = new ErlangUpdateNoticeState();
     state.lastCheck = START + 365 * DAY;
@@ -299,13 +331,26 @@ public class ErlangUpdateNoticeTest extends TestCase {
     }
   }
 
-  private static final class FakeUi implements ErlangUpdateNotice.Ui {
+  private final class FakeUi implements ErlangUpdateNotice.Ui {
     final List<String> events = new ArrayList<>();
     final List<ErlangUsageKey> counted = new ArrayList<>();
+    // the offers wait, as on the EDT, until showQueuedOffers()
+    boolean deferOffers;
+    private final List<Update> myQueuedOffers = new ArrayList<>();
 
     @Override
     public void offer(@NotNull Update update) {
-      events.add("offer " + update.version());
+      if (deferOffers) myQueuedOffers.add(update);
+      else show(update);
+    }
+
+    void showQueuedOffers() {
+      myQueuedOffers.forEach(this::show);
+      myQueuedOffers.clear();
+    }
+
+    private void show(@NotNull Update update) {
+      if (myNotice.mayShowOfferNow(this)) events.add("offer " + update.version());
     }
 
     @Override

@@ -283,6 +283,8 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
     @Override
     public void offer(@NotNull Update update) {
       later(() -> {
+        // the settings may have changed while the offer waited
+        if (!myNotice.mayShowOfferNow(this)) return;
         Notification notification = notification(offerTitle(update), offerText(update), NotificationType.INFORMATION)
           .addAction(NotificationAction.createSimple("Install", () -> startInstall(update, this)))
           .addAction(NotificationAction.createSimpleExpiring("Don't show again", () -> myNotice.dontShowAgain(this)));

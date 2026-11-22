@@ -70,7 +70,8 @@ public final class ErlangUpdateNotice {
    * The notifications and the usage counters of one project, or of no project.
    */
   interface Ui {
-    // the notification with the actions Install and Don't show again
+    // the notification with the actions Install and Don't show again; right before it appears, it asks
+    // mayShowOfferNow()
     void offer(@NotNull Update update);
 
     // the update is installed; with the action Restart when offerRestart is true
@@ -150,12 +151,23 @@ public final class ErlangUpdateNotice {
     if (update == null) return;
     synchronized (this) {
       // the user may have installed the update or changed a setting while the question ran
-      long now = myClock.getAsLong();
-      if (!mayShow(now)) return;
-      myState.lastShown = now;
+      if (!mayShow(myClock.getAsLong())) return;
     }
     ui.offer(update);
+  }
+
+  /**
+   * The offer is about to appear, on the EDT. It may have waited there, for example until the Settings dialog closed,
+   * so the silence rules are checked again. True when it may appear; then its time is recorded and it is counted.
+   */
+  boolean mayShowOfferNow(@NotNull Ui ui) {
+    synchronized (this) {
+      long now = myClock.getAsLong();
+      if (!mayShow(now)) return false;
+      myState.lastShown = now;
+    }
     ui.count(ErlangUsageKey.UPDATE_NOTICE_SHOWN);
+    return true;
   }
 
   // the silence rules, except the one for the last question
