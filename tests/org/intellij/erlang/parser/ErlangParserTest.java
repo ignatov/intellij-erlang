@@ -18,9 +18,11 @@ package org.intellij.erlang.parser;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
 import java.io.IOException;
@@ -167,6 +169,17 @@ public class ErlangParserTest extends ErlangParserTestBase {
     Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
     assertEquals(1, functions.size());
     assertEquals("visible", functions.iterator().next().getName());
+  }
+
+  // #1440: erl_scan accepts the Latin-1 letters in unquoted atoms and variables.
+  public void testLatin1LettersInNames() {
+    PsiFile file = parseText("-module(e).\n" +
+                             "-export([f/1]).\n" +
+                             "f(\u00C4rger) -> {caf\u00E9, \u00C4rger, gr\u00F6\u00DFe}.\n");
+    assertFalse(DebugUtil.psiToString(file, true), PsiTreeUtil.hasErrorElements(file));
+    Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
+    assertEquals(1, functions.size());
+    assertEquals(2, PsiTreeUtil.findChildrenOfType(file, ErlangQVar.class).size());
   }
 
   private PsiFile parseText(String text) {
