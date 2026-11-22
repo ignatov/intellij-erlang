@@ -288,3 +288,16 @@ jobs:
           if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
             echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
           fi
+
+      - name: Start a build of the hosted console
+        # factory-console.yml publishes a new snapshot of the console, which now shows this tick. It gets no
+        # secret from here; its concurrency group queues builds. Off unless the repository variable
+        # FACTORY_CONSOLE is "true".
+        if: ${{ !cancelled() && vars.FACTORY_CONSOLE == 'true' && steps.clone.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-console.yml -R "$REPO" --ref master; then
+            echo "::warning::The console build could not be started; the daily schedule or the next tick starts one."
+          fi

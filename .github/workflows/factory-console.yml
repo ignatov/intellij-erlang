@@ -1,0 +1,409 @@
+name: Factory console
+
+# Publishes a read-only snapshot of the factory's console (the dashboard of the private repository
+# ignatov/intellij-erlang-triage) to a Cloudflare R2 bucket, from which a Worker serves the hosted page. It runs here,
+# as factory-tick.yml does, because the Actions minutes of a public repository are free.
+#
+# One run: fetch main of the private repository, pull the export's cache from the bucket, build every answer of the
+# console (console/export.py, read-only, from GitHub), upload the snapshot (console/hosted/uploader/upload.py:
+# blobs, then the manifest, then "current"), push the cache back. A failed run changes nothing that is published:
+# the page keeps the last snapshot and shows its age. The Worker is deployed by hand and is not part of this.
+#
+# Started by the dispatcher's tick (factory-tick.yml starts it with its GITHUB_TOKEN at the end of every run, when
+# FACTORY_CONSOLE is "true"), by a person (workflow_dispatch, with the inputs cold and full) and by a daily schedule.
+# Off unless the repository variable FACTORY_CONSOLE is "true": the job is skipped.
+#
+# The daily cold run: a run that is scheduled, or that starts between 03:00 and 03:14 UTC (GitHub drops most scheduled
+# runs of this repository; a tick lands in that window on most days), builds with --cold (no cached GitHub answer is
+# used, so a poisoned cache cannot live longer than a day) and uploads with --full (every blob is written again, so a
+# blob deleted or changed in the bucket is repaired). Its cache push replaces the cache.
+#
+# One run at a time: the concurrency group queues and never cancels a running build, so two uploads never overlap;
+# a newer queued run replaces an older queued one (GitHub keeps at most one pending run per group). Runs therefore
+# upload in the order they build, each from newer data, and "current" never moves back to an older snapshot.
+#
+# What keeps the secrets and the private data in:
+#   - The secrets are secrets of the environment factory-console, which only jobs of master can use. There is no
+#     pull_request or pull_request_target trigger, so a pull request or a fork never runs this workflow.
+#   - No "uses:" step, and nothing from this repository's tree runs. The private repository is fetched with plain
+#     git (a shallow, sparse, blob-less clone of console/ and dispatcher/*.py), the token coming from an askpass
+#     script that reads it from the environment (never on a command line or in a URL). Each secret reaches only the
+#     steps that need it. GITHUB_TOKEN has no permission at all, and nothing here writes to GitHub.
+#   - The log of a public run is public. The export, the cache tool and the uploader write to files; this log shows
+#     only their lines of counts and fixed phrases, and only a line that matches one of the patterns of lines.py
+#     below; any other line is replaced by one generic line. No artifact, no cache of Actions, no step summary, no
+#     annotation with data, no output with data. The export's details go to a private file on the runner and are
+#     discarded with it.
+#   - Values from the event and the inputs reach the scripts only through env, never inside a script.
+#
+# Secrets of the environment factory-console:
+#   CONSOLE_READ_TOKEN     a fine-grained personal access token of the maintainer, read-only: repository
+#                          ignatov/intellij-erlang-triage only, with Contents, Issues and Actions: read (Metadata: read
+#                          comes with it). Public repositories, this one included, it reads as every token does.
+#                          It must be a stored token, not GITHUB_TOKEN: the export's cache is sealed with a key derived
+#                          from the token, so a token that changes on every run never finds its cache.
+#   R2_ACCOUNT_ID          the Cloudflare account id (32 hex characters)
+#   R2_ACCESS_KEY_ID       an R2 "Object Read & Write" key that applies to the bucket console-data only
+#   R2_SECRET_ACCESS_KEY
+#   CACHE_SIGNING_KEY      32 or more random characters; the cache archive in the bucket is signed with it
+
+on:
+  workflow_dispatch:
+    inputs:
+      cold:
+        description: Build cold (use no cached GitHub answer)
+        type: boolean
+        default: false
+      full:
+        description: Upload every blob, also the ones the live snapshot has
+        type: boolean
+        default: false
+  schedule:
+    - cron: '7 3 * * *'
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: factory-console
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: vars.FACTORY_CONSOLE == 'true' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    # Fetch about 10 s, cache pull 60 s, export 420 s (--max-seconds), upload 240 s (--deadline), cache push 60 s.
+    timeout-minutes: 15
+    permissions: {}
+    environment:
+      name: factory-console
+      # The environment is used for its secrets and its branch policy only; this is not a deployment.
+      deployment: false
+    env:
+      DESK_REPO: ignatov/intellij-erlang-triage
+      BUCKET: console-data
+      GIT_TERMINAL_PROMPT: '0'
+      # No credential helper of the runner stores or offers anything; the askpass script answers.
+      GIT_CONFIG_NOSYSTEM: '1'
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: credential.helper
+      GIT_CONFIG_VALUE_0: ''
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          EVENT: ${{ github.event_name }}
+          COLD_INPUT: ${{ inputs.cold }}
+          FULL_INPUT: ${{ inputs.full }}
+        run: |
+          cold=false
+          full=false
+          if [ "$EVENT" = "schedule" ]; then
+            cold=true
+            full=true
+          fi
+          if [ "$COLD_INPUT" = "true" ]; then cold=true; fi
+          if [ "$FULL_INPUT" = "true" ]; then full=true; fi
+          # The daily cold run, also when GitHub dropped the schedule: whatever starts in this window.
+          now=$(date -u +%H%M)
+          if [ "$now" -ge 300 ] && [ "$now" -lt 315 ] 2> /dev/null; then
+            cold=true
+            full=true
+          fi
+          echo "Build: $([ "$cold" = true ] && echo cold || echo warm); upload: $([ "$full" = true ] && echo every blob || echo new blobs only)"
+          echo "cold=$cold" >> "$GITHUB_OUTPUT"
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+
+      - name: Check the secrets
+        env:
+          CONSOLE_READ_TOKEN: ${{ secrets.CONSOLE_READ_TOKEN != '' }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID != '' }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID != '' }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY != '' }}
+          CACHE_SIGNING_KEY: ${{ secrets.CACHE_SIGNING_KEY != '' }}
+        run: |
+          missing=""
+          for name in CONSOLE_READ_TOKEN R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CACHE_SIGNING_KEY; do
+            if [ "${!name}" != "true" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Not set in the environment factory-console:$missing"
+            exit 1
+          fi
+          echo "Every secret is set."
+
+      - name: Write the line filter
+        # The only gate between the tools' output and this public log. A line is printed only when it matches one
+        # of these patterns in full: counts, fixed phrases, kinds of a refused secret scan, an exception class name.
+        # Never a path, a number in place of a word, a title, an API path, an error body or a traceback.
+        run: |
+          w="$RUNNER_TEMP/console"
+          mkdir -m 700 "$w" "$w/logs" "$w/home" "$w/work"
+          cat > "$w/lines.py" <<'PY'
+          import re
+          import sys
+
+          N = r"[0-9]{1,12}"
+          KIND = (r"(?:github-token|authorization|private-key|aws-key-id|api-key|slack-webhook|npm-token|"
+                  r"google-api-key|page-token|token-value|deny-env)")
+          HTTP = r"\(HTTP [0-9]{1,3}\)"
+          CLASS = r"[A-Z][A-Za-z0-9_]{0,60}"
+
+          def rx(text):
+              text = text.replace("<KINDS-N>", r"<N> <KIND>(?:, <N> <KIND>){0,15}")
+              text = text.replace("<SCAN>", r"<N> match(?:es)? \(<KIND> <N>(?:, <KIND> <N>){0,15}\)")
+              for name, value in (("<N>", N), ("<KIND>", KIND), ("<HTTP>", HTTP), ("<CLASS>", CLASS)):
+                  text = text.replace(name, value)
+              return re.compile(text, re.ASCII)
+
+          MANIFEST = (r"the manifest is larger than <N> bytes|the manifest is not JSON|the manifest has other fields than "
+                      r"the contract|the manifest format is not <N>|the manifest id is malformed|built_at or commit is "
+                      r"empty or longer than <N> characters|page_format is out of range|the manifest has no files|"
+                      r"the manifest has more than <N> entries|a manifest entry has other fields than h and n|"
+                      r"a manifest hash is not 64 hex|a manifest size is out of range|a key does not start with api/|"
+                      r"a path under api/ is empty or longer than <N> characters|a path under api/ has more than <N> "
+                      r"parts|a path under api/ has a part that is empty, '\.', '\.\.' or has a character outside "
+                      r"A-Z a-z 0-9 \. _ -|a path under api/ is one the Worker answers itself \(meta, stamp, s/\.\.\.\)")
+          BAD_INPUT = (r"a path is outside api/ or does not end in \.json|export\.json is missing|export\.json is larger "
+                       r"than 1 MiB|export\.json is not valid JSON|export\.json is not a JSON object|export\.json has an "
+                       r"unknown format \(this uploader reads format <N>\)|export\.json has no integer page_format from "
+                       r"<N> to <N>|export\.json has no (?:built_at|commit) of 1 to <N> characters|a file under api/ is "
+                       r"larger than <N> bytes|the export directory does not exist|a directory under api/ is a symbolic "
+                       r"link|a file under api/ is a symbolic link or not a regular file|more than <N> files under api/|"
+                       r"a file under api/ is not valid JSON|a file under api/ is nested too deeply|no \.json files under "
+                       r"api/|a file could not be read \(<CLASS>\)|" + MANIFEST)
+          UPLOAD_FAILED = (r"the run deadline passed|could not read current <HTTP>|could not read the previous manifest "
+                           r"<HTTP>|current is malformed|no live snapshot \(current is missing\)|the live manifest is "
+                           r"malformed|could not read the live manifest <HTTP>|a file changed during the upload|a blob "
+                           r"upload failed <HTTP>|could not make a new manifest id|the finished manifest breaks a limit: "
+                           r"(?:" + MANIFEST + r")|the manifest upload failed <HTTP>|the manifest read back is too large|"
+                           r"the manifest read back differs <HTTP>|the current upload failed <HTTP>")
+          USAGE = (r"bad usage|bad bucket name|--jobs must be 1-32|--deadline must be more than 0 and at most 86400 seconds|"
+                   r"--deadline takes a number of seconds|--list-live takes only a bucket name|missing environment "
+                   r"variables: [A-Z0-9_]{1,40}(?:, [A-Z0-9_]{1,40}){0,5}|R2_ACCOUNT_ID must be 32 lowercase hex "
+                   r"characters|CACHE_SIGNING_KEY must have at least <N> characters|the cache directory must be an empty "
+                   r"directory or absent|the cache directory must be empty or absent|the cache directory must exist|"
+                   r"--deny takes NAME=REGEX with NAME of a-z, 0-9 and -|--deny has a regex that does not compile|"
+                   r"--deny has a regex that matches the empty string|--deny-env takes the name of an environment variable")
+
+          PATTERNS = {
+              "export": [
+                  r"console export: <N> files, <N>(?:\.[0-9])? (?:MB|KB), <N> PRs, REST <N> \+ <N> not modified, "
+                  r"GraphQL <N>, redacted: (?:none|<KINDS-N>), cut: <N>, <N> s",
+                  r"console export failed: (?:time limit|GitHub read failed|rate floor|limits|internal error|"
+                  r"bad arguments \(see --help\)|the log cannot be opened|secret scan: <KINDS-N>)",
+              ],
+              "cache": [
+                  r"cache pulled: <N> files, <N> bytes",
+                  r"cache pull: none, building cold(?: \(CACHE_SIGNING_KEY is not set\))?",
+                  r"cache pushed: <N> files, <N> bytes, <N> skipped",
+                  r"cache push: skipped \((?:over a cap|two names collide|the upload failed <HTTP>|secret scan: <SCAN>|"
+                  r"CACHE_SIGNING_KEY is not set|<CLASS>)\)",
+                  r"error: cache <CLASS>",
+                  r"error: (?:" + USAGE + r")",
+              ],
+              "upload": [
+                  r"input: <N> files, <N> distinct blobs, <N> bytes, <N> ignored",
+                  r"secret scan: <N> --deny-env variables? skipped \(unset or shorter than <N> characters\)",
+                  r"secret scan: clean, <N> files",
+                  r"previous snapshot: (?:found|none, uploading every blob|current is malformed, uploading every blob|"
+                  r"manifest missing, uploading every blob|manifest malformed, uploading every blob)",
+                  r"--full: uploading every blob",
+                  r"uploaded <N> of <N> blobs, <N> bytes; reused <N>",
+                  r"manifest written",
+                  r"snapshot published: [0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}",
+                  r"dry run: input is valid, nothing written",
+                  r"secret scan: refused, <SCAN>; nothing written",
+                  r"error: bad input: (?:" + BAD_INPUT + r"); nothing written",
+                  r"error: upload failed: (?:" + UPLOAD_FAILED + r"); current (?:not changed|may have changed)",
+                  r"error: upload failed \(<CLASS>\); current (?:not changed|may have changed)",
+                  r"error: (?:" + USAGE + r")",
+              ],
+          }
+
+          def main(argv):
+              tool, files = argv[1], argv[2:]
+              patterns = [rx(p) for p in PATTERNS[tool]]
+              shown, hidden = 0, 0
+              for name in files:
+                  try:
+                      with open(name, "rb") as f:
+                          data = f.read(1 << 20)
+                  except OSError:
+                      continue
+                  for raw in data.split(b"\n"):
+                      line = raw.decode("ascii", "replace")
+                      if not line:
+                          continue
+                      if len(line) <= 400 and shown < 20 and any(p.fullmatch(line) for p in patterns):
+                          print(line)
+                          shown += 1
+                      else:
+                          hidden += 1
+              if hidden:
+                  print("%s: %s not shown (not of an expected form)" % (tool, "1 line" if hidden == 1 else "lines"))
+
+          main(sys.argv)
+          PY
+          echo "The line filter is written."
+
+      - name: Fetch the private repository
+        id: clone
+        env:
+          DESK_TOKEN: ${{ secrets.CONSOLE_READ_TOKEN }}
+        run: |
+          w="$RUNNER_TEMP/console"
+          # The askpass script holds no secret: it prints the token from the environment of the git process.
+          cat > "$w/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$w/askpass.sh"
+          export GIT_ASKPASS="$w/askpass.sh"
+          desk="$w/desk"
+          # Only what the export imports and reads: console/ (the export, the page files, console/config.json, the
+          # uploader under console/hosted/) and the dispatcher's modules, which the console imports. Blobs outside
+          # these paths are never fetched. git's output goes to a private file.
+          if ! { git clone --quiet --depth 1 --filter=blob:none --no-checkout --single-branch --branch main \
+                   "https://github.com/$DESK_REPO.git" "$desk" \
+              && git -C "$desk" sparse-checkout set --no-cone '/console/' '/dispatcher/*.py' \
+              && git -C "$desk" checkout --quiet main; } > "$w/logs/clone.log" 2>&1; then
+            echo "::error::The private repository could not be fetched."
+            exit 1
+          fi
+          echo "Fetched main of the private repository."
+          if [ -f "$desk/console/export.py" ] && [ -f "$desk/console/hosted/uploader/upload.py" ] \
+              && [ -f "$desk/console/hosted/uploader/cache.py" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The export or the uploader is not on main of the private repository yet: nothing to do."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull the cache
+        id: pull
+        if: steps.clone.outputs.present == 'true'
+        env:
+          COLD: ${{ steps.mode.outputs.cold }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          CACHE_SIGNING_KEY: ${{ secrets.CACHE_SIGNING_KEY }}
+        run: |
+          # The cache is private data: outside the checkout, outside the export's directory, never on sys.path.
+          # A failed pull never fails the job; the export then starts from an empty cache directory.
+          # The uploader's tools import their neighbours (credscan, r2s3, upload), so they run with -E -s, which keeps
+          # the script's directory on sys.path, and not with -I, which drops it.
+          w="$RUNNER_TEMP/console"
+          if [ "$COLD" = "true" ]; then
+            mkdir -m 700 "$w/cache"
+            echo "cache pull: skipped, building cold"
+            echo "dir=$w/cache" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          status=0
+          python3 -E -s "$w/desk/console/hosted/uploader/cache.py" pull --deadline 60 "$w/cache" "$BUCKET" \
+            > "$w/logs/pull.out" 2> "$w/logs/pull.err" || status=$?
+          python3 -I "$w/lines.py" cache "$w/logs/pull.out" "$w/logs/pull.err"
+          if [ "$status" = "0" ] && [ -d "$w/cache" ]; then
+            echo "dir=$w/cache" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The cache could not be pulled (exit status $status); the export builds cold."
+            mkdir -m 700 "$w/cache-empty"
+            echo "dir=$w/cache-empty" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the snapshot
+        id: export
+        if: steps.clone.outputs.present == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CONSOLE_READ_TOKEN }}
+          COLD: ${{ steps.mode.outputs.cold }}
+          CACHE_DIR: ${{ steps.pull.outputs.dir }}
+          PYTHONUNBUFFERED: '1'
+        run: |
+          w="$RUNNER_TEMP/console"
+          args=(--out "$w/out" --cache "$CACHE_DIR" --log "$w/logs/export.log" --max-seconds 420)
+          if [ "$COLD" = "true" ]; then args+=(--cold); fi
+          status=0
+          # An empty home: no gh, no git or Python configuration of the runner's user reaches the export.
+          (cd "$w/work" && HOME="$w/home" TZ=UTC python3 -I "$w/desk/console/export.py" "${args[@]}") \
+            > "$w/logs/export.out" 2> "$w/logs/export.err" || status=$?
+          python3 -I "$w/lines.py" export "$w/logs/export.out"
+          echo "Exit status: $status"
+          if [ "$status" != "0" ]; then
+            echo "::error::The export failed; the published snapshot stays as it is."
+            exit 1
+          fi
+
+      - name: Upload the snapshot
+        if: steps.export.outcome == 'success'
+        env:
+          FULL: ${{ steps.mode.outputs.full }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # Not used to upload: the uploader refuses the snapshot if the exact value of any of the job's secrets is in it.
+          CONSOLE_READ_TOKEN: ${{ secrets.CONSOLE_READ_TOKEN }}
+          CACHE_SIGNING_KEY: ${{ secrets.CACHE_SIGNING_KEY }}
+        run: |
+          w="$RUNNER_TEMP/console"
+          args=(--deadline 240)
+          for name in CONSOLE_READ_TOKEN R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CACHE_SIGNING_KEY; do
+            args+=(--deny-env "$name")
+          done
+          # The page token's shape, as the export redacts it (PAGE_TOKEN of console/export.py, one source).
+          page=$(python3 -I - "$w/desk/console/export.py" 2> /dev/null <<'PY'
+          import ast
+          import sys
+          with open(sys.argv[1], encoding="utf-8") as f:
+              tree = ast.parse(f.read())
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and any(getattr(t, "id", None) == "PAGE_TOKEN" for t in node.targets):
+                  value = ast.literal_eval(node.value)
+                  if isinstance(value, str) and value:
+                      print(value)
+          PY
+          ) || page=""
+          if [ -n "$page" ]; then
+            args+=(--deny "page-token=$page")
+          else
+            echo "::warning::PAGE_TOKEN was not found in console/export.py; the uploader scans without it."
+          fi
+          if [ "$FULL" = "true" ]; then args+=(--full); fi
+          status=0
+          python3 -E -s "$w/desk/console/hosted/uploader/upload.py" "${args[@]}" "$w/out" "$BUCKET" \
+            > "$w/logs/upload.out" 2> "$w/logs/upload.err" || status=$?
+          python3 -I "$w/lines.py" upload "$w/logs/upload.out" "$w/logs/upload.err"
+          echo "Exit status: $status"
+          if [ "$status" != "0" ]; then
+            echo "::error::The upload failed; the published snapshot stays as it is unless the line above says current may have changed."
+            exit 1
+          fi
+
+      - name: Push the cache
+        # After a successful export, also when the upload failed: the cache is right either way.
+        # A failed push never fails the job; the next run then builds cold.
+        if: ${{ !cancelled() && steps.export.outcome == 'success' }}
+        env:
+          CACHE_DIR: ${{ steps.pull.outputs.dir }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          CACHE_SIGNING_KEY: ${{ secrets.CACHE_SIGNING_KEY }}
+        run: |
+          w="$RUNNER_TEMP/console"
+          status=0
+          python3 -E -s "$w/desk/console/hosted/uploader/cache.py" push --deadline 60 "$CACHE_DIR" "$BUCKET" \
+            > "$w/logs/push.out" 2> "$w/logs/push.err" || status=$?
+          python3 -I "$w/lines.py" cache "$w/logs/push.out" "$w/logs/push.err"
+          if [ "$status" != "0" ]; then
+            echo "::warning::The cache could not be pushed (exit status $status); the next run builds cold."
+          fi
