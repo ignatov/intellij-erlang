@@ -28,6 +28,29 @@ public final class ErlangMacroExpander {
   public static final int MAX_DEPTH = 32;
   /** A hard limit of the engine, independent of the form cap. */
   public static final int MAX_TOKENS_PER_FORM = 50_000;
+  /**
+   * The work of the expansions of one form: expansions, tokens scanned and tokens added. Above it the use gets
+   * {@link Outcome#LIMIT_TOKENS}. Empty bodies make no tokens, so the token limit alone does not stop
+   * {@code -define(L2, ?L1 ?L1)}-style chains (2^n expansions); a 50,000-token form at depth 32 is far below.
+   */
+  public static final long MAX_WORK_PER_FORM = 4_000_000;
+  /** The work of all forms of a file; after it every use gets {@link Outcome#LIMIT_TOKENS}. */
+  public static final long MAX_WORK_PER_FILE = 40_000_000;
+  /** The header directives replayed for one file (include chains and diamonds); after it no header is replayed. */
+  public static final int MAX_REPLAYED_DIRECTIVES = 100_000;
+  private static volatile long ourWorkPerForm = MAX_WORK_PER_FORM;
+  private static volatile long ourWorkPerFile = MAX_WORK_PER_FILE;
+
+  /** Tests: other work limits (to check that a cancelled indicator stops a long expansion). */
+  @org.jetbrains.annotations.TestOnly
+  public static void setWorkLimitsForTests(long perForm, long perFile, @NotNull com.intellij.openapi.Disposable parent) {
+    ourWorkPerForm = perForm;
+    ourWorkPerFile = perFile;
+    com.intellij.openapi.util.Disposer.register(parent, () -> {
+      ourWorkPerForm = MAX_WORK_PER_FORM;
+      ourWorkPerFile = MAX_WORK_PER_FILE;
+    });
+  }
 
   public static final int SRC_NONE = 0;
   public static final int SRC_ARGUMENT = 1;
@@ -67,8 +90,10 @@ public final class ErlangMacroExpander {
       return null;
     }
 
+    /** The macro name of {@code -define}, {@code -undef}, {@code -ifdef} or {@code -ifndef} (unquoted), else "". */
     public @NotNull String name() {
-      return tokens.size() > 3 && tokens.get(2).type() == ERL_PAR_LEFT ? tokens.get(3).text() : "";
+      Name n = conditionName(tokens);
+      return n == null ? "" : n.name;
     }
   }
 
@@ -127,6 +152,10 @@ public final class ErlangMacroExpander {
   public static final Set<String> PREDEFINED = Set.of(
     "FILE", "FUNCTION_NAME", "FUNCTION_ARITY", "LINE", "MODULE", "MODULE_STRING", "BASE_MODULE", "BASE_MODULE_STRING",
     "MACHINE", "BEAM", "OTP_RELEASE", "FEATURE_AVAILABLE", "FEATURE_ENABLED");
+
+  /** Predefined macros that {@code -ifdef} sees as defined everywhere (OTP 29.1). */
+  static final Set<String> PREDEFINED_DEFINED = Set.of("FILE", "LINE", "MACHINE", "BEAM", "OTP_RELEASE", "FEATURE_AVAILABLE",
+                                                       "FEATURE_ENABLED");
 
   /** What happened to a macro use in the text (outside {@code -define} bodies). */
   public enum Outcome {
@@ -197,8 +226,14 @@ public final class ErlangMacroExpander {
     public int sourceTokens, expandedTokens;
     /** Spike 5: time of the base lexing inside {@link #expand} (measurement only). */
     public long lexNanos;
+    /** The work of all expansions (see {@link #MAX_WORK_PER_FORM}) and the header directives replayed. */
+    public long work;
+    public int replayedDirectives;
     private final int mySegments;
     private final int[] myVerbatim; // indices of the verbatim segments, sorted by source (and expanded) offset
+    /** The substituted top-level uses in text order: their expanded and source ranges. */
+    private final int[] myUseExpStart, myUseExpEnd, myUseSrcStart, myUseSrcEnd;
+    private final int myUses;
     private Map<Integer, int[]> myArgumentCopies;
 
     Expansion(CharSequence sourceText, String text, List<Form> forms, EnumMap<Outcome, Integer> outcomes, Out out) {
@@ -213,6 +248,11 @@ public final class ErlangMacroExpander {
       myKind = out.kind;
       myOrigin = out.origin;
       mySegments = out.n;
+      myUseExpStart = out.useExpStart;
+      myUseExpEnd = out.useExpEnd;
+      myUseSrcStart = out.useSrcStart;
+      myUseSrcEnd = out.useSrcEnd;
+      myUses = out.uses;
       int v = 0;
       for (int i = 0; i < mySegments; i++) if (myKind[i] == SRC_VERBATIM) v++;
       myVerbatim = new int[v];
@@ -333,21 +373,25 @@ public final class ErlangMacroExpander {
 
     /**
      * Round 6: the source range of the outermost macro use that produced the expanded offset (a body, header or
-     * argument token): the source between the copied (verbatim) text before and after it, without the spaces at its
-     * ends. Null for an offset in copied text.
+     * argument token, or the spaces of an empty expansion). Null for an offset in copied text.
      */
     public @Nullable TextRange useSourceRange(int expOffset) {
-      int s = segmentAt(expOffset);
-      if (s < 0 || myKind[s] == SRC_VERBATIM) return null;
-      int p = s - 1;
-      while (p >= 0 && myKind[p] != SRC_VERBATIM) p--;
-      int n = s + 1;
-      while (n < mySegments && myKind[n] != SRC_VERBATIM) n++;
-      if (p < 0 || n >= mySegments) return null;
-      int start = mySrcEnd[p], end = mySrcStart[n];
-      while (start < end && Character.isWhitespace(sourceText.charAt(start))) start++;
-      while (end > start && Character.isWhitespace(sourceText.charAt(end - 1))) end--;
-      return start < end ? TextRange.create(start, end) : null;
+      int lo = 0, hi = myUses - 1;
+      while (lo <= hi) {
+        int mid = (lo + hi) >>> 1;
+        if (expOffset < myUseExpStart[mid]) hi = mid - 1;
+        else if (expOffset >= myUseExpEnd[mid]) lo = mid + 1;
+        else return TextRange.create(myUseSrcStart[mid], myUseSrcEnd[mid]);
+      }
+      return null;
+    }
+
+    /** The source range of the last use that starts at or after {@code from} and before {@code expOffset}, or null. */
+    public @Nullable TextRange useBefore(int from, int expOffset) {
+      for (int u = myUses - 1; u >= 0 && myUseExpStart[u] >= from; u--) {
+        if (myUseExpStart[u] < expOffset) return TextRange.create(myUseSrcStart[u], myUseSrcEnd[u]);
+      }
+      return null;
     }
 
     public @Nullable Form formAtSource(int srcOffset) {
@@ -381,6 +425,22 @@ public final class ErlangMacroExpander {
     int[] expStart = new int[64], expEnd = new int[64], srcStart = new int[64], srcEnd = new int[64], kind = new int[64];
     Object[] origin = new Object[64];
     int n;
+    int[] useExpStart = new int[16], useExpEnd = new int[16], useSrcStart = new int[16], useSrcEnd = new int[16];
+    int uses;
+
+    void use(int es, int ee, int ss, int se) {
+      if (uses == useExpStart.length) {
+        useExpStart = Arrays.copyOf(useExpStart, uses * 2);
+        useExpEnd = Arrays.copyOf(useExpEnd, uses * 2);
+        useSrcStart = Arrays.copyOf(useSrcStart, uses * 2);
+        useSrcEnd = Arrays.copyOf(useSrcEnd, uses * 2);
+      }
+      useExpStart[uses] = es;
+      useExpEnd[uses] = ee;
+      useSrcStart[uses] = ss;
+      useSrcEnd[uses] = se;
+      uses++;
+    }
 
     void segment(int es, int ee, int ss, int se, int k) {
       segment(es, ee, ss, se, k, null);
@@ -452,6 +512,8 @@ public final class ErlangMacroExpander {
     e.sourceTokens = run.sigCount;
     e.expandedTokens = run.sigCount + run.expandedDelta;
     e.lexNanos = lexNanos;
+    e.work = run.fileWork + run.work;
+    e.replayedDirectives = run.replayed;
     return e;
   }
 
@@ -800,6 +862,37 @@ public final class ErlangMacroExpander {
     final boolean fragment;
     Branch branch;
     boolean fromHeader;
+    private List<Ref> myUses;
+
+    /** A use of a macro in a body: its name and its number of arguments as epp counts them (-1: none). */
+    record Ref(String name, int arity) {
+    }
+
+    /** epp's macro_uses: the macros the body uses ({@code ?M}, {@code ?M(...)}; not {@code ??P}). */
+    List<Ref> uses() {
+      if (myUses == null) {
+        Set<Ref> r = new LinkedHashSet<>();
+        for (int i = 0; i < body.size(); i++) {
+          if (body.get(i).type != ERL_QMARK) continue;
+          if (i + 1 < body.size() && body.get(i + 1).type == ERL_QMARK) {
+            i++;
+            continue;
+          }
+          Name n = tokName(body, i + 1);
+          if (n == null) continue;
+          int next = n.last + 1;
+          int arity = -1;
+          if (next < body.size() && body.get(next).type == ERL_PAR_LEFT) {
+            ArgsResult parsed = parseArgs(body, next);
+            if (parsed == null) continue; // epp rejects such a -define ("badly formed argument")
+            arity = parsed.args.size();
+          }
+          r.add(new Ref(n.name, arity));
+        }
+        myUses = List.copyOf(r);
+      }
+      return myUses;
+    }
 
     Def(String name, int arity, List<String> params, List<Tok> body, boolean fragment) {
       this.name = name;
@@ -833,15 +926,19 @@ public final class ErlangMacroExpander {
   }
 
   /**
-   * A branch of a conditional directive. Conditions are not evaluated. A definition made inside a branch is visible
-   * only to uses inside the same branch, except in an {@code -ifndef(N)} branch that itself defines N (an include
-   * guard or a default value): such a branch is "transparent".
+   * A branch of a conditional directive. A definition made inside a branch is visible only to uses inside the same
+   * branch, except in an {@code -ifndef(N)} branch that itself defines N (an include guard or a default value): such a
+   * branch is "transparent". The condition of {@code -ifdef(N)}/{@code -ifndef(N)} is known when N is visibly
+   * defined, or is a predefined macro whose definedness epp knows: the branch is then {@link #TRUE} (as transparent)
+   * or {@link #FALSE} (dead: what it defines is visible only inside it, its {@code -undef} and includes do nothing).
    */
   static final class Branch {
+    static final int UNKNOWN = 0, TRUE = 1, FALSE = -1;
     final String attribute;
     final String condition;
     final Branch parent;
     boolean transparent;
+    int state = UNKNOWN;
     /** Round 6 (next): the branch before this {@code -elif}/{@code -else} in the same conditional. */
     Branch previous;
     /** Round 6 (next): the definitions made directly in this branch. */
@@ -919,6 +1016,30 @@ public final class ErlangMacroExpander {
       outcomes.merge(o, 1, Integer::sum);
     }
 
+    /** The work of the current form, and of the forms before it. */
+    long work, fileWork;
+    private int myTicks;
+
+    /** Counts n steps of work; checks for cancellation; stops the use above the limits. */
+    void tick(int n) throws LimitException {
+      work += n;
+      if ((++myTicks & 1023) == 0) ProgressManager.checkCanceled();
+      if (work > ourWorkPerForm || fileWork + work > ourWorkPerFile) throw new LimitException(Outcome.LIMIT_TOKENS);
+    }
+
+    /** Adds the tokens to a result list within the limits. */
+    void addAll(List<Tok> to, List<Tok> tokens) throws LimitException {
+      tick(tokens.size());
+      if (to.size() + tokens.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
+      to.addAll(tokens);
+    }
+
+    void add(List<Tok> to, Tok token) throws LimitException {
+      tick(1);
+      if (to.size() >= MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
+      to.add(token);
+    }
+
     void flushTo(int srcOffset) {
       if (srcOffset <= cursor) return;
       int es = out.text.length();
@@ -951,15 +1072,20 @@ public final class ErlangMacroExpander {
         int formEnd = p;
         while (formEnd < sigCount - 1 && !isFormEnd(formEnd)) formEnd++;
         formSubstitutedTokens = 0;
+        fileWork += work;
+        work = 0;
         Form form = new Form(b.start[sig[formStart]], b.end[sig[formEnd]]);
         String attribute = attributeName(formStart, formEnd);
         boolean directive = attribute != null && DIRECTIVES.contains(attribute);
+        if ("module".equals(attribute)) moduleSeen = true;
+        else if ("extends".equals(attribute)) extendsSeen = true;
         List<Use> uses = new ArrayList<>();
         boolean ambiguous = false, refused = false, rejected = false, unknown = false;
         nestedLeft = false;
         boolean inBranch = branch != null;
         if (!directive) {
           for (int q = formStart; q <= formEnd; q++) {
+            if ((q & 1023) == 0) ProgressManager.checkCanceled();
             if (st(q) != ERL_QMARK) continue;
             useRejected = false;
             Object r = handleUse(q, formEnd);
@@ -1012,7 +1138,9 @@ public final class ErlangMacroExpander {
         form.expStart = out.text.length();
         for (Use u : uses) {
           flushTo(b.start[sig[u.q]]);
+          int es = out.text.length();
           emitTokens(u.result);
+          out.use(es, out.text.length(), b.start[sig[u.q]], b.end[sig[u.last]]);
           cursor = b.end[sig[u.last]];
         }
         flushTo(form.srcEnd);
@@ -1038,14 +1166,33 @@ public final class ErlangMacroExpander {
 
     /** One directive of the file (owner null) or of a replayed header. */
     void directive(String attribute, List<Tok> toks, @Nullable HeaderSummary owner) {
+      acyclic.clear();
       switch (attribute) {
         case "define" -> define(toks, owner != null);
         case "undef" -> undef(toks);
-        case "ifdef", "ifndef", "if" -> branch = new Branch(attribute, toks.size() > 3 ? toks.get(3).text() : "", branch);
+        case "ifdef", "ifndef", "if" -> {
+          Name n = "if".equals(attribute) ? null : conditionName(toks);
+          Branch next = new Branch(attribute, n == null ? "" : n.name, branch);
+          if (dead(branch)) next.state = Branch.FALSE;
+          else if (n != null) {
+            int defined = definedness(n.name);
+            next.state = "ifdef".equals(attribute) ? defined : -defined;
+          }
+          branch = next;
+        }
         case "elif", "else" -> {
           if (branch != null) {
             Branch next = new Branch(attribute, "", branch.parent);
             next.previous = branch;
+            if (dead(branch.parent)) next.state = Branch.FALSE;
+            else {
+              boolean anyTrue = false, allFalse = true;
+              for (Branch x = branch; x != null; x = x.previous) {
+                anyTrue |= x.state == Branch.TRUE;
+                allFalse &= x.state == Branch.FALSE;
+              }
+              next.state = anyTrue ? Branch.FALSE : allFalse && "else".equals(attribute) ? Branch.TRUE : Branch.UNKNOWN;
+            }
             branch = next;
           }
         }
@@ -1056,7 +1203,7 @@ public final class ErlangMacroExpander {
           }
         }
         case "include", "include_lib" -> {
-          if (resolver == null || owner != null) return; // a header's own includes are replayed by replay()
+          if (resolver == null || owner != null || dead(branch)) return; // a header's own includes are replayed by replay()
           HeaderSummary h = resolver.resolve(null, attribute, new Directive(attribute, toks).includeString());
           if (h == null) incompleteIncludes = true;
           replay(h);
@@ -1071,10 +1218,18 @@ public final class ErlangMacroExpander {
 
     void replay(@Nullable HeaderSummary h) {
       if (h == null || replayDepth > MAX_DEPTH) return;
+      if (replayed > MAX_REPLAYED_DIRECTIVES) {
+        // a pathological include graph: what was not replayed may define anything
+        incompleteIncludes = true;
+        return;
+      }
+      if (guardedAndDefined(h)) return; // epp skips the whole body of a guarded header included again
       replayDepth++;
       try {
         for (Directive d : h.directives) {
+          if ((++replayed & 255) == 0) ProgressManager.checkCanceled();
           if (isInclude(d.attribute)) {
+            if (dead(branch)) continue;
             HeaderSummary child = resolver.resolve(h, d.attribute, d.includeString());
             if (child == null) incompleteIncludes = true;
             replay(child);
@@ -1088,9 +1243,65 @@ public final class ErlangMacroExpander {
       }
     }
 
+    /** Header directives replayed so far. */
+    int replayed;
+    /** A {@code -module} and an {@code -extends} attribute came before (epp then defines MODULE, BASE_MODULE). */
+    boolean moduleSeen, extendsSeen;
+
+    /** The branch is known not to be taken, or lies inside one that is. */
+    static boolean dead(@Nullable Branch b) {
+      for (Branch x = b; x != null; x = x.parent) if (x.state == Branch.FALSE) return true;
+      return false;
+    }
+
+    /** Every branch around this point is known to be taken (or is a transparent guard). */
+    boolean certainPath() {
+      for (Branch x = branch; x != null; x = x.parent) if (!x.transparent && x.state != Branch.TRUE) return false;
+      return true;
+    }
+
+    /** Whether epp sees the macro as defined here: {@link Branch#TRUE}, {@link Branch#FALSE} or unknown (a -D flag). */
+    int definedness(String name) {
+      if (PREDEFINED_DEFINED.contains(name)) return Branch.TRUE;
+      switch (name) {
+        case "FUNCTION_NAME", "FUNCTION_ARITY" -> {
+          return Branch.FALSE;
+        }
+        case "MODULE", "MODULE_STRING" -> {
+          return moduleSeen ? Branch.TRUE : Branch.FALSE;
+        }
+        case "BASE_MODULE", "BASE_MODULE_STRING" -> {
+          return extendsSeen ? Branch.TRUE : Branch.FALSE;
+        }
+        default -> {
+        }
+      }
+      for (Def d : defs.getOrDefault(name, List.of())) if (visible(d)) return Branch.TRUE;
+      return Branch.UNKNOWN;
+    }
+
+    /**
+     * The header is guarded ({@code -ifndef(G).} first, its {@code -endif} last) and G is visible: epp skips its whole
+     * body. Without this, a chain of headers that each include the next one twice is replayed 2^n times.
+     */
+    boolean guardedAndDefined(HeaderSummary h) {
+      List<Directive> ds = h.directives;
+      if (ds.size() < 2 || !"ifndef".equals(ds.get(0).attribute) || !"endif".equals(ds.get(ds.size() - 1).attribute)) return false;
+      int depth = 0;
+      for (int i = 0; i < ds.size(); i++) {
+        String a = ds.get(i).attribute;
+        if ("ifdef".equals(a) || "ifndef".equals(a) || "if".equals(a)) depth++;
+        else if ("endif".equals(a) && --depth == 0 && i != ds.size() - 1) return false;
+      }
+      Name g = conditionName(ds.get(0).tokens);
+      if (g == null) return false;
+      for (Def d : defs.getOrDefault(g.name, List.of())) if (visible(d)) return true;
+      return false;
+    }
+
     boolean visible(Def d) {
       for (Branch x = d.branch; x != null; x = x.parent) {
-        if (x.transparent) continue;
+        if (x.transparent || x.state == Branch.TRUE) continue;
         boolean enclosing = false;
         for (Branch y = branch; y != null; y = y.parent) {
           if (y == x) {
@@ -1159,7 +1370,10 @@ public final class ErlangMacroExpander {
       def.branch = branch;
       def.fromHeader = fromHeader;
       // Q2: not after an include that does not resolve: the missing header may define the name, and then epp skips this
-      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition) && !incompleteIncludes) branch.transparent = true;
+      if (branch != null && "ifndef".equals(branch.attribute) && name.equals(branch.condition) && !incompleteIncludes &&
+          branch.state == Branch.UNKNOWN && !dead(branch)) {
+        branch.transparent = true;
+      }
       if (branch != null) branch.defined.add(def);
       defs.computeIfAbsent(name, k -> new ArrayList<>()).add(def);
     }
@@ -1167,14 +1381,16 @@ public final class ErlangMacroExpander {
     /**
      * Round 6 (next), item 4: a conditional closed by {@code -else} covers every configuration. When each of its
      * branches defines a name with the same arity, one definition is made visible after {@code -endif}: the common one
-     * when all bodies are the same (epp gives that text whatever the condition), else the one of the active branch
-     * when {@code -ifdef(X)}/{@code -ifndef(X)} can be decided (X predefined or defined earlier outside any branch;
-     * a name the file does not define may be a build flag, so that branch stays unknown and nothing is made visible).
+     * when all bodies are the same (epp gives that text whatever the condition). A conditional whose branches are
+     * known ({@link Branch#state}) needs nothing: the definitions of the taken branch are visible already; a name the
+     * file does not define may be a build flag, so its branches stay unknown.
      */
     void promoteAlternatives(Branch last) {
       if (!"else".equals(last.attribute)) return;
       List<Branch> chain = new ArrayList<>();
       for (Branch x = last; x != null; x = x.previous) chain.add(0, x);
+      // a known branch: its definitions are visible (or dead) already
+      for (Branch x : chain) if (x.state != Branch.UNKNOWN || dead(x)) return;
       Map<String, Def[]> per = new LinkedHashMap<>();
       for (int i = 0; i < chain.size(); i++) {
         for (Def d : chain.get(i).defined) per.computeIfAbsent(d.name + "/" + d.arity, k -> new Def[chain.size()])[i] = d;
@@ -1185,9 +1401,8 @@ public final class ErlangMacroExpander {
           if (d == null) all = false;
           else if (!d.key.equals(alternatives[0] == null ? null : alternatives[0].key)) same = false;
         }
-        if (!all) continue;
-        Def chosen = same ? alternatives[0] : activeAlternative(chain, alternatives);
-        if (chosen == null) continue;
+        if (!all || !same) continue;
+        Def chosen = alternatives[0];
         Def promoted = new Def(chosen.name, chosen.arity, chosen.params, chosen.body, chosen.fragment);
         promoted.branch = last.parent;
         promoted.fromHeader = chosen.fromHeader;
@@ -1196,20 +1411,10 @@ public final class ErlangMacroExpander {
       }
     }
 
-    private @Nullable Def activeAlternative(List<Branch> chain, Def[] alternatives) {
-      if (chain.size() != 2) return null;
-      Branch first = chain.get(0);
-      boolean ifdef = "ifdef".equals(first.attribute);
-      if (!ifdef && !"ifndef".equals(first.attribute)) return null;
-      boolean defined = PREDEFINED.contains(first.condition);
-      for (Def d : defs.getOrDefault(first.condition, List.of())) if (d.branch == null) defined = true;
-      if (!defined) return null;
-      return ifdef ? alternatives[0] : alternatives[1];
-    }
-
+    /** epp's -undef, where every branch around it is taken (or a transparent guard); else nothing is known. */
     void undef(List<Tok> t) {
-      if (branch != null || type(t, 2) != ERL_PAR_LEFT) return;
-      Name n = tokName(t, 3);
+      if (!certainPath()) return;
+      Name n = conditionName(t);
       if (n != null) defs.remove(n.name);
     }
 
@@ -1274,7 +1479,7 @@ public final class ErlangMacroExpander {
 
     /** No definition of the name, visible or not, takes this many arguments: epp says "argument mismatch". */
     boolean noDefinitionWithArity(String name, int arity) {
-      for (Def d : defs.getOrDefault(name, List.of())) if (d.arity == arity) return false;
+      for (Def d : defs.getOrDefault(name, List.of())) if (d.arity == arity && !dead(d.branch)) return false;
       return true;
     }
 
@@ -1355,7 +1560,7 @@ public final class ErlangMacroExpander {
         args = null;
       }
       try {
-        List<Tok> result = expand(def, args, 1, new ArrayDeque<>());
+        List<Tok> result = expand(def, args, 1);
         if (formSubstitutedTokens + result.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
         formSubstitutedTokens += result.size();
         count(Outcome.SUBSTITUTED);
@@ -1376,61 +1581,64 @@ public final class ErlangMacroExpander {
     @Nullable String circularMacro;
     int circularStart, circularEnd;
 
-    List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth, Deque<String> active) throws LimitException {
+    /**
+     * The expansion of a use, as epp's expand_macros does it: the raw argument tokens are put in place of the parameters
+     * and the result is scanned again (the arguments are not expanded before), after epp's check that the macro graph
+     * from this macro has no cycle ({@link #checkUses}).
+     */
+    List<Tok> expand(Def def, @Nullable List<List<Tok>> args, int depth) throws LimitException {
+      tick(1 + def.body.size());
       if (depth > MAX_DEPTH) throw new LimitException(Outcome.LIMIT_DEPTH);
-      String activeKey = def.name + "/" + def.arity;
-      if (active.contains(activeKey)) throw new LimitException(Outcome.LIMIT_RECURSION, def.name);
-      // the arguments are expanded first, in the context of the use (epp rescans them after the substitution and only
-      // rejects macros whose own bodies are circular)
-      List<List<Tok>> expandedArgs = null;
-      if (args != null) {
-        expandedArgs = new ArrayList<>(args.size());
-        for (List<Tok> arg : args) expandedArgs.add(rescan(arg, depth, active));
-      }
-      List<Tok> substituted = new ArrayList<>();
+      checkUses(def.name, def.arity);
+      return rescan(substitute(def, args), depth);
+    }
+
+    /** epp's expand_macro: the body with the raw arguments in place of the parameters; {@code ??P} is a string. */
+    List<Tok> substitute(Def def, @Nullable List<List<Tok>> args) throws LimitException {
+      List<Tok> substituted = new ArrayList<>(def.body.size());
       List<Tok> body = def.body;
       for (int i = 0; i < body.size(); i++) {
         Tok t = body.get(i);
-        if (args != null && t.type == ERL_QMARK && i + 2 < body.size() && body.get(i + 1).type == ERL_QMARK &&
-            body.get(i + 2).type == ERL_VAR) {
-          int index = def.params.indexOf(body.get(i + 2).text);
-          if (index >= 0) {
-            substituted.add(new Tok(ERL_STRING, stringify(args.get(index))));
-            i += 2;
-            continue;
-          }
+        if (t.type == ERL_QMARK && i + 2 < body.size() && body.get(i + 1).type == ERL_QMARK && body.get(i + 2).type == ERL_VAR) {
+          int index = args == null ? -1 : def.params.indexOf(body.get(i + 2).text);
+          // epp: ??V of a name that is not a parameter is the variable V
+          add(substituted, index >= 0 ? new Tok(ERL_STRING, stringify(args.get(index))) : body.get(i + 2));
+          i += 2;
+          continue;
         }
         if (args != null && t.type == ERL_VAR) {
           int index = def.params.indexOf(t.text);
           if (index >= 0) {
-            substituted.addAll(expandedArgs.get(index));
+            addAll(substituted, args.get(index));
             continue;
           }
         }
-        substituted.add(t);
+        add(substituted, t);
       }
-      active.push(activeKey);
-      try {
-        return rescan(substituted, depth, active);
-      }
-      finally {
-        active.pop();
-      }
+      return substituted;
     }
 
-    /** Expands the nested uses of same-file macros in a substitution result. */
-    List<Tok> rescan(List<Tok> tokens, int depth, Deque<String> active) throws LimitException {
+    /**
+     * Expands the nested uses in a substitution result. As in epp, the result of a use with arguments is scanned again
+     * together with the tokens after it (a body may end with {@code ?M} whose arguments follow the use); the result of
+     * a use without arguments is expanded alone first.
+     */
+    List<Tok> rescan(List<Tok> tokens, int depth) throws LimitException {
+      Frames in = new Frames(tokens);
       List<Tok> out = new ArrayList<>(tokens.size());
-      for (int i = 0; i < tokens.size(); i++) {
-        Tok t = tokens.get(i);
-        if (t.type == ERL_QMARK && i + 1 < tokens.size() && tokens.get(i + 1).type == ERL_QMARK) {
-          out.add(t);
-          out.add(tokens.get(++i));
+      List<Tok> view = in.view();
+      while (in.size() > 0) {
+        Tok t = view.get(0);
+        if (t.type == ERL_QMARK && view.size() > 1 && view.get(1).type == ERL_QMARK) {
+          add(out, t);
+          add(out, view.get(1));
+          in.skip(2);
           continue;
         }
-        Name n = t.type == ERL_QMARK ? tokName(tokens, i + 1) : null;
+        Name n = t.type == ERL_QMARK ? tokName(view, 1) : null;
         if (n == null) {
-          out.add(t);
+          add(out, t);
+          in.skip(1);
           continue;
         }
         String name = n.name;
@@ -1438,30 +1646,172 @@ public final class ErlangMacroExpander {
         List<List<Tok>> args = null;
         int arity = -1;
         ArgsResult parsed = null;
-        if (next < tokens.size() && tokens.get(next).type == ERL_PAR_LEFT) {
-          parsed = parseArgs(tokens, next);
+        if (next < view.size() && view.get(next).type == ERL_PAR_LEFT) {
+          parsed = parseArgs(view, next);
           if (parsed != null) {
             args = parsed.args;
             arity = args.size();
           }
         }
         Selection selection = select(name, arity);
-        if (selection.def == null || parsed == null && arity != -1) {
+        if (selection.def == null || parsed != null && parsed.hasEmptyArgument() && selection.def.arity != -1) {
           if (selection.outcome != Outcome.PREDEFINED) nestedLeft = true;
-          out.add(t);
+          add(out, t);
+          in.skip(1);
           continue; // left as it is; the name follows as a plain token
         }
         Def def = selection.def;
-        List<Tok> expanded = expand(def, def.arity == -1 ? null : args, depth + 1, active);
-        out.addAll(expanded);
+        if (def.arity == -1) {
+          addAll(out, expand(def, null, depth + 1));
+          in.skip(n.last + 1);
+        }
+        else {
+          tick(1 + def.body.size());
+          checkUses(def.name, def.arity);
+          List<Tok> substituted = substitute(def, args);
+          in.skip(next + parsed.closeIndex + 1);
+          in.push(substituted);
+        }
         if (formSubstitutedTokens + out.size() > MAX_TOKENS_PER_FORM) throw new LimitException(Outcome.LIMIT_TOKENS);
-        i = def.arity == -1 || parsed == null ? n.last : next + parsed.closeIndex;
       }
       return out;
+    }
+
+    /** The macro keys (name/arity) whose part of the macro graph has no cycle; cleared at every directive. */
+    final Set<String> acyclic = new HashSet<>();
+
+    /**
+     * epp's check_uses: no cycle is reachable from the macro in the graph of the uses that the bodies of the visible
+     * definitions make ({@code ?M} and {@code ?M(...)}, counted as epp counts them; a name with more than one visible
+     * body is not followed). A cycle stops the use with {@link Outcome#LIMIT_RECURSION} and the macro where it closes
+     * (epp: "circular macro"). A recursion that only arguments make is no cycle for epp; the work limit stops it.
+     */
+    void checkUses(String name, int arity) throws LimitException {
+      if (!acyclic.contains(name + "/" + arity)) visitUses(name, arity, new ArrayList<>());
+    }
+
+    private void visitUses(String name, int arity, List<String> path) throws LimitException {
+      String key = name + "/" + arity;
+      if (path.contains(key)) throw new LimitException(Outcome.LIMIT_RECURSION, name);
+      if (acyclic.contains(key)) return;
+      tick(1);
+      if (path.size() > 1000) throw new LimitException(Outcome.LIMIT_DEPTH);
+      Def d = graphNode(name, arity);
+      if (d != null) {
+        path.add(key);
+        for (Def.Ref u : d.uses()) visitUses(u.name(), u.arity(), path);
+        path.remove(path.size() - 1);
+      }
+      acyclic.add(key);
+    }
+
+    /** epp's get_macro_uses: the visible definition of the arity, else the one without parameters; null if not one. */
+    private @Nullable Def graphNode(String name, int arity) {
+      if (PREDEFINED.contains(name)) return null;
+      Def exact = null, none = null;
+      boolean exactMany = false, noneMany = false;
+      for (Def d : defs.getOrDefault(name, List.of())) {
+        if (!visible(d)) continue;
+        if (d.arity == arity) {
+          if (exact != null && !exact.key.equals(d.key)) exactMany = true;
+          exact = d;
+        }
+        else if (d.arity == -1) {
+          if (none != null && !none.key.equals(d.key)) noneMany = true;
+          none = d;
+        }
+      }
+      if (exact != null) return exactMany ? null : exact;
+      return noneMany ? null : none;
+    }
+  }
+
+  /**
+   * The tokens still to scan: a stack of token lists, the top one first. A use with arguments is replaced by its
+   * substitution result without copying the rest.
+   */
+  private static final class Frames {
+    private final List<List<Tok>> myLists = new ArrayList<>();
+    private int[] myPos = new int[8];
+    private int mySize;
+
+    Frames(List<Tok> first) {
+      push(first);
+    }
+
+    int size() {
+      return mySize;
+    }
+
+    void push(List<Tok> tokens) {
+      if (tokens.isEmpty()) return;
+      if (myLists.size() == myPos.length) myPos = Arrays.copyOf(myPos, myPos.length * 2);
+      myPos[myLists.size()] = 0;
+      myLists.add(tokens);
+      mySize += tokens.size();
+      myModCount++;
+    }
+
+    void skip(int k) {
+      mySize -= k;
+      while (k > 0) {
+        int top = myLists.size() - 1;
+        int rest = myLists.get(top).size() - myPos[top];
+        if (k < rest) {
+          myPos[top] += k;
+          break;
+        }
+        k -= rest;
+        myLists.remove(top);
+      }
+      myModCount++;
+    }
+
+    private int myModCount;
+
+    /** The tokens still to scan, as a list (sequential reads from the start are cheap). */
+    List<Tok> view() {
+      return new AbstractList<>() {
+        int at = -1, frame, pos, mod = -1;
+
+        @Override
+        public Tok get(int i) {
+          if (i < 0 || i >= mySize) throw new IndexOutOfBoundsException(i);
+          if (mod != myModCount || i < at) {
+            mod = myModCount;
+            at = 0;
+            frame = myLists.size() - 1;
+            pos = myPos[frame];
+          }
+          while (at < i) {
+            int step = Math.min(i - at, myLists.get(frame).size() - 1 - pos);
+            if (step > 0) {
+              pos += step;
+              at += step;
+            }
+            else {
+              frame--;
+              pos = myPos[frame];
+              at++;
+            }
+          }
+          return myLists.get(frame).get(pos);
+        }
+
+        @Override
+        public int size() {
+          return mySize;
+        }
+      };
     }
   }
 
   private record Name(String name, int last) {
+  }
+
+  /** The name of {@code -ifdef(Name)}, {@code -ifndef(Name)}, {@code -undef(Name)} or {@code -define(Name...)}, or null. */
+  static @Nullable Name conditionName(List<Tok> directive) {
+    return directive.size() > 3 && directive.get(2).type == ERL_PAR_LEFT ? tokName(directive, 3) : null;
   }
 
   /** A macro name in a token list at index i (an atom, a variable or a quoted atom), or null. */
@@ -1485,36 +1835,26 @@ public final class ErlangMacroExpander {
   }
 
   /**
-   * Splits the arguments of a call that starts with '(' at {@code open}, as epp's macro_arg does. Returns the
-   * arguments and the index of the closing ')' relative to {@code open}, or null if there is no closing ')'.
+   * Splits the arguments of a call that starts with '(' at {@code open}, as epp's macro_arg does
+   * ({@link ErlangMacroArgSplitter}). Returns the arguments and the index of the closing ')' relative to {@code open},
+   * or null if there is no closing ')'.
    */
   static @Nullable ArgsResult parseArgs(List<Tok> tokens, int open) {
     List<List<Tok>> args = new ArrayList<>();
     int i = open + 1;
     if (i < tokens.size() && tokens.get(i).type == ERL_PAR_RIGHT) return new ArgsResult(args, i - open);
-    Deque<IElementType> expected = new ArrayDeque<>();
+    ErlangMacroArgSplitter splitter = new ErlangMacroArgSplitter();
     List<Tok> arg = new ArrayList<>();
     for (; i < tokens.size(); i++) {
       Tok t = tokens.get(i);
-      IElementType type = t.type;
-      if (expected.isEmpty() && (type == ERL_COMMA || type == ERL_PAR_RIGHT)) {
-        args.add(arg);
-        if (type == ERL_PAR_RIGHT) return new ArgsResult(args, i - open);
-        arg = new ArrayList<>();
+      ErlangMacroArgSplitter.Step step = splitter.next(t.type, t.text);
+      if (step == ErlangMacroArgSplitter.Step.ARGUMENT) {
+        arg.add(t);
         continue;
       }
-      if (type == ERL_PAR_LEFT) expected.push(ERL_PAR_RIGHT);
-      else if (type == ERL_BIN_START) expected.push(ERL_BIN_END);
-      else if (type == ERL_BRACKET_LEFT) expected.push(ERL_BRACKET_RIGHT);
-      else if (type == ERL_CURLY_LEFT) expected.push(ERL_CURLY_RIGHT);
-      else if (BLOCK_OPENERS.contains(type)) expected.push(ERL_END);
-      else if (type == ERL_FUN && i + 1 < tokens.size() &&
-               (tokens.get(i + 1).type == ERL_PAR_LEFT ||
-                tokens.get(i + 1).type == ERL_VAR && i + 2 < tokens.size() && tokens.get(i + 2).type == ERL_PAR_LEFT)) {
-        expected.push(ERL_END);
-      }
-      else if (!expected.isEmpty() && expected.peek() == type) expected.pop();
-      arg.add(t);
+      args.add(arg);
+      if (step == ErlangMacroArgSplitter.Step.CLOSE) return new ArgsResult(args, i - open);
+      arg = new ArrayList<>();
     }
     return null;
   }

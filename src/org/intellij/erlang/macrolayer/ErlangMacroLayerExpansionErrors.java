@@ -260,7 +260,7 @@ public final class ErlangMacroLayerExpansionErrors {
       // except the '.' that ends the form: the expansion left the form unfinished ("syntax error before: '.'"), and
       // nothing of the file's own was wrong there (the main tree had no error); the last use before it did it
       if (token.getNode().getElementType() != ErlangTypes.ERL_DOT || token.getTextRange().getEndOffset() < f.expEnd) return null;
-      use = useBefore(x, f, at);
+      use = x.useBefore(f.expStart, at);
     }
     else {
       use = x.useSourceRange(at);
@@ -337,15 +337,6 @@ public final class ErlangMacroLayerExpansionErrors {
       leaf = PsiTreeUtil.nextLeaf(leaf);
     }
     return leaf;
-  }
-
-  /** The nearest macro use before the expanded offset in the form. */
-  private static @Nullable TextRange useBefore(@NotNull ErlangMacroExpander.Expansion x, @NotNull Form f, int at) {
-    for (int o = at - 1; o >= f.expStart; o--) {
-      int k = x.kindAt(o);
-      if (k >= 0 && k != ErlangMacroExpander.SRC_VERBATIM) return x.useSourceRange(o);
-    }
-    return null;
   }
 
   /**
