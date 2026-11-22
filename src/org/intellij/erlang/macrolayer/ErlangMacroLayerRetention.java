@@ -96,7 +96,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
         myWritePending = false;
       }
     }, this);
-    // The own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
+    // The own-text version of the files that have a table or a copy (see ErlangMacroLayerTables.TextTracker)
     PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
       @Override
       public void childAdded(@NotNull PsiTreeChangeEvent event) {
@@ -131,7 +131,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
       private void changed(@NotNull PsiTreeChangeEvent event) {
         PsiFile file = event.getFile();
         if (file != null && isBuildConfig(file.getName())) myBuildConfigVersion.incrementAndGet();
-        ErlangMacroLayer.TextTracker t = file == null ? null : ErlangMacroLayer.textTrackerIfAny(file);
+        ErlangMacroLayerTables.TextTracker t = file == null ? null : ErlangMacroLayerTables.textTrackerIfAny(file);
         if (t != null) {
           t.changed();
           noteChanged(file.getOriginalFile().getVirtualFile());
