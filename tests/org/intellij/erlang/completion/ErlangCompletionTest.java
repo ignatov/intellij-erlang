@@ -251,6 +251,28 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestEquals("bar() -> #geometry:point{<caret>}", "x", "y");
   }
 
+  public void testModuleQualifiedNativeRecordFieldsFromInclude() {
+    myFixture.addFileToProject("shapes.hrl", "-record #circle{radius = 0}.\n");
+    myFixture.addFileToProject(
+      "shapes.erl",
+      """
+        -module(shapes).
+        -include("shapes.hrl").
+        -export_record([circle]).
+        """);
+    doTestEquals("bar() -> #shapes:circle{<caret>}", "radius");
+  }
+
+  public void testRecordsFromInclude() {
+    myFixture.addFileToProject("records.hrl", "-record(included_record, {a}).\n");
+    doTestInclude("-include(\"records.hrl\").\nbar() -> #<caret>", "included_record");
+  }
+
+  public void testMacrosFromInclude() {
+    myFixture.addFileToProject("macros.hrl", "-define(INCLUDED_MACRO, 1).\n");
+    doTestInclude("-include(\"macros.hrl\").\nbar() -> ?<caret>", "INCLUDED_MACRO");
+  }
+
   private void addNativeRecordRemoteModule() {
     myFixture.addFileToProject(
       "geometry.erl",
@@ -473,6 +495,14 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
 
   public void testExportFunctionStartedTyping() {
     doCheckResult("-export([f<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.");
+  }
+
+  public void testExportFunctionReplacesWrongArity() {
+    doCheckResult("-export([fo<caret>/5]). foo(A) -> A.", "-export([foo/1<caret>]). foo(A) -> A.");
+  }
+
+  public void testExportFunctionReplacesWrongArityAfterSpace() {
+    doCheckResult("-export([fo<caret> /5]). foo(A) -> A.", "-export([foo/1<caret>]). foo(A) -> A.");
   }
 
   public void testOptionalCallbackTupleFunction() {
