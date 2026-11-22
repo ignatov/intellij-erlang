@@ -160,11 +160,22 @@ public class ErlangUpdateNoticeTest extends TestCase {
 
   public void testInstallThenOfferRestart() {
     myNotice.check(myUi);
-    myNotice.installPressed(myUi);
+    assertTrue(myNotice.installPressed(myUi));
     myNotice.install(myPlatform.update, null, myUi);
     assertEquals(1, myInstaller.runs);
     assertEquals(List.of("offer 0.11.1500", "installed 0.11.1500 restart"), myUi.events);
     assertEquals(List.of(ErlangUsageKey.UPDATE_NOTICE_SHOWN, ErlangUsageKey.UPDATE_NOTICE_INSTALL), myUi.counted);
+  }
+
+  public void testOneInstallAtATime() {
+    // Install pressed again, in the same notification or in an older one that is still on screen
+    assertTrue(myNotice.installPressed(myUi));
+    assertFalse(myNotice.installPressed(myUi));
+    assertFalse(myNotice.installPressed(new FakeUi()));
+    assertEquals(List.of(ErlangUsageKey.UPDATE_NOTICE_INSTALL), myUi.counted);
+    myNotice.installFinished();
+    assertTrue(myNotice.installPressed(myUi));
+    assertEquals(List.of(ErlangUsageKey.UPDATE_NOTICE_INSTALL, ErlangUsageKey.UPDATE_NOTICE_INSTALL), myUi.counted);
   }
 
   public void testRestartDoesNotAskAgain() {

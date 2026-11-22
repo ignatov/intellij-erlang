@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.LongSupplier;
 
 /**
@@ -110,6 +111,8 @@ public final class ErlangUpdateNotice {
   private final LongSupplier myClock;
   private final Platform myPlatform;
   private volatile ErlangUpdateNoticeState myState = new ErlangUpdateNoticeState();
+  // one install at a time
+  private final AtomicBoolean myInstalling = new AtomicBoolean();
 
   ErlangUpdateNotice(@NotNull LongSupplier clock, @NotNull Platform platform) {
     myClock = clock;
@@ -175,9 +178,19 @@ public final class ErlangUpdateNotice {
     ui.count(ErlangUsageKey.UPDATE_NOTICE_DONT_SHOW);
   }
 
-  // the user pressed Install; the install task starts next
-  void installPressed(@NotNull Ui ui) {
+  /**
+   * The user pressed Install. True when the install task may start: no other install runs, from this notification or
+   * from an older one.
+   */
+  boolean installPressed(@NotNull Ui ui) {
+    if (!myInstalling.compareAndSet(false, true)) return false;
     ui.count(ErlangUsageKey.UPDATE_NOTICE_INSTALL);
+    return true;
+  }
+
+  // the install task finished: the update is installed, or it failed, or the user cancelled it
+  void installFinished() {
+    myInstalling.set(false);
   }
 
   /**

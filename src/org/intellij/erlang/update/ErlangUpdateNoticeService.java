@@ -78,6 +78,8 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
   private volatile Future<?> myPendingCheck;
   private volatile ProgressIndicator myCheckIndicator;
   private volatile ProgressIndicator myInstallIndicator;
+  // the offer on screen; a newer offer expires it
+  private volatile Notification myOffer;
   private volatile int myChecksStartedForTests;
 
   @NotNull
@@ -141,8 +143,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
   }
 
   private void startInstall(@NotNull Update update, @NotNull IdeUi ui) {
-    if (myDisposed || !ui.myInstalling.compareAndSet(false, true)) return;
-    myNotice.installPressed(ui);
+    if (myDisposed || !myNotice.installPressed(ui)) return;
     new Task.Backgroundable(ui.project(), "Updating the Erlang plugin to version " + update.version(), true) {
       @Override
       public void run(@NotNull ProgressIndicator indicator) {
@@ -163,7 +164,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
       @Override
       public void onFinished() {
         myInstallIndicator = null;
-        ui.myInstalling.set(false);
+        myNotice.installFinished();
       }
     }.queue();
   }
@@ -268,9 +269,6 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
   // the notifications and the counters of the project where the Erlang file was opened
   private final class IdeUi implements Ui {
     private final WeakReference<Project> myProject;
-    // one install at a time from the same notification
-    private final AtomicBoolean myInstalling = new AtomicBoolean();
-    private volatile Notification myOffer;
 
     IdeUi(@NotNull WeakReference<Project> project) {
       myProject = project;
@@ -288,7 +286,9 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
         Notification notification = notification(offerTitle(update), offerText(update), NotificationType.INFORMATION)
           .addAction(NotificationAction.createSimple("Install", () -> startInstall(update, this)))
           .addAction(NotificationAction.createSimpleExpiring("Don't show again", () -> myNotice.dontShowAgain(this)));
+        Notification superseded = myOffer;
         myOffer = notification;
+        if (superseded != null) superseded.expire();
         notification.notify(project());
       });
     }
