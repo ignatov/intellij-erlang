@@ -25,9 +25,12 @@ import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Pass;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiParserFacade;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.RefactoringActionHandler;
 import com.intellij.refactoring.introduce.inplace.InplaceVariableIntroducer;
@@ -356,6 +359,24 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     @Override
     protected PsiElement checkLocalScope() {
       return myTarget.getContainingFile();
+    }
+
+    @Override
+    protected void moveOffsetAfter(boolean success) {
+      if (success) {
+        reformatDeclaration();
+      }
+      super.moveOffsetAfter(success);
+    }
+
+    private void reformatDeclaration() {
+      PsiDocumentManager.getInstance(myProject).commitDocument(myEditor.getDocument());
+      ErlangAssignmentExpression declaration = PsiTreeUtil.getParentOfType(getVariable(), ErlangAssignmentExpression.class);
+      if (declaration == null) return;
+      PsiFile file = declaration.getContainingFile();
+      TextRange range = declaration.getTextRange();
+      WriteCommandAction.writeCommandAction(myProject, file).withName(getCommandName())
+        .run(() -> CodeStyleManager.getInstance(myProject).reformatRange(file, range.getStartOffset(), range.getEndOffset()));
     }
   }
 }

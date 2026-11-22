@@ -17,8 +17,7 @@
 package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.actions.ConfigurationContext;
-import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.execution.configurations.ConfigurationType;
+import com.intellij.execution.actions.LazyRunConfigurationProducer;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
@@ -41,11 +40,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase<?>> extends RunConfigurationProducer<RunConfig> {
-  protected ErlangDebuggableRunConfigurationProducer(ConfigurationType configurationType) {
-    super(configurationType);
-  }
-
+public abstract class ErlangDebuggableRunConfigurationProducer<RunConfig extends ErlangRunConfigurationBase<?>> extends LazyRunConfigurationProducer<RunConfig> {
   @Override
   protected final boolean setupConfigurationFromContext(@NotNull RunConfig runConfig, @NotNull ConfigurationContext context, Ref<PsiElement> ref) {
     PsiElement location = ref.get();

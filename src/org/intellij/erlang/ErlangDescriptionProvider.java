@@ -28,6 +28,8 @@ import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewShortNameLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -37,8 +39,20 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
 
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
+    if (o instanceof ErlangMacroLayerHeaderTarget || ErlangMacroLayer.isNameMadeByMacro(o)) {
+      return ErlangMacroLayer.describeLayerTarget(o, location);
+    }
     if (!(o instanceof ErlangCompositeElement)) return null;
-    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || o instanceof ErlangFunctionCallExpression)) {
+    // a macro use (?OTP_RELEASE, ?MODULE, an undefined macro): quick documentation takes it as its target when it
+    // resolves to no -define; master logged "Unexpected element" for it
+    if (o instanceof ErlangMacros || o instanceof ErlangMacrosName) {
+      if (location == UsageViewTypeLocation.INSTANCE || location == RefactoringDescriptionLocation.WITH_PARENT ||
+          location instanceof DeleteTypeDescriptionLocation) {
+        return "macro";
+      }
+      return o.getText();
+    }
+    if (location == UsageViewNodeTextLocation.INSTANCE && (o instanceof ErlangNamedElement || o instanceof ErlangQAtom || o instanceof ErlangTypeRef || isFunctionReferenceOwner(o))) {
       return getElementDescription(o, UsageViewShortNameLocation.INSTANCE);
     }
     if (location == UsageViewShortNameLocation.INSTANCE ||
@@ -48,7 +62,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
       if (o instanceof ErlangTypeRef) return o.getText();
-      if (o instanceof ErlangFunctionCallExpression) return o.getText();
+      if (isFunctionReferenceOwner(o)) return o.getText();
       if (o instanceof ErlangAttribute) {
         ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
         if (spec != null) return spec.getName();
@@ -71,12 +85,21 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       else if (o instanceof ErlangAttribute) return "attribute";
       else if (o instanceof ErlangQAtom) return "atom";
       else if (o instanceof ErlangTypeRef) return "type";
-      else if (o instanceof ErlangFunctionCallExpression) return "function";
+      else if (isFunctionReferenceOwner(o)) return "function";
       else if (o instanceof ErlangSpecification) return "specification";
     }
-    LOG.error("Unexpected element " + o.getText() +
-              ", class: " + o.getClass() +
-              ", location: " + location.getClass());
-    return "<unknown>";
+    // any other element or location: the platform's default description (master logged an error and said "<unknown>",
+    // which the platform's presentation of a documentation or navigation target can reach with any Erlang element)
+    LOG.debug("No description of " + o.getClass().getSimpleName() + " for " + location.getClass().getSimpleName());
+    return null;
+  }
+
+  private static boolean isFunctionReferenceOwner(@NotNull PsiElement o) {
+    return o instanceof ErlangFunctionCallExpression ||
+           o instanceof ErlangFunctionWithArity ||
+           o instanceof ErlangExportFunction ||
+           o instanceof ErlangImportFunction ||
+           o instanceof ErlangCallbackFunction ||
+           o instanceof ErlangSpecFun;
   }
 }

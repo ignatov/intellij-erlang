@@ -1,0 +1,17 @@
+# answers:21 src/errors/err_par_alone.erl arm=master layer=false
+## highlights
+452-453 ERROR(400) ',' unexpected
+460-461 ERROR(400) '(' or ':' expected, got ','
+## references
+383 PsiMultiReference -> []
+395 PsiMultiReference -> []
+425 ErlangMacrosReferenceImpl -> [null]
+445 PsiMultiReference -> []
+480 PsiMultiReference -> []
+## completion
+136 []
+465 []
+428 []
+484 []
+425 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, begin, case, catch, fun, if, maybe, receive, try]
+432 []

@@ -19,6 +19,7 @@ package org.intellij.erlang.rename;
 import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
 import org.intellij.erlang.psi.ErlangFile;
@@ -50,6 +51,19 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   
   public void testMultiTarget()       { doTest("Bar"); }
   public void testMultiTargetMacro()  { doTest("BAR"); }
+  public void testTypedMacroRecordField() { doTest("uid"); }
+  public void testTypedMacroRecordFieldFromUsage() { doTest("uid"); }
+  public void testMacroNamedTypedRecordFieldFromUsage() { doTest("uid"); }
+  public void testCaseHeadVariable()  { doTest("Renamed"); }
+  public void testCaseHeadRematch()            { doTest("New"); }
+  public void testCaseHeadRematchArgument()    { doTest("New"); }
+  public void testCaseHeadRematchFromClause()  { doTest("New"); }
+  public void testCaseHeadRematchInLaterCase() { doTest("New"); }
+  public void testCaseHeadPattern()            { doTest("New"); }
+  public void testCaseHeadPatternFromPattern() { doTest("New"); }
+  public void testNamedFunShadowsFromCall()     { doTest("New"); }
+  public void testNamedFunShadowsFromOuter()    { doTest("New"); }
+  public void testNamedFunShadowsCaseHead()     { doTest("New"); }
 
   public void testMapKeyInFunHeadBody()           { doTest("Key2"); }
   public void testMapKeyInFunHeadBodyFromKey()    { doTest("Key2"); }
@@ -61,7 +75,27 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testNamedFunName()                  { doTest("Fact"); }
   public void testNamedFunShadowingArgument()     { doTest("Arg"); }
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
+
+  // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
+  public void testLongOperatorChain() {
+    String chain = " + 1".repeat(12000);
+    myFixture.configureByText("chain_12000.erl", "-module(chain_12000).\n-export([f/0]).\n<caret>f() -> 1" + chain + ".\n");
+    myFixture.renameElementAtCaret("g");
+    myFixture.checkResult("-module(chain_12000).\n-export([g/0]).\ng() -> 1" + chain + ".\n");
+  }
   
+  public void testRecordFromDefinition() {
+    myFixture.configureByText("a.erl", "-record(<caret>foo, {a}).\nf() -> #foo{a = 1}.\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-record(bar, {a}).\nf() -> #bar{a = 1}.\n");
+  }
+
+  public void testTypeFromDefinition() {
+    myFixture.configureByText("a.erl", "-type <caret>foo() :: ok.\n-spec f() -> foo().\nf() -> ok.\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-type bar() :: ok.\n-spec f() -> bar().\nf() -> ok.\n");
+  }
+
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
   public void testQuotedModule()       { doTest("quotedModule-after", true); }
@@ -74,6 +108,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
 
   public void testFileRenameToErlWithReferences() { doFileRenameWithReferencesTest("fileRenameToErlWithReferencesNew.erl"); }
   public void testFileRenameToBakWithReferences() { doFileRenameWithReferencesTest("fileRenameToBakWithReferences.erl.bak"); }
+
+  public void testIncludedHeaderRename() {
+    PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
+    PsiFile includer = myFixture.addFileToProject("includer.erl", "-module(includer).\n-include(\"header.hrl\").\n");
+    myFixture.renameElement(header, "renamed.hrl");
+    assertEquals("-module(includer).\n-include(\"renamed.hrl\").\n", includer.getText());
+  }
 
   public void testFileRenameToBakAndBack() {
     myFixture.configureByFile(getTestName(true) + ".erl");

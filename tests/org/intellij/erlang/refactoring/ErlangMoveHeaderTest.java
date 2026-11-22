@@ -28,10 +28,17 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor;
 import com.intellij.testFramework.fixtures.CodeInsightFixtureTestCase;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    ErlangLightPlatformCodeInsightFixtureTestCase.maskJsHintRefactoringListener(getProject(), myFixture.getTestRootDisposable());
+  }
+
   public void testMoveFromIncludeDirToModuleDir() {
     PsiFile includeFile = myFixture.addFileToProject("include/a.hrl", "");
     PsiDirectory includeDir = includeFile.getParent();
@@ -44,7 +51,7 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
     move(includeFile.getVirtualFile(), moduleDir);
 
     assertEquals("-module(a).\n" +
-                 "-include(\"../a.hrl\").", moduleFile.getText());
+                 "-include(\"a.hrl\").", moduleFile.getText());
   }
 
   public void testMoveFromIncludeDirToIncludeDirChild() {
@@ -79,7 +86,23 @@ public class ErlangMoveHeaderTest extends CodeInsightFixtureTestCase {
     PsiFile moduleFile = myFixture.configureByText("a.erl", "-module(a).\n-include(\"a.hrl\").");
     PsiDirectory childDir = createSubdirectory(moduleFile.getParent(), "child");
     move(includeFile.getVirtualFile(), childDir);
-    assertEquals("-module(a).\n-include(\"../child/a.hrl\").", moduleFile.getText());
+    assertEquals("-module(a).\n-include(\"child/a.hrl\").", moduleFile.getText());
+  }
+
+  public void testMoveDifferentlyNamedHeaderToSiblingDir() {
+    PsiFile includeFile = myFixture.addFileToProject("src/header.hrl", "");
+    PsiFile moduleFile = myFixture.addFileToProject("src/includer.erl", "-module(includer).\n-include(\"header.hrl\").");
+    PsiDirectory includeDir = createSubdirectory(moduleFile.getParent().getParent(), "include");
+    move(includeFile.getVirtualFile(), includeDir);
+    assertEquals("-module(includer).\n-include(\"../include/header.hrl\").", moduleFile.getText());
+  }
+
+  public void testMoveDifferentlyNamedHeaderToChildDir() {
+    PsiFile includeFile = myFixture.addFileToProject("src/header.hrl", "");
+    PsiFile moduleFile = myFixture.addFileToProject("src/includer.erl", "-module(includer).\n-include(\"header.hrl\").");
+    PsiDirectory childDir = createSubdirectory(moduleFile.getParent(), "child");
+    move(includeFile.getVirtualFile(), childDir);
+    assertEquals("-module(includer).\n-include(\"child/header.hrl\").", moduleFile.getText());
   }
 
   private void move(@NotNull VirtualFile what, @Nullable PsiDirectory where) {

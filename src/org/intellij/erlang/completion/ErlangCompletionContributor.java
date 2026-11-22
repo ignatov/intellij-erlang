@@ -24,6 +24,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
@@ -52,6 +53,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangAtomIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -137,12 +139,13 @@ public class ErlangCompletionContributor extends CompletionContributor {
           parent = parent.getParent();
         }
         PsiElement grandPa = parent.getParent();
-        PsiElement originalPosition = parameters.getOriginalPosition();
+        // the macro layer may run this provider at a position in its expanded text: the real original position
+        PsiElement originalPosition = ErlangMacroLayerCompletionContributor.originalPosition(parameters);
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
         if (originalParent instanceof ErlangIncludeString && originalPosition instanceof LeafPsiElement &&
             ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
-          TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset());
+          TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, ErlangMacroLayerCompletionContributor.originalOffset(parameters));
           String includeText = range.getLength() >= 0 ? range.substring(file.getText()) : "";
           if (grandPa instanceof ErlangInclude) {
             result.addAllElements(getModulePathLookupElements(file, includeText));
@@ -176,7 +179,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
             String moduleName = moduleAtom != null ? getName(moduleAtom) : null;
             String prefix = originalColonQExpr != null ?
-                            StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
+                            StringUtil.first(originalColonQExpr.getText(), ErlangMacroLayerCompletionContributor.originalOffset(parameters) - originalColonQExpr.getTextOffset(), false) :
                             moduleName != null ? moduleName + ":" : null;
             (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(result.getPrefixMatcher().cloneWithPrefix(prefix)))
               .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, moduleName));
@@ -417,8 +420,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static void suggestModules(@NotNull CompletionResultSet result, @NotNull PsiElement position, boolean withColon) {
     Project project = position.getProject();
 
+    GlobalSearchScope scope = GlobalSearchScope.allScope(project);
     Collection<String> names = ErlangModuleIndex.getNames(project);
     for (String name : names) {
+      ProgressManager.checkCanceled();
+      if (!result.getPrefixMatcher().prefixMatches(name)) continue;
+      if (ErlangModuleIndex.getVirtualFilesByName(project, name, scope).isEmpty()) continue;
       result.addElement(
         PrioritizedLookupElement.withPriority(
           LookupElementBuilder.create(name)

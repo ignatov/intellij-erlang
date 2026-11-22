@@ -20,6 +20,7 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
@@ -58,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 
 public class ErlangSdkType extends SdkType {
   private static final String OTP_RELEASE_PREFIX_LINE = "ErlangSdkType_OTP_RELEASE:";
@@ -71,8 +73,41 @@ public class ErlangSdkType extends SdkType {
     "]),erlang:halt().";
   private static final Logger LOG = Logger.getInstance(ErlangSdkType.class);
 
-  private final Map<String, ErlangSdkRelease> mySdkHomeToReleaseCache = ApplicationManager.getApplication().isUnitTestMode() ?
-                                                                        new HashMap<>() : new WeakHashMap<>();
+  private final ReleaseCache mySdkHomeToReleaseCache = new ReleaseCache(ApplicationManager.getApplication().isUnitTestMode() ?
+                                                                         new HashMap<>() : new WeakHashMap<>());
+
+  // the detected release of each SDK home; threads share it (the statistics read it on a pooled thread while detection
+  // writes it on another one), so every access holds its lock, but a detection, which may start erl, runs outside it
+  static final class ReleaseCache {
+    // guarded by this
+    private final Map<String, ErlangSdkRelease> myReleases;
+
+    ReleaseCache(@NotNull Map<String, ErlangSdkRelease> releases) {
+      myReleases = releases;
+    }
+
+    @Nullable
+    synchronized ErlangSdkRelease get(@Nullable String home) {
+      return myReleases.get(home);
+    }
+
+    synchronized void put(@Nullable String home, @NotNull ErlangSdkRelease release) {
+      myReleases.put(home, release);
+    }
+
+    // like Map.computeIfAbsent; two threads may both detect the same home, and the first result is kept
+    @Nullable
+    ErlangSdkRelease computeIfAbsent(@Nullable String home, @NotNull Function<String, ErlangSdkRelease> detect) {
+      ErlangSdkRelease known = get(home);
+      if (known != null) return known;
+      ErlangSdkRelease detected = detect.apply(home);
+      if (detected == null) return null;
+      synchronized (this) {
+        ErlangSdkRelease first = myReleases.putIfAbsent(home, detected);
+        return first != null ? first : detected;
+      }
+    }
+  }
 
   @NotNull
   public static ErlangSdkType getInstance() {
@@ -264,8 +299,31 @@ public class ErlangSdkType extends SdkType {
   @NotNull
   public static ErlangSdkRelease getRelease(@Nullable Project project) {
     if (project == null) return ErlangSdkRelease.DefaultRelease;
-    ErlangSdkRelease release = ErlangSystemUtil.isSmallIde() ? getReleaseForSmallIde(project) : getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
+    ErlangSdkRelease release = getProjectSdkRelease(project);
     return release != null ? release : ErlangSdkRelease.DefaultRelease;
+  }
+
+  // the release of the project's Erlang SDK; null when there is none or its release cannot be read, unlike getRelease
+  @Nullable
+  public static ErlangSdkRelease getProjectSdkRelease(@NotNull Project project) {
+    return ErlangSystemUtil.isSmallIde() ? getReleaseForSmallIde(project) : getRelease(ProjectRootManager.getInstance(project).getProjectSdk());
+  }
+
+  // the release of the project's Erlang SDK as far as it is already known: from the cache of detected releases or from
+  // the version string of the SDK. It never reads the SDK and never starts erl; null when the release is not known yet.
+  @Nullable
+  public static ErlangSdkRelease getKnownProjectSdkRelease(@NotNull Project project) {
+    if (ErlangSystemUtil.isSmallIde()) {
+      String sdkPath = getSdkPath(project);
+      return StringUtil.isEmpty(sdkPath) ? null : getInstance().mySdkHomeToReleaseCache.get(getVersionCacheKey(sdkPath));
+    }
+    Sdk sdk = ProjectRootManager.getInstance(project).getProjectSdk();
+    if (sdk == null || sdk.getSdkType() != getInstance()) return null;
+    CachedRelease cached = sdk.getUserData(ERLANG_SDK_RELEASE);
+    if (cached != null && Objects.equals(cached.versionString(), sdk.getVersionString()) && Objects.equals(cached.homePath(), sdk.getHomePath())) {
+      return cached.release();
+    }
+    return ErlangSdkRelease.fromString(sdk.getVersionString());
   }
 
   @NotNull
@@ -450,6 +508,9 @@ public class ErlangSdkType extends SdkType {
     String sdkHome = sdkModificator.getHomePath();
 
     {
+      // An installation prefix such as /usr or /opt/homebrew keeps OTP in lib/erlang/lib, next to other libraries in lib
+      File prefixLibDir = new File(new File(sdkHome), "lib/erlang/lib");
+      if (tryToProcessAsStandardLibraryDir(sdkModificator, prefixLibDir)) return;
       File stdLibDir = new File(new File(sdkHome), "lib");
       if (tryToProcessAsStandardLibraryDir(sdkModificator, stdLibDir)) return;
     }
@@ -507,23 +568,57 @@ public class ErlangSdkType extends SdkType {
     return version != null ? version.toString() : null;
   }
 
-  private static final Key<ErlangSdkRelease> ERLANG_SDK_RELEASE = Key.create("ERLANG_SDK_TYPE");
+  // the release together with the version string and the home it was found for, so that a change of either is seen
+  private record CachedRelease(@Nullable String versionString, @Nullable String homePath, @NotNull ErlangSdkRelease release) {}
+
+  private static final Key<CachedRelease> ERLANG_SDK_RELEASE = Key.create("ERLANG_SDK_TYPE");
 
   @Nullable
   private static ErlangSdkRelease getRelease(@Nullable Sdk sdk) {
     if (sdk != null && sdk.getSdkType() == getInstance()) {
+      String versionString = sdk.getVersionString();
+      String homePath = sdk.getHomePath();
 
-      var key = sdk.getUserData(ERLANG_SDK_RELEASE);
-      if (key != null) return key;
+      CachedRelease cached = sdk.getUserData(ERLANG_SDK_RELEASE);
+      if (cached != null && Objects.equals(cached.versionString(), versionString) && Objects.equals(cached.homePath(), homePath)) {
+        return cached.release();
+      }
 
-      ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(sdk.getVersionString());
-      ErlangSdkRelease release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(sdk.getHomePath()));
+      ErlangSdkRelease fromVersionString = ErlangSdkRelease.fromString(versionString);
+      ErlangSdkRelease release;
+      if (fromVersionString != null && cached != null && Objects.equals(cached.versionString(), versionString)) {
+        // only the home changed, so the version string may be the old home's: detect the release of the new home
+        ErlangSdkRelease known = homePath != null ? getInstance().mySdkHomeToReleaseCache.get(getVersionCacheKey(homePath)) : null;
+        release = known != null ? known : fromVersionString;
+        updateVersionStringInBackground(sdk, homePath, versionString);
+      }
+      else {
+        release = fromVersionString != null ? fromVersionString : getInstance().detectSdkVersion(StringUtil.notNullize(homePath));
+      }
 
-      if (release != null) sdk.putUserData(ERLANG_SDK_RELEASE, release);
+      sdk.putUserData(ERLANG_SDK_RELEASE, release != null ? new CachedRelease(versionString, homePath, release) : null);
 
       return release;
     }
     return null;
+  }
+
+  // detection may start erl, so it runs on a pooled thread; the version string is written once the dialogs are closed
+  private static void updateVersionStringInBackground(@NotNull Sdk sdk, @Nullable String homePath, @NotNull String oldVersionString) {
+    if (homePath == null) return;
+    Application application = ApplicationManager.getApplication();
+    application.executeOnPooledThread(() -> {
+      String detected = getVersionString(getInstance().detectSdkVersion(homePath));
+      if (detected == null || detected.equals(oldVersionString)) return;
+      application.invokeLater(() -> {
+        if (!Objects.equals(sdk.getHomePath(), homePath) || !Objects.equals(sdk.getVersionString(), oldVersionString)) return;
+        application.runWriteAction(() -> {
+          SdkModificator modificator = sdk.getSdkModificator();
+          modificator.setVersionString(detected);
+          modificator.commitChanges();
+        });
+      }, ModalityState.nonModal());
+    });
   }
 
   @Nullable

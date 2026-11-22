@@ -1,0 +1,20 @@
+# answers:39 src/gaps/gap_unbound_after_expansion.erl arm=master layer=false
+## highlights
+527-528 WARNING(300) Unused variable 'X'
+## references
+474 ErlangFunctionReferenceImpl -> []
+479 ErlangFunctionReferenceImpl -> []
+495 ErlangMacrosReferenceImpl -> [null]
+500 ErlangVariableReferenceImpl -> []
+519 ErlangMacrosReferenceImpl -> [src/gaps/gap_unbound_after_expansion.erl:495:ErlangMacrosDefinitionImpl]
+519 ErlangMacrosReferenceImpl -> [src/gaps/gap_unbound_after_expansion.erl:495:ErlangMacrosDefinitionImpl]
+527 ErlangVariableReferenceImpl -> []
+536 ErlangMacrosReferenceImpl -> [src/gaps/gap_unbound_after_expansion.erl:495:ErlangMacrosDefinitionImpl]
+536 ErlangMacrosReferenceImpl -> [src/gaps/gap_unbound_after_expansion.erl:495:ErlangMacrosDefinitionImpl]
+## completion
+504 [begin, case, catch, fun, if, maybe, receive, try]
+503 [begin, case, catch, fun, if, maybe, receive, try]
+537 [FUNCTION_ARITY, FUNCTION_NAME, MODULE, MODULE_STRING, USE]
+501 []
+500 [begin, case, catch, fun, if, maybe, receive, try]
+520 [FUNCTION_ARITY, FUNCTION_NAME, MODULE, MODULE_STRING, USE]

@@ -21,6 +21,8 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.SyntaxTraverser;
 import kotlin.Unit;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Parameter name hints at Erlang call sites.
@@ -43,6 +46,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
   @VisibleForTesting
   public static final int MAX_SUMMARY_LENGTH = 12;
   private static final String ELLIPSIS = "…";
+  private static final Pattern LINE_BREAK = Pattern.compile("\\s*\\R\\s*");
 
   @Override
   public @Nullable InlayHintsCollector createCollector(@NotNull PsiFile file, @NotNull Editor editor) {
@@ -204,7 +208,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
     if (variants.size() == 1) {
       String single = variants.iterator().next();
       // keep the whole record name, it is what the reader looks for
-      return single.startsWith("#") && !single.startsWith("#{") ? single : truncate(single);
+      return single.startsWith("#") && !single.startsWith("#{") && single.endsWith("{}") ? single : truncate(single);
     }
     String joined = String.join("|", variants);
     if (joined.length() <= MAX_SUMMARY_LENGTH) return joined;
@@ -216,7 +220,8 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
       if (!prefix.isEmpty()) prefix.append('|');
       prefix.append(variant);
     }
-    return prefix.isEmpty() ? truncate(variants.iterator().next()) : prefix + ELLIPSIS;
+    return prefix.isEmpty() ? variants.iterator().next().substring(0, MAX_SUMMARY_LENGTH - 1) + ELLIPSIS
+                            : prefix + ELLIPSIS;
   }
 
   private static @NotNull String truncate(@NotNull String text) {
@@ -231,13 +236,14 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
       return left != null ? left : shortForm(assignment.getRight());
     }
     if (asVariable(pattern) != null) return null;
-    if (pattern instanceof ErlangRecordExpression record && isStandalone(record) && record.getRecordRef() != null) {
+    if (pattern instanceof ErlangRecordExpression record && isStandalone(record) && record.getRecordRef() != null &&
+        record.getRecordTuple() != null) {
       return "#" + record.getRecordRef().getText() + "{}";
     }
     if (pattern instanceof ErlangMapExpression map && isStandalone(map)) {
       return map.getMapTuple().getMapEntryList().isEmpty() ? "#{}" : "#{" + ELLIPSIS + "}";
     }
-    String text = normalize(pattern.getText());
+    String text = normalize(pattern);
     if (text.length() <= MAX_SUMMARY_LENGTH) return text;
     if (pattern instanceof ErlangTupleExpression) return "{" + ELLIPSIS + "}";
     if (pattern instanceof ErlangListExpression) return "[" + ELLIPSIS + "]";
@@ -259,8 +265,28 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
     return expression;
   }
 
-  private static @NotNull String normalize(@NotNull String text) {
-    return text.replaceAll("\\s+", " ").replace("( ", "(").replace(" )", ")").trim();
+  /**
+   * The text with each run of whitespace between tokens turned into one space, and none after {@code (} or before
+   * {@code )}; the text of the tokens themselves, such as strings and quoted atoms, is kept as written, except that a
+   * line break inside a token, with the whitespace around it, becomes one space, as a hint is a single line.
+   */
+  private static @NotNull String normalize(@NotNull PsiElement element) {
+    StringBuilder result = new StringBuilder();
+    String previous = null;
+    boolean space = false;
+    for (PsiElement leaf : SyntaxTraverser.psiTraverser(element).filter(e -> e.getFirstChild() == null)) {
+      if (leaf instanceof PsiWhiteSpace) {
+        space = true;
+        continue;
+      }
+      String text = LINE_BREAK.matcher(leaf.getText()).replaceAll(" ");
+      if (text.isEmpty()) continue;
+      if (space && previous != null && !"(".equals(previous) && !")".equals(text)) result.append(' ');
+      space = false;
+      previous = text;
+      result.append(text);
+    }
+    return result.toString();
   }
 
   /**
@@ -270,7 +296,7 @@ public class ErlangParameterHintsProvider implements InlayHintsProvider {
                                      @NotNull ErlangFunction function, int arity) {
     if (!hint.isName()) {
       // the argument is the pattern itself, e.g. foo(ok) for foo(ok) -> ...
-      return normalize(argument.getText()).equals(hint.text());
+      return normalize(argument).equals(hint.text());
     }
     String name = comparable(hint.text());
     // one-letter names such as X or N1 say nothing

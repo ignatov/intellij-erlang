@@ -20,22 +20,41 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 public class ErlangRecursiveVisitor extends ErlangVisitor {
+  // the elements left to visit, top first; non-null while a walk is running, so that deep trees do not overflow the stack
+  private Deque<PsiElement> myPending;
+
   @Override
   public void visitCompositeElement(@NotNull ErlangCompositeElement o) {
-    for (PsiElement psiElement : o.getChildren()) {
-      if (psiElement instanceof ErlangCompositeElement) {
-        psiElement.accept(this);
-      }
-    }
+    visitChildren(o);
   }
 
   @Override
   public void visitFile(PsiFile file) {
-    for (PsiElement psiElement : file.getChildren()) {
-      if (psiElement instanceof ErlangCompositeElement) {
-        psiElement.accept(this);
+    visitChildren(file);
+  }
+
+  private void visitChildren(@NotNull PsiElement o) {
+    boolean outermost = myPending == null;
+    if (outermost) myPending = new ArrayDeque<>();
+    try {
+      PsiElement[] children = o.getChildren();
+      for (int i = children.length - 1; i >= 0; i--) {
+        if (children[i] instanceof ErlangCompositeElement) {
+          myPending.push(children[i]);
+        }
       }
+      if (outermost) {
+        while (!myPending.isEmpty()) {
+          myPending.pop().accept(this);
+        }
+      }
+    }
+    finally {
+      if (outermost) myPending = null;
     }
   }
 }

@@ -63,6 +63,9 @@ public interface ErlangFile extends PsiFile {
   ErlangTypeDefinition getType(@NotNull String name);
 
   @Nullable
+  ErlangTypeDefinition getType(@NotNull String name, int arity);
+
+  @Nullable
   ErlangRecordDefinition getRecord(String name);
 
   @NotNull

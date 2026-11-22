@@ -1,0 +1,20 @@
+# answers:31 src/gaps/gap_function_twice.erl arm=master layer=false
+## highlights
+## references
+509 ErlangFunctionReferenceImpl -> []
+525 ErlangMacrosReferenceImpl -> [null]
+529 ErlangVariableReferenceImpl -> []
+536 ErlangVariableReferenceImpl -> [src/gaps/gap_function_twice.erl:529:ErlangQVarImpl]
+546 PsiMultiReference -> []
+553 ErlangMacrosReferenceImpl -> [src/gaps/gap_function_twice.erl:525:ErlangMacrosDefinitionImpl]
+553 ErlangMacrosReferenceImpl -> [src/gaps/gap_function_twice.erl:525:ErlangMacrosDefinitionImpl]
+557 PsiMultiReference -> []
+577 PsiMultiReference -> []
+591 ErlangFunctionReferenceImpl -> []
+## completion
+546 [Name, begin, case, catch, fun, if, maybe, receive, try]
+536 [Name, begin, case, catch, fun, if, maybe, receive, try]
+557 [begin, case, catch, fun, if, maybe, receive, try, when]
+540 [<single or none>]
+529 [Name, begin, case, catch, fun, if, maybe, receive, try]
+548 []

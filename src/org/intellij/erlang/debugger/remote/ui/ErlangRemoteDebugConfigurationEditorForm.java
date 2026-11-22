@@ -17,10 +17,10 @@
 package org.intellij.erlang.debugger.remote.ui;
 
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.ui.HideableTitledPanel;
+import com.intellij.openapi.ui.DialogPanel;
 import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
+import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -31,7 +31,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   private JTextField myNodeTextField;
   private JTextField myCookieTextField;
   private JCheckBox myUseShortNamesCheckBox;
-  private HideableTitledPanel myDebugOptionsPanel;
+  private DialogPanel myDebugOptionsPanel;
   private JTextField myHostTextField;
   private JLabel myHostLabel;
   private JTextField myDebugNodeArgsTextField;
@@ -42,7 +42,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
 
   @Override
   protected void doResetEditorFrom(ErlangRemoteDebugRunConfiguration configuration) {
-    myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    ErlangUiUtil.fillModules(myModuleComboBox, configuration.getProject());
     myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
     myNodeTextField.setText(configuration.getRemoteErlangNodeName());
     myCookieTextField.setText(configuration.getCookie());
@@ -69,8 +69,7 @@ public class ErlangRemoteDebugConfigurationEditorForm extends ErlangDebuggableRu
   }
 
   private void createUIComponents() {
-    myDebugOptionsPanel = createDebugOptionsHideablePanel();
-    myDebugOptionsPanel.setOn(true);
+    myDebugOptionsPanel = createDebugOptionsHideablePanel(true);
   }
 
   private void setUseShortNames(boolean b) {
