@@ -1,0 +1,17 @@
+# answers:35 src/gaps/gap_par_with_args.erl arm=master layer=false
+## highlights
+597-598 ERROR(400) '(' unexpected
+603-606 WARNING(300) Unused function 'foo/0'
+## references
+548 ErlangFunctionReferenceImpl -> []
+567 ErlangMacrosReferenceImpl -> [null]
+590 PsiMultiReference -> []
+618 ErlangVariableReferenceImpl -> []
+624 ErlangVariableReferenceImpl -> [src/gaps/gap_par_with_args.erl:618:ErlangQVarImpl]
+## completion
+560 [behavior, behaviour, callback, define, else, export, export_record, export_type, if, ifdef, ifndef, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec, type, undef]
+559 []
+575 []
+571 [begin, case, catch, fun, if, maybe, receive, try]
+572 [begin, case, catch, fun, if, maybe, receive, try]
+633 [end, file:sendfile, lists:append]

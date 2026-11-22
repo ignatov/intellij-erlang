@@ -1,0 +1,32 @@
+# answers:77 src/otp/m_otp_ms.erl arm=master layer=false
+## highlights
+462-493 ERROR(400) Unresolved include_lib: file not found
+585-591 WARNING(300) Unresolved function fun2ms/1
+## references
+435 ErlangFunctionReferenceImpl -> []
+462  -> [null]
+506 ErlangMacrosReferenceImpl -> [null]
+528 ErlangMacrosReferenceImpl -> [null]
+532 ErlangVariableReferenceImpl -> []
+538 ErlangVariableReferenceImpl -> []
+545 PsiMultiReference -> []
+553 ErlangVariableReferenceImpl -> [src/otp/m_otp_ms.erl:532:ErlangQVarImpl]
+559 ErlangVariableReferenceImpl -> [src/otp/m_otp_ms.erl:538:ErlangQVarImpl]
+581 ErlangModuleReferenceImpl -> [null]
+585 ErlangFunctionReferenceImpl -> []
+596 ErlangFunctionReferenceImpl -> []
+597 ErlangMacrosReferenceImpl -> [src/otp/m_otp_ms.erl:528:ErlangMacrosDefinitionImpl]
+597 ErlangMacrosReferenceImpl -> [src/otp/m_otp_ms.erl:528:ErlangMacrosDefinitionImpl]
+601 ErlangVariableReferenceImpl -> []
+607 ErlangVariableReferenceImpl -> []
+618 ErlangVariableReferenceImpl -> [src/otp/m_otp_ms.erl:607:ErlangQVarImpl]
+626 ErlangMacrosReferenceImpl -> [src/otp/m_otp_ms.erl:506:ErlangMacrosDefinitionImpl]
+626 ErlangMacrosReferenceImpl -> [src/otp/m_otp_ms.erl:506:ErlangMacrosDefinitionImpl]
+637 ErlangVariableReferenceImpl -> [src/otp/m_otp_ms.erl:601:ErlangQVarImpl]
+## completion
+529 [FUNCTION_ARITY, MODULE_STRING, OTP_RELEASE]
+506 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, ROW, begin, case, catch, fun, if, maybe, receive, try]
+553 [Age, Name, begin, case, catch, fun, if, maybe, receive, try]
+532 [Name, begin, case, catch, fun, if, maybe, receive, try]
+544 [Age, Name, begin, case, catch, fun, if, maybe, receive, try]
+539 [Age, Name]

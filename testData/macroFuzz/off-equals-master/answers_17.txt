@@ -1,0 +1,16 @@
+# answers:17 src/errors/err_header_macro.erl arm=master layer=false
+## highlights
+## references
+438 PsiMultiReference -> []
+450 PsiMultiReference -> []
+482  -> [include/bad_macros.hrl:0:ErlangFileImpl]
+524 ErlangFunctionReferenceImpl -> []
+525 ErlangMacrosReferenceImpl -> [include/bad_macros.hrl:218:ErlangMacrosDefinitionImpl]
+525 ErlangMacrosReferenceImpl -> [include/bad_macros.hrl:218:ErlangMacrosDefinitionImpl]
+## completion
+512 []
+437 [begin, case, catch, fun, if, maybe, receive, try]
+534 []
+526 [HALF, MACHINE]
+525 [FILE, FUNCTION_ARITY, FUNCTION_NAME, HALF, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE]
+178 []
