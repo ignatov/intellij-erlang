@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>The plugin asks whether it may send anonymous usage counts once a day; it is off unless you say yes (<a href="https://github.com/ignatov/intellij-erlang/pull/1401">#1401</a>)</li>
-              <li>Rebar: support the rebar3 script made by rebar3 local install in run configurations and the rebar build, running it on the project's… (<a href="https://github.com/ignatov/intellij-erlang/issues/1233">#1233</a>)</li>
-              <li>Show the "Project SDK is not defined" banner again in IntelliJ IDEA for .erl and .hrl files when no SDK is set (<a href="https://github.com/ignatov/intellij-erlang/issues/1269">#1269</a>)</li>
-              <li>-include_lib and module resolve now pick the highest application version when version components differ in length (for example 1.10… (<a href="https://github.com/ignatov/intellij-erlang/issues/1383">#1383</a>)</li>
-              <li>Behaviour names of files that are not open are read from the index, without parsing the file (<a href="https://github.com/ignatov/intellij-erlang/issues/1382">#1382</a>)</li>
-              <li>Calls to modules that exist twice in a project, such as an OTP module and a copy in deps, resolve to the same file every time (<a href="https://github.com/ignatov/intellij-erlang/pull/1424">#1424</a>)</li>
-              <li>The example in the usage statistics dialog stays readable after the theme changes (<a href="https://github.com/ignatov/intellij-erlang/pull/1418">#1418</a>)</li>
-              <li>and 13 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1304">full list</a></li>
+              <li>Enter after a comma in -export([...]), -export_type([...]) and lists aligns the new element with the first one when "Align multiline… (<a href="https://github.com/ignatov/intellij-erlang/pull/1186">#1186</a>)</li>
+              <li>Completion no longer logs an error when another module has unsaved changes (<a href="https://github.com/ignatov/intellij-erlang/pull/1465">#1465</a>)</li>
+              <li>Completion after mod: in specs, type definitions and record fields offers the module's exported types (<a href="https://github.com/ignatov/intellij-erlang/pull/1191">#1191</a>)</li>
+              <li>*Introduce Variable: reformat the new declaration after the variable name is edited.* (<a href="https://github.com/ignatov/intellij-erlang/pull/1164">#1164</a>)</li>
+              <li>Formatter: 'Comma first style' no longer moves brackets and code far to the right (<a href="https://github.com/ignatov/intellij-erlang/pull/1160">#1160</a>)</li>
+              <li>Macros: go to declaration, find usages, rename and completion now work in code that uses macros in any position (foo?PAR, names made by… (<a href="https://github.com/ignatov/intellij-erlang/pull/1442">#1442</a>)</li>
+              <li>Uses of types like tree() and tree(A) now go to the right definition and are no longer reported as unused (<a href="https://github.com/ignatov/intellij-erlang/pull/1438">#1438</a>)</li>
+              <li>and 8 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1305">full list</a></li>
             </ul>
         ]]>
     </change-notes>
