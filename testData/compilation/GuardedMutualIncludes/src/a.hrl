@@ -1,0 +1,5 @@
+-ifndef(A_HRL).
+-define(A_HRL, 1).
+-include("b.hrl").
+-define(A, 1).
+-endif.

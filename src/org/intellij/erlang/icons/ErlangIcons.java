@@ -63,10 +63,10 @@ public final class ErlangIcons {
   // These icons use layered implementations and must be initialized lazily to avoid initialization issues
   private static class Lazy {
     private static final Icon ERLANG_MODULE_NODE = LayeredIcon.layeredIcon(new Icon[]{PlatformIcons.FOLDER_ICON, ERLANG_MARK});
-    private static final Icon EUNIT = new LayeredIcon(FILE, AllIcons.Nodes.JunitTestMark);
-    private static final Icon REBAR_EUNIT = new LayeredIcon(REBAR, AllIcons.Nodes.JunitTestMark);
-    private static final Icon ERLANG_CONSOLE = new LayeredIcon(CONSOLE, ERLANG_MARK);
-    private static final Icon REMOTE_NODE = new LayeredIcon(AllIcons.RunConfigurations.Remote, ERLANG_MARK);
+    private static final Icon EUNIT = LayeredIcon.layeredIcon(new Icon[]{FILE, AllIcons.Nodes.JunitTestMark});
+    private static final Icon REBAR_EUNIT = LayeredIcon.layeredIcon(new Icon[]{REBAR, AllIcons.Nodes.JunitTestMark});
+    private static final Icon ERLANG_CONSOLE = LayeredIcon.layeredIcon(new Icon[]{CONSOLE, ERLANG_MARK});
+    private static final Icon REMOTE_NODE = LayeredIcon.layeredIcon(new Icon[]{AllIcons.RunConfigurations.Remote, ERLANG_MARK});
   }
 
   public static Icon getErlangModuleNode() {

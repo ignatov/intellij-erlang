@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
@@ -26,9 +27,15 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -37,10 +44,17 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
+  // the earlier bindings of the variables met in this resolve; null when the processor collects only the variables it meets
+  @Nullable private final Map<ErlangQVar, List<ErlangQVar>> myEarlierBindings;
 
   public ErlangVarProcessor(String requestedName, PsiElement origin) {
+    this(requestedName, origin, new HashMap<>());
+  }
+
+  private ErlangVarProcessor(String requestedName, PsiElement origin, @Nullable Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
     myRequestedName = requestedName;
     myOrigin = origin;
+    myEarlierBindings = earlierBindings;
   }
 
   @Override
@@ -54,6 +68,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!(psiElement instanceof ErlangQVar)) return true;
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
+    if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
       if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
@@ -84,11 +99,70 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
       // put all possible variables to list
-      myVarList.add((ErlangQVar) psiElement);
+      ErlangQVar var = (ErlangQVar) psiElement;
+      List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
+                               ? List.of(var) : getEarlierBindings(var, myEarlierBindings);
+      for (ErlangQVar v : found) {
+        if (!myVarList.contains(v)) myVarList.add(v);
+      }
       return false;
     }
 
     return true;
+  }
+
+  // a variable that matches an earlier binding, like X in `X = 1, case X = g() of ...`, is not a binding itself.
+  // Only earlier variables are followed, so the lookup always moves towards the start of the file and terminates.
+  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per resolve.
+  @NotNull
+  private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
+    Map<ErlangQVar, List<ErlangQVar>> candidates = new HashMap<>();
+    Deque<ErlangQVar> stack = new ArrayDeque<>();
+    stack.push(var);
+    while (!stack.isEmpty()) {
+      ProgressManager.checkCanceled();
+      ErlangQVar top = stack.peek();
+      if (earlierBindings.containsKey(top)) {
+        stack.pop();
+        continue;
+      }
+      List<ErlangQVar> earlier = candidates.computeIfAbsent(top, ErlangVarProcessor::getEarlierCandidates);
+      boolean ready = true;
+      for (ErlangQVar candidate : earlier) {
+        if (!earlierBindings.containsKey(candidate)) {
+          stack.push(candidate);
+          ready = false;
+        }
+      }
+      if (!ready) continue;
+      Set<ErlangQVar> bindings = new LinkedHashSet<>();
+      for (ErlangQVar candidate : earlier) {
+        bindings.addAll(earlierBindings.get(candidate));
+      }
+      earlierBindings.put(top, bindings.isEmpty() ? List.of(top) : List.copyOf(bindings));
+      stack.pop();
+    }
+    return earlierBindings.get(var);
+  }
+
+  // the variables before var that a resolve of var meets, without following them further
+  @NotNull
+  private static List<ErlangQVar> getEarlierCandidates(@NotNull ErlangQVar var) {
+    int offset = var.getTextOffset();
+    List<ErlangQVar> result = new SmartList<>();
+    for (ErlangQVar candidate : ErlangVariableReferenceImpl.processVariables(var, new ErlangVarProcessor(var.getText(), var, null))) {
+      if (candidate.getTextOffset() < offset && !result.contains(candidate)) result.add(candidate);
+    }
+    return result;
+  }
+
+  // the name in the first clause of a named fun declares a new variable that shadows any outer one
+  private static boolean isNamedFunDeclaration(@NotNull PsiElement psiElement) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return definition != null
+           && definition.getParent() instanceof ErlangFunClause clause
+           && clause.getArgumentDefinition() == definition
+           && PsiTreeUtil.getPrevSiblingOfType(clause, ErlangFunClause.class) == null;
   }
 
   private static boolean inFunArgList(PsiElement psiElement) {
@@ -115,8 +189,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (narrowestParentScopeOwner instanceof ErlangFunClause) {
       ErlangArgumentDefinition funName = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
       if (((ErlangFunClause) narrowestParentScopeOwner).getArgumentDefinition() == funName) {
-        // the name of a named fun is declared by its first clause only
-        return funName != null && PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null;
+        // the name of a named fun is declared by its first clause only and is visible only inside that fun
+        if (funName == null) return false;
+        if (PsiTreeUtil.getPrevSiblingOfType(narrowestParentScopeOwner, ErlangFunClause.class) != null) return true;
+        ErlangFunExpression funExpression = PsiTreeUtil.getParentOfType(narrowestParentScopeOwner, ErlangFunExpression.class);
+        return !PsiTreeUtil.isAncestor(funExpression, myOrigin, false);
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {

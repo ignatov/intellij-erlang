@@ -53,9 +53,9 @@
 
         <!-- file types -->
         <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
-        <fileType language="Erlang" name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
-        <fileType language="Erlang" name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
-        <fileType language="Erlang" name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
+        <fileType name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
+        <fileType name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
+        <fileType name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
 
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
         <iconProvider implementation="org.intellij.erlang.icons.ErlangIconProvider"/>
@@ -90,6 +90,7 @@
         <typedHandler implementation="org.intellij.erlang.editor.ErlangTypedHandler" id="ErlangBinary"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterInCommentsHandler" id="ErlangEnterInComments"/>
         <enterHandlerDelegate implementation="org.intellij.erlang.editor.ErlangEnterHandler" id="ErlangEnter"/>
+        <joinLinesHandler implementation="org.intellij.erlang.editor.ErlangCommentJoinLinesHandler" id="ErlangCommentJoinLines"/>
         <enterBetweenBracesDelegate language="Erlang" implementationClass="org.intellij.erlang.editor.ErlangEnterBetweenBracesDelegate" id="ErlangEnterBwetweenBraces"/>
 
         <extendWordSelectionHandler implementation="org.intellij.erlang.editor.ErlangWordSelectioner" order="last"/>
@@ -284,12 +285,15 @@
         <localInspection language="Erlang" shortName="ErlangConflictingBehaviours" displayName="Conflicting behaviours"
                          groupName="Erlang" enabledByDefault="true" level="WARNING"
                          implementationClass="org.intellij.erlang.inspection.ErlangConflictingBehavioursInspection"/>
+        <localInspection language="Erlang" shortName="ErlangSingleClauseCase" displayName="Single-clause 'case' expression"
+                         groupName="Erlang" enabledByDefault="false" level="WEAK WARNING"
+                         implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
+        <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
 
-        <fileTypeStatisticProvider implementation="org.intellij.erlang.ErlangFileTypeStatisticsProvider"/>
         <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
 
         <intentionAction>
@@ -315,6 +319,30 @@
         <additionalTextAttributes scheme="Default" file="colorSchemes/ErlangDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ErlangDarcula.xml"/>
     </extensions>
+    <!-- Opt-in usage statistics: one summary of counts a day, see PRIVACY.md -->
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="org.intellij.erlang.statistics.ErlangUsageListeners$Startup"/>
+    </extensions>
+    <applicationListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageActionListener"
+                  topic="com.intellij.openapi.actionSystem.ex.AnActionListener"/>
+    </applicationListeners>
+    <projectListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Completion"
+                  topic="com.intellij.codeInsight.lookup.LookupManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Execution"
+                  topic="com.intellij.execution.ExecutionListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Debugger"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Build"
+                  topic="com.intellij.task.ProjectTaskListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$StructureView"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$LiveTemplates"
+                  topic="com.intellij.codeInsight.template.TemplateManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$OpenedFiles"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
                 text="Erlang File" description="Create new Erlang file">

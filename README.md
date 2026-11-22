@@ -8,7 +8,7 @@ and other IntelliJ-based products
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
 ## Requirements
-- IntelliJ IDEA 2026.1, 2026.2 or 2026.3
+- IntelliJ IDEA 2026.2 or 2026.3
 - Java 21 or later (bundled with the IDE)
 
 ## For Developers

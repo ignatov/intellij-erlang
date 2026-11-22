@@ -18,10 +18,10 @@ package org.intellij.erlang.application.ui;
 
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.ui.HideableTitledPanel;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -36,21 +36,22 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   private JTextField myErlFlagsTextField;
   private JCheckBox myStopErlangInterpreterCheckBox;
   @SuppressWarnings("unused")
-  private HideableTitledPanel myDebugOptionsHideablePanel;
+  private DialogPanel myDebugOptionsHideablePanel;
   private TextFieldWithBrowseButton myWorkingDirectoryComponent;
   private EnvironmentVariablesComponent myEnvironmentVariablesComponent;
   private JCheckBox myUseTestsCodePathCheckBox;
 
-  public ErlangRunConfigurationEditorForm(){
+  public ErlangRunConfigurationEditorForm(@NotNull Project project) {
+    super(project);
     ErlangUiUtil.installWorkingDirectoryChooser(myWorkingDirectoryComponent, null);
   }
 
   @Override
   protected void doResetEditorFrom(ErlangApplicationConfiguration configuration) {
-    myComboModules.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    ErlangUiUtil.fillModules(myComboModules, configuration.getProject());
     myComboModules.setSelectedModule(configuration.getConfigurationModule().getModule());
     myParamsField.setText(configuration.getParams());
-    myStopErlangInterpreterCheckBox.setSelected(configuration.stopErlang());
+    myStopErlangInterpreterCheckBox.setSelected(configuration.isStopErlang());
     myModuleAndFunctionField.setText(configuration.getModuleAndFunction());
     myErlFlagsTextField.setText(configuration.getErlFlags());
     myWorkingDirectoryComponent.setText(configuration.getWorkDirectory());
@@ -82,6 +83,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
   }
 
   private void createUIComponents() {
-    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel();
+    myDebugOptionsHideablePanel = createDebugOptionsHideablePanel(false);
+    myEnvironmentVariablesComponent = createEnvironmentVariablesComponent();
   }
 }

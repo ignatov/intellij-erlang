@@ -26,6 +26,7 @@ import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangTypedRecordFields;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
@@ -37,6 +38,7 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement element = descriptor.getPsiElement();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     if (recordExpression != null) {

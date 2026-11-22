@@ -54,10 +54,16 @@ public final class RebarConfigUtil {
   @NotNull
   public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
     final List<String> dependencyAppNames = new ArrayList<>();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", tuplesList -> {
-      List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
-      for (ErlangTupleExpression namedTuple : dependencyTuples) {
-        dependencyAppNames.add(ErlangTermFileUtil.getNameOfNamedTuple(namedTuple));
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", depsList -> {
+      if (!(depsList instanceof ErlangListExpression)) return;
+      for (ErlangExpression dependency : ((ErlangListExpression) depsList).getExpressionList()) {
+        String name = ErlangTermFileUtil.getNameOfNamedTuple(dependency);
+        if (name == null && dependency instanceof ErlangConfigExpression) {
+          PsiElement qAtom = dependency.getFirstChild();
+          ErlangAtom atom = qAtom instanceof ErlangQAtom ? ((ErlangQAtom) qAtom).getAtom() : null;
+          name = atom != null ? atom.getName() : null;
+        }
+        ContainerUtil.addIfNotNull(dependencyAppNames, name);
       }
     });
     return dependencyAppNames;

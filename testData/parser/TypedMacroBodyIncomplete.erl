@@ -1,0 +1,3 @@
+-define(TY, name ::).
+-define(U, name :: a |).
+-define(V, name = 1 ::).

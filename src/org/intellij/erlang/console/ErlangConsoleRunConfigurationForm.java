@@ -17,13 +17,11 @@
 package org.intellij.erlang.console;
 
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.ui.RawCommandLineEditor;
 import com.intellij.ui.SimpleListCellRenderer;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +48,7 @@ public final class ErlangConsoleRunConfigurationForm extends SettingsEditor<Erla
   protected void resetEditorFrom(@NotNull ErlangConsoleRunConfiguration config) {
     myModuleComboBox.removeAllItems();
     for (Module module : config.getValidModules()) {
-      if (ModuleType.get(module) == ErlangModuleType.getInstance()) {
+      if (ErlangUiUtil.isErlangModuleChoice(module)) {
         myModuleComboBox.addItem(module);
       }
     }
