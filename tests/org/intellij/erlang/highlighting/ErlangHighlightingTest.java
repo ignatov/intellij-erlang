@@ -324,6 +324,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
   }
 
+  // issue 1448: a macro that expands to the start of a tuple closed by each clause
+  public void testFragmentMacroInFunctionClauses() { doTest(); }
+
   private ErlangTypeRef findTypeRef(String typeText) {
     for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
       if (ref.getParent().getText().equals(typeText)) return ref;
