@@ -16,11 +16,16 @@
 
 package org.intellij.erlang.utils;
 
+import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.NlsContexts;
+import org.intellij.erlang.module.ErlangModuleType;
+import org.intellij.erlang.sdk.ErlangSystemUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +36,22 @@ public class ErlangUiUtil {
   public static void installWorkingDirectoryChooser(@NotNull TextFieldWithBrowseButton on, @Nullable Project project) {
     FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
     addBrowseFolderListener(on, "Choose Working Directory", null, project, descriptor);
+  }
+
+  /**
+   * Small IDEs have no Erlang module type (it needs the Java module), so any module can be chosen there.
+   */
+  public static void fillModules(@NotNull ModulesComboBox comboBox, @NotNull Project project) {
+    if (ErlangSystemUtil.isSmallIde()) {
+      comboBox.fillModules(project);
+    }
+    else {
+      comboBox.fillModules(project, ErlangModuleType.getInstance());
+    }
+  }
+
+  public static boolean isErlangModuleChoice(@NotNull Module module) {
+    return ErlangSystemUtil.isSmallIde() || ModuleType.get(module) == ErlangModuleType.getInstance();
   }
 
   public static void addBrowseFolderListener(
