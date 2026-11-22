@@ -99,6 +99,15 @@ public class ErlangMacroLayerRenameTest extends ErlangLightPlatformCodeInsightFi
     assertTexts("s.erl", "-record(mr, {mf})", "-record(mr, {mf2})", "s.erl", "#mr{mf = 1}", "#mr{mf2 = 1}");
   }
 
+  /** #1486: after the fragment macro {@code setup?PAR}, the export of a function named by a macro argument is renamed too. */
+  public void testFunctionNamedInMacroArgumentAfterFragmentMacro() throws Exception {
+    myOriginal.put("greet.erl", read(Paths.get("testData/macroLayer/nav", "greet.erl")));
+    myFiles.put("greet.erl", myFixture.addFileToProject("nav/greet.erl", myOriginal.get("greet.erl")));
+    rename("greet.erl", "?DEF(hello)", 5, "hello2");
+    assertTexts("greet.erl", "?DEF(hello).", "?DEF(hello2).", "greet.erl", "hello/0", "hello2/0",
+                "greet.erl", "  hello(),", "  hello2(),");
+  }
+
   // ------------------------------------------------------------------------------------------------ header used by two files
 
   public void testFunctionNamedInHeaderMacroBody() {
