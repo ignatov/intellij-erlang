@@ -50,6 +50,9 @@ import java.util.List;
 import java.util.Set;
 
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
+  // predefined since OTP 25, both with one argument
+  private static final Set<String> FEATURE_MACROS = Set.of("FEATURE_ENABLED", "FEATURE_AVAILABLE");
+
   @NotNull
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
@@ -64,7 +67,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
-        if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
+        if (macrosName == null || isPredefined(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
         if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
@@ -84,7 +87,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         for (PsiReference r : ErlangBareMacroReference.find(o)) {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();
-          if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
+          if (isPredefined(name)) continue;
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
           if (ErlangMacroResolve.firstTarget(bare) == null) {
             // the conditionals around the use itself: for a file host, the host has no enclosing form
@@ -103,6 +106,10 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (message != null) registerProblem(holder, target, message, range, null);
       }
     };
+  }
+
+  private static boolean isPredefined(@NotNull String name) {
+    return ErlangPsiImplUtil.KNOWN_MACROS.contains(name) || FEATURE_MACROS.contains(name);
   }
 
   private static boolean isDefinedByEnclosingCondition(@NotNull PsiElement macros, @NotNull String name) {
