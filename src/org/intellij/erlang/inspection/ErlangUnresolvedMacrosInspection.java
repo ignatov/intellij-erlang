@@ -67,14 +67,13 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
-        if (macrosName == null) return;
-        if (FEATURE_MACROS.contains(macrosName.getText())) {
+        if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
+
+        PsiReference reference = o.getReference();
+        if (FEATURE_MACROS.contains(macrosName.getText()) && (reference == null || ErlangMacroResolve.firstTarget(reference) == null)) {
           checkFeatureArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
           return;
         }
-        if (ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
-
-        PsiReference reference = o.getReference();
         if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
@@ -93,7 +92,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
-          if (FEATURE_MACROS.contains(name)) {
+          if (FEATURE_MACROS.contains(name) && ErlangMacroResolve.firstTarget(bare) == null) {
             checkFeatureArity(o, bare.getNameElement(), name, range);
             continue;
           }
@@ -109,7 +108,10 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         }
       }
 
-      /** Epp's "argument mismatch for macro" for a use of a feature macro without exactly one argument, outside -define bodies. */
+      /**
+       * Epp's "argument mismatch for macro" for a use of a predefined feature macro (no -define of the name resolves)
+       * without exactly one argument, outside -define bodies.
+       */
       private void checkFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
         if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);

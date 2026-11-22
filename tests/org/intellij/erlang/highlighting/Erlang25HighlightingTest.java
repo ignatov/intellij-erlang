@@ -60,4 +60,16 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     enableUnresolvedMacroInspection();
     doTest();
   }
+
+  public void testUnresolvedMacrosFeatureOwnDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureOwnDefineLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureOwnDefine.erl");
+  }
 }
