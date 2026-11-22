@@ -289,10 +289,11 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   public PsiReference @NotNull [] getReferences() {
     PsiReference[] own = super.getReferences();
     if (!isContentsLoaded()) return own;
-    // Without read access no answer of the layer, and none kept in the cache below for later callers
-    if (ErlangMacroLayer.noReadAccess()) return own;
+    // with the layer off or without read access, master's references and nothing kept in the cache below; the cache
+    // also depends on the switch, so a flip drops it
+    if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return own;
     PsiReference[] bare = CachedValuesManager.getCachedValue(
-      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this));
+      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this, ErlangMacroLayer.modeTracker()));
     return ErlangMacroLayerTokenReference.append(this, bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare));
   }
 

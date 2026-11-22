@@ -3,13 +3,17 @@ package org.intellij.erlang.macrolayer;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.SimpleModificationTracker;
 import com.intellij.openapi.util.registry.Registry;
+import com.intellij.openapi.util.registry.RegistryValue;
+import com.intellij.openapi.util.registry.RegistryValueListener;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The switch of the macro layer and its settings. The switch is the Registry key {@link #REGISTRY_KEY} (default on),
@@ -107,7 +111,25 @@ final class ErlangMacroLayerSettings {
     if (m != null) return m;
     if (OVERRIDE_MODE != null) return OVERRIDE_MODE;
     if (ApplicationManager.getApplication() == null) return ErlangMacroLayer.Mode.LAYER;
+    listenToTheKey();
     return Registry.is(REGISTRY_KEY, true) ? ErlangMacroLayer.Mode.LAYER : ErlangMacroLayer.Mode.OFF;
+  }
+
+  /**
+   * Moves whenever the mode may have changed (the Registry key flipped, a test set or restored the mode): a cached
+   * value that depends on the switch lists it as a dependency, so a flip drops it at once, both ways.
+   */
+  static final SimpleModificationTracker MODE_TRACKER = new SimpleModificationTracker();
+  private static final AtomicBoolean LISTENING = new AtomicBoolean();
+
+  private static void listenToTheKey() {
+    if (LISTENING.get() || !LISTENING.compareAndSet(false, true)) return;
+    Registry.get(REGISTRY_KEY).addListener(new RegistryValueListener() {
+      @Override
+      public void afterValueChanged(@NotNull RegistryValue value) {
+        MODE_TRACKER.incModificationCount();
+      }
+    }, ApplicationManager.getApplication());
   }
 
   public static boolean isEnabled() {
@@ -122,6 +144,10 @@ final class ErlangMacroLayerSettings {
   public static void setModeForTests(@NotNull ErlangMacroLayer.Mode mode, @NotNull Disposable parent) {
     ErlangMacroLayer.Mode previous = ourTestMode;
     ourTestMode = mode;
-    Disposer.register(parent, () -> ourTestMode = previous);
+    MODE_TRACKER.incModificationCount();
+    Disposer.register(parent, () -> {
+      ourTestMode = previous;
+      MODE_TRACKER.incModificationCount();
+    });
   }
 }

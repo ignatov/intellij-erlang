@@ -119,6 +119,11 @@ public final class ErlangMacroLayer {
     return ErlangMacroLayerSettings.isEnabled();
   }
 
+  /** Moves whenever the switch may have changed: a dependency of every cached value that depends on it. */
+  public static @NotNull ModificationTracker modeTracker() {
+    return ErlangMacroLayerSettings.MODE_TRACKER;
+  }
+
   public static boolean isRemoteEnabled() {
     return ErlangMacroLayerSettings.isRemoteEnabled();
   }
