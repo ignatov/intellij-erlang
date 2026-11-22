@@ -69,6 +69,9 @@ public final class ErlangUpdateNotice {
 
     boolean isRestartCapable();
 
+    // restarts the IDE; with exitConfirmed it does not ask "Are you sure you want to exit?"
+    void restart(boolean exitConfirmed);
+
     // asks the plugin repository, on a background thread; null when there is no update or the question failed
     @Nullable
     Update findUpdate();
@@ -198,6 +201,11 @@ public final class ErlangUpdateNotice {
     InstallResult result = update.installer().install(indicator);
     if (result.installed()) ui.installed(update, myPlatform.isRestartCapable());
     else ui.notInstalled(update, notInstalledText(update, result.reasonHtml()));
+  }
+
+  // the user pressed Restart: the question whether to exit is already answered
+  void restartPressed() {
+    myPlatform.restart(true);
   }
 
   void installCancelled(@NotNull Update update, @NotNull Ui ui) {

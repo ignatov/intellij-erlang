@@ -25,6 +25,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ex.ApplicationManagerEx;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.diagnostic.ControlFlowException;
 import com.intellij.openapi.diagnostic.Logger;
@@ -220,6 +221,11 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
       return ApplicationManager.getApplication().isRestartCapable();
     }
 
+    @Override
+    public void restart(boolean exitConfirmed) {
+      ApplicationManagerEx.getApplicationEx().restart(exitConfirmed);
+    }
+
     @Nullable
     @Override
     public Update findUpdate() {
@@ -273,7 +279,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
         Notification offer = myOffer;
         if (offer != null) offer.expire();
         Notification notification = notification(INSTALLED_TITLE, installedText(update), NotificationType.INFORMATION);
-        if (offerRestart) notification.addAction(NotificationAction.createSimpleExpiring("Restart", () -> ApplicationManager.getApplication().restart()));
+        if (offerRestart) notification.addAction(NotificationAction.createSimpleExpiring("Restart", myNotice::restartPressed));
         notification.notify(project());
       });
     }

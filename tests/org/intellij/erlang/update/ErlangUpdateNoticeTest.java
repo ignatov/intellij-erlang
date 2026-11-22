@@ -167,6 +167,12 @@ public class ErlangUpdateNoticeTest extends TestCase {
     assertEquals(List.of(ErlangUsageKey.UPDATE_NOTICE_SHOWN, ErlangUsageKey.UPDATE_NOTICE_INSTALL), myUi.counted);
   }
 
+  public void testRestartDoesNotAskAgain() {
+    myNotice.restartPressed();
+    // the user pressed Restart: the IDE must not ask "Are you sure you want to exit?"
+    assertEquals(List.of("restart, exit confirmed"), myPlatform.restarts);
+  }
+
   public void testInstallWithoutRestartWhenTheIdeCannotRestart() {
     myPlatform.restartCapable = false;
     myNotice.install(myPlatform.update, null, myUi);
@@ -262,6 +268,7 @@ public class ErlangUpdateNoticeTest extends TestCase {
     boolean restartCapable = true;
     Update update;
     int questions;
+    final List<String> restarts = new ArrayList<>();
 
     @Override
     public boolean isAllowedEnvironment() {
@@ -286,6 +293,11 @@ public class ErlangUpdateNoticeTest extends TestCase {
     @Override
     public boolean isRestartCapable() {
       return restartCapable;
+    }
+
+    @Override
+    public void restart(boolean exitConfirmed) {
+      restarts.add(exitConfirmed ? "restart, exit confirmed" : "restart, ask to exit");
     }
 
     @Nullable
