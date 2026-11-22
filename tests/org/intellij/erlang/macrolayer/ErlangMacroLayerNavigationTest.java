@@ -202,4 +202,22 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
     }
     assertEquals("", failures.toString());
   }
+
+  /** #1486: the module of the issue; usages of {@code hello()} made by {@code ?DEF(hello).} include its export. */
+  public void testUsagesOfFunctionNamedByMacroArgumentIncludeExport() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet.erl", read(Paths.get("testData/macroLayer/nav", "greet.erl")));
+    myFiles.put("greet.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet.erl:11:hello greet.erl:2:hello", usages(startAt("greet.erl", "hello(),", 0)));
+  }
+
+  /** #1486: the export entry {@code hello/0} goes to {@code hello} in {@code ?DEF(hello).}, not to the call. */
+  public void testExportOfFunctionNamedByMacroArgumentAfterFragmentMacro() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet.erl", read(Paths.get("testData/macroLayer/nav", "greet.erl")));
+    myFiles.put("greet.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet.erl:18:hello", navigate("greet.erl", "hello/0", 0));
+  }
 }

@@ -305,4 +305,22 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
     assertTrue(got.toString(), got.containsAll(List.of("Abc1", "Abc2")));
     assertEquals(taken0, takenOver());
   }
+
+  /**
+   * #1486: after {@code setup?PAR,} the recovery makes {@code hello().} a function, and {@code ?DEF(hello).} makes
+   * hello/0: it is offered once.
+   */
+  public void testFunctionMadeByMacroAndByRecoveryIsOfferedOnce() throws Exception {
+    String greet = read(java.nio.file.Paths.get("testData/macroLayer/nav", "greet.erl")).replace("-module(greet).", "-module(m).");
+    List<String> got = complete(greet.replace("io:format(\"ready~n\").", "hel<caret>,\n  io:format(\"ready~n\")."));
+    assertEquals(got.toString(), 1, Collections.frequency(got, "hello"));
+  }
+
+  /** #1486: another module that exports hello/0 does not hide the hello/0 that ?DEF(hello). makes here. */
+  public void testFunctionMadeByMacroIsOfferedWhenAnotherModuleExportsItToo() {
+    myFixture.addFileToProject("c/other.erl", "-module(other).\n-export([hello/0]).\nhello() -> ok.\n");
+    List<String> got = complete("-module(m).\n-export([start/0, hello/0]).\n-define(DEF(Name), Name() -> ok).\n" +
+                                "start() ->\n  hel<caret>,\n  ok.\n?DEF(hello).\n");
+    assertTrue(got.toString(), got.containsAll(List.of("hello", "other:hello")));
+  }
 }

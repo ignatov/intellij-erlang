@@ -269,7 +269,7 @@ public final class ErlangMacroLayer {
           int at = id.getTextRange().getStartOffset();
           if (expansion.kindAt(at) == ErlangMacroExpander.SRC_VERBATIM) continue;
           if (!isUsableTarget(at)) continue;
-          if (realFile instanceof ErlangFile rf && rf.getFunction(fn.getName(), fn.getArity()) != null) continue;
+          if (realFile instanceof ErlangFile rf && isSourceFunction(rf, rf.getFunction(fn.getName(), fn.getArity()))) continue;
           PsiElement real = toReal(fn);
           if (real != null) map.put(key, real);
         }
@@ -1053,6 +1053,22 @@ public final class ErlangMacroLayer {
       }
     }
     return r;
+  }
+
+  /** A function of the real file that is one of the source, not one the recovery made from the rest of a split form. */
+  private static boolean isSourceFunction(@NotNull ErlangFile file, @Nullable ErlangFunction function) {
+    return function != null && !(function.getParent() == file && continuesASplitForm(function));
+  }
+
+  /**
+   * A top-level function that the recovery made from the rest of a split form ({@code setup?PAR, hello().}) while a
+   * macro makes a function of the same name and arity ({@code ?DEF(hello).}): references to the name go to that one.
+   */
+  public static boolean isHiddenByMadeFunction(@NotNull ErlangFunction function) {
+    ErlangFile file = layerFile(function);
+    if (file == null || isSourceFunction(file, function)) return false;
+    Copy copy = getCopy(file, "split-form-function");
+    return copy != null && copy.functionsMadeByMacros().containsKey(function.getName() + "/" + function.getArity());
   }
 
   /** The top-level element continues a form that the parser's recovery split: the element before it ends no form. */
