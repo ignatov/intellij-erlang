@@ -37,4 +37,9 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang25SyntaxInspection();
     doTest();
   }
+
+  public void testUnresolvedMacrosFeature() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
 }
