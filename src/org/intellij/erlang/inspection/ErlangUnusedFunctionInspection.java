@@ -26,6 +26,7 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
@@ -47,6 +48,8 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
     for (ErlangFunction function : file.getFunctions()) {
+      // with the macro layer, a "function" named by a macro use (guarded3(X) ?HH2(X) -> X.) is the parser's recovery
+      if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?")) continue;
       if (!isUnusedFunction(file, function)) continue;
 
       PsiElement identifier = function.getNameIdentifier();

@@ -86,4 +86,16 @@ public class ErlangMacroLayerTypedStateTest extends ErlangLightPlatformCodeInsig
     List<String> typed = highlights(f);
     assertEquals("the typed state equals a fresh project", fresh("fresh2", BEFORE), typed);
   }
+
+  /**
+   * F8: a "function" whose name is a macro use ({@code guarded3(X) ?HH2(X) -> X.} parses as a function named ?HH2) is
+   * not reported as unused: it is the parser's recovery, not a function of the source. Its warning sat on the same
+   * range as "Unresolved macros '?HH2'" once the include broke, so which one stayed depended on the order of passes.
+   */
+  public void testNoUnusedFunctionNamedByAMacroUse() {
+    myFixture.addFileToProject("named/h2.hrl", HEADER);
+    PsiFile f = myFixture.addFileToProject("named/m.erl", BEFORE);
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    for (String h : highlights(f)) assertFalse(h, h.contains("Unused function '?HH2/1'"));
+  }
 }
