@@ -23,6 +23,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.util.RefactoringDescriptionLocation;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
@@ -34,8 +36,14 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Set;
+
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   private final static Logger LOG = Logger.getInstance(ErlangDescriptionProvider.class);
+  // the reserved words of Erlang, which an atom must quote
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div",
+    "else", "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
 
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
@@ -62,7 +70,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
       if (o instanceof ErlangTypeRef) return o.getText();
-      if (isFunctionReferenceOwner(o)) return o.getText();
+      if (isFunctionReferenceOwner(o)) return describeFunctionReferenceOwner(o);
       if (o instanceof ErlangAttribute) {
         ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
         if (spec != null) return spec.getName();
@@ -92,6 +100,22 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     // which the platform's presentation of a documentation or navigation target can reach with any Erlang element)
     LOG.debug("No description of " + o.getClass().getSimpleName() + " for " + location.getClass().getSimpleName());
     return null;
+  }
+
+  // name/arity, not the raw text of the owner, which keeps the arguments of a call and the line breaks and spaces of
+  // the source (#1467); a spec gives its name only
+  @NotNull
+  private static String describeFunctionReferenceOwner(@NotNull PsiElement o) {
+    PsiReference reference = o instanceof ErlangSpecFun ? null : o.getReference();
+    if (reference instanceof ErlangFunctionReference ref && ref.getArity() >= 0) {
+      // quoted only when the atom needs quotes, as erlc writes it: 'abs'(1) gives abs/1, erlang:'+'(1, 2) gives '+'/2
+      // and erlang:'not'(true) gives 'not'/1 (toAtomName takes a reserved word for a plain atom)
+      String name = ref.getName();
+      if (RESERVED_WORDS.contains(name)) return "'" + name + "'/" + ref.getArity();
+      return ErlangPsiImplUtil.toAtomName(name) != null ? ref.getSignature() : name + "/" + ref.getArity();
+    }
+    ErlangQAtom qAtom = PsiTreeUtil.getChildOfType(o, ErlangQAtom.class);
+    return qAtom != null ? qAtom.getText() : o.getText();
   }
 
   private static boolean isFunctionReferenceOwner(@NotNull PsiElement o) {
