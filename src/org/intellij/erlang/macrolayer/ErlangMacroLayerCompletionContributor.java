@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * The copy is the layer's copy of the real file, under the layer's build rule: an explicit completion builds it if it
  * is not there (cancellably); the auto-popup is a passive query: while the file is typed in it waits for the copy that
- * the daemon builds and starts no build (see {@code ErlangMacroLayer.awaitWhileTyped}). The cost per completion in such
+ * the daemon builds and starts no build (see {@code ErlangMacroLayerCopies.awaitWhileTyped}). The cost per completion in such
  * a form is one parse of the expanded text with the dummy identifier (the keyword provider already parses the text
  * before the caret once per completion).
  */

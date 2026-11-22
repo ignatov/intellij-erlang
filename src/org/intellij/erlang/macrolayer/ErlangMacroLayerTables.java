@@ -55,9 +55,8 @@ import java.util.function.Supplier;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.index.ErlangModuleIndex;
-import org.intellij.erlang.macrolayer.ErlangMacroLayer.Build;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer.Copy;
-import org.intellij.erlang.macrolayer.ErlangMacroLayer.CopyHolder;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerCopies.CopyHolder;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer.Mode;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer.Outcome;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer.Table;
@@ -341,15 +340,15 @@ final class ErlangMacroLayerTables {
     String refusal = ErlangMacroLayerCallers.nonCancellableCaller();
     if (ErlangMacroLayerCallers.NO_INDICATOR.equals(refusal)) {
       // Under an indicator of its own that a write action cancels
-      return ErlangMacroLayer.underOwnIndicator(() -> table0(file, explicit), file, "table");
+      return ErlangMacroLayerCopies.underOwnIndicator(() -> table0(file, explicit), file, "table");
     }
-    if (refusal == null && cache.building.get() == null && !explicit) refusal = ErlangMacroLayer.buildRefusal(file);
-    if (ErlangMacroLayer.TYPING.equals(refusal) && ErlangMacroLayer.lastTableNeedsCopy(cache)) {
+    if (refusal == null && cache.building.get() == null && !explicit) refusal = ErlangMacroLayerCopies.buildRefusal(file);
+    if (ErlangMacroLayerCopies.TYPING.equals(refusal) && ErlangMacroLayerCopies.lastTableNeedsCopy(cache)) {
       // A passive query waits for the table of this version (the daemon builds it) rather
       // than give an answer that the platform would keep (see awaitWhileTyped); only in a file whose last table had a
       // form that needs the copy: elsewhere master's answer is the layer's answer
       TableEntry before = cache.entry;
-      if (ErlangMacroLayer.awaitWhileTyped(file, () -> cache.building.get() != null || cache.entry != before, "table")) return table0(file, explicit);
+      if (ErlangMacroLayerCopies.awaitWhileTyped(file, () -> cache.building.get() != null || cache.entry != before, "table")) return table0(file, explicit);
     }
     if (refusal != null) {
       ErlangMacroLayerStats.phase("table-skipped:" + refusal, file.getName(), 0);
@@ -394,7 +393,7 @@ final class ErlangMacroLayerTables {
       }
       if (other.thread() == Thread.currentThread()) return computeTable(file);
       // both threads hold a read action: no change between the other thread's computation and this question
-      Table t = ErlangMacroLayer.awaitCancellably(other.result());
+      Table t = ErlangMacroLayerCopies.awaitCancellably(other.result());
       if (t != null) return t;
     }
   }

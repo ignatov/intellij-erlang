@@ -47,7 +47,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
   public static final AtomicLong DIRECTIVE_CHECKS = new AtomicLong();
 
   private final Project myProject;
-  private final LinkedHashMap<ErlangMacroLayer.CopyHolder, Boolean> myLru = new LinkedHashMap<>(32, 0.75f, true);
+  private final LinkedHashMap<ErlangMacroLayerCopies.CopyHolder, Boolean> myLru = new LinkedHashMap<>(32, 0.75f, true);
   private final Map<VirtualFile, DirectiveTracker> myTrackers = new ConcurrentHashMap<>();
 
   public ErlangMacroLayerRetention(@NotNull Project project) {
@@ -71,7 +71,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
       public void documentChanged(@NotNull DocumentEvent event) {
         // a replacement by the same text (as a test fixture's setText) is no key press
         if (!StringUtil.equals(event.getOldFragment(), event.getNewFragment())) {
-          ErlangMacroLayer.documentChanged(event.getDocument());
+          ErlangMacroLayerCopies.documentChanged(event.getDocument());
           VirtualFile file = FileDocumentManager.getInstance().getFile(event.getDocument());
           noteChanged(file);
           if (file != null && isBuildConfig(file.getName())) myBuildConfigVersion.incrementAndGet();
@@ -186,12 +186,12 @@ public final class ErlangMacroLayerRetention implements Disposable {
     return project.getService(ErlangMacroLayerRetention.class);
   }
 
-  synchronized void touch(@NotNull ErlangMacroLayer.CopyHolder holder, @NotNull ErlangMacroLayer.Copy copy) {
+  synchronized void touch(@NotNull ErlangMacroLayerCopies.CopyHolder holder, @NotNull ErlangMacroLayer.Copy copy) {
     holder.strong = copy;
     if (!myLru.containsKey(holder) && holder.file != null) {
       // a new holder for a file: the holders of its older versions are stale; let their copies go
-      for (Iterator<ErlangMacroLayer.CopyHolder> old = myLru.keySet().iterator(); old.hasNext(); ) {
-        ErlangMacroLayer.CopyHolder h = old.next();
+      for (Iterator<ErlangMacroLayerCopies.CopyHolder> old = myLru.keySet().iterator(); old.hasNext(); ) {
+        ErlangMacroLayerCopies.CopyHolder h = old.next();
         if (holder.file.equals(h.file)) {
           h.strong = null;
           old.remove();
@@ -199,18 +199,18 @@ public final class ErlangMacroLayerRetention implements Disposable {
       }
     }
     myLru.put(holder, Boolean.TRUE);
-    Iterator<ErlangMacroLayer.CopyHolder> it = myLru.keySet().iterator();
+    Iterator<ErlangMacroLayerCopies.CopyHolder> it = myLru.keySet().iterator();
     while (myLru.size() > STRONG && it.hasNext()) {
-      ErlangMacroLayer.CopyHolder eldest = it.next();
+      ErlangMacroLayerCopies.CopyHolder eldest = it.next();
       eldest.strong = null;
       it.remove();
     }
   }
 
   synchronized void release(@NotNull VirtualFile file) {
-    Iterator<ErlangMacroLayer.CopyHolder> it = myLru.keySet().iterator();
+    Iterator<ErlangMacroLayerCopies.CopyHolder> it = myLru.keySet().iterator();
     while (it.hasNext()) {
-      ErlangMacroLayer.CopyHolder h = it.next();
+      ErlangMacroLayerCopies.CopyHolder h = it.next();
       if (file.equals(h.file)) {
         h.strong = null;
         it.remove();
@@ -220,7 +220,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
 
   @TestOnly
   public synchronized void releaseAll() {
-    for (ErlangMacroLayer.CopyHolder h : myLru.keySet()) h.strong = null;
+    for (ErlangMacroLayerCopies.CopyHolder h : myLru.keySet()) h.strong = null;
     myLru.clear();
   }
 
