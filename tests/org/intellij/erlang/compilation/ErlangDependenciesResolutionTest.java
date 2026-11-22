@@ -125,7 +125,15 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertOrderedEquals(erlangModules, "pt", "m");
   }
 
-  public void testMutualIncludesThroughModule() {
+  // b.hrl declares the behaviour of beh.erl, which includes it: erlc compiles beh.erl with only a warning (#1469).
+  public void testMutualIncludesThroughModule() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "beh");
+  }
+
+  public void testMutualIncludesThroughParseTransform() {
     try {
       ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");
@@ -145,6 +153,13 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
                                                           path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
     assertOrderedEquals(erlangModules, "n");
+  }
+
+  public void testSelfBehaviourInHeaderIncludedByOtherModule() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "n", "a");
   }
 
   public void testTestsDependency() throws Exception {
