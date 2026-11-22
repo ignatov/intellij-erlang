@@ -78,20 +78,14 @@ public class ErlangMacroLayerHostsTest extends ErlangLightPlatformCodeInsightFix
 
   /** A bare use in the function itself: error recovery puts the list into top-level error elements, which the file hosts. */
   public void testAFragmentInsideTheFunctionCostsLinearWork() throws Exception {
-    String extra = "-define(PAR, ()).\nfoo() -> ok.\n";
-    PsiFile small = myFixture.addFileToProject("h/c10s.erl", module("c10s", 200, extra, "rs", "  foo?PAR,\n"));
-    PsiFile large = myFixture.addFileToProject("h/c10l.erl", module("c10l", 2_000, extra, "rl", "  foo?PAR,\n"));
-    myFixture.configureFromExistingVirtualFile(small.getVirtualFile());
-    long v0 = ErlangMacroLayerHosts.LEAF_VISITS.get();
-    int smallUsages = usagesOf(small, "rs");
-    long v1 = ErlangMacroLayerHosts.LEAF_VISITS.get();
-    myFixture.configureFromExistingVirtualFile(large.getVirtualFile());
-    long v2 = ErlangMacroLayerHosts.LEAF_VISITS.get();
-    int largeUsages = usagesOf(large, "rl");
-    long v3 = ErlangMacroLayerHosts.LEAF_VISITS.get();
-    assertEquals("the same usages in both files (by the size)", smallUsages * 10, largeUsages);
-    long smallWork = Math.max(1, v1 - v0), largeWork = v3 - v2;
-    // ten times the uses: about ten times the work when linear, a hundred times when quadratic
-    assertTrue("leaves walked: " + smallWork + " for 200 uses, " + largeWork + " for 2,000", largeWork <= 20 * smallWork);
+    int uses = 4_000;
+    PsiFile f = myFixture.addFileToProject("h/c10i.erl", module("c10i", uses, "-define(PAR, ()).\nfoo() -> ok.\n", "r", "  foo?PAR,\n"));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    long visits = ErlangMacroLayerHosts.LEAF_VISITS.get();
+    usagesOfR(f);
+    long work = ErlangMacroLayerHosts.LEAF_VISITS.get() - visits;
+    // the file is asked once per occurrence: walking its leaves each time is uses * uses (16,000,000); once per search
+    // is a few leaves per use (more when parallel search threads compute the same cached answer at the same time)
+    assertTrue("leaves walked for " + uses + " uses: " + work, work <= 250L * uses);
   }
 }

@@ -1,6 +1,8 @@
 package org.intellij.erlang.psi.impl;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
@@ -64,6 +66,16 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
     // most elements host nothing: a per-file answer, without a scan of the children
     boolean mayHost = ErlangMacroLayerHosts.mayHostBareUse(host);
     if (!mayHost && !(host instanceof PsiFile)) return PsiReference.EMPTY_ARRAY;
+    // find usages asks every ancestor of every occurrence: a host answers from the cache, which depends on its file's tree
+    // (the file host is kept by ErlangFileImpl)
+    if (!(host instanceof PsiFile)) {
+      return CachedValuesManager.getCachedValue(host, () -> CachedValueProvider.Result.create(uses(host, host.getNode(), true), host.getContainingFile(),
+                                                                                              ErlangMacroLayer.modeTracker()));
+    }
+    return uses(host, node, mayHost);
+  }
+
+  private static PsiReference @NotNull [] uses(@NotNull PsiElement host, @NotNull ASTNode node, boolean mayHost) {
     List<PsiReference> result = new SmartList<>();
     if (host instanceof PsiFile) addSplitUses(host, result);
     if (!mayHost || !mayHold(node)) return result.isEmpty() ? PsiReference.EMPTY_ARRAY : result.toArray(PsiReference.EMPTY_ARRAY);

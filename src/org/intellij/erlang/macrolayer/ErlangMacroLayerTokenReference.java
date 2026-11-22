@@ -1,6 +1,14 @@
 package org.intellij.erlang.macrolayer;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.util.PsiModificationTracker;
+import com.intellij.psi.util.CachedValue;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.util.ModificationTracker;
+import com.intellij.openapi.util.Key;
+import com.intellij.openapi.roots.ProjectRootManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
@@ -44,6 +52,8 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   private static final TokenSet SKIPPED = TokenSet.orSet(ErlangParserDefinition.COMMENTS, TokenSet.create(TokenType.WHITE_SPACE));
   private static final TokenSet NAMES = TokenSet.create(ErlangTypes.ERL_VAR, ErlangTypes.ERL_ATOM_NAME);
 
+  private static final Key<CachedValue<PsiReference[]>> REFERENCES = Key.create("erlang.macro.layer.token.references");
+
   private final @NotNull PsiElement myLeaf;
 
   private ErlangMacroLayerTokenReference(@NotNull PsiElement host, @NotNull PsiElement leaf) {
@@ -54,6 +64,28 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   /** The references of the host's candidate tokens (empty when the layer is off or the token's form needs no copy). */
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
     if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
+    if (host instanceof ErlangAtom) return references(host); // one leaf at most
+    if (!ErlangMacroLayerHosts.mayHostToken(host)) return PsiReference.EMPTY_ARRAY;
+    // without a layer file (dumb mode, a header, a copy) every token of the host is answered no
+    ErlangFile file = ErlangMacroLayer.layerFile(host);
+    if (file == null) return PsiReference.EMPTY_ARRAY;
+    // answers from the last table are not kept
+    if (ErlangMacroLayerTables.hasOnlyAStaleTable(file)) return references(host);
+    // find usages asks every ancestor of every occurrence: a host with many tokens answers from the cache. The answer
+    // depends on the tree and on the table, which holds until the PSI, the VFS structure or the roots change; it is
+    // kept only when it came from a valid table (none on the UI thread, none when the build was refused).
+    return CachedValuesManager.getManager(host.getProject()).getCachedValue(host, REFERENCES, () -> {
+      PsiReference[] refs = references(host);
+      Project project = host.getProject();
+      return ErlangMacroLayerTables.hasAValidTable(file)
+             ? CachedValueProvider.Result.create(refs, PsiModificationTracker.getInstance(project), VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS,
+                                                 ProjectRootManager.getInstance(project), DumbService.getInstance(project).getModificationTracker(),
+                                                 ErlangMacroLayer.modeTracker())
+             : CachedValueProvider.Result.create(refs, ModificationTracker.EVER_CHANGED);
+    }, false);
+  }
+
+  private static PsiReference @NotNull [] references(@NotNull PsiElement host) {
     List<PsiElement> leaves = host instanceof PsiFile file
                               ? CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(candidates(file), file))
                               : candidates(host);
@@ -86,8 +118,6 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
       PsiElement name = atom.getNameIdentifier();
       return name.getNode().getElementType() == ErlangTypes.ERL_ATOM_NAME ? List.of(name) : List.of();
     }
-    // most elements host nothing: a per-file answer, without a scan of the children
-    if (!ErlangMacroLayerHosts.mayHostToken(host)) return List.of();
     ASTNode node = host.getNode();
     if (node == null || !hasForeignChild(node)) return List.of();
     List<ASTNode> seq = new ArrayList<>();

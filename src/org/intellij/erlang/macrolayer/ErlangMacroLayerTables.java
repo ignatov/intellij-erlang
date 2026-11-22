@@ -266,6 +266,28 @@ final class ErlangMacroLayerTables {
     final AtomicReference<TableBuild> building = new AtomicReference<>();
   }
 
+  /**
+   * The file has a table, but not a valid one: the answers about its forms come from the last table
+   * ({@link ErlangMacroLayer#formUsesMacroNoWait}), and a caller must not keep them.
+   */
+  static boolean hasOnlyAStaleTable(@NotNull ErlangFile file) {
+    TableCache cache = file.getUserData(TABLE_KEY);
+    return cache != null && cache.entry != null && currentTable(file, cache) == null;
+  }
+
+  /** The file has a valid table: the answers about its forms hold until the PSI, the VFS structure or the roots change. */
+  static boolean hasAValidTable(@NotNull ErlangFile file) {
+    TableCache cache = file.getUserData(TABLE_KEY);
+    return cache != null && currentTable(file, cache) != null;
+  }
+
+  private static @Nullable Table currentTable(@NotNull ErlangFile file, @NotNull TableCache cache) {
+    Project project = file.getProject();
+    return validTable(file, cache, PsiModificationTracker.getInstance(project).getModificationCount(),
+                      VirtualFileManager.VFS_STRUCTURE_MODIFICATIONS.getModificationCount(),
+                      ProjectRootManager.getInstance(project).getModificationCount());
+  }
+
   static @NotNull TableCache tableCache(@NotNull ErlangFile file) {
     TableCache c = file.getUserData(TABLE_KEY);
     return c != null ? c : ((UserDataHolderEx)file).putUserDataIfAbsent(TABLE_KEY, new TableCache());
