@@ -876,6 +876,22 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                """);
   }
 
+  public void testDescriptionsOfWordOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'not'/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'n<caret>ot'/1.
+                               """);
+  }
+
+  public void testDescriptionsOfWordOperatorInRemoteCall() {
+    doTestTargetDescriptions("'div'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'d<caret>iv'(4, 2).
+                               """);
+  }
+
   public void testDescriptionsOfNeedlesslyQuotedBifCall() {
     doTestTargetDescriptions("abs/1", """
                                -module(test).
