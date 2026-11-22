@@ -1,12 +1,16 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.SimpleModificationTracker;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.util.registry.RegistryValue;
 import com.intellij.openapi.util.registry.RegistryValueListener;
+import com.intellij.psi.PsiManager;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -128,8 +132,23 @@ final class ErlangMacroLayerSettings {
       @Override
       public void afterValueChanged(@NotNull RegistryValue value) {
         MODE_TRACKER.incModificationCount();
+        dropAnswersOfOpenProjects();
       }
     }, ApplicationManager.getApplication());
+  }
+
+  /**
+   * After a flip every open project asks again: the PSI caches (resolve results, cached references) are dropped and the
+   * highlighting restarts, so nothing that one mode computed is shown in the other.
+   */
+  private static void dropAnswersOfOpenProjects() {
+    ApplicationManager.getApplication().invokeLater(() -> {
+      for (Project project : ProjectManager.getInstance().getOpenProjects()) {
+        if (project.isDisposed()) continue;
+        PsiManager.getInstance(project).dropPsiCaches();
+        DaemonCodeAnalyzer.getInstance(project).restart();
+      }
+    });
   }
 
   public static boolean isEnabled() {
