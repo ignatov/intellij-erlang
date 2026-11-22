@@ -18,6 +18,7 @@ package org.intellij.erlang.sdk;
 
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkAdditionalData;
+import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl;
 import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.roots.ui.configuration.projectRoot.ProjectSdksModel;
 import com.intellij.openapi.util.SystemInfo;
@@ -25,6 +26,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.JpsErlangSdkType;
 import org.jdom.Element;
 
@@ -92,6 +94,18 @@ public class ErlangSdkTypeRootsTest extends BasePlatformTestCase {
     assertVersionNotDetected(home);
   }
 
+  // a start_erl.data that cannot be read is not used
+  public void testUnreadableStartErlDataWithoutErl() throws IOException {
+    File home = FileUtil.createTempDirectory("otp", null);
+    assertTrue(new File(home, "releases/start_erl.data").mkdirs());
+    assertVersionNotDetected(home);
+  }
+
+  public void testIconAndName() {
+    assertSame(ErlangIcons.FILE, ErlangSdkType.getInstance().getIcon());
+    assertEquals("Erlang SDK", ErlangSdkType.getInstance().getPresentableName());
+  }
+
   public void testEmptyHomeWithoutErl() throws IOException {
     assertVersionNotDetected(FileUtil.createTempDirectory("empty", null));
   }
@@ -113,6 +127,20 @@ public class ErlangSdkTypeRootsTest extends BasePlatformTestCase {
   public void testMissingHomeIsNotValid() throws IOException {
     File home = new File(FileUtil.createTempDirectory("otp", null), "missing");
     assertFalse(ErlangSdkType.getInstance().isValidSdkHome(home.getAbsolutePath()));
+  }
+
+  // what the SDK dialog runs when an SDK is added
+  public void testSetupSdkPaths() throws IOException {
+    File home = FileUtil.createTempDirectory("otp", null);
+    createFile(home, "lib/stdlib-1/src/a.erl");
+    assertNotNull(LocalFileSystem.getInstance().refreshAndFindFileByIoFile(home));
+    Sdk sdk = new ProjectJdkImpl("Erlang 27", ErlangSdkType.getInstance(), home.getAbsolutePath(), ErlangSdkRelease.V_27_0.toString());
+    assertEmpty(sdk.getRootProvider().getFiles(OrderRootType.CLASSES));
+    ErlangSdkType.getInstance().setupSdkPaths(sdk);
+    List<String> classes = Arrays.stream(sdk.getRootProvider().getFiles(OrderRootType.CLASSES)).map(VirtualFile::getPath).toList();
+    List<String> sources = Arrays.stream(sdk.getRootProvider().getFiles(OrderRootType.SOURCES)).map(VirtualFile::getPath).toList();
+    assertEquals(List.of(path(home, "lib")), classes);
+    assertEquals(List.of(path(home, "lib")), sources);
   }
 
   public void testDocumentationUrl() throws IOException {
