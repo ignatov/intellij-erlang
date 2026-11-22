@@ -18,12 +18,15 @@ package org.intellij.erlang.configuration;
 
 import com.intellij.ui.RawCommandLineEditor;
 import com.intellij.util.ui.UIUtil;
+import org.intellij.erlang.rebar.settings.RebarConfigurationForm;
 import org.intellij.erlang.rebar.settings.RebarSettings;
+import org.intellij.erlang.settings.ErlangExternalToolsConfigurable;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import java.lang.reflect.Field;
 
 public class ErlangCompilerOptionsConfigurableTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   // The Settings dialog hides and shows the component of a visited page; showing it again must not drop unsaved edits; #1405
@@ -162,6 +165,39 @@ public class ErlangCompilerOptionsConfigurableTest extends ErlangLightPlatformCo
     finally {
       rebarSettings.setRebarPath(oldRebarPath);
       compilerSettings.setUseRebarCompilerEnabled(oldUseRebar);
+      configurable.disposeUIResources();
+    }
+  }
+
+  // "Configure Rebar" opens the Erlang External Tools page; a path typed there and not applied yet must enable
+  // the rebar compiler when the user comes back, as Apply then stores both pages together; #1472
+  public void testRevisitSeesUnappliedRebarPath() throws Exception {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    ErlangExternalToolsConfigurable toolsConfigurable = null;
+    try {
+      rebarSettings.setRebarPath("");
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      JCheckBox useRebar = findCheckBox(component, "rebar");
+      assertFalse(useRebar.isEnabled());
+
+      toolsConfigurable = new ErlangExternalToolsConfigurable(getProject());
+      toolsConfigurable.createComponent();
+      Field formField = ErlangExternalToolsConfigurable.class.getDeclaredField("myRebarConfigurationForm");
+      formField.setAccessible(true);
+      ((RebarConfigurationForm)formField.get(toolsConfigurable)).setPath("/usr/bin/rebar3");
+      assertTrue(toolsConfigurable.isModified());
+      assertEquals("", rebarSettings.getRebarPath());
+
+      fireShown(component);
+
+      assertTrue(useRebar.isEnabled());
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+      if (toolsConfigurable != null) toolsConfigurable.disposeUIResources();
       configurable.disposeUIResources();
     }
   }
