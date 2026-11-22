@@ -6,7 +6,7 @@ import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Round 6 (next), item 3f: the expansion-error pass is left out for a file where it has nothing to check, so that the
+ * The expansion-error pass is left out for a file where it has nothing to check, so that the
  * platform creates no external-tool pass for it. That pass queues its annotate step on a merging queue with a delay
  * of 300 ms (ExternalAnnotatorManager of 262) even when every annotator collected nothing, and the daemon ends only
  * after it: in {@code erl_types.erl}, which needs no copy, the end of highlighting came about 300-500 ms later than on

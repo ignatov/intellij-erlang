@@ -16,12 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Spike 4: the build log of the macro layer.
+ * The build log of the macro layer.
  * <p>
  * Switch: system property {@code erlang.macro.layer.log}, else the environment variable {@code ERLANG_MACRO_LAYER_LOG}.
  * {@code on}: every event goes to idea.log at INFO level (category {@code #org.intellij.erlang.macrolayer.ErlangMacroLayerLog}).
@@ -35,7 +37,7 @@ public final class ErlangMacroLayerLog {
   private static final Logger LOG = Logger.getInstance(ErlangMacroLayerLog.class);
 
   /**
-   * One event. Spike 5 appended three columns: the wall-clock time of the event's end and of its start
+   * One event. The last three columns are the wall-clock time of the event's end and of its start
    * (epoch milliseconds; start = end - duration), and free-form details ({@code key=value} pairs separated by spaces).
    */
   public record Event(@NotNull String kind, @NotNull String file, @NotNull String thread, boolean edt, long nanos,
@@ -51,7 +53,7 @@ public final class ErlangMacroLayerLog {
   private static final String SETTING = read();
 
   static {
-    // spike 5: when the log is a file, the entry-point counters go to "<log>.stats.tsv" at JVM exit
+    // When the log is a file, the entry-point counters go to "<log>.stats.tsv" at JVM exit
     if (SETTING != null && !"on".equalsIgnoreCase(SETTING)) {
       try {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> writeStats(Paths.get(SETTING + ".stats.tsv")), "macro layer stats"));
@@ -110,12 +112,12 @@ public final class ErlangMacroLayerLog {
 
   /** Oracle queries, key "kind file". */
   public static @NotNull Map<String, Integer> queries() {
-    Map<String, Integer> m = new java.util.TreeMap<>();
+    Map<String, Integer> m = new TreeMap<>();
     QUERIES.forEach((k, v) -> m.put(k, v.get()));
     return m;
   }
 
-  private static final java.util.concurrent.atomic.LongAdder QUERY_NANOS = new java.util.concurrent.atomic.LongAdder();
+  private static final LongAdder QUERY_NANOS = new LongAdder();
 
   /** Time spent answering oracle questions in a built copy (builds excluded). */
   public static long queryNanosTotal() {

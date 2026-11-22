@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Spike 4: a resolve target that lies in a {@code -define} body of an included header. It is named by the header,
+ * A resolve target that lies in a {@code -define} body of an included header. It is named by the header,
  * the directive and the token index, not by an offset: an edit of the header outside its directive lines keeps it.
  * Highlighting needs only "it resolves", so the header's PSI tree is not loaded. The header element is made only when
  * navigation asks ({@link #getNavigationElement()}). Rename refuses: renaming a name of a header macro body from one

@@ -57,7 +57,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
-      /** D1: epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
+      /** Epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
         if (!ErlangMacroLayer.isEnabled()) return;
@@ -91,11 +91,11 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         }
       }
 
-      /** Round 6: a macro use that the parser left as bare tokens ({@code foo?PAR}), hosted by this element. */
+      /** A macro use that the parser left as bare tokens ({@code foo?PAR}), hosted by this element. */
       @Override
       public void visitElement(@NotNull PsiElement o) {
         // only the hosts of the references (their getReferences adds them): an error element or a dummy block has the
-        // same tokens, which its Erlang parent collects through it (round 6 next: one problem per use, not three)
+        // same tokens, which its Erlang parent collects through it
         if (!(o instanceof ErlangCompositeElement) && !(o instanceof ErlangFile)) return;
         for (PsiReference r : ErlangBareMacroReference.find(o)) {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
@@ -114,7 +114,7 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       }
 
       /**
-       * Round 6: epp's "argument mismatch for macro": no definition takes as many arguments as the use has, and none
+       * Epp's "argument mismatch for macro": no definition takes as many arguments as the use has, and none
        * takes no parameter list (then epp leaves the parentheses as a call). Only when every include of the file
        * resolves, so that no definition is out of sight.
        */

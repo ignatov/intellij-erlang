@@ -12,6 +12,7 @@ import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Round 6: a macro use {@code ?NAME} that the parser left as bare tokens (a use where the grammar expects no
+ * A macro use {@code ?NAME} that the parser left as bare tokens (a use where the grammar expects no
  * expression, such as {@code foo?PAR}, a separator between clauses, a body consumed as raw tokens, or tokens skipped
  * by error recovery). The tree stays as it is; the nearest Erlang composite element (or the file) that holds the two
  * tokens, directly or through error elements and dummy blocks of the error recovery, hosts this reference. Its range
@@ -52,10 +53,10 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
    * looking for a {@code ?} token, an error element or a dummy block.
    */
   public static PsiReference @NotNull [] find(@NotNull PsiElement host) {
-    // round 6 (next), N3: no read access (a platform listener outside a read action): master's answer, no exception
-    if (org.intellij.erlang.macrolayer.ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
-    // M2: with the layer off, master's references only
-    if (!org.intellij.erlang.macrolayer.ErlangMacroLayer.isEnabled()) return PsiReference.EMPTY_ARRAY;
+    // No read access (a platform listener outside a read action): master's answer, no exception
+    if (ErlangMacroLayer.noReadAccess()) return PsiReference.EMPTY_ARRAY;
+    // With the layer off, master's references only
+    if (!ErlangMacroLayer.isEnabled()) return PsiReference.EMPTY_ARRAY;
     if (host instanceof StubBasedPsiElement<?> s && s.getStub() != null) return PsiReference.EMPTY_ARRAY; // no AST: no text search here
     ASTNode node = host.getNode();
     if (node == null) return PsiReference.EMPTY_ARRAY;
@@ -137,7 +138,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
 
   @Override
   public @Nullable PsiElement resolve() {
-    // round 6 (next), N2: several possible definitions (conditional branches): no single target, go to declaration offers all
+    // Several possible definitions (conditional branches): no single target, go to declaration offers all
     ResolveResult[] r = multiResolve(false);
     return r.length == 1 ? r[0].getElement() : null;
   }
@@ -147,7 +148,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
     int arity = ErlangMacroResolve.arityAfter(myName);
     List<ErlangMacrosDefinition> all = ErlangMacroResolve.resolveAll(file, myName.getText(), arity, myName);
-    if (!all.isEmpty()) return PsiElementResolveResult.createResults(all); // round 6 (next), item 4
+    if (!all.isEmpty()) return PsiElementResolveResult.createResults(all);
     ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, myName.getText(), arity, myName);
     return d == null ? ResolveResult.EMPTY_ARRAY : new ResolveResult[]{new PsiElementResolveResult(d)};
   }
@@ -156,7 +157,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   public boolean isReferenceTo(@NotNull PsiElement element) {
     if (!(element instanceof ErlangMacrosDefinition d) || !myName.getText().equals(d.getName())) return false;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
-    // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
+    // A definition that epp may choose for this use's arity (any conditional branch)
     List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myName.getText(), ErlangMacroResolve.arityAfter(myName), myName);
     if (!m.isEmpty()) return m.contains(d);
     // a header may use a macro that only its includers define: then any definition of the name may be meant

@@ -39,7 +39,7 @@ public class ErlangRenameAtomProcessor extends RenamePsiElementProcessor {
   }
 
   /**
-   * Round 6: an atom inside a macro that names something only the macro's expansion makes (a function, record, field
+   * An atom inside a macro that names something only the macro's expansion makes (a function, record, field
    * or type): the rename takes that name, as from its uses. When the macro layer cannot tell yet, the rename is refused.
    */
   @Override

@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.LongAccumulator;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Spike 5: counters of the macro layer's entry points, for measurement only. Active only when the build log is on
+ * Counters of the macro layer's entry points, for measurement only. Active only when the build log is on
  * ({@link ErlangMacroLayerLog#isEnabled()}); when it is off every method returns at once after one volatile read.
  * <p>
  * Each call of an entry point (the resolve hook, the variable hook, the error filter, the header target, ...) is counted

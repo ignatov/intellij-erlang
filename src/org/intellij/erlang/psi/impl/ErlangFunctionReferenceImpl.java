@@ -121,7 +121,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     if (suppressResolve()) return ResolveResult.EMPTY_ARRAY; // for #132
 
-    // round 6: a call that only the macro layer resolves (a function made by a macro) has the layer's answer as its
+    // A call that only the macro layer resolves (a function made by a macro) has the layer's answer as its
     // result, as resolve() has; with incompleteCode it comes first, before master's candidates of the same name
     PsiElement layerAnswer = null;
     if (resolveWithoutLayer() == null) {
@@ -188,7 +188,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   public boolean isReferenceTo(@NotNull PsiElement element) {
     PsiElement target = resolve();
     if (getElement().getManager().areElementsEquivalent(target, element)) return true;
-    // round 5: a call in a -define body that only the macro's uses resolve (a header body naming includer functions)
+    // A call in a -define body that only the macro's uses resolve (a header body naming includer functions)
     return target == null && ErlangMacroLayer.isReferenceThroughMacroUses(this, element);
   }
 

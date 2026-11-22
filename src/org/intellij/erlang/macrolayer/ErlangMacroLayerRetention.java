@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Spike 4: the memory bound of the macro layer and the header directive trackers, per project.
+ * The memory bound of the macro layer and the header directive trackers, per project.
  * <p>
  * At most {@link #STRONG} copies are held strongly: the most recently asked ones. A copy of a file whose editor is
  * closed is released at once. Every other copy is held only weakly, so a GC can collect it; it is then rebuilt on
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service(Service.Level.PROJECT)
 public final class ErlangMacroLayerRetention implements Disposable {
   public static final int STRONG = Math.max(1, Integer.getInteger("erlang.macro.layer.strong", 24));
-  /** Round 5: how often a header directive tracker was asked (for tests and measurements). */
+  /** How often a header directive tracker was asked (for tests and measurements). */
   public static final AtomicLong DIRECTIVE_CHECKS = new AtomicLong();
 
   private final Project myProject;
@@ -65,7 +65,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
         release(file);
       }
     });
-    // round 5: when a document last changed (a key press; the PSI changes later, when the document is committed)
+    // When a document last changed (a key press; the PSI changes later, when the document is committed)
     EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new DocumentListener() {
       @Override
       public void documentChanged(@NotNull DocumentEvent event) {
@@ -78,7 +78,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
         }
       }
     }, this);
-    // round 6 (next): a write action waits to start (a key press): a passive query that waits for the copy gives up
+    // A write action waits to start (a key press): a passive query that waits for the copy gives up
     ApplicationManager.getApplication().addApplicationListener(new ApplicationListener() {
       @Override
       public void beforeWriteActionStart(@NotNull Object action) {
@@ -96,7 +96,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
         myWritePending = false;
       }
     }, this);
-    // round 5: the own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
+    // The own-text version of the files that have a table or a copy (see ErlangMacroLayer.TextTracker)
     PsiManager.getInstance(project).addPsiTreeChangeListener(new PsiTreeChangeAdapter() {
       @Override
       public void childAdded(@NotNull PsiTreeChangeEvent event) {
@@ -144,26 +144,26 @@ public final class ErlangMacroLayerRetention implements Disposable {
   private volatile long myWritePendingSince;
 
   /**
-   * Round 6 (next): a write action announced its start and has not started yet (it waits for the read actions to end).
+   * A write action announced its start and has not started yet (it waits for the read actions to end).
    * A flag older than 5 s is taken as stale (a write action that never started).
    */
   boolean isWriteActionPending() {
     return myWritePending && System.nanoTime() - myWritePendingSince < 5_000_000_000L;
   }
 
-  /** Round 6: changes of the rebar.config files of the project (their include paths take part in include resolution). */
+  /** Changes of the rebar.config files of the project (their include paths take part in include resolution). */
   private final AtomicLong myBuildConfigVersion = new AtomicLong();
 
   private static boolean isBuildConfig(@NotNull String name) {
     return "rebar.config".equals(name);
   }
 
-  /** Round 6: moves with every change of a rebar.config (a document change or a PSI change). */
+  /** Moves with every change of a rebar.config (a document change or a PSI change). */
   long buildConfigVersion() {
     return myBuildConfigVersion.get();
   }
 
-  /** Round 6: System.nanoTime() of the last change of each .erl file (a document change or a PSI change). */
+  /** System.nanoTime() of the last change of each .erl file (a document change or a PSI change). */
   private final Map<VirtualFile, Long> myChangedAt = new ConcurrentHashMap<>();
 
   private void noteChanged(@Nullable VirtualFile file) {
@@ -173,7 +173,7 @@ public final class ErlangMacroLayerRetention implements Disposable {
     if (myChangedAt.size() > 64) myChangedAt.values().removeIf(t -> now - t > 60_000_000_000L);
   }
 
-  /** Round 6: the .erl files that changed less than {@code millis} ms ago (see {@link ErlangMacroLayer#prepareSearch}). */
+  /** The .erl files that changed less than {@code millis} ms ago (see {@link ErlangMacroLayer#prepareSearch}). */
   @NotNull List<VirtualFile> filesChangedWithin(long millis) {
     if (millis <= 0 || myChangedAt.isEmpty()) return List.of();
     long now = System.nanoTime();

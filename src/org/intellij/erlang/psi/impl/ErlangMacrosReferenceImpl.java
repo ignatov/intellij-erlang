@@ -51,14 +51,14 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
 
   @Override
   public PsiElement resolve() {
-    // round 6 (next), N2: several possible definitions (conditional branches): no single target, as the platform
+    // Several possible definitions (conditional branches): no single target, as the platform
     // expects of a poly-variant reference, so that go to declaration offers them all; see ErlangMacroResolve.firstTarget
     ResolveResult[] r = multiResolve(false);
     return r.length == 1 ? r[0].getElement() : null;
   }
 
   /**
-   * Round 6: the definition with the use's arity, as epp chooses it; round 6 (next), item 4: every such definition in
+   * The definition with the use's arity, as epp chooses it, and every such definition in
    * the branches of a conditional, unless the file tells the active one (go to declaration then offers them all).
    */
   @Override
@@ -66,7 +66,7 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     ErlangMacrosDefinition definition = PsiTreeUtil.getParentOfType(myNameElement, ErlangMacrosDefinition.class);
     if (definition != null && definition.getMacrosName() == myNameElement) return ResolveResult.EMPTY_ARRAY;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return ResolveResult.EMPTY_ARRAY;
-    // F5: the name of -ifdef/-ifndef/-undef: what is defined at that point, any arity
+    // The name of -ifdef/-ifndef/-undef: what is defined at that point, any arity
     ErlangAttribute directive = ErlangMacroResolve.directiveOf(myNameElement);
     if (directive != null) return PsiElementResolveResult.createResults(ErlangMacroResolve.directiveTargets(file, directive, myReferenceName));
     int arity = ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement));
@@ -89,18 +89,18 @@ public class ErlangMacrosReferenceImpl extends PsiReferenceBase<PsiElement> impl
     ErlangMacrosDefinition definition = ObjectUtils.tryCast(element, ErlangMacrosDefinition.class);
     String macroName = definition != null ? definition.getName() : null;
     if (macroName == null || !macroName.equals(myReferenceName) || definition.getMacrosName() == myNameElement) return false;
-    // round 6 (next): the name of another -define (another branch, another arity) is a definition, not a use
+    // The name of another -define (another branch, another arity) is a definition, not a use
     if (myNameElement.getParent() instanceof ErlangMacrosDefinition d && d.getMacrosName() == myNameElement) return false;
     if (!(myElement.getContainingFile() instanceof ErlangFile file)) return true;
     // the name of a directive refers to what it acts on (every arity defined before it; see directiveTargets)
     ErlangAttribute directive = ErlangMacroResolve.directiveOf(myNameElement);
     if (directive != null) return ErlangMacroResolve.directiveTargets(file, directive, myReferenceName).contains(definition);
-    // round 6 (next), item 3b: a definition that epp may choose for this use's arity (any conditional branch)
+    // A definition that epp may choose for this use's arity (any conditional branch)
     List<ErlangMacrosDefinition> m = ErlangMacroResolve.matching(file, myReferenceName,
                                                                  ErlangMacroResolve.arityAfter(ErlangPsiImplUtil.getNameIdentifier(myNameElement)),
                                                                  myNameElement);
     if (!m.isEmpty()) return m.contains(definition);
-    // round 6: not a definition of the same name in an unrelated file (a header may use a macro only its includers define)
+    // Not a definition of the same name in an unrelated file (a header may use a macro only its includers define)
     return ErlangMacroResolve.isVisibleOrUnknown(file, definition);
   }
 }

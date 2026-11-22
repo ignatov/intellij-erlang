@@ -23,6 +23,7 @@ import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
@@ -97,7 +98,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   private static final ThreadLocal<Boolean> DESCRIBING = new ThreadLocal<>();
 
   @NotNull
-  private static String describe(@NotNull PsiElement element, @NotNull com.intellij.psi.ElementDescriptionLocation location) {
+  private static String describe(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
     if (DESCRIBING.get() != null) return "";
     DESCRIBING.set(Boolean.TRUE);
     try {

@@ -10,12 +10,14 @@ import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Form;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- * Round 6: a name token of the edited file that the main tree gives no reference, but that has one in the expanded
+ * A name token of the edited file that the main tree gives no reference, but that has one in the expanded
  * copy: {@code foo} in {@code foo?PAR} (with {@code -define(PAR, ())}) is a plain atom in the main tree and the name
  * of a call of {@code foo/0} in the copy; a record field name in the arguments of a macro that builds record fields;
  * a token that error recovery left bare. The reference stands on the token in the main tree and resolves through the
@@ -74,7 +76,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   /** The host's own references followed by the token references it holds. */
   public static PsiReference @NotNull [] append(@NotNull PsiElement host, PsiReference @NotNull [] own) {
     PsiReference[] tokens = find(host);
-    return tokens.length == 0 ? own : com.intellij.util.ArrayUtil.mergeArrays(own, tokens);
+    return tokens.length == 0 ? own : ArrayUtil.mergeArrays(own, tokens);
   }
 
   private static @NotNull List<PsiElement> candidates(@NotNull PsiElement host) {
@@ -104,7 +106,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   }
 
   /**
-   * D2: the name of a function clause in a top-level piece that continues a form the recovery split
+   * The name of a function clause in a top-level piece that continues a form the recovery split
    * ({@code reverse} in {@code lists?COLON reverse(L).} or {@code ?LISTS reverse(L).}): no function of the source is
    * declared there; in the expansion the name is a call.
    */
@@ -162,7 +164,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     ErlangFile file = ErlangMacroLayer.layerFile(leaf);
     if (file == null) return false;
     if (PsiTreeUtil.getParentOfType(leaf, ErlangMacrosDefinition.class, false) != null) return false;
-    // round 6 (next), item 1b: the valid table or the last one, never a new one (no wait, no refusal)
+    // The valid table or the last one, never a new one (no wait, no refusal)
     Boolean uses = ErlangMacroLayer.formUsesMacroNoWait(file, form);
     if (uses != null) return uses;
     ErlangMacroLayer.Table t = ErlangMacroLayer.table(file);
@@ -236,7 +238,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
 
   private @Nullable PsiElement tokenOf(@NotNull String name) {
     try {
-      PsiElement e = org.intellij.erlang.psi.impl.ErlangElementFactory.createMacrosFromText(myLeaf.getProject(), name);
+      PsiElement e = ErlangElementFactory.createMacrosFromText(myLeaf.getProject(), name);
       if (!(e instanceof ErlangMacrosName m)) return null;
       if (m.getVar() != null) return m.getVar();
       if (m.getAtom() != null && m.getAtom().getFirstChild() == m.getAtom().getLastChild()) return m.getAtom().getFirstChild();
@@ -299,7 +301,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
         TextRange cabs = c.getRangeInElement().shiftRight(c.getElement().getTextRange().getStartOffset());
         if (cabs.getStartOffset() != e || !text.contentEquals(cabs.subSequence(copy.expansion.text))) continue;
         if (first == null) first = c;
-        // resolve() first: the multiResolve of a function reference is not the same answer (round 5)
+        // resolve() first: the multiResolve of a function reference is not the same answer
         PsiElement single = c.resolve();
         if (single != null) {
           PsiElement real = ErlangMacroLayer.exit(copy.toReal(single), file);

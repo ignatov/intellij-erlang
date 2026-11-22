@@ -36,12 +36,12 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   public final PsiElement resolve() {
     if (!getElement().isValid()) return null;
     PsiElement result = ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
-    // spike 4: when master's (cached) path finds nothing, ask the macro expansion layer. Its answer is cached in the
+    // When master's (cached) path finds nothing, ask the macro expansion layer. Its answer is cached in the
     // layer's copy, not in the ResolveCache, so a "no copy yet" answer on the UI thread is not kept.
     return result != null ? result : ErlangMacroLayer.resolveFallback(this);
   }
 
-  /** Round 6: master's answer alone (cached), without the macro layer's. */
+  /** Master's answer alone (cached), without the macro layer's. */
   @Nullable
   protected final PsiElement resolveWithoutLayer() {
     if (!getElement().isValid()) return null;

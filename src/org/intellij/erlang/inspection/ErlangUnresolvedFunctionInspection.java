@@ -69,13 +69,13 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         registerProblem(holder, call.getNameIdentifier(), "Unresolved function " + presentation, fixes);
       }
 
-      /** Round 6: {@code foo} in {@code foo?PAR}: a plain atom in the tree, a call of foo/0 after expansion. */
+      /** {@code foo} in {@code foo?PAR}: a plain atom in the tree, a call of foo/0 after expansion. */
       @Override
       public void visitAtom(@NotNull ErlangAtom o) {
         inspectToken(o.getNameIdentifier(), o);
       }
 
-      /** Round 6: an atom token that error recovery left bare, which a call names after expansion. */
+      /** An atom token that error recovery left bare, which a call names after expansion. */
       @Override
       public void visitElement(@NotNull PsiElement o) {
         if (o instanceof LeafPsiElement leaf && leaf.getElementType() == ErlangTypes.ERL_ATOM_NAME && !(o.getParent() instanceof ErlangAtom)) {

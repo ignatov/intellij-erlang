@@ -6,13 +6,17 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
@@ -27,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 /**
- * Round 6: the {@code -define} a macro use names, chosen by arity as {@code epp} does: the definition with as many
+ * The {@code -define} a macro use names, chosen by arity as {@code epp} does: the definition with as many
  * parameters as the use has arguments, else the one without a parameter list (epp then leaves the parentheses as a
  * call), else the first one found. Definitions of the file come before those of its headers.
  */
@@ -56,7 +60,7 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * Round 6 (next), item 3b: the definitions that epp may choose for a use with this many arguments, in every
+   * The definitions that epp may choose for a use with this many arguments, in every
    * conditional branch: those with the same number of parameters, else those without a parameter list (epp then
    * leaves the parentheses as a call); with an unclosed argument list, every definition. Empty when none fits (epp:
    * argument mismatch). A use refers to each of them; a use of another arity refers to none of them.
@@ -78,7 +82,7 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * Round 6 (next), item 4: the definitions a use resolves to: of {@link #matching}, the one in the active branch when
+   * The definitions a use resolves to: of {@link #matching}, the one in the active branch when
    * the file tells it (see {@link #branchState}), else all of them except those in a branch known to be inactive (go to
    * declaration then offers them all).
    */
@@ -103,7 +107,7 @@ public final class ErlangMacroResolve {
   public static final int ACTIVE = 1, INACTIVE = 2, UNKNOWN_BRANCH = 3;
 
   /**
-   * Round 6 (next), item 4: whether the branch of a definition is active, as far as its own file tells: every
+   * Whether the branch of a definition is active, as far as its own file tells: every
    * enclosing {@code -ifdef(X)}/{@code -ifndef(X)} (and its {@code -else}) is decided when X is predefined or defined
    * earlier in the file outside any branch; a macro that the file does not define may come from a build flag
    * ({@code -DTEST}), so its branch stays unknown, as does every {@code -if}/{@code -elif} and every header definition.
@@ -112,7 +116,7 @@ public final class ErlangMacroResolve {
   public static int branchState(@NotNull ErlangMacrosDefinition d) {
     PsiFile file = d.getContainingFile();
     if (!(file instanceof ErlangFile ef) || d.getParent() != file) return UNKNOWN_BRANCH;
-    Integer s = com.intellij.psi.util.CachedValuesManager.getCachedValue(ef, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+    Integer s = CachedValuesManager.getCachedValue(ef, () -> CachedValueProvider.Result.create(
       computeBranchStates(ef), ef)).get(d);
     return s == null ? UNKNOWN_BRANCH : s;
   }
@@ -135,7 +139,7 @@ public final class ErlangMacroResolve {
             state = state == INACTIVE ? INACTIVE : UNKNOWN_BRANCH;
             continue;
           }
-          boolean isDefined = defined.contains(k.macro()) || org.intellij.erlang.parser.macro.ErlangMacroExpander.PREDEFINED.contains(k.macro());
+          boolean isDefined = defined.contains(k.macro()) || ErlangMacroExpander.PREDEFINED.contains(k.macro());
           if (!isDefined) {
             state = state == INACTIVE ? INACTIVE : UNKNOWN_BRANCH;
             continue;
@@ -160,7 +164,7 @@ public final class ErlangMacroResolve {
       ErlangAtomAttribute atom = attribute.getAtomAttribute();
       if (atom == null) continue;
       ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
-      String macro = m == null ? null : com.intellij.openapi.util.text.StringUtil.unquoteString(m.getText(), '\'');
+      String macro = m == null ? null : StringUtil.unquoteString(m.getText(), '\'');
       switch (atom.getName()) {
         case "ifdef" -> stack.push(new Condition(macro, true, true, false));
         case "ifndef" -> stack.push(new Condition(macro, false, true, false));
@@ -179,7 +183,7 @@ public final class ErlangMacroResolve {
     return r;
   }
 
-  /** F5: the attribute when the name is the one of {@code -ifdef(X)}, {@code -ifndef(X)} or {@code -undef(X)}, else null. */
+  /** The attribute when the name is the one of {@code -ifdef(X)}, {@code -ifndef(X)} or {@code -undef(X)}, else null. */
   public static @Nullable ErlangAttribute directiveOf(@NotNull ErlangMacrosName name) {
     if (!(name.getParent() instanceof ErlangAtomAttribute atom) || !(atom.getParent() instanceof ErlangAttribute attribute)) return null;
     String n = atom.getName();
@@ -187,7 +191,7 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * F5: epp tests the name of a directive against what is defined at that point, any arity: the definitions before the
+   * Epp tests the name of a directive against what is defined at that point, any arity: the definitions before the
    * directive in the file, and those of the headers included before it. None: no target (not a definition after it).
    */
   public static @NotNull List<ErlangMacrosDefinition> definedBefore(@NotNull ErlangFile file, @NotNull PsiElement directive, @NotNull String name) {
@@ -197,10 +201,10 @@ public final class ErlangMacroResolve {
       if (name.equals(d.getName()) && d.getTextRange().getStartOffset() < at) r.add(d);
     }
     List<List<ErlangFile>> included = new ArrayList<>();
-    for (org.intellij.erlang.psi.ErlangInclude inc : file.getIncludes()) {
+    for (ErlangInclude inc : file.getIncludes()) {
       if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
     }
-    for (org.intellij.erlang.psi.ErlangIncludeLib inc : file.getIncludeLibs()) {
+    for (ErlangIncludeLib inc : file.getIncludeLibs()) {
       if (inc.getTextRange().getStartOffset() < at) included.add(ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file));
     }
     for (List<ErlangFile> headers : included) {
@@ -347,15 +351,15 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * Round 6 (next), N2: the target of a macro reference for code that needs one definition (parameter info, record
+   * The target of a macro reference for code that needs one definition (parameter info, record
    * fields of a macro body, the inspections): its single target, else the first of its possible definitions.
    */
-  public static @Nullable PsiElement firstTarget(@Nullable com.intellij.psi.PsiReference ref) {
+  public static @Nullable PsiElement firstTarget(@Nullable PsiReference ref) {
     if (ref == null) return null;
     PsiElement single = ref.resolve();
     if (single != null) return single;
-    if (ref instanceof com.intellij.psi.PsiPolyVariantReference p) {
-      for (com.intellij.psi.ResolveResult r : p.multiResolve(false)) if (r.getElement() != null) return r.getElement();
+    if (ref instanceof PsiPolyVariantReference p) {
+      for (ResolveResult r : p.multiResolve(false)) if (r.getElement() != null) return r.getElement();
     }
     return null;
   }
@@ -407,17 +411,17 @@ public final class ErlangMacroResolve {
 
   /** Every include of the file, and of the headers it includes, resolves to a file (cached until a PSI change). */
   public static boolean allIncludesResolve(@NotNull ErlangFile file) {
-    return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
-      allIncludesResolve(file, new java.util.HashSet<>()), com.intellij.psi.util.PsiModificationTracker.MODIFICATION_COUNT));
+    return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
+      allIncludesResolve(file, new HashSet<>()), PsiModificationTracker.MODIFICATION_COUNT));
   }
 
-  private static boolean allIncludesResolve(@NotNull ErlangFile file, @NotNull java.util.Set<ErlangFile> seen) {
+  private static boolean allIncludesResolve(@NotNull ErlangFile file, @NotNull Set<ErlangFile> seen) {
     if (!seen.add(file)) return true;
-    for (org.intellij.erlang.psi.ErlangInclude inc : file.getIncludes()) {
+    for (ErlangInclude inc : file.getIncludes()) {
       List<ErlangFile> r = ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file);
       if (r.isEmpty() || !allIncludesResolve(r.get(0), seen)) return false;
     }
-    for (org.intellij.erlang.psi.ErlangIncludeLib inc : file.getIncludeLibs()) {
+    for (ErlangIncludeLib inc : file.getIncludeLibs()) {
       List<ErlangFile> r = ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file);
       if (r.isEmpty() || !allIncludesResolve(r.get(0), seen)) return false;
     }
@@ -425,13 +429,13 @@ public final class ErlangMacroResolve {
   }
 
   /**
-   * D4: epp's "redefining macro": a second definition of the same name and arity. Only where it is certain: both
+   * Epp's "redefining macro": a second definition of the same name and arity. Only where it is certain: both
    * definitions in this file, outside any conditional, with no {@code -undef} of the name (at any depth) and no
    * include between them (a header may undefine it).
    */
   public static boolean isRedefinition(@NotNull ErlangMacrosDefinition d) {
     if (!(d.getContainingFile() instanceof ErlangFile file)) return false;
-    return com.intellij.psi.util.CachedValuesManager.getCachedValue(file, () -> com.intellij.psi.util.CachedValueProvider.Result.create(
+    return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
       computeRedefinitions(file), file)).contains(d);
   }
 
@@ -445,9 +449,9 @@ public final class ErlangMacroResolve {
         if (name != null && depth == 0 && !seen.computeIfAbsent(name, k -> new HashSet<>()).add(arity(d))) r.add(d);
         continue;
       }
-      if (c instanceof org.intellij.erlang.psi.ErlangInclude || c instanceof org.intellij.erlang.psi.ErlangIncludeLib ||
-          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangInclude.class) != null ||
-          PsiTreeUtil.getChildOfType(c, org.intellij.erlang.psi.ErlangIncludeLib.class) != null) {
+      if (c instanceof ErlangInclude || c instanceof ErlangIncludeLib ||
+          PsiTreeUtil.getChildOfType(c, ErlangInclude.class) != null ||
+          PsiTreeUtil.getChildOfType(c, ErlangIncludeLib.class) != null) {
         seen.clear();
         continue;
       }
@@ -464,7 +468,7 @@ public final class ErlangMacroResolve {
         case "undef" -> {
           ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
           if (m == null) seen.clear();
-          else seen.remove(com.intellij.openapi.util.text.StringUtil.unquoteString(m.getText(), '\''));
+          else seen.remove(StringUtil.unquoteString(m.getText(), '\''));
         }
         default -> {
         }

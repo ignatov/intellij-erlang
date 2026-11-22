@@ -28,9 +28,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Round 6 (next), item 2: completion in a part of a form that the main tree lost. In
+ * Completion in a part of a form that the main tree lost. In
  * {@code f(Abc1, Abc2) -> foo?PAR, X1 = Ab<caret>} the main tree's error recovery after {@code ?PAR} puts the rest of
  * the clause into dummy blocks, so the Erlang completion providers find no clause, no expression and no variable there.
  * The expanded copy of the file parses that clause. This contributor runs first. When the main tree lost the caret's
@@ -58,7 +59,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
   public static final Key<Origin> ORIGIN = Key.create("erlang.macro.layer.completion.origin");
 
   /** Completions answered through the copy, for tests and measurements. */
-  static final java.util.concurrent.atomic.AtomicInteger TAKEN_OVER = new java.util.concurrent.atomic.AtomicInteger();
+  static final AtomicInteger TAKEN_OVER = new AtomicInteger();
   /** Nanoseconds of the last parse of the copy's text with the dummy identifier (tests and measurements). */
   static volatile long ourLastParseNanos;
 
@@ -85,7 +86,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       if (made != null && !made.isEmpty()) addMadeNames(parameters, result, made);
       return;
     }
-    // round 6 (next), item 3d: the main tree's items first, as fast as on master; the copy's items after them
+    // The main tree's items first, as fast as on master; the copy's items after them
     // the main tree's items, by name and target: a copy item is dropped only when the main tree has the same one
     // (bar/0 and bar/1 have the same name and both stay)
     Set<Object> seen = new HashSet<>();
@@ -94,7 +95,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       result.passResult(r);
     });
     ourLastMainNanos = System.nanoTime() - t0;
-    // round 6 (next), N1: the auto-popup too builds the copy if it is not there, under the completion's own indicator
+    // The auto-popup too builds the copy if it is not there, under the completion's own indicator
     // (the next key cancels it): as a passive query it waited for the daemon's copy and opened empty for about 1 s
     Position p = position(parameters);
     if (p != null) {
@@ -143,10 +144,10 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
            !(ErlangMacroLayer.formFreeBodyVars(t, top).isEmpty() && ErlangMacroLayer.substitutedArgumentVars(t, top).isEmpty());
   }
 
-  // ------------------------------------------------------------------------------------------------ item 3: made names
+  // ------------------------------------------------------------------------------------------------ made names
 
   /**
-   * Round 6 (next), item 3: the functions (by name/arity), records and record fields that only the expansions of the
+   * The functions (by name/arity), records and record fields that only the expansions of the
    * file make, with their real targets (null when the list is one edit old). Kept on the file from the last copy
    * (strings only, see {@link #MADE_NAMES}).
    */
@@ -270,7 +271,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
   }
 
   /** Completions that added names made by expansions (tests and measurements). */
-  static final java.util.concurrent.atomic.AtomicInteger MADE_ADDED = new java.util.concurrent.atomic.AtomicInteger();
+  static final AtomicInteger MADE_ADDED = new AtomicInteger();
 
   private record Position(@NotNull PsiElement position, int offset, @NotNull ErlangMacroLayer.Copy copy, @NotNull ErlangFile real,
                           @NotNull PsiFile parsed) {
@@ -307,7 +308,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
   }
 
   /**
-   * Round 6 (next), item 3: a variable that only a macro binds ({@code ?BIND(X), X<caret>}, or the free {@code Xh} of
+   * A variable that only a macro binds ({@code ?BIND(X), X<caret>}, or the free {@code Xh} of
    * {@code -define(HX, Xh = 5)}) in a form that the main tree parses: the form needs the copy and has a candidate
    * (a free variable of a body it uses, or a variable in a substituted argument), and the prefix is a variable's (or
    * empty). The auto-popup only uses a copy that is there.

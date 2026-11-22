@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Round 5: go to declaration from a name inside a {@code -define} body that master cannot resolve there (a header body
+ * Go to declaration from a name inside a {@code -define} body that master cannot resolve there (a header body
  * that names things of its includers, a fragment body): the layer resolves it through the expanded uses of the macro.
  */
 public final class ErlangMacroLayerGotoDeclarationHandler implements GotoDeclarationHandler {

@@ -33,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class ErlangTargetElementEvaluator extends TargetElementEvaluatorEx2 implements TargetElementEvaluatorEx {
   /**
-   * Round 6 (next), item 3a: the name that a macro makes is its own declaration, so the identifier highlighting with
+   * The name that a macro makes is its own declaration, so the identifier highlighting with
    * the caret on it (the argument of {@code ?HGEN(hfoo).}, a name in a {@code -define} body) paints it and its uses.
    */
   @Override

@@ -69,7 +69,7 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   }
 
   /**
-   * Round 5: the macro layer resolves a use of a name made by a macro (such as {@code foo()} after {@code ?GEN(foo).},
+   * The macro layer resolves a use of a name made by a macro (such as {@code foo()} after {@code ?GEN(foo).},
    * or {@code #mr{}} after a macro whose body is {@code -record(mr, ...)}) to the atom name leaf in the macro use or
    * in the {@code -define} body. That leaf is not a named element, so the platform's reference search has no word to
    * look for. This handler searches the name and keeps the references that resolve to the leaf.
@@ -89,7 +89,7 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
     }
 
     /**
-     * Round 6 (next), item 3a: the identifier highlighting and highlight usages ask this method, not
+     * The identifier highlighting and highlight usages ask this method, not
      * {@link #processElementUsages}; the platform's reference search has no word for the leaf, so it found nothing.
      */
     @Override
@@ -113,12 +113,12 @@ public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   }
 
   /**
-   * Round 5: the references to a name made by a macro (see {@link ErlangMacroLayer#isNameMadeByMacro}): a search of
+   * The references to a name made by a macro (see {@link ErlangMacroLayer#isNameMadeByMacro}): a search of
    * its text that keeps the references resolving to it; the name itself is not its reference. Also used by rename.
    */
   public static boolean processReferencesToNameMadeByMacro(@NotNull PsiElement element, @NotNull SearchScope scope,
                                                            @NotNull Processor<? super PsiReference> processor) {
-    // round 6: the copies of the files just typed in, before the answers are read
+    // The copies of the files just typed in, before the answers are read
     read(() -> {
       ErlangMacroLayer.prepareSearch(element, scope);
       return null;

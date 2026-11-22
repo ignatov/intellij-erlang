@@ -41,7 +41,7 @@ public abstract class ErlangQAtomBasedReferenceImpl extends PsiReferenceBase<Psi
   public final PsiElement resolve() {
     if (!myElement.isValid()) return null;
     PsiElement result = ResolveCache.getInstance(myElement.getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
-    // round 5: records, fields and types made by macros; the layer's answer is cached in its copy, as for functions
+    // Records, fields and types made by macros; the layer's answer is cached in its copy, as for functions
     return result != null ? result : ErlangMacroLayer.resolveFallback(this);
   }
 

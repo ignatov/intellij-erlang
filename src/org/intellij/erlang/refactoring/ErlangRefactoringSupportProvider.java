@@ -51,7 +51,7 @@ public class ErlangRefactoringSupportProvider extends RefactoringSupportProvider
 
   @Override
   public boolean isMemberInplaceRenameAvailable(@NotNull PsiElement o, PsiElement context) {
-    // round 6: a free variable of a header macro body is renamed with the dialog, through the macro layer's target
+    // A free variable of a header macro body is renamed with the dialog, through the macro layer's target
     return (o instanceof ErlangNamedElement || o instanceof ErlangQAtom) && !ErlangMacroLayer.isHeaderBodyVariable(o);
   }
 

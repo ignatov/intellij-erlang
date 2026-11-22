@@ -17,6 +17,7 @@ import com.intellij.openapi.util.UserDataHolderEx;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.editor.Document;
@@ -34,6 +35,7 @@ import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangLanguage;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
@@ -41,6 +43,7 @@ import org.intellij.erlang.parser.macro.ErlangMacroExpander.Expansion;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Form;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.FormStatus;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.psi.impl.ErlangModuleReferenceImpl;
 import org.intellij.erlang.psi.impl.ErlangQAtomBasedReferenceImpl;
@@ -51,6 +54,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.*;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,12 +64,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
+import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
- * Spike 3: macro expansion as a separate layer, used only as an oracle.
+ * Macro expansion as a separate layer, used only as an oracle.
  * <p>
  * The main tree, the stubs and the indices of a file are not touched. On demand, the layer expands the same-file
  * macros of the file's PSI text ({@link ErlangMacroExpander}), parses the expanded text as one non-physical Erlang
@@ -95,36 +106,26 @@ public final class ErlangMacroLayer {
   /** The system property or the environment variable, when set: it overrides the Registry key. */
   private static final @Nullable Mode OVERRIDE_MODE = readMode();
   /**
-   * Round 5, fix 7: 4,000 (it was 2,000). With the narrow gate a file pays for the copy only when it needs substitution,
+   * 4,000. With the narrow gate a file pays for the copy only when it needs substitution,
    * and a big function with few expanded tokens (scan_entity_value/7 of xmerl_scan.erl: 2,354) no longer stays broken.
    * Expansion bombs stay out: a form over the cap is not expanded, and the expander itself stops at
    * {@link ErlangMacroExpander#MAX_TOKENS_PER_FORM} substituted tokens per form and {@link ErlangMacroExpander#MAX_DEPTH}
    * nested macro levels.
    */
   public static final int FORM_CAP = readInt("erlang.macro.layer.cap", "ERLANG_MACRO_LAYER_CAP", 4000);
-  private static volatile @Nullable Integer ourTestFormCap;
 
-  /** The form cap in force ({@link #FORM_CAP}, or the value a measurement set). */
+  /** The form cap in force ({@link #FORM_CAP}). */
   public static int formCap() {
-    Integer c = ourTestFormCap;
-    return c != null ? c : FORM_CAP;
-  }
-
-  @TestOnly
-  public static void setFormCapForTests(int cap, @NotNull Disposable parent) {
-    Integer previous = ourTestFormCap;
-    ourTestFormCap = cap;
-    Disposer.register(parent, () -> ourTestFormCap = previous);
+    return FORM_CAP;
   }
 
   private static final boolean REMOTE_DEFAULT = "on".equals(read("erlang.macro.layer.remote", "ERLANG_MACRO_LAYER_REMOTE"));
   private static volatile @Nullable Mode ourTestMode;
-  private static volatile @Nullable Boolean ourTestRemote;
   /** Diagnostic only: {@code erlang.macro.layer.edt=allow} lets the UI thread build a copy (default: never). */
   private static final boolean EDT_BUILD_DEFAULT = "allow".equals(read("erlang.macro.layer.edt", "ERLANG_MACRO_LAYER_EDT"));
   private static volatile @Nullable Boolean ourTestEdtBuild;
   /**
-   * Round 5: {@code erlang.macro.layer.gate} / {@code ERLANG_MACRO_LAYER_GATE} = {@code wide} restores the gate of round 4
+   * {@code erlang.macro.layer.gate} / {@code ERLANG_MACRO_LAYER_GATE} = {@code wide} restores the wide gate
    * (a form asks the copy as soon as it uses a visible macro; for the soundness check of the narrow gate). Default:
    * narrow (only forms that need substitution ask).
    */
@@ -158,7 +159,7 @@ public final class ErlangMacroLayer {
   private ErlangMacroLayer() {
   }
 
-  /** Spike 5: the outcome of one entry-point call, for {@link ErlangMacroLayerStats}; null when the log is off. */
+  /** The outcome of one entry-point call, for {@link ErlangMacroLayerStats}; null when the log is off. */
   static final class Outcome {
     String value = "exception";
     String file;
@@ -170,21 +171,6 @@ public final class ErlangMacroLayer {
 
   private static void markFile(@Nullable Outcome o, @Nullable PsiFile file) {
     if (o != null && file != null) o.file = file.getName();
-  }
-
-  /** Diagnostic ablation switches for the measurement harness (spike 5); all off by default. */
-  static volatile boolean ourAblateResolve, ourAblateVariable, ourAblateErrorFilter;
-
-  @TestOnly
-  public static void setAblationForTests(boolean resolve, boolean variable, boolean errorFilter, @NotNull Disposable parent) {
-    ourAblateResolve = resolve;
-    ourAblateVariable = variable;
-    ourAblateErrorFilter = errorFilter;
-    Disposer.register(parent, () -> {
-      ourAblateResolve = false;
-      ourAblateVariable = false;
-      ourAblateErrorFilter = false;
-    });
   }
 
   static @Nullable String read(String property, String env) {
@@ -209,7 +195,7 @@ public final class ErlangMacroLayer {
     return "off".equals(v) || "none".equals(v) || "false".equals(v) ? Mode.OFF : Mode.LAYER;
   }
 
-  /** M2: read at each call: a test mode, else the system property or environment variable, else the Registry key. */
+  /** Read at each call: a test mode, else the system property or environment variable, else the Registry key. */
   public static @NotNull Mode getMode() {
     Mode m = ourTestMode;
     if (m != null) return m;
@@ -223,8 +209,7 @@ public final class ErlangMacroLayer {
   }
 
   public static boolean isRemoteEnabled() {
-    Boolean b = ourTestRemote;
-    return b != null ? b : REMOTE_DEFAULT;
+    return REMOTE_DEFAULT;
   }
 
   @TestOnly
@@ -232,13 +217,6 @@ public final class ErlangMacroLayer {
     Mode previous = ourTestMode;
     ourTestMode = mode;
     Disposer.register(parent, () -> ourTestMode = previous);
-  }
-
-  @TestOnly
-  public static void setRemoteForTests(boolean on, @NotNull Disposable parent) {
-    Boolean previous = ourTestRemote;
-    ourTestRemote = on;
-    Disposer.register(parent, () -> ourTestRemote = previous);
   }
 
   // ------------------------------------------------------------------------------------------------ the copy
@@ -255,7 +233,7 @@ public final class ErlangMacroLayer {
     private volatile Map<String, PsiElement> myFunctionsMadeByMacros;
     /**
      * Answers of the oracle for this copy, by kind and real offset. Read and write them only through {@link #answers()}:
-     * an answer can point into another file, which can change while this copy stays (M1).
+     * an answer can point into another file, which can change while this copy stays.
      */
     private final ConcurrentHashMap<String, Object> myAnswers = new ConcurrentHashMap<>();
     private volatile long myAnswersStamp = -1;
@@ -360,7 +338,7 @@ public final class ErlangMacroLayer {
     private volatile Map<String, PsiElement> myRecordsMadeByMacros;
     private volatile Map<String, PsiElement> myTypesMadeByMacros;
 
-    /** Round 5: records whose definition exists only in an expansion, by name, with real targets (see functions). */
+    /** Records whose definition exists only in an expansion, by name, with real targets (see functions). */
     @NotNull Map<String, PsiElement> recordsMadeByMacros() {
       Map<String, PsiElement> map = myRecordsMadeByMacros;
       if (map == null) {
@@ -371,7 +349,7 @@ public final class ErlangMacroLayer {
       return map;
     }
 
-    /** Round 5: local types whose definition exists only in an expansion, by name, with real targets. */
+    /** Local types whose definition exists only in an expansion, by name, with real targets. */
     @NotNull Map<String, PsiElement> typesMadeByMacros() {
       Map<String, PsiElement> map = myTypesMadeByMacros;
       if (map == null) {
@@ -383,7 +361,7 @@ public final class ErlangMacroLayer {
     }
 
     private @NotNull Map<String, PsiElement> madeByMacros(@NotNull List<? extends PsiNameIdentifierOwner> defs,
-                                                          @NotNull java.util.function.Predicate<String> masterSees) {
+                                                          @NotNull Predicate<String> masterSees) {
       Map<String, Integer> made = new HashMap<>();
       for (PsiNameIdentifierOwner d : defs) made.merge(String.valueOf(d.getName()), 1, Integer::sum);
       Map<String, PsiElement> map = new LinkedHashMap<>();
@@ -403,7 +381,7 @@ public final class ErlangMacroLayer {
     private volatile Map<TextRange, String> myMadeNameKinds;
 
     /**
-     * Round 6: the names that only the expansions make (functions, records, record fields, local types), by the range
+     * The names that only the expansions make (functions, records, record fields, local types), by the range
      * of their token in the real file, with their kind. The layer gives these tokens as the targets of the names.
      */
     @NotNull Map<TextRange, String> madeNameKinds() {
@@ -523,14 +501,14 @@ public final class ErlangMacroLayer {
     final List<VirtualFile> headers = new ArrayList<>();
     final Object[] deps;
     final @NotNull IncludeTracker includes;
-    /** Round 5: the visible macros that are not plain (see {@link #classify}); the others need no substitution. */
+    /** The visible macros that are not plain (see {@link #classify}); the others need no substitution. */
     final Set<String> nonPlain = new HashSet<>();
-    /** Round 5: the variables of macro bodies that are not parameters of their macro. */
+    /** The variables of macro bodies that are not parameters of their macro. */
     final Set<String> freeBodyVars = new HashSet<>();
-    /** Round 6: per visible macro, the free variables of all its definitions, and the macros those bodies use. */
+    /** Per visible macro, the free variables of all its definitions, and the macros those bodies use. */
     final Map<String, Set<String>> macroFreeVars = new HashMap<>();
     final Map<String, Set<String>> macroNestedUses = new HashMap<>();
-    /** Round 6: per form, the free variables of the macros it uses ({@link #formFreeBodyVars}). */
+    /** Per form, the free variables of the macros it uses ({@link #formFreeBodyVars}). */
     final ConcurrentHashMap<Integer, Set<String>> formFreeVars = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formUse = new ConcurrentHashMap<>();
     final ConcurrentHashMap<Integer, Boolean> formNeedsCopy = new ConcurrentHashMap<>();
@@ -539,18 +517,18 @@ public final class ErlangMacroLayer {
     final ConcurrentHashMap<Integer, Set<String>> formSubstitutedArgVars = new ConcurrentHashMap<>();
     volatile Boolean topLevelMacroForm;
     /**
-     * Q2: an include of the file or of one of its headers does not resolve. The layer still works; a form that uses a
+     * An include of the file or of one of its headers does not resolve. The layer still works; a form that uses a
      * macro the file cannot see ({@link #usesUnseen}) gets master's behaviour, since that macro may come from there.
      */
     volatile boolean missingInclude;
-    /** Q2: the visible macros whose bodies use, directly or through other macros, a macro the file cannot see. */
+    /** The visible macros whose bodies use, directly or through other macros, a macro the file cannot see. */
     final Set<String> usesUnseen = new HashSet<>();
-    /** Round 5: some top-level form of the file needs the copy ({@link #anyFormNeedsCopy}). */
+    /** Some top-level form of the file needs the copy ({@link #anyFormNeedsCopy}). */
     volatile Boolean anyFormNeedsCopy;
-    /** Round 5: the forms that need the copy need it only because they are broken ({@link #onlyBrokenFormsNeedCopy}). */
+    /** The forms that need the copy need it only because they are broken ({@link #onlyBrokenFormsNeedCopy}). */
     volatile Boolean onlyBrokenFormsNeedCopy;
 
-    /** Round 5: the copy of this version of the file (a new table, a new holder: the same dependencies). */
+    /** The copy of this version of the file (a new table, a new holder: the same dependencies). */
     final @NotNull CopyHolder holder;
 
     Table(@Nullable String refusal, Object[] deps, @NotNull IncludeTracker includes, @Nullable VirtualFile file) {
@@ -589,12 +567,12 @@ public final class ErlangMacroLayer {
   private static final AtomicLong UNCHECKED_STAMPS = new AtomicLong();
 
   /**
-   * Round 5: what the includes of a file, and of its headers transitively, resolve to. Its count changes only when one
+   * What the includes of a file, and of its headers transitively, resolve to. Its count changes only when one
    * of them resolves to another file or to none. Include resolution ({@link ErlangPsiImplUtil#getDirectlyIncludedFiles})
    * reads only the file tree, the project roots, the application index, the include paths of {@code rebar.config} (in
    * a small IDE) and the include attributes. The attributes are covered by the other dependencies (the file's own text
    * and the header directive trackers); the rest can change only with a VFS structure event (creation, deletion, move,
-   * rename, copy), a roots change, or (round 6) an edit of a {@code rebar.config}. So the tracker re-runs master's
+   * rename, copy), a roots change, or an edit of a {@code rebar.config}. So the tracker re-runs master's
    * resolution, once, when the VFS structure count, the roots count or the {@code rebar.config} count
    * ({@link ErlangMacroLayerRetention#buildConfigVersion}) moved since its last check, and compares
    * the result with the last one. A header that appears or disappears changes the result (an include now resolves, or
@@ -645,7 +623,7 @@ public final class ErlangMacroLayer {
   private static final Key<TextTracker> TEXT_TRACKER_KEY = Key.create("erlang.macro.layer.text.tracker");
 
   /**
-   * Round 5: the file's own text and tree. The PSI modification stamp of a file also moves when the platform clears the
+   * The file's own text and tree. The PSI modification stamp of a file also moves when the platform clears the
    * caches of every PSI file (a file moved or a directory deleted anywhere in the project does that), so the copy does
    * not depend on it. This tracker counts the PSI tree change events of the file itself instead
    * ({@link ErlangMacroLayerRetention} listens): every reparse and every PSI edit fires them, a cache clearing does not.
@@ -654,7 +632,7 @@ public final class ErlangMacroLayer {
    */
   static final class TextTracker implements ModificationTracker {
     private final AtomicLong myVersion = new AtomicLong();
-    /** Round 5: System.nanoTime() of the last change; valid when {@link #myChanged}. */
+    /** System.nanoTime() of the last change; valid when {@link #myChanged}. */
     private volatile long myLastChange;
     private volatile boolean myChanged;
 
@@ -733,10 +711,10 @@ public final class ErlangMacroLayer {
     return file;
   }
 
-  private static final java.util.concurrent.atomic.AtomicBoolean NO_READ_ACCESS_LOGGED = new java.util.concurrent.atomic.AtomicBoolean();
+  private static final AtomicBoolean NO_READ_ACCESS_LOGGED = new AtomicBoolean();
 
   /**
-   * Round 6 (next), N3: the caller holds no read access (a platform listener on the UI thread outside a read action,
+   * The caller holds no read access (a platform listener on the UI thread outside a read action,
    * as the next-edit rename listener does). The layer then answers what master answers: nothing. Logged once.
    */
   public static boolean noReadAccess() {
@@ -772,7 +750,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5, fix 5: the table of a file, the counts of its dependencies when it was computed, and the stamps (the
+   * The table of a file, the counts of its dependencies when it was computed, and the stamps (the
    * project's PSI modification count, the VFS structure count, the roots count) under which it was last found valid.
    * Every dependency of the table changes only with a PSI change, a VFS structure change or a roots change, so while
    * these three stamps stay the same the table is valid without asking its dependencies (the header trackers, which
@@ -801,7 +779,7 @@ public final class ErlangMacroLayer {
     return table(file, false);
   }
 
-  /** {@code explicit}: round 6, the caller is a search that must get the layer's answers (see {@link #prepareSearch}). */
+  /** {@code explicit}: the caller is a search that must get the layer's answers (see {@link #prepareSearch}). */
   static @Nullable Table table(@NotNull ErlangFile file, boolean explicit) {
     if (!ErlangMacroLayerStats.on()) return table0(file, explicit);
     long g0 = System.nanoTime();
@@ -819,17 +797,17 @@ public final class ErlangMacroLayer {
     Table valid = validTable(file, cache, psi, vfs, roots);
     if (valid != null) return valid;
     if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return null;
-    // round 5: the rules of a copy build hold for a table build too (in xmerl_scan.erl, about 15 ms of include
+    // The rules of a copy build hold for a table build too (in xmerl_scan.erl, about 15 ms of include
     // resolution, which the next key press cancelled): an uncancellable caller neither starts one nor waits for one,
     // and while the file changes only its highlighting starts one (another caller waits for a running one)
     String refusal = nonCancellableCaller();
     if (NO_INDICATOR.equals(refusal)) {
-      // round 6: under an indicator of its own that a write action cancels
+      // Under an indicator of its own that a write action cancels
       return underOwnIndicator(() -> table0(file, explicit), file, "table");
     }
     if (refusal == null && cache.building.get() == null && !explicit) refusal = buildRefusal(file);
     if (TYPING.equals(refusal) && lastTableNeedsCopy(cache)) {
-      // round 6 (next), item 1: a passive query waits for the table of this version (the daemon builds it) rather
+      // A passive query waits for the table of this version (the daemon builds it) rather
       // than give an answer that the platform would keep (see awaitWhileTyped); only in a file whose last table had a
       // form that needs the copy: elsewhere master's answer is the layer's answer
       TableEntry before = cache.entry;
@@ -967,7 +945,7 @@ public final class ErlangMacroLayer {
     boolean[] missing = {false};
     try {
       for (Map.Entry<String, ErlangFile> e : direct.get(file).entrySet()) {
-        // Q2: an include that does not resolve no longer turns the layer off for the whole file
+        // An include that does not resolve no longer turns the layer off for the whole file
         if (e.getValue() == null || e.getValue().getOriginalFile().getVirtualFile() == null) {
           missing[0] = true;
           continue;
@@ -993,7 +971,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: which visible macros need substitution. A macro is plain when every definition of its name (in the file and
+   * Which visible macros need substitution. A macro is plain when every definition of its name (in the file and
    * in its headers, any arity, any conditional branch) has a locally plain body ({@link ErlangMacroExpander#isPlainBody})
    * and every macro name used in those bodies is predefined or is itself plain (transitively); a name used in a body
    * that the file cannot see makes the macro not plain.
@@ -1015,7 +993,7 @@ public final class ErlangMacroLayer {
         if (!shape.plainBody() || broken.contains(name)) t.nonPlain.add(name);
       }
     }
-    // round 6 (next), item 5: a macro whose bodies come back to itself is not plain (epp: "circular macro")
+    // A macro whose bodies come back to itself is not plain (epp: "circular macro")
     for (String name : t.names) {
       if (t.nonPlain.contains(name)) continue;
       ArrayDeque<String> queue = new ArrayDeque<>(t.macroNestedUses.getOrDefault(name, Set.of()));
@@ -1047,7 +1025,7 @@ public final class ErlangMacroLayer {
         }
       }
     }
-    // Q2: with an unresolved include, the macros whose bodies reach a macro the file cannot see
+    // With an unresolved include, the macros whose bodies reach a macro the file cannot see
     changed = true;
     while (changed) {
       changed = false;
@@ -1074,7 +1052,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * D1: the error lies in the body of a {@code -define} that epp accepts. For epp a body is any sequence of tokens up
+   * The error lies in the body of a {@code -define} that epp accepts. For epp a body is any sequence of tokens up
    * to the {@code )} before the {@code .} that ends the form, so a parser error there is false: the define reads as a
    * well-formed define to the expander ({@link ErlangMacroExpander#defineShape}: a macro name, a parameter list of
    * distinct variables, a {@code ,} and the closing {@code )}), and a {@code .} follows it. A define without its
@@ -1092,8 +1070,8 @@ public final class ErlangMacroLayer {
     // the form ends with "." (the define element ends with it, or it is the next token)
     PsiElement last = PsiTreeUtil.getDeepestVisibleLast(d);
     PsiElement next = PsiTreeUtil.nextVisibleLeaf(d);
-    boolean dot = last != null && last.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_DOT ||
-                  next != null && next.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_DOT;
+    boolean dot = last != null && last.getNode().getElementType() == ErlangTypes.ERL_DOT ||
+                  next != null && next.getNode().getElementType() == ErlangTypes.ERL_DOT;
     if (!dot) return false;
     ErlangMacroExpander.DefineShape shape = ErlangMacroExpander.defineShape(leafTokens(d));
     return shape != null && shape.params().size() == new HashSet<>(shape.params()).size();
@@ -1151,7 +1129,7 @@ public final class ErlangMacroLayer {
       if (!"define".equals(d.attribute)) continue;
       names.add(d.name());
       for (int i = 4; i < d.tokens.size(); i++) {
-        if (d.tokens.get(i).type() == org.intellij.erlang.ErlangTypes.ERL_VAR) bodyVars.add(d.tokens.get(i).text());
+        if (d.tokens.get(i).type() == ErlangTypes.ERL_VAR) bodyVars.add(d.tokens.get(i).text());
       }
     }
     if (nested.containsKey(s)) return s;
@@ -1206,7 +1184,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the copy of a holder, built once. Highlighting asks from several threads at once: one thread builds, the
+   * The copy of a holder, built once. Highlighting asks from several threads at once: one thread builds, the
    * others wait for its result. A waiter holds a read action, which a write action must be able to cancel, so the wait
    * checks for cancellation (a monitor wait cannot). A build that ends without a copy (cancelled or failed) completes
    * with null; then a waiter that is still running builds itself. Null also when the building thread asks again
@@ -1219,11 +1197,11 @@ public final class ErlangMacroLayer {
       if (copy != null) return copy;
       String uncancellable = nonCancellableCaller();
       if (NO_INDICATOR.equals(uncancellable)) {
-        // round 6: under an indicator of its own that a write action cancels
+        // Under an indicator of its own that a write action cancels
         return underOwnIndicator(() -> obtain(holder, file, table, trigger, explicit), file, trigger);
       }
       if (uncancellable != null) {
-        // round 5, fix 6: such a caller neither builds nor waits for another thread's build
+        // Such a caller neither builds nor waits for another thread's build
         ErlangMacroLayerStats.phase("build-skipped:" + uncancellable, file.getName(), 0);
         ErlangMacroLayerLog.event("SKIPPED", file.getName(), 0, 0, 0, uncancellable, trigger);
         return null;
@@ -1233,10 +1211,10 @@ public final class ErlangMacroLayer {
         String refusal = buildRefusal(file);
         if (TYPING.equals(refusal) && !onlyBrokenFormsNeedCopy(file, table) &&
             awaitWhileTyped(file, () -> holder.get() != null || holder.building.get() != null, trigger)) {
-          continue; // round 6 (next), item 1: the copy is there, a build runs, or the quiet time is over
+          continue; // the copy is there, a build runs, or the quiet time is over
         }
         if (refusal == null && !isEdtBuildAllowed() && onlyBrokenFormsNeedCopy(file, table)) {
-          // round 5: a form broken while the user types, with plain macros only; round 6: no caller builds for it, not
+          // A form broken while the user types, with plain macros only: no caller builds for it, not
           // even highlighting. The copy of such a form is broken too, so the copy answers nothing in the whole file:
           // a question needs a clean form (resolve), and the error filter hides an error only in a clean form.
           refusal = "broken-plain";
@@ -1312,7 +1290,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5, fix 2, and round 6: while a file changes (for {@link #quietMillis()} after an edit), a passive query at
+   * While a file changes (for {@link #quietMillis()} after an edit), a passive query at
    * the caret ({@link #isPassiveCaller}: the identifier highlighting, ctrl-hover, parameter info, highlight usages)
    * starts no copy build: the next key press would cancel it. It uses a copy that is there or being built, else it
    * gets master's answer. Every other caller builds and waits, cancellably: highlighting, and every search or
@@ -1344,7 +1322,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6 (next), item 1: the longest wait of a passive query for the copy, ms ({@code erlang.macro.layer.passive.wait},
+   * The longest wait of a passive query for the copy, ms ({@code erlang.macro.layer.passive.wait},
    * default 2,000). The wait ends earlier when the quiet time is over (by default 1 s after the last change).
    */
   private static final int PASSIVE_WAIT_MS = readInt("erlang.macro.layer.passive.wait", "ERLANG_MACRO_LAYER_PASSIVE_WAIT", 2000);
@@ -1355,19 +1333,19 @@ public final class ErlangMacroLayer {
     return w != null ? w : PASSIVE_WAIT_MS;
   }
 
-  /** Sets the longest wait of a passive query for the copy (0: a passive query is refused at once, as in round 6). */
+  /** Sets the longest wait of a passive query for the copy (0: a passive query is refused at once). */
   @TestOnly
   public static void setPassiveWaitMillisForTests(int millis, @NotNull Disposable parent) {
     Integer previous = ourTestPassiveWait;
     ourTestPassiveWait = millis;
     Disposer.register(parent, () -> ourTestPassiveWait = previous);
   }
-  /** Round 6 (next): waits of passive queries, and those that ended with the copy or the table there, for tests and measurements. */
+  /** Waits of passive queries, and those that ended with the copy or the table there, for tests and measurements. */
   static final AtomicInteger PASSIVE_WAITS = new AtomicInteger();
   static final AtomicInteger PASSIVE_WAITS_READY = new AtomicInteger();
 
   /**
-   * Round 6 (next), item 1: a passive query that the layer refuses while the file is typed in waits for the copy (or
+   * A passive query that the layer refuses while the file is typed in waits for the copy (or
    * the table) of this version of the file instead of answering at once. The platform keeps the answer of the
    * identifier highlighting at the caret on range markers of its targets, and drops it only on a change of the
    * document or of the PSI of the file, or when the editor closes ({@code IdentifierHighlightingManagerImpl} of 262 and
@@ -1382,7 +1360,7 @@ public final class ErlangMacroLayer {
    * for it. It returns false also after {@link #PASSIVE_WAIT_MS}. After a give-up, the later questions of the same
    * query (the same root progress indicator) do not wait again. No restart of anything: it cannot loop.
    */
-  private static boolean awaitWhileTyped(@NotNull PsiFile file, @NotNull java.util.function.BooleanSupplier ready, @NotNull String trigger) {
+  private static boolean awaitWhileTyped(@NotNull PsiFile file, @NotNull BooleanSupplier ready, @NotNull String trigger) {
     ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
     if (root == null || gaveUp(root)) return false;
     ErlangMacroLayerRetention retention = ErlangMacroLayerRetention.getInstance(file.getProject());
@@ -1398,7 +1376,7 @@ public final class ErlangMacroLayer {
           long g0 = System.nanoTime();
           while (System.nanoTime() - g0 < 50_000_000L) {
             ProgressManager.checkCanceled();
-            java.util.concurrent.locks.LockSupport.parkNanos(1_000_000L);
+            LockSupport.parkNanos(1_000_000L);
           }
           outcome = "write-action";
           giveUp(root);
@@ -1414,7 +1392,7 @@ public final class ErlangMacroLayer {
           giveUp(root);
           return false;
         }
-        java.util.concurrent.locks.LockSupport.parkNanos(10_000_000L);
+        LockSupport.parkNanos(10_000_000L);
         if (Thread.interrupted()) {
           Thread.currentThread().interrupt();
           throw new ProcessCanceledException();
@@ -1428,7 +1406,7 @@ public final class ErlangMacroLayer {
     }
   }
 
-  /** Round 6 (next): root progress indicators of passive queries whose wait gave up (weak keys, identity). */
+  /** Root progress indicators of passive queries whose wait gave up (weak keys, identity). */
   private static final Map<ProgressIndicator, Boolean> GAVE_UP = Collections.synchronizedMap(new WeakHashMap<>());
 
   private static boolean gaveUp(@NotNull ProgressIndicator root) {
@@ -1447,13 +1425,13 @@ public final class ErlangMacroLayer {
    */
   private static final String[] PASSIVE_CALLERS = {"IdentifierHighlight", "HighlightUsages", "CtrlMouse", "com.intellij.codeInsight.hint."};
 
-  /** Round 6: stack walks made by {@link #isPassiveCaller}, for tests and measurements. */
+  /** Stack walks made by {@link #isPassiveCaller}, for tests and measurements. */
   static final AtomicInteger STACK_WALKS = new AtomicInteger();
-  /** Round 6: stack walks made by {@link #prepareSearch} (one per search in a file just typed in). */
+  /** Stack walks made by {@link #prepareSearch} (one per search in a file just typed in). */
   static final AtomicInteger SEARCH_STACK_WALKS = new AtomicInteger();
 
   /**
-   * Round 6: the last progress indicator under which this thread was found to run a passive query (the indicator
+   * The last progress indicator under which this thread was found to run a passive query (the indicator
    * itself, not a wrapper of it: the search inside the identifier highlighting wraps it). Only this thread reads it,
    * and it matches only the very same indicator object, so it never marks a worker thread or another caller: a search
    * that the platform splits over worker threads walks their own stacks. The identifier highlighting
@@ -1465,7 +1443,7 @@ public final class ErlangMacroLayer {
   private static final ThreadLocal<WeakReference<ProgressIndicator>> PASSIVE_MEMO = new ThreadLocal<>();
 
   /**
-   * Round 6: the caller is a passive query ({@link #PASSIVE_CALLERS} on the thread's stack). Asked only when a build
+   * The caller is a passive query ({@link #PASSIVE_CALLERS} on the thread's stack). Asked only when a build
    * would be refused for a passive caller. The walk stops at the first passive frame (in the IDE 10 to 45 frames
    * below the layer). The next questions of the same passive call on the same thread are answered by
    * {@link #PASSIVE_MEMO} without a walk. The answer "not passive" is not kept: such a caller builds the copy, and
@@ -1493,7 +1471,7 @@ public final class ErlangMacroLayer {
     return p;
   }
 
-  /** Round 6: a frame of a passive query ({@link #PASSIVE_CALLERS}) is on this thread's stack; always walks. */
+  /** A frame of a passive query ({@link #PASSIVE_CALLERS}) is on this thread's stack; always walks. */
   static boolean hasPassiveFrame() {
     return StackWalker.getInstance().walk(frames -> frames.limit(400).anyMatch(f -> {
       String c = f.getClassName();
@@ -1507,7 +1485,7 @@ public final class ErlangMacroLayer {
    * tests that do not run the IDE's own passive callers). The mark lasts only for the computation.
    */
   @TestOnly
-  public static <T> T computeAsPassiveQueryForTests(@NotNull java.util.function.Supplier<T> computation) {
+  public static <T> T computeAsPassiveQueryForTests(@NotNull Supplier<T> computation) {
     ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
     if (root == null) throw new IllegalStateException("a passive query runs under a progress indicator");
     WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
@@ -1521,11 +1499,11 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6 (next), item 2: runs the computation as a passive query of the caller's progress indicator (the completion
+   * Runs the computation as a passive query of the caller's progress indicator (the completion
    * auto-popup, which runs after every key and whose answer is only shown): while the file is typed in, it builds
    * nothing and waits for the copy (see {@link #awaitWhileTyped}). The mark lasts only for the computation.
    */
-  static <T> T asPassiveQuery(@NotNull java.util.function.Supplier<T> computation) {
+  static <T> T asPassiveQuery(@NotNull Supplier<T> computation) {
     ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
     if (root == null) return computation.get();
     WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
@@ -1539,14 +1517,14 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6: called by the layer's reference searcher ({@link ErlangMacroLayerReferencesSearcher}) and by the search of
+   * Called by the layer's reference searcher ({@link ErlangMacroLayerReferencesSearcher}) and by the search of
    * names made by macros, on the thread that starts a search, before any answer is read. For every Erlang file of the
    * search scope that changed within {@link #quietMillis()} (the only files for which a build can be refused) and that
    * contains the name searched for, it builds the copy now, cancellably, unless the search itself is a passive query.
    * The worker threads of the search then find the copy there, whatever their stacks show; so a wrong "passive" on a
    * worker can no longer make a rename or a find usages miss the layer's answers in a file just typed in.
    */
-  public static void prepareSearch(@NotNull PsiElement target, @NotNull com.intellij.psi.search.SearchScope scope) {
+  public static void prepareSearch(@NotNull PsiElement target, @NotNull SearchScope scope) {
     if (!isEnabled() || ApplicationManager.getApplication().isDispatchThread() || nonCancellableCaller() != null) return;
     if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return; // highlighting is never refused a build
     if (!(target instanceof ErlangMacroLayerHeaderTarget) && !target.getLanguage().isKindOf(ErlangLanguage.INSTANCE)) return;
@@ -1585,7 +1563,7 @@ public final class ErlangMacroLayer {
     return changed != null && System.nanoTime() - changed < quiet * 1_000_000L;
   }
 
-  /** Round 5: System.nanoTime() of the last change of a document (set by the listener of the retention service). */
+  /** System.nanoTime() of the last change of a document (set by the listener of the retention service). */
   private static final Key<Long> DOCUMENT_CHANGED_AT = Key.create("erlang.macro.layer.document.changed.at");
 
   static void documentChanged(@NotNull Document document) {
@@ -1593,7 +1571,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: every form of the file that needs the copy needs it only because it is broken in the main tree: it does
+   * Every form of the file that needs the copy needs it only because it is broken in the main tree: it does
    * not start with {@code ?}, and each of its macro uses is a plain macro in a plain slot. Such a form is broken in
    * the copy too (a plain body is one balanced expression in the place of a use the main tree already parsed), so the
    * copy answers nothing there; it is most likely a form the user is typing. Computed once per table.
@@ -1618,11 +1596,11 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5, fix 6: the caller cannot be cancelled: it runs in a non-cancellable section, or with no progress indicator
+   * The caller cannot be cancelled: it runs in a non-cancellable section, or with no progress indicator
    * (a plain read action on a pooled thread, or a coroutine read action such as the update of the rename action). A
    * key press is a write action: it waits until every read action ends, and a caller that cannot be cancelled would
    * hold it for a whole build (or a wait for one). In a non-cancellable section the caller gets the copy that is
-   * there, or master's answer. Round 6: a caller with no indicator builds and waits under an indicator of its own that
+   * there, or master's answer. A caller with no indicator builds and waits under an indicator of its own that
    * a write action cancels ({@link #underOwnIndicator}). Null when the caller is cancellable (or builds are allowed anywhere).
    */
   private static @Nullable String nonCancellableCaller() {
@@ -1636,7 +1614,7 @@ public final class ErlangMacroLayer {
   private static final String NO_INDICATOR = "no-indicator";
 
   /**
-   * Round 6: runs a table or copy request of a caller that has no progress indicator (not the UI thread, not a
+   * Runs a table or copy request of a caller that has no progress indicator (not the UI thread, not a
    * non-cancellable section) under a new indicator, which an application listener cancels before a write action
    * starts. So the caller gets the layer's answer, and a key press waits for no build: the build or the wait stops at
    * its next cancellation check, and the caller gets master's answer for this question. The platform's own helpers for
@@ -1645,7 +1623,7 @@ public final class ErlangMacroLayer {
    * A write action that already waited for the read lock before the listener was added is not seen; it waits for
    * this one build at most.
    */
-  private static <T> @Nullable T underOwnIndicator(@NotNull java.util.function.Supplier<T> request, @NotNull PsiFile file,
+  private static <T> @Nullable T underOwnIndicator(@NotNull Supplier<T> request, @NotNull PsiFile file,
                                                   @NotNull String trigger) {
     var app = ApplicationManager.getApplication();
     EmptyProgressIndicator indicator = new EmptyProgressIndicator();
@@ -1670,7 +1648,7 @@ public final class ErlangMacroLayer {
     }
   }
 
-  /** Round 6: requests run by {@link #underOwnIndicator}, for tests and measurements. */
+  /** Requests run by {@link #underOwnIndicator}, for tests and measurements. */
   static final AtomicInteger OWN_INDICATOR_REQUESTS = new AtomicInteger();
 
   static boolean isHighlighting(@Nullable ProgressIndicator indicator) {
@@ -1682,7 +1660,7 @@ public final class ErlangMacroLayer {
     return false;
   }
 
-  /** Round 5: {@code erlang.macro.layer.quiet} / {@code ERLANG_MACRO_LAYER_QUIET}, ms, default 1,000. */
+  /** {@code erlang.macro.layer.quiet} / {@code ERLANG_MACRO_LAYER_QUIET}, ms, default 1,000. */
   private static final int QUIET_MS = readInt("erlang.macro.layer.quiet", "ERLANG_MACRO_LAYER_QUIET", 1000);
   private static volatile @Nullable Integer ourTestQuiet;
 
@@ -1776,7 +1754,7 @@ public final class ErlangMacroLayer {
     }
     int end = form.getTextRange().getEndOffset();
     for (PsiElement leaf = first; leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
-      if (leaf.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_QMARK) continue;
+      if (leaf.getNode().getElementType() != ErlangTypes.ERL_QMARK) continue;
       PsiElement parent = leaf.getParent();
       if (parent instanceof ErlangMacrosArg) continue;
       if (!(parent instanceof ErlangMacros m) || leaf != m.getFirstChild()) return "odd-?:" + parent.getClass().getSimpleName();
@@ -1829,7 +1807,7 @@ public final class ErlangMacroLayer {
     try {
       return build0(file, table, trigger, why, probe);
     }
-    catch (com.intellij.openapi.progress.ProcessCanceledException e) {
+    catch (ProcessCanceledException e) {
       long dt = System.nanoTime() - probe.t0;
       ErlangMacroLayerStats.phase("build-cancelled", file.getName(), dt);
       ErlangMacroLayerLog.event("CANCELLED", file.getName(), dt, 0, 0, "phase=" + probe.phase, trigger, probe.details());
@@ -1837,7 +1815,7 @@ public final class ErlangMacroLayer {
     }
   }
 
-  /** Spike 5: what one build spends, by phase, with GC and thread CPU time; for the log only. */
+  /** What one build spends, by phase, with GC and thread CPU time; for the log only. */
   private static final class BuildProbe {
     final long t0 = System.nanoTime();
     final long cpu0 = threadCpu();
@@ -1847,7 +1825,7 @@ public final class ErlangMacroLayer {
     String phase = "start";
 
     String details() {
-      com.intellij.openapi.progress.ProgressIndicator pi = ProgressManager.getGlobalProgressIndicator();
+      ProgressIndicator pi = ProgressManager.getGlobalProgressIndicator();
       return String.format(Locale.ROOT, "lex=%.1f expand=%.1f parse=%.1f errors=%.1f cpu=%.1f gcMs=%d gcCount=%d indicator=%s nonCancelable=%s",
                            lex / 1e6, expand / 1e6, parse / 1e6, errors / 1e6, (threadCpu() - cpu0) / 1e6, gcMillis() - gc0,
                            gcCount() - gcCount0, pi == null ? "none" : pi.getClass().getSimpleName(),
@@ -1855,13 +1833,13 @@ public final class ErlangMacroLayer {
     }
 
     static long threadCpu() {
-      java.lang.management.ThreadMXBean b = java.lang.management.ManagementFactory.getThreadMXBean();
+      ThreadMXBean b = ManagementFactory.getThreadMXBean();
       return b.isCurrentThreadCpuTimeSupported() ? b.getCurrentThreadCpuTime() : 0;
     }
 
     static long gcMillis() {
       long n = 0;
-      for (java.lang.management.GarbageCollectorMXBean b : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+      for (GarbageCollectorMXBean b : ManagementFactory.getGarbageCollectorMXBeans()) {
         n += Math.max(0, b.getCollectionTime());
       }
       return n;
@@ -1869,7 +1847,7 @@ public final class ErlangMacroLayer {
 
     static long gcCount() {
       long n = 0;
-      for (java.lang.management.GarbageCollectorMXBean b : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+      for (GarbageCollectorMXBean b : ManagementFactory.getGarbageCollectorMXBeans()) {
         n += Math.max(0, b.getCollectionCount());
       }
       return n;
@@ -1962,14 +1940,14 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Q2: the text uses a macro that the file cannot see (with an unresolved include it may come from there), or a
+   * The text uses a macro that the file cannot see (with an unresolved include it may come from there), or a
    * visible macro whose body reaches one. Strings and comments count too: a refusal too many, never a wrong answer.
    */
   static boolean usesUnseenMacro(@NotNull CharSequence s, @NotNull Table t) {
     return anyMacroName(s, name -> !ErlangMacroExpander.PREDEFINED.contains(name) && (!t.names.contains(name) || t.usesUnseen.contains(name)));
   }
 
-  /** Q2: the piece and the pieces after it up to the end of its source form (the recovery may split a form). */
+  /** The piece and the pieces after it up to the end of its source form (the recovery may split a form). */
   private static boolean sourceFormUsesUnseenMacro(@NotNull PsiElement form, @NotNull Table t) {
     for (PsiElement e = form; e != null; e = PsiTreeUtil.skipWhitespacesAndCommentsForward(e)) {
       if (usesUnseenMacro(e.getNode().getChars(), t)) return true;
@@ -1978,7 +1956,7 @@ public final class ErlangMacroLayer {
     return false;
   }
 
-  private static boolean anyMacroName(@NotNull CharSequence s, @NotNull java.util.function.Predicate<String> test) {
+  private static boolean anyMacroName(@NotNull CharSequence s, @NotNull Predicate<String> test) {
     int n = s.length();
     for (int i = 0; i < n; i++) {
       if (s.charAt(i) != '?') continue;
@@ -2013,7 +1991,7 @@ public final class ErlangMacroLayer {
     Boolean b = t.formUse.get(at);
     if (b == null) {
       b = formUsesNames(t.names, form);
-      // Q2: a form that uses a macro the file cannot see: master's behaviour (the macro may be in a missing header)
+      // A form that uses a macro the file cannot see: master's behaviour (the macro may be in a missing header)
       if (b && t.missingInclude && sourceFormUsesUnseenMacro(form, t)) b = false;
       t.formUse.put(at, b);
     }
@@ -2026,7 +2004,7 @@ public final class ErlangMacroLayer {
       PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form);
       b = prev != null && usesKnownMacro(prev.getNode().getChars(), names);
     }
-    // D2: the rest of a form that the recovery split ("reverse(L)." after "?LISTS" or "lists?COLON"): the pieces
+    // The rest of a form that the recovery split ("reverse(L)." after "?LISTS" or "lists?COLON"): the pieces
     // before it, back to the one that ends the form, belong to the same form of the source
     for (PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form); !b && prev != null && !endsSourceForm(prev);
          prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(prev)) {
@@ -2038,14 +2016,14 @@ public final class ErlangMacroLayer {
   /** The top-level element ends with the dot that ends a form (not the dot of a record field access, R#rec.f). */
   static boolean endsSourceForm(@NotNull PsiElement e) {
     PsiElement last = PsiTreeUtil.getDeepestVisibleLast(e);
-    if (last == null || last.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_DOT) return false;
+    if (last == null || last.getNode().getElementType() != ErlangTypes.ERL_DOT) return false;
     PsiElement name = PsiTreeUtil.prevVisibleLeaf(last);
     PsiElement radix = name == null ? null : PsiTreeUtil.prevVisibleLeaf(name);
-    return radix == null || radix.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_RADIX;
+    return radix == null || radix.getNode().getElementType() != ErlangTypes.ERL_RADIX;
   }
 
   /**
-   * Round 6 (next), item 1b: {@link #formUsesMacro} for a structural question (does a token reference exist here), which
+   * {@link #formUsesMacro} for a structural question (does a token reference exist here), which
    * must never build, wait or be refused: with the valid table of the file, else with the macro names of its last table
    * (one edit old: the names change only with a {@code -define}, an include or a header's directives; not cached, the
    * per-form caches of an old table are keyed by old offsets). Null when the file has no table yet. The identifier
@@ -2066,7 +2044,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6: the free variables (not parameters) of every definition of every macro that the form uses, directly or
+   * The free variables (not parameters) of every definition of every macro that the form uses, directly or
    * through the macros those bodies use. Only these variables can occur in the form's expansion besides the form's
    * own tokens. A superset: every {@code ?NAME} of the form's text counts, strings and comments too.
    */
@@ -2114,7 +2092,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6: the main tree split a use {@code ?name(...)} between two top-level forms: error recovery stops before
+   * The main tree split a use {@code ?name(...)} between two top-level forms: error recovery stops before
    * {@code atom (}, so {@code foo?is_timeout(a)} ends one form with the bare {@code ?} and starts the next with
    * {@code is_timeout(a)}. Both forms use the macro.
    */
@@ -2155,7 +2133,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: names of the variables inside the arguments of the macro uses of the form that need substitution (the
+   * Names of the variables inside the arguments of the macro uses of the form that need substitution (the
    * macro is not plain, or the use is not in a plain slot). Every enclosing use counts: {@code ?PLAIN(?OTHER(X))}
    * counts X for ?OTHER. An element that starts with {@code ?} but is not a macro use counts too (a superset).
    */
@@ -2188,14 +2166,14 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the form uses a visible macro and needs substitution: the copy may answer for it. That is the case when
+   * The form uses a visible macro and needs substitution: the copy may answer for it. That is the case when
    * the form is broken in the main tree, or starts with {@code ?}, or has a use {@code ?NAME} of a visible macro that
    * is not plain ({@link #classify}), or of a plain macro in a position other than a plain expression slot
    * ({@link #isPlainPosition}). A directive ({@code -define}, {@code -include}, {@code -ifdef}, ...) never needs it:
    * the copy keeps directives as they are and never answers inside them. With the wide gate: every form with a use.
    */
   /**
-   * Round 5: some top-level form of the file needs the copy (computed once per table, with every form's answer). When
+   * Some top-level form of the file needs the copy (computed once per table, with every form's answer). When
    * none does, every question is answered "none" after this one check: no form can be answered by the copy, and no
    * form can make a name (a form that could, a top-level macro use or a broken form with a macro use, needs the copy).
    */
@@ -2248,7 +2226,7 @@ public final class ErlangMacroLayer {
   private static boolean usesNeedSubstitution(@NotNull Table t, @NotNull PsiElement form, @NotNull PsiElement first) {
     int end = form.getTextRange().getEndOffset();
     for (PsiElement leaf = first; leaf != null && leaf.getTextRange().getStartOffset() < end; leaf = PsiTreeUtil.nextLeaf(leaf)) {
-      if (leaf.getNode().getElementType() != org.intellij.erlang.ErlangTypes.ERL_QMARK) continue;
+      if (leaf.getNode().getElementType() != ErlangTypes.ERL_QMARK) continue;
       PsiElement parent = leaf.getParent();
       if (parent instanceof ErlangMacrosArg) continue; // ??X: the expander leaves it as it is
       if (!(parent instanceof ErlangMacros m) || leaf != m.getFirstChild()) return true;
@@ -2262,7 +2240,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the macro use stands alone in a slot of a value: a whole expression ({@code ?M}), the callee of a local
+   * The macro use stands alone in a slot of a value: a whole expression ({@code ?M}), the callee of a local
    * call ({@code ?M(...)}), a whole type operand, or the module of a remote call ({@code ?M:f(...)}: the remote function
    * reference never asks the layer). It is not next to {@code #} (a record name), and not before {@code :} or
    * {@code (} unless it is the callee or the module of a call. In any other position (a record name, the module of a
@@ -2298,20 +2276,20 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the element may be what the layer gives as the declaration of a name made by a macro: an atom name leaf
+   * The element may be what the layer gives as the declaration of a name made by a macro: an atom name leaf
    * in a top-level form that starts with a macro use or is broken (such as {@code foo} in {@code ?GEN(foo).}), or in a
    * {@code -define} body (such as {@code mr} in {@code -define(R, -record(mr, {f})).}). A structural check only; it
    * asks no copy, so the UI thread may call it.
    */
   public static boolean isNameMadeByMacro(@Nullable PsiElement element) {
-    // the owner's finding: the platform asks with any element (a directory, a binary file, another language's element),
+    // the platform asks with any element (a directory, a binary file, another language's element),
     // whose text range or first child's text range may be null: only an Erlang leaf or Erlang element can be such a name
     if (!(element instanceof LeafPsiElement) && !(element instanceof ErlangCompositeElement)) return false;
     // the layer maps to the topmost element with the token's range: it may be an expression around the leaf
     PsiElement first = element instanceof LeafPsiElement ? element : PsiTreeUtil.firstChild(element);
     TextRange range = element.getTextRange();
     if (first == null || range == null || !range.equals(first.getTextRange())) return false;
-    if (!(first instanceof LeafPsiElement leaf) || leaf.getElementType() != org.intellij.erlang.ErlangTypes.ERL_ATOM_NAME) return false;
+    if (!(first instanceof LeafPsiElement leaf) || leaf.getElementType() != ErlangTypes.ERL_ATOM_NAME) return false;
     if (element instanceof PsiNamedElement || element instanceof ErlangQAtom) return false; // master's own handlers
     if (!isEnabled() || realFile(element) == null) return false;
     if (PsiTreeUtil.getParentOfType(element, ErlangMacrosBody.class) != null) return true;
@@ -2333,8 +2311,8 @@ public final class ErlangMacroLayer {
   public static @Nullable String describeLayerTarget(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
     if (element instanceof ErlangMacroLayerHeaderTarget target) return target.describe(location);
     if (isNameMadeByMacro(element)) {
-      // a name in a macro use at the top level makes a function; in a -define body it may name anything (round 6:
-      // the copy, if there is one, tells what)
+      // a name in a macro use at the top level makes a function; in a -define body it may name anything (the copy, if
+      // there is one, tells what)
       String kind = isInTopLevelMacroForm(element) ? "function" : "name";
       String made = madeNameKind(element);
       return ErlangMacroLayerHeaderTarget.describe(made != null ? made : kind, element.getText(), location);
@@ -2343,7 +2321,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6 (next), item 3a: the token is the name that a macro makes ({@code hfoo} in {@code ?HGEN(hfoo).}, {@code mr}
+   * The token is the name that a macro makes ({@code hfoo} in {@code ?HGEN(hfoo).}, {@code mr}
    * in {@code -define(R, -record(mr, {mf})).}), as the copy tells; it is then its own declaration (the uses resolve to
    * it). A structural check first; the copy only for such tokens, under the layer's build rule (a passive query waits).
    */
@@ -2399,7 +2377,7 @@ public final class ErlangMacroLayer {
     return "function".equals(kind) || "record".equals(kind) || "record field".equals(kind);
   }
 
-  /** Round 6: the kind of a name made by a macro at this token of a real .erl file, from a copy that is there; or null. */
+  /** The kind of a name made by a macro at this token of a real .erl file, from a copy that is there; or null. */
   private static @Nullable String madeNameKind(@NotNull PsiElement token) {
     ErlangFile file = layerFile(token);
     Copy copy = file == null ? null : cachedCopy(file);
@@ -2407,7 +2385,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6 (next), item 3f: whether some form of the file needs the copy, from the valid table (computed if it is not
+   * Whether some form of the file needs the copy, from the valid table (computed if it is not
    * known for it yet; a walk of the forms, cached on the table), else from the file's last table if that one knows;
    * null when there is no table or the answer is not known. Never computes a table, never builds, never waits.
    */
@@ -2422,7 +2400,7 @@ public final class ErlangMacroLayer {
     return t.anyFormNeedsCopy;
   }
 
-  /** Round 6 (next): the table of the file if it is up to date; never computes one, never waits. */
+  /** The table of the file if it is up to date; never computes one, never waits. */
   static @Nullable Table cachedTable(@NotNull ErlangFile file) {
     if (file.getUserData(TABLE_KEY) == null) return null;
     Project project = file.getProject();
@@ -2442,7 +2420,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6: the element to rename when a rename starts at a token inside a macro, or null when the layer cannot tell
+   * The element to rename when a rename starts at a token inside a macro, or null when the layer cannot tell
    * now (the caller then refuses the rename with a message). The uses of a name made by a macro resolve to the name's
    * leaf ({@code made} in {@code ?MK(made).}, {@code mr} in {@code -define(R, -record(mr, {mf})).}), and the uses of a
    * free variable of a header macro body to an {@link ErlangMacroLayerHeaderTarget}; started at the token itself, the
@@ -2471,7 +2449,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 6: the token may be a name that an expansion makes: an argument of a top-level form that starts with a macro
+   * The token may be a name that an expansion makes: an argument of a top-level form that starts with a macro
    * use, or a token of a -define body that can make a top-level form (it starts with {@code -} or has a {@code ->}) or
    * that uses another macro. A token of any other body (a field fragment such as {@code id :: atom()}, a constant) is
    * renamed by master's path, which resolves it itself.
@@ -2492,7 +2470,7 @@ public final class ErlangMacroLayer {
     return false;
   }
 
-  /** Round 6: a variable of a header macro body that is not a parameter of its macro: the uses in the includers see it. */
+  /** A variable of a header macro body that is not a parameter of its macro: the uses in the includers see it. */
   public static boolean isHeaderBodyVariable(@NotNull PsiElement element) {
     return element instanceof ErlangQVar v && isEnabled() && headerBodyVariableTarget(v) != null;
   }
@@ -2529,7 +2507,7 @@ public final class ErlangMacroLayer {
   private static final Key<ConcurrentHashMap<String, Object[]>> INCLUDERS_KEY = Key.create("erlang.macro.layer.includers");
 
   /**
-   * Round 5: resolves a name inside a {@code -define} body through the expanded copies of the macro's uses: in the
+   * Resolves a name inside a {@code -define} body through the expanded copies of the macro's uses: in the
    * file itself, and for a header, in the .erl files that use the macro and include the header (at most
    * {@link #MAX_BODY_USERS}). The body alone may not parse (a fragment), and a header body names things of its
    * includers, so master cannot resolve it there. Every use contributes its answer, mapped back to real elements;
@@ -2592,7 +2570,7 @@ public final class ErlangMacroLayer {
     return null;
   }
 
-  /** Round 5: the .erl files of the project that use the macro of the header (for rename conflicts); never on the UI thread. */
+  /** The .erl files of the project that use the macro of the header (for rename conflicts); never on the UI thread. */
   public static @NotNull List<ErlangFile> includersOfHeader(@Nullable PsiFile header, @NotNull String macro) {
     VirtualFile vf = header == null ? null : header.getOriginalFile().getVirtualFile();
     if (vf == null || !isEnabled() || DumbService.isDumb(header.getProject())) return List.of();
@@ -2639,7 +2617,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: the reference lies in a {@code -define} body, master resolves it to nothing, and one of the macro's uses
+   * The reference lies in a {@code -define} body, master resolves it to nothing, and one of the macro's uses
    * resolves it to the element: for find usages and rename of that element.
    */
   public static boolean isReferenceThroughMacroUses(@NotNull PsiReference ref, @NotNull PsiElement element) {
@@ -2669,7 +2647,7 @@ public final class ErlangMacroLayer {
     if (!t.names.isEmpty()) {
       for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
         if (c instanceof PsiWhiteSpace || c instanceof PsiComment) continue;
-        // round 5 (narrow gate): only a form with a use of a visible macro can make a name; another form is copied as it is
+        // the narrow gate: only a form with a use of a visible macro can make a name; another form is copied as it is
         if (!isGateWide() && !formUsesMacro(t, c)) continue;
         if (c instanceof PsiErrorElement) {
           b = true;
@@ -2735,10 +2713,6 @@ public final class ErlangMacroLayer {
       ResolveResult[] rr = multiResolveFallback(v, o);
       return rr.length > 0 ? rr[0].getElement() : null;
     }
-    if (ourAblateResolve) {
-      mark(o, "ablated");
-      return null;
-    }
     if (ref instanceof ErlangFunctionReference fr && isRemoteCall(element)) {
       mark(o, isRemoteEnabled() ? "remote" : "gate:remote-off");
       return isRemoteEnabled() ? remoteFallback(file, element, fr) : null;
@@ -2766,7 +2740,7 @@ public final class ErlangMacroLayer {
     PsiElement form = topForm(element);
     boolean formHasUse = formUsesMacro(t, form);
     if (formHasUse && !formNeedsCopy(t, form) && !hasTopLevelMacroForm(file, t)) {
-      // round 5: the form's macros need no substitution, and no top-level form can make a name: the copy has no answer
+      // The form's macros need no substitution, and no top-level form can make a name: the copy has no answer
       mark(o, "gate:plain-form");
       return null;
     }
@@ -2775,7 +2749,7 @@ public final class ErlangMacroLayer {
         mark(o, "gate:form-no-use");
         return null;
       }
-      // round 5: a record, a record field or a local type may be made by a macro in another form
+      // A record, a record field or a local type may be made by a macro in another form
       if (isMadeNameReference(ref)) return madeNameFallback(file, ref, element);
       // a local function may be made by a macro in another form: the per-file table
       if (!(ref instanceof ErlangFunctionReference fr)) {
@@ -2818,7 +2792,7 @@ public final class ErlangMacroLayer {
   private static final Object NO_ANSWER = new Object();
 
   /**
-   * D4: {@code -record(?REC, {...})} with {@code -define(REC, item).}: the record that {@code #item{}} means (the main
+   * {@code -record(?REC, {...})} with {@code -define(REC, item).}: the record that {@code #item{}} means (the main
    * tree names it "?REC"). Only a macro without parameters whose body is one atom, and only the file's own records.
    */
   private static @Nullable PsiElement recordNamedByMacro(@NotNull ErlangFile file, @NotNull String name) {
@@ -2829,7 +2803,7 @@ public final class ErlangMacroLayer {
       ErlangMacros m = q == null ? null : q.getMacros();
       ErlangMacrosName macroName = m == null ? null : m.getMacrosName();
       if (macroName == null) continue;
-      ErlangMacrosDefinition d = org.intellij.erlang.psi.impl.ErlangMacroResolve.resolve(file, StringUtil.unquoteString(macroName.getText(), '\''), org.intellij.erlang.psi.impl.ErlangMacroResolve.NO_ARGUMENTS);
+      ErlangMacrosDefinition d = ErlangMacroResolve.resolve(file, StringUtil.unquoteString(macroName.getText(), '\''), ErlangMacroResolve.NO_ARGUMENTS);
       ErlangMacrosBody body = d == null || d.getArgumentDefinitionList() != null ? null : d.getMacrosBody();
       if (body == null) continue;
       String atom = body.getText().trim();
@@ -2840,7 +2814,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5, fix 3: the reference's own name is a macro use ({@code ?NAME(...)}, {@code fun ?F/1}, {@code #?R{}}, ...).
+   * The reference's own name is a macro use ({@code ?NAME(...)}, {@code fun ?F/1}, {@code #?R{}}, ...).
    * The copy replaces that name with the macro's body, so no reference of the copy stands at the name: the copy can
    * never answer for it.
    */
@@ -2848,7 +2822,7 @@ public final class ErlangMacroLayer {
     TextRange range = ref.getRangeInElement();
     if (range.isEmpty()) return false;
     PsiElement leaf = element.findElementAt(range.getStartOffset());
-    return leaf != null && leaf.getNode().getElementType() == org.intellij.erlang.ErlangTypes.ERL_QMARK;
+    return leaf != null && leaf.getNode().getElementType() == ErlangTypes.ERL_QMARK;
   }
 
   /** A record, record field or local type reference: the names a macro can make besides functions. */
@@ -2862,7 +2836,7 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * Round 5: a record, field or type reference in a form without a macro use, in a file with a top-level macro form.
+   * A record, field or type reference in a form without a macro use, in a file with a top-level macro form.
    * The form is copied verbatim into the copy, so the same reference there sees the definitions the expansions made.
    */
   private static @Nullable PsiElement madeNameFallback(@NotNull ErlangFile file, @NotNull PsiReference ref, @NotNull PsiElement element) {
@@ -2927,10 +2901,6 @@ public final class ErlangMacroLayer {
       return ResolveResult.EMPTY_ARRAY;
     }
     markFile(o, file);
-    if (ourAblateVariable) {
-      mark(o, "ablated");
-      return ResolveResult.EMPTY_ARRAY;
-    }
     Table t = table(file);
     if (t == null || t.refusal != null || t.names.isEmpty()) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:no-names");
@@ -2954,8 +2924,8 @@ public final class ErlangMacroLayer {
       return ResolveResult.EMPTY_ARRAY;
     }
     // the copy can bind the variable only through a macro body that names it, a macro argument, or a broken form;
-    // round 5 (narrow gate): only a free variable of a body (not a parameter), and only the arguments of a use that
-    // needs substitution (a plain use puts its arguments in value slots: their bindings are master's); round 6: only a
+    // the narrow gate: only a free variable of a body (not a parameter), and only the arguments of a use that
+    // needs substitution (a plain use puts its arguments in value slots: their bindings are master's); only a
     // free variable of a body of a macro that this form uses (directly or through the macros of that body)
     boolean wide = isGateWide();
     String name = element.getText();
@@ -3000,7 +2970,7 @@ public final class ErlangMacroLayer {
         PsiElement real = exit(copy.toReal(rr.getElement()), file);
         if (real != null) result.add(real);
       }
-      // D4: in the copy the variable binds itself (a parameter of a function that a top-level macro use makes, the left
+      // In the copy the variable binds itself (a parameter of a function that a top-level macro use makes, the left
       // side of a match), while the main tree does not see a binding there: the real variable is a binding, not an
       // unbound one (where the main tree sees the binding, master's answer, none, stays)
       PsiElement v = c.getElement();
@@ -3059,10 +3029,6 @@ public final class ErlangMacroLayer {
       return false;
     }
     markFile(o, file);
-    if (ourAblateErrorFilter) {
-      mark(o, "ablated");
-      return false;
-    }
     Table t = table(file);
     if (t == null || t.refusal != null || !formUsesMacro(t, topForm(error))) {
       mark(o, t == null ? "gate:no-table" : t.refusal != null ? "gate:refused" : "gate:form-no-use");

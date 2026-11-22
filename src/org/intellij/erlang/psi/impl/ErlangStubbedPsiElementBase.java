@@ -43,7 +43,7 @@ public class ErlangStubbedPsiElementBase<T extends StubElement<?>> extends StubB
   }
 
   /**
-   * Round 6: also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}) and of its
+   * Also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}) and of its
    * tokens that have a reference only in the expanded copy ({@link ErlangMacroLayerTokenReference}).
    */
   @Override

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Round 6: the expansion errors ({@link ErlangMacroLayerExpansionErrors}) as a pass of their own, after the main
+ * The expansion errors ({@link ErlangMacroLayerExpansionErrors}) as a pass of their own, after the main
  * highlighting: the platform runs an external annotator when the daemon has finished the other passes, so the normal
  * errors and inspections never wait for it.
  * <ul>
@@ -48,7 +48,7 @@ public class ErlangMacroLayerExpansionErrorAnnotator
   public @Nullable Info collectInformation(@NotNull PsiFile file) {
     if (!ErlangMacroLayer.isEnabled()) return null;
     ErlangFile f = ErlangMacroLayer.layerFile(file);
-    // round 6 (next), item 3f: nothing to check, nothing collected
+    // Nothing to check, nothing collected
     return f == null || !ErlangMacroLayerExpansionErrors.mayHaveProblems(f) ? null : new Info(f, f.getModificationStamp());
   }
 

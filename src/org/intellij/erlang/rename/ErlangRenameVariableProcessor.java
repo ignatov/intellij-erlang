@@ -46,7 +46,7 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
     return element instanceof ErlangQVar;
   }
 
-  /** Round 6: a free variable of a header macro body is renamed as from its uses (in the header and its includers). */
+  /** A free variable of a header macro body is renamed as from its uses (in the header and its includers). */
   @Override
   public @Nullable PsiElement substituteElementToRename(@NotNull PsiElement element, @Nullable Editor editor) {
     PsiElement target = ErlangMacroLayer.renameTargetOfMacroToken(element);
@@ -55,7 +55,7 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
   }
 
   /**
-   * Round 6, with the macro layer: (1) a free variable of a -define body of this file: a function that uses the macro
+   * With the macro layer: (1) a free variable of a -define body of this file: a function that uses the macro
    * already has a variable with the new name (the body would then bind or match it); (2) the variable to rename is a
    * use that only a macro binds (its own reference resolves only through the macro layer): it was taken as the target
    * before the macro layer could answer, so the rename would edit only it.

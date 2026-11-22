@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 /**
- * Round 5: rename of names that the macro layer resolves, and its conflicts.
+ * Rename of names that the macro layer resolves, and its conflicts.
  * <ul>
  * <li>A name made by a macro whose declaration is a token of a macro argument or a {@code -define} body
  * ({@link ErlangMacroLayer#isNameMadeByMacro}), and a name in the body of a header macro
