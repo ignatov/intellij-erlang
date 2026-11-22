@@ -29,6 +29,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangVarProcessor;
@@ -65,7 +66,7 @@ public class ErlangVariableCompletionContributor extends CompletionContributor i
         PsiElement position = parameters.getPosition();
         ErlangFile file = (ErlangFile) position.getContainingFile();
 
-        ErlangQVar originalVar = PsiTreeUtil.getParentOfType(parameters.getOriginalPosition(), ErlangQVar.class);
+        ErlangQVar originalVar = PsiTreeUtil.getParentOfType(ErlangMacroLayerCompletionContributor.originalPosition(parameters), ErlangQVar.class);
         if (originalVar != null) {
           boolean isDeclaration = inArgumentDefinition(originalVar) || inLeftPartOfAssignment(originalVar);
           PsiReference reference = !isDeclaration ? originalVar.getReference() : null;

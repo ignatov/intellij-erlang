@@ -1,0 +1,12 @@
+-record(hr, {hf}).
+-define(H_CONST, 42).
+-define(H_CALL(X), h_target(X)).
+-define(H_BIND(V), V = 1).
+-define(H_X, Xh = 1).
+-define(H_MK(N), N() -> ok).
+-define(H_FIX, hfixed() -> ok).
+-define(H_REC(V), #hr{hf = V}).
+-define(H_MKREC, -record(hmr, {hmf})).
+-define(H_MKTYPE, -type hmt() :: integer()).
+-define(H_FRAG, ok; hf(_) -> h_frag_target()).
+-define(H_NEST, ?H_CONST + 1).

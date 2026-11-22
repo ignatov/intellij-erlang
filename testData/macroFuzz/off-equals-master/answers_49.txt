@@ -1,0 +1,19 @@
+# answers:49 src/local/m_redefine.erl arm=master layer=false
+## highlights
+## references
+581 ErlangFunctionReferenceImpl -> []
+588 ErlangFunctionReferenceImpl -> []
+608  -> [include/shared.hrl:0:ErlangFileImpl]
+649 ErlangMacrosReferenceImpl -> [src/local/m_redefine.erl:684:ErlangMacrosDefinitionImpl]
+649 ErlangMacrosReferenceImpl -> [src/local/m_redefine.erl:684:ErlangMacrosDefinitionImpl]
+666 ErlangMacrosReferenceImpl -> [src/local/m_redefine.erl:684:ErlangMacrosDefinitionImpl]
+684 ErlangMacrosReferenceImpl -> [null]
+711 ErlangMacrosReferenceImpl -> [src/local/m_redefine.erl:684:ErlangMacrosDefinitionImpl]
+711 ErlangMacrosReferenceImpl -> [src/local/m_redefine.erl:684:ErlangMacrosDefinitionImpl]
+## completion
+678 [define, export_record, ifdef, ifndef, import_record, include, include_lib, module, on_load, record, undef]
+692 [begin, case, catch, fun, if, maybe, receive, try]
+177 []
+126 []
+720 []
+684 [APP, FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MAX, MODULE, MODULE_STRING, NAME_FUN, OTP_RELEASE, PAR, RETRIES, SHARED_HRL, TIMEOUT, WITH_TIMEOUT, WRAP, begin, case, catch, fun, if, maybe, receive, try]

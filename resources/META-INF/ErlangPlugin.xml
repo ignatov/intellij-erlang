@@ -25,6 +25,12 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <registryKey key="erlang.macro.layer" defaultValue="true" restartRequired="false"
+                     description="Erlang: the macro expansion layer (references, completion, rename and error checks in code that uses macros). Off gives the plugin's behaviour without the layer."/>
+        <!-- macro layer: no syntax error in a form whose macro expansion parses -->
+        <highlightErrorFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerErrorFilter"/>
+        <!-- macro layer: names inside -define bodies, resolved through the expanded uses of the macro -->
+        <gotoDeclarationHandler implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerGotoDeclarationHandler"/>
         <createFromTemplateHandler implementation="org.intellij.erlang.template.ErlangCreateFromTemplateHandler"/>
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
@@ -73,6 +79,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>
         <lang.namesValidator language="Erlang" implementationClass="org.intellij.erlang.ErlangNamesValidator"/>
         <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactoring.ErlangSafeDeleteProcessor" />
+        <!-- macro layer: completion in a part of a form that the main tree lost, through the expanded copy -->
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor" id="ErlangMacroLayerCompletion" order="first"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangVariableCompletionContributor" id="ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor" id="ErlangCompletion" order="after ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor" order="before ErlangCompletion"/>
@@ -81,6 +89,10 @@
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameAtomProcessor"/>
+        <!-- the definitions of a macro in the branches of a conditional are renamed together -->
+        <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameMacroProcessor"/>
+        <!-- macro layer: names made or used by macros, and their conflicts -->
+        <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangMacroLayerRenameProcessor"/>
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor" language="Erlang"/>
 
@@ -167,6 +179,8 @@
         <actionPromoter implementation="org.intellij.erlang.console.ErlangConsoleActionPromoter"/>
 
         <findUsagesHandlerFactory implementation="org.intellij.erlang.search.ErlangFindUsagesHandlerFactory"/>
+        <!-- macro layer: builds the copies of files just typed in before a reference search reads answers -->
+        <referencesSearch implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerReferencesSearcher" order="first"/>
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
@@ -290,6 +304,9 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
+        <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerExpansionErrorAnnotator"/>
+        <!-- macro layer: no external-tool pass (and its 300 ms queue) for a file where the expansion-error pass has nothing to check -->
+        <daemon.externalAnnotatorsFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerExternalAnnotatorsFilter"/>
         <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>

@@ -22,6 +22,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +40,17 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
+    ResolveResult[] results = multiResolveOnMaster();
+    // when master's path finds nothing, ask the macro expansion layer
+    return results.length > 0 ? results : ErlangMacroLayer.multiResolveFallback(this);
+  }
+
+  /** The macro layer's answers when master's path resolves nothing; else none. */
+  public ResolveResult @NotNull [] resolveOnlyThroughMacroLayer() {
+    return multiResolveOnMaster().length == 0 ? ErlangMacroLayer.multiResolveFallback(this) : ResolveResult.EMPTY_ARRAY;
+  }
+
+  private ResolveResult @NotNull [] multiResolveOnMaster() {
     List<ErlangQVar> result = processVariables(myElement, new ErlangVarProcessor(myElement.getText(), myElement));
     return result.isEmpty() ? ResolveResult.EMPTY_ARRAY : PsiElementResolveResult.createResults(result);
   }
@@ -60,12 +73,19 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Nullable
   @Override
   public PsiElement resolveInner() {
-    ResolveResult[] resolveResults = multiResolve(false);
+    ResolveResult[] resolveResults = multiResolveOnMaster();
     return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
   }
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
+    if (element instanceof ErlangMacroLayerHeaderTarget) {
+      // A variable bound in the body of a header macro (the macro layer's answer)
+      for (ResolveResult result : multiResolve(false)) {
+        if (element.isEquivalentTo(result.getElement())) return true;
+      }
+      return false;
+    }
     if (!(element instanceof ErlangQVar)) return false;
     for (ResolveResult result : multiResolve(false)) {
       PsiElement resultElement = result.getElement();
