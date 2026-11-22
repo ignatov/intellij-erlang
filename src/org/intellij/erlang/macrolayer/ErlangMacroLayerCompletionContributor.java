@@ -228,7 +228,9 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       PsiElement psi = r.getLookupElement().getPsiElement();
       if (psi instanceof ErlangFunction f) {
         saw[0] = true;
-        seenFunctions.add(f.getName() + "/" + f.getArity());
+        // only the file's own functions: other:hello/0 does not offer this module's hello/0
+        PsiFile fnFile = f.getContainingFile();
+        if (fnFile != null && fnFile.getOriginalFile() == parameters.getOriginalFile()) seenFunctions.add(f.getName() + "/" + f.getArity());
       }
       if (psi instanceof ErlangRecordDefinition) saw[1] = true;
       seen.add(r.getLookupElement().getLookupString());
