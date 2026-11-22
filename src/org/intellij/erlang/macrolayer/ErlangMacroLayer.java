@@ -800,8 +800,8 @@ public final class ErlangMacroLayer {
     // The rules of a copy build hold for a table build too (in xmerl_scan.erl, about 15 ms of include
     // resolution, which the next key press cancelled): an uncancellable caller neither starts one nor waits for one,
     // and while the file changes only its highlighting starts one (another caller waits for a running one)
-    String refusal = nonCancellableCaller();
-    if (NO_INDICATOR.equals(refusal)) {
+    String refusal = ErlangMacroLayerCallers.nonCancellableCaller();
+    if (ErlangMacroLayerCallers.NO_INDICATOR.equals(refusal)) {
       // Under an indicator of its own that a write action cancels
       return underOwnIndicator(() -> table0(file, explicit), file, "table");
     }
@@ -1195,8 +1195,8 @@ public final class ErlangMacroLayer {
     while (true) {
       Copy copy = holder.get();
       if (copy != null) return copy;
-      String uncancellable = nonCancellableCaller();
-      if (NO_INDICATOR.equals(uncancellable)) {
+      String uncancellable = ErlangMacroLayerCallers.nonCancellableCaller();
+      if (ErlangMacroLayerCallers.NO_INDICATOR.equals(uncancellable)) {
         // Under an indicator of its own that a write action cancels
         return underOwnIndicator(() -> obtain(holder, file, table, trigger, explicit), file, trigger);
       }
@@ -1300,8 +1300,8 @@ public final class ErlangMacroLayer {
    */
   private static @Nullable String buildRefusal(@NotNull PsiFile file) {
     if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
-    if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return null;
-    if (typedWithinQuietTime(file)) return isPassiveCaller(file) ? TYPING : null;
+    if (ErlangMacroLayerCallers.isHighlighting(ProgressManager.getGlobalProgressIndicator())) return null;
+    if (typedWithinQuietTime(file)) return ErlangMacroLayerCallers.isPassiveCaller(file) ? TYPING : null;
     return null;
   }
 
@@ -1361,7 +1361,7 @@ public final class ErlangMacroLayer {
    * query (the same root progress indicator) do not wait again. No restart of anything: it cannot loop.
    */
   private static boolean awaitWhileTyped(@NotNull PsiFile file, @NotNull BooleanSupplier ready, @NotNull String trigger) {
-    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
+    ProgressIndicator root = ErlangMacroLayerCallers.rootIndicator(ProgressManager.getGlobalProgressIndicator());
     if (root == null || gaveUp(root)) return false;
     ErlangMacroLayerRetention retention = ErlangMacroLayerRetention.getInstance(file.getProject());
     long w0 = System.nanoTime();
@@ -1417,103 +1417,18 @@ public final class ErlangMacroLayer {
     GAVE_UP.put(root, Boolean.TRUE);
   }
 
-  /**
-   * Classes of passive queries at the caret, which run again after every key press and whose answer is only shown:
-   * the identifier highlighting ({@code IdentifierHighlightingComputer} and its manager, updater and pass), ctrl-hover
-   * ({@code CtrlMouseHandler}, {@code CtrlMouseData}), parameter info ({@code com.intellij.codeInsight.hint.}) and
-   * highlight usages in the file ({@code HighlightUsagesHandler}). None of them runs a rename or a find usages.
-   */
-  private static final String[] PASSIVE_CALLERS = {"IdentifierHighlight", "HighlightUsages", "CtrlMouse", "com.intellij.codeInsight.hint."};
-
-  /** Stack walks made by {@link #isPassiveCaller}, for tests and measurements. */
-  static final AtomicInteger STACK_WALKS = new AtomicInteger();
+  /** Stack walks of {@link ErlangMacroLayerCallers#isPassiveCaller}, for tests and measurements. */
+  static final AtomicInteger STACK_WALKS = ErlangMacroLayerCallers.STACK_WALKS;
   /** Stack walks made by {@link #prepareSearch} (one per search in a file just typed in). */
-  static final AtomicInteger SEARCH_STACK_WALKS = new AtomicInteger();
+  static final AtomicInteger SEARCH_STACK_WALKS = ErlangMacroLayerCallers.SEARCH_STACK_WALKS;
 
-  /**
-   * The last progress indicator under which this thread was found to run a passive query (the indicator
-   * itself, not a wrapper of it: the search inside the identifier highlighting wraps it). Only this thread reads it,
-   * and it matches only the very same indicator object, so it never marks a worker thread or another caller: a search
-   * that the platform splits over worker threads walks their own stacks. The identifier highlighting
-   * (every refused question in the IDE measurement, CALLERS6.md) runs under an indicator that
-   * {@code CoroutinesKt.contextToIndicator} makes for that one call, inside the passive frame
-   * ({@code IdentifierHighlightingAccessorImpl.getMarkupData}); the indicator, and so this memo, cannot outlive it.
-   * Weak: the memo keeps no indicator alive.
-   */
-  private static final ThreadLocal<WeakReference<ProgressIndicator>> PASSIVE_MEMO = new ThreadLocal<>();
-
-  /**
-   * The caller is a passive query ({@link #PASSIVE_CALLERS} on the thread's stack). Asked only when a build
-   * would be refused for a passive caller. The walk stops at the first passive frame (in the IDE 10 to 45 frames
-   * below the layer). The next questions of the same passive call on the same thread are answered by
-   * {@link #PASSIVE_MEMO} without a walk. The answer "not passive" is not kept: such a caller builds the copy, and
-   * then no longer asks.
-   */
-  static boolean isPassiveCaller(@Nullable PsiFile file) {
-    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
-    WeakReference<ProgressIndicator> memo = root == null ? null : PASSIVE_MEMO.get();
-    if (memo != null && memo.get() == root) return true;
-    STACK_WALKS.incrementAndGet();
-    long w0 = ErlangMacroLayerStats.on() ? System.nanoTime() : 0;
-    boolean passive = hasPassiveFrame();
-    if (w0 != 0) {
-      ErlangMacroLayerStats.phase(passive ? "stack-walk:passive" : "stack-walk:not-passive", file == null ? null : file.getName(),
-                                  System.nanoTime() - w0);
-    }
-    if (passive && root != null) PASSIVE_MEMO.set(new WeakReference<>(root));
-    return passive;
+  static <T> T asPassiveQuery(@NotNull Supplier<T> computation) {
+    return ErlangMacroLayerCallers.asPassiveQuery(computation);
   }
 
-  /** The indicator that the given one wraps ({@link WrappedProgressIndicator}), at any depth; itself if it wraps none. */
-  private static @Nullable ProgressIndicator rootIndicator(@Nullable ProgressIndicator indicator) {
-    ProgressIndicator p = indicator;
-    for (int depth = 0; p instanceof WrappedProgressIndicator w && depth < 16; depth++) p = w.getOriginalProgressIndicator();
-    return p;
-  }
-
-  /** A frame of a passive query ({@link #PASSIVE_CALLERS}) is on this thread's stack; always walks. */
-  static boolean hasPassiveFrame() {
-    return StackWalker.getInstance().walk(frames -> frames.limit(400).anyMatch(f -> {
-      String c = f.getClassName();
-      for (String marker : PASSIVE_CALLERS) if (c.contains(marker)) return true;
-      return false;
-    }));
-  }
-
-  /**
-   * Runs the computation as a passive query of the caller's progress indicator (a stand-in for the IDE's callers in
-   * tests that do not run the IDE's own passive callers). The mark lasts only for the computation.
-   */
   @TestOnly
   public static <T> T computeAsPassiveQueryForTests(@NotNull Supplier<T> computation) {
-    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
-    if (root == null) throw new IllegalStateException("a passive query runs under a progress indicator");
-    WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
-    PASSIVE_MEMO.set(new WeakReference<>(root));
-    try {
-      return computation.get();
-    }
-    finally {
-      PASSIVE_MEMO.set(previous);
-    }
-  }
-
-  /**
-   * Runs the computation as a passive query of the caller's progress indicator (the completion
-   * auto-popup, which runs after every key and whose answer is only shown): while the file is typed in, it builds
-   * nothing and waits for the copy (see {@link #awaitWhileTyped}). The mark lasts only for the computation.
-   */
-  static <T> T asPassiveQuery(@NotNull Supplier<T> computation) {
-    ProgressIndicator root = rootIndicator(ProgressManager.getGlobalProgressIndicator());
-    if (root == null) return computation.get();
-    WeakReference<ProgressIndicator> previous = PASSIVE_MEMO.get();
-    PASSIVE_MEMO.set(new WeakReference<>(root));
-    try {
-      return computation.get();
-    }
-    finally {
-      PASSIVE_MEMO.set(previous);
-    }
+    return ErlangMacroLayerCallers.computeAsPassiveQueryForTests(computation);
   }
 
   /**
@@ -1525,8 +1440,8 @@ public final class ErlangMacroLayer {
    * worker can no longer make a rename or a find usages miss the layer's answers in a file just typed in.
    */
   public static void prepareSearch(@NotNull PsiElement target, @NotNull SearchScope scope) {
-    if (!isEnabled() || ApplicationManager.getApplication().isDispatchThread() || nonCancellableCaller() != null) return;
-    if (isHighlighting(ProgressManager.getGlobalProgressIndicator())) return; // highlighting is never refused a build
+    if (!isEnabled() || ApplicationManager.getApplication().isDispatchThread() || ErlangMacroLayerCallers.nonCancellableCaller() != null) return;
+    if (ErlangMacroLayerCallers.isHighlighting(ProgressManager.getGlobalProgressIndicator())) return; // highlighting is never refused a build
     if (!(target instanceof ErlangMacroLayerHeaderTarget) && !target.getLanguage().isKindOf(ErlangLanguage.INSTANCE)) return;
     Project project = target.getProject();
     if (DumbService.isDumb(project)) return;
@@ -1543,7 +1458,7 @@ public final class ErlangMacroLayer {
     }
     if (files.isEmpty()) return;
     SEARCH_STACK_WALKS.incrementAndGet();
-    if (hasPassiveFrame()) return;
+    if (ErlangMacroLayerCallers.hasPassiveFrame()) return;
     for (ErlangFile f : files) {
       ProgressManager.checkCanceled();
       getCopy(f, "search", true);
@@ -1596,24 +1511,6 @@ public final class ErlangMacroLayer {
   }
 
   /**
-   * The caller cannot be cancelled: it runs in a non-cancellable section, or with no progress indicator
-   * (a plain read action on a pooled thread, or a coroutine read action such as the update of the rename action). A
-   * key press is a write action: it waits until every read action ends, and a caller that cannot be cancelled would
-   * hold it for a whole build (or a wait for one). In a non-cancellable section the caller gets the copy that is
-   * there, or master's answer. A caller with no indicator builds and waits under an indicator of its own that
-   * a write action cancels ({@link #underOwnIndicator}). Null when the caller is cancellable (or builds are allowed anywhere).
-   */
-  private static @Nullable String nonCancellableCaller() {
-    if (isEdtBuildAllowed()) return null; // diagnostic: builds allowed anywhere
-    ProgressManager pm = ProgressManager.getInstance();
-    if (pm.isInNonCancelableSection()) return "non-cancellable";
-    if (ProgressManager.getGlobalProgressIndicator() == null) return NO_INDICATOR;
-    return null;
-  }
-
-  private static final String NO_INDICATOR = "no-indicator";
-
-  /**
    * Runs a table or copy request of a caller that has no progress indicator (not the UI thread, not a
    * non-cancellable section) under a new indicator, which an application listener cancels before a write action
    * starts. So the caller gets the layer's answer, and a key press waits for no build: the build or the wait stops at
@@ -1651,14 +1548,7 @@ public final class ErlangMacroLayer {
   /** Requests run by {@link #underOwnIndicator}, for tests and measurements. */
   static final AtomicInteger OWN_INDICATOR_REQUESTS = new AtomicInteger();
 
-  static boolean isHighlighting(@Nullable ProgressIndicator indicator) {
-    ProgressIndicator p = indicator;
-    for (int depth = 0; p != null && depth < 16; depth++) {
-      if (p instanceof DaemonProgressIndicator) return true;
-      p = p instanceof WrappedProgressIndicator w ? w.getOriginalProgressIndicator() : null;
-    }
-    return false;
-  }
+
 
   /** {@code erlang.macro.layer.quiet} / {@code ERLANG_MACRO_LAYER_QUIET}, ms, default 1,000. */
   private static final int QUIET_MS = readInt("erlang.macro.layer.quiet", "ERLANG_MACRO_LAYER_QUIET", 1000);
