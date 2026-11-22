@@ -18,21 +18,14 @@ package org.intellij.erlang.rename;
 
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.ResolveResult;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.listeners.RefactoringElementListener;
 import com.intellij.refactoring.rename.RenamePsiElementProcessor;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
-import org.intellij.erlang.psi.ErlangFile;
-import org.intellij.erlang.psi.ErlangMacrosBody;
-import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.psi.ErlangQVar;
-import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,37 +47,12 @@ public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
     return target;
   }
 
-  /**
-   * With the macro layer: (1) a free variable of a -define body of this file: a function that uses the macro
-   * already has a variable with the new name (the body would then bind or match it); (2) the variable to rename is a
-   * use that only a macro binds (its own reference resolves only through the macro layer): it was taken as the target
-   * before the macro layer could answer, so the rename would edit only it.
-   */
+  /** The macro layer's collisions of a variable rename (see {@link ErlangMacroLayerRenameProcessor#variableRenameCollisions}). */
   @Override
   public void findCollisions(@NotNull PsiElement element, @NotNull String newName, @NotNull Map<? extends PsiElement, String> allRenames,
                              @NotNull List<UsageInfo> result) {
     super.findCollisions(element, newName, allRenames, result);
-    if (!(element instanceof ErlangQVar var) || !ErlangMacroLayer.isEnabled()) return;
-    ErlangMacrosDefinition def = PsiTreeUtil.getParentOfType(var, ErlangMacrosDefinition.class);
-    PsiFile file = var.getContainingFile();
-    if (def != null && def.getName() != null && PsiTreeUtil.isAncestor(def.getMacrosBody(), var, false)) {
-      if (file instanceof ErlangFile ef && !ErlangMacroLayer.isMacroParameter(def, var.getText())) {
-        ErlangMacroLayerRenameProcessor.variableCollisions(ef, def.getName(), newName, element, result);
-      }
-      return;
-    }
-    PsiReference ref = var.getReference();
-    if (PsiTreeUtil.getParentOfType(var, ErlangMacrosBody.class) == null && ref instanceof ErlangVariableReferenceImpl v &&
-        isBoundElsewhereByMacro(var, v.resolveOnlyThroughMacroLayer())) {
-      result.add(ErlangMacroLayerRenameProcessor.collision(var, element, "Variable " + var.getText() + " is bound by a macro, but the " +
-                                                                         "rename started before the macro expansion of the file was ready: try again"));
-    }
-  }
-
-  private static boolean isBoundElsewhereByMacro(@NotNull ErlangQVar var, ResolveResult @NotNull [] layerAnswers) {
-    if (layerAnswers.length == 0) return false;
-    for (ResolveResult r : layerAnswers) if (var.isEquivalentTo(r.getElement()) || var == r.getElement()) return false;
-    return true;
+    ErlangMacroLayerRenameProcessor.variableRenameCollisions(element, newName, result);
   }
 
   @Override
