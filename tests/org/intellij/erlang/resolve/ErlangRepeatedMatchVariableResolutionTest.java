@@ -1,0 +1,74 @@
+/*
+ * Copyright 2012-2026 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.resolve;
+
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.ResolveResult;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final String REPEATED_PAIR = """
+        X = a,
+        case A of 1 -> X = a; _ -> X = a end,
+    """;
+
+  // #1433: the last X is bound only by the first X = a; every later X only matches it again
+  public void testVariableMatchedAgainInCaseClausesHasOneTarget() {
+    List<ErlangQVar> vars = configure(10);
+    ErlangQVar first = vars.get(0);
+    ErlangQVar last = vars.get(vars.size() - 1);
+    ResolveResult[] results = multiResolve(last);
+    assertEquals(1, results.length);
+    assertEquals(first, results[0].getElement());
+  }
+
+  // #1433: four more repetitions must not multiply the time of the resolve by 2^4
+  public void testResolveAfterRepeatedMatchesDoesNotDouble() {
+    timeOfResolve(12);
+    long small = timeOfResolve(12);
+    long big = timeOfResolve(16);
+    assertTrue("12 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 8 * Math.max(small, 1_000_000L));
+  }
+
+  private long timeOfResolve(int repetitions) {
+    List<ErlangQVar> vars = configure(repetitions);
+    ErlangQVar last = vars.get(vars.size() - 1);
+    long start = System.nanoTime();
+    multiResolve(last);
+    return System.nanoTime() - start;
+  }
+
+  private static ResolveResult[] multiResolve(ErlangQVar var) {
+    return ((PsiPolyVariantReference) var.getReference()).multiResolve(false);
+  }
+
+  private List<ErlangQVar> configure(int repetitions) {
+    String text = "-module(rep).\n-export([f/1]).\nf(A) ->\n" + REPEATED_PAIR.repeat(repetitions) + "    X.\n";
+    myFixture.configureByText("rep.erl", text);
+    List<ErlangQVar> vars = new ArrayList<>();
+    for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
+      if ("X".equals(v.getText())) vars.add(v);
+    }
+    assertEquals(3 * repetitions + 1, vars.size());
+    return vars;
+  }
+}
