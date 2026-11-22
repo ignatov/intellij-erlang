@@ -180,7 +180,7 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
    * {@code ErlangFileImpl.getReferences} after a flip (case switch:109).
    */
   public void testF9NoReferencesKeptFromTheOtherMode() {
-    if (!open() || !LayerHooks.present()) return;   // the switch exists only on the branch
+    if (!LayerHooks.present()) return;   // the switch exists only on the branch
     myFixture.configureByText("m.erl", "-module(m).\n-export([f/0]).\n-define(PAR, ()).\nf() ->\n  foo?PAR,\n  foo?PAR.\nfoo() -> ok.\n");
     myFixture.doHighlighting();
     List<String> on = referenceClasses();
