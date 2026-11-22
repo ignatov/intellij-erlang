@@ -67,6 +67,7 @@ import org.intellij.erlang.completion.QuoteInsertHandler;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
@@ -202,7 +203,7 @@ public class ErlangPsiImplUtil {
     if (resolve == null && recordExpression != null) {
       ErlangMacros macros = recordExpression.getMacros();
       PsiReference macrosReference = macros != null ? macros.getReference() : null;
-      PsiElement macroDefinition = macrosReference != null ? macrosReference.resolve() : null;
+      PsiElement macroDefinition = ErlangMacroResolve.firstTarget(macrosReference);
       if (macroDefinition instanceof ErlangMacrosDefinition) {
         ErlangMacrosBody body = ((ErlangMacrosDefinition) macroDefinition).getMacrosBody();
         final Ref<ErlangRecordRef> ref = Ref.create();
@@ -259,7 +260,7 @@ public class ErlangPsiImplUtil {
                                           @NotNull List<ErlangQAtom> atoms,
                                           @NotNull Set<ErlangMacrosDefinition> visited) {
     PsiReference psiReference = macros.getReference();
-    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+    PsiElement macrosDefinition = ErlangMacroResolve.firstTarget(psiReference);
     if (macrosDefinition instanceof ErlangMacrosDefinition && visited.add((ErlangMacrosDefinition) macrosDefinition)) {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
       List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.emptyList();
@@ -505,6 +506,9 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@Nullable ErlangMacrosName o) {
+    // Inside ?NAME the use element carries the reference over the same name: one usage per use
+    // (with the macro layer off, master's second reference stays)
+    if (o != null && o.getParent() instanceof ErlangMacros && ErlangMacroLayer.isEnabled()) return null;
     return o!= null ? getReference(o, o) : null;
   }
 
@@ -755,7 +759,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
+  public static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
       .withInsertHandler(getInsertHandler(name, arity, withArity)), priority);
@@ -1693,6 +1697,8 @@ public class ErlangPsiImplUtil {
       macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, newName);
     } catch (Exception ignore) {
     }
+    // a name that needs quotes parses as its first part ("p q" as p): quote it
+    if (macroName != null && !macroName.getText().equals(newName)) macroName = null;
     if (macroName == null) {
       try {
         macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, '\'' + newName + '\'');

@@ -1,0 +1,119 @@
+# answers:61 src/one_file/m_fragments.erl arm=master layer=false
+## highlights
+1016-1017 ERROR(400) <expression> expected, got ')'
+1059-1060 ERROR(400) <expression>, <q atom>, '?' or var expected, got ')'
+1088-1089 ERROR(400) <argument definition> expected, got ')'
+1106-1107 ERROR(400) <expression>, ']' or '||' expected, got ')'
+1192-1193 ERROR(400) ',' unexpected
+1196-1204 ERROR(400) '-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'foo'
+1206-1209 WARNING(300) Unused function 'foo/0'
+1249-1250 WARNING(300) Unused variable 'V'
+1265-1266 ERROR(400) '(' unexpected
+1271-1274 WARNING(300) Unused function 'add/2'
+1316-1317 WARNING(300) Unused variable 'X'
+1326-1327 ERROR(400) '#', '(', '*', '+', '++', ',', '-', '--', '/', '/=', <, '=/=', '=:=', '=<', '==', '>', '>=', '?', ']', and, band, bor, bsl, bsr, bxor, div, or, rem, xor, '|' or '||' expected, got '?'
+1332-1333 ERROR(400) '(' unexpected
+1387-1388 ERROR(400) 'A' unexpected
+1398-1411 ERROR(400) '-', <attribute>, <function clause> or '?' expected, got 'A'
+1437-1438 ERROR(400) Variable 'N' is unbound
+1440-1448 ERROR(400) '->' or when expected, got 'positive'
+1520-1530 WARNING(300) Unresolved function is_integer/1
+1544-1545 ERROR(400) '(' unexpected
+1614-1615 WARNING(300) Unused variable 'N'
+1632-1633 ERROR(400) 'N' unexpected
+1703-1704 ERROR(400) '#', '(', ')', '*', '+', '++', ',', '-', '--', '.', '/', '/=', ':', <, '=/=', '=:=', '=<', '==', '>', '>=', '?', and, band, bor, bsl, bsr, bxor, div, or, rem, when or xor expected, got '?'
+1707-1708 ERROR(400) ')' unexpected
+1737-1738 WARNING(300) Unused variable 'L'
+1751-1752 ERROR(400) '.' or ';' expected, got 'reverse'
+1752-1759 WARNING(300) Unused function 'reverse/1'
+1760-1761 WARNING(300) Unused variable 'L'
+1762-1763 ERROR(400) '->' or when expected, got '.'
+1807-1808 ERROR(400) '0' unexpected
+1812-1839 ERROR(400) '-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'zero'
+1877-1878 ERROR(400) '1' unexpected
+1880-1892 ERROR(400) '-', <attribute>, <function clause> or '?' expected, got '2'
+1920-1921 ERROR(400) '->' or when expected, got '?'
+1930-1932 ERROR(400) '(' or ':' expected, got 'ok'
+728-734 ERROR(400) Unresolved function sign/1
+898-899 ERROR(400) <expression> expected, got ')'
+## references
+1003 ErlangMacrosReferenceImpl -> [null]
+1027 ErlangMacrosReferenceImpl -> [null]
+1030 ErlangVariableReferenceImpl -> []
+1034 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1030:ErlangQVarImpl]
+1046 ErlangMacrosReferenceImpl -> [null]
+1053 PsiMultiReference -> []
+1070 ErlangMacrosReferenceImpl -> [null]
+1075 ErlangVariableReferenceImpl -> []
+1084 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1075:ErlangQVarImpl]
+1099 ErlangMacrosReferenceImpl -> [null]
+1117 ErlangMacrosReferenceImpl -> [null]
+1136 ErlangMacrosReferenceImpl -> [null]
+1185 PsiMultiReference -> []
+1217 PsiMultiReference -> []
+1249 ErlangVariableReferenceImpl -> []
+1257 PsiMultiReference -> []
+1275 ErlangVariableReferenceImpl -> []
+1278 ErlangVariableReferenceImpl -> []
+1286 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1275:ErlangQVarImpl]
+1290 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1278:ErlangQVarImpl]
+1316 ErlangVariableReferenceImpl -> []
+1377 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:886:ErlangMacrosDefinitionImpl]
+1377 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:886:ErlangMacrosDefinitionImpl]
+1432 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:928:ErlangMacrosDefinitionImpl]
+1432 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:928:ErlangMacrosDefinitionImpl]
+1437 ErlangVariableReferenceImpl -> []
+1512 ErlangVariableReferenceImpl -> []
+1520 ErlangFunctionReferenceImpl -> []
+1531 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1512:ErlangQVarImpl]
+1551 PsiMultiReference -> []
+1563 ErlangVariableReferenceImpl -> []
+1569 PsiMultiReference -> []
+1614 ErlangVariableReferenceImpl -> []
+1623 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1003:ErlangMacrosDefinitionImpl]
+1623 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1003:ErlangMacrosDefinitionImpl]
+1696 ErlangFunctionReferenceImpl -> []
+1697 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1027:ErlangMacrosDefinitionImpl]
+1697 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1027:ErlangMacrosDefinitionImpl]
+1700 PsiMultiReference -> []
+1737 ErlangVariableReferenceImpl -> []
+1746 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1046:ErlangMacrosDefinitionImpl]
+1746 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1046:ErlangMacrosDefinitionImpl]
+1760 ErlangVariableReferenceImpl -> []
+1786 ErlangVariableReferenceImpl -> []
+1794 ErlangFunctionReferenceImpl -> []
+1795 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1070:ErlangMacrosDefinitionImpl]
+1795 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1070:ErlangMacrosDefinitionImpl]
+1800 ErlangVariableReferenceImpl -> [src/one_file/m_fragments.erl:1786:ErlangQVarImpl]
+1872 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1099:ErlangMacrosDefinitionImpl]
+1872 ErlangMacrosReferenceImpl -> [src/one_file/m_fragments.erl:1099:ErlangMacrosDefinitionImpl]
+696 ErlangFunctionReferenceImpl -> []
+703 ErlangFunctionReferenceImpl -> []
+711 ErlangFunctionReferenceImpl -> []
+719 ErlangFunctionReferenceImpl -> []
+728 ErlangFunctionReferenceImpl -> []
+736 ErlangFunctionReferenceImpl -> []
+745 ErlangFunctionReferenceImpl -> []
+762 ErlangFunctionReferenceImpl -> []
+772 ErlangFunctionReferenceImpl -> []
+782 ErlangFunctionReferenceImpl -> []
+790 ErlangFunctionReferenceImpl -> []
+798 ErlangFunctionReferenceImpl -> []
+818 ErlangMacrosReferenceImpl -> [null]
+836 ErlangMacrosReferenceImpl -> [null]
+841 ErlangVariableReferenceImpl -> []
+862 ErlangMacrosReferenceImpl -> [null]
+867 ErlangVariableReferenceImpl -> []
+886 ErlangMacrosReferenceImpl -> [null]
+909 ErlangMacrosReferenceImpl -> [null]
+928 ErlangMacrosReferenceImpl -> [null]
+933 ErlangVariableReferenceImpl -> []
+969 ErlangMacrosReferenceImpl -> [null]
+979 ErlangVariableReferenceImpl -> []
+## completion
+1458 []
+1705 []
+920 []
+1002 [<single or none>]
+1076 [<single or none>]
+1098 [<single or none>]

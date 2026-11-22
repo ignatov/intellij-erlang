@@ -1,0 +1,86 @@
+# answers:63 src/one_file/m_made_by_macro.erl arm=master layer=false
+## highlights
+1177-1178 ERROR(400) Variable 'S' is unbound
+1180-1181 ERROR(400) Variable 'S' is unbound
+1182-1187 ERROR(400) Unresolved record 'shape'
+1196-1197 ERROR(400) Variable 'S' is unbound
+1198-1203 ERROR(400) Unresolved record 'shape'
+1230-1231 ERROR(400) Variable 'S' is unbound
+1238-1239 ERROR(400) Variable 'S' is unbound
+1240-1245 ERROR(400) Unresolved record 'shape'
+1254-1255 ERROR(400) Variable 'S' is unbound
+1256-1261 ERROR(400) Unresolved record 'shape'
+1289-1294 ERROR(400) Unresolved record 'shape'
+1364-1369 ERROR(400) Unresolved record 'shape'
+1377-1382 ERROR(400) Variable 'Total' is unbound
+950-956 WARNING(300) Unresolved function record/2
+## references
+1023 ErlangMacrosReferenceImpl -> [null]
+1028 ErlangVariableReferenceImpl -> []
+1034 ErlangVariableReferenceImpl -> []
+1039 ErlangVariableReferenceImpl -> []
+1046 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1028:ErlangQVarImpl]
+1051 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1034:ErlangQVarImpl]
+1059 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1039:ErlangQVarImpl]
+1101 ErlangMacrosReferenceImpl -> [null]
+1106 ErlangVariableReferenceImpl -> []
+1111 ErlangVariableReferenceImpl -> []
+1119 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1106:ErlangQVarImpl]
+1125 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1111:ErlangQVarImpl]
+1135 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:927:ErlangMacrosDefinitionImpl]
+1135 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:927:ErlangMacrosDefinitionImpl]
+1142 PsiMultiReference -> []
+1149 PsiMultiReference -> []
+1156 PsiMultiReference -> []
+1166 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1023:ErlangMacrosDefinitionImpl]
+1166 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1023:ErlangMacrosDefinitionImpl]
+1171 PsiMultiReference -> []
+1177 ErlangVariableReferenceImpl -> []
+1180 ErlangVariableReferenceImpl -> []
+1182 ErlangRecordReferenceImpl -> [null]
+1188  -> [null]
+1196 ErlangVariableReferenceImpl -> []
+1198 ErlangRecordReferenceImpl -> [null]
+1204  -> [null]
+1214 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1023:ErlangMacrosDefinitionImpl]
+1214 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1023:ErlangMacrosDefinitionImpl]
+1219 PsiMultiReference -> []
+1230 ErlangVariableReferenceImpl -> []
+1238 ErlangVariableReferenceImpl -> []
+1240 ErlangRecordReferenceImpl -> [null]
+1246  -> [null]
+1254 ErlangVariableReferenceImpl -> []
+1256 ErlangRecordReferenceImpl -> [null]
+1262  -> [null]
+1284 ErlangVariableReferenceImpl -> []
+1289 ErlangRecordReferenceImpl -> [null]
+1295  -> [null]
+1306  -> [null]
+1321 ErlangFunctionReferenceImpl -> []
+1322 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1101:ErlangMacrosDefinitionImpl]
+1322 ErlangMacrosReferenceImpl -> [src/one_file/m_made_by_macro.erl:1101:ErlangMacrosDefinitionImpl]
+1327 ErlangVariableReferenceImpl -> []
+1334 ErlangFunctionReferenceImpl -> []
+1339 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1284:ErlangQVarImpl]
+1344 ErlangFunctionReferenceImpl -> []
+1354 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1284:ErlangQVarImpl]
+1362 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:1284:ErlangQVarImpl]
+1364 ErlangRecordReferenceImpl -> [null]
+1370  -> [null]
+1377 ErlangVariableReferenceImpl -> []
+842 ErlangFunctionReferenceImpl -> []
+927 ErlangMacrosReferenceImpl -> [null]
+934 ErlangVariableReferenceImpl -> []
+940 ErlangVariableReferenceImpl -> []
+944 ErlangVariableReferenceImpl -> []
+950 ErlangFunctionReferenceImpl -> []
+957 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:934:ErlangQVarImpl]
+964 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:940:ErlangQVarImpl]
+972 ErlangVariableReferenceImpl -> [src/one_file/m_made_by_macro.erl:944:ErlangQVarImpl]
+## completion
+1034 [Arg, Name, begin, case, catch, fun, if, maybe, receive, try]
+1237 [begin, case, catch, fun, if, maybe, receive, try, when]
+814 []
+1245 []
+933 []
+1142 [begin, case, catch, fun, if, maybe, receive, try, when]

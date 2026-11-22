@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +39,10 @@ public abstract class ErlangQAtomBasedReferenceImpl extends PsiReferenceBase<Psi
   @Nullable
   @Override
   public final PsiElement resolve() {
-    return myElement.isValid()
-           ? ResolveCache.getInstance(myElement.getProject()).resolveWithCaching(this, MY_RESOLVER, false, false)
-           : null;
+    if (!myElement.isValid()) return null;
+    PsiElement result = ResolveCache.getInstance(myElement.getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
+    // Records, fields and types made by macros; the layer's answer is cached in its copy, as for functions
+    return result != null ? result : ErlangMacroLayer.resolveFallback(this);
   }
 
   public ErlangQAtomBasedReferenceImpl(@NotNull PsiElement owner, ErlangQAtom qAtom, TextRange range, String name) {
