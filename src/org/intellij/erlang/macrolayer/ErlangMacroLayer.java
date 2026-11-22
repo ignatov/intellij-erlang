@@ -1060,6 +1060,17 @@ public final class ErlangMacroLayer {
     return function != null && !(function.getParent() == file && continuesASplitForm(function));
   }
 
+  /**
+   * A top-level function that the recovery made from the rest of a split form ({@code setup?PAR, hello().}) while a
+   * macro makes a function of the same name and arity ({@code ?DEF(hello).}): references to the name go to that one.
+   */
+  public static boolean isHiddenByMadeFunction(@NotNull ErlangFunction function) {
+    ErlangFile file = layerFile(function);
+    if (file == null || isSourceFunction(file, function)) return false;
+    Copy copy = getCopy(file, "split-form-function");
+    return copy != null && copy.functionsMadeByMacros().containsKey(function.getName() + "/" + function.getArity());
+  }
+
   /** The top-level element continues a form that the parser's recovery split: the element before it ends no form. */
   public static boolean continuesASplitForm(@NotNull PsiElement topLevel) {
     PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(topLevel);

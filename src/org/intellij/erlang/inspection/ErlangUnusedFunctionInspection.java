@@ -51,6 +51,8 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
       // with the macro layer: a "function" named by a macro use that continues a form the recovery split
       // (guarded3(X) ?HH2(X) -> X.) is no function of the source; ?test(A) -> A. after a whole form still is one
       if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) continue;
+      // the rest of a split form (setup?PAR, hello().) when a macro makes hello/0: the references go to the made one
+      if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(function)) continue;
       if (!isUnusedFunction(file, function)) continue;
 
       PsiElement identifier = function.getNameIdentifier();

@@ -222,10 +222,14 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     boolean inBraces = PsiTreeUtil.getParentOfType(position, ErlangRecordTuple.class, ErlangRecordField.class) != null;
     List<String> fields = inBraces && recordRef != null ? made.fields().get(recordRef.getText()) : null;
     Set<String> seen = new HashSet<>();
+    Set<String> seenFunctions = new HashSet<>();
     boolean[] saw = new boolean[2];
     result.runRemainingContributors(parameters, r -> {
       PsiElement psi = r.getLookupElement().getPsiElement();
-      if (psi instanceof ErlangFunction) saw[0] = true;
+      if (psi instanceof ErlangFunction f) {
+        saw[0] = true;
+        seenFunctions.add(f.getName() + "/" + f.getArity());
+      }
       if (psi instanceof ErlangRecordDefinition) saw[1] = true;
       seen.add(r.getLookupElement().getLookupString());
       result.passResult(r);
@@ -233,6 +237,8 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     ErlangFile real = (ErlangFile)parameters.getOriginalFile();
     if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
+        // a function the recovery made from the rest of a split form has the same name/arity: offered once
+        if (seenFunctions.contains(e.getKey())) continue;
         int slash = e.getKey().lastIndexOf('/');
         String name = e.getKey().substring(0, slash);
         int arity = Integer.parseInt(e.getKey().substring(slash + 1));

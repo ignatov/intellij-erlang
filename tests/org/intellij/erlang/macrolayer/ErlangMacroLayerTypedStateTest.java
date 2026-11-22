@@ -9,12 +9,14 @@ import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.intellij.erlang.macrolayer.LayerTestSupport.descriptor;
 import static org.intellij.erlang.macrolayer.LayerTestSupport.enableAll;
+import static org.intellij.erlang.macrolayer.LayerTestSupport.read;
 
 /**
  * The highlighting after an edit equals the highlighting of a fresh project with the same texts (fuzz finding F8):
@@ -97,5 +99,15 @@ public class ErlangMacroLayerTypedStateTest extends ErlangLightPlatformCodeInsig
     PsiFile f = myFixture.addFileToProject("named/m.erl", BEFORE);
     myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
     for (String h : highlights(f)) assertFalse(h, h.contains("Unused function '?HH2/1'"));
+  }
+
+  /**
+   * #1486: after {@code setup?PAR,} the recovery makes {@code hello().} a function; the export goes to the one that
+   * {@code ?DEF(hello).} makes, and the call is not reported as an unused function.
+   */
+  public void testNoUnusedFunctionForTheRestOfASplitForm() throws Exception {
+    PsiFile f = myFixture.addFileToProject("greet/greet.erl", read(Paths.get("testData/macroLayer/nav", "greet.erl")));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    for (String h : highlights(f)) assertFalse(h, h.contains("Unused function"));
   }
 }
