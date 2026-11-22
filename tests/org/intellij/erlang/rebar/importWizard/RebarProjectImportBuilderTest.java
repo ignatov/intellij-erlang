@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -118,6 +119,21 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
   public void testRebarlessDeps() throws Exception { doTest(null); }
   public void testRebarDependencies() throws Exception { doTest(null); }
   public void testRebarBareAtomDependency() throws Exception { doTest(null); }
+  public void testRebarProfileDependency() throws Exception { doTest(null); }
+  public void testRebarProfileTupleDependency() throws Exception { doTest(null); }
+  public void testRebarDependencyAppProfiles() throws Exception { doTest(null); }
+
+  public void testRebarTestProfileBuildDependency() throws Exception {
+    Project createdProject = doTest(null);
+    ModuleManager moduleManager = ModuleManager.getInstance(createdProject);
+    Module a = moduleManager.findModuleByName("a");
+    Module d = moduleManager.findModuleByName("d");
+    assertNotNull(a);
+    assertNotNull("The dependency fetched only into _build/test/lib is not imported.", d);
+    assertEquals(2, moduleManager.getModules().length);
+    assertSameElements(Arrays.asList(ModuleRootManager.getInstance(a).getDependencies()), d);
+  }
+
   public void testTransitiveRebarDependencies() throws Exception { doTest(null); }
   public void testIncludePathsInRebarConfig1() throws Exception { doTest(null); }
   public void testIncludePathsInRebarConfig2() throws Exception { doTest(null); }
