@@ -613,6 +613,14 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     return myTypeMap.getValue().get(name);
   }
 
+  @Override
+  public ErlangTypeDefinition getType(@NotNull String name, int arity) {
+    for (ErlangTypeDefinition type : getTypes()) {
+      if (type.getArity() == arity && name.equals(type.getName())) return type;
+    }
+    return null;
+  }
+
   @NotNull
   @Override
   public List<ErlangMacrosDefinition> getMacroses() {

@@ -515,18 +515,24 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    return getModuleReference(o, o.getQAtom());
+    return getModuleReference(o, o.getQAtom(), getTypeRefArity(o));
+  }
+
+  private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
+    PsiElement parent = o.getParent();
+    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
+    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
   }
 
   @NotNull
-  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(o, atom, moduleRef);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity);
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    return getModuleReference(o, o.getQAtom());
+    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()));
   }
 
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
@@ -888,7 +894,7 @@ public class ErlangPsiImplUtil {
   @NotNull
   public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
     if (containingFile instanceof ErlangFile erlangFile) {
-      List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
+      List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, "", -1));
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
@@ -1558,11 +1564,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
+  static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
     List<ErlangTypeDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
-        ContainerUtil.addIfNotNull(fromIncludes, file.getType(name));
+        ContainerUtil.addIfNotNull(fromIncludes, arity < 0 ? file.getType(name) : file.getType(name, arity));
       }
       else {
         fromIncludes.addAll(file.getTypes());
