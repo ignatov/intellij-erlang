@@ -134,6 +134,19 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     }
   }
 
+  // erlc compiles a module that names itself as its behaviour with only a warning "behaviour m undefined" (#1469).
+  public void testSelfBehaviour() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder, "m");
+  }
+
+  public void testSelfBehaviourInHeader() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "n");
+  }
+
   public void testTestsDependency() throws Exception {
     List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
     assertSameErlangFiles(moduleBuildOrder, "src_parse_transform", "test_parse_transform", "test");
