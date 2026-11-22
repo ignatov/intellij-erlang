@@ -238,7 +238,6 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
         String version = downloader.getPluginVersion();
         if (version == null) return null;
         return new Update(version, StringUtil.notNullize(ErlangUsageStatistics.pluginVersion()),
-                          whatsNew(downloader.getDescriptor().getChangeNotes()),
                           indicator -> installUpdate(downloader, indicator));
       }
       if (info instanceof PluginUpdateInfo.CheckFailed failed) {
@@ -268,7 +267,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
     @Override
     public void offer(@NotNull Update update) {
       later(() -> {
-        Notification notification = notification(TITLE, offerText(update), NotificationType.INFORMATION)
+        Notification notification = notification(offerTitle(update), offerText(update), NotificationType.INFORMATION)
           .addAction(NotificationAction.createSimple("Install", () -> startInstall(update, this)))
           .addAction(NotificationAction.createSimpleExpiring("Don't show again", () -> myNotice.dontShowAgain(this)));
         myOffer = notification;

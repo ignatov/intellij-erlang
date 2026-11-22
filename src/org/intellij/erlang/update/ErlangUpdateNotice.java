@@ -22,11 +22,8 @@ import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
-import java.util.regex.Pattern;
 
 /**
  * The decisions of the notification about a new version of the plugin: when to ask the plugin repository, when to
@@ -34,7 +31,6 @@ import java.util.regex.Pattern;
  * state of its own; {@link ErlangUpdateNoticeService} connects it to the IDE.
  */
 public final class ErlangUpdateNotice {
-  public static final String TITLE = "A new version of the Erlang plugin is out";
   public static final String INSTALLED_TITLE = "The Erlang plugin is updated";
   public static final String NOT_INSTALLED_TITLE = "The Erlang plugin is not updated";
   public static final String SWITCH_PROPERTY = "erlang.update.notification";
@@ -42,14 +38,6 @@ public final class ErlangUpdateNotice {
   static final long CHECK_INTERVAL_MS = TimeUnit.HOURS.toMillis(24);
   // at most one notification a week: releases come out almost every day
   static final long SHOW_INTERVAL_MS = TimeUnit.DAYS.toMillis(7);
-  static final int WHATS_NEW_LINES = 2;
-  static final int WHATS_NEW_LENGTH = 80;
-  // the tags that start or end a line of the change notes
-  private static final Pattern LINE_BREAK = Pattern.compile("(?i)<\\s*/?\\s*(li|br|p|ul|ol|div|h\\d)\\b[^>]*>|\\r?\\n");
-  private static final Pattern TAG = Pattern.compile("<[^>]*>");
-  private static final Pattern SPACES = Pattern.compile("\\s+");
-  // the issue or pull request number at the end of a line, "(#1401)"
-  private static final Pattern ISSUE_SUFFIX = Pattern.compile("\\s*\\(\\s*#\\d+\\s*\\)$");
 
   /**
    * What the decisions need to know about the IDE.
@@ -115,10 +103,8 @@ public final class ErlangUpdateNotice {
 
   /**
    * A new version that the plugin repository offers.
-   *
-   * @param whatsNew at most {@link #WHATS_NEW_LINES} short lines of plain text from the change notes
    */
-  record Update(@NotNull String version, @NotNull String currentVersion, @NotNull List<String> whatsNew, @NotNull Installer installer) {
+  record Update(@NotNull String version, @NotNull String currentVersion, @NotNull Installer installer) {
   }
 
   private final LongSupplier myClock;
@@ -227,16 +213,15 @@ public final class ErlangUpdateNotice {
     return pluginVersion != null && !pluginVersion.contains("SNAPSHOT");
   }
 
-  // HTML: who writes on the first line, the versions on the second, then what is new
+  // the title and the text are one short line each, so the collapsed balloon shows them in full
+  @NotNull
+  static String offerTitle(@NotNull Update update) {
+    return "Erlang plugin " + StringUtil.escapeXmlEntities(update.version()) + " is available";
+  }
+
   @NotNull
   static String offerText(@NotNull Update update) {
-    StringBuilder text = new StringBuilder("Hi, it's Sergey, the author of the Erlang plugin.<br>")
-      .append("Version ").append(StringUtil.escapeXmlEntities(update.version()))
-      .append(" is available; you have ").append(StringUtil.escapeXmlEntities(update.currentVersion())).append('.');
-    for (String line : update.whatsNew()) {
-      text.append("<br>• ").append(StringUtil.escapeXmlEntities(line));
-    }
-    return text.toString();
+    return "You have version " + StringUtil.escapeXmlEntities(update.currentVersion()) + ".";
   }
 
   @NotNull
@@ -253,26 +238,5 @@ public final class ErlangUpdateNotice {
   @NotNull
   static String cancelledText(@NotNull Update update) {
     return "The update to version " + StringUtil.escapeXmlEntities(update.version()) + " was cancelled.";
-  }
-
-  /**
-   * At most {@link #WHATS_NEW_LINES} lines of plain text from the change notes of the new version: the first items,
-   * without HTML and without the issue numbers at their end, each cut to {@link #WHATS_NEW_LENGTH} characters.
-   */
-  @NotNull
-  static List<String> whatsNew(@Nullable String changeNotes) {
-    List<String> lines = new ArrayList<>();
-    if (changeNotes == null) return lines;
-    for (String part : LINE_BREAK.split(changeNotes)) {
-      String line = TAG.matcher(part).replaceAll("");
-      line = StringUtil.unescapeXmlEntities(line).replace(' ', ' ').replace("&nbsp;", " ");
-      line = SPACES.matcher(line).replaceAll(" ").trim();
-      line = ISSUE_SUFFIX.matcher(line).replaceAll("");
-      if (line.isEmpty()) continue;
-      if (line.length() > WHATS_NEW_LENGTH) line = line.substring(0, WHATS_NEW_LENGTH - 1).trim() + "…";
-      lines.add(line);
-      if (lines.size() == WHATS_NEW_LINES) break;
-    }
-    return lines;
   }
 }

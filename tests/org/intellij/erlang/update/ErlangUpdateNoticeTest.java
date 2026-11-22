@@ -47,7 +47,7 @@ public class ErlangUpdateNoticeTest extends TestCase {
 
   @NotNull
   private Update update() {
-    return new Update("0.11.1500", "0.11.1400", List.of("Faster completion"), myInstaller);
+    return new Update("0.11.1500", "0.11.1400", myInstaller);
   }
 
   public void testFirstCheckShowsTheUpdate() {
@@ -212,38 +212,17 @@ public class ErlangUpdateNoticeTest extends TestCase {
   }
 
   public void testTexts() {
-    Update update = new Update("0.11.1500", "0.11.1400", List.of("Faster completion", "Fix <tags> & more"), myInstaller);
-    assertEquals("Hi, it's Sergey, the author of the Erlang plugin.<br>" +
-                 "Version 0.11.1500 is available; you have 0.11.1400.<br>" +
-                 "• Faster completion<br>" +
-                 "• Fix &lt;tags&gt; &amp; more",
-                 ErlangUpdateNotice.offerText(update));
-    assertEquals("Hi, it's Sergey, the author of the Erlang plugin.<br>Version 0.11.1500 is available; you have 0.11.1400.",
-                 ErlangUpdateNotice.offerText(new Update("0.11.1500", "0.11.1400", List.of(), myInstaller)));
+    Update update = update();
+    // the collapsed balloon shows the title and the text in full: one short line each
+    assertEquals("Erlang plugin 0.11.1500 is available", ErlangUpdateNotice.offerTitle(update));
+    assertEquals("You have version 0.11.1400.", ErlangUpdateNotice.offerText(update));
     assertEquals("Version 0.11.1500 is installed. Restart the IDE to use it.", ErlangUpdateNotice.installedText(update));
   }
 
-  public void testWhatsNewFromTheChangeNotesOfARelease() {
-    String notes = """
-      <ul>
-        <li>The plugin tells you when a new version is out (<a href="https://github.com/ignatov/intellij-erlang/pull/1500">#1500</a>)</li>
-        <li>Rebar: support the rebar3 script made by rebar3 local install in run configurations and the rebar build, running it on the project's… (<a href="https://github.com/ignatov/intellij-erlang/issues/1233">#1233</a>)</li>
-        <li>Show the "Project SDK is not defined" banner again (<a href="https://github.com/ignatov/intellij-erlang/issues/1269">#1269</a>)</li>
-      </ul>
-      """;
-    List<String> lines = ErlangUpdateNotice.whatsNew(notes);
-    assertEquals(2, lines.size());
-    assertEquals("The plugin tells you when a new version is out", lines.get(0));
-    assertEquals(ErlangUpdateNotice.WHATS_NEW_LENGTH, lines.get(1).length());
-    assertTrue(lines.get(1), lines.get(1).startsWith("Rebar: support the rebar3 script"));
-    assertTrue(lines.get(1), lines.get(1).endsWith("…"));
-  }
-
-  public void testWhatsNewFromPlainTextAndEntities() {
-    assertEquals(List.of("Fix x < y in guards", "Faster completion"),
-                 ErlangUpdateNotice.whatsNew("Fix x &lt; y&nbsp;in   guards\n\n<b>Faster</b> completion\nThird line"));
-    assertEquals(List.of(), ErlangUpdateNotice.whatsNew(null));
-    assertEquals(List.of(), ErlangUpdateNotice.whatsNew("  <ul> </ul> "));
+  public void testTextsEscapeTheVersions() {
+    Update update = new Update("1.0<b>", "0.9&1", myInstaller);
+    assertEquals("Erlang plugin 1.0&lt;b&gt; is available", ErlangUpdateNotice.offerTitle(update));
+    assertEquals("You have version 0.9&amp;1.", ErlangUpdateNotice.offerText(update));
   }
 
   private void assertSilent() {
