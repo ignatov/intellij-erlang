@@ -49,6 +49,25 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertTrue("12 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 8 * Math.max(small, 1_000_000L));
   }
 
+  // a variable bound in every clause of a case and matched again after it resolves to each clause binding once
+  public void testMatchAfterCaseResolvesToEveryClauseBinding() {
+    myFixture.configureByText("rep.erl", """
+      -module(rep).
+      -export([f/1]).
+      f(A) ->
+          case A of 1 -> X = a; 2 -> X = b; _ -> X = c end,
+          X = a,
+          X = a,
+          X.
+      """);
+    List<ErlangQVar> vars = new ArrayList<>(PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class));
+    vars.removeIf(v -> !"X".equals(v.getText()));
+    assertEquals(6, vars.size());
+    List<Object> targets = new ArrayList<>();
+    for (ResolveResult r : multiResolve(vars.get(5))) targets.add(r.getElement());
+    assertEquals(vars.subList(0, 3), targets);
+  }
+
   private long timeOfResolve(int repetitions) {
     List<ErlangQVar> vars = configure(repetitions);
     ErlangQVar last = vars.get(vars.size() - 1);
