@@ -8,6 +8,7 @@ import com.intellij.psi.StubBasedPsiElement;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
+import org.intellij.erlang.psi.ErlangAtom;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +44,18 @@ public final class ErlangMacroLayerHosts {
   }
 
   private ErlangMacroLayerHosts() {
+  }
+
+  /**
+   * The element may host a reference of the layer: false when the layer is off or there is no read access (both
+   * finds give none then), and for an element that is in neither set and is not an atom (an atom has its own path in
+   * {@link ErlangMacroLayerTokenReference}). One look-up per asked element, before either find.
+   */
+  public static boolean mayHostAny(@NotNull PsiElement host) {
+    if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return false;
+    if (host instanceof ErlangAtom) return true;
+    Hosts hosts = hostsOf(host);
+    return hosts == null || hosts.bareUses().contains(host) || hosts.tokens().contains(host);
   }
 
   /** The element may host a bare macro use (false: it hosts none, its children need no scan). */

@@ -24,6 +24,7 @@ import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.stubs.IStubElementType;
 import com.intellij.psi.stubs.StubElement;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHosts;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +49,10 @@ public class ErlangStubbedPsiElementBase<T extends StubElement<?>> extends StubB
    */
   @Override
   public PsiReference @NotNull [] getReferences() {
-    return ErlangMacroLayerTokenReference.append(this, ErlangBareMacroReference.append(this, super.getReferences()));
+    PsiReference[] own = super.getReferences();
+    // most elements host nothing: one look-up, without either find
+    if (!ErlangMacroLayerHosts.mayHostAny(this)) return own;
+    return ErlangMacroLayerTokenReference.append(this, ErlangBareMacroReference.append(this, own));
   }
 
   @Override
