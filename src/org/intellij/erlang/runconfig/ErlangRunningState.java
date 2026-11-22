@@ -44,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
+import java.io.File;
 import java.util.List;
 
 import static org.intellij.erlang.ErlangTypes.ERL_BIN_END;
@@ -77,17 +78,29 @@ public abstract class ErlangRunningState extends CommandLineState {
     setWorkDirectory(commandLine);
     setEnvironment(commandLine);
     setCodePath(commandLine);
+    setErlangFlags(commandLine);
     setEntryPoint(commandLine);
     setStopErlang(commandLine);
     setNoShellMode(commandLine);
-    setErlangFlags(commandLine);
+    setExtraArguments(commandLine);
     TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myModule.getProject());
     setConsoleBuilder(consoleBuilder);
     return commandLine;
   }
 
   protected List<String> getCodePath() throws ExecutionException {
+    return getModulesCodePath();
+  }
+
+  // the code path from the project model, without the directories of createCodePathDirectories; read it in a read action
+  public final List<String> getModulesCodePath() {
     return ErlangConsoleUtil.getCodePath(myModule, useTestCodePath());
+  }
+
+  // makes the directories of one run that come first on the code path; file I/O, so not on the EDT or in a read action
+  @NotNull
+  public List<File> createCodePathDirectories() throws ExecutionException {
+    return List.of();
   }
 
   public Module getModule() {
@@ -156,7 +169,16 @@ public abstract class ErlangRunningState extends CommandLineState {
   }
 
   public final void setErlangFlags(GeneralCommandLine commandLine) {
-    commandLine.addParameters(getErlFlags());
+    List<String> flags = getErlFlags();
+    int extra = flags.indexOf("-extra");
+    commandLine.addParameters(extra < 0 ? flags : flags.subList(0, extra));
+  }
+
+  // everything after -extra is plain arguments, so it must stay at the end of the command line
+  public final void setExtraArguments(GeneralCommandLine commandLine) {
+    List<String> flags = getErlFlags();
+    int extra = flags.indexOf("-extra");
+    if (extra >= 0) commandLine.addParameters(flags.subList(extra, flags.size()));
   }
 
   @NotNull

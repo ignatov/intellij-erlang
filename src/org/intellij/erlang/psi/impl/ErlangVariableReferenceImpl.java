@@ -38,19 +38,23 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
+    List<ErlangQVar> result = processVariables(myElement, new ErlangVarProcessor(myElement.getText(), myElement));
+    return result.isEmpty() ? ResolveResult.EMPTY_ARRAY : PsiElementResolveResult.createResults(result);
+  }
+
+  @NotNull
+  static List<ErlangQVar> processVariables(@NotNull ErlangQVar element, @NotNull ErlangVarProcessor processor) {
+    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(element, ErlangLcExpression.class);
+    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, element);
     ResolveUtil.treeWalkUp(place, processor);
     List<ErlangQVar> result = processor.getAllResults();
-    if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
+    if (!result.isEmpty()) return result;
 
-    ErlangModule module = getErlangModule();
-    if (module == null) return ResolveResult.EMPTY_ARRAY;
+    ErlangModule module = getErlangModule(element);
+    if (module == null) return result;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
 
-    List<ErlangQVar> allResults = processor.getAllResults();
-    return PsiElementResolveResult.createResults(allResults);
+    return processor.getAllResults();
   }
 
   @Nullable
@@ -72,8 +76,8 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Nullable
-  private ErlangModule getErlangModule() {
-    PsiFile file = myElement.getContainingFile();
+  private static ErlangModule getErlangModule(@NotNull PsiElement element) {
+    PsiFile file = element.getContainingFile();
     ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     return erlangFile != null ? erlangFile.getModule() : null;
   }

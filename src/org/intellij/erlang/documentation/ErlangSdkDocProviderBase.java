@@ -22,6 +22,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.roots.LibraryOrSdkOrderEntry;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -32,6 +33,8 @@ import com.intellij.util.io.HttpRequests;
 import com.intellij.util.io.URLUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -119,12 +122,16 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @Nullable
   private String fetchDoc(@NotNull String urlString) {
+    boolean web = false;
     try {
       String protocol = URLUtil.containsScheme(urlString) ? urlString.substring(0, urlString.indexOf(URLUtil.SCHEME_SEPARATOR)) : null;
       if (protocol != null && isHttpProtocol(protocol)) {
-        return HttpRequests.request(urlString)
+        web = true;
+        String doc = HttpRequests.request(urlString)
           .productNameAsUserAgent()
           .connect(request -> retrieveDoc(request.getReader()));
+        ErlangUsageCounters.count(myProject, doc != null ? ErlangUsageKey.OTP_DOCS_WEB_OK : ErlangUsageKey.OTP_DOCS_WEB_FAILED);
+        return doc;
       }
       if (protocol == null || protocol.equals(URLUtil.FILE_PROTOCOL)) {
         Path path = Path.of(protocol == null ? urlString : VfsUtilCore.urlToPath(urlString));
@@ -135,6 +142,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       }
     }
     catch (IOException | InvalidPathException e) {
+      if (web) ErlangUsageCounters.count(myProject, ErlangUsageKey.OTP_DOCS_WEB_FAILED);
       LOG.debug("Cannot fetch Erlang SDK documentation from " + urlString, e);
     }
     return null;
@@ -320,7 +328,9 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
                                           @NotNull VirtualFile virtualFile) {
     List<String> fileUrls = null;
     for (OrderEntry orderEntry : orderEntries) {
-      VirtualFile[] docRootFiles = orderEntry.getFiles(JavadocOrderRootType.getInstance());
+      VirtualFile[] docRootFiles = orderEntry instanceof LibraryOrSdkOrderEntry libraryOrSdkOrderEntry
+                                   ? libraryOrSdkOrderEntry.getRootFiles(JavadocOrderRootType.getInstance())
+                                   : VirtualFile.EMPTY_ARRAY;
       String sdkHttpDocRelPath = legacyHttpDocRelPath(virtualFile);
       for (VirtualFile docRootFile : docRootFiles) {
         if (docRootFile.isInLocalFileSystem()) {

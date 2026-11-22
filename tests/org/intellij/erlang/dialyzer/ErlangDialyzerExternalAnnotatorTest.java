@@ -23,6 +23,9 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfoType;
 import com.intellij.codeInsight.daemon.impl.SeverityRegistrar;
 import com.intellij.lang.ExternalLanguageAnnotators;
 import com.intellij.lang.annotation.HighlightSeverity;
+import com.intellij.notification.NotificationDisplayType;
+import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.TextAttributes;
@@ -50,6 +53,12 @@ public class ErlangDialyzerExternalAnnotatorTest extends ErlangLightPlatformCode
 
   public void testDefaultSeverityIsWarning() {
     assertEquals(HighlightSeverity.WARNING, highlightDialyzerProblem().getSeverity());
+  }
+
+  public void testDialyzerErrorNotificationGroupIsLogOnly() {
+    NotificationGroup group = NotificationGroupManager.getInstance().getNotificationGroup("Dialyzer-based inspections");
+    assertNotNull(group);
+    assertEquals(NotificationDisplayType.NONE, group.getDisplayType());
   }
 
   public void testSeverityFromProfile() {

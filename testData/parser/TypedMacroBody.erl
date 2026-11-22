@@ -1,0 +1,3 @@
+-define(FIELDS(Module), module = Module :: atom(), id :: id(), class = "" :: string() | [string()]).
+-define(MORE_FIELDS, ?FIELDS(m), text = "" :: string()).
+-define(EXPRESSIONS, a, b = c).
