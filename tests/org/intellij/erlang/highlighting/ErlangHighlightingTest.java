@@ -41,6 +41,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNativeRecordsResolve() { doTest("native_records_resolve.erl", "native_records_remote.erl"); }
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
+  public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
   public void testDuplicate()         { doTest(); }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
