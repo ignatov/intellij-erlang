@@ -37,4 +37,8 @@ public class Erlang18HighlightingTest extends ErlangHighlightingTestBase {
     enableErlang18SyntaxInspection();
     doTest();
   }
+
+  public void testErlang18ElseAtomNoError() {
+    doTest();
+  }
 }
