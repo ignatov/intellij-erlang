@@ -146,7 +146,7 @@ final class ErlangMacroLayerSettings {
       for (Project project : ProjectManager.getInstance().getOpenProjects()) {
         if (project.isDisposed()) continue;
         PsiManager.getInstance(project).dropPsiCaches();
-        DaemonCodeAnalyzer.getInstance(project).restart();
+        DaemonCodeAnalyzer.getInstance(project).restart("the macro layer switch changed");
       }
     });
   }
