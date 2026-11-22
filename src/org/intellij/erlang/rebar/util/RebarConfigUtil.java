@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +55,7 @@ public final class RebarConfigUtil {
   @NotNull
   public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
     final List<String> dependencyAppNames = new ArrayList<>();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", depsList -> {
+    Consumer<ErlangExpression> depsConsumer = depsList -> {
       if (!(depsList instanceof ErlangListExpression)) return;
       for (ErlangExpression dependency : ((ErlangListExpression) depsList).getExpressionList()) {
         String name = ErlangTermFileUtil.getNameOfNamedTuple(dependency);
@@ -64,6 +65,17 @@ public final class RebarConfigUtil {
           name = atom != null ? atom.getName() : null;
         }
         ContainerUtil.addIfNotNull(dependencyAppNames, name);
+      }
+    };
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", depsConsumer);
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "profiles", profilesList -> {
+      if (!(profilesList instanceof ErlangListExpression)) return;
+      for (ErlangExpression profile : ((ErlangListExpression) profilesList).getExpressionList()) {
+        if (ErlangTermFileUtil.getNameOfNamedTuple(profile) == null) continue;
+        List<ErlangExpression> profileTuple = ((ErlangTupleExpression) profile).getExpressionList();
+        if (profileTuple.size() >= 2) {
+          ErlangTermFileUtil.processConfigSection(profileTuple.get(1), "deps", depsConsumer);
+        }
       }
     });
     return dependencyAppNames;
