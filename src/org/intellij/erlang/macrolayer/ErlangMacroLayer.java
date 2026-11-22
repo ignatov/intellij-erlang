@@ -101,59 +101,51 @@ public final class ErlangMacroLayer {
   public static final AtomicInteger GUARD_VIOLATIONS = new AtomicInteger();
   public static final AtomicInteger REMOTE_ANSWERED = new AtomicInteger();
 
-  /** The Registry key of the switch (registered in ErlangPlugin.xml). */
-  public static final String REGISTRY_KEY = "erlang.macro.layer";
-  /** The system property or the environment variable, when set: it overrides the Registry key. */
-  private static final @Nullable Mode OVERRIDE_MODE = readMode();
-  /**
-   * 4,000. With the narrow gate a file pays for the copy only when it needs substitution,
-   * and a big function with few expanded tokens (scan_entity_value/7 of xmerl_scan.erl: 2,354) no longer stays broken.
-   * Expansion bombs stay out: a form over the cap is not expanded, and the expander itself stops at
-   * {@link ErlangMacroExpander#MAX_TOKENS_PER_FORM} substituted tokens per form and {@link ErlangMacroExpander#MAX_DEPTH}
-   * nested macro levels.
-   */
-  public static final int FORM_CAP = readInt("erlang.macro.layer.cap", "ERLANG_MACRO_LAYER_CAP", 4000);
+  /** The Registry key of the switch (registered in ErlangPlugin.xml); see {@link ErlangMacroLayerSettings}. */
+  public static final String REGISTRY_KEY = ErlangMacroLayerSettings.REGISTRY_KEY;
+  public static final int FORM_CAP = ErlangMacroLayerSettings.FORM_CAP;
 
-  /** The form cap in force ({@link #FORM_CAP}). */
-  public static int formCap() {
-    return FORM_CAP;
+  public static @NotNull Mode getMode() {
+    return ErlangMacroLayerSettings.getMode();
   }
 
-  private static final boolean REMOTE_DEFAULT = "on".equals(read("erlang.macro.layer.remote", "ERLANG_MACRO_LAYER_REMOTE"));
-  private static volatile @Nullable Mode ourTestMode;
-  /** Diagnostic only: {@code erlang.macro.layer.edt=allow} lets the UI thread build a copy (default: never). */
-  private static final boolean EDT_BUILD_DEFAULT = "allow".equals(read("erlang.macro.layer.edt", "ERLANG_MACRO_LAYER_EDT"));
-  private static volatile @Nullable Boolean ourTestEdtBuild;
-  /**
-   * {@code erlang.macro.layer.gate} / {@code ERLANG_MACRO_LAYER_GATE} = {@code wide} restores the wide gate
-   * (a form asks the copy as soon as it uses a visible macro; for the soundness check of the narrow gate). Default:
-   * narrow (only forms that need substitution ask).
-   */
-  private static final boolean GATE_WIDE_DEFAULT = "wide".equals(read("erlang.macro.layer.gate", "ERLANG_MACRO_LAYER_GATE"));
-  private static volatile @Nullable Boolean ourTestGateWide;
+  public static boolean isEnabled() {
+    return ErlangMacroLayerSettings.isEnabled();
+  }
+
+  public static boolean isRemoteEnabled() {
+    return ErlangMacroLayerSettings.isRemoteEnabled();
+  }
+
+  public static int formCap() {
+    return ErlangMacroLayerSettings.formCap();
+  }
 
   static boolean isGateWide() {
-    Boolean b = ourTestGateWide;
-    return b != null ? b : GATE_WIDE_DEFAULT;
+    return ErlangMacroLayerSettings.isGateWide();
+  }
+
+  static boolean isEdtBuildAllowed() {
+    return ErlangMacroLayerSettings.isEdtBuildAllowed();
+  }
+
+  static @Nullable String read(String property, String env) {
+    return ErlangMacroLayerSettings.read(property, env);
+  }
+
+  @TestOnly
+  public static void setModeForTests(@NotNull Mode mode, @NotNull Disposable parent) {
+    ErlangMacroLayerSettings.setModeForTests(mode, parent);
   }
 
   @TestOnly
   public static void setGateWideForTests(boolean wide, @NotNull Disposable parent) {
-    Boolean previous = ourTestGateWide;
-    ourTestGateWide = wide;
-    Disposer.register(parent, () -> ourTestGateWide = previous);
-  }
-
-  static boolean isEdtBuildAllowed() {
-    Boolean b = ourTestEdtBuild;
-    return b != null ? b : EDT_BUILD_DEFAULT;
+    ErlangMacroLayerSettings.setGateWideForTests(wide, parent);
   }
 
   @TestOnly
   public static void setEdtBuildForTests(boolean allow, @NotNull Disposable parent) {
-    Boolean previous = ourTestEdtBuild;
-    ourTestEdtBuild = allow;
-    Disposer.register(parent, () -> ourTestEdtBuild = previous);
+    ErlangMacroLayerSettings.setEdtBuildForTests(allow, parent);
   }
 
   private ErlangMacroLayer() {
@@ -171,52 +163,6 @@ public final class ErlangMacroLayer {
 
   private static void markFile(@Nullable Outcome o, @Nullable PsiFile file) {
     if (o != null && file != null) o.file = file.getName();
-  }
-
-  static @Nullable String read(String property, String env) {
-    String value = System.getProperty(property);
-    if (value == null || value.isEmpty()) value = System.getenv(env);
-    return value == null || value.isEmpty() ? null : value.trim().toLowerCase(Locale.ROOT);
-  }
-
-  private static int readInt(String property, String env, int def) {
-    String v = read(property, env);
-    try {
-      return v == null ? def : Integer.parseInt(v);
-    }
-    catch (NumberFormatException e) {
-      return def;
-    }
-  }
-
-  private static @Nullable Mode readMode() {
-    String v = read("erlang.macro.layer", "ERLANG_MACRO_LAYER");
-    if (v == null) return null;
-    return "off".equals(v) || "none".equals(v) || "false".equals(v) ? Mode.OFF : Mode.LAYER;
-  }
-
-  /** Read at each call: a test mode, else the system property or environment variable, else the Registry key. */
-  public static @NotNull Mode getMode() {
-    Mode m = ourTestMode;
-    if (m != null) return m;
-    if (OVERRIDE_MODE != null) return OVERRIDE_MODE;
-    if (ApplicationManager.getApplication() == null) return Mode.LAYER;
-    return Registry.is(REGISTRY_KEY, true) ? Mode.LAYER : Mode.OFF;
-  }
-
-  public static boolean isEnabled() {
-    return getMode() == Mode.LAYER;
-  }
-
-  public static boolean isRemoteEnabled() {
-    return REMOTE_DEFAULT;
-  }
-
-  @TestOnly
-  public static void setModeForTests(@NotNull Mode mode, @NotNull Disposable parent) {
-    Mode previous = ourTestMode;
-    ourTestMode = mode;
-    Disposer.register(parent, () -> ourTestMode = previous);
   }
 
   // ------------------------------------------------------------------------------------------------ the copy
@@ -1325,7 +1271,7 @@ public final class ErlangMacroLayer {
    * The longest wait of a passive query for the copy, ms ({@code erlang.macro.layer.passive.wait},
    * default 2,000). The wait ends earlier when the quiet time is over (by default 1 s after the last change).
    */
-  private static final int PASSIVE_WAIT_MS = readInt("erlang.macro.layer.passive.wait", "ERLANG_MACRO_LAYER_PASSIVE_WAIT", 2000);
+  private static final int PASSIVE_WAIT_MS = ErlangMacroLayerSettings.readInt("erlang.macro.layer.passive.wait", "ERLANG_MACRO_LAYER_PASSIVE_WAIT", 2000);
   private static volatile @Nullable Integer ourTestPassiveWait;
 
   static int passiveWaitMillis() {
@@ -1551,7 +1497,7 @@ public final class ErlangMacroLayer {
 
 
   /** {@code erlang.macro.layer.quiet} / {@code ERLANG_MACRO_LAYER_QUIET}, ms, default 1,000. */
-  private static final int QUIET_MS = readInt("erlang.macro.layer.quiet", "ERLANG_MACRO_LAYER_QUIET", 1000);
+  private static final int QUIET_MS = ErlangMacroLayerSettings.readInt("erlang.macro.layer.quiet", "ERLANG_MACRO_LAYER_QUIET", 1000);
   private static volatile @Nullable Integer ourTestQuiet;
 
   static long quietMillis() {
