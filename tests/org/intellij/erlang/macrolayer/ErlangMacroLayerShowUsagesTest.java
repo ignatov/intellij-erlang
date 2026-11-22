@@ -53,7 +53,7 @@ public class ErlangMacroLayerShowUsagesTest extends ErlangLightPlatformCodeInsig
    */
   private String showUsages(PsiFile f, String marker) throws Exception {
     Editor editor = myFixture.getEditor();
-    int caret = TEXT.indexOf(marker.replace("|", "")) + marker.indexOf('|');
+    int caret = f.getText().indexOf(marker.replace("|", "")) + marker.indexOf('|');
     editor.getCaretModel().moveToOffset(caret);
     PsiElement target = inBackgroundWithIndicator(
       () -> TargetElementUtil.getInstance().findTargetElement(editor, TargetElementUtil.getInstance().getAllAccepted(), caret));
@@ -75,14 +75,40 @@ public class ErlangMacroLayerShowUsagesTest extends ErlangLightPlatformCodeInsig
     });
     String result = target.getClass().getSimpleName() + " " + lines;
     System.out.println("SHOW-USAGES at " + marker + ": " + result);
-    return lines.toString();
+    return result;
   }
 
   public void testFromTheMacroArgumentThatNamesAFunction() throws Exception {
     PsiFile f = myFixture.addFileToProject("su/shop_tests.erl", TEXT);
     myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
     myFixture.doHighlighting();
-    assertEquals("from the call", "[2, 6]", showUsages(f, "b|ig_order()."));
-    assertEquals("from the macro argument", "[2, 6]", showUsages(f, "?TEST(b|ig_order"));
+    assertEquals("from the call", "LeafPsiElement [2, 6]", showUsages(f, "b|ig_order()."));
+    assertEquals("from the macro argument", "LeafPsiElement [2, 6]", showUsages(f, "?TEST(b|ig_order"));
+  }
+
+  public void testFromTheArgumentOfAOneArgumentMacro() throws Exception {
+    PsiFile f = myFixture.addFileToProject("su/mk.erl", """
+      -module(mk).
+      -export([made/0, d/0]).
+      -define(MK(N), N() -> ok).
+      ?MK(made).
+      d() -> made().
+      """);
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("from the call", "LeafPsiElement [2, 5]", showUsages(f, "d() -> m|ade()"));
+    assertEquals("from the macro argument", "LeafPsiElement [2, 5]", showUsages(f, "?MK(m|ade"));
+  }
+
+  public void testPlainAtomKeepsTheAtomTarget() throws Exception {
+    PsiFile f = myFixture.addFileToProject("su/plain.erl", """
+      -module(plain).
+      -export([a/0, b/0]).
+      a() -> some_atom.
+      b() -> some_atom.
+      """);
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("ErlangQAtomImpl [3, 4]", showUsages(f, "a() -> s|ome_atom"));
   }
 }
