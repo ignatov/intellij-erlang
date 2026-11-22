@@ -49,6 +49,30 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertTrue("12 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 8 * Math.max(small, 1_000_000L));
   }
 
+  // #1481: the check of testResolveAfterRepeatedMatchesDoesNotDouble times one resolve of each size, so a busy machine
+  // that pauses only the bigger resolve fails it although the resolve does not double; the check must hold on a busy runner
+  public void testDoublingCheckHoldsOnBusyMachine() throws InterruptedException {
+    List<Thread> load = new ArrayList<>();
+    for (int i = 0; i < 3 * Runtime.getRuntime().availableProcessors(); i++) {
+      Thread t = new Thread(() -> { while (!Thread.currentThread().isInterrupted()) Thread.onSpinWait(); });
+      t.setDaemon(true);
+      t.start();
+      load.add(t);
+    }
+    try {
+      for (int i = 0; i < 300; i++) {
+        timeOfResolve(12);
+        long small = timeOfResolve(12);
+        long big = timeOfResolve(16);
+        assertTrue("run " + i + ": 12 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 8 * Math.max(small, 1_000_000L));
+      }
+    }
+    finally {
+      for (Thread t : load) t.interrupt();
+      for (Thread t : load) t.join();
+    }
+  }
+
   // a variable bound in every clause of a case and matched again after it resolves to each clause binding once
   public void testMatchAfterCaseResolvesToEveryClauseBinding() {
     myFixture.configureByText("rep.erl", """
