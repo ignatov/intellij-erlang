@@ -860,6 +860,30 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                """);
   }
 
+  public void testDescriptionsOfQuotedOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'<caret>+'/2.
+                               """);
+  }
+
+  public void testDescriptionsOfQuotedOperatorInRemoteCall() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'<caret>+'(1, 2).
+                               """);
+  }
+
+  public void testDescriptionsOfNeedlesslyQuotedBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> 'ab<caret>s'(1).
+                               """);
+  }
+
   private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertInstanceOf(element, NavigationItem.class);

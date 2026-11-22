@@ -96,12 +96,15 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     return null;
   }
 
-  // name/arity as the reference reads them, not the raw text of the owner, which keeps the arguments of a call and
-  // the line breaks and spaces of the source (#1467); a spec gives its name only
+  // name/arity, not the raw text of the owner, which keeps the arguments of a call and the line breaks and spaces of
+  // the source (#1467); a spec gives its name only
   @NotNull
   private static String describeFunctionReferenceOwner(@NotNull PsiElement o) {
     PsiReference reference = o instanceof ErlangSpecFun ? null : o.getReference();
-    if (reference instanceof ErlangFunctionReference ref && ref.getArity() >= 0) return ref.getName() + "/" + ref.getArity();
+    if (reference instanceof ErlangFunctionReference ref && ref.getArity() >= 0) {
+      // quoted only when the atom needs quotes, as erlc writes it: 'abs'(1) gives abs/1, erlang:'+'(1, 2) gives '+'/2
+      return ErlangPsiImplUtil.toAtomName(ref.getName()) != null ? ref.getSignature() : ref.getName() + "/" + ref.getArity();
+    }
     ErlangQAtom qAtom = PsiTreeUtil.getChildOfType(o, ErlangQAtom.class);
     return qAtom != null ? qAtom.getText() : o.getText();
   }
