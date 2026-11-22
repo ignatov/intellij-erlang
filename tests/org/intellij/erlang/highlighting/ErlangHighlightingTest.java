@@ -60,6 +60,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testBinaryComprehensionTemplate() { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
+  public void testMacroBodyFormsAndTypes() { doTest(); } // issue 1446
   public void testIfConditionalCompilation() { doTest(); }
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
