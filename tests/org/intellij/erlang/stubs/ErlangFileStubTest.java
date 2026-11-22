@@ -24,6 +24,7 @@ import com.intellij.psi.stubs.StubElement;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.impl.ErlangBehaviourImpl;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -55,6 +56,20 @@ public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTes
     assertEquals(1, behaviours.size());
     assertEquals("gen_server", behaviours.get(0).getName());
     assertFalse(fileImpl.isContentsLoaded());
+  }
+
+  // Resolving an auto-imported call such as length/1 looks for -import attributes in the included
+  // headers; that must be read without loading the tree of the header (#1432).
+  public void testBifCallDoesNotLoadIncludedHeader() {
+    PsiFileImpl header = (PsiFileImpl) myFixture.addFileToProject("h.hrl", "-define(X, 1).\n");
+    assertNotNull(header.getStub());
+    assertFalse(header.isContentsLoaded());
+
+    myFixture.configureByText("a.erl", "-module(a).\n-include(\"h.hrl\").\nf(L) -> len<caret>gth(L).\n");
+    PsiManagerEx.getInstanceEx(getProject()).setAssertOnFileLoadingFilter(
+      file -> file.equals(header.getVirtualFile()), getTestRootDisposable());
+    getElementAtCaret(ErlangFunctionCallExpression.class).getReference().resolve();
+    assertFalse("the tree of the included header was loaded", header.isContentsLoaded());
   }
 
   // The name from the stub must equal the name from the tree.
