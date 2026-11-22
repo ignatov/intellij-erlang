@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * The build log of the macro layer.
+ * The build log of the macro layer, for measurements and for the tests that count copy builds (no build while the
+ * user types, no copy for erl_types.erl). Off by default; then every method returns after one volatile read.
  * <p>
  * Switch: system property {@code erlang.macro.layer.log}, else the environment variable {@code ERLANG_MACRO_LAYER_LOG}.
  * {@code on}: every event goes to idea.log at INFO level (category {@code #org.intellij.erlang.macrolayer.ErlangMacroLayerLog}).
