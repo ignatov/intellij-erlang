@@ -127,7 +127,7 @@ public final class EditorActionProbe {
   }
 
   /** Actions that wait for smart mode in tests (the daemon) and so never end inside dumb mode. */
-  public static final Set<String> NOT_IN_DUMB_MODE = Set.of("highlight", "GotoNextError", "find-usages-at-caret");
+  public static final Set<String> NOT_IN_DUMB_MODE = Set.of("highlight", "GotoNextError", "find-usages-at-caret", "goto-symbol", "rename-at-caret");
 
   /** Turns on every inspection of the plugin (the Dialyzer one excepted) for the highlighting actions. */
   public static void enableInspections(@NotNull CodeInsightTestFixture fixture) {

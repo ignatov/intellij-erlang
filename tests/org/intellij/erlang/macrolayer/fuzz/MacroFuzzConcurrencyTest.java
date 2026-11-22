@@ -110,7 +110,7 @@ public class MacroFuzzConcurrencyTest extends MacroFuzzTestBase {
         open(m.getVirtualFile());
         EditorActionProbe probe = new EditorActionProbe(rec, myFixture);
         TargetProbe targets = new TargetProbe(rec, myFixture.getEditor(), myFixture.getFile());
-        targets.searchedTargets = 1;
+        targets.searchedTargets = 0;   // a search waits for smart mode: never inside dumb mode
         List<Integer> offsets = TargetProbe.offsets(myFixture.getFile(), rnd, 5);
         Collections.shuffle(offsets, rnd);
         List<Integer> some = offsets.subList(0, Math.min(offsets.size(), smoke() ? 4 : 20));
