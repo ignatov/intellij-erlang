@@ -2318,7 +2318,7 @@ public final class ErlangMacroLayer {
     if (def == null || def.getName() == null || !PsiTreeUtil.isAncestor(def.getMacrosBody(), v, false)) return null;
     if (isMacroParameter(def, v.getText()) || "_".equals(v.getText())) return null;
     VirtualFile vf = ef.getOriginalFile().getVirtualFile();
-    ErlangMacroExpander.HeaderTok h = vf == null ? null : headerOrigin(ef, vf, v.getTextRange().getStartOffset(), v.getText());
+    ErlangMacroExpander.HeaderTok h = vf == null ? null : ErlangMacroLayerBodySearch.headerOrigin(ef, vf, v.getTextRange().getStartOffset(), v.getText());
     return h == null ? null : new ErlangMacroLayerHeaderTarget(ef.getProject(), vf, h.directive(), h.index(), v.getText(), v.getClass(),
                                                                 "variable");
   }
@@ -2331,142 +2331,19 @@ public final class ErlangMacroLayer {
     return false;
   }
 
-  // ------------------------------------------------------------------------------------------------ macro bodies
-
-  /**
-   * Includers searched for the uses of a header macro, at most: as many copies as the retention keeps strongly, so that
-   * one search does not build copies that the next one builds again.
-   */
-  private static final int MAX_BODY_USERS = ErlangMacroLayerRetention.STRONG;
   /** Project-wide word searches for the includers of a header macro (tests). */
-  public static final AtomicInteger INCLUDER_SEARCHES = new AtomicInteger();
-  private static final Key<ConcurrentHashMap<String, Object[]>> INCLUDERS_KEY = Key.create("erlang.macro.layer.includers");
+  public static final AtomicInteger INCLUDER_SEARCHES = ErlangMacroLayerBodySearch.INCLUDER_SEARCHES;
 
-  /**
-   * Resolves a name inside a {@code -define} body through the expanded copies of the macro's uses: in the
-   * file itself, and for a header, in the .erl files that use the macro and include the header (at most
-   * {@link #MAX_BODY_USERS}). The body alone may not parse (a fragment), and a header body names things of its
-   * includers, so master cannot resolve it there. Every use contributes its answer, mapped back to real elements;
-   * different uses may resolve differently, and then all answers are returned. Never builds a copy on the UI thread.
-   */
   public static @NotNull List<PsiElement> resolveInMacroBody(@NotNull PsiElement leaf) {
-    if (!isEnabled() || leaf.getTextLength() == 0) return List.of();
-    // the search for the includers queries the word index: never on the UI thread
-    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return List.of();
-    PsiFile file = leaf.getContainingFile();
-    if (!(file instanceof ErlangFile ef) || file.getUserData(COPY_OF) != null || DumbService.isDumb(file.getProject())) return List.of();
-    ErlangMacrosDefinition def = PsiTreeUtil.getParentOfType(leaf, ErlangMacrosDefinition.class);
-    if (def == null || def.getName() == null || !PsiTreeUtil.isAncestor(def.getMacrosBody(), leaf, false)) return List.of();
-    int start = leaf.getTextRange().getStartOffset();
-    VirtualFile vf = file.getOriginalFile().getVirtualFile();
-    ErlangMacroExpander.HeaderTok origin = null;
-    List<ErlangFile> users = new ArrayList<>();
-    if (layerFile(ef) != null) users.add(ef);
-    else if (vf != null) {
-      origin = headerOrigin(ef, vf, start, leaf.getText());
-      if (origin == null) return List.of();
-      users.addAll(includersUsing(ef.getProject(), vf, def.getName()));
-    }
-    // the includers whose copy is there first: their answers cost nothing
-    users.sort(Comparator.comparingInt(u -> cachedCopy(u) != null ? 0 : 1));
-    LinkedHashSet<PsiElement> result = new LinkedHashSet<>();
-    for (ErlangFile user : users) {
-      ProgressManager.checkCanceled();
-      Copy copy = getCopy(user, "macro-body");
-      if (copy == null || copy.copyFile == null) continue;
-      for (int e : copy.expansion.bodyCopies(start, origin)) {
-        if (!copy.isClean(copy.expansion.formAtExpanded(e))) continue;
-        PsiReference ref = copy.copyFile.findReferenceAt(e);
-        if (ref == null) continue;
-        TextRange abs = ref.getRangeInElement().shiftRight(ref.getElement().getTextRange().getStartOffset());
-        if (abs.getStartOffset() != e || !leaf.textMatches(abs.subSequence(copy.expansion.text))) continue;
-        List<PsiElement> targets = new ArrayList<>();
-        if (ref instanceof PsiPolyVariantReference poly) for (ResolveResult rr : poly.multiResolve(false)) targets.add(rr.getElement());
-        if (targets.isEmpty()) targets.add(ref.resolve());
-        for (PsiElement t : targets) {
-          PsiElement real = exit(copy.toReal(t), user);
-          if (real != null) result.add(real);
-        }
-      }
-    }
-    return new ArrayList<>(result);
+    return ErlangMacroLayerBodySearch.resolveInMacroBody(leaf);
   }
 
-  /** The origin of a header token in the header's summary, or null when it is not a token of a directive. */
-  private static @Nullable ErlangMacroExpander.HeaderTok headerOrigin(@NotNull ErlangFile header, @NotNull VirtualFile vf, int start,
-                                                                       @NotNull String text) {
-    List<ErlangMacroExpander.Directive> directives = summaryOf(header).directives;
-    for (int d = 0; d < directives.size(); d++) {
-      List<ErlangMacroExpander.Tok> toks = directives.get(d).tokens;
-      if (toks.isEmpty() || toks.getFirst().start() > start || toks.getLast().end() <= start) continue;
-      for (int i = 0; i < toks.size(); i++) {
-        if (toks.get(i).start() == start && toks.get(i).text().equals(text)) return new ErlangMacroExpander.HeaderTok(vf, d, i);
-      }
-    }
-    return null;
-  }
-
-  /** The .erl files of the project that use the macro of the header (for rename conflicts); never on the UI thread. */
   public static @NotNull List<ErlangFile> includersOfHeader(@Nullable PsiFile header, @NotNull String macro) {
-    VirtualFile vf = header == null ? null : header.getOriginalFile().getVirtualFile();
-    if (vf == null || !isEnabled() || DumbService.isDumb(header.getProject())) return List.of();
-    if (ApplicationManager.getApplication().isDispatchThread() && !isEdtBuildAllowed()) return List.of();
-    return includersUsing(header.getProject(), vf, macro);
+    return ErlangMacroLayerBodySearch.includersOfHeader(header, macro);
   }
 
-  /**
-   * The .erl files of the project that contain the macro's name and include the header (directly or not), at most
-   * {@link #MAX_BODY_USERS}; kept until the next PSI change (a search asks it for every occurrence of a word).
-   */
-  private static @NotNull List<ErlangFile> includersUsing(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
-    long stamp = PsiModificationTracker.getInstance(project).getModificationCount();
-    ConcurrentHashMap<String, Object[]> cache = project.getUserData(INCLUDERS_KEY);
-    if (cache == null) cache = ((UserDataHolderEx)project).putUserDataIfAbsent(INCLUDERS_KEY, new ConcurrentHashMap<>());
-    String key = header.getUrl() + "|" + macro;
-    Object[] kept = cache.get(key);
-    if (kept != null && (Long)kept[0] == stamp) {
-      List<ErlangFile> r = new ArrayList<>();
-      PsiManager manager = PsiManager.getInstance(project);
-      for (Object o : (List<?>)kept[1]) {
-        if (o instanceof VirtualFile vf && vf.isValid() && manager.findFile(vf) instanceof ErlangFile ef) r.add(ef);
-      }
-      return r;
-    }
-    List<ErlangFile> r = includersUsing0(project, header, macro);
-    List<VirtualFile> files = new ArrayList<>();
-    for (ErlangFile f : r) if (f.getVirtualFile() != null) files.add(f.getVirtualFile());
-    cache.put(key, new Object[]{stamp, files});
-    return r;
-  }
-
-  private static @NotNull List<ErlangFile> includersUsing0(@NotNull Project project, @NotNull VirtualFile header, @NotNull String macro) {
-    INCLUDER_SEARCHES.incrementAndGet();
-    List<ErlangFile> r = new ArrayList<>();
-    PsiSearchHelper.getInstance(project).processAllFilesWithWord(macro, GlobalSearchScope.projectScope(project), f -> {
-      ProgressManager.checkCanceled();
-      ErlangFile ef = f instanceof ErlangFile x ? layerFile(x) : null;
-      Table t = ef == null ? null : table(ef);
-      if (t != null && t.refusal == null && t.headers.contains(header)) r.add(ef);
-      return r.size() < MAX_BODY_USERS;
-    }, true);
-    return r;
-  }
-
-  /**
-   * The reference lies in a {@code -define} body, master resolves it to nothing, and one of the macro's uses
-   * resolves it to the element: for find usages and rename of that element.
-   */
   public static boolean isReferenceThroughMacroUses(@NotNull PsiReference ref, @NotNull PsiElement element) {
-    PsiElement owner = ref.getElement();
-    if (!isEnabled() || PsiTreeUtil.getParentOfType(owner, ErlangMacrosBody.class) == null) return false;
-    PsiFile file = owner.getContainingFile();
-    PsiElement leaf = file == null ? null : file.findElementAt(owner.getTextRange().getStartOffset() + ref.getRangeInElement().getStartOffset());
-    if (leaf == null) return false;
-    PsiManager manager = owner.getManager();
-    for (PsiElement target : resolveInMacroBody(leaf)) {
-      if (manager.areElementsEquivalent(target, element)) return true;
-    }
-    return false;
+    return ErlangMacroLayerBodySearch.isReferenceThroughMacroUses(ref, element);
   }
 
   // ------------------------------------------------------------------------------------------------ resolve
