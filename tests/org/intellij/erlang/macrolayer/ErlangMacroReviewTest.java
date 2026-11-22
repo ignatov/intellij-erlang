@@ -250,4 +250,22 @@ public class ErlangMacroReviewTest extends ErlangLightPlatformCodeInsightFixture
     PsiFile f = open("-module(m).\n-export([f/0]).\n-define(CALL(M, F), M:F(), ok).\n%% " + "x".repeat(300) + "\nf() -> ?CALL(b, g).\n");
     assertEquals("too-large", inBackgroundWithIndicator(() -> ErlangMacroLayer.refusalForTests(f)));
   }
+
+  // master #1436 merged: a variable that master resolves (here matched again many times) never asks the layer
+  public void testVariablesMasterResolvesDoNotAskTheLayer() throws Exception {
+    StringBuilder body = new StringBuilder("f(X) ->\n  A = X,\n");
+    for (int i = 0; i < 30; i++) body.append("  A = X,\n");
+    PsiFile f = open("-module(m).\n-export([f/1, g/0]).\n-define(CALL(M, F), M:F(), ok).\n" + body + "  A.\ng() -> ?CALL(b, g).\n");
+    int asked = ErlangMacroLayer.FALLBACK_ASKED.get();
+    int resolved = inBackgroundWithIndicator(() -> {
+      int n = 0;
+      for (org.intellij.erlang.psi.ErlangQVar v : com.intellij.psi.util.PsiTreeUtil.findChildrenOfType(f, org.intellij.erlang.psi.ErlangQVar.class)) {
+        PsiReference r = v.getReference();
+        if (r instanceof PsiPolyVariantReference p && p.multiResolve(false).length > 0) n++;
+      }
+      return n;
+    });
+    assertTrue("variables resolved: " + resolved, resolved > 30);
+    assertEquals("the layer was not asked", asked, ErlangMacroLayer.FALLBACK_ASKED.get());
+  }
 }

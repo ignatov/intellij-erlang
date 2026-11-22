@@ -62,7 +62,8 @@ public class ErlangMacroLayerVariableGateTest extends ErlangLightPlatformCodeIns
         if (p[1].equals("variable(multiResolve)") && !p[2].startsWith("nested:")) outcomes.put(v, p[2].replaceFirst(":.*", ""));
       });
     }
-    assertEquals("{A=gate, N=asked(arg-var), Q=gate, T=gate, W=asked(body-var), X=gate, Z=asked(arg-var)}", outcomes.toString());
+    // T is a parameter: master's resolve finds it, so the layer is not asked at all
+    assertEquals("{A=gate, N=asked(arg-var), Q=gate, W=asked(body-var), X=gate, Z=asked(arg-var)}", outcomes.toString());
   }
 
   /**
@@ -94,6 +95,7 @@ public class ErlangMacroLayerVariableGateTest extends ErlangLightPlatformCodeIns
         if (p[1].equals("variable(multiResolve)") && !p[2].startsWith("nested:")) outcomes.put(c[0], p[2].replaceFirst(":.*", ""));
       });
     }
-    assertEquals("{f:S=gate, f:W=gate, g:S=asked(body-var), h:W=asked(body-var)}", outcomes.toString());
+    // S is a parameter in f and g: master's resolve finds it, so the layer is not asked at all
+    assertEquals("{f:W=gate, h:W=asked(body-var)}", outcomes.toString());
   }
 }
