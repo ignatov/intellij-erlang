@@ -16,7 +16,7 @@ import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.search.ErlangFindUsagesHandlerFactory;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerFindUsages;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,7 +58,7 @@ public class ErlangMacroLayerRenameProcessor extends RenamePsiElementProcessor {
                                                          boolean searchInCommentsAndStrings) {
     if (!ErlangMacroLayer.isNameMadeByMacro(element)) return super.findReferences(element, searchScope, searchInCommentsAndStrings);
     List<PsiReference> r = Collections.synchronizedList(new ArrayList<>());
-    ErlangFindUsagesHandlerFactory.processReferencesToNameMadeByMacro(element, searchScope.intersectWith(element.getUseScope()), r::add);
+    ErlangMacroLayerFindUsages.processReferencesToNameMadeByMacro(element, searchScope.intersectWith(element.getUseScope()), r::add);
     return r;
   }
 

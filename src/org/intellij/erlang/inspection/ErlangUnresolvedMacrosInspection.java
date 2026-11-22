@@ -25,10 +25,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.psi.ErlangArgumentDefinition;
-import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
-import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
@@ -57,24 +54,11 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
-      /** Epp's errors for a parameter list: "badly formed 'define'", "argument 'X' already used". */
+      /** Epp's errors of a -define (see {@link ErlangMacroResolve#defineProblems}), with the macro layer on. */
       @Override
       public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
         if (!ErlangMacroLayer.isEnabled()) return;
-        ErlangMacrosName name = o.getMacrosName();
-        if (name != null && ErlangMacroResolve.isRedefinition(o)) registerProblem(holder, name, "Redefining macro '" + o.getName() + "'");
-        ErlangArgumentDefinitionList list = o.getArgumentDefinitionList();
-        if (list == null) return;
-        Set<String> seen = new HashSet<>();
-        for (ErlangArgumentDefinition a : list.getArgumentDefinitionList()) {
-          String text = a.getText();
-          if (!(a.getExpression() instanceof ErlangMaxExpression m) || m.getQVar() == null || !m.getQVar().getText().equals(text)) {
-            registerProblem(holder, a, "Badly formed 'define': a parameter must be a variable");
-          }
-          else if (!seen.add(text)) {
-            registerProblem(holder, a, "Argument '" + text + "' already used");
-          }
-        }
+        ErlangMacroResolve.defineProblems(o).forEach((element, message) -> registerProblem(holder, element, message));
       }
 
       @Override
@@ -113,26 +97,10 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         }
       }
 
-      /**
-       * Epp's "argument mismatch for macro": no definition takes as many arguments as the use has, and none
-       * takes no parameter list (then epp leaves the parentheses as a call). Only when every include of the file
-       * resolves, so that no definition is out of sight.
-       */
+      /** Epp's "argument mismatch for macro" where it is certain (see {@link ErlangMacroResolve#argumentMismatch}). */
       private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
-        if (!ErlangMacroLayer.isEnabled()) return;
-        if (!(target.getContainingFile() instanceof ErlangFile file) || !ErlangMacroResolve.allIncludesResolve(file)) return;
-        int arity = ErlangMacroResolve.arityAfter(nameLeaf);
-        if (arity == ErlangMacroResolve.UNKNOWN) return;
-        List<ErlangMacrosDefinition> candidates = ErlangMacroResolve.candidates(file, unquote(name));
-        if (candidates.isEmpty()) return;
-        for (ErlangMacrosDefinition d : candidates) {
-          int a = ErlangMacroResolve.arity(d);
-          if (a == arity || a == ErlangMacroResolve.NO_ARGUMENTS) return;
-        }
-        // never paint code that may be valid: a branch that may be skipped, or a name that a build flag (-D) may give
-        if (ErlangMacroResolve.isInConditional(nameLeaf) || ErlangMacroResolve.isTestedByConditional(file, unquote(name))) return;
-        String uses = arity == ErlangMacroResolve.NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
-        registerProblem(holder, target, "Argument mismatch for macro '?" + unquote(name) + "': no definition takes " + uses, range, null);
+        String message = ErlangMacroLayer.isEnabled() ? ErlangMacroResolve.argumentMismatch(nameLeaf, unquote(name)) : null;
+        if (message != null) registerProblem(holder, target, message, range, null);
       }
     };
   }

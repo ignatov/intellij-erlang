@@ -17,6 +17,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroArgSplitter;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
 import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
@@ -25,6 +26,7 @@ import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
 import org.intellij.erlang.psi.ErlangMacrosName;
+import org.intellij.erlang.psi.ErlangMaxExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -367,6 +369,50 @@ public final class ErlangMacroResolve {
     if (name == null) return false;
     List<ErlangMacrosDefinition> c = candidates(file, name);
     return c.isEmpty() || c.contains(d);
+  }
+
+  /**
+   * Epp's errors of a {@code -define}: "redefining macro" where it is certain ({@link #isRedefinition}), "badly formed
+   * 'define'" for a parameter that is not a variable, "argument 'X' already used"; by element, in order.
+   */
+  public static @NotNull Map<PsiElement, String> defineProblems(@NotNull ErlangMacrosDefinition d) {
+    Map<PsiElement, String> r = new LinkedHashMap<>();
+    ErlangMacrosName name = d.getMacrosName();
+    if (name != null && isRedefinition(d)) r.put(name, "Redefining macro '" + d.getName() + "'");
+    ErlangArgumentDefinitionList list = d.getArgumentDefinitionList();
+    if (list == null) return r;
+    Set<String> seen = new HashSet<>();
+    for (ErlangArgumentDefinition a : list.getArgumentDefinitionList()) {
+      String text = a.getText();
+      if (!(a.getExpression() instanceof ErlangMaxExpression m) || m.getQVar() == null || !m.getQVar().getText().equals(text)) {
+        r.put(a, "Badly formed 'define': a parameter must be a variable");
+      }
+      else if (!seen.add(text)) {
+        r.put(a, "Argument '" + text + "' already used");
+      }
+    }
+    return r;
+  }
+
+  /**
+   * Epp's "argument mismatch for macro" at a use, or null: no definition takes as many arguments as the use has, and
+   * none takes no parameter list (then epp leaves the parentheses as a call). Only where it is certain: every include
+   * of the file resolves (no definition is out of sight), the use is in no conditional branch (it may be skipped),
+   * and no conditional tests the name (a build flag may give it).
+   */
+  public static @Nullable String argumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return null;
+    int arity = arityAfter(nameLeaf);
+    if (arity == UNKNOWN) return null;
+    List<ErlangMacrosDefinition> candidates = candidates(file, name);
+    if (candidates.isEmpty()) return null;
+    for (ErlangMacrosDefinition d : candidates) {
+      int a = arity(d);
+      if (a == arity || a == NO_ARGUMENTS) return null;
+    }
+    if (isInConditional(nameLeaf) || isTestedByConditional(file, name)) return null;
+    String uses = arity == NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
+    return "Argument mismatch for macro '?" + name + "': no definition takes " + uses;
   }
 
   /** The element is in a top-level form inside an {@code -if}, {@code -ifdef} or {@code -ifndef} branch of its file. */
