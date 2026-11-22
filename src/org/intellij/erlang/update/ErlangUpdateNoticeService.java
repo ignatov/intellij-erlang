@@ -223,7 +223,10 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
 
     @Override
     public void restart(boolean exitConfirmed) {
-      ApplicationManagerEx.getApplicationEx().restart(exitConfirmed);
+      // after the notification action returns: an exit inside the action logs "CE must not be thrown from a dispose()
+      // implementation" on 2026.2 and blames the plugin for it
+      ApplicationManager.getApplication().invokeLater(() -> ApplicationManagerEx.getApplicationEx().restart(exitConfirmed),
+                                                      ModalityState.nonModal());
     }
 
     @Nullable
