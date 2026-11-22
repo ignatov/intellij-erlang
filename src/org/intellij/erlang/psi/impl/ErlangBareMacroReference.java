@@ -61,9 +61,12 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
     if (host instanceof StubBasedPsiElement<?> s && s.getStub() != null) return PsiReference.EMPTY_ARRAY; // no AST: no text search here
     ASTNode node = host.getNode();
     if (node == null) return PsiReference.EMPTY_ARRAY;
+    // most elements host nothing: a per-file answer, without a scan of the children
+    boolean mayHost = ErlangMacroLayerHosts.mayHostBareUse(host);
+    if (!mayHost && !(host instanceof PsiFile)) return PsiReference.EMPTY_ARRAY;
     List<PsiReference> result = new SmartList<>();
     if (host instanceof PsiFile) addSplitUses(host, result);
-    if (!mayHold(node)) return result.isEmpty() ? PsiReference.EMPTY_ARRAY : result.toArray(PsiReference.EMPTY_ARRAY);
+    if (!mayHost || !mayHold(node)) return result.isEmpty() ? PsiReference.EMPTY_ARRAY : result.toArray(PsiReference.EMPTY_ARRAY);
     List<ASTNode> seq = new ArrayList<>();
     collect(node, seq);
     for (int i = 0; i + 1 < seq.size(); i++) {
@@ -105,6 +108,11 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
 
   private static boolean mayHold(@NotNull ASTNode node) {
     ErlangMacroLayerHosts.CHILD_SCANS.incrementAndGet();
+    return mayHoldBareUse(node);
+  }
+
+  /** A direct child is a {@code ?} token, an error element or a dummy block: the node may hold a bare macro use. */
+  public static boolean mayHoldBareUse(@NotNull ASTNode node) {
     for (ASTNode c = node.getFirstChildNode(); c != null; c = c.getTreeNext()) {
       IElementType t = c.getElementType();
       if (t == ErlangTypes.ERL_QMARK || isForeign(t)) return true;

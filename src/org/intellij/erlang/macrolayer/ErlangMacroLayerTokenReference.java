@@ -85,6 +85,8 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
       PsiElement name = atom.getNameIdentifier();
       return name.getNode().getElementType() == ErlangTypes.ERL_ATOM_NAME ? List.of(name) : List.of();
     }
+    // most elements host nothing: a per-file answer, without a scan of the children
+    if (!ErlangMacroLayerHosts.mayHostToken(host)) return List.of();
     ASTNode node = host.getNode();
     if (node == null || !hasForeignChild(node)) return List.of();
     List<ASTNode> seq = new ArrayList<>();
@@ -127,8 +129,18 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
 
   private static boolean hasForeignChild(@NotNull ASTNode node) {
     ErlangMacroLayerHosts.CHILD_SCANS.incrementAndGet();
+    return mayHoldToken(node, false);
+  }
+
+  /**
+   * A direct child is an error element, a dummy block or a bare name token: the node may hold a token reference.
+   * With {@code skipAttributeName}, the name of an attribute ({@code record} in {@code -record(...)}) does not count:
+   * {@link #candidates} drops it anyway.
+   */
+  static boolean mayHoldToken(@NotNull ASTNode node, boolean skipAttributeName) {
     for (ASTNode c = node.getFirstChildNode(); c != null; c = c.getTreeNext()) {
       IElementType t = c.getElementType();
+      if (skipAttributeName && isAttributeNameOfTopForm(node, c)) continue;
       if (isForeign(t) || c.getFirstChildNode() == null && NAMES.contains(t) && !(c.getTreeParent().getPsi() instanceof ErlangAtom) &&
                           !(c.getTreeParent().getPsi() instanceof ErlangQVar) && !(c.getTreeParent().getPsi() instanceof ErlangMacrosName)) {
         return true;
@@ -136,6 +148,16 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     }
     return false;
   }
+  /** The child is the name right after the leading {@code -} of a top-level form: {@link #isAttributeName} is true for it. */
+  private static boolean isAttributeNameOfTopForm(@NotNull ASTNode form, @NotNull ASTNode child) {
+    ASTNode first = form.getFirstChildNode();
+    if (first == null || first == child || first.getElementType() != ErlangTypes.ERL_OP_MINUS) return false;
+    if (form.getTreeParent() == null || !(form.getTreeParent().getPsi() instanceof PsiFile)) return false;
+    ASTNode prev = child.getTreePrev();
+    while (prev != null && (prev.getPsi() instanceof PsiWhiteSpace || prev.getPsi() instanceof PsiComment)) prev = prev.getTreePrev();
+    return prev == first;
+  }
+
 
   private static boolean isForeign(@NotNull IElementType t) {
     return t == TokenType.ERROR_ELEMENT || t == GeneratedParserUtilBase.DUMMY_BLOCK;
