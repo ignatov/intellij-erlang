@@ -34,8 +34,95 @@ public class MacroFuzzTypingTest extends MacroFuzzTestBase {
   public void testEditScriptsAgreeWithFreshRun() throws Throwable {
     EditorActionProbe.enableInspections(myFixture);
     runCases("typing", 3, (index, rnd, caseId) -> {
-      Map<String, String> files = new LinkedHashMap<>(new MacroCaseGenerator(rnd).project());
-      if (!files.containsKey("b.erl")) files.put("b.erl", "-module(b).\n-export([g/0]).\ng() -> ok.\n");
+      Map<String, String> files = files(rnd);
+      long scriptSeed = rnd.nextLong();
+      int steps = smoke() ? 6 : 10 + rnd.nextInt(40);
+      typingCase(files, scriptSeed, steps, new BitSet());
+    });
+  }
+
+  private static Map<String, String> files(Random rnd) {
+    Map<String, String> files = new LinkedHashMap<>(new MacroCaseGenerator(rnd).project());
+    if (!files.containsKey("b.erl")) files.put("b.erl", "-module(b).\n-export([g/0]).\ng() -> ok.\n");
+    return files;
+  }
+
+  /**
+   * The minimiser of an edit script: replays case {@code MACRO_FUZZ_MIN_TYPING_CASE} (with {@code MACRO_FUZZ_SEED}) with
+   * steps left out (delta debugging) while a failure whose signature contains {@code MACRO_FUZZ_MIN_SIG} still appears.
+   * Each step has its own random numbers, so leaving one out does not change the others. Prints the steps kept, the
+   * starting texts and the final texts.
+   */
+  public void testMinimizeTypingCase() throws Throwable {
+    String c = FuzzConfig.env("MACRO_FUZZ_MIN_TYPING_CASE");
+    String sig = FuzzConfig.env("MACRO_FUZZ_MIN_SIG");
+    if (c == null || sig == null) return;
+    EditorActionProbe.enableInspections(myFixture);
+    int index = Integer.parseInt(c);
+    Random rnd = new Random(FuzzConfig.caseSeed(FuzzConfig.seed(), "typing", index));
+    Map<String, String> files = files(rnd);
+    long scriptSeed = rnd.nextLong();
+    int steps = 10 + rnd.nextInt(40);
+    List<Integer> kept = new ArrayList<>();
+    for (int i = 0; i < steps; i++) kept.add(i);
+    int[] trials = {0};
+    java.util.function.Predicate<List<Integer>> fails = candidate -> {
+      trials[0]++;
+      BitSet skip = new BitSet();
+      for (int i = 0; i < steps; i++) if (!candidate.contains(i)) skip.set(i);
+      FuzzRecorder saved = rec;
+      FuzzRecorder trial = new FuzzRecorder(getClass().getName() + "#trial", false);
+      rec = trial;
+      try {
+        trial.runAll(() -> {
+          trial.startCase("min:" + trials[0], 0, files);
+          typingCase(files, scriptSeed, steps, skip);
+        });
+      }
+      catch (Throwable t) {
+        return false;
+      }
+      finally {
+        rec = saved;
+      }
+      for (String s : trial.findings().keySet()) if (s.contains(sig)) return true;
+      return false;
+    };
+    rec = new FuzzRecorder(getClass().getName() + "#" + getName());
+    assertTrue("case " + index + " does not fail with '" + sig + "'", fails.test(kept));
+    int n = 2;
+    while (kept.size() >= 2 && trials[0] < 200) {
+      int chunk = (int)Math.ceil(kept.size() / (double)n);
+      boolean reduced = false;
+      for (int st = 0; st < kept.size(); st += chunk) {
+        List<Integer> complement = new ArrayList<>(kept.subList(0, st));
+        complement.addAll(kept.subList(Math.min(kept.size(), st + chunk), kept.size()));
+        if (!complement.isEmpty() && fails.test(complement)) {
+          kept = complement;
+          n = Math.max(n - 1, 2);
+          reduced = true;
+          break;
+        }
+      }
+      if (!reduced) {
+        if (n >= kept.size()) break;
+        n = Math.min(kept.size(), n * 2);
+      }
+    }
+    // one more run with the kept steps, reported with its trail and texts
+    BitSet skip = new BitSet();
+    for (int i = 0; i < steps; i++) if (!kept.contains(i)) skip.set(i);
+    List<Integer> keptFinal = kept;
+    rec.runAll(() -> {
+      rec.startCase("typing-min:" + index, scriptSeed, files);
+      typingCase(files, scriptSeed, steps, skip);
+    });
+    System.err.println("MACRO-FUZZ minimised script of typing:" + index + " after " + trials[0] + " trials: steps " + keptFinal +
+                       "\nstarting texts: " + files + "\n" + rec.finish(0));
+  }
+
+  /** One edit script on a fresh world, then the comparison of its final answers with a fresh project. */
+  private void typingCase(Map<String, String> files, long scriptSeed, int steps, BitSet skip) throws Throwable {
       FuzzWorld w = world(files, false);
       List<String> typedRefs;
       List<String> typedEdtRefs;
@@ -47,10 +134,12 @@ public class MacroFuzzTypingTest extends MacroFuzzTestBase {
         open(m.getVirtualFile());
         warm(m);
         EditorActionProbe probe = new EditorActionProbe(rec, myFixture);
-        int steps = smoke() ? 6 : 10 + rnd.nextInt(40);
         for (int step = 0; step < steps; step++) {
-          String edit = edit(w, rnd, probe);
-          ask(w, rnd, probe, "step" + step + "[" + edit + "] ");
+          if (skip.get(step)) continue;
+          // every step has its own random numbers: leaving a step out does not change the others
+          Random sr = new Random(scriptSeed + step * 0x9E3779B97F4A7C15L);
+          String edit = edit(w, sr, probe);
+          ask(w, sr, probe, "step" + step + "[" + edit + "] ");
         }
         // the final state: everything committed and highlighted
         PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
@@ -108,7 +197,6 @@ public class MacroFuzzTypingTest extends MacroFuzzTestBase {
       for (List<String> l : Arrays.asList(typedRefs, typedEdtRefs, freshRefs)) {
         if (l != null && l.toString().contains("INVALID:")) rec.fail("wrong-answer", "invalid target in final answers", l.toString());
       }
-    });
   }
 
   private void compare(String kind, String what, List<String> a, List<String> b) {

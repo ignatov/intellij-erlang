@@ -172,6 +172,32 @@ public class MacroFuzzOpenFindingsTest extends ErlangLightPlatformCodeInsightFix
     myFixture.renameElement(target, "renamed_sign");
   }
 
+  /**
+   * F9 (stale answer, branch only; open): after the layer's switch (the Registry key {@code erlang.macro.layer}) is turned
+   * off in a session, the open file still hosts the bare macro references of the layer ({@code ErlangBareMacroReference});
+   * a fresh project in the off mode has none. The reverse after turning it on again. Found by {@code MacroFuzzSwitchTest}
+   * (seed 401, cases switch:40 and others); the platform's idempotence check also logs "Non-idempotent computation" from
+   * {@code ErlangFileImpl.getReferences} after a flip (case switch:109).
+   */
+  public void testF9NoReferencesKeptFromTheOtherMode() {
+    if (!open() || !LayerHooks.present()) return;   // the switch exists only on the branch
+    myFixture.configureByText("m.erl", "-module(m).\n-export([f/0]).\n-define(PAR, ()).\nf() ->\n  foo?PAR,\n  foo?PAR.\nfoo() -> ok.\n");
+    myFixture.doHighlighting();
+    List<String> on = referenceClasses();
+    assertTrue("the layer hosts bare macro references when on: " + on, on.stream().anyMatch(c -> c.startsWith("ErlangBareMacroReference")));
+    com.intellij.openapi.Disposable off = com.intellij.openapi.util.Disposer.newDisposable();
+    try {
+      LayerHooks.setEnabled(false, off);
+      myFixture.doHighlighting();
+      for (String c : referenceClasses()) assertFalse("kept from the on mode: " + c, c.startsWith("ErlangBareMacroReference"));
+    }
+    finally {
+      com.intellij.openapi.util.Disposer.dispose(off);
+    }
+    myFixture.doHighlighting();
+    assertEquals("back on", on, referenceClasses());
+  }
+
   /** Every target of every reference of the open file is valid. */
   private void allTargets(boolean check) {
     for (PsiElement e : PsiTreeUtil.collectElements(myFixture.getFile(), x -> true)) {

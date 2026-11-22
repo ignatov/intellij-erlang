@@ -136,6 +136,8 @@ public class MacroFuzzOracleTest extends MacroFuzzTestBase {
         files = new MacroCaseGenerator(rnd).project();
         main = "m.erl";
       }
+      // erlc sees the real OTP headers; the plugin only those of its SDK: without MACRO_FUZZ_SDK, OTP includes are left out
+      if (FuzzConfig.env("MACRO_FUZZ_SDK") == null && files.get(main).contains("-include_lib(")) return;
       String err = erlc(files, main);
       if (err != null) return;                                  // only modules erlc compiles
       FuzzWorld w = world(files, false);
@@ -150,7 +152,10 @@ public class MacroFuzzOracleTest extends MacroFuzzTestBase {
           for (HighlightInfo h : infos[0]) {
             if (h.getSeverity() != HighlightSeverity.ERROR) continue;
             String at = myFixture.getEditor().getDocument().getText().substring(h.getStartOffset(), Math.min(h.getEndOffset(), h.getStartOffset() + 40));
-            rec.fail("false-error", "error in a module erlc compiles: " + String.valueOf(h.getDescription()).replaceAll("'[^']*'", "'X'"),
+            String d = String.valueOf(h.getDescription());
+            // a predefined macro keeps its name in the signature (one root cause each)
+            String key = d.matches("Unresolved macros '\\?(FEATURE_|OTP_|MODULE|LINE|FILE|MACHINE|FUNCTION_).*") ? d : d.replaceAll("'[^']*'", "'X'");
+            rec.fail("false-error", "error in a module erlc compiles: " + key,
                      main + " at " + h.getStartOffset() + " «" + at + "»: " + h.getDescription());
           }
         }
