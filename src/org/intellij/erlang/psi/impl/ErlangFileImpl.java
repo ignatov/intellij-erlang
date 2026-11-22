@@ -534,7 +534,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangFileStub stub = getStub();
     if (stub != null) return stub.isBehaviour();
 
-    ErlangFunction behaviourInfo = getFunction("behaviour_info", 1);
+    // The stub builder calls this method, so it must not read the cached values that ask for the stub (#1444).
+    ErlangFunction behaviourInfo = ContainerUtil.find(collectChildrenDummyAware(ErlangFunction.class),
+                                                      f -> "behaviour_info".equals(f.getName()) && f.getArity() == 1);
     return behaviourInfo != null && behaviourInfo.isExported() || !getCallbackMap().isEmpty();
   }
 
