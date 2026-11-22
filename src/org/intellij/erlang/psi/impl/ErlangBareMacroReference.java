@@ -13,6 +13,7 @@ import com.intellij.util.SmartList;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHosts;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
@@ -103,6 +104,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   }
 
   private static boolean mayHold(@NotNull ASTNode node) {
+    ErlangMacroLayerHosts.CHILD_SCANS.incrementAndGet();
     for (ASTNode c = node.getFirstChildNode(); c != null; c = c.getTreeNext()) {
       IElementType t = c.getElementType();
       if (t == ErlangTypes.ERL_QMARK || isForeign(t)) return true;

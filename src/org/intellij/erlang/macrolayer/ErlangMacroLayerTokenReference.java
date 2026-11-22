@@ -126,6 +126,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
   }
 
   private static boolean hasForeignChild(@NotNull ASTNode node) {
+    ErlangMacroLayerHosts.CHILD_SCANS.incrementAndGet();
     for (ASTNode c = node.getFirstChildNode(); c != null; c = c.getTreeNext()) {
       IElementType t = c.getElementType();
       if (isForeign(t) || c.getFirstChildNode() == null && NAMES.contains(t) && !(c.getTreeParent().getPsi() instanceof ErlangAtom) &&
