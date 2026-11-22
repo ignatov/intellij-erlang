@@ -23,6 +23,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionProvider;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.util.RefactoringDescriptionLocation;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
@@ -62,7 +64,7 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
       if (o instanceof ErlangNamedElement) return ((ErlangNamedElement) o).getName();
       if (o instanceof ErlangQAtom) return ErlangPsiImplUtil.getName((ErlangQAtom)o);
       if (o instanceof ErlangTypeRef) return o.getText();
-      if (isFunctionReferenceOwner(o)) return o.getText();
+      if (isFunctionReferenceOwner(o)) return describeFunctionReferenceOwner(o);
       if (o instanceof ErlangAttribute) {
         ErlangSpecification spec = ((ErlangAttribute) o).getSpecification();
         if (spec != null) return spec.getName();
@@ -92,6 +94,16 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     // which the platform's presentation of a documentation or navigation target can reach with any Erlang element)
     LOG.debug("No description of " + o.getClass().getSimpleName() + " for " + location.getClass().getSimpleName());
     return null;
+  }
+
+  // name/arity as the reference reads them, not the raw text of the owner, which keeps the arguments of a call and
+  // the line breaks and spaces of the source (#1467); a spec gives its name only
+  @NotNull
+  private static String describeFunctionReferenceOwner(@NotNull PsiElement o) {
+    PsiReference reference = o instanceof ErlangSpecFun ? null : o.getReference();
+    if (reference instanceof ErlangFunctionReference ref && ref.getArity() >= 0) return ref.getName() + "/" + ref.getArity();
+    ErlangQAtom qAtom = PsiTreeUtil.getChildOfType(o, ErlangQAtom.class);
+    return qAtom != null ? qAtom.getText() : o.getText();
   }
 
   private static boolean isFunctionReferenceOwner(@NotNull PsiElement o) {

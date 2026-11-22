@@ -836,6 +836,30 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                """);
   }
 
+  public void testDescriptionsOfBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(-1).
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInExportOverTwoLines() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([module_<caret>info /
+                                         0]).
+                               """);
+  }
+
   private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertInstanceOf(element, NavigationItem.class);
