@@ -2,7 +2,6 @@ package org.intellij.erlang.macrolayer;
 
 import com.intellij.codeInsight.TargetElementUtil;
 import com.intellij.codeInsight.daemon.impl.IdentifierHighlightingComputer;
-import com.intellij.concurrency.JobLauncher;
 import com.intellij.find.findUsages.FindUsagesHandler;
 import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.find.findUsages.FindUsagesManager;
@@ -126,8 +125,10 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
   }
 
   /**
-   * One search per file, each on its own worker thread of the job launcher, under the indicator of a pooled thread
-   * that started them: the workers' stacks show neither the action nor the starting thread.
+   * One search per file, each on its own pooled worker thread under a wrapper of one indicator (as the platform splits a
+   * search):
+   * the workers' stacks show neither the action nor a starting thread. (JobLauncher's list form, used before, is not
+   * in IDEA 2026.3.)
    */
   private String searchOnWorkerThreads(PsiElement target, String... files) throws Exception {
     List<PsiReference> found = Collections.synchronizedList(new ArrayList<>());
@@ -135,14 +136,15 @@ public class ErlangMacroLayerActiveCallersTest extends ErlangLightPlatformCodeIn
     List<PsiFile> list = new ArrayList<>();
     for (String f : files) list.add(myFiles.get(f));
     ProgressIndicator indicator = new EmptyProgressIndicator();
-    ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(() -> {
-      Thread caller = Thread.currentThread();
-      JobLauncher.getInstance().invokeConcurrentlyUnderProgress(list, indicator, f -> ReadAction.compute(() -> {
-        threads.add(Thread.currentThread() == caller ? "caller" : "worker");
-        found.addAll(ReferencesSearch.search(target, new LocalSearchScope(f)).findAll());
-        return true;
-      }));
-    }, indicator)).get();
+    List<java.util.concurrent.Future<?>> workers = new ArrayList<>();
+    for (PsiFile f : list) {
+      workers.add(ApplicationManager.getApplication().executeOnPooledThread(() -> ProgressManager.getInstance().runProcess(
+        () -> ReadAction.run(() -> {
+          threads.add("worker");
+          found.addAll(ReferencesSearch.search(target, new LocalSearchScope(f)).findAll());
+        }), new com.intellij.concurrency.SensitiveProgressWrapper(indicator))));
+    }
+    for (java.util.concurrent.Future<?> w : workers) w.get(60, java.util.concurrent.TimeUnit.SECONDS);
     System.out.println("LAYER-AC search threads: " + threads);
     return inBackgroundWithIndicator(() -> refs(found));
   }
