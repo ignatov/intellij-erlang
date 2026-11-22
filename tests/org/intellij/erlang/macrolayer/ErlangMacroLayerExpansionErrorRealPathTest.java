@@ -9,12 +9,12 @@ import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.intellij.erlang.macrolayer.LayerTestSupport.descriptor;
 
@@ -42,8 +42,9 @@ public class ErlangMacroLayerExpansionErrorRealPathTest extends ErlangLightPlatf
 
   private ErlangMacroLayerExpansionErrorAnnotator.Result annotateOnAPooledThread(ErlangMacroLayerExpansionErrorAnnotator a,
                                                                                ErlangMacroLayerExpansionErrorAnnotator.Info info) throws Exception {
-    return ApplicationManager.getApplication().executeOnPooledThread(
-      () -> ProgressManager.getInstance().runProcess(() -> a.doAnnotate(info), new ProgressIndicatorBase())).get(60, TimeUnit.SECONDS);
+    // the UI thread keeps dispatching while it waits: the pooled computation may need it (a document commit)
+    return PlatformTestUtil.waitForFuture(ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ProgressManager.getInstance().runProcess(() -> a.doAnnotate(info), new ProgressIndicatorBase())), 60_000);
   }
 
   private static List<String> apply(ErlangMacroLayerExpansionErrorAnnotator a, PsiFile f, ErlangMacroLayerExpansionErrorAnnotator.Result r) {
