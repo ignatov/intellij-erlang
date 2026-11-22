@@ -1055,6 +1055,12 @@ public final class ErlangMacroLayer {
     return r;
   }
 
+  /** The top-level element continues a form that the parser's recovery split: the element before it ends no form. */
+  public static boolean continuesASplitForm(@NotNull PsiElement topLevel) {
+    PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(topLevel);
+    return prev != null && !endsSourceForm(prev);
+  }
+
   public static boolean isMadeNameDeclaration(@NotNull PsiElement leaf) {
     if (!isNameMadeByMacro(leaf)) return false;
     ErlangFile file = ErlangMacroLayerTables.layerFile(leaf);

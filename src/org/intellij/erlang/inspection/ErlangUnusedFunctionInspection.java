@@ -48,8 +48,9 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
     for (ErlangFunction function : file.getFunctions()) {
-      // with the macro layer, a "function" named by a macro use (guarded3(X) ?HH2(X) -> X.) is the parser's recovery
-      if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?")) continue;
+      // with the macro layer: a "function" named by a macro use that continues a form the recovery split
+      // (guarded3(X) ?HH2(X) -> X.) is no function of the source; ?test(A) -> A. after a whole form still is one
+      if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) continue;
       if (!isUnusedFunction(file, function)) continue;
 
       PsiElement identifier = function.getNameIdentifier();
