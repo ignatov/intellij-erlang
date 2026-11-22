@@ -3,6 +3,8 @@ package org.intellij.erlang.macrolayer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiReferenceService;
+import com.intellij.psi.ReferenceRange;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
@@ -10,6 +12,9 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.intellij.erlang.macrolayer.LayerTestSupport.descriptor;
 import static org.intellij.erlang.macrolayer.LayerTestSupport.inBackgroundWithIndicator;
@@ -87,5 +92,36 @@ public class ErlangMacroLayerHostsTest extends ErlangLightPlatformCodeInsightFix
     // the file is asked once per occurrence: walking its leaves each time is uses * uses (16,000,000); once per search
     // is a few leaves per use (more when parallel search threads compute the same cached answer at the same time)
     assertTrue("leaves walked for " + uses + " uses: " + work, work <= 250L * uses);
+  }
+
+  /**
+   * Find usages asks the file once per occurrence, with the offset: the file gives only the references at the offset
+   * (at most two: one ends there, the next starts there), the same ones, in the same order, as its full list filtered by
+   * the offset.
+   */
+  public void testTheFileGivesFindUsagesOnlyTheReferencesAtTheOffset() throws Exception {
+    PsiFile f = myFixture.addFileToProject("h/c10o.erl", module("c10o", 2_000, "-define(PAR, ()).\nfoo() -> ok.\n", "r", "  foo?PAR,\n"));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    ErlangRecordDefinition rec = inBackgroundWithIndicator(() -> ((ErlangFile)f).getRecord("r"));
+    String result = inBackgroundWithIndicator(() -> {
+      PsiReference[] all = f.getReferences();
+      int most = 0;
+      for (int offset = 0; offset <= f.getTextLength(); offset++) {
+        List<PsiReference> expected = new ArrayList<>();
+        for (PsiReference r : all) if (ReferenceRange.containsOffsetInElement(r, offset)) expected.add(r);
+        List<PsiReference> hinted = PsiReferenceService.getService().getReferences(f, new PsiReferenceService.Hints(rec, offset));
+        if (!describe(expected).equals(describe(hinted))) return "at " + offset + ": " + describe(hinted) + " instead of " + describe(expected);
+        most = Math.max(most, hinted.size());
+      }
+      return all.length + " references, at most " + most + " at one offset";
+    });
+    assertTrue(result, result.endsWith("at most 1 at one offset") || result.endsWith("at most 2 at one offset"));
+    assertTrue("the file hosts the token references of the fragment: " + result, Integer.parseInt(result.split(" ")[0]) >= 2_000);
+  }
+
+  private static String describe(List<PsiReference> refs) {
+    StringBuilder sb = new StringBuilder();
+    for (PsiReference r : refs) sb.append(r.getClass().getSimpleName()).append(r.getRangeInElement()).append(' ');
+    return sb.toString();
   }
 }
