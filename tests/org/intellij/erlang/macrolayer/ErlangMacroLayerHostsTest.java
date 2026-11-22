@@ -1,19 +1,24 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceService;
 import com.intellij.psi.ReferenceRange;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.util.IdempotenceChecker;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.intellij.erlang.macrolayer.LayerTestSupport.descriptor;
@@ -92,6 +97,50 @@ public class ErlangMacroLayerHostsTest extends ErlangLightPlatformCodeInsightFix
     // the file is asked once per occurrence: walking its leaves each time is uses * uses (16,000,000); once per search
     // is a few leaves per use (more when parallel search threads compute the same cached answer at the same time)
     assertTrue("leaves walked for " + uses + " uses: " + work, work <= 250L * uses);
+  }
+
+  /**
+   * Issue #1452: with a bare use in the function before the list, a search costs more than twice what it costs with the
+   * layer off (21 ms and 49 ms in the issue for 20,000 uses), with the same results. The layer may cost a little more,
+   * not a multiple: the median of interleaved searches, each after {@code dropPsiCaches()}, without the random
+   * recomputation of cached values that only tests do.
+   */
+  public void testAFragmentInsideTheFunctionCostsAboutWhatTheLayerOffCosts() throws Exception {
+    IdempotenceChecker.disableRandomChecksUntil(getTestRootDisposable());
+    PsiFile f = myFixture.addFileToProject("h/c10t.erl", module("c10t", 20_000, "-define(PAR, ()).\nfoo() -> ok.\n", "r", "  foo?PAR,\n"));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    long[] off = new long[7], layer = new long[7];
+    int[] found = new int[2];
+    for (int i = -3; i < off.length; i++) {
+      long o = timedSearch(f, ErlangMacroLayer.Mode.OFF, found, 0);
+      long l = timedSearch(f, ErlangMacroLayer.Mode.LAYER, found, 1);
+      if (i >= 0) {
+        off[i] = o;
+        layer[i] = l;
+      }
+    }
+    assertEquals("the same results as with the layer off", found[0], found[1]);
+    Arrays.sort(off);
+    Arrays.sort(layer);
+    long offMedian = off[off.length / 2], layerMedian = layer[layer.length / 2];
+    assertTrue("median of a search: " + layerMedian + " ms with the layer, " + offMedian + " ms with the layer off (" +
+               Arrays.toString(layer) + " " + Arrays.toString(off) + ")",
+               layerMedian * 2 <= Math.max(offMedian, 1) * 3);
+  }
+
+  private long timedSearch(PsiFile f, ErlangMacroLayer.Mode mode, int[] found, int slot) throws Exception {
+    Disposable d = Disposer.newDisposable();
+    try {
+      ErlangMacroLayer.setModeForTests(mode, d);
+      PsiManager.getInstance(getProject()).dropPsiCaches();
+      ErlangRecordDefinition rec = inBackgroundWithIndicator(() -> ((ErlangFile)f).getRecord("r"));
+      long start = System.nanoTime();
+      found[slot] = inBackgroundWithIndicator(() -> ReferencesSearch.search(rec).findAll().size());
+      return (System.nanoTime() - start) / 1_000_000;
+    }
+    finally {
+      Disposer.dispose(d);
+    }
   }
 
   /**
