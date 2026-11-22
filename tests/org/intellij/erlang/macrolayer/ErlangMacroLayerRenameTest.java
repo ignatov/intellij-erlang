@@ -172,4 +172,25 @@ public class ErlangMacroLayerRenameTest extends ErlangLightPlatformCodeInsightFi
     assertTexts("h.hrl", "h_target(X))", "h_target2(X))", "i.erl", "h_target(X) -> X.", "h_target2(X) -> X.",
                 "i.erl", "?H_CALL(h_target(Q))", "?H_CALL(h_target2(Q))");
   }
+
+  /**
+   * #1455: ?DEF(hello) in a.erl makes hello/0, which b.erl calls as a:hello(). Renaming hello must either change the
+   * remote call too or refuse with a conflict that names b.erl; erlc compiles both results of a partial rename, and
+   * b:f() then fails with undef.
+   */
+  public void testFunctionMadeByMacroRenameChangesRemoteCall() throws Exception {
+    for (String n : List.of("a.erl", "b.erl")) {
+      myOriginal.put(n, read(Paths.get("testData/macroLayer/remoteRename", n)));
+      myFiles.put(n, myFixture.addFileToProject("remoteRename/" + n, myOriginal.get(n)));
+    }
+    try {
+      rename("a.erl", "hello).", 0, "hi");
+    }
+    catch (BaseRefactoringProcessor.ConflictsInTestsException e) {
+      assertTrue(e.getMessages().toString(), e.getMessages().toString().contains("b.erl"));
+      assertTexts();
+      return;
+    }
+    assertTexts("a.erl", "?DEF(hello).", "?DEF(hi).", "a.erl", "[hello/0]", "[hi/0]", "b.erl", "a:hello()", "a:hi()");
+  }
 }
