@@ -96,7 +96,7 @@ public class ErlangPsiImplUtilTest extends ErlangLightPlatformCodeInsightFixture
     assertEmpty(ErlangPsiImplUtil.getFunctionLookupElements(text, false, null));
     assertEmpty(ErlangPsiImplUtil.getMacrosLookupElements(text));
     assertEmpty(ErlangPsiImplUtil.getRecordLookupElements(text));
-    assertEmpty(ErlangPsiImplUtil.getTypeLookupElements(text, true, false));
+    assertEmpty(ErlangPsiImplUtil.getTypeLookupElements(text, true, false, false));
   }
 
   public void testNoFunctionLookupElementsInApplicationFile() {
