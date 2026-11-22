@@ -54,7 +54,7 @@ import java.util.*;
 import static java.util.Collections.*;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
+public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner, HintedReferenceHost {
   private final CachedValue<ErlangModule> myModuleValue =
     createCachedValue(new ValueProvider<>() {
       @Nullable
@@ -292,9 +292,36 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     // with the layer off or without read access, master's references and nothing kept in the cache below; the cache
     // also depends on the switch, so a flip drops it
     if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return own;
-    PsiReference[] bare = CachedValuesManager.getCachedValue(
-      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this, ErlangMacroLayer.modeTracker()));
+    PsiReference[] bare = bareMacroUses();
     return ErlangMacroLayerTokenReference.append(this, bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare));
+  }
+
+  private PsiReference @NotNull [] bareMacroUses() {
+    return CachedValuesManager.getCachedValue(
+      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this, ErlangMacroLayer.modeTracker()));
+  }
+
+  /**
+   * The references of {@link #getReferences()} that hold the offset, in the same order. Find usages asks the file once
+   * per occurrence of the word; a file that hosts many token references gives the few at the offset, without a walk
+   * over all of them.
+   */
+  @Override
+  public PsiReference @NotNull [] getReferences(@NotNull PsiReferenceService.Hints hints) {
+    Integer offset = hints.offsetInElement;
+    if (offset == null) return getReferences();
+    PsiReference[] own = super.getReferences();
+    if (!isContentsLoaded() || !ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return own;
+    List<PsiReference> result = new SmartList<>();
+    for (PsiReference r : own) if (ReferenceRange.containsOffsetInElement(r, offset)) result.add(r);
+    for (PsiReference r : bareMacroUses()) if (ReferenceRange.containsOffsetInElement(r, offset)) result.add(r);
+    ErlangMacroLayerTokenReference.addAt(ErlangMacroLayerTokenReference.find(this), offset, result);
+    return result.toArray(PsiReference.EMPTY_ARRAY);
+  }
+
+  @Override
+  public boolean shouldAskParentForReferences(@NotNull PsiReferenceService.Hints hints) {
+    return true;
   }
 
   @Override

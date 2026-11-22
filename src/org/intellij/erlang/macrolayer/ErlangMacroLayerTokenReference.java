@@ -106,6 +106,23 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     return r.isEmpty() ? PsiReference.EMPTY_ARRAY : r.toArray(PsiReference.EMPTY_ARRAY);
   }
 
+  /**
+   * Adds the references of {@code tokens} (a result of {@link #find}) whose range holds {@code offset}, in order. The
+   * ranges follow the tokens: sorted and disjoint, so a binary search finds them (at most two: one ends at the offset,
+   * the next starts there).
+   */
+  public static void addAt(PsiReference @NotNull [] tokens, int offset, @NotNull List<? super PsiReference> out) {
+    int lo = 0, hi = tokens.length;
+    while (lo < hi) {
+      int mid = (lo + hi) >>> 1;
+      if (tokens[mid].getRangeInElement().getStartOffset() <= offset) lo = mid + 1;
+      else hi = mid;
+    }
+    int from = lo;
+    while (from > 0 && tokens[from - 1].getRangeInElement().getEndOffset() >= offset) from--;
+    for (int i = from; i < lo; i++) out.add(tokens[i]);
+  }
+
   /** The host's own references followed by the token references it holds. */
   public static PsiReference @NotNull [] append(@NotNull PsiElement host, PsiReference @NotNull [] own) {
     PsiReference[] tokens = find(host);
