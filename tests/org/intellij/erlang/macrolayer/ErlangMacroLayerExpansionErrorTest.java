@@ -1,5 +1,7 @@
 package org.intellij.erlang.macrolayer;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.testFramework.LightProjectDescriptor;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -177,5 +179,45 @@ public class ErlangMacroLayerExpansionErrorTest extends ErlangLightPlatformCodeI
   public void testNoMismatchForADefinitionWithoutParameters() {
     myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
     doTest("-module(main).\n-export([a/0]).\n-define(F, fun(X) -> X end).\na() -> ?F(1).\n");
+  }
+
+  /**
+   * Issue #1450: the use expands to {@code ?F} with no argument list, and F takes one (epp expands a body on its own
+   * tokens, so the {@code (1)} after the use is not F's). erlc: 5:9: argument mismatch for macro 'F'.
+   */
+  public void testArgumentMismatchThroughABodyThatIsAMacro() {
+    assertErrorOnUse("-module(main).\n-export([f/0]).\n-define(F(X), X).\n-define(A, ?F).\nf() -> ?A(1).\n", "?A(1)");
+  }
+
+  /**
+   * Issue #1450: the body of W calls T with one argument, {@code ?PAIR}, and T takes two (epp counts the arguments before
+   * it expands them). erlc: 6:9: argument mismatch for macro 'T'.
+   */
+  public void testArgumentMismatchOfAMacroCalledInABody() {
+    assertErrorOnUse("-module(main).\n-export([f/0]).\n-define(PAIR, 1, 2).\n-define(T(X, Y), {X, Y}).\n-define(W(A), ?T(A)).\n" +
+                     "f() -> ?W(?PAIR).\n", "?W(?PAIR)");
+  }
+
+  /**
+   * Issue #1450, the other side: epp checks the arguments of a nested use only when the outer macro is used. Here A is
+   * never used, and erlc compiles the file: no error in the body of A.
+   */
+  public void testNoArgumentMismatchInTheBodyOfAnUnusedMacro() {
+    myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
+    doTest("-module(main).\n-export([f/0]).\n-define(F(X), X).\n-define(A, ?F).\nf() -> ok.\n");
+  }
+
+  /** Some error overlaps the use: erlc rejects the file at the use. */
+  private void assertErrorOnUse(String text, String use) {
+    myFixture.enableInspections(new org.intellij.erlang.inspection.ErlangUnresolvedMacrosInspection());
+    myFixture.configureByText("main.erl", text);
+    int start = text.lastIndexOf(use), end = start + use.length();
+    StringBuilder all = new StringBuilder();
+    for (HighlightInfo h : myFixture.doHighlighting()) {
+      all.append(h.getSeverity()).append(' ').append(h.getStartOffset()).append('-').append(h.getEndOffset()).append(' ')
+        .append(h.getDescription()).append('\n');
+      if (h.getSeverity() == HighlightSeverity.ERROR && h.getStartOffset() < end && h.getEndOffset() > start) return;
+    }
+    fail("no error on " + use + " (" + start + "-" + end + "); highlighting:\n" + all);
   }
 }
