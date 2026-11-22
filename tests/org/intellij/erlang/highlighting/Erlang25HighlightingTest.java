@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -39,6 +40,23 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testUnresolvedMacrosFeature() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureArity() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureArityLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureArity.erl");
+  }
+
+  public void testUnresolvedMacrosFeatureBare() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     enableUnresolvedMacroInspection();
     doTest();
   }
