@@ -16,11 +16,16 @@
 
 package org.intellij.erlang.stubs;
 
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.vfs.VirtualFileFilter;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.PsiManagerEx;
 import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.stubs.StubElement;
+import com.intellij.util.ref.GCUtil;
 import org.intellij.erlang.psi.ErlangBehaviour;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -79,5 +84,29 @@ public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTes
     assertNull(((ErlangBehaviourImpl) fromTree.get(0)).getStub());
     assertEquals(expected, fromTree.get(0).getName());
     assertEquals(fromTree.get(0).getName(), stubName);
+  }
+
+  // #1444: building the stub of an unsaved document must not re-enter the cached values of the file
+  // that asked for the stub (getFunctions -> getStub -> ErlangFileStub -> isBehaviour -> getFunctions).
+  public void testFunctionsOfUnsavedDocument() {
+    ErlangFile file = (ErlangFile) myFixture.addFileToProject("unsaved.erl", "-module(unsaved).\n-export([f/0]).\nf() -> ok.\n");
+    PsiFileImpl fileImpl = (PsiFileImpl) file;
+    assertNotNull(fileImpl.getStub());
+    assertFalse(fileImpl.isContentsLoaded());
+
+    Document document = FileDocumentManager.getInstance().getDocument(file.getVirtualFile());
+    assertNotNull(document);
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      document.insertString(document.getTextLength(), "g() -> ok.\n");
+      PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+    });
+    assertTrue(FileDocumentManager.getInstance().isDocumentUnsaved(document));
+    // The commit loads the tree; drop it so that getStub() asks the index, which builds the stub of the unsaved document.
+    GCUtil.tryGcSoftlyReachableObjects();
+    assertFalse(fileImpl.isContentsLoaded());
+
+    List<ErlangFunction> functions = file.getFunctions();
+    assertEquals(2, functions.size());
+    assertEquals(1, file.getExportedFunctions().size());
   }
 }
