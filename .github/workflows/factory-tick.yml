@@ -294,6 +294,9 @@ jobs:
         # secret from here; its concurrency group queues builds. Off unless the repository variable
         # FACTORY_CONSOLE is "true".
         if: ${{ !cancelled() && vars.FACTORY_CONSOLE == 'true' && steps.clone.outcome == 'success' }}
+        # A hung gh must not hold the tick (and the next tick, which waits in its concurrency group).
+        timeout-minutes: 2
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
