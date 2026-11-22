@@ -75,8 +75,9 @@ jobs:
   publish:
     if: vars.FACTORY_CONSOLE == 'true' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
-    # Fetch about 10 s, cache pull 60 s, export 420 s (--max-seconds), upload 240 s (--deadline), cache push 60 s.
-    timeout-minutes: 15
+    # Fetch about 10 s, cache pull 60 s, export 420 s (--max-seconds), upload 240 s (--deadline), cache push 60 s. The
+    # PUT of current is not bound by the upload deadline (up to 4 tries of 120 s), hence 20 minutes and not 15.
+    timeout-minutes: 20
     permissions: {}
     environment:
       name: factory-console
@@ -91,7 +92,6 @@ jobs:
       GIT_CONFIG_COUNT: '1'
       GIT_CONFIG_KEY_0: credential.helper
       GIT_CONFIG_VALUE_0: ''
-      PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - name: Choose the mode
         id: mode
@@ -150,8 +150,11 @@ jobs:
           N = r"[0-9]{1,12}"
           KIND = (r"(?:github-token|authorization|private-key|aws-key-id|api-key|slack-webhook|npm-token|"
                   r"google-api-key|page-token|token-value|deny-env)")
-          HTTP = r"\(HTTP [0-9]{1,3}\)"
-          CLASS = r"[A-Z][A-Za-z0-9_]{0,60}"
+          # A status of three digits, or 0: no answer at all.
+          HTTP = r"\(HTTP (?:0|[1-5][0-9]{2})\)"
+          # The exception classes the tools print by name (type(e).__name__): built-in errors such as OSError or
+          # TimeoutError, r2s3.BodyTooLarge, and the two that are not errors.
+          CLASS = r"(?:[A-Z][A-Za-z]{1,40}(?:Error|Exception|Timeout)|BodyTooLarge|KeyboardInterrupt|SystemExit)"
 
           def rx(text):
               text = text.replace("<KINDS-N>", r"<N> <KIND>(?:, <N> <KIND>){0,15}")
@@ -309,9 +312,10 @@ jobs:
             exit 0
           fi
           status=0
-          python3 -E -s "$w/desk/console/hosted/uploader/cache.py" pull --deadline 60 "$w/cache" "$BUCKET" \
+          python3 -B -E -s "$w/desk/console/hosted/uploader/cache.py" pull --deadline 60 "$w/cache" "$BUCKET" \
             > "$w/logs/pull.out" 2> "$w/logs/pull.err" || status=$?
-          python3 -I "$w/lines.py" cache "$w/logs/pull.out" "$w/logs/pull.err"
+          python3 -B -I "$w/lines.py" cache "$w/logs/pull.out" "$w/logs/pull.err" 2> /dev/null \
+            || echo "cache: the line filter failed"
           if [ "$status" = "0" ] && [ -d "$w/cache" ]; then
             echo "dir=$w/cache" >> "$GITHUB_OUTPUT"
           else
@@ -327,16 +331,16 @@ jobs:
           GH_TOKEN: ${{ secrets.CONSOLE_READ_TOKEN }}
           COLD: ${{ steps.mode.outputs.cold }}
           CACHE_DIR: ${{ steps.pull.outputs.dir }}
-          PYTHONUNBUFFERED: '1'
         run: |
           w="$RUNNER_TEMP/console"
           args=(--out "$w/out" --cache "$CACHE_DIR" --log "$w/logs/export.log" --max-seconds 420)
           if [ "$COLD" = "true" ]; then args+=(--cold); fi
           status=0
           # An empty home: no gh, no git or Python configuration of the runner's user reaches the export.
-          (cd "$w/work" && HOME="$w/home" TZ=UTC python3 -I "$w/desk/console/export.py" "${args[@]}") \
+          (cd "$w/work" && HOME="$w/home" TZ=UTC python3 -B -u -I "$w/desk/console/export.py" "${args[@]}") \
             > "$w/logs/export.out" 2> "$w/logs/export.err" || status=$?
-          python3 -I "$w/lines.py" export "$w/logs/export.out"
+          python3 -B -I "$w/lines.py" export "$w/logs/export.out" 2> /dev/null \
+            || echo "export: the line filter failed"
           echo "Exit status: $status"
           if [ "$status" != "0" ]; then
             echo "::error::The export failed; the published snapshot stays as it is."
@@ -360,7 +364,7 @@ jobs:
             args+=(--deny-env "$name")
           done
           # The page token's shape, as the export redacts it (PAGE_TOKEN of console/export.py, one source).
-          page=$(python3 -I - "$w/desk/console/export.py" 2> /dev/null <<'PY'
+          page=$(python3 -B -I - "$w/desk/console/export.py" 2> /dev/null <<'PY'
           import ast
           import sys
           with open(sys.argv[1], encoding="utf-8") as f:
@@ -379,9 +383,10 @@ jobs:
           fi
           if [ "$FULL" = "true" ]; then args+=(--full); fi
           status=0
-          python3 -E -s "$w/desk/console/hosted/uploader/upload.py" "${args[@]}" "$w/out" "$BUCKET" \
+          python3 -B -E -s "$w/desk/console/hosted/uploader/upload.py" "${args[@]}" "$w/out" "$BUCKET" \
             > "$w/logs/upload.out" 2> "$w/logs/upload.err" || status=$?
-          python3 -I "$w/lines.py" upload "$w/logs/upload.out" "$w/logs/upload.err"
+          python3 -B -I "$w/lines.py" upload "$w/logs/upload.out" "$w/logs/upload.err" 2> /dev/null \
+            || echo "upload: the line filter failed"
           echo "Exit status: $status"
           if [ "$status" != "0" ]; then
             echo "::error::The upload failed; the published snapshot stays as it is unless the line above says current may have changed."
@@ -401,9 +406,10 @@ jobs:
         run: |
           w="$RUNNER_TEMP/console"
           status=0
-          python3 -E -s "$w/desk/console/hosted/uploader/cache.py" push --deadline 60 "$CACHE_DIR" "$BUCKET" \
+          python3 -B -E -s "$w/desk/console/hosted/uploader/cache.py" push --deadline 60 "$CACHE_DIR" "$BUCKET" \
             > "$w/logs/push.out" 2> "$w/logs/push.err" || status=$?
-          python3 -I "$w/lines.py" cache "$w/logs/push.out" "$w/logs/push.err"
+          python3 -B -I "$w/lines.py" cache "$w/logs/push.out" "$w/logs/push.err" 2> /dev/null \
+            || echo "cache: the line filter failed"
           if [ "$status" != "0" ]; then
             echo "::warning::The cache could not be pushed (exit status $status); the next run builds cold."
           fi
