@@ -16,6 +16,12 @@
 
 package org.intellij.erlang.highlighting;
 
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.psi.ErlangTypeDefinition;
+import org.intellij.erlang.psi.ErlangTypeRef;
+
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
@@ -267,5 +273,24 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.configureByText("chain_12000.erl",
                               "-module(chain_12000).\n-export([f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
     myFixture.checkHighlighting();
+  }
+
+  // issue 1435: types with the same name and different arities are distinct types
+  public void testTypesWithSameNameAndDifferentArity() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
+  // issue 1435
+  public void testTypeReferenceResolvesByArity() {
+    myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");
+    ErlangTypeRef useOfTreeA = null;
+    for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
+      if (ref.getParent().getText().equals("tree(A)")) useOfTreeA = ref;
+    }
+    assertNotNull(useOfTreeA);
+    PsiElement resolved = useOfTreeA.getReference().resolve();
+    assertInstanceOf(resolved, ErlangTypeDefinition.class);
+    assertEquals(1, ((ErlangTypeDefinition) resolved).getArity());
   }
 }
