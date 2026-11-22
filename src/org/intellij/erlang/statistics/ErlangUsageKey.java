@@ -104,7 +104,12 @@ public enum ErlangUsageKey {
   OPENED_HRL,
   OPENED_APP,
   OPENED_CONFIG,
-  OPENED_ESCRIPT;
+  OPENED_ESCRIPT,
+
+  // the notification about a new version of the plugin
+  UPDATE_NOTICE_SHOWN,
+  UPDATE_NOTICE_INSTALL,
+  UPDATE_NOTICE_DONT_SHOW;
 
   @NotNull
   public String jsonName() {

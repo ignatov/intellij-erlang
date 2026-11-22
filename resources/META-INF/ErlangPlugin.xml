@@ -359,7 +359,14 @@
                   topic="com.intellij.codeInsight.template.TemplateManagerListener"/>
         <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$OpenedFiles"
                   topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <!-- the notification about a new version of the plugin waits for an opened Erlang file -->
+        <listener class="org.intellij.erlang.update.ErlangUpdateNoticeListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
+    <!-- The notification about a new version of the plugin, with an action that installs it -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Erlang plugin updates" displayType="STICKY_BALLOON"/>
+    </extensions>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"
                 text="Erlang File" description="Create new Erlang file">
