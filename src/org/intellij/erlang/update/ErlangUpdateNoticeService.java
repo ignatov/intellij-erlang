@@ -54,6 +54,7 @@ import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static org.intellij.erlang.update.ErlangUpdateNotice.*;
 
@@ -145,8 +146,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
     new Task.Backgroundable(ui.project(), "Updating the Erlang plugin to version " + update.version(), true) {
       @Override
       public void run(@NotNull ProgressIndicator indicator) {
-        myInstallIndicator = indicator;
-        myNotice.install(update, indicator, ui);
+        runInstall(update, indicator, ui);
       }
 
       @Override
@@ -166,6 +166,14 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
         ui.myInstalling.set(false);
       }
     }.queue();
+  }
+
+  // the body of the install task; the plugin may be unloaded while the task waits in the queue
+  void runInstall(@NotNull Update update, @NotNull ProgressIndicator indicator, @NotNull Ui ui) {
+    myInstallIndicator = indicator;
+    // after the indicator is published: dispose() either sees it and cancels it, or this sees myDisposed
+    if (myDisposed) return;
+    myNotice.install(update, indicator, ui);
   }
 
   // downloads the new version, checks its signature and installs it for the next start of the IDE
@@ -191,7 +199,18 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
     return myChecksStartedForTests;
   }
 
-  private static final class IdePlatform implements Platform {
+  static final class IdePlatform implements Platform {
+    // ApplicationEx.restart; tests give another one
+    private final Consumer<Boolean> myRestart;
+
+    IdePlatform() {
+      this(exitConfirmed -> ApplicationManagerEx.getApplicationEx().restart(exitConfirmed));
+    }
+
+    IdePlatform(@NotNull Consumer<Boolean> restart) {
+      myRestart = restart;
+    }
+
     @Override
     public boolean isAllowedEnvironment() {
       Application application = ApplicationManager.getApplication();
@@ -225,8 +244,7 @@ public final class ErlangUpdateNoticeService implements PersistentStateComponent
     public void restart(boolean exitConfirmed) {
       // after the notification action returns: an exit inside the action logs "CE must not be thrown from a dispose()
       // implementation" on 2026.2 and blames the plugin for it
-      ApplicationManager.getApplication().invokeLater(() -> ApplicationManagerEx.getApplicationEx().restart(exitConfirmed),
-                                                      ModalityState.nonModal());
+      ApplicationManager.getApplication().invokeLater(() -> myRestart.accept(exitConfirmed), ModalityState.nonModal());
     }
 
     @Nullable

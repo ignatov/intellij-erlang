@@ -20,9 +20,19 @@ import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import org.intellij.erlang.statistics.ErlangUsageKey;
+import org.intellij.erlang.update.ErlangUpdateNotice.InstallResult;
+import org.intellij.erlang.update.ErlangUpdateNotice.Update;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   public void testNotificationGroupIsAStickyBalloon() {
@@ -37,6 +47,50 @@ public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsigh
     myFixture.configureByText("module.erl", "-module(module).");
     new ErlangUpdateNoticeListener().fileOpened(FileEditorManager.getInstance(getProject()), myFixture.getFile().getVirtualFile());
     assertEquals(started, service.getChecksStartedForTests());
+  }
+
+  public void testRestartRunsAfterTheNotificationActionReturns() {
+    List<Boolean> restarts = new ArrayList<>();
+    new ErlangUpdateNoticeService.IdePlatform(restarts::add).restart(true);
+    // an exit inside the notification action logs an error on 2026.2
+    assertEquals(List.of(), restarts);
+    PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+    assertEquals(List.of(true), restarts);
+  }
+
+  public void testQueuedInstallDoesNothingAfterThePluginIsUnloaded() {
+    ErlangUpdateNoticeService service = new ErlangUpdateNoticeService();
+    service.dispose();
+    AtomicInteger installs = new AtomicInteger();
+    Update update = new Update("0.11.1500", "0.11.1400", indicator -> {
+      installs.incrementAndGet();
+      return InstallResult.INSTALLED;
+    });
+    List<String> events = new ArrayList<>();
+    EmptyProgressIndicator indicator = new EmptyProgressIndicator();
+    service.runInstall(update, indicator, new ErlangUpdateNotice.Ui() {
+      @Override
+      public void offer(@NotNull Update update) {
+        events.add("offer");
+      }
+
+      @Override
+      public void installed(@NotNull Update update, boolean offerRestart) {
+        events.add("installed");
+      }
+
+      @Override
+      public void notInstalled(@NotNull Update update, @NotNull String contentHtml) {
+        events.add("not installed");
+      }
+
+      @Override
+      public void count(@NotNull ErlangUsageKey key) {
+        events.add(key.name());
+      }
+    });
+    assertEquals(0, installs.get());
+    assertEquals(List.of(), events);
   }
 
   public void testStateIsStored() {
