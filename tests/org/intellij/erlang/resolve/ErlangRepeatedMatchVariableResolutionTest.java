@@ -41,12 +41,30 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertEquals(first, results[0].getElement());
   }
 
-  // #1433: four more repetitions must not multiply the time of the resolve by 2^4
+  // #1433: eight more repetitions must not multiply the time of the resolve by 2^8
   public void testResolveAfterRepeatedMatchesDoesNotDouble() {
-    timeOfResolve(12);
-    long small = timeOfResolve(12);
-    long big = timeOfResolve(16);
-    assertTrue("12 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 8 * Math.max(small, 1_000_000L));
+    assertResolveDoesNotDouble("");
+  }
+
+  // #1481: a busy machine that pauses one resolve must not fail the check of testResolveAfterRepeatedMatchesDoesNotDouble
+  // although the resolve does not double
+  public void testDoublingCheckHoldsOnBusyMachine() throws InterruptedException {
+    List<Thread> load = new ArrayList<>();
+    for (int i = 0; i < 3 * Runtime.getRuntime().availableProcessors(); i++) {
+      Thread t = new Thread(() -> { while (!Thread.currentThread().isInterrupted()) Thread.onSpinWait(); });
+      t.setDaemon(true);
+      t.start();
+      load.add(t);
+    }
+    try {
+      for (int i = 0; i < 30; i++) {
+        assertResolveDoesNotDouble("run " + i + ": ");
+      }
+    }
+    finally {
+      for (Thread t : load) t.interrupt();
+      for (Thread t : load) t.join();
+    }
   }
 
   // a variable bound in every clause of a case and matched again after it resolves to each clause binding once
@@ -68,12 +86,25 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertEquals(vars.subList(0, 3), targets);
   }
 
-  private long timeOfResolve(int repetitions) {
+  // the fastest of several warmed-up resolves of each size, so that a pause of the machine during one resolve does not count.
+  // The resolve grows about 2x from 8 to 16 repetitions and 256x when it doubles, so the 32x limit leaves room for a busy machine
+  private void assertResolveDoesNotDouble(String prefix) {
+    long small = fastestResolve(8);
+    long big = fastestResolve(16);
+    assertTrue(prefix + "8 repetitions: " + small + " ns, 16 repetitions: " + big + " ns", big < 32 * Math.max(small, 1_000_000L));
+  }
+
+  private long fastestResolve(int repetitions) {
     List<ErlangQVar> vars = configure(repetitions);
     ErlangQVar last = vars.get(vars.size() - 1);
-    long start = System.nanoTime();
-    multiResolve(last);
-    return System.nanoTime() - start;
+    for (int i = 0; i < 5; i++) multiResolve(last);
+    long fastest = Long.MAX_VALUE;
+    for (int i = 0; i < 10; i++) {
+      long start = System.nanoTime();
+      multiResolve(last);
+      fastest = Math.min(fastest, System.nanoTime() - start);
+    }
+    return fastest;
   }
 
   private static ResolveResult[] multiResolve(ErlangQVar var) {
