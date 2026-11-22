@@ -1,0 +1,1 @@
+<selection>%% my comment<caret></selection>
