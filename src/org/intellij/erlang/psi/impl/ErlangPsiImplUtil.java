@@ -1898,9 +1898,8 @@ public class ErlangPsiImplUtil {
     List<ErlangIncludeLib> includes = file.getIncludeLibs();
     for (ErlangIncludeLib include : includes) {
       ErlangIncludeString string = include.getIncludeStringSafe();
-      if (string != null) {
-        String includeFilePath = StringUtil.unquoteString(string.getText());
-        return StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl");
+      if (string != null && StringUtil.equals(StringUtil.unquoteString(string.getText()), "eunit/include/eunit.hrl")) {
+        return true;
       }
     }
     return false;

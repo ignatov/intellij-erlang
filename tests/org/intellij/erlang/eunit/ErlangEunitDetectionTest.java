@@ -41,6 +41,16 @@ public class ErlangEunitDetectionTest extends ErlangLightPlatformCodeInsightFixt
     doEunitDetectionTest();
   }
 
+  public void testIndirectInclusionEunitIsNotTheFirstIncludeLib() {
+    myFixture.configureByFiles("indirect-inclusion-not-first.erl", "include-eunit-not-first.hrl");
+    doEunitDetectionTest();
+  }
+
+  public void testNoEunitInclusion() {
+    myFixture.configureByFile("no-eunit.erl");
+    assertFalse(ErlangPsiImplUtil.isEunitImported((ErlangFile) myFixture.getFile()));
+  }
+
   private void doEunitDetectionTest() {
     assertTrue(ErlangPsiImplUtil.isEunitImported((ErlangFile) myFixture.getFile()));
   }
