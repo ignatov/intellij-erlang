@@ -2,96 +2,64 @@ package org.intellij.erlang.macrolayer;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator;
-import com.intellij.openapi.application.ApplicationListener;
-import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.progress.WrappedProgressIndicator;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.util.UserDataHolderEx;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.util.CachedValue;
-import com.intellij.openapi.util.Disposer;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ModificationTracker;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.registry.Registry;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.PsiSearchHelper;
-import com.intellij.psi.util.CachedValueProvider;
-import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
-import org.intellij.erlang.index.ErlangModuleIndex;
-import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Expansion;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.Form;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander.FormStatus;
 import org.intellij.erlang.psi.*;
-import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
-import org.intellij.erlang.psi.impl.ErlangModuleReferenceImpl;
-import org.intellij.erlang.psi.impl.ErlangQAtomBasedReferenceImpl;
-import org.intellij.erlang.psi.impl.ErlangRecordReferenceImpl;
-import org.intellij.erlang.psi.impl.ErlangTypeReferenceImpl;
-import org.intellij.erlang.psi.impl.ErlangVariableReferenceImpl;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerCopies.CopyHolder;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTables.IncludeTracker;
-import org.intellij.erlang.macrolayer.ErlangMacroLayerTables.TableBuild;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTables.TableCache;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTables.TableEntry;
-import org.intellij.erlang.macrolayer.ErlangMacroLayerTables.TextTracker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.TestOnly;
 
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.*;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Macro expansion as a separate layer, used only as an oracle.
+ * The macro layer: an expanded copy of a file used as a look-up, and the entry points the rest of the plugin calls.
  * <p>
- * The main tree, the stubs and the indices of a file are not touched. On demand, the layer expands the same-file
- * macros of the file's PSI text ({@link ErlangMacroExpander}), parses the expanded text as one non-physical Erlang
- * file whose original file is the real file (the "copy"), and caches it on the real file. A caller asks the copy only
- * when master's path has no answer, and every answer is mapped back to an element of a real file.
+ * The main tree, the stubs and the indices of a file are master's (the unexpanded text). On demand the layer expands
+ * the macros a file can see ({@link ErlangMacroExpander}), parses the expanded text as a non-physical Erlang file whose
+ * original file is the real file (the copy, {@link Copy}), and caches it. A caller asks the copy only when master's
+ * path has no answer, and every answer is mapped back to an element of a real file.
  * <p>
- * Switch: the Registry key {@code erlang.macro.layer} (default on), read at each call, so a user can turn the layer
- * off in the IDE (Help | Find Action | Registry) without a restart. The system property {@code erlang.macro.layer}, else
- * the environment variable {@code ERLANG_MACRO_LAYER} ({@code off} or {@code layer}), overrides it. Form cap: {@code erlang.macro.layer.cap} / {@code ERLANG_MACRO_LAYER_CAP},
- * default 4,000 significant tokens per expanded form. Remote fallback ({@code m:f()} to a function made by a macro
- * in m): {@code erlang.macro.layer.remote} / {@code ERLANG_MACRO_LAYER_REMOTE} = {@code on}, default off.
+ * This class keeps the entry points (most are one-line delegates), the copy ({@link Copy}: the parsed expansion and
+ * the mapping between its positions and the real file), the macro table type ({@link Table}), the gates that decide
+ * per form whether the copy is needed, the names that macros make, and the syntax-error filter. The rest lives in:
+ * <ul>
+ * <li>{@link ErlangMacroLayerSettings}: the switch (Registry key {@code erlang.macro.layer}) and the other settings;</li>
+ * <li>{@link ErlangMacroLayerTables}: the per-file table, its trackers and the header summaries;</li>
+ * <li>{@link ErlangMacroLayerCopies}: getting, building and keeping copies, and the build rule while the user types;</li>
+ * <li>{@link ErlangMacroLayerCallers}: the only place that recognises the platform's callers;</li>
+ * <li>{@link ErlangMacroLayerAnswers}: the answers to master's references;</li>
+ * <li>{@link ErlangMacroLayerBodySearch}: names inside {@code -define} bodies;</li>
+ * <li>{@link ErlangMacroLayerRetention}: which copies are kept strongly, and the document and write-action listeners.</li>
+ * </ul>
+ * Threading: every entry point is cheap on the UI thread (it never builds a copy there) and otherwise runs under a read
+ * action, cancellable; without read access the layer gives master's answer.
  */
 public final class ErlangMacroLayer {
   public enum Mode {OFF, LAYER}
