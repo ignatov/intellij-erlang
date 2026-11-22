@@ -1,0 +1,2 @@
+-module(beh).
+-callback f() -> ok.
