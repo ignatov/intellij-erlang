@@ -127,6 +127,7 @@ public final class ErlangBareMacroReference extends PsiReferenceBase<PsiElement>
   /** Significant leaves of the host and of its error elements and dummy blocks; null for an Erlang element between them. */
   private static void collect(@NotNull ASTNode node, @NotNull List<ASTNode> out) {
     for (ASTNode c = node.getFirstChildNode(); c != null; c = c.getTreeNext()) {
+      ErlangMacroLayerHosts.LEAF_VISITS.incrementAndGet();
       IElementType t = c.getElementType();
       if (c.getFirstChildNode() == null && !isForeign(t)) {
         if (!SKIPPED.contains(t) && c.getTextLength() > 0) out.add(c);

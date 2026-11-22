@@ -62,6 +62,7 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     PsiElement lastForm = null;
     boolean lastAnswer = false, first = true;
     for (PsiElement leaf : leaves) {
+      ErlangMacroLayerHosts.LEAF_VISITS.incrementAndGet();
       PsiElement form = ErlangMacroLayer.topForm(leaf);
       if (first || form != lastForm) {
         first = false;

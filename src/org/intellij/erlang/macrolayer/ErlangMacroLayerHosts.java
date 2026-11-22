@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class ErlangMacroLayerHosts {
   /** Scans of an element's children by the hosted references' find (tests: a file with nothing to host needs none). */
   public static final AtomicLong CHILD_SCANS = new AtomicLong();
+  /** Leaves walked by the hosted references' find (tests: the work of one search grows with the uses, not with their square). */
+  public static final AtomicLong LEAF_VISITS = new AtomicLong();
 
   private static final Key<CachedValue<Hosts>> HOSTS = Key.create("erlang.macro.layer.hosts");
 
