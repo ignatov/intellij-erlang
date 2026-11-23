@@ -662,6 +662,27 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         sma<caret>.""", CompletionType.BASIC, 2, CheckType.EXCLUDES, "sma");
   }
 
+  public void testThirdBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> small.
+      all() -> sma<caret>.""", CompletionType.BASIC, 3, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedElsewhereInFile() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma.
+      all() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedInAnotherFile() {
+    myFixture.addFileToProject("other.erl", "-module(other).\nf() -> sma.");
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
   public void testModuleCompletionContainsFunctions() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
     doTestInclude("foo() -> fake_mod<caret>", "fake_module:bar");
