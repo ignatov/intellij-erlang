@@ -1,0 +1,1 @@
+-define(assert(BoolExpr), ok).
