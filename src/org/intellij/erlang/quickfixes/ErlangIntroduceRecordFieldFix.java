@@ -60,7 +60,15 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
             fields.addBefore(newField, rightBrace);
           }
           else {
-            fields.addRangeAfter(comma, newField, lastField);
+            PsiElement lastComment = PsiTreeUtil.skipWhitespacesBackward(rightBrace);
+            if (lastComment == lastField) {
+              fields.addRangeAfter(comma, newField, lastField);
+            }
+            else {
+              fields.addAfter(comma, lastField);
+              PsiElement addedField = fields.addAfter(newField, lastComment);
+              fields.addBefore(ErlangElementFactory.createWhitespaceFromText(project, "\n"), addedField);
+            }
           }
         }
       }
