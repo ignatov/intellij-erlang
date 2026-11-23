@@ -1931,7 +1931,10 @@ public class ErlangPsiImplUtil {
         return true;
       }
     }
-    return false;
+    // eunit.hrl declares this parse transform, so a file that includes it with -include counts too
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    return parseTransforms.contains("eunit_autoexport");
   }
 
   @NotNull
