@@ -323,4 +323,42 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
                                 "start() ->\n  hel<caret>,\n  ok.\n?DEF(hello).\n");
     assertTrue(got.toString(), got.containsAll(List.of("hello", "other:hello")));
   }
+
+  /** #1538: after {@code ssl_manager:} only the exports of ssl_manager are offered, not the functions ?TEST makes here. */
+  public void testFunctionMadeByMacroIsNotOfferedAfterAnotherModule() {
+    myFixture.addFileToProject("c/ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1, cache/0]).\n" +
+                                                    "start_link(_) -> ok.\ncache() -> ok.\n");
+    List<String> got = complete("-module(m).\n-export([all/0, small_order/0, big_order/0]).\n\n" +
+                                "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                "?TEST(small_order, ok = orders:check(5)).\n?TEST(big_order, too_big = orders:check(500)).\n\n" +
+                                "all() ->\n  small_order(),\n  big_order(),\n  ssl_manager:<caret>.\n");
+    assertTrue(got.toString(), got.containsAll(List.of("cache", "start_link")));
+    assertFalse(got.toString(), got.contains("small_order") || got.contains("big_order"));
+  }
+
+  /** #1538: after the file's own module name the functions ?TEST makes there are offered, but only the exported ones. */
+  public void testExportedFunctionMadeByMacroIsOfferedAfterTheOwnModule() {
+    String text = "-module(shop).\n-export([all/0, small_order/0]).\n\n" +
+                  "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                  "?TEST(small_order, ok).\n?TEST(hidden_order, ok).\n\n" +
+                  "all() ->\n  hidden_order(),\n  shop:<caret>.\n";
+    PsiFile f = myFixture.addFileToProject("c/shop.erl", text.replace("<caret>", ""));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    myFixture.doHighlighting();
+    myFixture.getEditor().getCaretModel().moveToOffset(text.indexOf("<caret>"));
+    myFixture.complete(CompletionType.BASIC);
+    List<String> got = myFixture.getLookupElementStrings();
+    assertNotNull(got);
+    assertTrue(got.toString(), got.contains("small_order"));
+    assertFalse(got.toString(), got.contains("hidden_order"));
+  }
+
+  /** #1538: after a variable qualifier the file's functions are offered, and the functions ?TEST makes there with them. */
+  public void testFunctionMadeByMacroIsOfferedAfterAVariableQualifier() {
+    List<String> got = complete("-module(m).\n-export([all/0, small_order/0]).\n\n" +
+                                "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                "?TEST(small_order, ok).\nlocal_fn() -> ok.\n\n" +
+                                "all() ->\n  local_fn(),\n  Mod = m,\n  Mod:<caret>.\n");
+    assertTrue(got.toString(), got.containsAll(List.of("local_fn", "small_order")));
+  }
 }
