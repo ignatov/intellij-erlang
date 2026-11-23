@@ -36,6 +36,11 @@ public class ErlangIntroduceRecordFieldTest extends ErlangQuickFixTestBase {
   public void testSimple()           { doIntroduceRecordFieldTest(); }
   public void testWithOtherFields()  { doIntroduceRecordFieldTest(); }
   public void testWithTupleDefault() { doIntroduceRecordFieldTest(); }
+  public void testWithMapDefault()    { doIntroduceRecordFieldTest(); }
+  public void testWithRecordDefault() { doIntroduceRecordFieldTest(); }
+  public void testWithTupleType()     { doIntroduceRecordFieldTest(); }
+  public void testWithBraceInString() { doIntroduceRecordFieldTest(); }
+  public void testWithBraceInComment() { doIntroduceRecordFieldTest(); }
 
   private void doIntroduceRecordFieldTest() { doTest("Introduce record field"); }
 }
