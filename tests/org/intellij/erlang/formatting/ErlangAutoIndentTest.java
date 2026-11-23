@@ -48,6 +48,8 @@ public class ErlangAutoIndentTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test337()                         throws Exception { doTest(); }
   public void testIfBeforeIf()                  throws Exception { doTest(); }
   public void testNoReformatAfterInsertedText() throws Exception { doTest(); }
+  public void testAfterExpressionBeforeDot()       throws Exception { doTest(); }
+  public void testAfterExpressionBeforeSemicolon() throws Exception { doTest(); }
   public void testAfterFragmentMacroCall()      throws Exception { doTest(); }
   public void testAfterFunctionClauseSemicolon() throws Exception { doTest(); }
   public void testAfterFunctionEnd()            throws Exception { doTest(); }

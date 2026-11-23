@@ -18,6 +18,7 @@ package org.intellij.erlang.formatter;
 
 import com.intellij.formatting.Indent;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
@@ -143,7 +144,22 @@ public class ErlangIndentProcessor {
     if (parent.getPsi() instanceof ErlangExpression && (BIN_OPERATORS.contains(elementType) || BIN_OPERATORS.contains(prevSiblingElementType))) {
       return Indent.getNormalIndent();
     }
+    if (parentType == ERL_FUNCTION && (elementType == ERL_DOT || elementType == ERL_SEMI) && isPrecededByComma(node)) {
+      return Indent.getNormalIndent();
+    }
     return Indent.getNoneIndent();
+  }
+
+  /**
+   * Whether the code before the node ends with a comma, as in {@code ok,<caret>.} while the next expression
+   * of a clause body is being typed.
+   */
+  private static boolean isPrecededByComma(@NotNull ASTNode node) {
+    PsiElement prevLeaf = PsiTreeUtil.prevVisibleLeaf(node.getPsi());
+    while (prevLeaf instanceof PsiComment) {
+      prevLeaf = PsiTreeUtil.prevVisibleLeaf(prevLeaf);
+    }
+    return prevLeaf != null && prevLeaf.getNode().getElementType() == ERL_COMMA;
   }
 
   /**
