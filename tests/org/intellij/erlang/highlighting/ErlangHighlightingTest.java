@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.psi.ErlangExportType;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
@@ -74,6 +75,13 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInclude()           { doTest(); }
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
+  // issue 1506: ceil/1 and floor/1 are guard BIFs since OTP 20, min/2 and max/2 since OTP 26
+  public void testIllegalGuardCeilFloorMinMaxR15() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR15.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testIllegalPattern()    { doTest(); }
   public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
   public void testIllegalPatternMacroListOp() { doTest(); } // issue 890

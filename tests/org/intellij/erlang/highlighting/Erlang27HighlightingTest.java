@@ -3,6 +3,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -83,5 +84,36 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
   public void testAutoImportByRelease27() {
     addErlangModuleWithFunctionsAutoImportedSince28();
     doTest();
+  }
+
+  // issue 1506: ceil/1, floor/1, min/2 and max/2 are guard BIFs
+  public void testIllegalGuardCeilFloorMinMax() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMax.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalGuardLocalMaxAndArguments() {
+    myFixture.configureByFile("IllegalGuardLocalMaxAndArguments.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalGuardImportedMin() {
+    myFixture.configureByFile("IllegalGuardImportedMin.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalGuardImportedFromErlang() {
+    myFixture.configureByFile("IllegalGuardImportedFromErlang.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalGuardImportedFromErlangNoAutoImport() {
+    myFixture.configureByFile("IllegalGuardImportedFromErlangNoAutoImport.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
   }
 }
