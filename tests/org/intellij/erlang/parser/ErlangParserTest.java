@@ -106,6 +106,19 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
   public void testTypo()                                { doTest(true);  }
   public void testNewNumbers()                          { doTest(true);  }
+  public void testBasedIntegerSeparators()              { doTest(false); }
+  public void testBasedIntegerSeparatorsErrors()        { doTest(true);  }
+  public void testControlEscapes()                      { doTest(false); }
+  public void testControlEscapesErrors()                { doTest(true);  }
+  public void testGenericEscapes()                      { doTest(false); }
+  public void testHexEscapes()                          { doTest(false); }
+  public void testHexEscapesErrors()                    { doTest(true);  }
+  public void testControlEscapeAtStringEnd()            { doTest(false); }
+  public void testBasedIntegerBaseSeparators()          { doTest(false); }
+  public void testBasedIntegerBaseSeparatorsErrors()    { doTest(true);  }
+  public void testVerbatimSigilControlEscape()          { doTest(false); }
+  public void testHexEscapeInBraceSigil()               { doTest(false); }
+  public void testHexEscapeInBraceSigilErrors()         { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
   public void testTripleQuotesMoreThanThree()           { doTest(false); }

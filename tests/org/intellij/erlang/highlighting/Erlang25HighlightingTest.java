@@ -40,6 +40,14 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testControlEscapeAnyCharOtp25() {
+    doTest();
+  }
+
+  public void testSigilControlEscapeBadNameOtp25() {
+    doTest();
+  }
+
   public void testIoFormatMapOrderModifiersBefore26() {
     myFixture.addFileToProject("io.erl", "-module(io).\n-export([format/2]).\nformat(_, _) -> ok.\n");
     doTest();

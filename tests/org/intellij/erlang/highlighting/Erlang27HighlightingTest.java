@@ -23,6 +23,10 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testControlEscapeBadNameErrors() {
+    doTest();
+  }
+
   public void testTripleQuotedStringWhiteSpaceAfterOpening() {
     doTest();
   }
