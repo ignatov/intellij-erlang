@@ -17,10 +17,9 @@
 package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PostprocessReformattingAspect;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
@@ -30,7 +29,6 @@ import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,7 +48,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
     if (signature == null) return;
     PsiFile file = function.getContainingFile();
     if (!(file instanceof ErlangFile)) return;
-    List<TextRange> ranges = new ArrayList<>();
+    List<PsiElement> toDelete = new ArrayList<>();
     for (ErlangAttribute attribute : ((ErlangFile) file).getAttributes()) {
       ErlangExport export = attribute.getExport();
       ErlangExportFunctions exportFunctions = export != null ? export.getExportFunctions() : null;
@@ -67,26 +65,21 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
       }
       if (removed.isEmpty()) continue;
       if (!ContainerUtil.exists(children, c -> c instanceof ErlangExportFunction || c instanceof PsiComment)) {
-        PsiElement next = attribute.getNextSibling();
-        int end = next instanceof PsiWhiteSpace ? next.getTextRange().getEndOffset() : attribute.getTextRange().getEndOffset();
-        ranges.add(new TextRange(attribute.getTextRange().getStartOffset(), end));
+        if (attribute.getNextSibling() instanceof PsiWhiteSpace) {
+          toDelete.add(attribute.getNextSibling());
+        }
+        toDelete.add(attribute);
       }
       else {
-        for (PsiElement e : removed) {
-          ranges.add(e.getTextRange());
-        }
+        toDelete.addAll(removed);
       }
     }
-    if (ranges.isEmpty()) return;
-    PsiDocumentManager documentManager = PsiDocumentManager.getInstance(project);
-    Document document = documentManager.getDocument(file);
-    if (document == null) return;
-    documentManager.doPostponedOperationsAndUnblockDocument(document);
-    ranges.sort(Comparator.comparingInt(TextRange::getStartOffset).reversed());
-    for (TextRange range : ranges) {
-      document.deleteString(range.getStartOffset(), range.getEndOffset());
-    }
-    documentManager.commitDocument(document);
+    if (toDelete.isEmpty()) return;
+    PostprocessReformattingAspect.getInstance(project).disablePostprocessFormattingInside(() -> {
+      for (PsiElement e : toDelete) {
+        e.delete();
+      }
+    });
   }
 
   private static void removeEntry(@NotNull List<PsiElement> children, int index, @NotNull List<PsiElement> removed) {
@@ -94,7 +87,7 @@ public class ErlangRemoveDuplicateFunctionExportFix extends ErlangQuickFixBase {
     if (isComma(children, next)) {
       int last = next + 1 < children.size() && children.get(next + 1) instanceof PsiWhiteSpace ? next + 1 : next;
       for (int i = last; i > index; i--) {
-        if (i >= next || children.get(i) instanceof PsiWhiteSpace) {
+        if (i >= next || children.get(i) instanceof PsiWhiteSpace && !(children.get(i - 1) instanceof PsiComment)) {
           removed.add(children.remove(i));
         }
       }
