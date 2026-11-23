@@ -157,8 +157,9 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-          if (isInSizeOrMapKey(o, element)) super.visitFunctionCallExpression(o);
-          else if (o.getQAtom().getMacros() == null) {
+          boolean macro = o.getQAtom().getMacros() != null;
+          if (isInSizeOrMapKey(o, element) && (macro || isGuardBifCall(o))) super.visitFunctionCallExpression(o);
+          else if (!macro) {
             registerProblem(problemsHolder, o, ERROR);
           }
         }
@@ -284,12 +285,23 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
         List<ErlangExpression> valueAndSize = element.getExpressionList();
         if (valueAndSize.size() == 2 && valueAndSize.get(1) == child) return true;
       }
-      if (parent instanceof ErlangMapEntry entry) {
+      if (parent instanceof ErlangMapEntry entry && entry.getMatch() != null) {
         List<ErlangExpression> keyAndValue = entry.getExpressionList();
         if (keyAndValue.size() == 2 && keyAndValue.get(0) == child) return true;
       }
     }
     return false;
+  }
+
+  private static boolean isGuardBifCall(@NotNull ErlangFunctionCallExpression o) {
+    String name = o.getName();
+    int arity = o.getArgumentList().getExpressionList().size();
+    String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
+    if (o.getParent() instanceof ErlangGlobalFunctionCallExpression global) {
+      return ErlangIllegalGuardInspection.isGuardBif(ErlangPsiImplUtil.getName(global.getModuleRef().getQAtom()), presentation);
+    }
+    return ((ErlangFile) o.getContainingFile()).getFunction(name, arity) == null &&
+           ErlangIllegalGuardInspection.isGuardBif(null, presentation);
   }
 
   // A predefined macro of a known kind may stand only where its kind may; any other macro may expand to anything

@@ -21,6 +21,7 @@ import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
@@ -41,6 +42,13 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "size/1", "tl/1", "trunc/1", "tuple_size/1",
     "map_get/2", "is_map_key/2"
   );
+
+  // A guard may call a guard BIF, with or without erlang:, and an operator as erlang:'+'(..)
+  static boolean isGuardBif(@Nullable String moduleName, @NotNull String functionPresentation) {
+    if (moduleName == null) return BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation);
+    return "erlang".equals(moduleName) &&
+           (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) || ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation));
+  }
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
