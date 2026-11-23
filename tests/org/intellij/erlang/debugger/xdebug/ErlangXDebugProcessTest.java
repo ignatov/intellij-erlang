@@ -17,8 +17,11 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.*;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugSession;
+import com.intellij.xdebugger.XDebuggerUtil;
+import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XValue;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
@@ -421,6 +424,38 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
 
       assertEquals(List.of(new OtpErlangString("error: The result is nested too deeply to show")), watch.myValues);
       assertEquals(List.of("pause", "resume"), sessionCalls);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1541: the platform marks the session as resumed before it calls runToPosition, so the suspended process
+  // must be told to run on (to the line of the caret); otherwise the session shows a running process that never moves.
+  public void testRunToPositionSendsACommandToTheDebuggerNode() throws Exception {
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(new ErlangXDebugProcess[1], new CountDownLatch(0)));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      ErlangXDebugProcess process = createProcessWithoutTarget(node);
+      VirtualFile file = myFixture.configureByText("pricing.erl", """
+        -module(pricing).
+        -export([cheapest/1]).
+
+        cheapest([H | T]) ->
+          lists:foldl(fun(I, Best) when I < Best -> I; (_, Best) -> Best end, H, T).
+        """).getVirtualFile();
+      node.processSuspended(new OtpErlangPid("nonode@nohost", 85, 0, 0));
+
+      XSourcePosition position = XDebuggerUtil.getInstance().createPosition(file, 4);
+      assertNotNull(position);
+      process.runToPosition(position, null);
+
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      try {
+        assertNotNull(receive(peer));
+      }
+      catch (SocketTimeoutException e) {
+        fail("runToPosition sent no command to the debugger node in " + TIMEOUT_SECONDS + " s");
+      }
     }
     finally {
       node.stop();
