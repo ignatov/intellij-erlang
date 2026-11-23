@@ -153,17 +153,56 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
   private static List<ErlangFileDescriptor> getTopologicallySortedFileDescriptors(@NotNull Module... modulesToCompile) throws CyclicDependencyFoundException {
     final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
     DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.generate(semiGraph));
+    List<String> sortedNodes = builder.getSortedNodes();
     if (!builder.isAcyclic()) {
-      // Inside a cycle the order is arbitrary, so order by the known edges, which the guessed ones must not override.
-      builder = checkOnlyHeadersAreInCycles(semiGraph);
+      checkOnlyHeadersAreInCycles(semiGraph);
+      sortedNodes = orderCyclesByKnownEdges(builder, semiGraph);
     }
-    return ContainerUtil.map(builder.getSortedNodes(), filePath -> new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath)));
+    return ContainerUtil.map(sortedNodes, filePath -> new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath)));
+  }
+
+  // The order inside a cycle is arbitrary, so the files of a cycle are ordered by their known edges alone:
+  // there the guessed edges of a module without Erlang PSI must not override a known edge.
+  @NotNull
+  private static List<String> orderCyclesByKnownEdges(@NotNull DFSTBuilder<String> builder,
+                                                      @NotNull ErlangFilesDependencyGraph semiGraph) {
+    Map<String, Collection<String>> componentsByNode = new HashMap<>();
+    for (Collection<String> component : builder.getComponents()) {
+      for (String filePath : component) {
+        componentsByNode.put(filePath, component);
+      }
+    }
+    List<String> sortedNodes = new ArrayList<>();
+    Set<Collection<String>> orderedComponents = new HashSet<>();
+    for (String filePath : builder.getSortedNodes()) {
+      Collection<String> component = componentsByNode.get(filePath);
+      if (component == null || component.size() < 2) {
+        sortedNodes.add(filePath);
+      }
+      else if (orderedComponents.add(component)) {
+        Set<String> members = new HashSet<>(component);
+        InboundSemiGraph<String> componentGraph = new InboundSemiGraph<>() {
+          @NotNull
+          @Override
+          public Collection<String> getNodes() {
+            return component;
+          }
+
+          @NotNull
+          @Override
+          public Iterator<String> getIn(String node) {
+            return ContainerUtil.filter(semiGraph.getKnownOrderingDependencies(node), members::contains).iterator();
+          }
+        };
+        sortedNodes.addAll(new DFSTBuilder<>(GraphGenerator.generate(componentGraph)).getSortedNodes());
+      }
+    }
+    return sortedNodes;
   }
 
   // Headers are not compiled, and guarded headers may include each other, so only cycles through modules are errors.
   // The guessed edges of a module without Erlang PSI can't prove a cycle, so the check leaves them out.
-  @NotNull
-  private static DFSTBuilder<String> checkOnlyHeadersAreInCycles(@NotNull ErlangFilesDependencyGraph semiGraph) throws CyclicDependencyFoundException {
+  private static void checkOnlyHeadersAreInCycles(@NotNull ErlangFilesDependencyGraph semiGraph) throws CyclicDependencyFoundException {
     InboundSemiGraph<String> knownGraph = new InboundSemiGraph<>() {
       @NotNull
       @Override
@@ -188,7 +227,6 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         }
       }
     }
-    return builder;
   }
 
   @NotNull

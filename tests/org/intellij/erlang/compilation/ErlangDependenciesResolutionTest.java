@@ -212,6 +212,32 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertTrue(files.toString(), files.indexOf("x.erl") < files.indexOf("m.erl"));
   }
 
+  public void testLargeModulesAfterParseTransformInHeaderWithGuardedCycle() throws Exception {
+    List<String> largeModules = List.of("abig.erl", "zbig.erl", "big1.erl", "mbig.erl");
+    for (String largeModule : largeModules) {
+      writeAboveSizeLimit(largeModule, "-module(" + FileUtil.getNameWithoutExtension(largeModule) + ").\n-include(\"h.hrl\").\n");
+    }
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    for (String largeModule : largeModules) {
+      assertTrue(files.toString(), files.indexOf("pt.erl") < files.indexOf(largeModule));
+    }
+  }
+
+  public void testLargeModulesAfterParseTransformInHeaderWithLargeParseTransformCycle() throws Exception {
+    writeAboveSizeLimit("lpt.erl", "-module(lpt).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
+    List<String> largeModules = List.of("abig.erl", "zbig.erl", "rbig.erl", "mbig.erl", "big1.erl", "big2.erl");
+    for (String largeModule : largeModules) {
+      writeAboveSizeLimit(largeModule, "-module(" + FileUtil.getNameWithoutExtension(largeModule) + ").\n-include(\"h2.hrl\").\n");
+    }
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("lpt.erl") < files.indexOf("m.erl"));
+    for (String largeModule : ContainerUtil.append(largeModules, "lpt.erl")) {
+      assertTrue(files.toString(), files.indexOf("q.erl") < files.indexOf(largeModule));
+    }
+  }
+
   private void writeAboveSizeLimit(String fileName, String text) throws IOException {
     // A file above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
     String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";
