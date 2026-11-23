@@ -137,9 +137,10 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
       boolean f2IsHidden = isUnderHiddenDirectory(f2);
       if (f1IsHidden != f2IsHidden) return f1IsHidden ? 1 : -1;
 
+      // user modules come before SDK and library modules (see "Code Path" at http://www.erlang.org/doc/man/code.html)
       boolean f1IsInLibrary = isInLibrary(f1);
       boolean f2IsInLibrary = isInLibrary(f2);
-      if (f1IsInLibrary != f2IsInLibrary) return f1IsInLibrary ? -1 : 1;
+      if (f1IsInLibrary != f2IsInLibrary) return f1IsInLibrary ? 1 : -1;
 
       String f1Path = f1.getPath();
       String f2Path = f2.getPath();
