@@ -24,11 +24,14 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.ProgressManagerListener;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.updateSettings.impl.UpdateSettings;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.util.xmlb.XmlSerializer;
@@ -123,6 +126,7 @@ public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsigh
   }
 
   private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+  private static final String INSTALL_TASK_TITLE = "Updating the Erlang plugin to version 0.11.1500";
   private final List<Notification> myNotifications = new CopyOnWriteArrayList<>();
   private final List<ErlangUpdateNoticeService> myServices = new ArrayList<>();
   private final AtomicLong myNow = new AtomicLong(1_795_000_000_000L);
@@ -338,25 +342,43 @@ public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsigh
   }
 
   public void testInstallPressedDuringTheInstallStartsNoSecondOne() throws Exception {
+    List<String> tasks = recordTaskStarts();
     AtomicInteger installs = new AtomicInteger();
+    AtomicBoolean pressedDuringInstall = new AtomicBoolean();
     List<Notification> offers = new CopyOnWriteArrayList<>();
     myPlatform.update = update(indicator -> {
-      // the user presses Install again while the first install runs
-      if (installs.incrementAndGet() == 1) fire(offers.get(0), "Install");
+      if (installs.incrementAndGet() == 1) {
+        // the user presses Install again on the EDT while the first install runs
+        CountDownLatch pressed = new CountDownLatch(1);
+        ApplicationManager.getApplication().invokeLater(() -> {
+          fire(offers.get(0), "Install");
+          pressed.countDown();
+        }, ModalityState.any());
+        try {
+          pressedDuringInstall.set(pressed.await(30, TimeUnit.SECONDS));
+        }
+        catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      }
       return InstallResult.INSTALLED;
     });
     ErlangUpdateNoticeService service = service();
     service.erlangFileOpened(getProject());
     offers.add(waitForNotification(0));
     fire(offers.get(0), "Install");
-    waitForNotification(1);
+    Notification installed = waitForNotification(1);
     waitUntilInstallEnds(service);
     PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+    assertTrue(pressedDuringInstall.get());
     assertEquals(1, installs.get());
+    assertEquals(List.of(INSTALL_TASK_TITLE), tasks);
+    assertEquals(ErlangUpdateNotice.INSTALLED_TITLE, installed.getTitle());
     assertEquals(2, myNotifications.size());
   }
 
   public void testInstallPressedAfterThePluginIsUnloadedDoesNothing() throws Exception {
+    List<String> tasks = recordTaskStarts();
     AtomicInteger installs = new AtomicInteger();
     myPlatform.update = update(indicator -> {
       installs.incrementAndGet();
@@ -368,6 +390,8 @@ public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsigh
     service.dispose();
     fire(offer, "Install");
     PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+    // no install task is queued at all
+    assertEquals(List.of(), tasks);
     assertEquals(0, installs.get());
     assertEquals(1, myNotifications.size());
   }
@@ -442,6 +466,19 @@ public class ErlangUpdateNoticeServiceTest extends ErlangLightPlatformCodeInsigh
     assertEquals(3, service.getChecksStartedForTests());
     waitForNotification(0);
     assertEquals(3, myPlatform.questions.get());
+  }
+
+  @NotNull
+  private List<String> recordTaskStarts() {
+    List<String> titles = new CopyOnWriteArrayList<>();
+    ApplicationManager.getApplication().getMessageBus().connect(getTestRootDisposable())
+      .subscribe(ProgressManagerListener.TOPIC, new ProgressManagerListener() {
+        @Override
+        public void beforeTaskStart(@NotNull Task task, @NotNull ProgressIndicator indicator) {
+          if (task.getTitle().startsWith("Updating the Erlang plugin")) titles.add(task.getTitle());
+        }
+      });
+    return titles;
   }
 
   @NotNull
