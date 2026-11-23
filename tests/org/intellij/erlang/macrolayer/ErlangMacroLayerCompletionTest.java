@@ -352,4 +352,13 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
     assertTrue(got.toString(), got.contains("small_order"));
     assertFalse(got.toString(), got.contains("hidden_order"));
   }
+
+  /** #1538: after a variable qualifier the file's functions are offered, and the functions ?TEST makes there with them. */
+  public void testFunctionMadeByMacroIsOfferedAfterAVariableQualifier() {
+    List<String> got = complete("-module(m).\n-export([all/0, small_order/0]).\n\n" +
+                                "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                "?TEST(small_order, ok).\nlocal_fn() -> ok.\n\n" +
+                                "all() ->\n  local_fn(),\n  Mod = m,\n  Mod:<caret>.\n");
+    assertTrue(got.toString(), got.containsAll(List.of("local_fn", "small_order")));
+  }
 }

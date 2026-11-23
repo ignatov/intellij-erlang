@@ -237,10 +237,12 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       result.passResult(r);
     });
     ErlangFile real = (ErlangFile)parameters.getOriginalFile();
-    // after module: only that module's exports: the made functions only after this module's own name, and only the exported ones
+    // after module: only that module's exports: the made functions only after this module's own name, and only the exported ones;
+    // after a variable or another expression the main provider offers the file's functions, and the made ones with them
     ErlangColonQualifiedExpression qualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
-    boolean ownModule = qualified != null && isOwnModule(qualified, real);
-    if ((qualified == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces) {
+    ErlangQAtom moduleAtom = ErlangPsiImplUtil.getQAtom(qualified);
+    boolean ownModule = moduleAtom != null && isOwnModule(moduleAtom, real);
+    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
         // a function the recovery made from the rest of a split form has the same name/arity: offered once
         if (seenFunctions.contains(e.getKey())) continue;
@@ -279,10 +281,9 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
   }
 
   /** The qualifier of {@code module:} is the name of the completion's own module. */
-  private static boolean isOwnModule(@NotNull ErlangColonQualifiedExpression qualified, @NotNull ErlangFile real) {
-    ErlangQAtom atom = ErlangPsiImplUtil.getQAtom(qualified);
+  private static boolean isOwnModule(@NotNull ErlangQAtom atom, @NotNull ErlangFile real) {
     ErlangModule module = real.getModule();
-    return atom != null && module != null && ErlangPsiImplUtil.getName(atom).equals(module.getName());
+    return module != null && ErlangPsiImplUtil.getName(atom).equals(module.getName());
   }
 
   private static @Nullable PsiElement realTarget(@Nullable PsiElement e, @NotNull ErlangFile real) {
