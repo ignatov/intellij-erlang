@@ -94,4 +94,16 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     myFixture.enableInspections(ErlangIllegalGuardInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
+
+  public void testIllegalGuardImportedFromErlang() {
+    myFixture.configureByFile("IllegalGuardImportedFromErlang.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalGuardImportedFromErlangNoAutoImport() {
+    myFixture.configureByFile("IllegalGuardImportedFromErlangNoAutoImport.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
 }

@@ -18,6 +18,7 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -188,7 +189,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
 
       ErlangFile file = (ErlangFile) o.getContainingFile();
       if (file.getFunction(functionName, functionArity) != null ||
-          file.getImportedFunction(functionName, functionArity) != null) {
+          isImportedFromOtherThanErlang(file, functionName, functionArity)) {
         registerProblem(myHolder, o, "Call to local/imported function " + functionPresentation + " is illegal in guard");
       }
       else if (ErlangPsiImplUtil.isMsTransformPseudoFunctionCall(o, functionName, functionArity)) {
@@ -201,6 +202,16 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
         o.getArgumentList().accept(this);
       }
     }
+  }
+
+  private static boolean isImportedFromOtherThanErlang(@NotNull ErlangFile file, @NotNull String name, int arity) {
+    for (ErlangImportFunction importFunction : file.getImportedFunctions()) {
+      if (!name.equals(ErlangPsiImplUtil.getName(importFunction)) || arity != ErlangPsiImplUtil.getArity(importFunction)) continue;
+      ErlangImportDirective directive = PsiTreeUtil.getParentOfType(importFunction, ErlangImportDirective.class);
+      ErlangModuleRef moduleRef = directive != null ? directive.getModuleRef() : null;
+      if (moduleRef == null || !"erlang".equals(ErlangPsiImplUtil.getName(moduleRef.getQAtom()))) return true;
+    }
+    return false;
   }
 
   private static boolean isAllowedInGuard(@NotNull String functionPresentation, @NotNull PsiElement call) {
