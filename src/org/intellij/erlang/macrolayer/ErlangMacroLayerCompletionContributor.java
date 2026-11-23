@@ -246,7 +246,9 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     ErlangColonQualifiedExpression qualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
     ErlangQAtom moduleAtom = ErlangPsiImplUtil.getQAtom(qualified);
     boolean ownModule = moduleAtom != null && isOwnModule(moduleAtom, real);
-    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces) {
+    // in -import(other, [...]) only other's functions: importing a function the file defines is an error
+    boolean imports = PsiTreeUtil.getParentOfType(position, ErlangImportFunctions.class) != null;
+    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces && !imports) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
         // a function the recovery made from the rest of a split form has the same name/arity: offered once
         if (seenFunctions.contains(e.getKey())) continue;
