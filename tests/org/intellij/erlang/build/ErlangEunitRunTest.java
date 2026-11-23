@@ -110,6 +110,53 @@ public class ErlangEunitRunTest extends ErlangCompilationTestBase {
     assertFalse(output, output.contains("##teamcity[testFailed name='passing_test'"));
   }
 
+  // #1532: EUnit cancels a test that runs longer than its 5 second timeout; the test tree must not show it as passed.
+  public void testCancelledTestIsNotReportedAsPassed() throws Exception {
+    addTestFile(myModule, "slow_tests.erl", """
+      -module(slow_tests).
+      -include_lib("eunit/include/eunit.hrl").
+      slow_test() -> timer:sleep(6000).
+      """);
+    compileAndAssertOutput(true);
+
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(myProject, "slow_tests", ErlangUnitRunConfigurationType.getInstance());
+    configuration.setModule(myModule);
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE);
+    configuration.getConfigData().setModuleNames(Set.of("slow_tests"));
+
+    Executor executor = DefaultRunExecutor.getRunExecutorInstance();
+    ExecutionEnvironment environment = ExecutionEnvironmentBuilder.create(executor, configuration).build();
+    ProgramRunner<?> runner = environment.getRunner();
+    ErlangUnitRunningState state = configuration.getState(executor, environment);
+    assertNotNull(state);
+
+    ExecutionResult result = state.execute(executor, runner);
+    Disposer.register(getTestRootDisposable(), result.getExecutionConsole());
+    ProcessHandler processHandler = result.getProcessHandler();
+    StringBuilder output = new StringBuilder();
+    processHandler.addProcessListener(new ProcessAdapter() {
+      @Override
+      public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+        synchronized (output) {
+          output.append(event.getText());
+        }
+      }
+    });
+    processHandler.startNotify();
+    assertTrue("EUnit did not finish in time", processHandler.waitFor(60_000));
+    PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+
+    String text;
+    synchronized (output) {
+      text = output.toString();
+    }
+    SMTestProxy.SMRootTestProxy root = ((SMTRunnerConsoleView) result.getExecutionConsole()).getResultsViewer().getTestsRootNode();
+    List<? extends SMTestProxy> tests = ContainerUtil.filter(root.getAllTests(), SMTestProxy::isLeaf);
+    assertEquals(text, List.of("slow_test"), ContainerUtil.map(tests, SMTestProxy::getName));
+    assertFalse("cancelled test is shown as passed:\n" + text, tests.get(0).isPassed());
+  }
+
   private String runEunit(String moduleName) throws Exception {
     ErlangUnitRunConfigurationType type = ErlangUnitRunConfigurationType.getInstance();
     ErlangUnitRunConfiguration configuration = new ErlangUnitRunConfiguration(myProject, "eunit", type);
