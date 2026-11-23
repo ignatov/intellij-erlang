@@ -63,6 +63,12 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testPreferLocalFunction()        { doFunctionCallTest("test.erl", "test.erl", "incl.erl"); }
   public void testPreferFirstImport()          { doFunctionCallTest("test.erl", "incl.erl", "another_incl.erl"); }
   public void testImportArityWithDigitSeparators() { doFunctionCallTest("test.erl", "incl.erl"); }
+  public void testPreferFirstIncludedHeader() {
+    doFunctionCallTest("test.erl", "a.hrl", "b.hrl", "c.hrl", "d.hrl", "e.hrl", "g.hrl", "h.hrl", "i.hrl");
+  }
+  public void testPreferNestedIncludeInSourceOrder() {
+    doFunctionCallTest("test.erl", "a.hrl", "outer.hrl", "b.hrl", "c.hrl", "d.hrl", "e.hrl", "g.hrl", "h.hrl", "i.hrl");
+  }
 
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
