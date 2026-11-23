@@ -86,6 +86,27 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertEquals(vars.subList(0, 3), targets);
   }
 
+  // #1503: resolving every variable of the clause grows linearly with the number of matches, not quadratically.
+  // From 25 to 200 repetitions the total grows about 8x when it is linear and 64x when it is quadratic
+  public void testResolvingEveryVariableOfClauseIsNotQuadratic() {
+    long small = fastestResolveOfEveryVariable(25);
+    long big = fastestResolveOfEveryVariable(200);
+    assertTrue("25 repetitions: " + small + " ns, 200 repetitions: " + big + " ns, ratio " + (double) big / Math.max(small, 1L),
+               big < 24 * Math.max(small, 1_000_000L));
+  }
+
+  private long fastestResolveOfEveryVariable(int repetitions) {
+    List<ErlangQVar> vars = configure(repetitions);
+    for (ErlangQVar v : vars) multiResolve(v);
+    long fastest = Long.MAX_VALUE;
+    for (int i = 0; i < 3; i++) {
+      long start = System.nanoTime();
+      for (ErlangQVar v : vars) multiResolve(v);
+      fastest = Math.min(fastest, System.nanoTime() - start);
+    }
+    return fastest;
+  }
+
   // the fastest of several warmed-up resolves of each size, so that a pause of the machine during one resolve does not count.
   // The resolve grows about 2x from 8 to 16 repetitions and 256x when it doubles, so the 32x limit leaves room for a busy machine
   private void assertResolveDoesNotDouble(String prefix) {
