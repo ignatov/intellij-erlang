@@ -17,10 +17,14 @@
 package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
@@ -39,9 +43,10 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "length/1", "map_size/1", "node/1",
     "node/0", "round/1", "self/0",
     "size/1", "tl/1", "trunc/1", "tuple_size/1",
-    "map_get/2", "is_map_key/2",
-    "ceil/1", "floor/1", "min/2", "max/2"
+    "map_get/2", "is_map_key/2"
   );
+  private static final Set<String> BIFS_ALLOWED_IN_GUARDS_SINCE_20 = Set.of("ceil/1", "floor/1");
+  private static final Set<String> BIFS_ALLOWED_IN_GUARDS_SINCE_26 = Set.of("min/2", "max/2");
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
@@ -163,7 +168,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
       if (!"erlang".equals(moduleName)) {
         registerProblem(myHolder, o, ERROR);
       }
-      else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) &&
+      else if (!isAllowedInGuard(functionPresentation, o) &&
                !ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation)) {
         registerProblem(myHolder, function, ERROR);
       }
@@ -181,18 +186,31 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
       int functionArity = o.getArgumentList().getExpressionList().size();
       String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(functionName, functionArity);
 
-      if (((ErlangFile) o.getContainingFile()).getFunction(functionName, functionArity) != null) {
+      ErlangFile file = (ErlangFile) o.getContainingFile();
+      if (file.getFunction(functionName, functionArity) != null ||
+          file.getImportedFunction(functionName, functionArity) != null) {
         registerProblem(myHolder, o, "Call to local/imported function " + functionPresentation + " is illegal in guard");
       }
       else if (ErlangPsiImplUtil.isMsTransformPseudoFunctionCall(o, functionName, functionArity)) {
         return;
       }
-      else if (!BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) {
+      else if (!isAllowedInGuard(functionPresentation, o)) {
         registerProblem(myHolder, o, ERROR);
       }
       else {
         o.getArgumentList().accept(this);
       }
     }
+  }
+
+  private static boolean isAllowedInGuard(@NotNull String functionPresentation, @NotNull PsiElement call) {
+    if (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation)) return true;
+    ErlangSdkRelease since = BIFS_ALLOWED_IN_GUARDS_SINCE_20.contains(functionPresentation) ? ErlangSdkRelease.V_20_0 :
+                             BIFS_ALLOWED_IN_GUARDS_SINCE_26.contains(functionPresentation) ? ErlangSdkRelease.V_26_0 : null;
+    return since != null && isAtLeast(ErlangSdkType.getSdkRelease(call), since);
+  }
+
+  private static boolean isAtLeast(@Nullable ErlangSdkRelease release, @NotNull ErlangSdkRelease since) {
+    return release == null || release.isNewerOrEqualTo(since);
   }
 }

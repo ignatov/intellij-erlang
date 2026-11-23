@@ -72,15 +72,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInclude()           { doTest(); }
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
-  // issue 1506: ceil/1, floor/1, min/2 and max/2 are guard BIFs
-  public void testIllegalGuardCeilFloorMinMax() {
-    myFixture.configureByFile("IllegalGuardCeilFloorMinMax.erl");
-    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
-    myFixture.checkHighlighting(true, false, false);
-  }
-
-  public void testIllegalGuardLocalMaxAndArguments() {
-    myFixture.configureByFile("IllegalGuardLocalMaxAndArguments.erl");
+  // issue 1506: ceil/1 and floor/1 are guard BIFs since OTP 20, min/2 and max/2 since OTP 26
+  public void testIllegalGuardCeilFloorMinMaxR15() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR15.erl");
     myFixture.enableInspections(ErlangIllegalGuardInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }

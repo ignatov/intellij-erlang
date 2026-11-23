@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -71,5 +72,12 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
     enableUnresolvedMacroInspection();
     doTest("UnresolvedMacrosFeatureOwnDefine.erl");
+  }
+
+  // issue 1506
+  public void testIllegalGuardCeilFloorMinMaxR25() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
   }
 }
