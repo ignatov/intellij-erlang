@@ -74,6 +74,7 @@ import org.jetbrains.annotations.TestOnly;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.intellij.erlang.debugger.ErlangDebuggerLog.LOG;
 
@@ -88,6 +89,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
+  // the temporary breakpoint of Run to Cursor, removed at the next suspend; null when there is none or a user breakpoint is there
+  private final AtomicReference<ErlangSourcePosition> myRunToPosition = new AtomicReference<>();
   // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
   // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
   private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
@@ -277,6 +280,13 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
+    ErlangSourcePosition runToPosition = myRunToPosition.get();
+    if (runToPosition != null && runToPosition.getErlangModuleName().equals(module) && runToPosition.getLine() == line &&
+        myRunToPosition.compareAndSet(runToPosition, null)) {
+      // the process has been resumed already, so it runs on as after Resume Program
+      getSession().reportMessage("Run to Cursor cannot stop at line " + (line + 1) + " of " + module + ": " + errorMessage,
+                                 MessageType.WARNING);
+    }
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
     if (breakpoint != null) {
@@ -299,12 +309,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
     ErlangSuspendContext suspendContext = new ErlangSuspendContext(this, pid, snapshots);
     if (breakpoint == null) {
+      removeRunToPositionBreakpoint();
       getSession().positionReached(suspendContext);
     }
     else {
       boolean shouldSuspend = getSession().breakpointReached(breakpoint, null, suspendContext);
       if (!shouldSuspend) {
         resume(suspendContext);
+      }
+      else {
+        removeRunToPositionBreakpoint();
       }
     }
   }
@@ -464,7 +478,22 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-    //TODO implement me
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    removeRunToPositionBreakpoint();
+    ErlangSourcePosition target = ErlangSourcePosition.create(position);
+    // a user breakpoint on the line stops the process there already, and must outlive this run
+    if (!myPositionToLineBreakpointMap.containsKey(target)) {
+      myRunToPosition.set(target);
+      myDebuggerNode.setBreakpoint(target.getErlangModuleName(), target.getLine());
+    }
+    myDebuggerNode.resume();
+  }
+
+  private void removeRunToPositionBreakpoint() {
+    ErlangSourcePosition target = myRunToPosition.getAndSet(null);
+    if (target != null && !myPositionToLineBreakpointMap.containsKey(target)) {
+      myDebuggerNode.removeBreakpoint(target.getErlangModuleName(), target.getLine());
+    }
   }
 
   @Nullable
@@ -484,6 +513,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
     myPositionToLineBreakpointMap.remove(breakpointPosition);
+    // the temporary breakpoint of Run to Cursor is the same breakpoint of the interpreter, and is removed at the next suspend
+    if (breakpointPosition.equals(myRunToPosition.get())) return;
     myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
   }
 
