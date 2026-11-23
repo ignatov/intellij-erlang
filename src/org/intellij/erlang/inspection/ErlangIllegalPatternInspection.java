@@ -102,22 +102,26 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitAdditiveExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitMultiplicativeExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitOrelseExpression(@NotNull ErlangOrelseExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitOrelseExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitAndalsoExpression(@NotNull ErlangAndalsoExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitAndalsoExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
@@ -147,12 +151,14 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitCompOpExpression(@NotNull ErlangCompOpExpression o) {
-          registerProblem(problemsHolder, o, ERROR);
+          if (isInSizeOrMapKey(o, element)) super.visitCompOpExpression(o);
+          else registerProblem(problemsHolder, o, ERROR);
         }
 
         @Override
         public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-          if (o.getQAtom().getMacros() == null) {
+          if (isInSizeOrMapKey(o, element)) super.visitFunctionCallExpression(o);
+          else if (o.getQAtom().getMacros() == null) {
             registerProblem(problemsHolder, o, ERROR);
           }
         }
@@ -209,7 +215,8 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitPrefixExpression(@NotNull ErlangPrefixExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitPrefixExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
@@ -262,6 +269,21 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static boolean isInGuardExpression(@NotNull PsiElement o, @NotNull PsiElement pattern) {
     for (PsiElement child = o, parent = o.getParent(); child != pattern && parent != null; child = parent, parent = parent.getParent()) {
       if (parent instanceof ErlangBinElement) return true;
+      if (parent instanceof ErlangMapEntry entry) {
+        List<ErlangExpression> keyAndValue = entry.getExpressionList();
+        if (keyAndValue.size() == 2 && keyAndValue.get(0) == child) return true;
+      }
+    }
+    return false;
+  }
+
+  // The size of a binary segment and a map key in a pattern are guard expressions, which may compute with bound variables
+  private static boolean isInSizeOrMapKey(@NotNull PsiElement o, @NotNull PsiElement pattern) {
+    for (PsiElement child = o, parent = o.getParent(); child != pattern && parent != null; child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangBinElement element) {
+        List<ErlangExpression> valueAndSize = element.getExpressionList();
+        if (valueAndSize.size() == 2 && valueAndSize.get(1) == child) return true;
+      }
       if (parent instanceof ErlangMapEntry entry) {
         List<ErlangExpression> keyAndValue = entry.getExpressionList();
         if (keyAndValue.size() == 2 && keyAndValue.get(0) == child) return true;
