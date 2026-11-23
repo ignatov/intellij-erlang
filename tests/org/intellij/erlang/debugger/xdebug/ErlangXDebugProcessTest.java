@@ -513,8 +513,8 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     }
   }
 
-  // #1541: a user breakpoint added on the line of the caret while the process runs to it, then removed, keeps the
-  // temporary breakpoint until the process stops; then it goes.
+  // #1541: a user breakpoint added on the line of the caret while the process runs to it shares the temporary breakpoint
+  // (a second int:break there fails with break_exists); removed again, it leaves the temporary one until the process stops.
   public void testRemovingAUserBreakpointOnTheLineOfRunToPositionKeepsTheTemporaryOne() throws Exception {
     ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(new ErlangXDebugProcess[1], new CountDownLatch(0)));
     try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
@@ -530,7 +530,6 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
       receive(peer);
       XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = lineBreakpointAt(position);
       process.addBreakpoint(breakpoint);
-      assertEquals(breakpointCommand("set_breakpoint", "pricing", 5), receive(peer));
       process.removeBreakpoint(breakpoint);
       assertNoCommand(peer);
 
@@ -561,6 +560,32 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
       assertTrue(sessionCalls.toString(), sessionCalls.contains("reportMessage"));
 
       process.breakpointReached(pid, List.of(snapshotAt(pid, "pricing", 3)));
+      assertNoCommand(peer);
+    }
+    finally {
+      node.stop();
+    }
+  }
+
+  // #1541: a user breakpoint added on the line of the caret while the process runs to it keeps the breakpoint there
+  // after the process stops.
+  public void testUserBreakpointAddedOnTheLineOfRunToPositionIsKept() throws Exception {
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(new ErlangXDebugProcess[1], new CountDownLatch(0)));
+    try (Socket peer = new Socket(InetAddress.getLoopbackAddress(), node.getLocalDebuggerPort())) {
+      peer.setSoTimeout(TIMEOUT_SECONDS * 1000);
+      List<String> sessionCalls = new CopyOnWriteArrayList<>();
+      ErlangXDebugProcess process = createProcessWithoutTarget(node, sessionCalls);
+      VirtualFile file = configurePricing();
+      XSourcePosition position = XDebuggerUtil.getInstance().createPosition(file, 4);
+      OtpErlangPid pid = new OtpErlangPid("nonode@nohost", 85, 0, 0);
+      node.processSuspended(pid);
+
+      process.runToPosition(position, null);
+      receive(peer);
+      receive(peer);
+      process.addBreakpoint(lineBreakpointAt(position));
+      process.breakpointReached(pid, List.of(snapshotAt(pid, "pricing", 4)));
+      assertTrue(sessionCalls.toString(), sessionCalls.contains("breakpointReached"));
       assertNoCommand(peer);
     }
     finally {
