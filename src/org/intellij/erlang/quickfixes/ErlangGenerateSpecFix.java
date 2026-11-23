@@ -133,17 +133,20 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
   }
 
-  private static ErlType computeCommonType(List<ErlangExpression> expressions) {
-    var types = expressions.stream().map(ErlType::fromExpression).toList();
-    var unionType = new ErlTypeUnion(types);
+  private static String computeCommonType(List<ErlangExpression> expressions) {
+    var unionType = new ErlTypeUnion(null);
+
+    for (ErlangExpression expression : expressions) {
+      unionType.add(ErlType.fromExpression(expression));
+    }
 
     // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
     return unionType.isEmpty()
-           ? ErlType.ANY_TYPE
-           : types.getFirst();
+           ? ErlType.ANY_TYPE.toString()
+           : unionType.toString();
   }
 
-  private static ErlType computeReturnType(ErlangFunction function) {
+  private static String computeReturnType(ErlangFunction function) {
     var clauses = function.getFunctionClauseList();
     var lastExpressions = new ArrayList<ErlangExpression>(clauses.size());
 
@@ -165,7 +168,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     template.addTextSegment("-spec " + function.getName() + "(");
     addArgsTypeSpecsAsTemplateFields(template, function);
     template.addTextSegment(") -> ");
-    template.addVariable("RETURN", new ConstantNode(computeReturnType(function).toString()), true);
+    template.addVariable("RETURN", new ConstantNode(computeReturnType(function)), true);
     template.addTextSegment(".\n");
 
     template.addEndVariable();
