@@ -237,10 +237,14 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       result.passResult(r);
     });
     ErlangFile real = (ErlangFile)parameters.getOriginalFile();
-    if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces) {
+    // after module: only that module's exports: the made functions only after this module's own name, and only the exported ones
+    ErlangColonQualifiedExpression qualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
+    boolean ownModule = qualified != null && isOwnModule(qualified, real);
+    if ((qualified == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
         // a function the recovery made from the rest of a split form has the same name/arity: offered once
         if (seenFunctions.contains(e.getKey())) continue;
+        if (ownModule && !real.isExported(e.getKey())) continue;
         int slash = e.getKey().lastIndexOf('/');
         String name = e.getKey().substring(0, slash);
         int arity = Integer.parseInt(e.getKey().substring(slash + 1));
@@ -272,6 +276,13 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     PsiElement grandPa = parent == null ? null : parent.getParent();
     return grandPa instanceof ErlangExpression && PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class) == null &&
            PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
+
+  /** The qualifier of {@code module:} is the name of the completion's own module. */
+  private static boolean isOwnModule(@NotNull ErlangColonQualifiedExpression qualified, @NotNull ErlangFile real) {
+    ErlangQAtom atom = ErlangPsiImplUtil.getQAtom(qualified);
+    ErlangModule module = real.getModule();
+    return atom != null && module != null && ErlangPsiImplUtil.getName(atom).equals(module.getName());
   }
 
   private static @Nullable PsiElement realTarget(@Nullable PsiElement e, @NotNull ErlangFile real) {
