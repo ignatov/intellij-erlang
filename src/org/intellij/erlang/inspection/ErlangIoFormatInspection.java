@@ -122,7 +122,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
         if (matcher.group(i) != null) expectedArgumentsCount++;
       }
       String controlSequenceType = matcher.group(4);
-      if ("P".equals(controlSequenceType)) expectedArgumentsCount++;
+      if (controlSequenceType != null && "PWXx".contains(controlSequenceType)) expectedArgumentsCount++;
       if (controlSequenceType == null && matcher.group(5) == null) {
         throw new InvalidControlSequenceException(matcher.start());
       }

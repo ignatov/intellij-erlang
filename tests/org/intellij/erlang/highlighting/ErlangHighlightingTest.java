@@ -55,6 +55,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test155()               { doTest(); }
   public void test158()               { doTest(); }
   public void testIoFormat()          { doTest(); }
+  public void testIoFormatTwoArgumentControls() { doTest(); }
+  public void testIoFormatTwoArgumentControlsOneArgument() { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
   public void testBinaryComprehensionTemplate() { doTest(); }
@@ -285,6 +287,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testTypesWithSameNameAndDifferentArity() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
     doTest();
+  }
+
+  // issue 1502: erlc never warns about unused types of an included file
+  public void testNoUnusedTypeInHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
   // issue 1435
