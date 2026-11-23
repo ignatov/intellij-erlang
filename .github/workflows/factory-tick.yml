@@ -9,8 +9,8 @@ name: Factory tick
 # It acts (--live) only when the run is scheduled or was started with "live", the repository variable
 # FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is set. Otherwise it is a dry run that only reads.
 # A live tick also needs the deploy gate: when the code of the private main changed since its tests last passed
-# here, the dispatcher tests run first, and when they fail the tick runs dry and the job fails (see the step
-# "Test the dispatcher code").
+# here, the dispatcher tests run first, and when they fail no dispatcher code runs (not even dry, so that it
+# never runs next to the tokens) and the job fails (see the step "Test the dispatcher code").
 #
 # What keeps the secrets in:
 #   - They are secrets of the environment factory-dispatch, which only jobs of master can use. There is no
@@ -171,8 +171,10 @@ jobs:
         # dispatcher/*.py, the tests too, config.json, the prompts, the scripts of the robustness sweep that
         # sweep.py loads, and triage-config.json) is compared with dispatcher/tested-code.txt, the hash of the
         # last code whose tests passed here. Another hash runs the dispatcher tests: when they pass, the hash is
-        # written and the state commit records it; when they fail, or this step fails or times out, the tick
-        # runs dry, nothing is committed to main and the job fails at its end.
+        # written and the state commit records it; when they fail, or this step fails or times out, the step
+        # "Tick" runs no dispatcher code at all (not dispatch.py, not pace.py: code whose tests failed must not
+        # run next to the tokens), nothing is committed to main, the timer still waits as idle, and the job
+        # fails at its end.
         # No secret reaches the tests: this step maps none, the tests run under env -i (no askpass, no GIT_CONFIG_*
         # and no token variable) with a scratch HOME, on a copy of the checkout without .git. Their output goes to
         # last-tests.log of the branch tick-log only, not into last-tick.log, whose lines the watch and the
@@ -212,7 +214,7 @@ jobs:
           # The askpass script reads the token from the environment of git and holds none; the clone keeps none.
           if grep -Eqi 'extraheader|x-access-token:|gh[pousr]_|github_pat_' "$desk/.git/config"; then
             echo "::error::Deploy gate: the configuration of the checkout holds a credential; the tests do not run."
-            echo "deploy gate: dispatcher tests failed on $short, the tick ran dry (a credential in .git/config)" >> "$log"
+            echo "deploy gate: dispatcher tests failed on $short, the tick did not run (a credential in .git/config)" >> "$log"
             echo "result=failed" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -237,8 +239,8 @@ jobs:
             echo "deploy gate: dispatcher tests passed on $short ($ran tests), the output is last-tests.log of the branch tick-log" >> "$log"
             echo "result=passed" >> "$GITHUB_OUTPUT"
           else
-            echo "::error::Deploy gate: the dispatcher tests failed (exit status $status, $ran tests, ${summary:-no summary line}); this tick runs dry."
-            echo "deploy gate: dispatcher tests failed on $short, the tick ran dry; the output is last-tests.log of the branch tick-log" >> "$log"
+            echo "::error::Deploy gate: the dispatcher tests failed (exit status $status, $ran tests, ${summary:-no summary line}); the tick does not run."
+            echo "deploy gate: dispatcher tests failed on $short, the tick did not run; the output is last-tests.log of the branch tick-log" >> "$log"
             echo "result=failed" >> "$GITHUB_OUTPUT"
           fi
 
@@ -256,13 +258,22 @@ jobs:
         run: |
           cd "$RUNNER_TEMP/desk"
           log="$RUNNER_TEMP/tick.log"
-          # A live tick only on code that passed its tests (the step "Test the dispatcher code").
+          # A live tick only on code that passed its tests (the step "Test the dispatcher code"). Otherwise no
+          # code of the private repository runs here, not even dry: it would run next to the tokens. The public
+          # lines stay the same, and the step ends green so that the log, the timer (idle) and the console go
+          # on as after any tick; the last step of the job fails it.
           if [ "$MODE" = live ] && [ "$GATE" != passed ] && [ "$GATE" != tested ]; then
-            MODE=dry-run
-            echo "The deploy gate did not pass: this tick runs dry."
             if [ "$GATE" != failed ]; then
-              echo "deploy gate: dispatcher tests failed on unknown, the tick ran dry (the gate step did not finish)" >> "$log"
+              echo "deploy gate: dispatcher tests failed on unknown, the tick did not run (the gate step did not finish)" >> "$log"
             fi
+            echo "Mode: skipped (deploy gate)"
+            echo "Exit status: 0"
+            count=$(wc -l < "$log")
+            echo "Log lines: $((count))"
+            echo "requests: (no such line in the log)"
+            echo "Pace: idle"
+            echo "pace=idle" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           status=0
           python3 dispatcher/dispatch.py "--$MODE" >> "$log" 2>&1 || status=$?
@@ -295,9 +306,9 @@ jobs:
           export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
           cd "$RUNNER_TEMP/desk"
           out="$RUNNER_TEMP/state-push.log"
-          # A dry tick saves nothing; and code whose tests failed must not get a file to main through this commit.
+          # No tick ran when the deploy gate did not pass: there is nothing to record.
           if [ "$GATE" != passed ] && [ "$GATE" != tested ]; then
-            echo "State: not committed, the tick ran dry (the deploy gate did not pass)."
+            echo "State: not committed, the tick did not run (the deploy gate did not pass)."
             exit 0
           fi
           git add dispatcher/state.json dispatcher/journal.csv
@@ -415,11 +426,11 @@ jobs:
           fi
 
       - name: Fail when the deploy gate stopped the tick
-        # Last, so that the log, the timer and the console come first: the factory keeps ticking (dry) until the
+        # Last, so that the log, the timer and the console come first: the timer keeps starting ticks until the
         # code is fixed, and the next tick tests the new code.
         if: >-
           !cancelled() && steps.mode.outputs.mode == 'live' && steps.gate.outcome != 'skipped'
           && steps.gate.outputs.result != 'passed' && steps.gate.outputs.result != 'tested'
         run: |
-          echo "::error::Deploy gate: the dispatcher tests failed on main of the private repository, or could not run, so this tick ran dry. Their output is last-tests.log of the branch tick-log there."
+          echo "::error::Deploy gate: the dispatcher tests failed on main of the private repository, or could not run, so the tick did not run. Their output is last-tests.log of the branch tick-log there."
           exit 1
