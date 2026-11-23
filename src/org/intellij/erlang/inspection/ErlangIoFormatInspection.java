@@ -26,6 +26,7 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
@@ -43,10 +44,10 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     String oneOfErlangEscapeSequences = "(?:\\\\(?:[bdefnrstv'\"\\\\]|(?:[0-7]{1,3})|(?:x[0-9a-fA-F]{2})|(?:x\\{[0-9a-fA-F]+})|(?:\\^[a-zA-Z])))";
     String paddingCharacter =           "(?:\\.(?:(\\*)|" + oneOfErlangEscapeSequences + "|.))?";
     String verbatimPaddingCharacter =   "(?:\\.(?:(\\*)|.))?";
-    String controlSequenceModifier =    "[tl]?";
+    String controlSequenceModifiers =   "([tlkK]*)";
     String controlSequenceType =        "(?:([cfegswpWPBX#bx+i])|([~n]))";
-    CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + paddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
-    VERBATIM_CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + verbatimPaddingCharacter + ")?" + controlSequenceModifier + controlSequenceType);
+    CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + paddingCharacter + ")?" + controlSequenceModifiers + controlSequenceType);
+    VERBATIM_CONTROL_SEQUENCE_PATTERN = Pattern.compile("~" + fieldWidth + "(?:" + precision + verbatimPaddingCharacter + ")?" + controlSequenceModifiers + controlSequenceType);
   }
 
   private static final Set<String> MODULE_NAMES = Set.of("io", "io_lib");
@@ -118,18 +119,30 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     Matcher matcher = pattern.matcher(formatString);
     while (matcher.find()) {
       checkNoControlSequencePresent(formatString, previousMatchEnd, matcher.start());
-      for (int i = 1; i < 5; i++) {
+      for (int i = 1; i < 4; i++) {
         if (matcher.group(i) != null) expectedArgumentsCount++;
       }
-      String controlSequenceType = matcher.group(4);
+      String modifiers = matcher.group(4);
+      String controlSequenceType = matcher.group(5);
+      if (controlSequenceType != null) expectedArgumentsCount++;
       if ("P".equals(controlSequenceType)) expectedArgumentsCount++;
-      if (controlSequenceType == null && matcher.group(5) == null) {
+      if (modifiers.indexOf('K') != -1) expectedArgumentsCount++;
+      if (!areValidModifiers(modifiers, controlSequenceType)) {
         throw new InvalidControlSequenceException(matcher.start());
       }
       previousMatchEnd = matcher.end();
     }
     checkNoControlSequencePresent(formatString, previousMatchEnd, formatString.length());
     return expectedArgumentsCount;
+  }
+
+  // as erl_lint: no modifier twice, not both t and l, not both k and K, and k or K only with p, P, w or W
+  private static boolean areValidModifiers(@NotNull String modifiers, @Nullable String controlSequenceType) {
+    if (modifiers.chars().distinct().count() != modifiers.length()) return false;
+    if (modifiers.contains("t") && modifiers.contains("l")) return false;
+    if (modifiers.contains("k") && modifiers.contains("K")) return false;
+    boolean mapOrder = modifiers.contains("k") || modifiers.contains("K");
+    return !mapOrder || controlSequenceType != null && "pPwW".contains(controlSequenceType);
   }
 
   private static void checkNoControlSequencePresent(String formatString, int begin, int end) throws InvalidControlSequenceException {
