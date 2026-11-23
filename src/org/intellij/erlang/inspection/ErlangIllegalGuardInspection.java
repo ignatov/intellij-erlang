@@ -49,6 +49,17 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
   private static final Set<String> BIFS_ALLOWED_IN_GUARDS_SINCE_20 = Set.of("ceil/1", "floor/1");
   private static final Set<String> BIFS_ALLOWED_IN_GUARDS_SINCE_26 = Set.of("min/2", "max/2");
 
+  private static final Set<String> OPERATORS_NOT_ALLOWED_IN_GUARDS = Set.of("'++'/2", "'--'/2", "'!'/2");
+
+  // A guard may call a guard BIF, with or without erlang:, and an operator other than ++, -- and ! as erlang:'+'(..)
+  static boolean isGuardBif(@Nullable String moduleName, @NotNull String functionPresentation) {
+    if (moduleName == null) return BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation);
+    return "erlang".equals(moduleName) &&
+           (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) ||
+            ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation) &&
+            !OPERATORS_NOT_ALLOWED_IN_GUARDS.contains(functionPresentation));
+  }
+
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
     for (ErlangFunction function : file.getFunctions()) {

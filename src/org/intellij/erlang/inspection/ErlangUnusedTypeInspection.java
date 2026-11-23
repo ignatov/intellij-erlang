@@ -22,6 +22,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Query;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
@@ -29,6 +30,11 @@ import org.intellij.erlang.quickfixes.ErlangRemoveTypeFix;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
+  @Override
+  protected boolean canRunOn(@NotNull ErlangFile file) {
+    return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension());
+  }
+
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
     for (ErlangTypeDefinition o : file.getTypes()) {

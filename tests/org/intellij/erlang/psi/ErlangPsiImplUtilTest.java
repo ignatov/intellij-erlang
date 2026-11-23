@@ -53,6 +53,25 @@ public class ErlangPsiImplUtilTest extends ErlangLightPlatformCodeInsightFixture
     assertEquals("a", reference.getRangeInElement().substring(fieldType.getText()));
   }
 
+  public void testRecordFieldInRecordTypeResolvesToRecordField() {
+    myFixture.configureByText("a.erl", "-record(r, {a, b}).\n-type t() :: #r{<caret>a :: integer()}.");
+    PsiElement resolved = myFixture.getReferenceAtCaretPositionWithAssertion().resolve();
+    assertInstanceOf(resolved, ErlangTypedExpr.class);
+    assertEquals("a", ((ErlangTypedExpr) resolved).getName());
+  }
+
+  public void testRecordFieldInNestedRecordTypeResolvesToInnerRecordField() {
+    myFixture.configureByText("a.erl", "-record(s, {b}).\n-record(r, {a}).\n-type t() :: #r{a :: #s{<caret>b :: integer()}}.");
+    PsiElement resolved = myFixture.getReferenceAtCaretPositionWithAssertion().resolve();
+    assertInstanceOf(resolved, ErlangTypedExpr.class);
+    assertEquals("b", ((ErlangTypedExpr) resolved).getName());
+  }
+
+  public void testUnknownFieldInRecordTypeDoesNotResolve() {
+    myFixture.configureByText("a.erl", "-record(r, {a, b}).\n-type t() :: #r{<caret>c :: integer()}.");
+    assertNull(myFixture.getReferenceAtCaretPositionWithAssertion().resolve());
+  }
+
   public void testRecordFieldResolvesThroughMacroRecordName() {
     myFixture.configureByText("a.erl", "-record(rec, {a, b}).\n-define(R, #rec).\nf() -> ?R{<caret>b = 1}.");
     PsiElement resolved = myFixture.getReferenceAtCaretPositionWithAssertion().resolve();

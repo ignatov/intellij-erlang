@@ -196,8 +196,11 @@ public class ErlangPsiImplUtil {
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new SmartList<>();
     List<ErlangQAtom> atoms = new SmartList<>();
-    ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
+    PsiElement parent = element.getParent();
+    ErlangRecordExpression recordExpression = parent instanceof ErlangFieldType ? null : PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
+    ErlangRecordRef recordTypeRef = parent instanceof ErlangFieldType ? PsiTreeUtil.getChildOfType(parent.getParent(), ErlangRecordRef.class) : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() :
+                             recordTypeRef != null ? recordTypeRef.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve == null && recordExpression != null) {
@@ -1258,19 +1261,14 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
-    HashSet<ErlangFile> includedFiles = new HashSet<>();
+    Set<ErlangFile> includedFiles = new LinkedHashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
   }
 
   private static void addIncludedFiles(@NotNull ErlangFile erlangFile, @NotNull Set<ErlangFile> alreadyAdded) {
-    List<ErlangFile> directlyIncludedFiles = getDirectlyIncludedFiles(erlangFile);
-    boolean added = false;
-    for (ErlangFile f : directlyIncludedFiles) {
-      added |= alreadyAdded.add(f);
-    }
-    if (added) {
-      for (ErlangFile f : directlyIncludedFiles) {
+    for (ErlangFile f : getDirectlyIncludedFiles(erlangFile)) {
+      if (alreadyAdded.add(f)) {
         addIncludedFiles(f, alreadyAdded);
       }
     }
@@ -1936,7 +1934,10 @@ public class ErlangPsiImplUtil {
         return true;
       }
     }
-    return false;
+    // eunit.hrl declares this parse transform, so a file that includes it with -include counts too
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    return parseTransforms.contains("eunit_autoexport");
   }
 
   @NotNull

@@ -49,6 +49,11 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals(1, myFixture.findUsages(myFixture.getElementAtCaret()).size());
   }
 
+  public void testRecordFieldUsedInRecordType() {
+    myFixture.configureByText("a.erl", "-record(r, {<caret>a, b}).\n-type t() :: #r{a :: integer()}.\nf() -> #r{a = 1}.\n");
+    assertEquals(2, myFixture.findUsages(myFixture.getElementAtCaret()).size());
+  }
+
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations
 //  public void testEmptyAtomFunctionInSingleFile()    { doTest(2); }
 //  public void testEmptyAtomFunctionInMultipleFiles() { doTest(3, "emptyAtomFunctionInSingleFile.erl"); }

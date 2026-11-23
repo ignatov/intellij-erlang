@@ -43,6 +43,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
+  public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
   public void testDuplicate()         { doTest(); }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
@@ -56,6 +57,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test155()               { doTest(); }
   public void test158()               { doTest(); }
   public void testIoFormat()          { doTest(); }
+  public void testIoFormatTwoArgumentControls() { doTest(); }
+  public void testIoFormatTwoArgumentControlsOneArgument() { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
   public void testBinaryComprehensionTemplate() { doTest(); }
@@ -96,6 +99,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
   public void testIllegalPatternGuardMatch() { doTest(); }
   public void testIllegalPatternCatchClassMacroCall() { doTest(); }
+  public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
+  public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
@@ -293,6 +298,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testTypesWithSameNameAndDifferentArity() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
     doTest();
+  }
+
+  // issue 1502: erlc never warns about unused types of an included file
+  public void testNoUnusedTypeInHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
   // issue 1435
