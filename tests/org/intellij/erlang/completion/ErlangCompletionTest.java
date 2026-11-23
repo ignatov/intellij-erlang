@@ -648,6 +648,41 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
   }
 
+  public void testSecondBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      -export([all/0, small_order/0, big_order/0]).
+
+      small_order() -> ok.
+      big_order() -> ok.
+
+      all() ->
+        small_order(),
+        big_order(),
+        sma<caret>.""", CompletionType.BASIC, 2, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testThirdBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> small.
+      all() -> sma<caret>.""", CompletionType.BASIC, 3, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedElsewhereInFile() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma.
+      all() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedInAnotherFile() {
+    myFixture.addFileToProject("other.erl", "-module(other).\nf() -> sma.");
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
   public void testModuleCompletionContainsFunctions() {
     myFixture.configureByFiles("module-completion/fake_module.erl");
     doTestInclude("foo() -> fake_mod<caret>", "fake_module:bar");

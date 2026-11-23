@@ -573,6 +573,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testTerminatorOnOwnLine() throws Exception { doTest(); }
+
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();
     settings.RIGHT_MARGIN = 40;
