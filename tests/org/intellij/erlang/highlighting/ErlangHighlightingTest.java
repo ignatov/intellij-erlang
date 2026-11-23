@@ -90,6 +90,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
   public void testIllegalPatternGuardMatch() { doTest(); }
   public void testIllegalPatternCatchClassMacroCall() { doTest(); }
+  public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
+  public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
