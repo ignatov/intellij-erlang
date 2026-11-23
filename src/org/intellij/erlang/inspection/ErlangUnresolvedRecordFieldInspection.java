@@ -18,9 +18,12 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.psi.ErlangQAtom;
+import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangRecordExpression;
 import org.intellij.erlang.psi.ErlangRecordField;
 import org.intellij.erlang.psi.ErlangVisitor;
@@ -35,9 +38,11 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
       @Override
       public void visitRecordField(@NotNull ErlangRecordField o) {
         ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(o, ErlangRecordExpression.class);
+        PsiElement record = null;
         if (recordExpression != null) {
           PsiReference reference = recordExpression.getReferenceInternal();
-          if (reference != null && reference.resolve() == null) {
+          record = reference != null ? reference.resolve() : null;
+          if (reference != null && record == null) {
             return;
           }
         }
@@ -46,7 +51,8 @@ public class ErlangUnresolvedRecordFieldInspection extends ErlangInspectionBase 
         if (reference == null || reference.resolve() == null) {
           ErlangQAtom atom = o.getFieldNameAtom();
           if (atom == null || atom.getMacros() != null) return;
-          registerProblem(holder, atom, "Unresolved record field " + "'" + atom.getText() + "'", new ErlangIntroduceRecordFieldFix());
+          registerProblem(holder, atom, "Unresolved record field " + "'" + atom.getText() + "'",
+                          new ErlangIntroduceRecordFieldFix(ObjectUtils.tryCast(record, ErlangRecordDefinition.class)));
         }
       }
     };
