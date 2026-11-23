@@ -67,6 +67,7 @@ import org.intellij.erlang.completion.QuoteInsertHandler;
 import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.rebar.util.RebarConfigUtil;
@@ -195,14 +196,17 @@ public class ErlangPsiImplUtil {
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new SmartList<>();
     List<ErlangQAtom> atoms = new SmartList<>();
-    ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
+    PsiElement parent = element.getParent();
+    ErlangRecordExpression recordExpression = parent instanceof ErlangFieldType ? null : PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
+    ErlangRecordRef recordTypeRef = parent instanceof ErlangFieldType ? PsiTreeUtil.getChildOfType(parent.getParent(), ErlangRecordRef.class) : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() :
+                             recordTypeRef != null ? recordTypeRef.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve == null && recordExpression != null) {
       ErlangMacros macros = recordExpression.getMacros();
       PsiReference macrosReference = macros != null ? macros.getReference() : null;
-      PsiElement macroDefinition = macrosReference != null ? macrosReference.resolve() : null;
+      PsiElement macroDefinition = ErlangMacroResolve.firstTarget(macrosReference);
       if (macroDefinition instanceof ErlangMacrosDefinition) {
         ErlangMacrosBody body = ((ErlangMacrosDefinition) macroDefinition).getMacrosBody();
         final Ref<ErlangRecordRef> ref = Ref.create();
@@ -259,7 +263,7 @@ public class ErlangPsiImplUtil {
                                           @NotNull List<ErlangQAtom> atoms,
                                           @NotNull Set<ErlangMacrosDefinition> visited) {
     PsiReference psiReference = macros.getReference();
-    PsiElement macrosDefinition = psiReference != null ? psiReference.resolve() : null;
+    PsiElement macrosDefinition = ErlangMacroResolve.firstTarget(psiReference);
     if (macrosDefinition instanceof ErlangMacrosDefinition && visited.add((ErlangMacrosDefinition) macrosDefinition)) {
       ErlangMacrosBody macrosBody = ((ErlangMacrosDefinition) macrosDefinition).getMacrosBody();
       List<ErlangExpression> expressionList = macrosBody != null ? macrosBody.getExpressionList() : ContainerUtil.emptyList();
@@ -505,6 +509,9 @@ public class ErlangPsiImplUtil {
 
   @Nullable
   public static PsiReference getReference(@Nullable ErlangMacrosName o) {
+    // Inside ?NAME the use element carries the reference over the same name: one usage per use
+    // (with the macro layer off, master's second reference stays)
+    if (o != null && o.getParent() instanceof ErlangMacros && ErlangMacroLayer.isEnabled()) return null;
     return o!= null ? getReference(o, o) : null;
   }
 
@@ -515,18 +522,24 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    return getModuleReference(o, o.getQAtom());
+    return getModuleReference(o, o.getQAtom(), getTypeRefArity(o));
+  }
+
+  private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
+    PsiElement parent = o.getParent();
+    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
+    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
   }
 
   @NotNull
-  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(o, atom, moduleRef);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity);
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    return getModuleReference(o, o.getQAtom());
+    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()));
   }
 
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
@@ -749,7 +762,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
+  public static LookupElement createFunctionLookupElement(@NotNull String name, int arity, boolean withArity, int priority) {
     return PrioritizedLookupElement.withPriority(LookupElementBuilder.create(name + arity, name)
       .withIcon(ErlangIcons.FUNCTION).withTailText("/" + arity)
       .withInsertHandler(getInsertHandler(name, arity, withArity)), priority);
@@ -886,9 +899,13 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity) {
+  public static List<LookupElement> getTypeLookupElements(@NotNull PsiFile containingFile, boolean addBuiltInTypes, final boolean withArity, boolean exportedOnly) {
     if (containingFile instanceof ErlangFile erlangFile) {
-      List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, ""));
+      List<ErlangTypeDefinition> types = ContainerUtil.concat(erlangFile.getTypes(), getErlangTypeFromIncludes(erlangFile, true, "", -1));
+      if (exportedOnly) {
+        Set<String> exportedTypes = getExportedTypeSignatures(erlangFile);
+        types = ContainerUtil.filter(types, t -> exportedTypes.contains(t.getName() + "/" + getArity(t)));
+      }
 
       final ParenthesesInsertHandler<LookupElement> handler = new ParenthesesInsertHandler<>() {
         @Override
@@ -912,6 +929,24 @@ public class ErlangPsiImplUtil {
       return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
     return Collections.emptyList();
+  }
+
+  @NotNull
+  private static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
+    Set<String> result = new HashSet<>();
+    List<ErlangFile> files = new ArrayList<>(getIncludedFiles(file));
+    files.add(file);
+    for (ErlangFile f : files) {
+      for (ErlangAttribute attribute : f.getAttributes()) {
+        ErlangExportTypeAttribute exportTypeAttribute = attribute.getExportTypeAttribute();
+        ErlangExportTypes exportTypes = exportTypeAttribute != null ? exportTypeAttribute.getExportTypes() : null;
+        if (exportTypes == null) continue;
+        for (ErlangExportType exportType : exportTypes.getExportTypeList()) {
+          result.add(getName(exportType.getQAtom()) + "/" + getArity(exportType.getInteger()));
+        }
+      }
+    }
+    return result;
   }
 
   public static int getArity(@NotNull ErlangTypeDefinition o) {
@@ -1225,20 +1260,15 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
-    HashSet<ErlangFile> includedFiles = new HashSet<>();
+  static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
+    Set<ErlangFile> includedFiles = new LinkedHashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
   }
 
   private static void addIncludedFiles(@NotNull ErlangFile erlangFile, @NotNull Set<ErlangFile> alreadyAdded) {
-    List<ErlangFile> directlyIncludedFiles = getDirectlyIncludedFiles(erlangFile);
-    boolean added = false;
-    for (ErlangFile f : directlyIncludedFiles) {
-      added |= alreadyAdded.add(f);
-    }
-    if (added) {
-      for (ErlangFile f : directlyIncludedFiles) {
+    for (ErlangFile f : getDirectlyIncludedFiles(erlangFile)) {
+      if (alreadyAdded.add(f)) {
         addIncludedFiles(f, alreadyAdded);
       }
     }
@@ -1558,11 +1588,11 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name) {
+  static List<ErlangTypeDefinition> getErlangTypeFromIncludes(@NotNull ErlangFile containingFile, boolean forCompletion, @NotNull String name, int arity) {
     List<ErlangTypeDefinition> fromIncludes = new SmartList<>();
     for (ErlangFile file : getIncludedFiles(containingFile)) {
       if (!forCompletion) {
-        ContainerUtil.addIfNotNull(fromIncludes, file.getType(name));
+        ContainerUtil.addIfNotNull(fromIncludes, arity < 0 ? file.getType(name) : file.getType(name, arity));
       }
       else {
         fromIncludes.addAll(file.getTypes());
@@ -1687,6 +1717,8 @@ public class ErlangPsiImplUtil {
       macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, newName);
     } catch (Exception ignore) {
     }
+    // a name that needs quotes parses as its first part ("p q" as p): quote it
+    if (macroName != null && !macroName.getText().equals(newName)) macroName = null;
     if (macroName == null) {
       try {
         macroName = (ErlangMacrosName) ErlangElementFactory.createMacrosFromText(project, '\'' + newName + '\'');
@@ -1898,12 +1930,14 @@ public class ErlangPsiImplUtil {
     List<ErlangIncludeLib> includes = file.getIncludeLibs();
     for (ErlangIncludeLib include : includes) {
       ErlangIncludeString string = include.getIncludeStringSafe();
-      if (string != null) {
-        String includeFilePath = StringUtil.unquoteString(string.getText());
-        return StringUtil.equals(includeFilePath, "eunit/include/eunit.hrl");
+      if (string != null && StringUtil.equals(StringUtil.unquoteString(string.getText()), "eunit/include/eunit.hrl")) {
+        return true;
       }
     }
-    return false;
+    // eunit.hrl declares this parse transform, so a file that includes it with -include counts too
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    return parseTransforms.contains("eunit_autoexport");
   }
 
   @NotNull

@@ -99,6 +99,57 @@ jobs:
       with:
         save: true
 
+  changed-lines-coverage:
+    # Which changed lines of src/ the test classes that a pull request adds or changes execute, written into the job
+    # summary (scripts/coverage/pr-coverage.sh; the reviewer runs the same command). Information, not a check: no
+    # ruleset requires it, and continue-on-error keeps a failure or a timeout of any of its steps (a network error,
+    # a hang) from making the gradle.yml run red, whose conclusion the panel and the watch read. It needs no token
+    # and no secret.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    continue-on-error: true
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        # The merge commit of the pull request and its parents: HEAD^1 is the base.
+        fetch-depth: 2
+        # The code of the pull request runs here; it gets no token, not even the read-only one of the checkout.
+        persist-credentials: false
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Measure the changed lines
+      continue-on-error: true
+      timeout-minutes: 20
+      run: |
+        scripts/coverage/pr-coverage.sh 'HEAD^1'
+        {
+          echo "## Changed lines executed by the tests of this pull request"
+          echo
+          echo '```text'
+          cat build/coverage-pr/result.txt
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload the result
+      if: ${{ !cancelled() }}
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        name: changed-lines-coverage
+        path: |
+          build/coverage-pr
+          build/reports/jacoco/coverageReport
+        if-no-files-found: ignore
+
   other-ides:
     # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.2.
     # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
@@ -173,8 +224,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP
-      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml and scripts/smoke/inputs.sh (the release
-      # smoke); change the pins together in all three.
+      # The same pinned build from builds.hex.pm as copilot-setup-steps.yml, coverage.yml and scripts/smoke/inputs.sh
+      # (the release smoke); change the pins together in all four.
       env:
         OTP_VERSION: '27.3.4.9'
       run: |
@@ -336,8 +387,8 @@ jobs:
     - name: Route Maven Central through a mirror
       uses: ./.github/actions/maven-central-mirror
     - name: Install Erlang/OTP on macOS
-      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
-      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 comes from the list of builds of
+      # The erlef/otp_builds build of the same OTP as the compilation-tests job, copilot-setup-steps.yml, coverage.yml
+      # and scripts/smoke/inputs.sh; change the pins together in all five. The sha256 comes from the list of builds of
       # erlef/otp_builds.
       if: runner.os == 'macOS'
       env:
@@ -362,8 +413,8 @@ jobs:
         tar -xzf "$archive" -C "$root"
         echo "$root/bin" >> "$GITHUB_PATH"
     - name: Install Erlang/OTP on Windows
-      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml and
-      # scripts/smoke/inputs.sh; change the pins together in all four. The sha256 is the one GitHub publishes for the
+      # The official archive of the same OTP as the compilation-tests job, copilot-setup-steps.yml, coverage.yml and
+      # scripts/smoke/inputs.sh; change the pins together in all five. The sha256 is the one GitHub publishes for the
       # release asset; SHA256.txt of the release does not list the Windows builds.
       if: runner.os == 'Windows'
       env:

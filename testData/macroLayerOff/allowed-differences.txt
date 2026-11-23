@@ -1,0 +1,7 @@
+# The differences from master 2a6160fc that stay with the macro layer off. Format: file TAB master's line TAB the branch's line.
+# ErlangMacroResolve picks the definition by the number of arguments: ?M(2) goes to -define(M(X), ...), not to -define(M, 1).
+src/one_file/m_basics.erl	REF 43:8 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_basics.erl:29:1:-define(M, 1)., ErlangMacrosReferenceImpl:m_basics.erl:29:1:-define(M, 1).	REF 43:8 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:m_basics.erl:30:1:-define(M(X), X + 100)., ErlangMacrosReferenceImpl:m_basics.erl:30:1:-define(M(X), X + 100).
+# The macro resolve uses the definition in force at the use (C4): before an -undef the header's TIMEOUT (1000, as the
+# sample's own comment asks), after a redefinition the last SIZE; master took the first definition of the name.
+src/errors/err_redefine.erl	REF 14:3 ? -> ErlangMacrosReferenceImpl:err_redefine.erl:10:1:-define(SIZE, 1)., ErlangMacrosReferenceImpl:err_redefine.erl:10:1:-define(SIZE, 1).	REF 14:3 ? -> ErlangMacrosReferenceImpl:err_redefine.erl:11:1:-define(SIZE, 2)., ErlangMacrosReferenceImpl:err_redefine.erl:11:1:-define(SIZE, 2).
+src/local/m_redefine.erl	REF 19:3 ? -> ErlangMacrosReferenceImpl:m_redefine.erl:22:1:-define(TIMEOUT, 10)., ErlangMacrosReferenceImpl:m_redefine.erl:22:1:-define(TIMEOUT, 10).	REF 19:3 ? -> ErlangMacrosReferenceImpl:shared.hrl:15:1:-define(TIMEOUT, 1000)., ErlangMacrosReferenceImpl:shared.hrl:15:1:-define(TIMEOUT, 1000).

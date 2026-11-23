@@ -20,18 +20,24 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
+import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangMacros;
 import org.intellij.erlang.psi.ErlangMacrosName;
 import org.intellij.erlang.psi.ErlangVisitor;
+import org.intellij.erlang.psi.ErlangMacrosDefinition;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
 import org.jetbrains.annotations.NotNull;
@@ -44,24 +50,85 @@ import java.util.List;
 import java.util.Set;
 
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
+  // predefined since OTP 25, both with one argument
+  private static final Set<String> FEATURE_MACROS = Set.of("FEATURE_ENABLED", "FEATURE_AVAILABLE");
+
   @NotNull
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
     return new ErlangVisitor() {
+      /** Epp's errors of a -define (see {@link ErlangMacroResolve#defineProblems}), with the macro layer on. */
+      @Override
+      public void visitMacrosDefinition(@NotNull ErlangMacrosDefinition o) {
+        if (!ErlangMacroLayer.isEnabled()) return;
+        ErlangMacroResolve.defineProblems(o).forEach((element, message) -> registerProblem(holder, element, message));
+      }
+
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
         if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
-        if (reference != null && reference.resolve() == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
+        if (FEATURE_MACROS.contains(macrosName.getText()) && (reference == null || ErlangMacroResolve.firstTarget(reference) == null)) {
+          checkFeatureArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+          return;
+        }
+        if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
+        else if (reference != null) {
+          checkArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+        }
+      }
+
+      /** A macro use that the parser left as bare tokens ({@code foo?PAR}), hosted by this element. */
+      @Override
+      public void visitElement(@NotNull PsiElement o) {
+        // only the hosts of the references (their getReferences adds them): an error element or a dummy block has the
+        // same tokens, which its Erlang parent collects through it
+        if (!(o instanceof ErlangCompositeElement) && !(o instanceof ErlangFile)) return;
+        for (PsiReference r : ErlangBareMacroReference.find(o)) {
+          if (!(r instanceof ErlangBareMacroReference bare)) continue;
+          String name = bare.getCanonicalText();
+          TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
+          if (FEATURE_MACROS.contains(name) && ErlangMacroResolve.firstTarget(bare) == null) {
+            checkFeatureArity(o, bare.getNameElement(), name, range);
+            continue;
+          }
+          if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
+          if (ErlangMacroResolve.firstTarget(bare) == null) {
+            // the conditionals around the use itself: for a file host, the host has no enclosing form
+            PsiElement use = bare.getNameElement();
+            if (!isDefinedByEnclosingCondition(use, name)) registerProblem(holder, o, "Unresolved macros '?" + name + "'", range, null);
+          }
+          else {
+            checkArity(o, bare.getNameElement(), name, range);
+          }
+        }
+      }
+
+      /**
+       * Epp's "argument mismatch for macro" for a use of a predefined feature macro (no -define of the name resolves)
+       * without exactly one argument, outside -define bodies.
+       */
+      private void checkFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
+        int arity = ErlangMacroResolve.arityAfter(nameLeaf);
+        if (arity != 1 && arity != ErlangMacroResolve.UNKNOWN) {
+          registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
+        }
+      }
+
+      /** Epp's "argument mismatch for macro" where it is certain (see {@link ErlangMacroResolve#argumentMismatch}). */
+      private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        String message = ErlangMacroLayer.isEnabled() ? ErlangMacroResolve.argumentMismatch(nameLeaf, unquote(name)) : null;
+        if (message != null) registerProblem(holder, target, message, range, null);
       }
     };
   }
 
-  private static boolean isDefinedByEnclosingCondition(@NotNull ErlangMacros macros, @NotNull String name) {
+  private static boolean isDefinedByEnclosingCondition(@NotNull PsiElement macros, @NotNull String name) {
     PsiElement form = macros;
     while (form.getParent() != null && !(form.getParent() instanceof PsiFile)) {
       form = form.getParent();

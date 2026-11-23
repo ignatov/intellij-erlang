@@ -17,6 +17,7 @@
 package org.intellij.erlang.sdk;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -161,6 +162,44 @@ public class ErlangSdkTypeReleaseCacheTest extends ErlangLightPlatformCodeInsigh
     modifyProjectSdk(modificator -> modificator.setHomePath("testData/mockSdk-R27/"));
 
     assertEquals("27", ErlangSdkType.getRelease(getProject()).getOtpRelease());
+  }
+
+  public void testKnownReleaseOfProjectSdk() {
+    assertEquals("OTP 25, erts-13.0", String.valueOf(ErlangSdkType.getKnownProjectSdkRelease(getProject())));
+  }
+
+  public void testKnownReleaseFollowsChangedVersionString() {
+    modifyProjectSdk(modificator -> modificator.setVersionString("OTP 27, erts-15.1"));
+    assertEquals("OTP 27, erts-15.1", String.valueOf(ErlangSdkType.getKnownProjectSdkRelease(getProject())));
+  }
+
+  public void testKnownReleaseOfUnreadableVersionString() {
+    modifyProjectSdk(modificator -> modificator.setVersionString("unknown"));
+    assertNull(ErlangSdkType.getKnownProjectSdkRelease(getProject()));
+  }
+
+  public void testKnownReleaseWithoutProjectSdk() {
+    ApplicationManager.getApplication().runWriteAction(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
+    try {
+      assertNull(ErlangSdkType.getKnownProjectSdkRelease(getProject()));
+      assertNull(ErlangSdkType.getProjectSdkRelease(getProject()));
+      assertSame(ErlangSdkRelease.DefaultRelease, ErlangSdkType.getRelease(getProject()));
+    }
+    finally {
+      setUpProjectSdk();
+    }
+  }
+
+  public void testReleaseOfModule() {
+    modifyProjectSdk(modificator -> modificator.setVersionString("OTP 27, erts-15.1"));
+    assertEquals("27", ErlangSdkType.getRelease(getModule()).getOtpRelease());
+    assertSame(ErlangSdkRelease.DefaultRelease, ErlangSdkType.getRelease((Module)null));
+  }
+
+  public void testDocumentationUrlFollowsChangedVersionString() {
+    assertEquals("https://www.erlang.org/doc", ErlangSdkType.getInstance().getDefaultDocumentationUrl(getProjectSdk()));
+    modifyProjectSdk(modificator -> modificator.setVersionString("OTP 28.0.1, erts-16.0.1"));
+    assertEquals("https://www.erlang.org/docs/28", ErlangSdkType.getInstance().getDefaultDocumentationUrl(getProjectSdk()));
   }
 
   @NotNull

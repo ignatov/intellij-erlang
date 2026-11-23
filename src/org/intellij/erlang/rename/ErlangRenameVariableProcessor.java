@@ -16,22 +16,43 @@
 
 package org.intellij.erlang.rename;
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.refactoring.listeners.RefactoringElementListener;
 import com.intellij.refactoring.rename.RenamePsiElementProcessor;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.console.ErlangConsoleView;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+import java.util.Map;
+
 public class ErlangRenameVariableProcessor extends RenamePsiElementProcessor {
   @Override
   public boolean canProcessElement(@NotNull PsiElement element) {
     return element instanceof ErlangQVar;
+  }
+
+  /** A free variable of a header macro body is renamed as from its uses (in the header and its includers). */
+  @Override
+  public @Nullable PsiElement substituteElementToRename(@NotNull PsiElement element, @Nullable Editor editor) {
+    PsiElement target = ErlangMacroLayer.renameTargetOfMacroToken(element);
+    if (target == null) ErlangRenameAtomProcessor.refuseUntilTheMacroLayerIsReady(element, editor);
+    return target;
+  }
+
+  /** The macro layer's collisions of a variable rename (see {@link ErlangMacroLayerRenameProcessor#variableRenameCollisions}). */
+  @Override
+  public void findCollisions(@NotNull PsiElement element, @NotNull String newName, @NotNull Map<? extends PsiElement, String> allRenames,
+                             @NotNull List<UsageInfo> result) {
+    super.findCollisions(element, newName, allRenames, result);
+    ErlangMacroLayerRenameProcessor.variableRenameCollisions(element, newName, result);
   }
 
   @Override

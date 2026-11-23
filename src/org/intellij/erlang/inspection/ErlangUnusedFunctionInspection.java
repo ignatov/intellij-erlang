@@ -26,6 +26,7 @@ import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
@@ -47,6 +48,11 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
     for (ErlangFunction function : file.getFunctions()) {
+      // with the macro layer: a "function" named by a macro use that continues a form the recovery split
+      // (guarded3(X) ?HH2(X) -> X.) is no function of the source; ?test(A) -> A. after a whole form still is one
+      if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) continue;
+      // the rest of a split form (setup?PAR, hello().) when a macro makes hello/0: the references go to the made one
+      if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(function)) continue;
       if (!isUnusedFunction(file, function)) continue;
 
       PsiElement identifier = function.getNameIdentifier();

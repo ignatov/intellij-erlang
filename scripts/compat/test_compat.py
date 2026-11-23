@@ -12,6 +12,7 @@ import tempfile
 import textwrap
 import unittest
 import unittest.mock
+import zipfile
 
 import compat
 
@@ -212,10 +213,120 @@ class IdeMatchTest(unittest.TestCase):
         self.assertTrue(compat.ide_matches('latest', info))
 
 
+def plugin_xml(idea_version='<idea-version since-build="263"/>'):
+    return ('<idea-plugin url="https://ignatov.github.io/intellij-erlang">\n  %s\n  <version>0.11.1302</version>\n'
+            '  <id>org.jetbrains.erlang</id>\n</idea-plugin>\n' % idea_version)
+
+
+def jar(entries):
+    data = io.BytesIO()
+    with zipfile.ZipFile(data, 'w') as archive:
+        for name, content in entries.items():
+            archive.writestr(name, content)
+    return data.getvalue()
+
+
+def plugin_archive(path, descriptor=None, jars=None):
+    """A plugin ZIP laid out as buildPlugin makes it, with META-INF/plugin.xml in intellij-erlang.jar."""
+    if jars is None:
+        jars = {'intellij-erlang/lib/intellij-erlang.jar': {'META-INF/plugin.xml': descriptor or plugin_xml(),
+                                                             'org/intellij/erlang/A.class': 'x'},
+                'intellij-erlang/lib/OtpErlang.jar': {'META-INF/MANIFEST.MF': 'x'},
+                'intellij-erlang/lib/intellij-erlang-0.11.1302-searchableOptions.jar': {'search/x.json': '{}'}}
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with zipfile.ZipFile(path, 'w') as archive:
+        archive.writestr('intellij-erlang/lib/', '')
+        for name, entries in jars.items():
+            archive.writestr(name, jar(entries))
+    return path
+
+
+class ReleaseMetaTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.archive = os.path.join(self.temp.name, 'released', 'intellij-erlang-0.11.1302.zip')
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_bounds_of_the_plugin_jar(self):
+        plugin_archive(self.archive)
+        self.assertEqual({'tag': 'v0.11.1302', 'asset': 'intellij-erlang-0.11.1302.zip',
+                          'pluginJar': 'intellij-erlang/lib/intellij-erlang.jar', 'sinceBuild': '263', 'untilBuild': None},
+                         compat.release_meta('v0.11.1302', self.archive))
+        plugin_archive(self.archive, plugin_xml('<idea-version since-build="262.1" until-build="263.*"/>'))
+        meta = compat.release_meta('v0.11.1302', self.archive)
+        self.assertEqual(('262.1', '263.*'), (meta['sinceBuild'], meta['untilBuild']))
+        plugin_archive(self.archive, plugin_xml(''))
+        self.assertEqual((None, None), tuple(compat.release_meta('v0.11.1302', self.archive)[k]
+                                             for k in ('sinceBuild', 'untilBuild')))
+
+    def test_archive_that_cannot_be_read(self):
+        cases = {
+            'no plugin.xml': {'intellij-erlang/lib/a.jar': {'META-INF/MANIFEST.MF': 'x'}},
+            'two plugin.xml': {'intellij-erlang/lib/a.jar': {'META-INF/plugin.xml': plugin_xml()},
+                               'intellij-erlang/lib/b.jar': {'META-INF/plugin.xml': plugin_xml()}},
+            'not XML': {'intellij-erlang/lib/a.jar': {'META-INF/plugin.xml': '<idea-plugin>'}},
+            'entities': {'intellij-erlang/lib/a.jar': {'META-INF/plugin.xml': '<!DOCTYPE x [<!ENTITY a "b">]>'
+                                                                              + plugin_xml()}},
+            'bad since-build': {'intellij-erlang/lib/a.jar': {
+                'META-INF/plugin.xml': plugin_xml('<idea-version since-build="263\nX=1"/>')}},
+            'two idea-version': {'intellij-erlang/lib/a.jar': {
+                'META-INF/plugin.xml': plugin_xml('<idea-version since-build="263"/><idea-version since-build="1"/>')}},
+        }
+        for case, jars in cases.items():
+            plugin_archive(self.archive, jars=jars)
+            with self.assertRaises(compat.InputError, msg=case):
+                compat.release_meta('v0.11.1302', self.archive)
+        write(self.archive, 'not a zip')
+        with self.assertRaises(compat.InputError):
+            compat.release_meta('v0.11.1302', self.archive)
+
+    def test_command(self):
+        plugin_archive(self.archive)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(0, compat.main(['release-meta', '--tag', 'v0.11.1302', self.archive]))
+        self.assertEqual('263', json.loads(out.getvalue())['sinceBuild'])
+        write(self.archive, 'not a zip')
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(1, compat.main(['release-meta', '--tag', 'v0.11.1302', self.archive]))
+        self.assertTrue(out.getvalue().startswith('::error::cannot read intellij-erlang-0.11.1302.zip'))
+
+
+class BuildRangeTest(unittest.TestCase):
+    def test_build_numbers(self):
+        self.assertEqual((263,), compat.build_number('263'))
+        self.assertEqual((263, 7307, 44), compat.build_number('IU-263.7307.44'))
+        self.assertEqual((263, compat.BUILD_COMPONENT_MAX), compat.build_number('263.*'))
+        self.assertEqual((263, compat.BUILD_COMPONENT_MAX), compat.build_number('263.SNAPSHOT'))
+        for value in (None, 263, '', '263.', 'x263', '263 ', '\u0662\u0666\u0663'):
+            self.assertIsNone(compat.build_number(value), value)
+
+    def test_not_applicable_below_the_since_build_only(self):
+        meta = {'tag': 'v0.11.1302', 'sinceBuild': '263'}
+        self.assertEqual('not applicable: the IDE build 261.22158.277 is below since-build 263 of the archive of '
+                         'v0.11.1302', compat.released_not_applicable(meta, '261.22158.277'))
+        self.assertIsNotNone(compat.released_not_applicable(meta, '262.SNAPSHOT'))
+        for ide in ('263.7307.200', '263', '263.SNAPSHOT', '264.1', 'IU-263.1'):
+            self.assertIsNone(compat.released_not_applicable(meta, ide), ide)
+        meta = {'tag': 'v0.11.1302', 'sinceBuild': '263.7307'}
+        self.assertIsNotNone(compat.released_not_applicable(meta, '263.7000.1'))
+        self.assertIsNone(compat.released_not_applicable(meta, '263.7307.1'))
+        # Above the until-build: verified, to find out whether the bound can be raised.
+        meta = {'tag': 'v0.11.1302', 'sinceBuild': '261', 'untilBuild': '262.*'}
+        self.assertIsNone(compat.released_not_applicable(meta, '263.7307.200'))
+        # Nothing to compare: verified.
+        for meta, ide in (({}, '261.1'), ({'error': 'no published plugin'}, '261.1'), ({'sinceBuild': '263'}, None),
+                          ({'sinceBuild': '263'}, 'unknown')):
+            self.assertIsNone(compat.released_not_applicable(meta, ide), (meta, ide))
+
+
 class IdeResultTest(Fixture):
-    def args(self, ide=''):
+    def args(self, ide='', build=None):
         info = os.path.join(self.root, 'build/compat/ide.json')
-        write(info, json.dumps(IDE_INFO))
+        write(info, json.dumps(dict(IDE_INFO, buildNumber=build) if build else IDE_INFO))
         return argparse.Namespace(
             root=self.root, logs=self.logs, commit='abc', ref='', ide=ide, ide_info=info,
             out=os.path.join(self.temp.name, 'compat-ide.json'), summary=None)
@@ -508,6 +619,101 @@ class IdeResultTest(Fixture):
             self.verdict(reports, BROKEN_VERDICT if exit_code else COMPATIBLE_VERDICT,
                          {'compatibility-problems': ['Missing class B']} if exit_code else None)
         self.check_ran(name, exit_code, log)
+
+    def released_meta(self, since=None, until=None):
+        meta = {'tag': 'v0.11.1302', 'asset': 'intellij-erlang-0.11.1302.zip',
+                'pluginJar': 'intellij-erlang/lib/intellij-erlang.jar', 'sinceBuild': since, 'untilBuild': until}
+        write(os.path.join(self.logs, 'released.json'), json.dumps(meta) + '\n')
+
+    def other_checks_passed(self, ide='IU-263.7307.200'):
+        self.check_ran('compile', 0, 'BUILD SUCCESSFUL')
+        self.check_ran('test', 0)
+        write(os.path.join(self.root, 'build/test-results/test/TEST-Bar.xml'), PASSING_XML)
+        self.check_ran('verify', 0)
+        self.verdict('build/reports/pluginVerifier', COMPATIBLE_VERDICT, ide=ide)
+
+    def applies(self, args):
+        """The output of the step "Check the since-build of the released plugin"."""
+        output = os.path.join(self.temp.name, 'applies-output')
+        write(output, '')
+        with contextlib.redirect_stdout(io.StringIO()) as printed:
+            self.assertEqual(0, compat.main(['released-applies', '--logs', self.logs, '--ide-info', args.ide_info,
+                                             '--output', output]))
+        with open(output, encoding='utf-8') as f:
+            return f.read(), printed.getvalue()
+
+    def test_ide_below_the_since_build_of_the_released_plugin(self):
+        # Run 43764589214: the default IDE 2026.1 (261) and v0.11.1302, which has since-build 263. The released plugin
+        # does not claim to support the IDE, so it is not verified, and that is not a finding nor a check that failed.
+        self.other_checks_passed('IU-261.22158.277')
+        self.released_meta('263')
+        args = self.args(build='261.22158.277')
+        output, printed = self.applies(args)
+        self.assertEqual('applies=false\n', output)
+        self.assertIn('since-build 263', printed)
+        result = compat.ide_result(args)
+        released = result['checks']['releasedPlugin']
+        self.assertEqual({'status': 'not-run', 'release': 'v0.11.1302', 'asset': 'intellij-erlang-0.11.1302.zip',
+                          'sinceBuild': '263', 'untilBuild': None, 'notApplicable': True,
+                          'reason': 'not applicable: the IDE build 261.22158.277 is below since-build 263 of the '
+                                    'archive of v0.11.1302'}, released)
+        self.assertEqual([], compat.incomplete_checks(result['checks']))
+        self.assertEqual('passed', result['status'])
+        self.assertIn('| releasedPlugin | not-run | not applicable: the IDE build 261.22158.277 is below since-build '
+                      '263 of the archive of v0.11.1302 |', compat.summary(result))
+        self.assertEqual(0, self.conclude(result, 'pull_request'))
+        self.assertEqual(0, self.conclude(result, 'workflow_dispatch'))
+        # The findings of the other checks still count.
+        self.check_ran('test', 1, 'There were failing tests')
+        write(os.path.join(self.root, 'build/test-results/test/TEST-Foo.xml'), JUNIT_XML)
+        result = compat.ide_result(args)
+        self.assertEqual('failed', result['status'])
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_ide_of_the_since_build_branch_is_verified(self):
+        self.other_checks_passed()
+        self.released_meta('263')
+        args = self.args()
+        self.assertEqual('applies=true\n', self.applies(args)[0])
+        # A check that applies and did not run gave no answer.
+        result = compat.ide_result(args)
+        self.assertNotIn('notApplicable', result['checks']['releasedPlugin'])
+        self.assertEqual(['releasedPlugin'], compat.incomplete_checks(result['checks']))
+        self.assertEqual('incomplete', result['status'])
+        self.check_ran('released', 0)
+        self.verdict('build/compat/released-verifier', COMPATIBLE_VERDICT)
+        result = compat.ide_result(args)
+        released = result['checks']['releasedPlugin']
+        self.assertEqual(('passed', '263'), (released['status'], released['sinceBuild']))
+        self.assertNotIn('notApplicable', released)
+        self.assertEqual('passed', result['status'])
+        self.assertIn('| releasedPlugin | passed | v0.11.1302 (intellij-erlang-0.11.1302.zip); since-build 263, '
+                      'until-build none; IU-263.7307.200: ', compat.summary(result))
+
+    def test_ide_above_the_until_build_of_the_released_plugin_is_verified(self):
+        # How the bound can be raised: the Plugin Verifier tells whether the released plugin works in the newer IDE.
+        self.other_checks_passed()
+        self.released_meta('261', '262.*')
+        args = self.args()
+        self.assertEqual('applies=true\n', self.applies(args)[0])
+        self.check_ran('released', 1)
+        self.verdict('build/compat/released-verifier', BROKEN_VERDICT, {'compatibility-problems': ['Missing class B']})
+        result = compat.ide_result(args)
+        released = result['checks']['releasedPlugin']
+        self.assertEqual(('failed', '261', '262.*'), (released['status'], released['sinceBuild'], released['untilBuild']))
+        self.assertNotIn('notApplicable', released)
+        self.assertEqual('failed', result['status'])
+        self.assertEqual(1, self.conclude(result, 'workflow_dispatch'))
+
+    def test_released_plugin_that_started_below_the_since_build_did_not_finish(self):
+        # A check that started is not excused: if its step timed out, it gave no answer.
+        self.other_checks_passed('IU-261.22158.277')
+        self.released_meta('263')
+        write(os.path.join(self.logs, 'released.started'), '')
+        result = compat.ide_result(self.args(build='261.22158.277'))
+        self.assertEqual(('not-run', 'timed out or was cancelled'),
+                         tuple(result['checks']['releasedPlugin'][k] for k in ('status', 'reason')))
+        self.assertEqual('incomplete', result['status'])
 
     def test_unresolved_ide_is_infrastructure(self):
         args = self.args()
@@ -1249,6 +1455,17 @@ class WorkflowTest(unittest.TestCase):
                 for step_id in set(re.findall(r'steps\.([\w-]+)\.outputs\.', condition)):
                     self.assertIn("steps.%s.outcome == 'success'" % step_id, condition, '%s: %s' % (job, step['name']))
                     self.assertNotIn('||', condition, '%s: %s' % (job, step['name']))
+
+    def test_released_plugin_is_verified_only_from_its_since_build(self):
+        names = [step.get('name') for step in self.steps('ide')]
+        bounds = self.step('ide', 'Check the since-build of the released plugin')
+        self.assertEqual('bounds', bounds['id'])
+        self.assertIn('compat.py" released-applies --logs "$COMPAT_LOGS" --ide-info plugin/build/compat/ide.json',
+                      bounds['run'])
+        self.assertNotIn('env', bounds)
+        self.assertLess(names.index('Resolve the IDE'), names.index('Check the since-build of the released plugin'))
+        self.assertLess(names.index('Check the since-build of the released plugin'), names.index('Verify the released plugin'))
+        self.assertIn("steps.bounds.outputs.applies == 'true'", self.step('ide', 'Verify the released plugin')['if'])
 
     def test_checks_that_a_predating_commit_cannot_run_are_skipped(self):
         # Finding 4 of the third review: the tree is checked after its checkout and before any check runs.

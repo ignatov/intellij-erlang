@@ -19,6 +19,8 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -44,5 +46,51 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
 
   public void testSigilControlEscapeBadNameOtp25() {
     doTest();
+  }
+
+  public void testIoFormatMapOrderModifiersBefore26() {
+    myFixture.addFileToProject("io.erl", "-module(io).\n-export([format/2]).\nformat(_, _) -> ok.\n");
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeature() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureArity() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureArityLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureArity.erl");
+  }
+
+  public void testUnresolvedMacrosFeatureBare() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureOwnDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureOwnDefineLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureOwnDefine.erl");
+  }
+
+  // issue 1506
+  public void testIllegalGuardCeilFloorMinMaxR25() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
   }
 }

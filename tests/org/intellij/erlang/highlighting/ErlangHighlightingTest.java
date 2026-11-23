@@ -16,6 +16,18 @@
 
 package org.intellij.erlang.highlighting;
 
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.psi.ErlangExportType;
+import org.intellij.erlang.psi.ErlangTypeDefinition;
+import org.intellij.erlang.psi.ErlangTypeRef;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testHelloWorld()        { doTest(); }
   public void testExport()            { doTest(); }
@@ -30,6 +42,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNativeRecordsResolve() { doTest("native_records_resolve.erl", "native_records_remote.erl"); }
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
+  public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
+  public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
   public void testDuplicate()         { doTest(); }
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
@@ -43,6 +57,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test155()               { doTest(); }
   public void test158()               { doTest(); }
   public void testIoFormat()          { doTest(); }
+  public void testIoFormatTwoArgumentControls() { doTest(); }
+  public void testIoFormatTwoArgumentControlsOneArgument() { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
   public void testBinaryComprehensionTemplate() { doTest(); }
@@ -59,6 +75,13 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInclude()           { doTest(); }
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
+  // issue 1506: ceil/1 and floor/1 are guard BIFs since OTP 20, min/2 and max/2 since OTP 26
+  public void testIllegalGuardCeilFloorMinMaxR15() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR15.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testIllegalPattern()    { doTest(); }
   public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
   public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
@@ -76,6 +99,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
   public void testIllegalPatternGuardMatch() { doTest(); }
   public void testIllegalPatternCatchClassMacroCall() { doTest(); }
+  public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
+  public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
@@ -271,5 +296,68 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.configureByText("chain_12000.erl",
                               "-module(chain_12000).\n-export([f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
     myFixture.checkHighlighting();
+  }
+
+  // issue 1435: types with the same name and different arities are distinct types
+  public void testTypesWithSameNameAndDifferentArity() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
+  // issue 1502: erlc never warns about unused types of an included file
+  public void testNoUnusedTypeInHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
+  }
+
+  // issue 1435
+  public void testTypeReferenceResolvesByArity() {
+    myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");
+    ErlangTypeRef useOfTreeA = null;
+    for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
+      if (ref.getParent().getText().equals("tree(A)")) useOfTreeA = ref;
+    }
+    assertNotNull(useOfTreeA);
+    PsiElement resolved = useOfTreeA.getReference().resolve();
+    assertInstanceOf(resolved, ErlangTypeDefinition.class);
+    assertEquals(1, ((ErlangTypeDefinition) resolved).getArity());
+  }
+
+  public void testExportTypeResolvesByArity() {
+    myFixture.configureByText("ov.erl", "-module(ov).\n-export_type([tree/1, tree/0]).\n" +
+                                        "-type tree() :: tree(term()).\n-type tree(A) :: {node, A, [tree(A)]} | nil.\n");
+    List<ErlangExportType> exports = new ArrayList<>(PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangExportType.class));
+    assertEquals(2, exports.size());
+    assertResolvesToArity(exports.get(0).getReference(), 1);
+    assertResolvesToArity(exports.get(1).getReference(), 0);
+  }
+
+  public void testRemoteTypeResolvesByArity() {
+    myFixture.addFileToProject("ov.erl", "-module(ov).\n-export_type([tree/0, tree/1]).\n" +
+                                         "-type tree() :: tree(term()).\n-type tree(A) :: {node, A, [tree(A)]} | nil.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-type t() :: ov:tree(atom()).\n-type u() :: ov:tree().\n");
+    assertResolvesToArity(findTypeRef("ov:tree(atom())").getReference(), 1);
+    assertResolvesToArity(findTypeRef("ov:tree()").getReference(), 0);
+  }
+
+  public void testIncludedTypeResolvesByArity() {
+    myFixture.addFileToProject("ov.hrl", "-type tree() :: tree(term()).\n-type tree(A) :: {node, A, [tree(A)]} | nil.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type t() :: tree(atom()).\n-type u() :: tree().\n");
+    assertResolvesToArity(findTypeRef("tree(atom())").getReference(), 1);
+    assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
+  }
+
+  private ErlangTypeRef findTypeRef(String typeText) {
+    for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
+      if (ref.getParent().getText().equals(typeText)) return ref;
+    }
+    fail("no type " + typeText);
+    return null;
+  }
+
+  private static void assertResolvesToArity(PsiReference reference, int arity) {
+    PsiElement resolved = reference.resolve();
+    assertInstanceOf(resolved, ErlangTypeDefinition.class);
+    assertEquals(arity, ((ErlangTypeDefinition) resolved).getArity());
   }
 }

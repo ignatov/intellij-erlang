@@ -523,7 +523,7 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   @Nullable
-  static String pluginVersion() {
+  public static String pluginVersion() {
     return ErlangUsageStatistics.class.getClassLoader() instanceof PluginAwareClassLoader loader
            ? loader.getPluginDescriptor().getVersion()
            : null;

@@ -32,7 +32,9 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_R16B = new ErlangSdkRelease("R16B", "5.10.1");
   public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
+  public static final ErlangSdkRelease V_20_0 = new ErlangSdkRelease("20", "9.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
+  public static final ErlangSdkRelease V_26_0 = new ErlangSdkRelease("26", "14.0");
   public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.0");
   public static final ErlangSdkRelease V_28_0 = new ErlangSdkRelease("28", "16.0");
   public static final ErlangSdkRelease V_29_0 = new ErlangSdkRelease("29", "17.0");

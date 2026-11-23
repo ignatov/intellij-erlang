@@ -817,6 +817,89 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                """);
   }
 
+  // #1467: the title of a self-resolving reference is its name and arity, not the raw source text of the owner
+  public void testDescriptionsOfBifInFunWithArityOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s  /
+                                 1.
+                               """);
+  }
+
+  public void testDescriptionsOfBifCallOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(
+                                 1).
+                               """);
+  }
+
+  public void testDescriptionsOfBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(-1).
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInExportOverTwoLines() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([module_<caret>info /
+                                         0]).
+                               """);
+  }
+
+  public void testDescriptionsOfQuotedOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'<caret>+'/2.
+                               """);
+  }
+
+  public void testDescriptionsOfQuotedOperatorInRemoteCall() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'<caret>+'(1, 2).
+                               """);
+  }
+
+  public void testDescriptionsOfWordOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'not'/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'n<caret>ot'/1.
+                               """);
+  }
+
+  public void testDescriptionsOfWordOperatorInRemoteCall() {
+    doTestTargetDescriptions("'div'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'d<caret>iv'(4, 2).
+                               """);
+  }
+
+  public void testDescriptionsOfNeedlesslyQuotedBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> 'ab<caret>s'(1).
+                               """);
+  }
+
   private void doTestTargetDescriptions(@NotNull String expectedName, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertInstanceOf(element, NavigationItem.class);

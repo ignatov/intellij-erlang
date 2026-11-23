@@ -24,7 +24,6 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.SimpleListCellRenderer;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +55,7 @@ public class ErlangUnitRunConfigurationEditorForm extends ErlangDebuggableRunCon
 
   @Override
   protected void doResetEditorFrom(ErlangUnitRunConfiguration configuration) {
-    myModuleComboBox.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    ErlangUiUtil.fillModules(myModuleComboBox, configuration.getProject());
     myModuleComboBox.setSelectedModule(configuration.getConfigurationModule().getModule());
 
     ErlangUnitRunConfiguration.ErlangUnitConfigData configData = configuration.getConfigData();

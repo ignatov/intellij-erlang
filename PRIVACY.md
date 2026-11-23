@@ -28,7 +28,7 @@ At most one summary a day. It is sent on a later day, for each day on which you 
 - The country, guessed from the time zone of your computer on that day.
 - For the Erlang projects that you opened: the major release of the Erlang/OTP SDK (for example `27`, or `unknown` when the IDE does not know it yet; the statistics never start Erlang to find it out), whether an SDK is set, which rebar is used (rebar3, rebar2, none, or unknown when the project has a `rebar.config` but no rebar path is set), and the number of Erlang files as a range (up to 10, up to 100, up to 1000, more).
 - Whether parameter name hints are on, and the names of this plugin's inspections that you turned on or off.
-- Counts of the features you used, for example: completion items chosen, go to declaration, find usages, quick documentation, reformat, rename, run and debug of each kind of Erlang run configuration, breakpoints added, builds, Dialyzer runs, and the quick fixes and intentions of this plugin, by their class name in the plugin.
+- Counts of the features you used, for example: completion items chosen, go to declaration, find usages, quick documentation, reformat, rename, run and debug of each kind of Erlang run configuration, breakpoints added, builds, Dialyzer runs, the quick fixes and intentions of this plugin, by their class name in the plugin, and how often the plugin showed its notification about a new version and you clicked **Install** or **Don't show again** in it.
 
 ## What is never sent
 
@@ -59,6 +59,12 @@ In these cases the check box in the settings is disabled, and the plugin deletes
 ## How to turn it off
 
 Clear the **Send anonymous usage statistics** check box on the **Erlang External Tools** page of the IDE settings. Then the plugin stops counting, deletes the counts that it did not send yet, and deletes the installation id. If you turn it on again later, the plugin makes a new id, so the old and the new data cannot be connected.
+
+## The check for a new version
+
+The plugin asks the plugin repository of the IDE for its newest version, through the IDE's own update service, at most once a day and only after you open an Erlang file. This sends nothing beyond what the IDE's own plugin update check sends. If a new version is out, the plugin shows a notification with an **Install** button, at most once a week.
+
+The plugin does not ask if the IDE updates plugins automatically, if the IDE does not check for plugin updates, after you click **Don't show again**, or if the IDE runs with the system property `-Derlang.update.notification=false`. This check does not depend on your answer about the usage statistics.
 
 ## Contact
 

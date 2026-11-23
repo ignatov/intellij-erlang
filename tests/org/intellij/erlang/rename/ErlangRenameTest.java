@@ -84,6 +84,24 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.checkResult("-module(chain_12000).\n-export([g/0]).\ng() -> 1" + chain + ".\n");
   }
   
+  public void testRecordFromDefinition() {
+    myFixture.configureByText("a.erl", "-record(<caret>foo, {a}).\nf() -> #foo{a = 1}.\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-record(bar, {a}).\nf() -> #bar{a = 1}.\n");
+  }
+
+  public void testRecordFieldUsedInRecordType() {
+    myFixture.configureByText("a.erl", "-record(r, {<caret>a, b}).\n-type t() :: #r{a :: integer()}.\nf() -> #r{a = 1}.\n");
+    myFixture.renameElementAtCaret("c");
+    myFixture.checkResult("-record(r, {c, b}).\n-type t() :: #r{c :: integer()}.\nf() -> #r{c = 1}.\n");
+  }
+
+  public void testTypeFromDefinition() {
+    myFixture.configureByText("a.erl", "-type <caret>foo() :: ok.\n-spec f() -> foo().\nf() -> ok.\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-type bar() :: ok.\n-spec f() -> bar().\nf() -> ok.\n");
+  }
+
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
   public void testQuotedModule()       { doTest("quotedModule-after", true); }

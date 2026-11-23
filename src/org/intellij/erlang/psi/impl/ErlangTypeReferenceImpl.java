@@ -20,6 +20,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
+import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -31,23 +32,35 @@ import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getTextRangeForRefe
 public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Nullable
   private final ErlangModuleRef myModuleRef;
+  private final int myArity;
 
   ErlangTypeReferenceImpl(@NotNull ErlangCompositeElement owner,
                           @NotNull ErlangQAtom element,
-                          @Nullable ErlangModuleRef moduleRef) {
+                          @Nullable ErlangModuleRef moduleRef,
+                          int arity) {
     super(owner, element, getTextRangeForReference(element), getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
+    myArity = arity;
   }
 
   @Override
   public PsiElement resolveInner() {
     PsiFile containingFile = getPsiFile();
-    if (containingFile instanceof ErlangFile) {
-      ErlangTypeDefinition type = ((ErlangFile) containingFile).getType(myReferenceName);
-      if (type != null) return type;
-      return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangTypeFromIncludes((ErlangFile) containingFile, false, myReferenceName));
+    if (containingFile instanceof ErlangFile erlangFile) {
+      if (myArity >= 0) {
+        PsiElement type = resolve(erlangFile, myArity);
+        if (type != null) return type;
+      }
+      return resolve(erlangFile, -1);
     }
     return null;
+  }
+
+  @Nullable
+  private PsiElement resolve(@NotNull ErlangFile file, int arity) {
+    ErlangTypeDefinition type = arity < 0 ? file.getType(myReferenceName) : file.getType(myReferenceName, arity);
+    if (type != null) return type;
+    return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangTypeFromIncludes(file, false, myReferenceName, arity));
   }
 
   @NotNull
@@ -61,7 +74,20 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Override
   public Object @NotNull [] getVariants() {
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
-    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(getPsiFile(), myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null));
+    ErlangFile moduleFile = null;
+    if (myModuleRef != null) {
+      PsiElement resolve = myModuleRef.getReference().resolve();
+      moduleFile = resolve != null ? ObjectUtils.tryCast(resolve.getContainingFile(), ErlangFile.class) : null;
+      if (moduleFile == null) return ArrayUtil.EMPTY_OBJECT_ARRAY;
+    }
+    PsiFile psiFile = moduleFile != null ? moduleFile : myElement.getContainingFile();
+    boolean exportedOnly = moduleFile != null && !isSameModule(moduleFile);
+    return ArrayUtil.toObjectArray(ErlangPsiImplUtil.getTypeLookupElements(psiFile, myModuleRef == null && exportTypeAttribute == null, exportTypeAttribute != null, exportedOnly));
+  }
+
+  private boolean isSameModule(@NotNull ErlangFile moduleFile) {
+    PsiFile currentFile = myElement.getContainingFile().getOriginalFile();
+    return moduleFile.getOriginalFile() == currentFile || ErlangPsiImplUtil.getIncludedFiles(moduleFile).contains(currentFile);
   }
 
   @Override

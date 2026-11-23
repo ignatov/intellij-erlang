@@ -48,7 +48,7 @@ jobs:
       run: ./gradlew --no-daemon test --tests 'org.intellij.erlang.parser.ErlangAppParserTest' buildPlugin verifyPlugin
     # A pinned Erlang/OTP from builds.hex.pm rather than apt, which has OTP 25 on ubuntu-24.04, so that the agent
     # can run testCompilation with the rebar3 below, which needs OTP 27 to 29. The compilation-tests job of
-    # gradle.yml installs the same OTP and rebar3: change the pins together in both files.
+    # gradle.yml and coverage.yml install the same OTP and rebar3: change the pins together in all three files.
     # The links in /usr/local/bin put this Erlang on PATH without GITHUB_PATH.
     - name: Install Erlang/OTP
       id: erlang

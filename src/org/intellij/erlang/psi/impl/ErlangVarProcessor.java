@@ -16,11 +16,10 @@
 
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiPolyVariantReference;
-import com.intellij.psi.ResolveResult;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -28,9 +27,15 @@ import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -39,10 +44,17 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
+  // the earlier bindings of the variables met in this resolve; null when the processor collects only the variables it meets
+  @Nullable private final Map<ErlangQVar, List<ErlangQVar>> myEarlierBindings;
 
   public ErlangVarProcessor(String requestedName, PsiElement origin) {
+    this(requestedName, origin, new HashMap<>());
+  }
+
+  private ErlangVarProcessor(String requestedName, PsiElement origin, @Nullable Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
     myRequestedName = requestedName;
     myOrigin = origin;
+    myEarlierBindings = earlierBindings;
   }
 
   @Override
@@ -87,7 +99,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
       // put all possible variables to list
-      myVarList.addAll(getEarlierBindings((ErlangQVar) psiElement, myOrigin));
+      ErlangQVar var = (ErlangQVar) psiElement;
+      List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
+                               ? List.of(var) : getEarlierBindings(var, myEarlierBindings);
+      for (ErlangQVar v : found) {
+        if (!myVarList.contains(v)) myVarList.add(v);
+      }
       return false;
     }
 
@@ -95,16 +112,48 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   }
 
   // a variable that matches an earlier binding, like X in `X = 1, case X = g() of ...`, is not a binding itself.
-  // Only earlier variables are followed, so the nested resolve always starts before the origin and terminates.
+  // Only earlier variables are followed, so the lookup always moves towards the start of the file and terminates.
+  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per resolve.
   @NotNull
-  private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull PsiElement origin) {
-    int offset = var.getTextOffset();
-    if (offset >= origin.getTextOffset() || !(var.getReference() instanceof PsiPolyVariantReference reference)) return List.of(var);
-    List<ErlangQVar> result = new SmartList<>();
-    for (ResolveResult r : reference.multiResolve(false)) {
-      if (r.getElement() instanceof ErlangQVar target && target.getTextOffset() < offset) result.add(target);
+  private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
+    Map<ErlangQVar, List<ErlangQVar>> candidates = new HashMap<>();
+    Deque<ErlangQVar> stack = new ArrayDeque<>();
+    stack.push(var);
+    while (!stack.isEmpty()) {
+      ProgressManager.checkCanceled();
+      ErlangQVar top = stack.peek();
+      if (earlierBindings.containsKey(top)) {
+        stack.pop();
+        continue;
+      }
+      List<ErlangQVar> earlier = candidates.computeIfAbsent(top, ErlangVarProcessor::getEarlierCandidates);
+      boolean ready = true;
+      for (ErlangQVar candidate : earlier) {
+        if (!earlierBindings.containsKey(candidate)) {
+          stack.push(candidate);
+          ready = false;
+        }
+      }
+      if (!ready) continue;
+      Set<ErlangQVar> bindings = new LinkedHashSet<>();
+      for (ErlangQVar candidate : earlier) {
+        bindings.addAll(earlierBindings.get(candidate));
+      }
+      earlierBindings.put(top, bindings.isEmpty() ? List.of(top) : List.copyOf(bindings));
+      stack.pop();
     }
-    return result.isEmpty() ? List.of(var) : result;
+    return earlierBindings.get(var);
+  }
+
+  // the variables before var that a resolve of var meets, without following them further
+  @NotNull
+  private static List<ErlangQVar> getEarlierCandidates(@NotNull ErlangQVar var) {
+    int offset = var.getTextOffset();
+    List<ErlangQVar> result = new SmartList<>();
+    for (ErlangQVar candidate : ErlangVariableReferenceImpl.processVariables(var, new ErlangVarProcessor(var.getText(), var, null))) {
+      if (candidate.getTextOffset() < offset && !result.contains(candidate)) result.add(candidate);
+    }
+    return result;
   }
 
   // the name in the first clause of a named fun declares a new variable that shadows any outer one

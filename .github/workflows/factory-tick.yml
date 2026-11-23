@@ -211,9 +211,9 @@ jobs:
           # coverage ledger, the hypotheses and the card of each unit, and the issue drafts. A path that the tick
           # has not made yet is skipped, and one that cannot be added must not keep the state from being committed.
           for path in discovery/robustness-sweep/ledger.jsonl discovery/robustness-sweep/known-signatures.tsv \
-              discovery/robustness-sweep/runs discovery/robustness-hunt; do
+              discovery/robustness-sweep/runs discovery/robustness-hunt dispatcher/steps.csv; do
             if [ -e "$path" ] && ! git add -- "$path" >> "$out" 2>&1; then
-              echo "::warning::A file of the robustness sweep or of the hypothesis hunt could not be added to the state commit."
+              echo "::warning::A file of the robustness sweep, of the hypothesis hunt or of the step record could not be added to the state commit."
             fi
           done
           if git diff --cached --quiet; then
@@ -287,4 +287,20 @@ jobs:
           case "$PACE" in active|idle|settle) ;; *) PACE=idle ;; esac
           if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
             echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
+          fi
+
+      - name: Start a build of the hosted console
+        # factory-console.yml publishes a new snapshot of the console, which now shows this tick. It gets no
+        # secret from here; its concurrency group queues builds. Off unless the repository variable
+        # FACTORY_CONSOLE is "true".
+        if: ${{ !cancelled() && vars.FACTORY_CONSOLE == 'true' && steps.clone.outcome == 'success' }}
+        # A hung gh must not hold the tick (and the next tick, which waits in its concurrency group).
+        timeout-minutes: 2
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-console.yml -R "$REPO" --ref master; then
+            echo "::warning::The console build could not be started; the daily schedule or the next tick starts one."
           fi

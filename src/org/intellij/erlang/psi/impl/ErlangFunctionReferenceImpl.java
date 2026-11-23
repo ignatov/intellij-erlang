@@ -27,6 +27,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.bif.ErlangOperatorTable;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -120,8 +121,16 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
     if (suppressResolve()) return ResolveResult.EMPTY_ARRAY; // for #132
 
+    // A call that only the macro layer resolves (a function made by a macro) has the layer's answer as its
+    // result, as resolve() has; with incompleteCode it comes first, before master's candidates of the same name
+    PsiElement layerAnswer = null;
+    PsiElement masterAnswer = resolveWithoutLayer();
+    if (masterAnswer == null || preferLayerAnswer(masterAnswer)) {
+      layerAnswer = ErlangMacroLayer.resolveFallback(this);
+      if (layerAnswer != null && !incompleteCode) return PsiElementResolveResult.createResults(layerAnswer);
+    }
     // todo: use incompleteCode
-    if (resolve() != null && !incompleteCode) return ResolveResult.EMPTY_ARRAY;
+    if (masterAnswer != null && !incompleteCode) return ResolveResult.EMPTY_ARRAY;
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
@@ -150,6 +159,12 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
         result = ContainerUtil.emptyList();
       }
     }
+    if (layerAnswer != null) {
+      List<PsiElement> withLayer = new ArrayList<>();
+      withLayer.add(layerAnswer);
+      withLayer.addAll(result);
+      return PsiElementResolveResult.createResults(withLayer);
+    }
     return PsiElementResolveResult.createResults(result);
   }
 
@@ -162,6 +177,14 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     return result;
   }
 
+  // a function that the parser's recovery made from the rest of a form it split (setup?PAR, hello().) is no function
+  // of the source: a function of the same name made by a macro is the one meant
+  @Override
+  protected boolean preferLayerAnswer(@NotNull PsiElement masterAnswer) {
+    return ErlangMacroLayer.isEnabled() && masterAnswer instanceof ErlangFunction &&
+           masterAnswer.getParent() == getElement().getContainingFile() && ErlangMacroLayer.continuesASplitForm(masterAnswer);
+  }
+
   private boolean isInExport() {
     return getElement() instanceof ErlangExportFunction;
   }
@@ -172,7 +195,10 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
-    return getElement().getManager().areElementsEquivalent(resolve(), element);
+    PsiElement target = resolve();
+    if (getElement().getManager().areElementsEquivalent(target, element)) return true;
+    // A call in a -define body that only the macro's uses resolve (a header body naming includer functions)
+    return target == null && ErlangMacroLayer.isReferenceThroughMacroUses(this, element);
   }
 
   @Nullable
