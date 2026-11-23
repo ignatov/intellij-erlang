@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Importing a rebar project now adds the dependencies listed under profiles in rebar.config (<a href="https://github.com/ignatov/intellij-erlang/issues/1473">#1473</a>)</li>
-              <li>Documentation hover and Highlight Usages titles of built-in functions read as name/arity, such as abs/1 (<a href="https://github.com/ignatov/intellij-erlang/pull/1476">#1476</a>)</li>
-              <li>Uses of ?FEATURE_ENABLED and ?FEATURE_AVAILABLE are no longer reported as unresolved macros (<a href="https://github.com/ignatov/intellij-erlang/pull/1468">#1468</a>)</li>
-              <li>Pressing Enter over a selected comment no longer shows an error or adds a stray comment prefix (<a href="https://github.com/ignatov/intellij-erlang/pull/1464">#1464</a>)</li>
-              <li>Enter after a comma in -export([...]), -export_type([...]) and lists aligns the new element with the first one when "Align multiline… (<a href="https://github.com/ignatov/intellij-erlang/pull/1186">#1186</a>)</li>
-              <li>Completion no longer logs an error when another module has unsaved changes (<a href="https://github.com/ignatov/intellij-erlang/pull/1465">#1465</a>)</li>
-              <li>Completion after mod: in specs, type definitions and record fields offers the module's exported types (<a href="https://github.com/ignatov/intellij-erlang/pull/1191">#1191</a>)</li>
-              <li>and 13 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1305">full list</a></li>
+              <li>Remove duplicate export now keeps comments and line breaks in the module's export lists (<a href="https://github.com/ignatov/intellij-erlang/pull/1527">#1527</a>)</li>
+              <li>Introduce record field no longer breaks records whose fields contain braces, such as tuple or map defaults (<a href="https://github.com/ignatov/intellij-erlang/pull/1524">#1524</a>)</li>
+              <li>Guards that call ceil, floor, min or max are no longer marked as illegal guard expressions (<a href="https://github.com/ignatov/intellij-erlang/pull/1514">#1514</a>)</li>
+              <li>Format strings with the map key order modifiers ~kp and ~Kp no longer get an "Invalid control sequence" warning (<a href="https://github.com/ignatov/intellij-erlang/pull/1515">#1515</a>)</li>
+              <li>The build now compiles a module after its parse transform or behaviour even when that file is very large (<a href="https://github.com/ignatov/intellij-erlang/pull/1511">#1511</a>)</li>
+              <li>Generate function spec now proposes a return type that covers every clause, such as atom() | tuple() (<a href="https://github.com/ignatov/intellij-erlang/pull/1525">#1525</a>)</li>
+              <li>Test functions in modules that include eunit.hrl with -include are no longer reported as unused and can be run (<a href="https://github.com/ignatov/intellij-erlang/pull/1519">#1519</a>)</li>
+              <li>and 7 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1306">full list</a></li>
             </ul>
         ]]>
     </change-notes>
