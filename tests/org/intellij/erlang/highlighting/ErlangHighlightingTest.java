@@ -16,6 +16,8 @@
 
 package org.intellij.erlang.highlighting;
 
+import com.intellij.codeInsight.daemon.impl.HighlightInfo;
+import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -322,6 +324,40 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type t() :: tree(atom()).\n-type u() :: tree().\n");
     assertResolvesToArity(findTypeRef("tree(atom())").getReference(), 1);
     assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
+  }
+
+  // issue 1505: erlc only warns for BIFs auto-imported since R14 (erl_internal:old_bif/2 is false)
+  public void testOverriddenBifAutoImportedSinceR14() {
+    List<HighlightInfo> infos = doHighlightingOf("OverriddenBifAutoImportedSinceR14.erl");
+    for (HighlightInfo info : infos) {
+      assertFalse(info.getDescription(), info.getSeverity() == HighlightSeverity.ERROR);
+      assertFalse(info.getDescription(), String.valueOf(info.getDescription()).contains("pre R14"));
+    }
+  }
+
+  // issue 1505
+  public void testImportOverridesBifAutoImportedSinceR14() {
+    for (HighlightInfo info : doHighlightingOf("ImportOverridesBifAutoImportedSinceR14.erl")) {
+      assertFalse(info.getDescription(), String.valueOf(info.getDescription()).contains("pre R14"));
+    }
+  }
+
+  // issue 1505: control, erlc gives an error for a pre-R14 auto-imported BIF
+  public void testOverriddenPreR14AutoImportedBif() {
+    boolean found = false;
+    for (HighlightInfo info : doHighlightingOf("OverriddenPreR14AutoImportedBif.erl")) {
+      if (info.getSeverity() == HighlightSeverity.ERROR &&
+          "Ambiguous call of overridden pre R14 auto-imported BIF 'length/1'".equals(info.getDescription())) {
+        found = true;
+      }
+    }
+    assertTrue(found);
+  }
+
+  private List<HighlightInfo> doHighlightingOf(String file) {
+    myFixture.configureByFile(file);
+    setUpInspections(myFixture);
+    return myFixture.doHighlighting();
   }
 
   private ErlangTypeRef findTypeRef(String typeText) {
