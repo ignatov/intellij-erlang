@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.resolve;
 
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -93,6 +96,39 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     long big = fastestResolveOfEveryVariable(200);
     assertTrue("25 repetitions: " + small + " ns, 200 repetitions: " + big + " ns, ratio " + (double) big / Math.max(small, 1L),
                big < 24 * Math.max(small, 1_000_000L));
+  }
+
+  // #1503: the earlier bindings that resolves share are dropped when the file changes
+  public void testResolveAfterEditDropsEarlierBindings() {
+    myFixture.configureByText("rep.erl", """
+      -module(rep).
+      -export([f/0]).
+      f() ->
+          X = a,
+          X = b,
+          X = c,
+          X.
+      """);
+    List<ErlangQVar> vars = xVars();
+    assertEquals(vars.get(0), multiResolve(vars.get(3))[0].getElement());
+    assertEquals(vars.get(0), multiResolve(vars.get(2))[0].getElement());
+    Document document = myFixture.getEditor().getDocument();
+    int start = document.getText().indexOf("X = a,");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      document.deleteString(start, start + "X = a,".length());
+      PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+    });
+    vars = xVars();
+    assertEquals(3, vars.size());
+    ResolveResult[] results = multiResolve(vars.get(2));
+    assertEquals(1, results.length);
+    assertEquals(vars.get(0), results[0].getElement());
+  }
+
+  private List<ErlangQVar> xVars() {
+    List<ErlangQVar> vars = new ArrayList<>(PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class));
+    vars.removeIf(v -> !"X".equals(v.getText()));
+    return vars;
   }
 
   private long fastestResolveOfEveryVariable(int repetitions) {
