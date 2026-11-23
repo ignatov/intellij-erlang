@@ -16,6 +16,11 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangUnresolvedRecordFieldInspection;
 
 public class ErlangIntroduceRecordFieldTest extends ErlangQuickFixTestBase {
@@ -35,6 +40,28 @@ public class ErlangIntroduceRecordFieldTest extends ErlangQuickFixTestBase {
 
   public void testSimple()           { doIntroduceRecordFieldTest(); }
   public void testWithOtherFields()  { doIntroduceRecordFieldTest(); }
+
+  public void testRecordInHeaderPreview() {
+    myFixture.configureByFiles("recordInHeader.erl", "recordInHeader.hrl");
+    VirtualFile header = myFixture.findFileInTempDir("recordInHeader.hrl");
+    IntentionAction action = ContainerUtil.getFirstItem(myFixture.filterAvailableIntentions("Introduce record field"));
+    assertNotNull(action);
+    myFixture.getIntentionPreviewText(action);
+    assertEquals("-record(rec, {old_field}).\n", getDocumentText(header));
+  }
+
+  public void testRecordInReadOnlyHeader() throws Exception {
+    myFixture.configureByFiles("recordInReadOnlyHeader.erl", "recordInReadOnlyHeader.hrl");
+    VirtualFile header = myFixture.findFileInTempDir("recordInReadOnlyHeader.hrl");
+    WriteAction.runAndWait(() -> header.setWritable(false));
+    assertFalse(header.isWritable());
+    launchIntention("Introduce record field");
+    assertEquals("-record(rec, {old_field}).\n", getDocumentText(header));
+  }
+
+  private static String getDocumentText(VirtualFile file) {
+    return FileDocumentManager.getInstance().getDocument(file).getText();
+  }
 
   private void doIntroduceRecordFieldTest() { doTest("Introduce record field"); }
 }
