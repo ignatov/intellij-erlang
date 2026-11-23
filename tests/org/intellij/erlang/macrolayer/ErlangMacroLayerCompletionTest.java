@@ -323,4 +323,16 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
                                 "start() ->\n  hel<caret>,\n  ok.\n?DEF(hello).\n");
     assertTrue(got.toString(), got.containsAll(List.of("hello", "other:hello")));
   }
+
+  /** #1538: after {@code ssl_manager:} only the exports of ssl_manager are offered, not the functions ?TEST makes here. */
+  public void testFunctionMadeByMacroIsNotOfferedAfterAnotherModule() {
+    myFixture.addFileToProject("c/ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1, cache/0]).\n" +
+                                                    "start_link(_) -> ok.\ncache() -> ok.\n");
+    List<String> got = complete("-module(m).\n-export([all/0, small_order/0, big_order/0]).\n\n" +
+                                "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                "?TEST(small_order, ok = orders:check(5)).\n?TEST(big_order, too_big = orders:check(500)).\n\n" +
+                                "all() ->\n  small_order(),\n  big_order(),\n  ssl_manager:<caret>.\n");
+    assertTrue(got.toString(), got.containsAll(List.of("cache", "start_link")));
+    assertFalse(got.toString(), got.contains("small_order") || got.contains("big_order"));
+  }
 }
