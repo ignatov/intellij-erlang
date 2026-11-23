@@ -18,8 +18,11 @@ package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInsight.daemon.impl.analysis.FileHighlightingSetting;
 import com.intellij.codeInsight.daemon.impl.analysis.HighlightingSettingsPerFile;
+import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.ide.PowerSaveMode;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiFile;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
 import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
@@ -27,6 +30,8 @@ import org.intellij.erlang.intention.ErlangExportFunctionIntention;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
@@ -132,6 +137,20 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testOneDuplicateExport2() { doTest("Remove duplicate export"); }
   public void testFewDuplicateExport()  { doTest("Remove duplicate export"); }
   public void testDuplicateExportWithDigitSeparators() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportKeepsOtherLists() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportKeepsComments() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportCommaFirst() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportCommentBeforeComma() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportPreviewOfRemovedEntry() throws IOException { doTestPreview("duplicateExportKeepsOtherLists"); }
+  public void testDuplicateExportPreviewOfRemovedAttribute() throws IOException { doTestPreview("oneDuplicateExport1"); }
+
+  private void doTestPreview(String fixtureName) throws IOException {
+    myFixture.configureByFile(fixtureName + ".erl");
+    IntentionAction action = ContainerUtil.getFirstItem(myFixture.filterAvailableIntentions("Remove duplicate export"));
+    assertNotNull(action);
+    String expected = FileUtil.loadFile(new File(getTestDataPath(), fixtureName + "-after.erl")).replace("<caret>", "");
+    assertEquals(expected, myFixture.getIntentionPreviewText(action));
+  }
 
   public void testFewEmpties()          { doTest("Export function"); }
   public void testFewNonEmpties1()      { doTest("Export function"); }
