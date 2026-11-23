@@ -323,4 +323,13 @@ public class ErlangMacroLayerCompletionTest extends ErlangLightPlatformCodeInsig
                                 "start() ->\n  hel<caret>,\n  ok.\n?DEF(hello).\n");
     assertTrue(got.toString(), got.containsAll(List.of("hello", "other:hello")));
   }
+
+  /** #1537: after {@code ssl_manager:} the functions of ssl_manager are offered, not the small_order/0 that ?DEF makes here. */
+  public void testFunctionMadeByMacroIsNotOfferedAfterAnotherModule() {
+    myFixture.addFileToProject("c/ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1]).\nstart_link(_) -> ok.\n");
+    List<String> got = complete("-module(m).\n-export([start/0, small_order/0]).\n-define(DEF(Name), Name() -> ok).\n" +
+                                "?DEF(small_order).\nstart() ->\n  ssl_manager:s<caret>,\n  ok.\n");
+    assertTrue(got.toString(), got.contains("start_link"));
+    assertFalse(got.toString(), got.contains("small_order"));
+  }
 }

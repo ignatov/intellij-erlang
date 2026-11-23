@@ -86,4 +86,23 @@ public class ErlangMacroLayerAutoPopupTest extends BasePlatformTestCase {
     assertNotNull("the popup is shown", items);
     assertTrue(String.valueOf(items), items.contains("small_order"));
   }
+
+  /** #1537: the auto-popup after {@code ssl_manager:} offers its functions, not the small_order/0 that a macro makes here. */
+  public void testAutoPopupAfterAnotherModuleOffersNoFunctionMadeByAMacro() {
+    EdtTestUtil.runInEdtAndWait(() -> {
+      myFixture.addFileToProject("ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1]).\nstart_link(_) -> ok.\n");
+      myFixture.configureByText("shop_tests.erl", "-module(shop_tests).\n-export([all/0, small_order/0, big_order/0]).\n\n" +
+                                                  "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                                  "?TEST(small_order, ok).\n?TEST(big_order, too_big).\n\n" +
+                                                  "all() ->\n  small_order(),\n  big_order()<caret>.\n");
+      myFixture.doHighlighting();
+    });
+    myTester.typeWithPauses(",\n  ssl_manager:s");
+    myTester.joinAutopopup();
+    myTester.joinCompletion();
+    List<String> items = EdtTestUtil.runInEdtAndGet(() -> myFixture.getLookupElementStrings());
+    assertNotNull("the popup is shown", items);
+    assertTrue(String.valueOf(items), items.contains("start_link"));
+    assertFalse(String.valueOf(items), items.contains("small_order"));
+  }
 }

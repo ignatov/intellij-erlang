@@ -7,6 +7,7 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementDecorator;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -241,7 +242,7 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
       result.passResult(r);
     });
     ErlangFile real = (ErlangFile)parameters.getOriginalFile();
-    if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces) {
+    if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces && !qualifiedByAnotherModule(position, real)) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
         // a function the recovery made from the rest of a split form has the same name/arity: offered once
         if (seenFunctions.contains(e.getKey())) continue;
@@ -276,6 +277,14 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     PsiElement grandPa = parent == null ? null : parent.getParent();
     return grandPa instanceof ErlangExpression && PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class) == null &&
            PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
+
+  /** After {@code other:}: the functions of another module, not the ones that macros make in this file. */
+  private static boolean qualifiedByAnotherModule(@NotNull PsiElement position, @NotNull ErlangFile real) {
+    ErlangColonQualifiedExpression colon = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
+    if (colon == null) return false;
+    ErlangQAtom module = ErlangPsiImplUtil.getQAtom(colon);
+    return module == null || !FileUtilRt.getNameWithoutExtension(real.getName()).equals(ErlangPsiImplUtil.getName(module));
   }
 
   private static @Nullable PsiElement realTarget(@Nullable PsiElement e, @NotNull ErlangFile real) {
