@@ -189,17 +189,21 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
    */
   static final Key<Made> MADE_NAMES = Key.create("erlang.macro.layer.completion.made.names");
 
-  /** The names that expansions make in the completion's file, or null; never builds for the auto-popup. */
+  /**
+   * The names that expansions make in the completion's file, or null. The auto-popup too builds the table and the copy
+   * if they are not there, under the completion's own indicator (the next key cancels it), as the take-over path does:
+   * the cached ones are stale after every typed key, so it offered no made name (#1537).
+   */
   private static @Nullable Made made(@NotNull CompletionParameters parameters) {
     ErlangFile real = ErlangMacroLayer.layerFile(parameters.getOriginalFile());
     if (real == null || real != parameters.getOriginalFile()) return null;
     boolean auto = parameters.isAutoPopup();
-    ErlangMacroLayer.Table t = auto ? ErlangMacroLayer.cachedTable(real) : ErlangMacroLayer.table(real);
+    ErlangMacroLayer.Table t = ErlangMacroLayer.table(real);
     if (t == null) return auto ? real.getUserData(MADE_NAMES) : null;
     if (t.refusal != null || t.names.isEmpty()) return null;
     // only a top-level form that starts with a macro use, or a broken one, can make a name (and then it needs the copy)
     if (!ErlangMacroLayer.anyFormNeedsCopy(real, t) || !ErlangMacroLayer.hasTopLevelMacroForm(real, t)) return null;
-    ErlangMacroLayer.Copy copy = auto ? ErlangMacroLayer.cachedCopy(real) : ErlangMacroLayer.getCopy(real, "completion-names");
+    ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(real, "completion-names");
     if (copy == null) return auto ? real.getUserData(MADE_NAMES) : null;
     Made m = Made.of(copy);
     real.putUserData(MADE_NAMES, m.namesOnly());
@@ -242,7 +246,9 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     ErlangColonQualifiedExpression qualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
     ErlangQAtom moduleAtom = ErlangPsiImplUtil.getQAtom(qualified);
     boolean ownModule = moduleAtom != null && isOwnModule(moduleAtom, real);
-    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces) {
+    // in -import(other, [...]) only other's functions: importing a function the file defines is an error
+    boolean imports = PsiTreeUtil.getParentOfType(position, ErlangImportFunctions.class) != null;
+    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces && !imports) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
         // a function the recovery made from the rest of a split form has the same name/arity: offered once
         if (seenFunctions.contains(e.getKey())) continue;
