@@ -201,6 +201,17 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertSameElements(dependencies.get("pt.erl"), "h.hrl");
   }
 
+  public void testLargeParseTransformOfHeaderParseTransformIsBuiltFirst() throws Exception {
+    String text = "-module(%s).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n";
+    writeAboveSizeLimit("abig.erl", String.format(text, "abig"));
+    writeAboveSizeLimit("zbig.erl", String.format(text, "zbig"));
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("abig.erl") < files.indexOf("x.erl"));
+    assertTrue(files.toString(), files.indexOf("zbig.erl") < files.indexOf("x.erl"));
+    assertTrue(files.toString(), files.indexOf("x.erl") < files.indexOf("m.erl"));
+  }
+
   private void writeAboveSizeLimit(String fileName, String text) throws IOException {
     // A file above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
     String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";

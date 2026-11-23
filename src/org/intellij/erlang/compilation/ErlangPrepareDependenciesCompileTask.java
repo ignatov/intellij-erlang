@@ -154,14 +154,16 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     final ErlangFilesDependencyGraph semiGraph = ErlangFilesDependencyGraph.createSemiGraph(modulesToCompile);
     DFSTBuilder<String> builder = new DFSTBuilder<>(GraphGenerator.generate(semiGraph));
     if (!builder.isAcyclic()) {
-      checkOnlyHeadersAreInCycles(semiGraph);
+      // Inside a cycle the order is arbitrary, so order by the known edges, which the guessed ones must not override.
+      builder = checkOnlyHeadersAreInCycles(semiGraph);
     }
     return ContainerUtil.map(builder.getSortedNodes(), filePath -> new ErlangFileDescriptor(filePath, semiGraph.getDependencies(filePath)));
   }
 
   // Headers are not compiled, and guarded headers may include each other, so only cycles through modules are errors.
   // The guessed edges of a module without Erlang PSI can't prove a cycle, so the check leaves them out.
-  private static void checkOnlyHeadersAreInCycles(@NotNull ErlangFilesDependencyGraph semiGraph) throws CyclicDependencyFoundException {
+  @NotNull
+  private static DFSTBuilder<String> checkOnlyHeadersAreInCycles(@NotNull ErlangFilesDependencyGraph semiGraph) throws CyclicDependencyFoundException {
     InboundSemiGraph<String> knownGraph = new InboundSemiGraph<>() {
       @NotNull
       @Override
@@ -186,6 +188,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         }
       }
     }
+    return builder;
   }
 
   @NotNull
