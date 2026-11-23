@@ -39,7 +39,8 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "length/1", "map_size/1", "node/1",
     "node/0", "round/1", "self/0",
     "size/1", "tl/1", "trunc/1", "tuple_size/1",
-    "map_get/2", "is_map_key/2"
+    "map_get/2", "is_map_key/2",
+    "ceil/1", "floor/1", "min/2", "max/2"
   );
 
   @Override

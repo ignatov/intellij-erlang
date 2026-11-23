@@ -79,6 +79,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  public void testIllegalGuardLocalMaxAndArguments() {
+    myFixture.configureByFile("IllegalGuardLocalMaxAndArguments.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testIllegalPattern()    { doTest(); }
   public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
   public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
