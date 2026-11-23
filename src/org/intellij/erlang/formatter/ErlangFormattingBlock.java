@@ -556,8 +556,27 @@ public class ErlangFormattingBlock extends AbstractBlock {
     return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
   }
 
+  /**
+   * A function whose last child is a comma is one whose clause body the parser's recovery cut short (as at
+   * {@code setup?PAR,} with {@code -define(PAR, ()).}): a new line after it continues the body.
+   */
+  @Override
+  public boolean isIncomplete() {
+    return super.isIncomplete() || endsInRecoveredComma();
+  }
+
+  private boolean endsInRecoveredComma() {
+    if (myNode.getElementType() != ERL_FUNCTION) return false;
+    ASTNode last = myNode.getLastChildNode();
+    while (last != null && (last.getElementType() == TokenType.WHITE_SPACE || COMMENTS.contains(last.getElementType()))) {
+      last = last.getTreePrev();
+    }
+    return last != null && last.getElementType() == ERL_COMMA;
+  }
+
   @Nullable
   private Indent getChildIndentByPreviousChild(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_COMMA) return Indent.getNormalIndent();
     if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
 
     if (type == ERL_SEMI || type == ERL_OF && newChildIndex == 3)  {
