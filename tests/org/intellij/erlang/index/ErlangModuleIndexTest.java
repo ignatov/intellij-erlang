@@ -82,6 +82,26 @@ public class ErlangModuleIndexTest extends ErlangLightPlatformCodeInsightFixture
     doResolveTest("/src/a/kernel/src/dup.erl");
   }
 
+  // #1497: the module name and the function name of one remote call resolve to the same copy of a duplicated module
+  public void testModuleAndFunctionOfRemoteCallResolveToSameCopy() {
+    addModule("apps/zz/src/dup.erl");
+    addModule("apps/aaaa/src/dup.erl");
+    myFixture.configureByText("caller.erl", "-module(caller).\ng() -> dup:f().\n");
+    String text = myFixture.getFile().getText();
+    PsiElement moduleTarget = resolveAt(text.indexOf("dup:") + 1);
+    PsiElement functionTarget = resolveAt(text.indexOf(":f(") + 1);
+    assertEquals(functionTarget.getContainingFile().getVirtualFile().getPath(),
+                 moduleTarget.getContainingFile().getVirtualFile().getPath());
+  }
+
+  private PsiElement resolveAt(int offset) {
+    PsiReference reference = myFixture.getFile().findReferenceAt(offset);
+    assertNotNull(reference);
+    PsiElement target = reference.resolve();
+    assertNotNull(target);
+    return target;
+  }
+
   private void addKernelCopy(String root) {
     addKernelCopy(root, "kernel-1.0");
   }

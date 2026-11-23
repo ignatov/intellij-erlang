@@ -131,7 +131,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
       String modifiers = matcher.group(4);
       String controlSequenceType = matcher.group(5);
       if (controlSequenceType != null) expectedArgumentsCount++;
-      if ("P".equals(controlSequenceType)) expectedArgumentsCount++;
+      if (controlSequenceType != null && "PWXx".contains(controlSequenceType)) expectedArgumentsCount++;
       if (modifiers.indexOf('K') != -1) expectedArgumentsCount++;
       if (!areValidModifiers(modifiers, controlSequenceType, mapOrderModifiers)) {
         throw new InvalidControlSequenceException(matcher.start());

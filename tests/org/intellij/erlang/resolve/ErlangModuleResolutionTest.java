@@ -23,12 +23,15 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangModuleRef;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -55,6 +58,13 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
   public void testKernelModulesAppearFirst() { doModuleRefTest("kernel-2.15.2/src/file.erl", "test.erl", "file.erl"); }
   public void testStdlibModulesAppearFirst() { doModuleRefTest("stdlib-1.18.2/src/io.erl", "test.erl", "io.erl"); }
   public void testUserModulesAppearFirst()   { doModuleRefTest("eunit.erl", "test.erl", "eunit.erl"); }
+  // #1497: the function of a remote call goes to the copy of the module that its module name goes to
+  public void testUserModuleFunctionsAppearFirst() {
+    myFixture.configureByFiles("test.erl", "eunit.erl");
+    assertEquals("/src/eunit.erl", resolvedPath(getElementAtCaret(ErlangFunctionCallExpression.class).getReference()));
+    ErlangGlobalFunctionCallExpression call = getElementAtCaret(ErlangGlobalFunctionCallExpression.class);
+    assertEquals("/src/eunit.erl", resolvedPath(call.getModuleRef().getReference()));
+  }
 
   public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }
   public void testModuleTypeInSpec()     { doParameterTest("typeInArguments.erl", "typeInArguments.erl"); }
@@ -70,15 +80,18 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
 
   private void doTest(@NotNull Class<? extends PsiElement> clazz, String expectedPath, String... filePaths) {
     myFixture.configureByFiles(filePaths);
-    PsiElement focusedElement = getElementAtCaret(clazz);
-    PsiReference reference = focusedElement.getReference();
+    String actualModulePath = resolvedPath(getElementAtCaret(clazz).getReference());
+    assertTrue("Expected path: *" + expectedPath + ", Actual: " + actualModulePath,
+               actualModulePath.endsWith(expectedPath));
+  }
+
+  @NotNull
+  private static String resolvedPath(@Nullable PsiReference reference) {
     PsiElement module = reference != null ? reference.resolve() : null;
     PsiFile containingFile = module != null ? module.getContainingFile() : null;
     VirtualFile virtualFile = containingFile != null ? containingFile.getVirtualFile() : null;
     assertNotNull(virtualFile);
-    String actualModulePath = virtualFile.getPath();
-    assertTrue("Expected path: *" + expectedPath + ", Actual: " + actualModulePath,
-               actualModulePath.endsWith(expectedPath));
+    return virtualFile.getPath();
   }
   //TODO add small IDE tests
   //TODO test source roots are preferred to plain directories
