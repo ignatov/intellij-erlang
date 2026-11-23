@@ -132,6 +132,7 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   public void testOneDuplicateExport2() { doTest("Remove duplicate export"); }
   public void testFewDuplicateExport()  { doTest("Remove duplicate export"); }
   public void testDuplicateExportWithDigitSeparators() { doTest("Remove duplicate export"); }
+  public void testDuplicateExportKeepsOtherLists() { doTest("Remove duplicate export"); }
 
   public void testFewEmpties()          { doTest("Export function"); }
   public void testFewNonEmpties1()      { doTest("Export function"); }
