@@ -131,11 +131,13 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     return vars;
   }
 
+  // each timed pass runs on a new text of the file, so that it is the first resolve after an edit and finds no shared memo
   private long fastestResolveOfEveryVariable(int repetitions) {
     List<ErlangQVar> vars = configure(repetitions);
     for (ErlangQVar v : vars) multiResolve(v);
     long fastest = Long.MAX_VALUE;
     for (int i = 0; i < 3; i++) {
+      vars = configure(repetitions, i);
       long start = System.nanoTime();
       for (ErlangQVar v : vars) multiResolve(v);
       fastest = Math.min(fastest, System.nanoTime() - start);
@@ -157,6 +159,8 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     for (int i = 0; i < 5; i++) multiResolve(last);
     long fastest = Long.MAX_VALUE;
     for (int i = 0; i < 10; i++) {
+      vars = configure(repetitions, i);
+      last = vars.get(vars.size() - 1);
       long start = System.nanoTime();
       multiResolve(last);
       fastest = Math.min(fastest, System.nanoTime() - start);
@@ -169,7 +173,12 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
   }
 
   private List<ErlangQVar> configure(int repetitions) {
-    String text = "-module(rep).\n-export([f/1]).\nf(A) ->\n" + REPEATED_PAIR.repeat(repetitions) + "    X.\n";
+    return configure(repetitions, -1);
+  }
+
+  // a different sample gives a different text, so the file is changed and nothing cached for an earlier text is reused
+  private List<ErlangQVar> configure(int repetitions, int sample) {
+    String text = "-module(rep).\n-export([f/1]).\nf(A) ->\n" + REPEATED_PAIR.repeat(repetitions) + "    X.\n%% sample " + sample + "\n";
     myFixture.configureByText("rep.erl", text);
     List<ErlangQVar> vars = new ArrayList<>();
     for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
