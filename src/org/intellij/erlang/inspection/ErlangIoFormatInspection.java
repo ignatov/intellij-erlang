@@ -25,6 +25,8 @@ import com.intellij.psi.PsiReference;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,10 +54,14 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
 
   private static final Set<String> MODULE_NAMES = Set.of("io", "io_lib");
   private static final Set<String> FUNCTION_NAMES = Set.of("format", "fwrite");
+  // OTP 26.0, the first release with the map key order modifiers k and K
+  private static final ErlangSdkRelease MAP_ORDER_MODIFIERS_RELEASE = new ErlangSdkRelease("26", "14.0");
 
   @NotNull
   @Override
   protected ErlangVisitor buildErlangVisitor(@NotNull final ProblemsHolder holder, @NotNull LocalInspectionToolSession session) {
+    ErlangSdkRelease release = ErlangSdkType.getSdkRelease(session.getFile());
+    boolean mapOrderModifiers = release == null || release.isNewerOrEqualTo(MAP_ORDER_MODIFIERS_RELEASE);
     return new ErlangVisitor() {
       @Override
       public void visitGlobalFunctionCallExpression(@NotNull ErlangGlobalFunctionCallExpression o) {
@@ -86,7 +92,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
 
         int expectedArgumentsCount;
         try {
-          expectedArgumentsCount = getExpectedFormatArgsCount(formatString, pattern);
+          expectedArgumentsCount = getExpectedFormatArgsCount(formatString, pattern, mapOrderModifiers);
         } catch (InvalidControlSequenceException e) {
           registerProblem(holder, formatLiteral, "Invalid control sequence",
             TextRange.create(formatStart + e.getInvalidSequenceStartIdx(), formatStart + formatString.length()), null);
@@ -113,7 +119,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return sigilText.startsWith("~s") || sigilText.startsWith("~S") ? 2 : -1;
   }
 
-  private static int getExpectedFormatArgsCount(String formatString, Pattern pattern) throws InvalidControlSequenceException {
+  private static int getExpectedFormatArgsCount(String formatString, Pattern pattern, boolean mapOrderModifiers) throws InvalidControlSequenceException {
     int expectedArgumentsCount = 0;
     int previousMatchEnd = 0;
     Matcher matcher = pattern.matcher(formatString);
@@ -127,7 +133,7 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
       if (controlSequenceType != null) expectedArgumentsCount++;
       if ("P".equals(controlSequenceType)) expectedArgumentsCount++;
       if (modifiers.indexOf('K') != -1) expectedArgumentsCount++;
-      if (!areValidModifiers(modifiers, controlSequenceType)) {
+      if (!areValidModifiers(modifiers, controlSequenceType, mapOrderModifiers)) {
         throw new InvalidControlSequenceException(matcher.start());
       }
       previousMatchEnd = matcher.end();
@@ -136,13 +142,15 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return expectedArgumentsCount;
   }
 
-  // as erl_lint: no modifier twice, not both t and l, not both k and K, and k or K only with p, P, w or W
-  private static boolean areValidModifiers(@NotNull String modifiers, @Nullable String controlSequenceType) {
+  // as erl_lint: no modifier twice, not both t and l, not both k and K, and k or K only with p, P, w or W,
+  // and only from OTP 26
+  private static boolean areValidModifiers(@NotNull String modifiers, @Nullable String controlSequenceType,
+                                           boolean mapOrderModifiers) {
     if (modifiers.chars().distinct().count() != modifiers.length()) return false;
     if (modifiers.contains("t") && modifiers.contains("l")) return false;
     if (modifiers.contains("k") && modifiers.contains("K")) return false;
     boolean mapOrder = modifiers.contains("k") || modifiers.contains("K");
-    return !mapOrder || controlSequenceType != null && "pPwW".contains(controlSequenceType);
+    return !mapOrder || mapOrderModifiers && controlSequenceType != null && "pPwW".contains(controlSequenceType);
   }
 
   private static void checkNoControlSequencePresent(String formatString, int begin, int end) throws InvalidControlSequenceException {
