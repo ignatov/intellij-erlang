@@ -16,15 +16,17 @@
 
 package org.intellij.erlang.quickfixes;
 
+import com.intellij.codeInsight.intention.FileModifier.SafeFieldForPreview;
 import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.codeInspection.ProblemDescriptor;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangRecordExpression;
@@ -35,6 +37,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
+  @SafeFieldForPreview
+  @Nullable
+  private final SmartPsiElementPointer<ErlangRecordDefinition> myDefinition;
+
+  public ErlangIntroduceRecordFieldFix(@Nullable ErlangRecordDefinition definition) {
+    myDefinition = definition != null ? SmartPointerManager.createPointer(definition) : null;
+  }
+
   @NotNull
   @Override
   public String getFamilyName() {
@@ -42,8 +52,10 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
   }
 
   @Override
-  public boolean startInWriteAction() {
-    return false;
+  public @NotNull PsiElement getElementToMakeWritable(@NotNull PsiFile currentFile) {
+    ErlangRecordDefinition definition = myDefinition != null ? myDefinition.getElement() : null;
+    PsiFile file = definition != null ? definition.getContainingFile() : null;
+    return file != null ? file : currentFile;
   }
 
   @Override
@@ -51,10 +63,8 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
     ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement element = descriptor.getPsiElement();
     ErlangTypedRecordFields fields = getRecordFields(element);
-    if (fields == null) return;
-    WriteCommandAction.writeCommandAction(project, fields.getContainingFile())
-      .withName(getFamilyName())
-      .run(() -> fields.replace(createNewFields(project, fields, element)));
+    if (fields == null || !fields.getContainingFile().isWritable()) return;
+    fields.replace(createNewFields(project, fields, element));
   }
 
   @Override

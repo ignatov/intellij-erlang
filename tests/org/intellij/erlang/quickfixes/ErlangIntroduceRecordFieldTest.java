@@ -63,6 +63,26 @@ public class ErlangIntroduceRecordFieldTest extends ErlangQuickFixTestBase {
                  myFixture.getIntentionPreviewText(action));
   }
 
+  public void testFixAllInHeader() {
+    myFixture.configureByFiles("fixAllInHeader.erl", "fixAllInHeader.hrl");
+    VirtualFile header = myFixture.findFileInTempDir("fixAllInHeader.hrl");
+    launchFixAll();
+    assertEquals("-record(rec, {old, b, a}).\n", getDocumentText(header));
+  }
+
+  public void testFixAllInSameFile() {
+    myFixture.configureByText("fixAllInSameFile.erl", "-record(rec, {old}).\n\nf() -> #rec{<caret>a = 1, b = 2}.\n");
+    launchFixAll();
+    myFixture.checkResult("-record(rec, {old, b, a}).\n\nf() -> #rec{a = 1, b = 2}.\n");
+  }
+
+  private void launchFixAll() {
+    IntentionAction fixAll = ContainerUtil.find(myFixture.getAvailableIntentions(), action ->
+      action.getText().equals("Fix all 'Unresolved record field' problems in file"));
+    assertNotNull(fixAll);
+    myFixture.launchAction(fixAll);
+  }
+
   public void testRecordInReadOnlyHeader() throws Exception {
     myFixture.configureByFiles("recordInReadOnlyHeader.erl", "recordInReadOnlyHeader.hrl");
     VirtualFile header = myFixture.findFileInTempDir("recordInReadOnlyHeader.hrl");
