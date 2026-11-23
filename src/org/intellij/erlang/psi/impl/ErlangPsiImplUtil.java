@@ -1258,19 +1258,14 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
-    HashSet<ErlangFile> includedFiles = new HashSet<>();
+    Set<ErlangFile> includedFiles = new LinkedHashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
   }
 
   private static void addIncludedFiles(@NotNull ErlangFile erlangFile, @NotNull Set<ErlangFile> alreadyAdded) {
-    List<ErlangFile> directlyIncludedFiles = getDirectlyIncludedFiles(erlangFile);
-    boolean added = false;
-    for (ErlangFile f : directlyIncludedFiles) {
-      added |= alreadyAdded.add(f);
-    }
-    if (added) {
-      for (ErlangFile f : directlyIncludedFiles) {
+    for (ErlangFile f : getDirectlyIncludedFiles(erlangFile)) {
+      if (alreadyAdded.add(f)) {
         addIncludedFiles(f, alreadyAdded);
       }
     }
