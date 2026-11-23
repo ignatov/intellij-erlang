@@ -43,11 +43,15 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     "map_get/2", "is_map_key/2"
   );
 
-  // A guard may call a guard BIF, with or without erlang:, and an operator as erlang:'+'(..)
+  private static final Set<String> OPERATORS_NOT_ALLOWED_IN_GUARDS = Set.of("'++'/2", "'--'/2", "'!'/2");
+
+  // A guard may call a guard BIF, with or without erlang:, and an operator other than ++, -- and ! as erlang:'+'(..)
   static boolean isGuardBif(@Nullable String moduleName, @NotNull String functionPresentation) {
     if (moduleName == null) return BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation);
     return "erlang".equals(moduleName) &&
-           (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) || ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation));
+           (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) ||
+            ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation) &&
+            !OPERATORS_NOT_ALLOWED_IN_GUARDS.contains(functionPresentation));
   }
 
   @Override

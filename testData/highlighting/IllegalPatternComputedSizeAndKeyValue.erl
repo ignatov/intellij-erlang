@@ -1,4 +1,4 @@
--export([a/1, b/1, c/1, d/1, e/1, f/1, h/2, i/2, j/1, fa/2, fb/2, fc/2, k2/2, cmp/1, op/2, foo/1]).
+-export([a/1, b/1, c/1, d/1, e/1, f/1, h/2, i/2, j/1, fa/2, fb/2, fc/2, k2/2, cmp/1, op/2, pl/2, pk/2, foo/1]).
 
 a(<<L:8, (<error>L+1</error>):8>>) -> L.
 b(#{k := <error>X+1</error>}) -> X.
@@ -16,3 +16,5 @@ fc(M, K) -> #{<error>foo(K)</error> := V} = M, V.
 k2(M, K) -> #{<error>K+1</error> => V} = M, V.
 cmp(<error>X == 1</error>) -> X.
 op(L, B) -> <<X:(erlang:'+'(L, 1))>> = B, X.
+pl(L, B) -> <<X:(erlang:<error>'++'(L, L)</error>)>> = B, X.
+pk(M, K) -> #{erlang:<error>'++'(K, K)</error> := V} = M, V.
