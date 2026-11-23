@@ -196,8 +196,11 @@ public class ErlangPsiImplUtil {
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new SmartList<>();
     List<ErlangQAtom> atoms = new SmartList<>();
-    ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
+    PsiElement parent = element.getParent();
+    ErlangRecordExpression recordExpression = parent instanceof ErlangFieldType ? null : PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
+    ErlangRecordRef recordTypeRef = parent instanceof ErlangFieldType ? PsiTreeUtil.getChildOfType(parent.getParent(), ErlangRecordRef.class) : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() :
+                             recordTypeRef != null ? recordTypeRef.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve == null && recordExpression != null) {
