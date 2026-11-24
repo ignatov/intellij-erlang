@@ -425,17 +425,35 @@ public final class ErlangMacroResolve {
    * Epp's "argument mismatch for macro" at a use of a predefined feature macro ({@code FEATURE_ENABLED},
    * {@code FEATURE_AVAILABLE}) that the file defines too. Epp keeps the predefined definition, which takes one argument,
    * next to the file's own ones, so a definition without a parameter list matches only a use without arguments, and
-   * outside -define bodies only the definitions in force at the use count. Only where it is certain, as
-   * {@link #argumentMismatch}.
+   * only the definitions in force at the use count. For a use outside -define bodies (epp checks a body where the macro
+   * is expanded; the caller skips those), and only where it is certain, as {@link #argumentMismatch}; an {@code -undef} of the name in the
+   * file or in a header it includes may remove the predefined definition, so then nothing is certain.
    */
   public static boolean isFeatureArgumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
     if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return false;
     int arity = arityAfter(nameLeaf);
     if (arity == UNKNOWN || arity == 1) return false;
-    List<ErlangMacrosDefinition> definitions = PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null
-                                               ? candidates(file, name) : inForceAt(file, name, nameLeaf);
-    for (ErlangMacrosDefinition d : definitions) if (arity(d) == arity) return false;
-    return !isInConditional(nameLeaf) && !isTestedByConditional(file, name);
+    for (ErlangMacrosDefinition d : inForceAt(file, name, nameLeaf)) if (arity(d) == arity) return false;
+    return !isInConditional(nameLeaf) && !isTestedByConditional(file, name) && !isUndefined(file, name, new HashSet<>());
+  }
+
+  /** An {@code -undef} of the name, at any depth, in the file or in a header it includes (directly or not). */
+  private static boolean isUndefined(@NotNull ErlangFile file, @NotNull String name, @NotNull Set<ErlangFile> seen) {
+    if (!seen.add(file)) return false;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      if (!(c instanceof ErlangAttribute attribute) || attribute.getAtomAttribute() == null) continue;
+      ErlangAtomAttribute atom = attribute.getAtomAttribute();
+      if (!"undef".equals(atom.getName())) continue;
+      ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+      if (m != null && name.equals(StringUtil.unquoteString(m.getText(), '\''))) return true;
+    }
+    for (ErlangInclude inc : file.getIncludes()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (isUndefined(h, name, seen)) return true;
+    }
+    for (ErlangIncludeLib inc : file.getIncludeLibs()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (isUndefined(h, name, seen)) return true;
+    }
+    return false;
   }
 
   /** The element is in a top-level form inside an {@code -if}, {@code -ifdef} or {@code -ifndef} branch of its file. */

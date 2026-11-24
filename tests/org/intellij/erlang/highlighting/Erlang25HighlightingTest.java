@@ -123,6 +123,29 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1565: -undef removes the predefined definition too
+  public void testUnresolvedMacrosFeatureOwnDefineUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineUndefInHeader() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("u.hrl", "-undef(FEATURE_ENABLED).\n-define(FEATURE_ENABLED, true).\n");
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0, true/0]).\n-include(\"u.hrl\").\nf() -> ?FEATURE_ENABLED().\ntrue() -> ok.\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565: epp checks a -define body only where the macro is expanded
+  public void testUnresolvedMacrosFeatureOwnDefineInDefineBody() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   // issue 1506
   public void testIllegalGuardCeilFloorMinMaxR25() {
     myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
