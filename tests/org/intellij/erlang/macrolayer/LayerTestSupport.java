@@ -12,6 +12,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
+import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -26,6 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** Spike 4: helpers of the measurement tests. */
 final class LayerTestSupport {
@@ -110,7 +114,7 @@ final class LayerTestSupport {
 
   /** Round 5: a pooled thread, a plain read action, no progress indicator: a caller that cannot be cancelled. */
   static <T> T inBackgroundWithoutIndicator(Callable<T> c) throws Exception {
-    return ApplicationManager.getApplication().executeOnPooledThread(() -> ReadAction.compute(c::call)).get();
+    return waitForTask(ApplicationManager.getApplication().executeOnPooledThread(() -> ReadAction.compute(c::call)));
   }
 
   /**
@@ -118,7 +122,7 @@ final class LayerTestSupport {
    * target-element search or find usages in the IDE).
    */
   static <T> T inBackgroundWithIndicator(Callable<T> c) throws Exception {
-    return ApplicationManager.getApplication().executeOnPooledThread(
+    return waitForTask(ApplicationManager.getApplication().executeOnPooledThread(
       () -> ProgressManager.getInstance().runProcess(() -> ReadAction.compute(() -> {
         try {
           return c.call();
@@ -129,7 +133,26 @@ final class LayerTestSupport {
         catch (Exception e) {
           throw new RuntimeException(e);
         }
-      }), new EmptyProgressIndicator())).get();
+      }), new EmptyProgressIndicator())));
+  }
+
+  /**
+   * Waits for a task of a pooled thread, as {@link Future#get()} does. On the UI thread it dispatches the events while it
+   * waits, which lets go of the write-intent lock that the test holds there. A plain {@code get()} keeps that lock and
+   * deadlocks when a background thread starts a write action meanwhile (on 2026.3 the scanning of the indexes does): the
+   * write action waits for the lock, the read action of the task waits behind the pending write action, and the UI
+   * thread waits for the task.
+   */
+  static <T> T waitForTask(Future<T> task) throws Exception {
+    if (!ApplicationManager.getApplication().isDispatchThread()) return task.get();
+    while (true) {
+      try {
+        return task.get(10, TimeUnit.MILLISECONDS);
+      }
+      catch (TimeoutException e) {
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+      }
+    }
   }
 
   /** Resolves every reference of the file in a background read action; returns the number resolved. */

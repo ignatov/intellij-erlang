@@ -107,9 +107,9 @@ public class ErlangMacroLayerIdeFindingsTest extends ErlangLightPlatformCodeInsi
     com.intellij.psi.PsiElement atom = f.findElementAt(at).getParent();
     com.intellij.psi.PsiElement body = com.intellij.psi.util.PsiTreeUtil.getParentOfType(atom, org.intellij.erlang.psi.ErlangClauseBody.class);
     int builds0 = builds().size();
-    String r = com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(
+    String r = waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(
       () -> ErlangMacroLayerTokenReference.find(atom).length + " " + ErlangMacroLayerTokenReference.find(body).length + " " +
-            org.intellij.erlang.psi.impl.ErlangBareMacroReference.find(body).length).get();
+            org.intellij.erlang.psi.impl.ErlangBareMacroReference.find(body).length));
     assertEquals("0 0 0", r);
     assertEquals(builds0, builds().size());
   }
@@ -127,7 +127,7 @@ public class ErlangMacroLayerIdeFindingsTest extends ErlangLightPlatformCodeInsi
     com.intellij.openapi.editor.Document d = PsiDocumentManager.getInstance(getProject()).getDocument(f);
     WriteCommandAction.runWriteCommandAction(getProject(), () -> d.insertString(d.getTextLength(), "%"));
     PsiDocumentManager.getInstance(getProject()).commitAllDocuments();
-    com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> f.getReferences()).get();
+    waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> f.getReferences()));
     String refs = inBackgroundWithIndicator(() -> java.util.Arrays.toString(f.getReferences()));
     assertTrue("the file's bare macro reference: " + refs, refs.contains("ErlangBareMacroReference"));
   }

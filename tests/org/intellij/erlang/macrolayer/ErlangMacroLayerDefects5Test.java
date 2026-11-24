@@ -188,10 +188,10 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
 
   /** Runs on a pooled thread without a read action, like listeners and expiration checks. */
   private static <T> T withoutReadAction(java.util.concurrent.Callable<T> c) throws Exception {
-    return com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+    return waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
       assertFalse(com.intellij.openapi.application.ApplicationManager.getApplication().isReadAccessAllowed());
       return c.call();
-    }).get();
+    }));
   }
 
   private PsiElement headerTarget(PsiFile includer, String marker) throws Exception {
@@ -278,12 +278,12 @@ public class ErlangMacroLayerDefects5Test extends ErlangLightPlatformCodeInsight
       manager.getFindUsagesHandler(t, com.intellij.find.findUsages.FindUsagesHandlerFactory.OperationMode.USAGES_WITH_DEFAULT_OPTIONS);
     assertNotNull("Cannot find handler for: " + t, handler);
     com.intellij.find.findUsages.FindUsagesOptions options = handler.getFindUsagesOptions(null);
-    return usagesText(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+    return usagesText(waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
       com.intellij.util.CommonProcessors.CollectProcessor<com.intellij.usageView.UsageInfo> p =
         new com.intellij.util.CommonProcessors.CollectProcessor<>(java.util.Collections.synchronizedList(new java.util.ArrayList<>()));
       for (PsiElement e : handler.getPrimaryElements()) handler.processElementUsages(e, p, options);
       return p.getResults();
-    }).get());
+    })));
   }
 
   /** P6: find usages on a name whose target is in the body of a header macro finds the uses in every includer. */
