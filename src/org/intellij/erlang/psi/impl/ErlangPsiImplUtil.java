@@ -924,7 +924,7 @@ public class ErlangPsiImplUtil {
       List<LookupElement> foundedTypes = ContainerUtil.map(
         types,
         rd -> PrioritizedLookupElement.withPriority(
-          LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
+          LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withTailText("/" + getArity(rd)).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
           ErlangCompletionContributor.TYPE_PRIORITY));
       return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
