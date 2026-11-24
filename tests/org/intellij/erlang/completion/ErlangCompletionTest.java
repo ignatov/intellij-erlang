@@ -992,6 +992,40 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.INCLUDES, "B", "C");
   }
 
+  public void testSmartIntegerSumOfProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 1 + 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerProductWithCommentBeforeOperator() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 % two
+                          * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatDivisionWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 / 1,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """

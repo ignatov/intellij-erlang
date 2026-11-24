@@ -157,7 +157,7 @@ public class ErlType {
       @Override
       public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
         var firstChild = o.getFirstChild();
-        var operator = firstChild.getNextSibling();
+        var operator = PsiTreeUtil.skipWhitespacesAndCommentsForward(firstChild);
 
         if (operator == null) return;
 
