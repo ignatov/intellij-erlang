@@ -190,4 +190,22 @@ public class ErlangMacroExpanderEppTest extends ErlangLightPlatformCodeInsightFi
     assertEquals("Y", h.directives.get(1).name());
     assertEquals("t ( ) -> quoted .", form(expand("-module(b12).\n-include(\"q.hrl\").\nt() -> ?'X'.\n", "q.hrl", "-define('X', quoted).\n"), "t()"));
   }
+
+  /** A body that ends with ?G takes the arguments that follow its use in the body around it (probe k). epp: [2]. */
+  public void testBodyEndingWithAUseTakesTheArgumentsAfterIt() {
+    assertEquals("f ( ) -> [ 2 ] .", form("-module(k).\n-define(K(X), ?G).\n-define(G(Y), [Y]).\n-define(H(X), ?K(X)(2)).\nf() -> ?H(a).\n", "f()"));
+  }
+
+  /** ??X of an argument with quoted atoms (probe s). epp: "f ( 'A' , 'a b' , x )". */
+  public void testStringifyOfQuotedAtoms() {
+    assertEquals("f ( ) -> \"f ( 'A' , 'a b' , x )\" .", form("-module(s).\n-define(S(X), ??X).\nf() -> ?S(f('A', 'a b', x)).\n", "f()"));
+  }
+
+  /** -define(X foo) is badly formed for epp and defines nothing (probe d): ?X stays as it is. */
+  public void testBadlyFormedDefineIsIgnored() {
+    Expansion x = expand("-module(d).\n-define(X foo).\nf() -> ?X.\n");
+    assertEquals("f ( ) -> ? X .", form(x, "f()"));
+    assertEquals(Integer.valueOf(1), x.outcomes.get(ErlangMacroExpander.Outcome.NOT_IN_FILE));
+    assertNull(x.outcomes.get(ErlangMacroExpander.Outcome.SUBSTITUTED));
+  }
 }
