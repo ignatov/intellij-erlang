@@ -426,8 +426,9 @@ public final class ErlangMacroResolve {
 
   /**
    * Whether an {@code -undef} of the name, in the file or in a header it includes (directly or not), comes before the use
-   * (anywhere in the file for a use inside a {@code -define} body): {@link #UNDEF_SURE} when all of them are outside
-   * any conditional of the file, {@link #UNDEF_MAYBE} when one is inside a conditional, else {@link #UNDEF_NONE}.
+   * (anywhere in the file for a use inside a {@code -define} body): {@link #UNDEF_SURE} when one of them is outside
+   * every conditional of the file, {@link #UNDEF_MAYBE} when all of them are inside conditionals, else
+   * {@link #UNDEF_NONE}.
    */
   private static int undefBefore(@NotNull ErlangFile file, @NotNull String name, @NotNull PsiElement use) {
     int at = PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null ? Integer.MAX_VALUE
@@ -453,8 +454,8 @@ public final class ErlangMacroResolve {
         else if ("undef".equals(a)) undef = isUndefOf(atom, name);
       }
       if (undef) {
-        if (depth > 0) return UNDEF_MAYBE;
-        r = UNDEF_SURE;
+        if (depth == 0) return UNDEF_SURE;
+        r = UNDEF_MAYBE;
       }
     }
     return r;
