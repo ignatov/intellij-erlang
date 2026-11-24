@@ -347,6 +347,20 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
   }
 
+  // issue 1553: erlc reports "type t() undefined" and "type t(_,_,_) undefined" here
+  public void testTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3]).\n-type t(A) :: {A}.\n-type u() :: t().\n");
+    ErlangExportType export = PsiTreeUtil.findChildOfType(myFixture.getFile(), ErlangExportType.class);
+    assertNotNull(export);
+    PsiElement exported = export.getReference().resolve();
+    PsiElement used = findTypeRef("t()").getReference().resolve();
+    assertTrue("t/3 resolved to " + describe(exported) + ", t() resolved to " + describe(used), exported == null && used == null);
+  }
+
+  private static String describe(PsiElement element) {
+    return element instanceof ErlangTypeDefinition type ? type.getName() + "/" + type.getArity() : String.valueOf(element);
+  }
+
   private ErlangTypeRef findTypeRef(String typeText) {
     for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
       if (ref.getParent().getText().equals(typeText)) return ref;
