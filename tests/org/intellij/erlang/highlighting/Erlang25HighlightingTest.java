@@ -87,6 +87,91 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnresolvedMacrosFeatureOwnDefine.erl");
   }
 
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineParens() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineBefore() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineArity() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineArityLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0]).\n-define(FEATURE_ENABLED, true).\nf() -> ?FEATURE_ENABLED().\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineBare() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565: -undef removes the predefined definition too
+  public void testUnresolvedMacrosFeatureOwnDefineUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineUndefInHeader() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("u.hrl", "-undef(FEATURE_ENABLED).\n-define(FEATURE_ENABLED, true).\n");
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0, true/0]).\n-include(\"u.hrl\").\nf() -> ?FEATURE_ENABLED().\ntrue() -> ok.\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineUndefInIncludeLib() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("app/include/u.hrl", "-undef(FEATURE_ENABLED).\n-define(FEATURE_ENABLED, true).\n");
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0, true/0]).\n-include_lib(\"app/include/u.hrl\").\nf() -> ?FEATURE_ENABLED().\ntrue() -> ok.\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565: a module that includes the header may undefine the name
+  public void testUnresolvedMacrosFeatureOwnDefineHeader() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("a.erl", "-module(a).\n-export([f/0, true/0]).\n-undef(FEATURE_ENABLED).\n-include(\"UnresolvedMacrosFeatureOwnDefineHeader.hrl\").\ntrue() -> ok.\n");
+    myFixture.configureByFile("UnresolvedMacrosFeatureOwnDefineHeader.hrl");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565: in a header, a use that matches neither an own definition nor the predefined one
+  public void testUnresolvedMacrosFeatureOwnDefineHeaderParams() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.configureByFile("UnresolvedMacrosFeatureOwnDefineHeaderParams.hrl");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565: epp checks a -define body only where the macro is expanded
+  public void testUnresolvedMacrosFeatureOwnDefineInDefineBody() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   // issue 1564
   public void testUnresolvedMacrosFeatureOwnDefineOneArgument() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());

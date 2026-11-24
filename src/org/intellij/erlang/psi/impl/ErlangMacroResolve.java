@@ -15,6 +15,7 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroArgSplitter;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
@@ -267,6 +268,12 @@ public final class ErlangMacroResolve {
     if (use == null || use.getContainingFile() != file || PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null) {
       return candidates(file, name);
     }
+    List<ErlangMacrosDefinition> r = inForceAt(file, name, use);
+    return r.isEmpty() ? candidates(file, name) : r;
+  }
+
+  /** The definitions of the name in force at a use of the file outside -define bodies, as {@link #candidatesAt}, without its fallback. */
+  private static @NotNull List<ErlangMacrosDefinition> inForceAt(@NotNull ErlangFile file, @NotNull String name, @NotNull PsiElement use) {
     int at = use.getTextRange().getStartOffset();
     Map<Integer, List<ErlangMacrosDefinition>> byArity = new LinkedHashMap<>();
     for (Event e : visible(file).events) {
@@ -288,7 +295,7 @@ public final class ErlangMacroResolve {
     }
     List<ErlangMacrosDefinition> r = new ArrayList<>();
     for (List<ErlangMacrosDefinition> list : byArity.values()) r.addAll(list);
-    return r.isEmpty() ? candidates(file, name) : r;
+    return r;
   }
 
   /** One top-level step of the file for {@link #candidatesAt}: a definition, an undef, or the definitions of an include. */
@@ -420,6 +427,24 @@ public final class ErlangMacroResolve {
     if (isInConditional(nameLeaf) || isTestedByConditional(file, name)) return null;
     String uses = arity == NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
     return "Argument mismatch for macro '?" + name + "': no definition takes " + uses;
+  }
+
+  /**
+   * Epp's "argument mismatch for macro" at a use of a predefined feature macro ({@code FEATURE_ENABLED},
+   * {@code FEATURE_AVAILABLE}) that the file defines too. Epp keeps the predefined definition, which takes one argument,
+   * next to the file's own ones, so a definition without a parameter list matches only a use without arguments, and
+   * only the definitions in force at the use count. For a use outside -define bodies (epp checks a body where the macro
+   * is expanded; the caller skips those), and only where it is certain, as {@link #argumentMismatch}; an {@code -undef} of the name in the
+   * file or in a header it includes may remove the predefined definition, so then nothing is certain. In a header the
+   * modules that include it are unknown, so only a use that is a mismatch with and without the predefined definition.
+   */
+  public static boolean isFeatureArgumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return false;
+    int arity = arityAfter(nameLeaf);
+    if (arity == UNKNOWN || arity == 1) return false;
+    if (file.getFileType() == ErlangFileType.HEADER) return argumentMismatch(nameLeaf, name) != null;
+    for (ErlangMacrosDefinition d : inForceAt(file, name, nameLeaf)) if (arity(d) == arity) return false;
+    return !isInConditional(nameLeaf) && !isTestedByConditional(file, name) && !undefines(file, name, new HashSet<>());
   }
 
   private static final int UNDEF_NONE = 0, UNDEF_SURE = 1, UNDEF_MAYBE = 2;

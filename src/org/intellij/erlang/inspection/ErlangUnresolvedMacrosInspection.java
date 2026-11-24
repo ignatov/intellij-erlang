@@ -40,6 +40,8 @@ import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
 import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceMacroQuickFix;
+import org.intellij.erlang.sdk.ErlangSdkRelease;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,9 +72,16 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
-        if (FEATURE_MACROS.contains(macrosName.getText()) && (reference == null || ErlangMacroResolve.firstTarget(reference) == null)) {
-          checkFeatureArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
-          return;
+        if (FEATURE_MACROS.contains(macrosName.getText())) {
+          PsiElement nameLeaf = ErlangPsiImplUtil.getNameIdentifier(macrosName);
+          if (reference == null || ErlangMacroResolve.firstTarget(reference) == null) {
+            checkFeatureArity(o, nameLeaf, macrosName.getText(), null);
+            return;
+          }
+          if (!isBeforeFeatureMacros(o)) {
+            checkOwnFeatureArity(o, nameLeaf, macrosName.getText(), null);
+            return;
+          }
         }
         if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
@@ -92,9 +101,15 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
-          if (FEATURE_MACROS.contains(name) && ErlangMacroResolve.firstTarget(bare) == null) {
-            checkFeatureArity(o, bare.getNameElement(), name, range);
-            continue;
+          if (FEATURE_MACROS.contains(name)) {
+            if (ErlangMacroResolve.firstTarget(bare) == null) {
+              checkFeatureArity(o, bare.getNameElement(), name, range);
+              continue;
+            }
+            if (!isBeforeFeatureMacros(o)) {
+              checkOwnFeatureArity(o, bare.getNameElement(), name, range);
+              continue;
+            }
           }
           if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
           if (ErlangMacroResolve.firstTarget(bare) == null) {
@@ -120,12 +135,35 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         }
       }
 
+      /**
+       * The same for a feature macro that a -define of the file resolves to: the ordinary rule first (see
+       * {@link #checkArity}), then {@link ErlangMacroResolve#isFeatureArgumentMismatch} outside -define bodies.
+       */
+      private void checkOwnFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (!ErlangMacroLayer.isEnabled()) return;
+        String message = ErlangMacroResolve.argumentMismatch(nameLeaf, name);
+        if (message != null) {
+          registerProblem(holder, target, message, range, null);
+          return;
+        }
+        if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
+        if (ErlangMacroResolve.isFeatureArgumentMismatch(nameLeaf, name)) {
+          registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
+        }
+      }
+
       /** Epp's "argument mismatch for macro" where it is certain (see {@link ErlangMacroResolve#argumentMismatch}). */
       private void checkArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
         String message = ErlangMacroLayer.isEnabled() ? ErlangMacroResolve.argumentMismatch(nameLeaf, unquote(name)) : null;
         if (message != null) registerProblem(holder, target, message, range, null);
       }
     };
+  }
+
+  /** The SDK release is known and has no predefined feature macros (OTP 24 or older): an own -define is the only one. */
+  private static boolean isBeforeFeatureMacros(@NotNull PsiElement element) {
+    ErlangSdkRelease release = ErlangSdkType.getSdkRelease(element);
+    return release != null && !release.isNewerOrEqualTo(ErlangSdkRelease.V_25_0);
   }
 
   private static boolean isDefinedByEnclosingCondition(@NotNull PsiElement macros, @NotNull String name) {
