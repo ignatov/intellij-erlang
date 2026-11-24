@@ -127,4 +127,25 @@ public class ErlangMacroExpanderLimitsTest extends ErlangLightPlatformCodeInsigh
     // each header's body is replayed once: its second include is skipped
     assertTrue(String.valueOf(x.replayedDirectives), x.replayedDirectives <= 6 * n);
   }
+
+  /**
+   * More than {@link ErlangMacroExpander#MAX_REPLAYED_DIRECTIVES} header directives: no header is replayed after it, so
+   * a definition of a later include is not visible.
+   */
+  public void testReplayStopsAfterTooManyHeaderDirectives() throws Exception {
+    StringBuilder flood = new StringBuilder();
+    for (int i = 0; i < 1000; i++) flood.append("-undef(Z).\n");
+    Map<String, HeaderSummary> headers = new HashMap<>();
+    headers.put("flood.hrl", ErlangMacroExpander.summarize(flood, new ErlangLexer(getProject()), "flood.hrl"));
+    headers.put("d.hrl", ErlangMacroExpander.summarize("-define(D, 1).\n", new ErlangLexer(getProject()), "d.hrl"));
+    IncludeResolver resolver = (owner, attribute, string) -> headers.get(string);
+    StringBuilder text = new StringBuilder("-module(m).\n");
+    for (int i = 0; i < 110; i++) text.append("-include(\"flood.hrl\").\n");
+    text.append("-include(\"d.hrl\").\nt() -> ?D.\n");
+    Expansion x = expandWithin(text.toString(), resolver);
+    assertEquals(101_000, x.replayedDirectives);
+    assertNull(x.outcomes.get(Outcome.SUBSTITUTED));
+    assertEquals(Integer.valueOf(1), x.outcomes.get(Outcome.NOT_IN_FILE));
+    assertTrue(x.text, x.text.endsWith("-include(\"d.hrl\").\nt() -> ?D.\n"));
+  }
 }

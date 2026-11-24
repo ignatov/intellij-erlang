@@ -17,6 +17,7 @@
 package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.intention.ErlangExportTypeIntention;
 
 public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   @Override
@@ -37,4 +38,25 @@ public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   public void testDelete()   { doTest("Remove type"); }
   public void testQuotedAtom()       { doTest("Export type"); }
   public void testQuotedAtomCommon() { doTest("Export type"); }
+
+  public void testIntentionNotOfferedForExportedType() {
+    myFixture.configureByFile("exportedType.erl");
+    assertFalse(new ErlangExportTypeIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+    assertEmpty(myFixture.filterAvailableIntentions("Export type"));
+  }
+
+  public void testIntentionOfferedForTypeExportedWithOtherArity() {
+    myFixture.configureByText("a.erl", "-export_type([t/1]).\n-type t<caret>() :: atom().\n-type t(A) :: A.");
+    assertTrue(new ErlangExportTypeIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+  }
+
+  public void testIntentionNotOfferedForTypeInSecondExportTypeAttribute() {
+    myFixture.configureByText("a.erl", "-export_type([u/0]).\n-export_type([t/0]).\n-type t<caret>() :: atom().\n-type u() :: atom().");
+    assertFalse(new ErlangExportTypeIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+  }
+
+  public void testIntentionNotOfferedForExportedQuotedType() {
+    myFixture.configureByText("a.erl", "-export_type(['my-type'/0]).\n-type 'my-<caret>type'() :: atom().");
+    assertFalse(new ErlangExportTypeIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+  }
 }

@@ -23,6 +23,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +40,8 @@ public class ErlangExportTypeIntention extends ErlangBaseNamedElementIntention {
   public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
     if (!file.getManager().isInProject(file) || !(file instanceof ErlangFile)) return false;
     ErlangTypeDefinition type = findType(file, editor.getCaretModel().getOffset());
-    return type != null;
+    return type != null &&
+           !ErlangPsiImplUtil.getExportedTypeSignatures((ErlangFile) file).contains(type.getName() + "/" + ErlangPsiImplUtil.getArity(type));
   }
 
   @Override

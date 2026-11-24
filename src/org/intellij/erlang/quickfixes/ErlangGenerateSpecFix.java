@@ -165,7 +165,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     var template = TemplateManager.getInstance(project).createTemplate("", "");
     template.setToReformat(true);
 
-    template.addTextSegment("-spec " + function.getName() + "(");
+    template.addTextSegment("-spec " + function.getAtomName().getText() + "(");
     addArgsTypeSpecsAsTemplateFields(template, function);
     template.addTextSegment(") -> ");
     template.addVariable("RETURN", new ConstantNode(computeReturnType(function)), true);
@@ -181,7 +181,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     if (!(containingFile instanceof ErlangFile)) return;
 
     var project = Objects.requireNonNull(editor.getProject());
-    var textOffset = function.getTextOffset();
+    var textOffset = function.getTextRange().getStartOffset();
     var template = createErlangSpecTemplate(function, project);
 
     editor.getCaretModel().moveToOffset(textOffset);
