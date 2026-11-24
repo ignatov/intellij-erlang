@@ -47,11 +47,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   public PsiElement resolveInner() {
     PsiFile containingFile = getPsiFile();
     if (containingFile instanceof ErlangFile erlangFile) {
-      if (myArity >= 0) {
-        PsiElement type = resolve(erlangFile, myArity);
-        if (type != null) return type;
-      }
-      return resolve(erlangFile, -1);
+      return resolve(erlangFile, myArity);
     }
     return null;
   }
