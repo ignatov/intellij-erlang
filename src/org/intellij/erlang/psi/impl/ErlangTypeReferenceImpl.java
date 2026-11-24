@@ -33,21 +33,28 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Nullable
   private final ErlangModuleRef myModuleRef;
   private final int myArity;
+  private final boolean myArityUncertain;
 
   ErlangTypeReferenceImpl(@NotNull ErlangCompositeElement owner,
                           @NotNull ErlangQAtom element,
                           @Nullable ErlangModuleRef moduleRef,
-                          int arity) {
+                          int arity,
+                          boolean arityUncertain) {
     super(owner, element, getTextRangeForReference(element), getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
     myArity = arity;
+    myArityUncertain = arityUncertain;
   }
 
   @Override
   public PsiElement resolveInner() {
     PsiFile containingFile = getPsiFile();
     if (containingFile instanceof ErlangFile erlangFile) {
-      return resolve(erlangFile, myArity);
+      if (myArity >= 0) {
+        PsiElement type = resolve(erlangFile, myArity);
+        if (type != null || !myArityUncertain) return type;
+      }
+      return resolve(erlangFile, -1);
     }
     return null;
   }

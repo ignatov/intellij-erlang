@@ -392,6 +392,26 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  // a macro argument still prefers the counted arity: t(?X) is a use of t/1 even when t/0 comes first
+  public void testTypeUsedWithMacroArgumentPrefersCountedArity() {
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    assertResolvesToArity(findTypeRef("t(?X)").getReference(), 1);
+  }
+
+  public void testTypeUsedWithMacroArgumentLeavesOtherArityUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type <warning descr=\"Unused type 't'\">t</warning>() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRenameOtherArityKeepsTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(X, a).\n-type <caret>t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(X, a).\n-type zz() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+  }
+
   private static String describe(PsiElement element) {
     return element instanceof ErlangTypeDefinition type ? type.getName() + "/" + type.getArity() : String.valueOf(element);
   }
