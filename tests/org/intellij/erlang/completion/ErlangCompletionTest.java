@@ -491,6 +491,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
   }
 
+  public void testModuleQualifiedTypesOfModuleMacro() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacroWithPrefix() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:p<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
   private void addTypesRemoteModule() {
     myFixture.addFileToProject("other.erl", """
       -module(other).

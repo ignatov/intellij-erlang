@@ -156,6 +156,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
+  public void testModuleMacroQualifiedType()            { doTest(false); }
 
   public void testSixQuoteMultilineStringAndSigil() {
     PsiFile file = parseText("-module(six_quotes).\n" +
