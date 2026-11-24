@@ -70,8 +70,10 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
 
         PsiReference reference = o.getReference();
-        if (FEATURE_MACROS.contains(macrosName.getText()) && (reference == null || ErlangMacroResolve.firstTarget(reference) == null)) {
-          checkFeatureArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+        if (FEATURE_MACROS.contains(macrosName.getText())) {
+          PsiElement nameLeaf = ErlangPsiImplUtil.getNameIdentifier(macrosName);
+          if (reference == null || ErlangMacroResolve.firstTarget(reference) == null) checkFeatureArity(o, nameLeaf, macrosName.getText(), null);
+          else checkOwnFeatureArity(o, nameLeaf, macrosName.getText(), null);
           return;
         }
         if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
@@ -92,8 +94,9 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
           if (!(r instanceof ErlangBareMacroReference bare)) continue;
           String name = bare.getCanonicalText();
           TextRange range = TextRange.create(r.getRangeInElement().getStartOffset() - 1, r.getRangeInElement().getEndOffset());
-          if (FEATURE_MACROS.contains(name) && ErlangMacroResolve.firstTarget(bare) == null) {
-            checkFeatureArity(o, bare.getNameElement(), name, range);
+          if (FEATURE_MACROS.contains(name)) {
+            if (ErlangMacroResolve.firstTarget(bare) == null) checkFeatureArity(o, bare.getNameElement(), name, range);
+            else checkOwnFeatureArity(o, bare.getNameElement(), name, range);
             continue;
           }
           if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name)) continue;
@@ -116,6 +119,13 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);
         if (arity != 1 && arity != ErlangMacroResolve.UNKNOWN) {
+          registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
+        }
+      }
+
+      /** The same for a feature macro that a -define of the file resolves to (see {@link ErlangMacroResolve#isFeatureArgumentMismatch}). */
+      private void checkOwnFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (ErlangMacroLayer.isEnabled() && ErlangMacroResolve.isFeatureArgumentMismatch(nameLeaf, name)) {
           registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
         }
       }

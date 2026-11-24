@@ -421,6 +421,23 @@ public final class ErlangMacroResolve {
     return "Argument mismatch for macro '?" + name + "': no definition takes " + uses;
   }
 
+  /**
+   * Epp's "argument mismatch for macro" at a use of a predefined feature macro ({@code FEATURE_ENABLED},
+   * {@code FEATURE_AVAILABLE}) that the file defines too. Epp keeps the predefined definition, which takes one argument,
+   * next to the file's own ones, so a definition without a parameter list matches only a use without arguments, and
+   * outside -define bodies only the definitions in force at the use count. Only where it is certain, as
+   * {@link #argumentMismatch}.
+   */
+  public static boolean isFeatureArgumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return false;
+    int arity = arityAfter(nameLeaf);
+    if (arity == UNKNOWN || arity == 1) return false;
+    List<ErlangMacrosDefinition> definitions = PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null
+                                               ? candidates(file, name) : inForceAt(file, name, nameLeaf);
+    for (ErlangMacrosDefinition d : definitions) if (arity(d) == arity) return false;
+    return !isInConditional(nameLeaf) && !isTestedByConditional(file, name);
+  }
+
   /** The element is in a top-level form inside an {@code -if}, {@code -ifdef} or {@code -ifndef} branch of its file. */
   public static boolean isInConditional(@NotNull PsiElement element) {
     if (!(element.getContainingFile() instanceof ErlangFile file)) return false;
