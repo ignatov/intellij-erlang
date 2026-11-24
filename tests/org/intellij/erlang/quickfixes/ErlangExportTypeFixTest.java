@@ -35,4 +35,6 @@ public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   public void testWithout()  { doTest("Export type"); }
   public void testCommon()   { doTest("Export type"); }
   public void testDelete()   { doTest("Remove type"); }
+  public void testQuotedAtom()       { doTest("Export type"); }
+  public void testQuotedAtomCommon() { doTest("Export type"); }
 }
