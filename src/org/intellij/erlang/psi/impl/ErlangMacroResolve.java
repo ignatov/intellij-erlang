@@ -428,14 +428,14 @@ public final class ErlangMacroResolve {
    * next to the file's own ones, so a definition without a parameter list matches only a use without arguments, and
    * only the definitions in force at the use count. For a use outside -define bodies (epp checks a body where the macro
    * is expanded; the caller skips those), and only where it is certain, as {@link #argumentMismatch}; an {@code -undef} of the name in the
-   * file or in a header it includes may remove the predefined definition, so then nothing is certain. Never in a
-   * header: the modules that include it are unknown there.
+   * file or in a header it includes may remove the predefined definition, so then nothing is certain. In a header the
+   * modules that include it are unknown, so only a use that is a mismatch with and without the predefined definition.
    */
   public static boolean isFeatureArgumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
     if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return false;
-    if (file.getFileType() == ErlangFileType.HEADER) return false;
     int arity = arityAfter(nameLeaf);
     if (arity == UNKNOWN || arity == 1) return false;
+    if (file.getFileType() == ErlangFileType.HEADER) return argumentMismatch(nameLeaf, name) != null;
     for (ErlangMacrosDefinition d : inForceAt(file, name, nameLeaf)) if (arity(d) == arity) return false;
     return !isInConditional(nameLeaf) && !isTestedByConditional(file, name) && !isUndefined(file, name, new HashSet<>());
   }

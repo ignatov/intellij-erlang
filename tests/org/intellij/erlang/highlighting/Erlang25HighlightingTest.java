@@ -157,6 +157,14 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  // issue 1565: in a header, a use that matches neither an own definition nor the predefined one
+  public void testUnresolvedMacrosFeatureOwnDefineHeaderParams() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.configureByFile("UnresolvedMacrosFeatureOwnDefineHeaderParams.hrl");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1565: epp checks a -define body only where the macro is expanded
   public void testUnresolvedMacrosFeatureOwnDefineInDefineBody() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
