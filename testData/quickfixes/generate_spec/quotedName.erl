@@ -1,0 +1,1 @@
+'my-f<caret>unc'() -> ok.
