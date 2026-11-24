@@ -38,6 +38,7 @@ The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts
 | Unit tests of the release smoke scripts | `python3 -m unittest discover -s scripts/smoke -p 'test_*.py' -v` |
 | Refresh the parser baseline of the release smoke | `scripts/smoke/run.sh inputs parser-baseline` |
 | Refresh the expected inspection problems of the release smoke | `scripts/smoke/run.sh inputs build inspect-baseline` |
+| Code areas (map `scripts/areas/areas.yml`; a new package needs an entry): check, area of files, unit tests | `python3 scripts/areas/check_areas.py`, `... which PATH...` or `... touched`; `python3 -m unittest discover -s scripts/areas -p 'test_*.py' -v` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml` and `coverage.yml`). It fails if any test was skipped.
