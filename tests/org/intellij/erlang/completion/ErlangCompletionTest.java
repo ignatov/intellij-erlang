@@ -20,6 +20,7 @@ import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementPresentation;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiFile;
@@ -365,6 +366,22 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     LookupElement[] elements = myFixture.completeBasic();
     assertNotNull(elements);
     assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
+  }
+
+  public void testLocalTypeWithTwoAritiesHasDistinctPresentations() {
+    myFixture.configureByText("a.erl", """
+      -type tree() :: tree(any()).
+      -type tree(A) :: {A, [tree(A)]}.
+      -type t() :: tre<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    List<String> presentations = ContainerUtil.mapNotNull(elements, e -> {
+      if (!e.getLookupString().equals("tree")) return null;
+      LookupElementPresentation p = LookupElementPresentation.renderElement(e);
+      return p.getItemText() + "|" + p.getTailText() + "|" + p.getTypeText();
+    });
+    assertEquals(2, presentations.size());
+    assertEquals(presentations.toString(), 2, new HashSet<>(presentations).size());
   }
 
   public void testNoUndefinedOrDeprecatedBuiltInTypes() {
