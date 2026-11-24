@@ -1130,10 +1130,33 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
+    List<ErlangAtom> atoms = new ArrayList<>();
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      renameQAtom(clause.getQAtom(), newName);
+      ErlangQAtom qAtom = clause.getQAtom();
+      ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+      if (atom != null) atoms.add(atom);
+    }
+    if (!renameAtomsInDocument(o.getContainingFile(), atoms, newName)) {
+      for (ErlangAtom atom : atoms) renameAtom(atom, newName);
     }
     return o;
+  }
+
+  // one document change and one commit for all the clause names: a PSI replace per clause checks the whole file
+  // and adds a reformat range each time, which makes a function with many clauses take quadratic time (#1580)
+  private static boolean renameAtomsInDocument(@Nullable PsiFile file, @NotNull List<ErlangAtom> atoms, @NotNull String newName) {
+    String text = toAtomName(newName);
+    if (file == null || atoms.size() < 2 || text == null) return false;
+    PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
+    Document document = manager.getDocument(file);
+    if (document == null) return false;
+    manager.doPostponedOperationsAndUnblockDocument(document);
+    List<TextRange> ranges = new ArrayList<>(atoms.size());
+    for (ErlangAtom atom : atoms) ranges.add(atom.getTextRange());
+    ranges.sort(Comparator.comparingInt(TextRange::getStartOffset).reversed());
+    for (TextRange range : ranges) document.replaceString(range.getStartOffset(), range.getEndOffset(), text);
+    manager.commitDocument(document);
+    return true;
   }
 
   @NotNull

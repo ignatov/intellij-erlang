@@ -20,6 +20,8 @@ import com.intellij.codeInsight.daemon.impl.HighlightInfo;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
+import com.intellij.refactoring.rename.inplace.MemberInplaceRenameHandler;
+import com.intellij.testFramework.fixtures.CodeInsightTestUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
@@ -37,6 +39,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testUnquotedFunction()  { doTest("bar"); }
   public void testQuotedFunction()    { doTest("bar"); }
   public void testQuoteFunctionName() { doTest("BAR"); }
+  public void testMultiClauseFunction() { doTest("BAR"); }
+
+  public void testMultiClauseFunctionInplace() {
+    myFixture.configureByText("a.erl", "-module(a).\n-export([foo/1]).\nfo<caret>o(0) -> ok;\n'foo'(N) -> foo(N - 1).\n");
+    CodeInsightTestUtil.doInlineRename(new MemberInplaceRenameHandler(), "bar", myFixture);
+    myFixture.checkResult("-module(a).\n-export([bar/1]).\nbar(0) -> ok;\nbar(N) -> bar(N - 1).\n");
+  }
 
   public void testImportedFunctionInExport() {
     myFixture.configureByFiles("importedFunctionInExport.erl", "importedFunctionInExportUser.erl");
