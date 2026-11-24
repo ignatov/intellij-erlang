@@ -76,7 +76,7 @@ public final class ErlangDocUtil {
                                       @NotNull final Set<String> contextTags) {
     List<String> lines = ContainerUtil.map(comments, PsiElement::getText);
     return StringUtil.join(ContainerUtil.map(lines, s -> {
-      String replace = StringUtil.replace(s, commentStartsWith, "");
+      String replace = StringUtil.escapeXmlEntities(StringUtil.replace(s, commentStartsWith, ""));
       for (String tag : contextTags) {
         replace = replace.replaceAll(tag, "<b>" + tag + "</b>");
       }
