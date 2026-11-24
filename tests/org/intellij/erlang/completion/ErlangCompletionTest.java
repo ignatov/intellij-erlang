@@ -508,6 +508,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
   }
 
+  public void testModuleQualifiedTypesOfModuleMacro() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacroWithPrefix() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:p<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
   private void addTypesRemoteModule() {
     myFixture.addFileToProject("other.erl", """
       -module(other).
@@ -998,6 +1016,85 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.EQUALS, "B4", "B3", "g");
   }
 
+  public void testSmartIntegerProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerSumOfProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 1 + 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerProductWithCommentBeforeOperator() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 % two
+                          * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatDivisionWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 / 1,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatExcludesProductWithUnknownOperand() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N * 2,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.EXCLUDES, "B");
+  }
+
+  public void testSmartFloatProductOfUnknownOperandAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N*2.0,
+                      B2 = N * 2.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "B2", "C");
+  }
+
+  public void testSmartFloatProductOfIntegerAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """
@@ -1010,6 +1107,39 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         new(Func, ClauseSpecs) -> ok.""",
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
+  }
+
+  public void testSmartSecondArgumentWithLowerArityOverload() {
+    doSmartTest(
+      """
+        -spec new(atom()) -> ok.
+        new(_) -> ok.
+        -spec new(atom(), string()) -> ok.
+        new(A, B) ->
+            Str = "",
+            Str2 = "",
+            new(atom, <caret>).""",
+      CheckType.INCLUDES, "Str", "Str2"
+    );
+  }
+
+  public void testSmartFirstArgumentWithZeroArityOverload() {
+    doSmartTest(
+      """
+        -spec foo() -> ok.
+        foo() -> ok.
+        -spec foo(integer()) -> ok.
+        foo(I) ->
+            B = 1,
+            B2 = 2,
+            foo(<caret>).""",
+      CheckType.INCLUDES, "B", "B2"
+    );
+  }
+
+  public void testSmartSecondArgumentOfBifWithLowerArityOverload() {
+    myFixture.configureByText("a.erl", "foo(N) -> spawn(N, <caret>).");
+    myFixture.complete(CompletionType.SMART);
   }
 
   public void testFunctionsFromCameCaseModule() {

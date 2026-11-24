@@ -470,7 +470,7 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl(o, nameAtom, isModule ? null : moduleAtom, getArity(arity));
   }
 
-  private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
+  static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
     if (moduleReference == null) return false;
     return moduleReference.getQAtom().getText().equals("?MODULE");
   }
@@ -522,24 +522,29 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    return getModuleReference(o, o.getQAtom(), getTypeRefArity(o));
+    List<ErlangType> arguments = getTypeRefArguments(o);
+    if (arguments == null) return getModuleReference(o, o.getQAtom(), -1, false);
+    // a macro can expand to several arguments, so the counted arity may be wrong
+    boolean uncertain = ContainerUtil.exists(arguments, a -> PsiTreeUtil.findChildOfType(a, ErlangMacros.class, false) != null);
+    return getModuleReference(o, o.getQAtom(), arguments.size(), uncertain);
   }
 
-  private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
+  @Nullable
+  private static List<ErlangType> getTypeRefArguments(@NotNull ErlangTypeRef o) {
     PsiElement parent = o.getParent();
-    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
-    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
+    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return null;
+    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class);
   }
 
   @NotNull
-  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity, boolean arityUncertain) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity, arityUncertain);
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()));
+    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()), false);
   }
 
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
@@ -1125,10 +1130,33 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
+    List<ErlangAtom> atoms = new ArrayList<>();
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      renameQAtom(clause.getQAtom(), newName);
+      ErlangQAtom qAtom = clause.getQAtom();
+      ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+      if (atom != null) atoms.add(atom);
+    }
+    if (!renameAtomsInDocument(o.getContainingFile(), atoms, newName)) {
+      for (ErlangAtom atom : atoms) renameAtom(atom, newName);
     }
     return o;
+  }
+
+  // one document change and one commit for all the clause names: a PSI replace per clause checks the whole file
+  // and adds a reformat range each time, which makes a function with many clauses take quadratic time (#1580)
+  private static boolean renameAtomsInDocument(@Nullable PsiFile file, @NotNull List<ErlangAtom> atoms, @NotNull String newName) {
+    String text = toAtomName(newName);
+    if (file == null || atoms.size() < 2 || text == null) return false;
+    PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
+    Document document = manager.getDocument(file);
+    if (document == null) return false;
+    manager.doPostponedOperationsAndUnblockDocument(document);
+    List<TextRange> ranges = new ArrayList<>(atoms.size());
+    for (ErlangAtom atom : atoms) ranges.add(atom.getTextRange());
+    ranges.sort(Comparator.comparingInt(TextRange::getStartOffset).reversed());
+    for (TextRange range : ranges) document.replaceString(range.getStartOffset(), range.getEndOffset(), text);
+    manager.commitDocument(document);
+    return true;
   }
 
   @NotNull

@@ -3464,7 +3464,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+  // int_type_prefix_op* (integer | macros !':' argument_list? | char | '(' int_type ')')
   static boolean int_type_operand(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand")) return false;
     boolean r;
@@ -3486,7 +3486,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // integer | macros argument_list? | char | '(' int_type ')'
+  // integer | macros !':' argument_list? | char | '(' int_type ')'
   private static boolean int_type_operand_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1")) return false;
     boolean r;
@@ -3499,20 +3499,31 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // macros argument_list?
+  // macros !':' argument_list?
   private static boolean int_type_operand_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = macros(b, l + 1);
     r = r && int_type_operand_1_1_1(b, l + 1);
+    r = r && int_type_operand_1_1_2(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // argument_list?
+  // !':'
   private static boolean int_type_operand_1_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1_1_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !consumeToken(b, ERL_COLON);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // argument_list?
+  private static boolean int_type_operand_1_1_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1_1_2")) return false;
     argument_list(b, l + 1);
     return true;
   }

@@ -312,6 +312,12 @@ jobs:
             exit 0
           fi
           git add dispatcher/state.json dispatcher/journal.csv
+          # The monthly archives of finished items that the dispatcher moves out of the state. The state keeps
+          # only a stub of each such item, so the state must never be committed without them: a failure here stops
+          # the step, as for the state itself. The folder does not exist until the dispatcher makes it.
+          if [ -e dispatcher/data ]; then
+            git add -- dispatcher/data
+          fi
           # What the driver of the robustness sweep keeps beside the state: the coverage ledger, the known
           # signatures and the summaries of the collected runs. And what the hypothesis hunt keeps there: its
           # coverage ledger, the hypotheses and the card of each unit, and the issue drafts. And the hash of the

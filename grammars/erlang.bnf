@@ -312,7 +312,7 @@ record_like_type ::= '{' top_type_list? '}'
 private parenthesized_type ::= !('(' int_type ')' ('..' | int_type_op)) '(' top_type ')' {pin=2}
 
 int_type ::= int_type_operand (int_type_op int_type_operand)*
-private int_type_operand ::= int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+private int_type_operand ::= int_type_prefix_op* (integer | macros !':' argument_list? | char | '(' int_type ')')
 private int_type_prefix_op ::= '+' | '-' | bnot
 private int_type_op ::= '+' | '-' | '*' | div | rem | band | bor | bxor | bsl | bsr
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
