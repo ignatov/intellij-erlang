@@ -69,8 +69,9 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     return ContainerUtil.getFirstItem(ErlangPsiImplUtil.getErlangTypeFromIncludes(file, false, myReferenceName, arity));
   }
 
-  @NotNull
+  @Nullable
   private PsiFile getPsiFile() {
+    if (myModuleRef != null && myModuleRef.getQAtom().getMacros() != null && !ErlangPsiImplUtil.isModule(myModuleRef)) return null;
     PsiElement resolve = myModuleRef != null ? myModuleRef.getReference().resolve() : null;
     PsiFile moduleRefContainingFile = resolve != null ? resolve.getContainingFile() : null;
     return moduleRefContainingFile != null ? moduleRefContainingFile : myElement.getContainingFile();

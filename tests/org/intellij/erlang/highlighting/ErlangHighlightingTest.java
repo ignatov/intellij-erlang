@@ -21,6 +21,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangExportType;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.psi.ErlangTypeRef;
@@ -329,6 +330,28 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     PsiElement resolved = ref.getReference().resolve();
     assertInstanceOf(resolved, ErlangTypeDefinition.class);
     assertEquals("priv", ((ErlangTypeDefinition) resolved).getName());
+  }
+
+  // issue 1561: ?MOD:t() is not a use of the local type t
+  public void testOtherMacroQualifiedTypeIsNotUseOfLocalType() {
+    doTestOtherMacroQualifiedTypeIsNotUseOfLocalType();
+  }
+
+  public void testOtherMacroQualifiedTypeIsNotUseOfLocalTypeWithoutMacroLayer() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    doTestOtherMacroQualifiedTypeIsNotUseOfLocalType();
+  }
+
+  private void doTestOtherMacroQualifiedTypeIsNotUseOfLocalType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("other.erl", "-module(other).\n-export_type([t/0]).\n-type t() :: atom().\n");
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -export_type([u/0]).
+      -define(MOD, other).
+      -type <warning descr="Unused type 't'">t</warning>() :: integer().
+      -type u() :: ?MOD:t().""");
+    myFixture.checkHighlighting();
   }
 
   // issue 1554: a bare atom in a type is not a use of the type with the same name
