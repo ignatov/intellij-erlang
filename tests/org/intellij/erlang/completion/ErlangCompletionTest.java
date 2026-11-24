@@ -509,6 +509,25 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestInclude("foo() -> lists:<caret>", "member", "reverse", "keysearch");
   }
 
+  public void testRemoteFunctionsInTypedRecordFieldDefault() {
+    addFunctionsRemoteModule();
+    doTestInclude("-record(r, {a :: integer(), b = other:<caret>}).", "g", "h");
+  }
+
+  public void testRemoteFunctionsInRecordFieldDefault() {
+    addFunctionsRemoteModule();
+    doTestInclude("-record(s, {c = other:<caret>}).", "g", "h");
+  }
+
+  private void addFunctionsRemoteModule() {
+    myFixture.addFileToProject("other.erl", """
+      -module(other).
+      -export([g/0, h/1]).
+      g() -> ok.
+      h(X) -> X.
+      """);
+  }
+
   public void testMultiModule() {
     myFixture.configureByFiles("multi-module/a.erl");
     myFixture.configureByFile("multi-module/b.erl");
