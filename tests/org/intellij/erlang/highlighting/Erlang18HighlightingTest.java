@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -35,6 +36,13 @@ public class Erlang18HighlightingTest extends ErlangHighlightingTestBase {
 
   public void testErlang18SyntaxNoError() {
     enableErlang18SyntaxInspection();
+    doTest();
+  }
+
+  // issue 1565: OTP 24 and older have no predefined FEATURE_ENABLED, so the own -define matches any use
+  public void testUnresolvedMacrosFeatureOwnDefineBefore25() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
     doTest();
   }
 }

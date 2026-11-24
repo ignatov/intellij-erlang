@@ -139,6 +139,24 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  // issue 1565
+  public void testUnresolvedMacrosFeatureOwnDefineUndefInIncludeLib() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("app/include/u.hrl", "-undef(FEATURE_ENABLED).\n-define(FEATURE_ENABLED, true).\n");
+    myFixture.configureByText("a.erl", "-module(a).\n-export([f/0, true/0]).\n-include_lib(\"app/include/u.hrl\").\nf() -> ?FEATURE_ENABLED().\ntrue() -> ok.\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1565: a module that includes the header may undefine the name
+  public void testUnresolvedMacrosFeatureOwnDefineHeader() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    myFixture.addFileToProject("a.erl", "-module(a).\n-export([f/0, true/0]).\n-undef(FEATURE_ENABLED).\n-include(\"UnresolvedMacrosFeatureOwnDefineHeader.hrl\").\ntrue() -> ok.\n");
+    myFixture.configureByFile("UnresolvedMacrosFeatureOwnDefineHeader.hrl");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1565: epp checks a -define body only where the macro is expanded
   public void testUnresolvedMacrosFeatureOwnDefineInDefineBody() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
