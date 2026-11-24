@@ -43,8 +43,14 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     myArity = arity;
   }
 
+  /** A type ref without an argument list, as {@code foo} in {@code -type t() :: foo.}: a plain atom, not a type. */
+  public boolean isBareAtom() {
+    return myArity < 0 && myElement instanceof ErlangTypeRef;
+  }
+
   @Override
   public PsiElement resolveInner() {
+    if (isBareAtom()) return null;
     PsiFile containingFile = getPsiFile();
     if (containingFile instanceof ErlangFile erlangFile) {
       if (myArity >= 0) {

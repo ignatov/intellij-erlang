@@ -50,7 +50,7 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
   public static void processType(Project project, ErlangTypeDefinition type) {
     PsiFile containingFile = type.getContainingFile();
     if (containingFile instanceof ErlangFile) {
-      String exportText = ErlangPsiImplUtil.createTypePresentation(type);
+      String exportText = getExportText(type);
 
       List<ErlangAttribute> attributes = ((ErlangFile) containingFile).getAttributes();
       for (ErlangAttribute attribute : attributes) {
@@ -75,5 +75,11 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
         containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
       }
     }
+  }
+
+  @NotNull
+  private static String getExportText(@NotNull ErlangTypeDefinition type) {
+    ErlangQAtom qAtom = type.getQAtom();
+    return qAtom != null ? qAtom.getText() + "/" + ErlangPsiImplUtil.getArity(type) : ErlangPsiImplUtil.createTypePresentation(type);
   }
 }
