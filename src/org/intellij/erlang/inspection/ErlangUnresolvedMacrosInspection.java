@@ -135,10 +135,19 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
         }
       }
 
-      /** The same for a feature macro that a -define of the file resolves to (see {@link ErlangMacroResolve#isFeatureArgumentMismatch}). */
+      /**
+       * The same for a feature macro that a -define of the file resolves to: the ordinary rule first (see
+       * {@link #checkArity}), then {@link ErlangMacroResolve#isFeatureArgumentMismatch} outside -define bodies.
+       */
       private void checkOwnFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
+        if (!ErlangMacroLayer.isEnabled()) return;
+        String message = ErlangMacroResolve.argumentMismatch(nameLeaf, name);
+        if (message != null) {
+          registerProblem(holder, target, message, range, null);
+          return;
+        }
         if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
-        if (ErlangMacroLayer.isEnabled() && ErlangMacroResolve.isFeatureArgumentMismatch(nameLeaf, name)) {
+        if (ErlangMacroResolve.isFeatureArgumentMismatch(nameLeaf, name)) {
           registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
         }
       }
