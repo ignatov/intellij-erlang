@@ -102,6 +102,13 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.checkResult("-type bar() :: ok.\n-spec f() -> bar().\nf() -> ok.\n");
   }
 
+  // issue 1554: atoms with the name of the type are not uses of the type
+  public void testTypeNotRenamedInAtomsOfTheSameName() {
+    myFixture.configureByText("a.erl", "-type <caret>foo() :: [].\n-type t() :: foo | {foo} | foo().\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-type bar() :: [].\n-type t() :: foo | {foo} | bar().\n");
+  }
+
   public void testModuleToQuotedName() { doTest("'moduleToQuotedName-after'", true); }
   public void testUnquotedModule()     { doTest("unquotedModule-after", true); }
   public void testQuotedModule()       { doTest("quotedModule-after", true); }
