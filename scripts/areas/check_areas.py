@@ -25,6 +25,7 @@ DEFAULT_MAP = os.path.join(HERE, 'areas.yml')
 REPOSITORY = os.path.dirname(os.path.dirname(HERE))
 ROOTS = ('src', 'grammars', 'gen', 'resources', 'jps-plugin', 'tests', 'testData')
 LABEL_PREFIX = 'area:'
+MAX_DESCRIPTION = 100
 NAME_RE = re.compile(r'[a-z][a-z0-9]*(?:-[a-z0-9]+)*$')
 BAD_GLOB_CHARS = set('?[]{}\\')
 
@@ -174,6 +175,9 @@ def validate(areas):
             problems.append('%s: the label must be %s%s' % (where, LABEL_PREFIX, a.name))
         if not a.description:
             problems.append('%s: no description' % where)
+        elif len(a.description) > MAX_DESCRIPTION:
+            problems.append('%s: the description is longer than %d characters, the limit of a GitHub label'
+                            % (where, MAX_DESCRIPTION))
         if not a.paths:
             problems.append('%s: no paths' % where)
         for g in a.paths:

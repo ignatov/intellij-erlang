@@ -8,6 +8,8 @@
 # longest text before its first "*" (a glob without "*" names one file and always wins). Two areas whose winning
 # globs are equally specific are an error of the map.
 #
+# A description is at most 100 characters, the limit of a GitHub label description.
+#
 # The format is a fixed subset of YAML, read by check_areas.py without a YAML library: each area is
 # "- name:", then "  label:", "  description:" and "  paths:", each path on a line "    - "glob"".
 
@@ -106,7 +108,7 @@
     - "testData/auto-indent/**"
 - name: editor
   label: area:editor
-  description: "Editor services: annotator, colors, typing, brace matching, folding, markers, structure view, spelling, new-file actions."
+  description: "Editor: annotator, colors, typing, braces, folding, markers, structure view, spelling, new files."
   paths:
     - "src/org/intellij/erlang/editor/**"
     - "src/org/intellij/erlang/marker/**"
@@ -224,7 +226,7 @@
     - "testData/mockSdk-*/**"
 - name: plugin-core
   label: area:plugin-core
-  description: "Plugin descriptors, messages, icons, usage statistics, update notice, shared utilities and test base classes."
+  description: "Plugin descriptors, messages, icons, statistics, update notice, shared utilities, test base classes."
   paths:
     - "resources/META-INF/**"
     - "resources/messages/**"

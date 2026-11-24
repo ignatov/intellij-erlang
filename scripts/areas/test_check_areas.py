@@ -73,6 +73,10 @@ class ParseTest(unittest.TestCase):
             with self.assertRaises(check_areas.MapError, msg=glob):
                 check_areas.parse(area('parser', glob))
 
+    def test_long_description(self):
+        with self.assertRaisesRegex(check_areas.MapError, 'longer than 100'):
+            check_areas.parse(area('parser', 'gen/**').replace('"d"', '"%s"' % ('x' * 101)))
+
     def test_missing_description(self):
         with self.assertRaisesRegex(check_areas.MapError, 'no description'):
             check_areas.parse('- name: parser\n  label: area:parser\n  paths:\n    - "gen/**"\n')
