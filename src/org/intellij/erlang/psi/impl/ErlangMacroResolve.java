@@ -404,6 +404,8 @@ public final class ErlangMacroResolve {
     if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return null;
     int arity = arityAfter(nameLeaf);
     if (arity == UNKNOWN) return null;
+    // epp's predefined ?FEATURE_ENABLED(F) and ?FEATURE_AVAILABLE(F) stay next to own definitions of other arities
+    if (arity == 1 && ("FEATURE_ENABLED".equals(name) || "FEATURE_AVAILABLE".equals(name))) return null;
     List<ErlangMacrosDefinition> candidates = candidates(file, name);
     if (candidates.isEmpty()) return null;
     for (ErlangMacrosDefinition d : candidates) {
