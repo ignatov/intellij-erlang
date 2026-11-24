@@ -75,11 +75,11 @@ public class ErlangMacroLayerFieldDefaultTest extends ErlangLightPlatformCodeIns
     FindUsagesHandler handler = manager.getFindUsagesHandler(t, FindUsagesHandlerFactory.OperationMode.USAGES_WITH_DEFAULT_OPTIONS);
     assertNotNull("no find usages handler for " + t, handler);
     FindUsagesOptions options = handler.getFindUsagesOptions(null);
-    List<UsageInfo> found = ApplicationManager.getApplication().executeOnPooledThread(() -> {
+    List<UsageInfo> found = waitForTask(ApplicationManager.getApplication().executeOnPooledThread(() -> {
       CommonProcessors.CollectProcessor<UsageInfo> p = new CommonProcessors.CollectProcessor<>(Collections.synchronizedList(new ArrayList<>()));
       for (PsiElement e : handler.getPrimaryElements()) handler.processElementUsages(e, p, options);
       return new ArrayList<>(p.getResults());
-    }).get();
+    }));
     Set<Integer> lines = inBackground(() -> {
       Set<Integer> r = new TreeSet<>();
       for (UsageInfo u : found) {

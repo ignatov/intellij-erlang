@@ -153,12 +153,12 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
       manager.getFindUsagesHandler(t, com.intellij.find.findUsages.FindUsagesHandlerFactory.OperationMode.USAGES_WITH_DEFAULT_OPTIONS);
     if (handler == null) return "NO HANDLER";
     com.intellij.find.findUsages.FindUsagesOptions options = handler.getFindUsagesOptions(null);
-    List<com.intellij.usageView.UsageInfo> found = com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+    List<com.intellij.usageView.UsageInfo> found = waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
       com.intellij.util.CommonProcessors.CollectProcessor<com.intellij.usageView.UsageInfo> p =
         new com.intellij.util.CommonProcessors.CollectProcessor<>(Collections.synchronizedList(new ArrayList<>()));
       for (PsiElement e : handler.getPrimaryElements()) handler.processElementUsages(e, p, options);
       return new ArrayList<>(p.getResults());
-    }).get();
+    }));
     return inBackground(() -> {
       Set<String> r = new TreeSet<>();
       for (com.intellij.usageView.UsageInfo u : found) {
