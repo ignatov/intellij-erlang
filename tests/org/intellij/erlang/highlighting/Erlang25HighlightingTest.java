@@ -106,6 +106,18 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnresolvedMacrosFeatureHeaderDefine.erl", "UnresolvedMacrosFeatureHeaderDefine.hrl");
   }
 
+  public void testUnresolvedMacrosFeatureUndefOwnDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureHeaderUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureHeaderUndef.erl", "UnresolvedMacrosFeatureHeaderUndef.hrl");
+  }
+
   // issue 1506
   public void testIllegalGuardCeilFloorMinMaxR25() {
     myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
