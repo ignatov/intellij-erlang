@@ -820,6 +820,47 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                         """);
   }
 
+  public void testFunctionDocShowsCommentAboveGroupedSpecs() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo(a) -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/1, foo/2, f/0]).
+                        %% Does foo.
+                        -spec foo(a) -> ok.
+                        -spec foo(a, b) -> ok.
+                        foo(A) -> foo(A, b).
+                        foo(_A, _B) -> ok.
+                        f() -> fo<caret>o(a).
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveSpecAndCompileAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -spec foo() -> ok.
+                        -compile({inline, [foo/0]}).
+                        -dialyzer({nowarn_function, foo/0}).
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveDocAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -doc "Foo.".
+                        -spec foo() -> ok.
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
   private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
