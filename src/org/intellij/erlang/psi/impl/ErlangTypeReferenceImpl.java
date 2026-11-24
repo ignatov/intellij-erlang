@@ -75,7 +75,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   public Object @NotNull [] getVariants() {
     ErlangExportTypeAttribute exportTypeAttribute = PsiTreeUtil.getParentOfType(myQAtom, ErlangExportTypeAttribute.class);
     ErlangFile moduleFile = null;
-    if (myModuleRef != null) {
+    if (myModuleRef != null && !ErlangPsiImplUtil.isModule(myModuleRef)) {
       PsiElement resolve = myModuleRef.getReference().resolve();
       moduleFile = resolve != null ? ObjectUtils.tryCast(resolve.getContainingFile(), ErlangFile.class) : null;
       if (moduleFile == null) return ArrayUtil.EMPTY_OBJECT_ARRAY;

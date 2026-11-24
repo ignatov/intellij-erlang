@@ -470,7 +470,7 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl(o, nameAtom, isModule ? null : moduleAtom, getArity(arity));
   }
 
-  private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
+  static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
     if (moduleReference == null) return false;
     return moduleReference.getQAtom().getText().equals("?MODULE");
   }

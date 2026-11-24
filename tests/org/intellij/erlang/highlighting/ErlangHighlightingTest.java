@@ -310,6 +310,27 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1561
+  public void testModuleMacroQualifiedType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -export([f/0]).
+      -type priv() :: integer().
+      -type <warning descr="Unused type 'unused'">unused</warning>() :: atom().
+      -spec f() -> ?MODULE:priv().
+      f() -> 1.""");
+    myFixture.checkHighlighting();
+    ErlangTypeRef ref = null;
+    for (ErlangTypeRef r : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
+      if (r.getParent().getText().equals("?MODULE:priv()")) ref = r;
+    }
+    assertNotNull(ref);
+    PsiElement resolved = ref.getReference().resolve();
+    assertInstanceOf(resolved, ErlangTypeDefinition.class);
+    assertEquals("priv", ((ErlangTypeDefinition) resolved).getName());
+  }
+
   // issue 1435
   public void testTypeReferenceResolvesByArity() {
     myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");
