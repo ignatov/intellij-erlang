@@ -357,6 +357,25 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     assertTrue("t/3 resolved to " + describe(exported) + ", t() resolved to " + describe(used), exported == null && used == null);
   }
 
+  public void testTypeWithUndefinedArityIsUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3, u/0]).\n" +
+                                        "-type <warning descr=\"Unused type 't'\">t</warning>(A) :: {A}.\n-type u() :: t().\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRemoteTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.erl", "-module(ov).\n-export_type([tree/1]).\n-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-type u() :: ov:tree().\n");
+    assertNull(findTypeRef("ov:tree()").getReference().resolve());
+  }
+
+  public void testIncludedTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.hrl", "-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type u() :: tree().\n");
+    assertNull(findTypeRef("tree()").getReference().resolve());
+  }
+
   private static String describe(PsiElement element) {
     return element instanceof ErlangTypeDefinition type ? type.getName() + "/" + type.getArity() : String.valueOf(element);
   }
