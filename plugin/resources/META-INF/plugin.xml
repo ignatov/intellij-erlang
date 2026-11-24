@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>*Lexer: accept digit separators in based integers (also in the base) and the \^?, \^a, \xHH, \x{...} and generic \C escapes… (<a href="https://github.com/ignatov/intellij-erlang/issues/929">#929</a>)</li>
-              <li>Show Usages and Find Usages work from a macro argument that names a function or record (<a href="https://github.com/ignatov/intellij-erlang/pull/1492">#1492</a>)</li>
-              <li>Remove duplicate export now keeps comments and line breaks in the module's export lists (<a href="https://github.com/ignatov/intellij-erlang/pull/1527">#1527</a>)</li>
-              <li>Introduce record field no longer breaks records whose fields contain braces, such as tuple or map defaults (<a href="https://github.com/ignatov/intellij-erlang/pull/1524">#1524</a>)</li>
-              <li>Guards that call ceil, floor, min or max are no longer marked as illegal guard expressions (<a href="https://github.com/ignatov/intellij-erlang/pull/1514">#1514</a>)</li>
-              <li>Format strings with the map key order modifiers ~kp and ~Kp no longer get an "Invalid control sequence" warning (<a href="https://github.com/ignatov/intellij-erlang/pull/1515">#1515</a>)</li>
-              <li>The build now compiles a module after its parse transform or behaviour even when that file is very large (<a href="https://github.com/ignatov/intellij-erlang/pull/1511">#1511</a>)</li>
-              <li>and 9 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1306">full list</a></li>
+              <li>Export type now keeps the quotes of a quoted type name, so the module still compiles (<a href="https://github.com/ignatov/intellij-erlang/issues/1557">#1557</a>)</li>
+              <li>Renaming a function with thousands of clauses no longer freezes the IDE (<a href="https://github.com/ignatov/intellij-erlang/pull/1586">#1586</a>)</li>
+              <li>The editor now flags ?FEATURE_ENABLED() and other wrong-arity feature macro uses next to an own -define (<a href="https://github.com/ignatov/intellij-erlang/pull/1585">#1585</a>)</li>
+              <li>Using ?FEATURE_ENABLED(Feature) no longer shows an argument mismatch when the module defines the macro with other arities (<a href="https://github.com/ignatov/intellij-erlang/pull/1584">#1584</a>)</li>
+              <li>Completion after ?MODULE: in a type spec now lists the types of the current module (<a href="https://github.com/ignatov/intellij-erlang/pull/1583">#1583</a>)</li>
+              <li>Go to Declaration no longer opens a type of another arity when no type of the used arity exists (<a href="https://github.com/ignatov/intellij-erlang/pull/1570">#1570</a>)</li>
+              <li>Smart completion now offers variables bound to products and divisions written with spaces, such as 2 * 3 (<a href="https://github.com/ignatov/intellij-erlang/pull/1579">#1579</a>)</li>
+              <li>and 15 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1307">full list</a></li>
             </ul>
         ]]>
     </change-notes>
