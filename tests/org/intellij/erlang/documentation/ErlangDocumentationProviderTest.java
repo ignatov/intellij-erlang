@@ -23,6 +23,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -109,6 +110,15 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     test() ->
                         erl<caret>ang:length([]).
                   """);
+  }
+
+  public void testExternalUrlSdkFunctionInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#request/1",
+                  """
+                    -module(test).
+                    test() ->
+                        httpc:req<caret>uest(u).
+                    """);
   }
 
   public void testGenerateModernDocSdkFunction() throws Exception {
@@ -771,6 +781,10 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
           SdkModificator sdkModificator = mockSdk.getSdkModificator();
           VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
           sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
+          // An OTP application whose module source lies in a subdirectory of src, as inets keeps httpc.erl in src/http_client
+          VirtualFile nestedSdkLib = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkLib/");
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.SOURCES);
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.CLASSES);
           sdkModificator.commitChanges();
           return mockSdk;
         });
