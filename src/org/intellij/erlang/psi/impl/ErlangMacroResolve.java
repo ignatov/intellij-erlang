@@ -266,6 +266,12 @@ public final class ErlangMacroResolve {
     if (use == null || use.getContainingFile() != file || PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null) {
       return candidates(file, name);
     }
+    List<ErlangMacrosDefinition> r = inForceAt(file, name, use);
+    return r.isEmpty() ? candidates(file, name) : r;
+  }
+
+  /** The definitions of the name in force at a use of the file outside -define bodies, as {@link #candidatesAt}, without its fallback. */
+  private static @NotNull List<ErlangMacrosDefinition> inForceAt(@NotNull ErlangFile file, @NotNull String name, @NotNull PsiElement use) {
     int at = use.getTextRange().getStartOffset();
     Map<Integer, List<ErlangMacrosDefinition>> byArity = new LinkedHashMap<>();
     for (Event e : visible(file).events) {
@@ -287,7 +293,7 @@ public final class ErlangMacroResolve {
     }
     List<ErlangMacrosDefinition> r = new ArrayList<>();
     for (List<ErlangMacrosDefinition> list : byArity.values()) r.addAll(list);
-    return r.isEmpty() ? candidates(file, name) : r;
+    return r;
   }
 
   /** One top-level step of the file for {@link #candidatesAt}: a definition, an undef, or the definitions of an include. */
