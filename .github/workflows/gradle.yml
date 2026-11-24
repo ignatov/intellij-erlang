@@ -154,8 +154,10 @@ jobs:
     # One archive serves every supported IDE. The build job builds it against the oldest one, IntelliJ IDEA 2026.2.
     # Here the same sources are compiled and tested against each newer IDE, and the Plugin Verifier checks that
     # archive against it. The list ends at the IDE of until-build (supportedUntilBuild in build.gradle).
+    # A green run takes 13 to 21 minutes. The timeout stops a hung test run long before GitHub's 6-hour limit.
     needs: build
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
