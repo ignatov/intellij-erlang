@@ -21,6 +21,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangExportType;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.psi.ErlangTypeRef;
@@ -374,6 +375,21 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.addFileToProject("ov.hrl", "-type tree(A) :: {node, A}.\n");
     myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type u() :: tree().\n");
     assertNull(findTypeRef("tree()").getReference().resolve());
+  }
+
+  // a macro argument can expand to several arguments: ?TWO makes t(?TWO) a use of t/2
+  public void testRenameTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(TWO, a, b).\n-type <caret>t(A, B) :: {A, B}.\n-type u() :: t(?TWO) | t(a, b).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(TWO, a, b).\n-type zz(A, B) :: {A, B}.\n-type u() :: zz(?TWO) | zz(a, b).\n");
+  }
+
+  public void testTypeUsedWithMacroArgumentIsNotUnused() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([u/0]).\n-define(TWO, a, b).\n" +
+                                        "-type t(A, B) :: {A, B}.\n-type u() :: t(?TWO).\n");
+    myFixture.checkHighlighting(true, false, false);
   }
 
   private static String describe(PsiElement element) {

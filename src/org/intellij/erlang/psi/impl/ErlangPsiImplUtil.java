@@ -528,7 +528,10 @@ public class ErlangPsiImplUtil {
   private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
     PsiElement parent = o.getParent();
     if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
-    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
+    List<ErlangType> arguments = PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class);
+    // a macro can expand to several arguments, so the arity is unknown
+    if (ContainerUtil.exists(arguments, a -> PsiTreeUtil.findChildOfType(a, ErlangMacros.class, false) != null)) return -1;
+    return arguments.size();
   }
 
   @NotNull
