@@ -491,6 +491,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
   }
 
+  public void testModuleQualifiedTypesOfModuleMacro() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacroWithPrefix() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:p<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
   private void addTypesRemoteModule() {
     myFixture.addFileToProject("other.erl", """
       -module(other).
@@ -979,6 +997,85 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                       B3 = 1 + 1*1,
                       g(<caret>);""",
                 CheckType.EQUALS, "B4", "B3", "g");
+  }
+
+  public void testSmartIntegerProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerSumOfProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 1 + 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerProductWithCommentBeforeOperator() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 % two
+                          * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatDivisionWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 / 1,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatExcludesProductWithUnknownOperand() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N * 2,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.EXCLUDES, "B");
+  }
+
+  public void testSmartFloatProductOfUnknownOperandAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N*2.0,
+                      B2 = N * 2.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "B2", "C");
+  }
+
+  public void testSmartFloatProductOfIntegerAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
   }
 
   public void testSmartCompositeTypes() {

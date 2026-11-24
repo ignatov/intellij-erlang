@@ -157,7 +157,7 @@ public class ErlType {
       @Override
       public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
         var firstChild = o.getFirstChild();
-        var operator = firstChild.getNextSibling();
+        var operator = PsiTreeUtil.skipWhitespacesAndCommentsForward(firstChild);
 
         if (operator == null) return;
 
@@ -173,7 +173,7 @@ public class ErlType {
           if (leftType.equals(rightType)) {
             result.set(leftType);
           }
-          else {
+          else if (leftType.equals(FLOAT_TYPE) || rightType.equals(FLOAT_TYPE)) {
             result.set(FLOAT_TYPE);
           }
         }

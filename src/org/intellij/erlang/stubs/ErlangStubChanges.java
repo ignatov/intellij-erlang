@@ -48,6 +48,7 @@ public final class ErlangStubChanges {
     "#1169 binary comprehension templates",
     "#1236 digit separators in function arities",
     "#1122 lexer escape and number fixes",
+    "#1561 ?MODULE as the module of a remote type",
   };
 
   private ErlangStubChanges() {

@@ -470,7 +470,7 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl(o, nameAtom, isModule ? null : moduleAtom, getArity(arity));
   }
 
-  private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
+  static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
     if (moduleReference == null) return false;
     return moduleReference.getQAtom().getText().equals("?MODULE");
   }
@@ -522,24 +522,29 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    return getModuleReference(o, o.getQAtom(), getTypeRefArity(o));
+    List<ErlangType> arguments = getTypeRefArguments(o);
+    if (arguments == null) return getModuleReference(o, o.getQAtom(), -1, false);
+    // a macro can expand to several arguments, so the counted arity may be wrong
+    boolean uncertain = ContainerUtil.exists(arguments, a -> PsiTreeUtil.findChildOfType(a, ErlangMacros.class, false) != null);
+    return getModuleReference(o, o.getQAtom(), arguments.size(), uncertain);
   }
 
-  private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
+  @Nullable
+  private static List<ErlangType> getTypeRefArguments(@NotNull ErlangTypeRef o) {
     PsiElement parent = o.getParent();
-    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
-    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
+    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return null;
+    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class);
   }
 
   @NotNull
-  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity, boolean arityUncertain) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity, arityUncertain);
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()));
+    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()), false);
   }
 
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {

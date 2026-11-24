@@ -22,6 +22,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangIncorrectModuleNameInspection;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
@@ -42,6 +43,17 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.renameElementAtCaret("bar");
     myFixture.checkResultByFile("importedFunctionInExport-after.erl");
     myFixture.checkResultByFile("importedFunctionInExportUser.erl", "importedFunctionInExportUser-after.erl", false);
+  }
+
+  // issue 1561: ?MOD:t() names the type t of another module
+  public void testTypeQualifiedWithOtherMacro() {
+    myFixture.addFileToProject("other.erl", "-module(other).\n-export_type([t/0]).\n-type t() :: atom().\n");
+    myFixture.testRename("typeQualifiedWithOtherMacro.erl", "typeQualifiedWithOtherMacro-after.erl", "zz");
+  }
+
+  public void testTypeQualifiedWithOtherMacroWithoutMacroLayer() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    testTypeQualifiedWithOtherMacro();
   }
 
   public void testUnquotedMacro()     { doTest("bar"); }
