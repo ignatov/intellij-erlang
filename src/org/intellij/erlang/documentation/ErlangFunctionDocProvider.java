@@ -17,8 +17,11 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -46,7 +49,11 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
   public String getDocText() {
     ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, ErlangFunction.class);
     ErlangSpecification spec = myErlangFunction.findSpecification();
-    PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, PsiComment.class);
+    PsiElement prev = PsiTreeUtil.skipWhitespacesBackward(myErlangFunction);
+    if (spec != null && prev instanceof ErlangAttribute && PsiTreeUtil.isAncestor(prev, spec, false)) {
+      prev = PsiTreeUtil.skipWhitespacesBackward(prev);
+    }
+    PsiComment comment = ObjectUtils.tryCast(prev, PsiComment.class);
 
     String commentText = "";
     if (spec != null && ErlangPsiImplUtil.notFromPreviousFunction(spec, prevFunction)) {

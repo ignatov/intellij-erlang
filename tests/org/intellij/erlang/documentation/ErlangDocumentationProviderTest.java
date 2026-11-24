@@ -793,6 +793,33 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                         """);
   }
 
+  public void testFunctionDocShowsCommentAboveSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/><b>Comment:</b><br/> Starts it.<br/> More.</pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        %% More.
+                        -spec start() -> ok.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentAboveDistantSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/></pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% The state of the server.
+                        -spec start() -> ok.
+                        -record(state, {n}).
+                        start() -> #state{n = 1}, ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
   private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
     PsiElement element = resolveElementAtCaret(text);
     assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
