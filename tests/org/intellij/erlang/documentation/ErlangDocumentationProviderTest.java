@@ -759,6 +759,45 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
+  public void testFunctionDocIgnoresFileHeaderComment() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentOfRecordAbove() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, bar/0]).
+                        foo() -> ba<caret>r().
+                        %% The state of the server.
+                        -record(state, {n}).
+                        bar() -> #state{n = 1}.
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentDirectlyAbove() {
+    doTestGenerateDoc("<pre><b>Comment:</b><br/> Starts it.</pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
