@@ -33,14 +33,17 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Nullable
   private final ErlangModuleRef myModuleRef;
   private final int myArity;
+  private final boolean myArityUncertain;
 
   ErlangTypeReferenceImpl(@NotNull ErlangCompositeElement owner,
                           @NotNull ErlangQAtom element,
                           @Nullable ErlangModuleRef moduleRef,
-                          int arity) {
+                          int arity,
+                          boolean arityUncertain) {
     super(owner, element, getTextRangeForReference(element), getNameIdentifier(element).getText());
     myModuleRef = moduleRef;
     myArity = arity;
+    myArityUncertain = arityUncertain;
   }
 
   /** A type ref without an argument list, as {@code foo} in {@code -type t() :: foo.}: a plain atom, not a type. */
@@ -55,7 +58,7 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     if (containingFile instanceof ErlangFile erlangFile) {
       if (myArity >= 0) {
         PsiElement type = resolve(erlangFile, myArity);
-        if (type != null) return type;
+        if (type != null || !myArityUncertain) return type;
       }
       return resolve(erlangFile, -1);
     }

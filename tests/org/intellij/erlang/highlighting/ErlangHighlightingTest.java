@@ -397,6 +397,74 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
   }
 
+  // issue 1553: erlc reports "type t() undefined" and "type t(_,_,_) undefined" here
+  public void testTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3]).\n-type t(A) :: {A}.\n-type u() :: t().\n");
+    ErlangExportType export = PsiTreeUtil.findChildOfType(myFixture.getFile(), ErlangExportType.class);
+    assertNotNull(export);
+    PsiElement exported = export.getReference().resolve();
+    PsiElement used = findTypeRef("t()").getReference().resolve();
+    assertTrue("t/3 resolved to " + describe(exported) + ", t() resolved to " + describe(used), exported == null && used == null);
+  }
+
+  public void testTypeWithUndefinedArityIsUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3, u/0]).\n" +
+                                        "-type <warning descr=\"Unused type 't'\">t</warning>(A) :: {A}.\n-type u() :: t().\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRemoteTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.erl", "-module(ov).\n-export_type([tree/1]).\n-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-type u() :: ov:tree().\n");
+    assertNull(findTypeRef("ov:tree()").getReference().resolve());
+  }
+
+  public void testIncludedTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.hrl", "-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type u() :: tree().\n");
+    assertNull(findTypeRef("tree()").getReference().resolve());
+  }
+
+  // a macro argument can expand to several arguments: ?TWO makes t(?TWO) a use of t/2
+  public void testRenameTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(TWO, a, b).\n-type <caret>t(A, B) :: {A, B}.\n-type u() :: t(?TWO) | t(a, b).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(TWO, a, b).\n-type zz(A, B) :: {A, B}.\n-type u() :: zz(?TWO) | zz(a, b).\n");
+  }
+
+  public void testTypeUsedWithMacroArgumentIsNotUnused() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([u/0]).\n-define(TWO, a, b).\n" +
+                                        "-type t(A, B) :: {A, B}.\n-type u() :: t(?TWO).\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // a macro argument still prefers the counted arity: t(?X) is a use of t/1 even when t/0 comes first
+  public void testTypeUsedWithMacroArgumentPrefersCountedArity() {
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    assertResolvesToArity(findTypeRef("t(?X)").getReference(), 1);
+  }
+
+  public void testTypeUsedWithMacroArgumentLeavesOtherArityUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type <warning descr=\"Unused type 't'\">t</warning>() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRenameOtherArityKeepsTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(X, a).\n-type <caret>t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(X, a).\n-type zz() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+  }
+
+  private static String describe(PsiElement element) {
+    return element instanceof ErlangTypeDefinition type ? type.getName() + "/" + type.getArity() : String.valueOf(element);
+  }
+
   private ErlangTypeRef findTypeRef(String typeText) {
     for (ErlangTypeRef ref : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
       if (ref.getParent().getText().equals(typeText)) return ref;
