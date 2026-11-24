@@ -932,7 +932,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
+  public static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
     Set<String> result = new HashSet<>();
     List<ErlangFile> files = new ArrayList<>(getIncludedFiles(file));
     files.add(file);
