@@ -981,6 +981,17 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.EQUALS, "B4", "B3", "g");
   }
 
+  public void testSmartIntegerProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """
