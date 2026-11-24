@@ -1,0 +1,3 @@
+-export_type([t/0]).
+-type <warning descr="Unused type 'nil'">nil</warning>() :: [].
+-type t() :: nil | {nil}.

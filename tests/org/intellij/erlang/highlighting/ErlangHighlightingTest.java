@@ -311,6 +311,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1554: a bare atom in a type is not a use of the type with the same name
+  public void testAtomInTypeIsNotUseOfType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1435
   public void testTypeReferenceResolvesByArity() {
     myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");

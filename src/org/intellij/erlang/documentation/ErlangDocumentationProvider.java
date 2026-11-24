@@ -34,6 +34,7 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangSpecification;
+import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -110,7 +111,11 @@ public class ErlangDocumentationProvider extends AbstractDocumentationProvider i
             if (kind == null) {
               return erlFile.getFunction(modernMatcher.group(2), Integer.parseInt(modernMatcher.group(3)));
             }
-            return kind.equals("t") ? erlFile.getType(modernMatcher.group(2)) : erlFile.getModule();
+            if (kind.equals("t")) {
+              ErlangTypeDefinition type = erlFile.getType(modernMatcher.group(2), Integer.parseInt(modernMatcher.group(3)));
+              return type != null ? type : erlFile.getType(modernMatcher.group(2));
+            }
+            return erlFile.getModule();
           }
           Matcher legacyMatcher = PATTERN_LEGACY_ANCHOR.matcher(anchor);
           if (legacyMatcher.matches()) {

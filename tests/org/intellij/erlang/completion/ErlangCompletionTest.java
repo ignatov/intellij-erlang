@@ -995,6 +995,39 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     );
   }
 
+  public void testSmartSecondArgumentWithLowerArityOverload() {
+    doSmartTest(
+      """
+        -spec new(atom()) -> ok.
+        new(_) -> ok.
+        -spec new(atom(), string()) -> ok.
+        new(A, B) ->
+            Str = "",
+            Str2 = "",
+            new(atom, <caret>).""",
+      CheckType.INCLUDES, "Str", "Str2"
+    );
+  }
+
+  public void testSmartFirstArgumentWithZeroArityOverload() {
+    doSmartTest(
+      """
+        -spec foo() -> ok.
+        foo() -> ok.
+        -spec foo(integer()) -> ok.
+        foo(I) ->
+            B = 1,
+            B2 = 2,
+            foo(<caret>).""",
+      CheckType.INCLUDES, "B", "B2"
+    );
+  }
+
+  public void testSmartSecondArgumentOfBifWithLowerArityOverload() {
+    myFixture.configureByText("a.erl", "foo(N) -> spawn(N, <caret>).");
+    myFixture.complete(CompletionType.SMART);
+  }
+
   public void testFunctionsFromCameCaseModule() {
     myFixture.configureByText("CamelCase.erl", "-module('CamelCase'). -export([foo/0]). foo() -> ok.");
     doTestInclude("bar() -> 'CamelCase':<caret>", "foo");
