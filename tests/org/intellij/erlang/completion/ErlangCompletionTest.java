@@ -1026,6 +1026,28 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.INCLUDES, "B", "C");
   }
 
+  public void testSmartFloatExcludesProductWithUnknownOperand() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N * 2,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.EXCLUDES, "B");
+  }
+
+  public void testSmartFloatProductOfIntegerAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """

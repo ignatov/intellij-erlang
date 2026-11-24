@@ -173,7 +173,8 @@ public class ErlType {
           if (leftType.equals(rightType)) {
             result.set(leftType);
           }
-          else {
+          else if (leftType.equals(FLOAT_TYPE) && rightType.equals(INTEGER_TYPE) ||
+                   leftType.equals(INTEGER_TYPE) && rightType.equals(FLOAT_TYPE)) {
             result.set(FLOAT_TYPE);
           }
         }
