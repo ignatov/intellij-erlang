@@ -773,6 +773,34 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                  myErlangDocProvider.generateDoc(element, null));
   }
 
+  public void testFunctionDocKeepsPlaceholdersAndTagsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(cli).
+                                                 -export([run/1, demo/0]).
+
+                                                 %% @doc Usage: run <file> [<options>] & more.
+                                                 run(Args) -> Args.
+
+                                                 demo() -> r<caret>un([]).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> <b>@doc</b> Usage: run &lt;file&gt; [&lt;options&gt;] &amp; more.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testModuleDocKeepsAngleBracketsOfComment() {
+    myFixture.configureByText("frame.erl", """
+      %%% Frames are <<Len:16, Data/binary>>.
+      -module(frame).
+      """);
+    PsiElement element = myFixture.configureByText("test.erl", """
+      -module(test).
+      demo() -> fra<caret>me:pack(<<>>).
+      """).findReferenceAt(myFixture.getEditor().getCaretModel().getOffset()).resolve();
+    assertInstanceOf(element, ErlangModule.class);
+    assertEquals("<pre> Frames are &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
