@@ -96,6 +96,30 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.checkResult("-module(chain_12000).\n-export([g/0]).\ng() -> 1" + chain + ".\n");
   }
   
+  // issue 1580: renaming a function replaces the name of each clause separately, so the time grows with the square of the clauses
+  public void testManyClausesFunctionScalesLinearly() {
+    renameManyClauses(500);
+    long small = renameManyClauses(1500);
+    long large = renameManyClauses(6000);
+    assertTrue("renaming 4x as many clauses took " + small + " ms and " + large + " ms (" + large / Math.max(1, small) + "x)",
+               large < 8 * Math.max(small, 100));
+  }
+
+  private long renameManyClauses(int n) {
+    StringBuilder before = new StringBuilder("-module(scale_clauses).\n-export([f/1]).\n");
+    StringBuilder after = new StringBuilder("-module(scale_clauses).\n-export([g/1]).\n");
+    for (int i = 0; i < n; i++) {
+      before.append(i == 0 ? "<caret>" : "").append("f(").append(i).append(") -> ").append(i).append(";\n");
+      after.append("g(").append(i).append(") -> ").append(i).append(";\n");
+    }
+    myFixture.configureByText("scale_clauses.erl", before.append("f(_) -> ok.\n").toString());
+    long start = System.nanoTime();
+    myFixture.renameElementAtCaret("g");
+    long ms = (System.nanoTime() - start) / 1_000_000;
+    myFixture.checkResult(after.append("g(_) -> ok.\n").toString());
+    return ms;
+  }
+
   public void testRecordFromDefinition() {
     myFixture.configureByText("a.erl", "-record(<caret>foo, {a}).\nf() -> #foo{a = 1}.\n");
     myFixture.renameElementAtCaret("bar");
