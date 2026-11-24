@@ -121,6 +121,39 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     """);
   }
 
+  public void testExternalUrlSdkModuleInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html",
+                  """
+                    -module(test).
+                    test() ->
+                        htt<caret>pc:request(u).
+                    """);
+  }
+
+  public void testExternalUrlSdkTypeInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#t:request_id/0",
+                  """
+                    -module(test).
+                    -spec test(httpc:request<caret>_id()) -> ok.
+                    test(_RequestId) -> ok.
+                    """);
+  }
+
+  public void testGenerateDocSdkFunctionInNestedSourceDir() {
+    doTestExternalDoc(
+      "<html>\n" +
+      ErlangSdkDocProviderBase.HTTP_STYLE +
+      "<body>\n" +
+      "    <p><a name=\"request-1\"></a><span class=\"bold_code\">request(Url) -&gt; Result</span><br>" +
+      "<div class=\"REFBODY\"><p>Sends a request to <span class=\"code\">Url</span>.</p></div></p>\n" +
+      "</body></html>\n",
+      """
+        -module(test).
+        test() ->
+            httpc:req<caret>uest(u).
+        """);
+  }
+
   public void testGenerateModernDocSdkFunction() throws Exception {
     String doc = retrieveDoc("""
                                -module(test).
@@ -785,6 +818,8 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
           VirtualFile nestedSdkLib = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkLib/");
           sdkModificator.addRoot(nestedSdkLib, OrderRootType.SOURCES);
           sdkModificator.addRoot(nestedSdkLib, OrderRootType.CLASSES);
+          VirtualFile nestedSdkDoc = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkDoc/");
+          sdkModificator.addRoot(nestedSdkDoc, JavadocOrderRootType.getInstance());
           sdkModificator.commitChanges();
           return mockSdk;
         });
