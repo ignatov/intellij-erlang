@@ -87,6 +87,55 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnresolvedMacrosFeatureOwnDefine.erl");
   }
 
+  // issue 1564
+  public void testUnresolvedMacrosFeatureOwnDefineOneArgument() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureOwnDefineOneArgumentLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureOwnDefineOneArgument.erl");
+  }
+
+  public void testUnresolvedMacrosFeatureHeaderDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureHeaderDefine.erl", "UnresolvedMacrosFeatureHeaderDefine.hrl");
+  }
+
+  public void testUnresolvedMacrosFeatureUndefOwnDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureHeaderUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureHeaderUndef.erl", "UnresolvedMacrosFeatureHeaderUndef.hrl");
+  }
+
+  public void testUnresolvedMacrosFeatureConditionalThenUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureConditionalUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  public void testUnresolvedMacrosFeatureNestedHeaderUndef() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureNestedHeaderUndef.erl", "UnresolvedMacrosFeatureNestedHeaderUndef.hrl", "UnresolvedMacrosFeatureNestedHeaderUndef2.hrl");
+  }
+
   // issue 1506
   public void testIllegalGuardCeilFloorMinMaxR25() {
     myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
