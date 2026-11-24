@@ -759,6 +759,20 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
+  public void testFunctionDocKeepsAngleBracketsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(frame).
+                                                 -export([pack/1, demo/0]).
+
+                                                 %% Packs Data as <<Len:16, Data/binary>>.
+                                                 pack(Data) -> <<(byte_size(Data)):16, Data/binary>>.
+
+                                                 demo() -> pa<caret>ck(<<"abc">>).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> Packs Data as &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
