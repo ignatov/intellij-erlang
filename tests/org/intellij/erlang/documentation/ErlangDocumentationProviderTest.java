@@ -688,6 +688,18 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
+  public void testResolveModernLinkTypeWithArity() {
+    myFixture.addFileToProject("trees.erl", """
+      -module(trees).
+      -export_type([tree/0, tree/1]).
+      -type tree() :: tree(term()).
+      -type tree(T) :: nil | {node, T, tree(T), tree(T)}.
+      """);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "trees#t:tree/1", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+    assertEquals(1, ((ErlangTypeDefinition) psiElement).getArity());
+  }
+
   public void testResolveLinkUnknownAnchor() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#module-error-information", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
