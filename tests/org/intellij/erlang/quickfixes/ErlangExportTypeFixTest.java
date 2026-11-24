@@ -17,6 +17,7 @@
 package org.intellij.erlang.quickfixes;
 
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.intention.ErlangExportTypeIntention;
 
 public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   @Override
@@ -35,4 +36,10 @@ public class ErlangExportTypeFixTest extends ErlangQuickFixTestBase {
   public void testWithout()  { doTest("Export type"); }
   public void testCommon()   { doTest("Export type"); }
   public void testDelete()   { doTest("Remove type"); }
+
+  public void testIntentionNotOfferedForExportedType() {
+    myFixture.configureByFile("exportedType.erl");
+    assertFalse(new ErlangExportTypeIntention().isAvailable(getProject(), myFixture.getEditor(), myFixture.getFile()));
+    assertEmpty(myFixture.filterAvailableIntentions("Export type"));
+  }
 }
