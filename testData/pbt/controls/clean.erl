@@ -9,7 +9,7 @@ f1(X, L) when is_integer(X) ->
     Y = R#r1.b,
     case [Z * 2 || Z <- L, Z > Y] of
         [] -> ok;
-        [H | _] -> f3(H)
+        [H | _] -> f3(length(L) + H)
     end;
 f1(_, _) ->
     ok.
@@ -25,5 +25,5 @@ f2() ->
 f3(B) ->
     receive
         {msg, B} -> ok
-    after 0 -> <<B:8>>
+    after 0 -> {self(), <<B:8>>}
     end.

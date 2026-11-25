@@ -135,36 +135,70 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     return new DefaultLightProjectDescriptor() {
       @Override
       public Sdk getSdk() {
-        return switch (sdkRelease()) {
-          case "25" -> ErlangSdkType.createMockSdk("testData/mockSdk-R25/", ErlangSdkRelease.V_25_0);
-          case "27" -> ErlangSdkType.createMockSdk("testData/mockSdk-R27/", ErlangSdkRelease.V_27_0);
-          case "28" -> ErlangSdkType.createMockSdk("testData/mockSdk-R28/", ErlangSdkRelease.V_28_0);
-          default -> ErlangSdkType.createMockSdk("testData/mockSdk-R29/", ErlangSdkRelease.V_29_0);
+        String release = sdkRelease();
+        ErlangSdkRelease r = switch (release) {
+          case "25" -> ErlangSdkRelease.V_25_0;
+          case "27" -> ErlangSdkRelease.V_27_0;
+          case "28" -> ErlangSdkRelease.V_28_0;
+          default -> ErlangSdkRelease.V_29_0;
         };
+        return ErlangSdkType.createMockSdk(sdkHome(), r);
       }
     };
   }
 
   private static String ourSdkRelease;
+  private static String ourSdkHome;
 
   /** PBT_SDK_RELEASE, else the OTP release of PBT_ERL; 25, 27, 28 and 29 have a mock SDK, anything else gets 29. */
   static synchronized String sdkRelease() {
-    if (ourSdkRelease != null) return ourSdkRelease;
+    if (ourSdkRelease == null) probeErl();
+    return ourSdkRelease;
+  }
+
+  /**
+   * The home of the SDK: PBT_SDK_HOME, else a copy of the mock SDK of the release with the {@code erlang.erl} of the
+   * PBT_ERL installation in it. From OTP R16 on the plugin resolves the auto-imported BIFs to that file only, so with
+   * the bare mock SDK every call of {@code self()} or {@code length/1} would be an unresolved function.
+   */
+  static synchronized String sdkHome() {
+    if (ourSdkHome == null) probeErl();
+    return ourSdkHome;
+  }
+
+  private static void probeErl() {
     String release = env("PBT_SDK_RELEASE");
     String erl = env("PBT_ERL");
-    if (release == null && erl != null) {
+    String root = null;
+    if (erl != null) {
       try {
-        Process p = new ProcessBuilder(erl, "-noshell", "-eval", "io:put_chars(erlang:system_info(otp_release)), halt().")
+        Process p = new ProcessBuilder(erl, "-noshell", "-eval",
+                                       "io:format(\"~s~n~s~n\", [erlang:system_info(otp_release), code:root_dir()]), halt().")
           .redirectErrorStream(true).start();
-        release = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        List<String> lines = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim().lines().toList();
         p.waitFor();
+        if (release == null && !lines.isEmpty()) release = lines.get(0).trim();
+        if (lines.size() > 1) root = lines.get(1).trim();
       }
-      catch (Exception e) {
-        release = null;
+      catch (Exception ignored) {
       }
     }
     ourSdkRelease = release != null && List.of("25", "27", "28").contains(release) ? release : "29";
-    return ourSdkRelease;
+    String mock = "testData/mockSdk-R" + ourSdkRelease + "/";
+    ourSdkHome = env("PBT_SDK_HOME", mock);
+    if (env("PBT_SDK_HOME") != null || root == null) return;
+    try (var libs = Files.list(Paths.get(root, "lib"))) {
+      Path erts = libs.filter(d -> d.getFileName().toString().startsWith("erts-")).findFirst().orElse(null);
+      Path erlang = erts == null ? null : erts.resolve("src/erlang.erl");
+      if (erlang == null || !Files.isRegularFile(erlang)) return;
+      Path home = Paths.get(env("PBT_WORK", "build/pbt/work")).toAbsolutePath().resolve("sdk-R" + ourSdkRelease);
+      Path target = home.resolve("lib").resolve(erts.getFileName()).resolve("src/erlang.erl");
+      Files.createDirectories(target.getParent());
+      Files.copy(erlang, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      ourSdkHome = home.toString() + "/";
+    }
+    catch (IOException ignored) {
+    }
   }
 
   @Override
@@ -234,6 +268,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     run.addProperty("seed", mySeed);
     run.addProperty("otp_release", myOracle.otpRelease());
     run.addProperty("sdk_release", sdkRelease());
+    run.addProperty("sdk_home", sdkHome());
     run.addProperty("revision", revision());
     journal(run);
 
@@ -272,6 +307,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     meta.addProperty("revision", revision());
     meta.addProperty("otp_release", myOracle.otpRelease());
     meta.addProperty("sdk_release", sdkRelease());
+    meta.addProperty("sdk_home", sdkHome());
     meta.addProperty("props", String.join(",", myProps));
     if (replay != null) meta.addProperty("replay", replay);
     if (myPlant != null) meta.addProperty("plant", myPlant);
@@ -432,9 +468,10 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (mutant) p.fromMutants++;
       if (!view.errorSigs.isEmpty()) {
         String sig = view.errorSigs.get(0);
+        Set<String> errors = otherErrors(erl);
         violation("parse", sig, in, view.errorDetail, text -> {
           PbtOracle.Result r = oracle(text);
-          return !r.hasSyntaxError() && plugin(text, false, false, null).errorSigs.contains(sig);
+          return !r.hasSyntaxError() && errors.containsAll(otherErrors(r)) && plugin(text, false, false, null).errorSigs.contains(sig);
         });
       }
     }
@@ -445,17 +482,30 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         return;
       }
       p.checked++;
+      myLastAgreed = agreed(erl, view);
       Map<String, String> mismatches = mismatches(erl, view);
+      Set<String> errors = otherErrors(erl);
       for (Map.Entry<String, String> m : mismatches.entrySet()) {
         String sig = m.getKey();
         violation("warnings", sig, in, m.getValue(), text -> {
           PbtOracle.Result r = oracle(text);
-          if (r.hasSyntaxError()) return false;
+          if (r.hasSyntaxError() || !errors.containsAll(otherErrors(r))) return false;
           View v = plugin(text, true, false, r);
           return v.errorSigs.isEmpty() && mismatches(r, v).containsKey(sig);
         });
       }
     }
+  }
+
+  /**
+   * The errors of erlc other than the five warning kinds, by tag. A reduced input must not have one that the original
+   * has not: then erlc no longer accepts it the same way (a call of {@code is_atom()} in a guard, a module without
+   * {@code -module}).
+   */
+  static Set<String> otherErrors(PbtOracle.Result r) {
+    Set<String> tags = new java.util.TreeSet<>();
+    for (PbtOracle.Item i : r.items()) if (i.error() && !WARNING_KINDS.contains(i.tag())) tags.add(i.module() + ":" + i.tag());
+    return tags;
   }
 
   /** {@code parse-reject}: erlc reports a syntax error, so the plugin must have an error element or an error highlight. */
@@ -774,7 +824,16 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
   }
 
   /** The mismatches of the five warning kinds, by signature, with a detail. */
-  private static Map<String, String> mismatches(PbtOracle.Result erl, View view) {
+  /** The number of warnings that erlc and the plugin agree on, for the negative controls. */
+  private int myLastAgreed;
+
+  private static int agreed(PbtOracle.Result erl, View view) {
+    int n = 0;
+    for (Key k : erlcKeys(erl).keySet()) if (view.warnings.containsKey(k)) n++;
+    return n;
+  }
+
+  private static Map<Key, PbtOracle.Item> erlcKeys(PbtOracle.Result erl) {
     Map<Key, PbtOracle.Item> ours = new LinkedHashMap<>();
     for (PbtOracle.Item i : erl.items()) {
       if (!WARNING_KINDS.contains(i.tag()) || i.name() == null) continue;
@@ -783,6 +842,11 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if ("unused_type".equals(i.tag()) && name.contains("/")) name = name.substring(0, name.indexOf('/'));
       ours.putIfAbsent(new Key(i.tag(), i.line(), name), i);
     }
+    return ours;
+  }
+
+  private static Map<String, String> mismatches(PbtOracle.Result erl, View view) {
+    Map<Key, PbtOracle.Item> ours = erlcKeys(erl);
     Map<String, String> out = new LinkedHashMap<>();
     for (Map.Entry<Key, String> e : view.warnings.entrySet()) {
       if (ours.containsKey(e.getKey())) continue;
@@ -876,6 +940,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     for (Path f : files) {
       String text = Files.readString(f);
       Map<String, Integer> before = violationCounts();
+      myLastAgreed = 0;
       PbtOracle.Result erl = oracle(text);
       Input in = new Input("control/" + f.getFileName(), null, text);
       if (erl.hasSyntaxError()) checkRejected(in, erl, false);
@@ -884,10 +949,15 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       JsonObject c = new JsonObject();
       c.addProperty("control", "negative " + f.getFileName());
       c.addProperty("erlc_syntax_error", erl.hasSyntaxError());
-      boolean ok = after.equals(before);
+      // a control may say how many warnings both sides must report, so that it cannot pass by both saying nothing
+      Matcher agree = Pattern.compile("%% agree: (\\d+)").matcher(text);
+      int want = agree.find() ? Integer.parseInt(agree.group(1)) : 0;
+      c.addProperty("agreed_warnings", myLastAgreed);
+      boolean ok = after.equals(before) && myLastAgreed >= want;
       c.addProperty("ok", ok);
       out.add(c);
-      if (!ok) failures.add("negative control " + f.getFileName() + " has violations: " + diff(before, after));
+      if (!after.equals(before)) failures.add("negative control " + f.getFileName() + " has violations: " + diff(before, after));
+      if (myLastAgreed < want) failures.add("negative control " + f.getFileName() + ": " + myLastAgreed + " agreed warnings, want " + want);
     }
     for (String prop : myProps) {
       myPlanted = prop;
