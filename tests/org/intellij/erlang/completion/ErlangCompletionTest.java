@@ -21,6 +21,7 @@ import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementPresentation;
+import com.intellij.codeInsight.lookup.LookupManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiFile;
@@ -1191,5 +1192,14 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testNoVariableDeclarationInRightPartOfAssignment() {
     myFixture.configureByText("a.erl", "foo(FirstVar, FirstVar1) -> {ok, FirstVar} = {ok, First<caret>}.");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "First");
+  }
+
+  // #1599: completion inside a left-nested chain of 20000 additions, which erlc compiles, overflowed the stack, and the
+  // half-started completion then logged "NoCompletion" from the platform when its lookup was hidden.
+  public void testCompletionInLongAdditiveChain() {
+    myFixture.configureByText("a.erl", "-module(a).\nf() -> 1" + " + 1".repeat(10000) + " + <caret>1" + " + 1".repeat(10000) + ".\n");
+    myFixture.completeBasic();
+    LookupManager.hideActiveLookup(getProject());
+    myFixture.getEditor().getCaretModel().moveToOffset(0);
   }
 }
