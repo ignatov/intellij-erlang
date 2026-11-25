@@ -207,6 +207,31 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEmpty("Parsed with a syntax error", rejected);
   }
 
+  // #1646: erlc gives "t.erl:3:18: syntax error before: '.'"
+  public void testLoneDotAfterAttributeIsError() {
+    PsiFile file = parseText("-module(t).\n" +
+                             "-export([f/0]).\n" +
+                             "-record(r, {a}). .\n" +
+                             "f() -> #r{}.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  // #1646: erlc gives "t2.erl:1:1: syntax error before: '.'"
+  public void testLoneDotBeforeFirstFormIsError() {
+    PsiFile file = parseText(".\n" +
+                             "-module(t2).\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  // #1646: erlc gives "t4.erl:3:12: syntax error before: '.'"; the dot after a function is marked only at the end of the file
+  public void testLoneDotAfterFunctionBeforeNextFormIsError() {
+    PsiFile file = parseText("-module(t4).\n" +
+                             "-export([f/0, g/0]).\n" +
+                             "f() -> ok. .\n" +
+                             "g() -> ok.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
