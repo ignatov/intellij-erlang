@@ -97,6 +97,22 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
     assertResolvesTo(getElementAtCaret(ErlangFunctionWithArity.class).getReference(), "test.erl", "g", 10);
   }
 
+  // issue 1609: the call hello() after setup?PAR, is no function of the source; the export names the real hello/0
+  public void testExportOfFunctionAfterSplitForm() {
+    myFixture.configureByText("greet.erl", """
+      -module(greet).
+      -export([start/0, setup/0, <caret>hello/0]).
+      -define(PAR, ()).
+      start() -> setup?PAR, hello().
+      setup() -> ok.
+      hello() -> ok.
+      """);
+    PsiReference reference = getElementAtCaret(ErlangExportFunction.class).getReference();
+    assertResolvesTo(reference, "greet.erl", "hello", 0);
+    ErlangFunction resolved = (ErlangFunction)reference.resolve();
+    assertEquals("hello() -> ok.", resolved.getText());
+  }
+
   private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
     String[] files = {focusedFile, expectedFile};
     myFixture.configureByFiles(ArrayUtil.mergeArrays(files, otherFiles));
