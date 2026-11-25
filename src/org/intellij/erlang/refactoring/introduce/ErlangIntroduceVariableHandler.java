@@ -89,7 +89,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       if (selectedExpression == null) {
         showCannotPerformError(project, editor);
       }
-      else {
+      else if (isInArgumentDefinition(selectedExpression) || checkIntroduceContext(file, editor, selectedExpression)) {
         performOnElement(editor, selectedExpression);
       }
       return;
@@ -300,6 +300,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     return PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null;
   }
 
+  private static boolean isInArgumentDefinition(@NotNull PsiElement element) {
+    return PsiTreeUtil.getParentOfType(element, ErlangArgumentDefinition.class) != null;
+  }
+
   @Nullable
   private static PsiElement findAnchor(@NotNull List<PsiElement> occurrences) {
     PsiElement anchor = occurrences.getFirst();
@@ -338,7 +342,11 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   @NotNull
   private static List<PsiElement> getOccurrences(@NotNull ErlangExpression expression) {
     ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
-    return ErlangRefactoringUtil.getOccurrences(expression, function);
+    List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, function);
+    if (ContainerUtil.exists(occurrences, ErlangIntroduceVariableHandler::isInArgumentDefinition)) {
+      return occurrences;
+    }
+    return ContainerUtil.filter(occurrences, ErlangIntroduceVariableHandler::isValidIntroduceContext);
   }
 
   @Override

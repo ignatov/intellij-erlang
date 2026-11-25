@@ -43,7 +43,15 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
 
+  public void testGuardOccurrenceNotReplaced()  { doTest(); }
+  public void testSelectionInFunctionArguments() { doTest(); }
+  public void testSelectionInMacroDefinition()   { doTestCannotPerform(); }
+
   public void testSelectionInFunctionClauseGuard() {
+    doTestCannotPerform();
+  }
+
+  private void doTestCannotPerform() {
     String name = getTestName(true);
     myFixture.configureByFile(name + ".erl");
     try {
