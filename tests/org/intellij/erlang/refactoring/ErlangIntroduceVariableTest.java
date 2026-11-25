@@ -41,6 +41,10 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+  public void testLeadingRunOfChain()       { doTest(SINGLE); }
+  public void testLeadingRunOfChainInCall() { doTest(SINGLE); }
+  public void testLeadingRunOccurrences()   { doTest(); }
+  public void testChainOccurrenceInLongerChain() { doTest(); }
 
   private void doTest() { doTest(ALL); }
 

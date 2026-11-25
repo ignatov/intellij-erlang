@@ -21,11 +21,13 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangAdditiveExpression;
 import org.intellij.erlang.psi.ErlangClauseBody;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
@@ -37,6 +39,16 @@ public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
   @Override
   public List<TextRange> select(@NotNull PsiElement e, @NotNull CharSequence editorText, int cursorOffset, @NotNull Editor editor) {
     List<TextRange> select = super.select(e, editorText, cursorOffset, editor);
+    if (e instanceof ErlangAdditiveExpression chain && select != null) {
+      List<ErlangExpression> operands = chain.getExpressionList();
+      int start = operands.getFirst().getTextRange().getStartOffset();
+      int k = Math.max(1, (int) operands.stream().filter(o -> o.getTextRange().getEndOffset() < cursorOffset).count());
+      List<TextRange> runs = new ArrayList<>();
+      for (; k < operands.size() - 1; k++) {
+        runs.add(TextRange.create(start, operands.get(k).getTextRange().getEndOffset()));
+      }
+      return ContainerUtil.concat(select, runs);
+    }
     PsiElement clause = e.getParent();
     if (clause instanceof ErlangClauseBody && select != null) {
       List<ErlangExpression> list = ((ErlangClauseBody) clause).getExpressionList();

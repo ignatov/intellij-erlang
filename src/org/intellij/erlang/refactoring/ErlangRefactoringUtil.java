@@ -22,17 +22,21 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Pass;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.IntroduceTargetChooser;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,23 +44,102 @@ public class ErlangRefactoringUtil {
   private ErlangRefactoringUtil() {
   }
 
+  /**
+   * A whole expression ({@code first == last}) or a leading run of the operands of an additive expression,
+   * from its first operand to {@code last}. Such a run is an expression of its own: {@code A + B} in {@code A + B + C}.
+   */
+  public record Occurrence(@NotNull PsiElement first, @NotNull PsiElement last) {
+    public boolean isRun() {
+      return first != last;
+    }
+
+    @NotNull
+    public TextRange getTextRange() {
+      return TextRange.create(first.getTextRange().getStartOffset(), last.getTextRange().getEndOffset());
+    }
+
+    @NotNull
+    public String getText() {
+      return getTextRange().substring(first.getContainingFile().getText());
+    }
+  }
+
   @NotNull
-  public static List<PsiElement> getOccurrences(@NotNull final PsiElement pattern, @Nullable PsiElement context) {
+  public static List<Occurrence> getOccurrences(@NotNull final Occurrence pattern, @Nullable PsiElement context) {
     if (context == null) {
       return Collections.emptyList();
     }
-    final List<PsiElement> occurrences = new ArrayList<>();
+    final List<PsiElement> patternChildren = pattern.isRun() ? getRunChildren(pattern) :
+                                             pattern.first() instanceof ErlangAdditiveExpression ? getSignificantChildren(pattern.first()) :
+                                             null;
+    final List<Occurrence> occurrences = new ArrayList<>();
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       public void visitElement(@NotNull PsiElement element) {
-        if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
-          occurrences.add(element);
+        if (!pattern.isRun() && PsiEquivalenceUtil.areElementsEquivalent(element, pattern.first())) {
+          occurrences.add(new Occurrence(element, element));
           return;
+        }
+        if (patternChildren != null && element instanceof ErlangAdditiveExpression) {
+          List<PsiElement> children = getSignificantChildren(element);
+          if (startsWith(children, patternChildren)) {
+            if (children.size() == patternChildren.size()) {
+              occurrences.add(new Occurrence(element, element));
+              return;
+            }
+            PsiElement last = children.get(patternChildren.size() - 1);
+            occurrences.add(new Occurrence(children.getFirst(), last));
+            for (PsiElement next = last.getNextSibling(); next != null; next = next.getNextSibling()) {
+              next.accept(this);
+            }
+            return;
+          }
         }
         super.visitElement(element);
       }
     };
     context.accept(visitor);
     return occurrences;
+  }
+
+  private static boolean startsWith(@NotNull List<PsiElement> children, @NotNull List<PsiElement> prefix) {
+    if (children.size() < prefix.size()) return false;
+    for (int i = 0; i < prefix.size(); i++) {
+      if (!PsiEquivalenceUtil.areElementsEquivalent(children.get(i), prefix.get(i))) return false;
+    }
+    return true;
+  }
+
+  @NotNull
+  private static List<PsiElement> getSignificantChildren(@NotNull PsiElement element) {
+    return Arrays.asList(PsiEquivalenceUtil.getFilteredChildren(element, null, false));
+  }
+
+  @NotNull
+  private static List<PsiElement> getRunChildren(@NotNull Occurrence run) {
+    List<PsiElement> children = getSignificantChildren(run.first().getParent());
+    return children.subList(children.indexOf(run.first()), children.indexOf(run.last()) + 1);
+  }
+
+  /**
+   * Returns the last operand of the leading run of operands of {@code parent}, an additive expression,
+   * that ends at {@code lastSelected}, or null when that run is not shorter than the whole expression.
+   */
+  @Nullable
+  public static ErlangExpression getLeadingRunEnd(@Nullable PsiElement parent, @NotNull PsiElement lastSelected) {
+    if (!(parent instanceof ErlangAdditiveExpression chain) || !PsiTreeUtil.isAncestor(chain, lastSelected, true)) return null;
+    PsiElement child = PsiTreeUtil.findPrevParent(chain, lastSelected);
+    List<ErlangExpression> operands = chain.getExpressionList();
+    int k = 0;
+    for (ErlangExpression operand : operands) {
+      if (operand.getTextRange().getStartOffset() < child.getTextRange().getStartOffset()) k++;
+    }
+    return k >= 1 && k < operands.size() - 1 ? operands.get(k) : null;
+  }
+
+  @NotNull
+  public static ErlangExpression getExpression(@NotNull Occurrence occurrence) {
+    return occurrence.isRun() ? ErlangElementFactory.createExpressionFromText(occurrence.first().getProject(), occurrence.getText()) :
+           (ErlangExpression) occurrence.first();
   }
 
   @NotNull

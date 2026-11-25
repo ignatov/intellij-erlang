@@ -104,6 +104,11 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test75()     throws Exception { doTest(); }
   public void test82()     throws Exception { doTest(); }
   public void testAdditiveChain() throws Exception { doTest(); }
+  public void testAdditiveChainChopDown() throws Exception {
+    getCommonSettings().RIGHT_MARGIN = 60;
+    getCommonSettings().BINARY_OPERATION_WRAP = CommonCodeStyleSettings.WRAP_ON_EVERY_ITEM;
+    doTest();
+  }
   public void test95()     throws Exception { doTest(); }
   public void test116()    throws Exception { doTest(); }
   public void test118()    throws Exception { doTest(); }
