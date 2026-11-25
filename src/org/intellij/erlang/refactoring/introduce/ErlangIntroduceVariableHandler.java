@@ -31,6 +31,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiParserFacade;
 import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.RefactoringActionHandler;
 import com.intellij.refactoring.introduce.inplace.InplaceVariableIntroducer;
@@ -105,6 +106,9 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     if (parent == null) {
       return null;
     }
+    if (parent instanceof LeafPsiElement && parent.getParent() instanceof ErlangAdditiveExpression) {
+      parent = parent.getParent();
+    }
     ErlangExpression runEnd = ErlangRefactoringUtil.getLeadingRunEnd(parent, element2);
     if (runEnd != null) {
       return new Occurrence(((ErlangAdditiveExpression) parent).getExpressionList().getFirst(), runEnd);
@@ -126,8 +130,8 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
                                            @Override
                                            public void process(@NotNull Editor editor,
-                                                               @NotNull ErlangExpression expression) {
-                                             performOnElement(editor, expression);
+                                                               @NotNull Occurrence expression) {
+                                             performActionOnElementOccurrences(editor, expression);
                                            }
                                          }
     );
@@ -154,10 +158,6 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       case ALL -> performInplaceIntroduce(editor, expression, true);
       case SINGLE -> performInplaceIntroduce(editor, expression, false);
     }
-  }
-
-  private void performOnElement(@NotNull Editor editor, @NotNull ErlangExpression expression) {
-    performActionOnElementOccurrences(editor, new Occurrence(expression, expression));
   }
 
   private static void performInplaceIntroduce(@NotNull Editor editor,

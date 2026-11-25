@@ -47,7 +47,7 @@ public class ErlangWordSelectioner extends ExtendWordSelectionHandlerBase {
       for (; k < operands.size() - 1; k++) {
         runs.add(TextRange.create(start, operands.get(k).getTextRange().getEndOffset()));
       }
-      return ContainerUtil.concat(select, runs);
+      select = ContainerUtil.concat(select, runs);
     }
     PsiElement clause = e.getParent();
     if (clause instanceof ErlangClauseBody && select != null) {

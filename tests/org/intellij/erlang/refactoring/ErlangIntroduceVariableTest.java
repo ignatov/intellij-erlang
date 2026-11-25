@@ -20,8 +20,12 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
+
+import java.util.List;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.ALL;
@@ -45,6 +49,21 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testLeadingRunOfChainInCall() { doTest(SINGLE); }
   public void testLeadingRunOccurrences()   { doTest(); }
   public void testChainOccurrenceInLongerChain() { doTest(); }
+  public void testLeadingRunOperatorSelected() { doTest(SINGLE); }
+  public void testLeadingRunAlsoWhole()     { doTest(); }
+
+  public void testSmartIntroduceTargetsInChain() {
+    myFixture.configureByText("a.erl", "f(A, B, C) -> A + <caret>B + C.");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    assertEquals(List.of("B", "A + B", "A + B + C"),
+                 ContainerUtil.map(ErlangRefactoringUtil.getIntroduceTargets(element), ErlangRefactoringUtil.Occurrence::getText));
+  }
+
+  public void testSmartIntroduceLeadingRun() {
+    myFixture.configureByText("a.erl", "f(A, B, C) -> foo(A <caret>+ B + C).");
+    new ErlangIntroduceVariableHandler(SINGLE).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    myFixture.checkResult("f(A, B, C) -> AB = A + B,\n  foo(AB + C).");
+  }
 
   private void doTest() { doTest(ALL); }
 

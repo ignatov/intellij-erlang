@@ -21,7 +21,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.Pass;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -29,6 +28,8 @@ import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.IntroduceTargetChooser;
+import com.intellij.refactoring.RefactoringBundle;
+import com.intellij.refactoring.introduce.IntroduceTarget;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -48,12 +49,13 @@ public class ErlangRefactoringUtil {
    * A whole expression ({@code first == last}) or a leading run of the operands of an additive expression,
    * from its first operand to {@code last}. Such a run is an expression of its own: {@code A + B} in {@code A + B + C}.
    */
-  public record Occurrence(@NotNull PsiElement first, @NotNull PsiElement last) {
+  public record Occurrence(@NotNull PsiElement first, @NotNull PsiElement last) implements IntroduceTarget {
     public boolean isRun() {
       return first != last;
     }
 
     @NotNull
+    @Override
     public TextRange getTextRange() {
       return TextRange.create(first.getTextRange().getStartOffset(), last.getTextRange().getEndOffset());
     }
@@ -61,6 +63,23 @@ public class ErlangRefactoringUtil {
     @NotNull
     public String getText() {
       return getTextRange().substring(first.getContainingFile().getText());
+    }
+
+    @NotNull
+    @Override
+    public PsiElement getPlace() {
+      return first;
+    }
+
+    @NotNull
+    @Override
+    public String render() {
+      return getText();
+    }
+
+    @Override
+    public boolean isValid() {
+      return first.isValid() && last.isValid();
     }
   }
 
@@ -121,8 +140,8 @@ public class ErlangRefactoringUtil {
   }
 
   /**
-   * Returns the last operand of the leading run of operands of {@code parent}, an additive expression,
-   * that ends at {@code lastSelected}, or null when that run is not shorter than the whole expression.
+   * Returns the last operand of the shortest leading run of at least two operands of {@code parent}, an additive expression,
+   * that contains {@code lastSelected}, or null when that run is not shorter than the whole expression.
    */
   @Nullable
   public static ErlangExpression getLeadingRunEnd(@Nullable PsiElement parent, @NotNull PsiElement lastSelected) {
@@ -133,7 +152,8 @@ public class ErlangRefactoringUtil {
     for (ErlangExpression operand : operands) {
       if (operand.getTextRange().getStartOffset() < child.getTextRange().getStartOffset()) k++;
     }
-    return k >= 1 && k < operands.size() - 1 ? operands.get(k) : null;
+    k = Math.max(k, 1);
+    return k < operands.size() - 1 ? operands.get(k) : null;
   }
 
   @NotNull
@@ -174,7 +194,25 @@ public class ErlangRefactoringUtil {
     int offset = editor.getCaretModel().getOffset();
     PsiElement element = file.findElementAt(offset);
     if (!extractor.checkContext(file, editor, element)) return;
-    List<ErlangExpression> expressions = new ArrayList<>();
+    List<Occurrence> expressions = getIntroduceTargets(element);
+    if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
+      extractor.process(editor, expressions.getFirst());
+    }
+    else if (expressions.size() > 1) {
+      IntroduceTargetChooser.showIntroduceTargetChooser(editor, expressions,
+                                                        expression -> extractor.process(editor, expression),
+                                                        RefactoringBundle.message("introduce.target.chooser.expressions.title"), 0);
+    }
+  }
+
+  /**
+   * Returns the expressions around {@code element}, innermost first, with the leading runs of an additive expression
+   * that contain {@code element} before the whole additive expression.
+   */
+  @NotNull
+  public static List<Occurrence> getIntroduceTargets(@Nullable PsiElement element) {
+    List<Occurrence> expressions = new ArrayList<>();
+    PsiElement child = null;
     while (element != null) {
       if (element instanceof ErlangClauseBody) {
         break;
@@ -183,29 +221,25 @@ public class ErlangRefactoringUtil {
         boolean isQualifiedFunCall = element instanceof ErlangFunctionCallExpression &&
                                      element.getParent() instanceof ErlangGlobalFunctionCallExpression;
         if (!isQualifiedFunCall && !ErlangPsiImplUtil.inLeftPartOfAssignment(element, false)) {
-          expressions.add((ErlangExpression) element);
+          if (element instanceof ErlangAdditiveExpression chain && child != null) {
+            List<ErlangExpression> operands = chain.getExpressionList();
+            for (ErlangExpression runEnd = getLeadingRunEnd(chain, child); runEnd != null; ) {
+              expressions.add(new Occurrence(operands.getFirst(), runEnd));
+              int next = operands.indexOf(runEnd) + 1;
+              runEnd = next < operands.size() - 1 ? operands.get(next) : null;
+            }
+          }
+          expressions.add(new Occurrence(element, element));
         }
       }
+      child = element;
       element = element.getParent();
     }
-    if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
-      extractor.process(editor, expressions.getFirst());
-    }
-    else if (expressions.size() > 1) {
-      IntroduceTargetChooser.showChooser(editor, expressions,
-        new Pass<ErlangExpression>() {
-          @Override
-          public void pass(@NotNull ErlangExpression expression) {
-            extractor.process(editor, expression);
-          }
-        },
-                                         PsiElement::getText
-      );
-    }
+    return expressions;
   }
 
   public interface Extractor {
     boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element);
-    void process(@NotNull Editor editor, @NotNull ErlangExpression expression);
+    void process(@NotNull Editor editor, @NotNull Occurrence expression);
   }
 }

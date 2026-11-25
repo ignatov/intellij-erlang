@@ -97,8 +97,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
                                              @Override
                                              public void process(@NotNull Editor editor,
-                                                                 @NotNull ErlangExpression expression) {
-                                               perform(new SmartList<>(expression));
+                                                                 @NotNull ErlangRefactoringUtil.Occurrence expression) {
+                                               perform(getOperands(expression));
                                              }
                                            });
     }
@@ -130,8 +130,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
       ErlangExpression runEnd = ErlangRefactoringUtil.getLeadingRunEnd(commonParent, second);
       if (runEnd != null) {
-        List<ErlangExpression> operands = ((ErlangAdditiveExpression) commonParent).getExpressionList();
-        return new ArrayList<>(operands.subList(0, operands.indexOf(runEnd) + 1));
+        return getOperands(new ErlangRefactoringUtil.Occurrence(((ErlangAdditiveExpression) commonParent).getExpressionList().getFirst(), runEnd));
       }
       return new SmartList<>((ErlangExpression) commonParent);
     }
@@ -148,6 +147,13 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     }
 
     return res;
+  }
+
+  @NotNull
+  private static List<ErlangExpression> getOperands(@NotNull ErlangRefactoringUtil.Occurrence occurrence) {
+    if (!occurrence.isRun()) return new SmartList<>((ErlangExpression) occurrence.first());
+    List<ErlangExpression> operands = ((ErlangAdditiveExpression) occurrence.first().getParent()).getExpressionList();
+    return new ArrayList<>(operands.subList(0, operands.indexOf(occurrence.last()) + 1));
   }
 
   private static void perform(@NotNull List<ErlangExpression> selection) {
