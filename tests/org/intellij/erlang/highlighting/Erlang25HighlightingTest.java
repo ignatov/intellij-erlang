@@ -58,6 +58,12 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1596
+  public void testUnresolvedMacrosFeatureQuoted() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testUnresolvedMacrosFeatureArity() {
     enableUnresolvedMacroInspection();
     doTest();
