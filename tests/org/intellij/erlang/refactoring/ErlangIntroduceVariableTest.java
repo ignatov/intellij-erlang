@@ -42,6 +42,8 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
   public void testQuotedAtom()              { doTest(); }
+  public void testQuotedAtomWithoutLetters() { doTest(); }
+  public void testQuotedFunctionCall()      { doTest(); }
 
   private void doTest() { doTest(ALL); }
 
