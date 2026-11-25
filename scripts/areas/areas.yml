@@ -1,0 +1,242 @@
+# The code areas of the plugin. The factory labels issues and pull requests with them (area:<name>).
+#
+# Every file of src/, grammars/, gen/, resources/, jps-plugin/, tests/ and testData/ belongs to exactly one area.
+# Check: python3 scripts/areas/check_areas.py. A new package or directory needs an entry here.
+#
+# Globs are relative to the repository root. "**" matches any characters, "/" included; "*" matches any
+# characters except "/". When globs of several areas match a file, the most specific one wins: the glob with the
+# longest text before its first "*" (a glob without "*" names one file and always wins). Two areas whose winning
+# globs are equally specific are an error of the map.
+#
+# A description is at most 100 characters, the limit of a GitHub label description.
+#
+# The format is a fixed subset of YAML, read by check_areas.py without a YAML library: each area is
+# "- name:", then "  label:", "  description:" and "  paths:", each path on a line "    - "glob"".
+
+- name: parser
+  label: area:parser
+  description: "Lexer, grammar, generated parser and PSI, the parser definition."
+  paths:
+    - "grammars/**"
+    - "gen/**"
+    - "src/org/intellij/erlang/parser/**"
+    - "src/org/intellij/erlang/ErlangParserDefinition.java"
+    - "src/org/intellij/erlang/ErlangLanguage.java"
+    - "src/org/intellij/erlang/ErlangFileType.java"
+    - "tests/org/intellij/erlang/parser/**"
+    - "testData/parser/**"
+    - "testData/verifier2/**"
+- name: macro
+  label: area:macro
+  description: "Macro expansion layer and the macro expander."
+  paths:
+    - "src/org/intellij/erlang/macrolayer/**"
+    - "src/org/intellij/erlang/parser/macro/**"
+    - "tests/org/intellij/erlang/macrolayer/**"
+    - "testData/macroLayer/**"
+    - "testData/macroLayerOff/**"
+    - "testData/macroFuzz/**"
+    - "testData/macroSpikeProbes/**"
+- name: psi-resolve
+  label: area:psi-resolve
+  description: "PSI classes, references and resolve of variables, functions, modules, includes and types."
+  paths:
+    - "src/org/intellij/erlang/psi/**"
+    - "src/org/intellij/erlang/types/**"
+    - "src/org/intellij/erlang/ErlangReferenceContributor.java"
+    - "tests/org/intellij/erlang/psi/**"
+    - "tests/org/intellij/erlang/resolve/**"
+    - "tests/org/intellij/erlang/performance/**"
+    - "testData/resolve/**"
+    - "testData/performance/**"
+- name: stubs-index
+  label: area:stubs-index
+  description: "Stubs, stub element types and indices."
+  paths:
+    - "src/org/intellij/erlang/stubs/**"
+    - "src/org/intellij/erlang/index/**"
+    - "src/org/intellij/erlang/ErlangElementTypeFactory.java"
+    - "tests/org/intellij/erlang/stubs/**"
+    - "tests/org/intellij/erlang/index/**"
+    - "testData/stubs/**"
+- name: code-insight
+  label: area:code-insight
+  description: "Completion, BIF table, Quick Documentation, parameter info, inlay hints, live templates."
+  paths:
+    - "src/org/intellij/erlang/completion/**"
+    - "src/org/intellij/erlang/bif/**"
+    - "src/org/intellij/erlang/documentation/**"
+    - "src/org/intellij/erlang/hints/**"
+    - "src/org/intellij/erlang/template/**"
+    - "src/org/intellij/erlang/ErlangParameterInfoHandler.java"
+    - "resources/documentation/**"
+    - "resources/inlayProviders/**"
+    - "resources/liveTemplates/**"
+    - "tests/org/intellij/erlang/completion/**"
+    - "tests/org/intellij/erlang/bif/**"
+    - "tests/org/intellij/erlang/documentation/**"
+    - "tests/org/intellij/erlang/hints/**"
+    - "tests/org/intellij/erlang/info/**"
+    - "testData/completion/**"
+    - "testData/documentation/**"
+    - "testData/autotemplates/**"
+- name: inspections
+  label: area:inspections
+  description: "Inspections, quick fixes, intentions and the dialyzer annotator."
+  paths:
+    - "src/org/intellij/erlang/inspection/**"
+    - "src/org/intellij/erlang/quickfixes/**"
+    - "src/org/intellij/erlang/intention/**"
+    - "src/org/intellij/erlang/dialyzer/**"
+    - "resources/inspectionDescriptions/**"
+    - "resources/intentionDescriptions/**"
+    - "tests/org/intellij/erlang/inspection/**"
+    - "tests/org/intellij/erlang/quickfixes/**"
+    - "tests/org/intellij/erlang/highlighting/**"
+    - "tests/org/intellij/erlang/dialyzer/**"
+    - "testData/highlighting/**"
+    - "testData/quickfixes/**"
+- name: formatter
+  label: area:formatter
+  description: "Formatter, code style and the Emacs formatter."
+  paths:
+    - "src/org/intellij/erlang/formatter/**"
+    - "src/org/intellij/erlang/emacs/**"
+    - "src/org/intellij/erlang/actions/ErlangEmacsFormatAction.java"
+    - "tests/org/intellij/erlang/formatting/**"
+    - "testData/formatter/**"
+    - "testData/auto-indent/**"
+- name: editor
+  label: area:editor
+  description: "Editor: annotator, colors, typing, braces, folding, markers, structure view, spelling, new files."
+  paths:
+    - "src/org/intellij/erlang/editor/**"
+    - "src/org/intellij/erlang/marker/**"
+    - "src/org/intellij/erlang/spellchecker/**"
+    - "src/org/intellij/erlang/copyright/**"
+    - "src/org/intellij/erlang/actions/**"
+    - "src/org/intellij/erlang/ErlangBraceMatcher.java"
+    - "src/org/intellij/erlang/ErlangCommenter.java"
+    - "src/org/intellij/erlang/ErlangQuoteHandler.java"
+    - "src/org/intellij/erlang/ErlangStringLiteralEscaper.java"
+    - "src/org/intellij/erlang/ErlangSpellcheckingStrategy.java"
+    - "src/org/intellij/erlang/ErlangBreadcrumbsProvider.java"
+    - "src/org/intellij/erlang/ErlangStructureViewFactory.java"
+    - "src/org/intellij/erlang/ErlangUpdateAddedFileProcessor.java"
+    - "resources/colorSchemes/**"
+    - "resources/dictionary/**"
+    - "resources/fileTemplates/**"
+    - "tests/org/intellij/erlang/typing/**"
+    - "tests/org/intellij/erlang/folding/**"
+    - "tests/org/intellij/erlang/selection/**"
+    - "tests/org/intellij/erlang/marker/**"
+    - "tests/org/intellij/erlang/structureView/**"
+    - "tests/org/intellij/erlang/copyright/**"
+    - "tests/org/intellij/erlang/ErlangBraceMatcherTest.java"
+    - "tests/org/intellij/erlang/ErlangCopyFileTest.java"
+    - "testData/folding/**"
+    - "testData/join-lines/**"
+    - "testData/select-word/**"
+    - "testData/marker/**"
+    - "testData/spellchecker/**"
+- name: navigation-refactoring
+  label: area:navigation-refactoring
+  description: "Go to symbol, find usages, hierarchy, rename and refactorings."
+  paths:
+    - "src/org/intellij/erlang/navigation/**"
+    - "src/org/intellij/erlang/go/**"
+    - "src/org/intellij/erlang/hierarchy/**"
+    - "src/org/intellij/erlang/search/**"
+    - "src/org/intellij/erlang/refactoring/**"
+    - "src/org/intellij/erlang/rename/**"
+    - "src/org/intellij/erlang/ErlangNamesValidator.java"
+    - "src/org/intellij/erlang/ErlangDescriptionProvider.java"
+    - "src/org/intellij/erlang/ErlangTestFinder.java"
+    - "tests/org/intellij/erlang/navigation/**"
+    - "tests/org/intellij/erlang/findUsages/**"
+    - "tests/org/intellij/erlang/hierarchy/**"
+    - "tests/org/intellij/erlang/refactoring/**"
+    - "tests/org/intellij/erlang/rename/**"
+    - "testData/navigation/**"
+    - "testData/find-usages/**"
+    - "testData/refactoring/**"
+    - "testData/rename/**"
+    - "testData/inline/**"
+- name: debugger
+  label: area:debugger
+  description: "Debugger: the IDE side and the Erlang debug node with its committed beams."
+  paths:
+    - "src/org/intellij/erlang/debugger/**"
+    - "resources/debugger/**"
+    - "tests/org/intellij/erlang/debugger/**"
+    - "testData/debugger/**"
+- name: run
+  label: area:run
+  description: "Run configurations, the Erlang console and rebar run configurations."
+  paths:
+    - "src/org/intellij/erlang/runconfig/**"
+    - "src/org/intellij/erlang/application/**"
+    - "src/org/intellij/erlang/console/**"
+    - "src/org/intellij/erlang/rebar/runner/**"
+    - "tests/org/intellij/erlang/runconfig/**"
+    - "tests/org/intellij/erlang/console/**"
+    - "tests/org/intellij/erlang/rebar/runner/**"
+    - "testData/runconfig/**"
+    - "testData/console/**"
+- name: eunit
+  label: area:eunit
+  description: "EUnit run configurations, test tree and the EUnit reporter with its committed beams."
+  paths:
+    - "src/org/intellij/erlang/eunit/**"
+    - "resources/eunit/**"
+    - "tests/org/intellij/erlang/eunit/**"
+    - "testData/eunit/**"
+- name: build
+  label: area:build
+  description: "Compilation: compile tasks, compiler settings and the JPS plugin."
+  paths:
+    - "src/org/intellij/erlang/compilation/**"
+    - "src/org/intellij/erlang/configuration/**"
+    - "src/org/intellij/erlang/ErlangBuildProcessParametersProvider.java"
+    - "jps-plugin/**"
+    - "tests/org/intellij/erlang/build/**"
+    - "tests/org/intellij/erlang/compilation/**"
+    - "tests/org/intellij/erlang/configuration/**"
+    - "testData/compilation/**"
+- name: rebar-tools
+  label: area:rebar-tools
+  description: "Rebar import wizard, rebar and External Tools settings, running external tools."
+  paths:
+    - "src/org/intellij/erlang/rebar/**"
+    - "src/org/intellij/erlang/settings/**"
+    - "src/org/intellij/erlang/utils/ExtProcessUtil.java"
+    - "src/org/intellij/erlang/utils/ErlangExternalToolsConfigureAction.java"
+    - "tests/org/intellij/erlang/rebar/**"
+    - "tests/org/intellij/erlang/utils/ExtProcessUtilTest.java"
+    - "testData/rebar/**"
+- name: sdk-project
+  label: area:sdk-project
+  description: "Erlang SDK type and release, facet, module type and source roots."
+  paths:
+    - "src/org/intellij/erlang/sdk/**"
+    - "src/org/intellij/erlang/facet/**"
+    - "src/org/intellij/erlang/module/**"
+    - "src/org/intellij/erlang/roots/**"
+    - "tests/org/intellij/erlang/sdk/**"
+    - "testData/mockSdk-*/**"
+- name: plugin-core
+  label: area:plugin-core
+  description: "Plugin descriptors, messages, icons, statistics, update notice, shared utilities, test base classes."
+  paths:
+    - "resources/META-INF/**"
+    - "resources/messages/**"
+    - "resources/icons/**"
+    - "src/org/intellij/erlang/icons/**"
+    - "src/org/intellij/erlang/statistics/**"
+    - "src/org/intellij/erlang/update/**"
+    - "src/org/intellij/erlang/utils/**"
+    - "tests/org/intellij/erlang/statistics/**"
+    - "tests/org/intellij/erlang/update/**"
+    - "tests/org/intellij/erlang/utils/**"
+    - "tests/org/intellij/erlang/sweep/**"
+    - "testData/smoke/**"

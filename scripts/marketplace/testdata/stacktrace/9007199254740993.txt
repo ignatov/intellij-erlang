@@ -1,0 +1,8 @@
+com.intellij.openapi.util.InvalidDataException: cannot read /Users/jdoe/work/secret-project/src/foo.erl for jdoe@example.com
+second line of the message: -module(secret).
+	at com.intellij.psi.impl.PsiManagerImpl.findFile(PsiManagerImpl.java:154)
+	at org.intellij.erlang.psi.impl.ErlangPsiImplUtil.resolve(ErlangPsiImplUtil.java:812)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.FileNotFoundException: C:\Users\jdoe\AppData\foo.erl (see @someone and #123 ```)
+	at java.base/java.io.FileInputStream.open0(Native Method)
+	... 3 more

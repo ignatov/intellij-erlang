@@ -25,6 +25,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     ErlangTypeDefinition type = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangTypeDefinition.class);
 
     if (type != null) {
@@ -48,7 +50,7 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
   public static void processType(Project project, ErlangTypeDefinition type) {
     PsiFile containingFile = type.getContainingFile();
     if (containingFile instanceof ErlangFile) {
-      String exportText = ErlangPsiImplUtil.createTypePresentation(type);
+      String exportText = getExportText(type);
 
       List<ErlangAttribute> attributes = ((ErlangFile) containingFile).getAttributes();
       for (ErlangAttribute attribute : attributes) {
@@ -73,5 +75,11 @@ public class ErlangExportTypeFix extends ErlangQuickFixBase {
         containingFile.addBefore(ErlangElementFactory.createLeafFromText(project, "\n\n"), elementBefore);
       }
     }
+  }
+
+  @NotNull
+  private static String getExportText(@NotNull ErlangTypeDefinition type) {
+    ErlangQAtom qAtom = type.getQAtom();
+    return qAtom != null ? qAtom.getText() + "/" + ErlangPsiImplUtil.getArity(type) : ErlangPsiImplUtil.createTypePresentation(type);
   }
 }

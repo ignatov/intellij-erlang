@@ -1,0 +1,2 @@
+java.lang.NullPointerException
+	at org.intellij.erlang.psi.impl.ErlangPsiImplUtil.getName(ErlangPsiImplUtil.java:100)

@@ -19,6 +19,7 @@ package org.intellij.erlang.inspection;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.Pair;
 import com.intellij.util.containers.MultiMap;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +31,8 @@ public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder problemsHolder) {
     MultiMap<Pair<String, Integer>, ErlangFunction> map = new MultiMap<>();
     for (ErlangFunction fun : file.getFunctions()) {
+      // the rest of a split form (setup?PAR, hello().) is a call, not a second hello/0 of the source
+      if (ErlangMacroLayer.preferSourceFunction(file, fun) != fun) continue;
       map.putValue(Pair.create(fun.getName(), fun.getArity()), fun);
     }
 

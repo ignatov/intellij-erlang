@@ -33,7 +33,7 @@ import java.util.Set;
 public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
   private static final String ERROR = "Illegal pattern";
   private static final Set<String> STRING_MACROS = Set.of("MODULE_STRING", "FILE");
-  private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY");
+  private static final Set<String> INTEGER_MACROS = Set.of("LINE", "FUNCTION_ARITY", "OTP_RELEASE");
   private static final Set<String> FUNCTION_MACROS = Set.of("FUNCTION_NAME", "FUNCTION_ARITY");
 
   @Override
@@ -102,22 +102,26 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitAdditiveExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitMultiplicativeExpression(@NotNull ErlangMultiplicativeExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitMultiplicativeExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitOrelseExpression(@NotNull ErlangOrelseExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitOrelseExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
         public void visitAndalsoExpression(@NotNull ErlangAndalsoExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitAndalsoExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
@@ -147,12 +151,15 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitCompOpExpression(@NotNull ErlangCompOpExpression o) {
-          registerProblem(problemsHolder, o, ERROR);
+          if (isInSizeOrMapKey(o, element)) super.visitCompOpExpression(o);
+          else registerProblem(problemsHolder, o, ERROR);
         }
 
         @Override
         public void visitFunctionCallExpression(@NotNull ErlangFunctionCallExpression o) {
-          if (o.getQAtom().getMacros() == null) {
+          boolean macro = o.getQAtom().getMacros() != null;
+          if (isInSizeOrMapKey(o, element) && (macro || isGuardBifCall(o))) super.visitFunctionCallExpression(o);
+          else if (!macro) {
             registerProblem(problemsHolder, o, ERROR);
           }
         }
@@ -209,7 +216,8 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitPrefixExpression(@NotNull ErlangPrefixExpression o) {
-          registerProblemIfContainsNonConstant(o);
+          if (isInSizeOrMapKey(o, element)) super.visitPrefixExpression(o);
+          else registerProblemIfContainsNonConstant(o);
         }
 
         @Override
@@ -268,6 +276,32 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
       }
     }
     return false;
+  }
+
+  // The size of a binary segment and a map key in a pattern are guard expressions, which may compute with bound variables
+  private static boolean isInSizeOrMapKey(@NotNull PsiElement o, @NotNull PsiElement pattern) {
+    for (PsiElement child = o, parent = o.getParent(); child != pattern && parent != null; child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangBinElement element) {
+        List<ErlangExpression> valueAndSize = element.getExpressionList();
+        if (valueAndSize.size() == 2 && valueAndSize.get(1) == child) return true;
+      }
+      if (parent instanceof ErlangMapEntry entry && entry.getMatch() != null) {
+        List<ErlangExpression> keyAndValue = entry.getExpressionList();
+        if (keyAndValue.size() == 2 && keyAndValue.get(0) == child) return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isGuardBifCall(@NotNull ErlangFunctionCallExpression o) {
+    String name = o.getName();
+    int arity = o.getArgumentList().getExpressionList().size();
+    String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
+    if (o.getParent() instanceof ErlangGlobalFunctionCallExpression global) {
+      return ErlangIllegalGuardInspection.isGuardBif(ErlangPsiImplUtil.getName(global.getModuleRef().getQAtom()), presentation);
+    }
+    return ((ErlangFile) o.getContainingFile()).getFunction(name, arity) == null &&
+           ErlangIllegalGuardInspection.isGuardBif(null, presentation);
   }
 
   // A predefined macro of a known kind may stand only where its kind may; any other macro may expand to anything

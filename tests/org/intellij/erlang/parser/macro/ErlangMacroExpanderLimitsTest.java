@@ -1,0 +1,151 @@
+package org.intellij.erlang.parser.macro;
+
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.util.ProgressIndicatorBase;
+import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander.Expansion;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander.HeaderSummary;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander.IncludeResolver;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander.Outcome;
+import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+/**
+ * The expander stops a macro expansion that would run for minutes or fill the memory, with a limit outcome, and stops
+ * at once when its indicator is cancelled (it runs inside a read action).
+ */
+public class ErlangMacroExpanderLimitsTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  private static final long BOUND_MS = 10_000;
+
+  /** {@code -define(E, ). -define(L1, ?E ?E). ... -define(Ln, ?Ln-1 ?Ln-1).}: 2^n expansions with no output token. */
+  static String emptyChain(int n, int uses) {
+    StringBuilder sb = new StringBuilder("-module(m).\n-define(E, ).\n-define(L1, ?E ?E).\n");
+    for (int i = 2; i <= n; i++) sb.append("-define(L").append(i).append(", ?L").append(i - 1).append(" ?L").append(i - 1).append(").\n");
+    for (int u = 0; u < uses; u++) sb.append("f").append(u).append("() -> ?L").append(n).append(".\n");
+    return sb.toString();
+  }
+
+  private Expansion expandWithin(String text, @Nullable IncludeResolver resolver) throws Exception {
+    ProgressIndicatorBase indicator = new ProgressIndicatorBase();
+    Future<Expansion> f = ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ProgressManager.getInstance().runProcess(() -> ErlangMacroExpander.expand(text, new ErlangLexer(getProject()), 4000, resolver), indicator));
+    try {
+      return f.get(BOUND_MS, TimeUnit.MILLISECONDS);
+    }
+    catch (TimeoutException e) {
+      indicator.cancel();
+      throw new AssertionError("the expansion did not end within " + BOUND_MS + " ms");
+    }
+  }
+
+  /** B1: 2^30 expansions of empty bodies end with a limit outcome within seconds. */
+  public void testExponentialEmptyExpansionStops() throws Exception {
+    Expansion x = expandWithin(emptyChain(30, 1), null);
+    assertEquals(Integer.valueOf(1), x.outcomes.get(Outcome.LIMIT_TOKENS));
+    assertNull(x.outcomes.get(Outcome.SUBSTITUTED));
+    // the work limit stopped it, not luck
+    assertTrue(String.valueOf(x.work), x.work > ErlangMacroExpander.MAX_WORK_PER_FORM && x.work < ErlangMacroExpander.MAX_WORK_PER_FORM + 1000);
+  }
+
+  /** B1: a cancelled indicator stops the expansion promptly, also inside one long form (here without work limits). */
+  public void testCancelStopsTheExpansion() throws Exception {
+    ErlangMacroExpander.setWorkLimitsForTests(Long.MAX_VALUE, Long.MAX_VALUE, getTestRootDisposable());
+    ProgressIndicatorBase indicator = new ProgressIndicatorBase();
+    String text = emptyChain(30, 1);
+    Future<Object> f = ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      try {
+        return ProgressManager.getInstance().runProcess(() -> ErlangMacroExpander.expand(text, new ErlangLexer(getProject()), 4000), indicator);
+      }
+      catch (ProcessCanceledException e) {
+        return e;
+      }
+    });
+    Thread.sleep(300);
+    long t0 = System.nanoTime();
+    indicator.cancel();
+    Object r;
+    try {
+      r = f.get(3, TimeUnit.SECONDS);
+    }
+    catch (TimeoutException e) {
+      throw new AssertionError("the expansion went on for 3 s after the cancel");
+    }
+    assertTrue(String.valueOf(r), r instanceof ProcessCanceledException);
+    assertTrue((System.nanoTime() - t0) / 1_000_000 < 3000);
+  }
+
+  /** B2: 10,000 uses of a parameter whose argument expands to 48,400 tokens: a limit outcome, not out of memory. */
+  public void testHugeSubstitutionStops() throws Exception {
+    StringBuilder sb = new StringBuilder("-module(m).\n-define(A, ");
+    for (int i = 0; i < 220; i++) sb.append(" x");
+    sb.append(").\n-define(B, ");
+    for (int i = 0; i < 220; i++) sb.append(" ?A");
+    sb.append(").\n-define(T(X), X");
+    for (int i = 1; i < 10_000; i++) sb.append(", X");
+    sb.append(").\nf() -> ?T(?B).\n");
+    Expansion x;
+    try {
+      x = expandWithin(sb.toString(), null);
+    }
+    catch (ExecutionException e) {
+      throw new AssertionError("the expansion failed: " + e.getCause(), e.getCause());
+    }
+    assertEquals(Integer.valueOf(1), x.outcomes.get(Outcome.LIMIT_TOKENS));
+    // tokens added and scanned: bounded by the limits, not hundreds of millions
+    assertTrue(String.valueOf(x.work), x.work <= ErlangMacroExpander.MAX_WORK_PER_FORM + ErlangMacroExpander.MAX_TOKENS_PER_FORM);
+  }
+
+  /**
+   * B3: a chain of 22 guarded headers, each including the next one twice. epp reads the guarded body of each header
+   * once; the expander replays each header's directives a bounded number of times and has one definition per macro.
+   */
+  public void testDoubleIncludeChainOfGuardedHeaders() throws Exception {
+    int n = 22;
+    Map<String, HeaderSummary> headers = new HashMap<>();
+    for (int k = 1; k <= n; k++) {
+      StringBuilder h = new StringBuilder();
+      h.append("-ifndef(H").append(k).append(").\n-define(H").append(k).append(", true).\n-define(M").append(k).append(", ").append(k).append(").\n");
+      if (k < n) for (int twice = 0; twice < 2; twice++) h.append("-include(\"h").append(k + 1).append(".hrl\").\n");
+      h.append("-endif.\n");
+      String name = "h" + k + ".hrl";
+      headers.put(name, ErlangMacroExpander.summarize(h, new ErlangLexer(getProject()), name));
+    }
+    IncludeResolver resolver = (owner, attribute, string) -> headers.get(string);
+    String text = "-module(m).\n-include(\"h1.hrl\").\nf() -> {?M1, ?M" + n + "}.\n";
+    Expansion x = expandWithin(text, resolver);
+    assertEquals(Integer.valueOf(2), x.outcomes.get(Outcome.SUBSTITUTED));
+    assertTrue(x.text, x.text.contains("1 ") && x.text.contains(" " + n + " "));
+    // each header's body is replayed once: its second include is skipped
+    assertTrue(String.valueOf(x.replayedDirectives), x.replayedDirectives <= 6 * n);
+  }
+
+  /**
+   * More than {@link ErlangMacroExpander#MAX_REPLAYED_DIRECTIVES} header directives: no header is replayed after it, so
+   * a definition of a later include is not visible.
+   */
+  public void testReplayStopsAfterTooManyHeaderDirectives() throws Exception {
+    StringBuilder flood = new StringBuilder();
+    for (int i = 0; i < 1000; i++) flood.append("-undef(Z).\n");
+    Map<String, HeaderSummary> headers = new HashMap<>();
+    headers.put("flood.hrl", ErlangMacroExpander.summarize(flood, new ErlangLexer(getProject()), "flood.hrl"));
+    headers.put("d.hrl", ErlangMacroExpander.summarize("-define(D, 1).\n", new ErlangLexer(getProject()), "d.hrl"));
+    IncludeResolver resolver = (owner, attribute, string) -> headers.get(string);
+    StringBuilder text = new StringBuilder("-module(m).\n");
+    for (int i = 0; i < 110; i++) text.append("-include(\"flood.hrl\").\n");
+    text.append("-include(\"d.hrl\").\nt() -> ?D.\n");
+    Expansion x = expandWithin(text.toString(), resolver);
+    assertEquals(101_000, x.replayedDirectives);
+    assertNull(x.outcomes.get(Outcome.SUBSTITUTED));
+    assertEquals(Integer.valueOf(1), x.outcomes.get(Outcome.NOT_IN_FILE));
+    assertTrue(x.text, x.text.endsWith("-include(\"d.hrl\").\nt() -> ?D.\n"));
+  }
+}

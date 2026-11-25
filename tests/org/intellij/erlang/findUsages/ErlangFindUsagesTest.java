@@ -34,6 +34,10 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapKeyInFunHeadBody()               { doTest(2); }
   public void testMapKeyInFunHeadGuard()              { doTest(2); }
   public void testMapKeyInNestedFunHeads()            { doTest(2); }
+  public void testTypedMacroRecordFieldUsages()       { doTest(1); }
+  public void testTypedMacroRecordFieldUsagesFromUsage() { doTest(2); }
+  public void testMacroNamedTypedRecordField()         { doTest(2); }
+  public void testMacroNamedTypedRecordFieldInTypedBody() { doTest(2); }
   public void testCaseHeadVariable()                  { doTest(3); }
   public void testCaseHeadRematch()                   { doTest(2); }
   public void testCaseHeadRematchArgument()           { doTest(3); }
@@ -43,6 +47,11 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
     myFixture.configureByText("chain_12000.erl",
                               "-module(chain_12000).\n-export([<caret>f/0]).\nf() -> 1" + " + 1".repeat(12000) + ".\n");
     assertEquals(1, myFixture.findUsages(myFixture.getElementAtCaret()).size());
+  }
+
+  public void testRecordFieldUsedInRecordType() {
+    myFixture.configureByText("a.erl", "-record(r, {<caret>a, b}).\n-type t() :: #r{a :: integer()}.\nf() -> #r{a = 1}.\n");
+    assertEquals(2, myFixture.findUsages(myFixture.getElementAtCaret()).size());
   }
 
 //TODO enable these tests when reference search will make use of custom WordsScanner implementations

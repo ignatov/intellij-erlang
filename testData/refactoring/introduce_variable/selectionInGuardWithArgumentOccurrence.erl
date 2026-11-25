@@ -1,0 +1,1 @@
+f(expr) when <selection>expr</selection> == 1 -> ok.

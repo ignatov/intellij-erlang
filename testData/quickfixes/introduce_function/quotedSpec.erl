@@ -1,0 +1,1 @@
+-spec 'q o<caret>te'() -> ok.

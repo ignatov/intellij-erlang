@@ -1,0 +1,19 @@
+{
+ "comment": "Differences that the regression check (diffreport.py --known) does not report as new. An entry with an issue is a known regression that has an open issue; an entry without one is an accepted, intended change. Every key of an entry must match: check (parser, inspections, formatter, exceptions, timing); file (a glob of the corpus path); tool (the inspection id); text (a part of the problem, parse error or exception text); metric (lex, parse, highlight) and maxRatio (timing). Remove an entry when its issue is fixed.",
+ "entries": [
+  {
+   "issue": 1636,
+   "check": "inspections",
+   "tool": "ErlangUnresolvedFunction",
+   "text": "Unresolved function defined/1",
+   "why": "defined(Macro) in an -if or -elif condition is marked as an unresolved function (#1130)"
+  },
+  {
+   "issue": 1503,
+   "check": "timing",
+   "metric": "highlight",
+   "maxRatio": 3.0,
+   "why": "highlighting is up to 2.5x slower because of the variable resolve of #1152"
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+# answers:83 src/otp/m_otp_xmerl.erl arm=master layer=false
+## highlights
+523-546 ERROR(400) Unresolved include_lib: file not found
+570-581 ERROR(400) Unresolved macros '?whitespace'
+619-629 ERROR(400) Unresolved record 'xmlElement'
+662-669 ERROR(400) Unresolved record 'xmlText'
+## references
+489 ErlangFunctionReferenceImpl -> []
+497 ErlangFunctionReferenceImpl -> []
+523  -> [null]
+557 ErlangVariableReferenceImpl -> []
+561 ErlangVariableReferenceImpl -> []
+570 ErlangFunctionReferenceImpl -> []
+571 ErlangMacrosReferenceImpl -> [null]
+571 ErlangMacrosReferenceImpl -> [null]
+582 ErlangVariableReferenceImpl -> [src/otp/m_otp_xmerl.erl:557:ErlangQVarImpl]
+588 ErlangFunctionReferenceImpl -> []
+593 ErlangVariableReferenceImpl -> [src/otp/m_otp_xmerl.erl:561:ErlangQVarImpl]
+602 ErlangVariableReferenceImpl -> []
+608 ErlangVariableReferenceImpl -> [src/otp/m_otp_xmerl.erl:602:ErlangQVarImpl]
+619 ErlangRecordReferenceImpl -> [null]
+630  -> [null]
+640 ErlangVariableReferenceImpl -> []
+656 ErlangVariableReferenceImpl -> [src/otp/m_otp_xmerl.erl:678:ErlangQVarImpl]
+662 ErlangRecordReferenceImpl -> [null]
+670  -> [null]
+678 ErlangVariableReferenceImpl -> []
+684 ErlangVariableReferenceImpl -> [src/otp/m_otp_xmerl.erl:640:ErlangQVarImpl]
+700 ErlangVariableReferenceImpl -> []
+## completion
+649 [when]
+464 [<single or none>]
+571 [FILE, FUNCTION_ARITY, FUNCTION_NAME, H, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, T]
+712 []
+572 []
+648 [when]

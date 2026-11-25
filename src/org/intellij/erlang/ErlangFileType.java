@@ -41,8 +41,9 @@ public abstract class ErlangFileType extends LanguageFileType {
     @NotNull String name,
     @NotNull String description,
     @NotNull Icon icon,
+    boolean secondary,
     @NotNull String... extensions) {
-    super(ErlangLanguage.INSTANCE);
+    super(ErlangLanguage.INSTANCE, secondary);
 
     myName = name;
     myDescription = description;
@@ -89,6 +90,7 @@ public abstract class ErlangFileType extends LanguageFileType {
       super("Erlang",
             "Erlang",
             ErlangIcons.FILE,
+            false,
             "erl");
     }
   }
@@ -98,6 +100,7 @@ public abstract class ErlangFileType extends LanguageFileType {
       super("Erlang Header",
             "Erlang/OTP Header File",
             ErlangIcons.HEADER,
+            true,
             "hrl");
     }
   }
@@ -110,6 +113,7 @@ public abstract class ErlangFileType extends LanguageFileType {
       super("Erlang/OTP app",
             "Erlang/OTP Application Resource File",
             ErlangIcons.OTP_APP_RESOURCE,
+            true,
             APP,
             APP_SRC);
     }
@@ -120,6 +124,7 @@ public abstract class ErlangFileType extends LanguageFileType {
       super("Erlang Terms",
             "Erlang Terms File",
             ErlangIcons.TERMS,
+            true,
             "config",
             "routes",
             "rel");

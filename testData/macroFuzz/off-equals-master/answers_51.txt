@@ -1,0 +1,43 @@
+# answers:51 src/local/m_shared_a.erl arm=master layer=false
+## highlights
+681-682 ERROR(400) '(' or ':' expected, got '.'
+730-733 WARNING(300) Unused variable 'Ref'
+736-744 WARNING(300) Unresolved function make_ref/0
+804-805 ERROR(400) '.' or '{' expected, got '('
+814-822 WARNING(300) Unresolved function app_name/0
+834-835 ERROR(400) '.' or '{' expected, got '}'
+838-842 WARNING(300) Unused function 'wait/2'
+879-883 WARNING(300) Unused function 'ping/0'
+## references
+621 ErlangFunctionReferenceImpl -> []
+643  -> [include/shared.hrl:0:ErlangFileImpl]
+690 ErlangVariableReferenceImpl -> []
+701 ErlangVariableReferenceImpl -> []
+706 ErlangRecordReferenceImpl -> [include/shared.hrl:742:ErlangRecordDefinitionImpl]
+714  -> [include/shared.hrl:752:ErlangTypedExprImpl]
+721 ErlangVariableReferenceImpl -> [src/local/m_shared_a.erl:690:ErlangQVarImpl]
+730 ErlangVariableReferenceImpl -> []
+736 ErlangFunctionReferenceImpl -> []
+751 ErlangFunctionReferenceImpl -> []
+752 ErlangMacrosReferenceImpl -> [include/shared.hrl:558:ErlangMacrosDefinitionImpl]
+752 ErlangMacrosReferenceImpl -> [include/shared.hrl:558:ErlangMacrosDefinitionImpl]
+757 ErlangVariableReferenceImpl -> [src/local/m_shared_a.erl:701:ErlangQVarImpl]
+759 ErlangRecordReferenceImpl -> [include/shared.hrl:742:ErlangRecordDefinitionImpl]
+767  -> [include/shared.hrl:770:ErlangTypedExprImpl]
+778 ErlangMacrosReferenceImpl -> [include/shared.hrl:464:ErlangMacrosDefinitionImpl]
+778 ErlangMacrosReferenceImpl -> [include/shared.hrl:464:ErlangMacrosDefinitionImpl]
+787 PsiMultiReference -> []
+814 ErlangFunctionReferenceImpl -> []
+826 PsiMultiReference -> []
+843 ErlangVariableReferenceImpl -> []
+848 ErlangVariableReferenceImpl -> []
+863 ErlangVariableReferenceImpl -> [src/local/m_shared_a.erl:843:ErlangQVarImpl]
+868 ErlangVariableReferenceImpl -> [src/local/m_shared_a.erl:848:ErlangQVarImpl]
+891 PsiMultiReference -> []
+## completion
+793 []
+540 []
+752 [APP, FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MAX, MODULE, MODULE_STRING, NAME_FUN, OTP_RELEASE, PAR, R, RETRIES, Ref, SHARED_HRL, TIMEOUT, User, WITH_TIMEOUT, WRAP]
+791 [<single or none>]
+896 []
+830 [<single or none>]

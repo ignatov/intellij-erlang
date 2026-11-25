@@ -1,0 +1,49 @@
+# answers:73 src/otp/m_otp_logger.erl arm=master layer=false
+## highlights
+552-577 ERROR(400) Unresolved include_lib: file not found
+595-604 ERROR(400) Unresolved macros '?LOG_INFO'
+642-651 ERROR(400) Unresolved macros '?LOG_INFO'
+680-691 ERROR(400) Unresolved macros '?LOG_NOTICE'
+753-763 ERROR(400) Unresolved macros '?LOG_ERROR'
+819-823 ERROR(400) Unresolved macros '?LOG'
+## references
+510 ErlangFunctionReferenceImpl -> []
+519 ErlangFunctionReferenceImpl -> []
+527 ErlangFunctionReferenceImpl -> []
+552  -> [null]
+595 ErlangFunctionReferenceImpl -> []
+596 ErlangMacrosReferenceImpl -> [null]
+596 ErlangMacrosReferenceImpl -> [null]
+619 PsiMultiReference -> []
+629 ErlangVariableReferenceImpl -> []
+642 ErlangFunctionReferenceImpl -> []
+643 ErlangMacrosReferenceImpl -> [null]
+643 ErlangMacrosReferenceImpl -> [null]
+668 ErlangVariableReferenceImpl -> [src/otp/m_otp_logger.erl:629:ErlangQVarImpl]
+680 ErlangFunctionReferenceImpl -> []
+681 ErlangMacrosReferenceImpl -> [null]
+681 ErlangMacrosReferenceImpl -> [null]
+694 PsiMultiReference -> []
+703 PsiMultiReference -> []
+709 PsiMultiReference -> []
+719 ErlangVariableReferenceImpl -> [src/otp/m_otp_logger.erl:629:ErlangQVarImpl]
+731 PsiMultiReference -> []
+741 ErlangVariableReferenceImpl -> []
+753 ErlangFunctionReferenceImpl -> []
+754 ErlangMacrosReferenceImpl -> [null]
+754 ErlangMacrosReferenceImpl -> [null]
+779 ErlangVariableReferenceImpl -> [src/otp/m_otp_logger.erl:741:ErlangQVarImpl]
+789 PsiMultiReference -> []
+800 PsiMultiReference -> []
+819 ErlangFunctionReferenceImpl -> []
+820 ErlangMacrosReferenceImpl -> [null]
+820 ErlangMacrosReferenceImpl -> [null]
+824 PsiMultiReference -> []
+860 PsiMultiReference -> []
+## completion
+596 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE]
+866 []
+643 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, Reason]
+867 []
+755 [FILE, LINE, MODULE, MODULE_STRING, OTP_RELEASE]
+820 [Error, FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE]

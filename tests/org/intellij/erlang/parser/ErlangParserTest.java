@@ -106,6 +106,19 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
   public void testTypo()                                { doTest(true);  }
   public void testNewNumbers()                          { doTest(true);  }
+  public void testBasedIntegerSeparators()              { doTest(false); }
+  public void testBasedIntegerSeparatorsErrors()        { doTest(true);  }
+  public void testControlEscapes()                      { doTest(false); }
+  public void testControlEscapesErrors()                { doTest(true);  }
+  public void testGenericEscapes()                      { doTest(false); }
+  public void testHexEscapes()                          { doTest(false); }
+  public void testHexEscapesErrors()                    { doTest(true);  }
+  public void testControlEscapeAtStringEnd()            { doTest(false); }
+  public void testBasedIntegerBaseSeparators()          { doTest(false); }
+  public void testBasedIntegerBaseSeparatorsErrors()    { doTest(true);  }
+  public void testVerbatimSigilControlEscape()          { doTest(false); }
+  public void testHexEscapeInBraceSigil()               { doTest(false); }
+  public void testHexEscapeInBraceSigilErrors()         { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
   public void testTripleQuotesMoreThanThree()           { doTest(false); }
@@ -120,8 +133,30 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testBinaryTypes()                         { doTest(false); }
   public void testBinaryTypesErrors()                   { doTest(true);  }
   public void testBinaryTypeSizeExpressions()           { doTest(false); }
+  public void testBinaryComprehensionTemplates()        { doTest(false); }
+
+  public void testDeeplyNestedBinariesParseWithoutBacktracking() {
+    int depth = 20;
+    String parenthesized = "X";
+    String caseTemplates = "<<>>";
+    for (int i = 0; i < depth; i++) {
+      parenthesized = "<<(" + parenthesized + ")/binary>>";
+      caseTemplates = "<< case X of _ -> " + caseTemplates + " end >>";
+    }
+    String text = "f(X) -> " + parenthesized + ".\ng(X) -> " + caseTemplates + ".\n";
+    long start = System.nanoTime();
+    PsiFile file = createPsiFile("nested", text);
+    boolean hasErrors = PsiTreeUtil.hasErrorElements(file);
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertFalse("PsiFile contains error elements", hasErrors);
+    assertTrue("Parsing took " + millis + " ms", millis < 5000);
+  }
+
+  public void testTypedMacroBody()                      { doTest(false); }
+  public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
+  public void testModuleMacroQualifiedType()            { doTest(false); }
 
   public void testSixQuoteMultilineStringAndSigil() {
     PsiFile file = parseText("-module(six_quotes).\n" +
@@ -190,5 +225,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
     @Override public CharSequence subSequence(int start, int end) { return text.subSequence(start, end); }
 
     @Override public String toString() { return text; }
-  }
+    }
 }
