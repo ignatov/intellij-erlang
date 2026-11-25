@@ -26,6 +26,7 @@ import org.intellij.erlang.psi.ErlangExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,17 +57,36 @@ public final class ErlangExpressionTarget implements IntroduceTarget {
   }
 
   /**
-   * The prefix of an additive chain that a selection from {@code first} to {@code last} covers, if it is not the whole chain.
+   * The shortest prefix of an additive chain, of at least two operands, that contains a selection from {@code first} to
+   * {@code last}, if it is not the whole chain. An operator belongs to the prefix that ends with the operand after it.
    */
   @Nullable
   public static ErlangExpressionTarget prefixOfSelection(@NotNull PsiElement first, @NotNull PsiElement last) {
     if (!(PsiTreeUtil.findCommonParent(first, last) instanceof ErlangAdditiveExpression chain)) return null;
     List<ErlangExpression> operands = chain.getExpressionList();
-    if (operands.size() < 3 || !PsiTreeUtil.isAncestor(operands.getFirst(), first, false)) return null;
+    int end = last.getTextRange().getEndOffset();
     for (int i = 1; i < operands.size() - 1; i++) {
-      if (PsiTreeUtil.isAncestor(operands.get(i), last, false)) return prefix(chain, i + 1);
+      if (operands.get(i).getTextRange().getEndOffset() >= end) return prefix(chain, i + 1);
     }
     return null;
+  }
+
+  /**
+   * The prefixes of {@code chain}, of at least two operands and not the whole chain, that contain {@code child}, a child of
+   * the chain, shortest first.
+   */
+  @NotNull
+  public static List<ErlangExpressionTarget> prefixesContaining(@NotNull ErlangAdditiveExpression chain, @NotNull PsiElement child) {
+    List<ErlangExpression> operands = chain.getExpressionList();
+    int before = 0;
+    while (before < operands.size() && operands.get(before).getTextRange().getEndOffset() <= child.getTextRange().getStartOffset()) {
+      before++;
+    }
+    List<ErlangExpressionTarget> prefixes = new ArrayList<>();
+    for (int k = Math.max(before + 1, 2); k < operands.size(); k++) {
+      prefixes.add(prefix(chain, k));
+    }
+    return prefixes;
   }
 
   /**
@@ -139,6 +159,16 @@ public final class ErlangExpressionTarget implements IntroduceTarget {
   @Override
   public String render() {
     return getText();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return o instanceof ErlangExpressionTarget other && myExpression == other.myExpression && myPrefixOperands == other.myPrefixOperands;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * myExpression.hashCode() + myPrefixOperands;
   }
 
   @Override

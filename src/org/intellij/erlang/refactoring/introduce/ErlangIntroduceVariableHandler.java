@@ -46,6 +46,7 @@ import org.intellij.erlang.refactoring.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -274,12 +275,13 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   @Nullable
   private static PsiElement replaceLeftmostArgumentDefinition(@NotNull PsiElement declaration,
                                                               @NotNull List<ErlangExpressionTarget> occurrences) {
-    PsiElement argDef = extractLeftmostArgumentDefinition(occurrences);
-    return argDef == null ? null : argDef.replace(declaration);
+    ErlangExpressionTarget argDef = extractLeftmostArgumentDefinition(occurrences);
+    if (argDef == null) return null;
+    return argDef.isPrefix() ? argDef.replacePrefix(declaration) : argDef.getExpression().replace(declaration);
   }
 
   @Nullable
-  private static PsiElement extractLeftmostArgumentDefinition(@NotNull List<ErlangExpressionTarget> occurrences) {
+  private static ErlangExpressionTarget extractLeftmostArgumentDefinition(@NotNull List<ErlangExpressionTarget> occurrences) {
     int occurrenceOffset = Integer.MAX_VALUE;
     int occurrenceIndex = -1;
     int currentOccurrenceIndex = 0;
@@ -299,7 +301,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       currentOccurrenceIndex++;
     }
 
-    return occurrenceIndex == -1 ? null : occurrences.remove(occurrenceIndex).getExpression();
+    return occurrenceIndex == -1 ? null : occurrences.remove(occurrenceIndex);
   }
 
   private static boolean checkIntroduceContext(@NotNull PsiFile file,
@@ -365,7 +367,9 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   @NotNull
   private static List<ErlangExpressionTarget> getOccurrences(@NotNull ErlangExpressionTarget expression) {
     ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression.getExpression(), ErlangFunctionClause.class);
-    return ErlangRefactoringUtil.getOccurrences(expression, function);
+    return new ArrayList<>(ContainerUtil.filter(ErlangRefactoringUtil.getOccurrences(expression, function),
+                                                o -> !o.isPrefix() || o.equals(expression) ||
+                                                     PsiTreeUtil.getParentOfType(o.getExpression(), ErlangArgumentDefinition.class) == null));
   }
 
   @Override

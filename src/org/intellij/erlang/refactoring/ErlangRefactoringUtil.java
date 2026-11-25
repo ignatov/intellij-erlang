@@ -148,7 +148,7 @@ public class ErlangRefactoringUtil {
                                      element.getParent() instanceof ErlangGlobalFunctionCallExpression;
         if (!isQualifiedFunCall && !ErlangPsiImplUtil.inLeftPartOfAssignment(element, false)) {
           if (element instanceof ErlangAdditiveExpression chain && child != null) {
-            addPrefixes(targets, chain, child);
+            targets.addAll(ErlangExpressionTarget.prefixesContaining(chain, child));
           }
           targets.add(ErlangExpressionTarget.of((ErlangExpression) element));
         }
@@ -157,22 +157,6 @@ public class ErlangRefactoringUtil {
       element = element.getParent();
     }
     return targets;
-  }
-
-  /**
-   * Adds the prefixes of {@code chain} that contain {@code child}, its child, and are not the whole chain.
-   */
-  private static void addPrefixes(@NotNull List<ErlangExpressionTarget> targets,
-                                  @NotNull ErlangAdditiveExpression chain,
-                                  @NotNull PsiElement child) {
-    List<ErlangExpression> operands = chain.getExpressionList();
-    int before = 0;
-    while (before < operands.size() && operands.get(before).getTextRange().getEndOffset() <= child.getTextRange().getStartOffset()) {
-      before++;
-    }
-    for (int k = Math.max(before + 1, 2); k < operands.size(); k++) {
-      targets.add(ErlangExpressionTarget.prefix(chain, k));
-    }
   }
 
   public interface Extractor {

@@ -49,6 +49,10 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSubtractivePrefix()       { doTest(); }
   public void testOccurrenceStartingLongerChain()      { doTest(); }
   public void testChainOccurrenceStartingLongerChain() { doTest(); }
+  public void testPrefixInFunctionHead()                { doTest(); }
+  public void testPrefixInFunctionHeadNotReplaced()     { doTest(); }
+  public void testSelectionFromOperator()               { doTest(); }
+  public void testSelectionFromMiddleOperand()          { doTest(); }
 
   public void testTargetsInsideChain() {
     myFixture.configureByText("a.erl", "foo(A, B, C, D) ->\n  X = A + <caret>B - C + D,\n  X.\n");

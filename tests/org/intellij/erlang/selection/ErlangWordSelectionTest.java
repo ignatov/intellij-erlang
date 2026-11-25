@@ -30,4 +30,6 @@ public class ErlangWordSelectionTest extends ErlangLightPlatformCodeInsightFixtu
   }
 
   public void testClauseBody() { doTest(); }
+  public void testAdditivePrefixes() { doTest(); }
+  public void testAdditivePrefixesAroundProduct() { doTest(); }
 }

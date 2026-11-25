@@ -31,6 +31,7 @@ public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFix
   public void testQuotedAtom() { doTest(); }
   public void testAdditivePrefix() { doTest(); }
   public void testSubtractivePrefix() { doTest(); }
+  public void testSelectionFromOperator() { doTest(); }
 
   private void doTest() {
     myFixture.configureByFile(getTestName(true) + ".erl");
