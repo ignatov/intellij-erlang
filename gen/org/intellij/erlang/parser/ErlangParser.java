@@ -4311,39 +4311,22 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression (('=>' | ':=') expression)?
+  // expression ('=>' | ':=') expression
   public static boolean map_entry(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entry")) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAP_ENTRY, "<map entry>");
     r = expression(b, l + 1, -1);
     p = r; // pin = 1
-    r = r && map_entry_1(b, l + 1);
+    r = r && report_error_(b, map_entry_1(b, l + 1));
+    r = p && expression(b, l + 1, -1) && r;
     exit_section_(b, l, m, r, p, ErlangParser::tuple_recoverer);
     return r || p;
   }
 
-  // (('=>' | ':=') expression)?
+  // '=>' | ':='
   private static boolean map_entry_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entry_1")) return false;
-    map_entry_1_0(b, l + 1);
-    return true;
-  }
-
-  // ('=>' | ':=') expression
-  private static boolean map_entry_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "map_entry_1_0")) return false;
-    boolean r;
-    Marker m = enter_section_(b);
-    r = map_entry_1_0_0(b, l + 1);
-    r = r && expression(b, l + 1, -1);
-    exit_section_(b, m, null, r);
-    return r;
-  }
-
-  // '=>' | ':='
-  private static boolean map_entry_1_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "map_entry_1_0_0")) return false;
     boolean r;
     r = consumeToken(b, ERL_ASSOC);
     if (!r) r = consumeToken(b, ERL_MATCH);
