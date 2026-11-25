@@ -103,6 +103,8 @@ allprojects {
   }
   
   def compilationPackages = ['org/intellij/erlang/build/**', 'org/intellij/erlang/jps/**']
+  // The per-file probe of the regression check (scripts/regression/differential.sh) runs only in regressionDiff.
+  def regressionPackages = ['org/intellij/erlang/regression/**']
 
   tasks.withType(Test).configureEach {
     jvmArgs = [
@@ -114,6 +116,7 @@ allprojects {
     environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
     useJUnitPlatform {
       exclude compilationPackages
+      exclude regressionPackages
     }
     testLogging {
       exceptionFormat = 'full'
@@ -137,8 +140,19 @@ allprojects {
       systemProperty 'rebar.path', System.getProperty('rebar.path', '')
     }
   }
+  intellijPlatformTesting.testIde.register('regressionDiff') {
+    task {
+      group = 'verification'
+      description = 'Runs the per-file probe of the regression check; requires -Ddiff.corpus=<dir> and -Ddiff.out=<file.jsonl>.'
+      environment 'NO_FS_ROOTS_ACCESS_CHECK', 'true'
+      useJUnitPlatform()
+      include regressionPackages
+      System.properties.each { k, v -> if (k.toString().startsWith('diff.')) systemProperty k.toString(), v.toString() }
+    }
+  }
   // Custom test tasks get their own dependency configurations; reuse the test frameworks declared for `test`.
-  configurations.matching { it.name == 'intellijPlatformTestDependencies_testCompilation' }.configureEach {
+  configurations.matching { it.name in ['intellijPlatformTestDependencies_testCompilation',
+                                        'intellijPlatformTestDependencies_regressionDiff'] }.configureEach {
     extendsFrom(configurations.intellijPlatformTestDependencies)
   }
 }
