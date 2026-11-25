@@ -84,6 +84,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
   private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
+  private volatile boolean myStartFailed = false;
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -113,6 +114,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
     catch (ExecutionException | RuntimeException | Error e) {
       // the session is not created, so nothing else would stop the debugger node
+      myStartFailed = true;
       myDebuggerNode.stop();
       throw e;
     }
@@ -203,6 +205,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void debuggerStopped() {
+    // the start error is already reported, and a session without a debug process has nothing to stop
+    if (myStartFailed) return;
     getSession().reportMessage("Debug process stopped", MessageType.INFO);
     getSession().stop();
   }

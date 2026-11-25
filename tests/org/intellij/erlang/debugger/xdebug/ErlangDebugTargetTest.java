@@ -39,6 +39,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,9 +111,13 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     ExecutionEnvironment environment = ExecutionEnvironmentBuilder
       .create(getProject(), DefaultDebugExecutor.getDebugExecutorInstance(), configuration)
       .build();
+    List<String> sessionCalls = Collections.synchronizedList(new ArrayList<>());
     XDebugSession session = (XDebugSession)Proxy.newProxyInstance(
       getClass().getClassLoader(), new Class<?>[]{XDebugSession.class},
       (proxy, method, args) -> {
+        if (method.getName().equals("reportMessage") || method.getName().equals("stop")) {
+          sessionCalls.add(method.getName() + (args != null && args.length > 0 ? "(" + args[0] + ")" : "()"));
+        }
         if (method.getName().equals("getRunProfile")) return configuration;
         if (method.getName().equals("getProject")) return getProject();
         if (method.getName().equals("toString")) return "session";
@@ -144,6 +150,9 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     }
     while (System.currentTimeMillis() < deadline);
     assertTrue("a failed debug start (" + startError + ") left " + leaked.size() + " debugger server thread(s) in accept(): " + leaked, leaked.isEmpty());
+    synchronized (sessionCalls) {
+      assertEquals("a failed debug start must report only its error to the session", List.of(), sessionCalls);
+    }
   }
 
   private static Set<Thread> debuggerServerThreads() {
