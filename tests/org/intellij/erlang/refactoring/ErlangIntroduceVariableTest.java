@@ -22,6 +22,8 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.ui.ChooserInterceptor;
+import com.intellij.ui.UiInterceptors;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
@@ -49,6 +51,22 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
 
   public void testSelectionInGuardWithArgumentOccurrence() { doTest(); }
   public void testSelectionInGuardWithArgumentOccurrenceSingle() { doTestCannotPerform(SINGLE); }
+
+  public void testSelectionInGuardWithArgumentOccurrenceOnlyThisChosen() {
+    UiInterceptors.register(new ChooserInterceptor(null, "NO"));
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
+    Throwable error = null;
+    try {
+      new ErlangIntroduceVariableHandler().invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    }
+    catch (Throwable e) {
+      error = e;
+    }
+    assertNotNull("Expected the hint", error);
+    assertTrue(error.toString(), error.getMessage() != null && error.getMessage().contains("Cannot Perform Refactoring"));
+    myFixture.checkResultByFile(name + ".erl");
+  }
 
   public void testSelectionInFunctionClauseGuard() {
     doTestCannotPerform();
