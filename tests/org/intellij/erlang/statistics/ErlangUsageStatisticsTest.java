@@ -26,6 +26,7 @@ import com.intellij.codeInsight.lookup.LookupListener;
 import com.intellij.codeInsight.template.Template;
 import com.intellij.codeInsight.template.TemplateManager;
 import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
+import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfile;
@@ -1197,9 +1198,15 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     TemplateManagerImpl.setTemplateTesting(getTestRootDisposable());
     TemplateManager manager = TemplateManager.getInstance(getProject());
     myFixture.configureByText("a.erl", "-module(a).\n<caret>");
-    startTemplate(manager.createTemplate("hello", "test", "hello()$END$"));
+    Template stopping = manager.createTemplate("hello", "test", "hello($X$)$END$");
+    stopping.addVariable("X", "", "\"a\"", true);
+    startTemplate(stopping);
+    TemplateState state = TemplateManagerImpl.getTemplateState(myFixture.getEditor());
+    assertNotNull(state);
+    // while the statistics are off, the listener returns before it asks the project for its editor
+    new ErlangUsageListeners.LiveTemplates(ErlangUsageBuildListenerTest.projectThatMustNotBeAsked()).templateStarted(state);
+    state.cancelTemplate();
     collector().setEnabled(true);
-    assertFalse(previewProperties().has(ErlangUsageKey.LIVE_TEMPLATE.jsonName()));
     myFixture.configureByText("a.txt", "<caret>");
     startTemplate(manager.createTemplate("hello", "test", "hello()$END$"));
     assertFalse(previewProperties().has(ErlangUsageKey.LIVE_TEMPLATE.jsonName()));

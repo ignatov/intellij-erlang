@@ -88,10 +88,9 @@ public class ErlangUsageBuildListenerTest extends ErlangLightPlatformCodeInsight
     assertFalse(previewProperties().has(ErlangUsageKey.BUILD_BUILT_IN.jsonName()));
   }
 
+  // while the statistics are off, the listener returns before it asks the project for its modules
   public void testBuildIsNotCountedWhileOff() {
-    new ErlangUsageListeners.Build(getProject()).finished(buildResult(false));
-    collector().setEnabled(true);
-    assertFalse(previewProperties().has(ErlangUsageKey.BUILD_BUILT_IN.jsonName()));
+    new ErlangUsageListeners.Build(projectThatMustNotBeAsked()).finished(buildResult(false));
   }
 
   // a closed project has no modules to ask for; asking would fail
@@ -110,6 +109,19 @@ public class ErlangUsageBuildListenerTest extends ErlangLightPlatformCodeInsight
         case "equals" -> proxy == args[0];
         case "toString" -> "closed project";
         default -> method.getReturnType() == boolean.class ? false : null;
+      });
+  }
+
+  // an open project that fails the test when anything but isDisposed is asked
+  @NotNull
+  static Project projectThatMustNotBeAsked() {
+    return (Project)Proxy.newProxyInstance(Project.class.getClassLoader(), new Class<?>[]{Project.class}, (proxy, method, args) ->
+      switch (method.getName()) {
+        case "isDisposed" -> false;
+        case "hashCode" -> System.identityHashCode(proxy);
+        case "equals" -> proxy == args[0];
+        case "toString" -> "project that must not be asked";
+        default -> throw new AssertionError("the project was asked: " + method.getName());
       });
   }
 
