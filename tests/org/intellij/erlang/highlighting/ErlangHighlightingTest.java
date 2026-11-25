@@ -162,6 +162,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
   public void testCatchClassVarAssignment() { doTest(); } // issue 1648
+  public void testBinarySegmentSizeVariable() { doTest(); } // issue 1665
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
