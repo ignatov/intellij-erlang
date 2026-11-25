@@ -220,4 +220,26 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
     myFixture.doHighlighting();
     assertEquals("greet.erl:18:hello", navigate("greet.erl", "hello/0", 0));
   }
+
+  private void addGreetAndCaller() throws Exception {
+    for (String n : List.of("greet.erl", "caller.erl")) {
+      myFiles.put(n, myFixture.addFileToProject("nav/" + n, read(Paths.get("testData/macroLayer/nav", n))));
+    }
+    for (String n : List.of("greet.erl", "caller.erl")) {
+      myFixture.configureFromExistingVirtualFile(myFiles.get(n).getVirtualFile());
+      myFixture.doHighlighting();
+    }
+  }
+
+  /** #1608: the remote call {@code greet:hello()} goes to {@code hello} in {@code ?DEF(hello).}, not to the call in start/0. */
+  public void testRemoteCallOfFunctionNamedByMacroArgumentAfterFragmentMacro() throws Exception {
+    addGreetAndCaller();
+    assertEquals("greet.erl:18:hello", navigate("caller.erl", "hello()", 0));
+  }
+
+  /** #1608: usages of {@code hello()} made by {@code ?DEF(hello).} include the remote call from another module. */
+  public void testUsagesOfFunctionNamedByMacroArgumentIncludeRemoteCall() throws Exception {
+    addGreetAndCaller();
+    assertEquals("caller.erl:4:hello greet.erl:11:hello greet.erl:2:hello", usages(startAt("greet.erl", "hello(),", 0)));
+  }
 }
