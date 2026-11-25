@@ -183,6 +183,16 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEquals("visible", functions.iterator().next().getName());
   }
 
+  // #1644: after an expression, erlc requires a field or braces after the record name: (X #r) is a syntax error.
+  public void testRecordNameWithoutFieldOrTupleAfterExpression() {
+    assertTrue("(X #r) must be a syntax error",
+               PsiTreeUtil.hasErrorElements(parseText("-module(t).\n-record(r, {a}).\nf(X) ->\n    (X #r).\n")));
+    assertTrue("(#{} #r) must be a syntax error",
+               PsiTreeUtil.hasErrorElements(parseText("-module(t).\n-record(r, {a}).\ng() ->\n    (#{} #r).\n")));
+    assertTrue("(#r) must be a syntax error",
+               PsiTreeUtil.hasErrorElements(parseText("-module(t).\n-record(r, {a}).\nh() ->\n    (#r).\n")));
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
