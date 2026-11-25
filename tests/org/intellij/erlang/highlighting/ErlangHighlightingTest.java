@@ -159,6 +159,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testCaseClauseRematchTwice() { doTest(); } // issue 1651
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
