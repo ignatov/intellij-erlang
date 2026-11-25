@@ -69,6 +69,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIfConditionalCompilation() { doTest(); }
   public void testIfElifDefinedMacro() { doTest(); } // issue 1636
   public void testDefinedOutsideIfElif() { doTest(); } // issue 1636
+  // issue 1653: erlc rejects a call as an attribute value with "bad attribute"; only errors are checked here
+  public void testAttributeValueCall() {
+    myFixture.configureByFile(getTestName(false) + ".erl");
+    setUpInspections(myFixture);
+    myFixture.checkHighlighting(false, false, false);
+  }
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
   public void test211()               { doTest(); }
