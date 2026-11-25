@@ -447,6 +447,17 @@ public final class ErlangMacroResolve {
     return !isInConditional(nameLeaf) && !isTestedByConditional(file, name) && !undefines(file, name, new HashSet<>());
   }
 
+  /**
+   * Epp's "undefined macro" at a use of a predefined feature macro that no -define resolves: an {@code -undef} of the
+   * name outside every conditional comes before it ({@link #undefBefore}). For a use outside -define bodies, and only
+   * where it is certain, as {@link #argumentMismatch}; in a header the modules that include it are unknown.
+   */
+  public static boolean isFeatureMacroUndefined(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || file.getFileType() == ErlangFileType.HEADER) return false;
+    if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null || !allIncludesResolve(file)) return false;
+    return undefBefore(file, name, nameLeaf) == UNDEF_SURE && !isInConditional(nameLeaf) && !isTestedByConditional(file, name);
+  }
+
   private static final int UNDEF_NONE = 0, UNDEF_SURE = 1, UNDEF_MAYBE = 2;
 
   /**

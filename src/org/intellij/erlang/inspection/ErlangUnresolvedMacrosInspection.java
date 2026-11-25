@@ -125,10 +125,15 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
 
       /**
        * Epp's "argument mismatch for macro" for a use of a predefined feature macro (no -define of the name resolves)
-       * without exactly one argument, outside -define bodies.
+       * without exactly one argument, outside -define bodies, and its "undefined macro" after an -undef of the name
+       * (see {@link ErlangMacroResolve#isFeatureMacroUndefined}), with the macro layer on.
        */
       private void checkFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
         if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
+        if (ErlangMacroLayer.isEnabled() && ErlangMacroResolve.isFeatureMacroUndefined(nameLeaf, name)) {
+          registerProblem(holder, target, "Unresolved macros '?" + name + "'", range, null);
+          return;
+        }
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);
         if (arity != 1 && arity != ErlangMacroResolve.UNKNOWN) {
           registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);
