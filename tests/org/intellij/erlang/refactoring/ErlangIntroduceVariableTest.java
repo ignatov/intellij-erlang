@@ -47,15 +47,20 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSelectionInFunctionArguments() { doTest(); }
   public void testSelectionInMacroDefinition()   { doTestCannotPerform(); }
 
+  public void testSelectionInGuardWithArgumentOccurrence() { doTest(); }
+  public void testSelectionInGuardWithArgumentOccurrenceSingle() { doTestCannotPerform(SINGLE); }
+
   public void testSelectionInFunctionClauseGuard() {
     doTestCannotPerform();
   }
 
-  private void doTestCannotPerform() {
+  private void doTestCannotPerform() { doTestCannotPerform(ALL); }
+
+  private void doTestCannotPerform(ReplaceStrategy replaceStrategy) {
     String name = getTestName(true);
     myFixture.configureByFile(name + ".erl");
     try {
-      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+      new ErlangIntroduceVariableHandler(replaceStrategy).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
       fail("Expected the Cannot Perform Refactoring hint");
     }
     catch (CommonRefactoringUtil.RefactoringErrorHintException e) {

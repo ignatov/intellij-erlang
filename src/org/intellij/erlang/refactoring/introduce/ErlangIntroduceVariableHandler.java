@@ -89,8 +89,16 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       if (selectedExpression == null) {
         showCannotPerformError(project, editor);
       }
-      else if (isInArgumentDefinition(selectedExpression) || checkIntroduceContext(file, editor, selectedExpression)) {
-        performOnElement(editor, selectedExpression);
+      else {
+        List<PsiElement> occurrences = myReplaceStrategy == ReplaceStrategy.SINGLE
+                                       ? Collections.singletonList(selectedExpression)
+                                       : getOccurrences(selectedExpression);
+        if (canIntroduce(selectedExpression, occurrences)) {
+          performOnElement(editor, selectedExpression);
+        }
+        else {
+          showCannotPerformError(project, editor);
+        }
       }
       return;
     }
@@ -155,6 +163,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
                                               @NotNull ErlangExpression expression,
                                               boolean replaceAll) {
     List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : Collections.singletonList(expression);
+    if (!canIntroduce(expression, occurrences)) {
+      showCannotPerformError(expression.getProject(), editor);
+      return;
+    }
     PsiElement declaration = performElement(editor, expression, occurrences);
 
     ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);
@@ -298,6 +310,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   private static boolean isValidIntroduceContext(@Nullable PsiElement element) {
     return PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null;
+  }
+
+  private static boolean canIntroduce(@NotNull ErlangExpression expression, @NotNull List<PsiElement> occurrences) {
+    return isValidIntroduceContext(expression) || ContainerUtil.exists(occurrences, ErlangIntroduceVariableHandler::isInArgumentDefinition);
   }
 
   private static boolean isInArgumentDefinition(@NotNull PsiElement element) {
