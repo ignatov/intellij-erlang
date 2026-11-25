@@ -25,7 +25,7 @@ BNF = textwrap.dedent("""\
     }
 
     forms ::= item *
-    private item ::= call | add_op | dead
+    private item ::= add_op | call | dead
     add_op ::= '+' | '-'
     call ::= '(' args? ')' {pin=1 extends=orphan}
     private args ::= atom
@@ -76,12 +76,12 @@ JAVA = [
     (RAN, "  }"),
     (RAN, ""),
     (RAN, "  /* ********************************************************** */"),
-    (RAN, "  // call | add_op | dead"),
+    (RAN, "  // add_op | call | dead"),
     (RAN, "  static boolean item(PsiBuilder b, int l) {"),
     ((0, 4, 1, 1), '    if (!recursion_guard_(b, l, "item")) return false;'),
     (RAN, "    boolean r;"),
-    ((0, 3, 0, 0), "    r = call(b, l + 1);"),
-    ((0, 5, 0, 2), "    if (!r) r = add_op(b, l + 1);"),
+    ((0, 3, 0, 0), "    r = add_op(b, l + 1);"),
+    ((0, 5, 0, 2), "    if (!r) r = call(b, l + 1);"),
     ((3, 2, 1, 1), "    if (!r) r = dead(b, l + 1);"),
     ((0, 2, 0, 0), "    return r;"),
     (RAN, "  }"),
@@ -216,7 +216,7 @@ class CoverageGapsTest(unittest.TestCase):
                          ["forms", "item", "add_op", "call", "args", "atom", "dead", "ghost", "marker", "orphan"])
         self.assertEqual(by_name["item"]["modifiers"], ["private"])
         self.assertEqual(by_name["marker"]["modifiers"], ["fake"])
-        self.assertEqual(by_name["item"]["refs"], ["call", "add_op", "dead"])
+        self.assertEqual(by_name["item"]["refs"], ["add_op", "call", "dead"])
         # names in strings and in the attribute block are not references
         self.assertEqual(by_name["call"]["refs"], ["args"])
         self.assertEqual(by_name["forms"]["line"], BNF.split("\n").index("forms ::= item *") + 1)
@@ -325,7 +325,7 @@ class CoverageGapsTest(unittest.TestCase):
 
     def test_executed_token_alternatives_are_not_a_match(self):
         # the caller's next line saw r false only: no alternative of add_op ever matched
-        java = [(cov if "r = dead(b, l + 1)" not in text else (0, 5, 1, 1), text) for cov, text in JAVA]
+        java = [(cov if "r = call(b, l + 1)" not in text else (0, 5, 1, 1), text) for cov, text in JAVA]
         report = self.write("fail.xml", report_xml(java))
         res, _ = self.result(report=report)
         rules = {r["name"]: r for r in res["parser"]["rules"]}
@@ -334,6 +334,50 @@ class CoverageGapsTest(unittest.TestCase):
         # and with r true after the first alternative the fixture's verdict stays
         res, _ = self.result()
         self.assertEqual({r["name"]: r for r in res["parser"]["rules"]}["add_op"]["verdict"], "partly")
+
+    def test_success_of_an_earlier_alternative_is_not_a_match_of_the_next_one(self):
+        # item ::= call | add_op | dead: r is true before add_op (call matched), so r true after it shows nothing
+        swap = {"    r = add_op(b, l + 1);": "    r = call(b, l + 1);",
+                "    if (!r) r = call(b, l + 1);": "    if (!r) r = add_op(b, l + 1);"}
+        java = [(cov, swap.get(text, text)) for cov, text in JAVA]
+        self.write("gen/org/intellij/erlang/parser/ErlangParser.java", "\n".join(t for _, t in java) + "\n")
+        res, _ = self.result(report=self.write("earlier.xml", report_xml(java)))
+        self.assertEqual({r["name"]: r for r in res["parser"]["rules"]}["add_op"]["verdict"], "not-reached")
+
+    def delegating(self, item_lines):
+        """dead only passes on the result of ghost, which ran and matched; item calls dead as `item_lines` say."""
+        ran = {'    if (!recursion_guard_(b, l, "dead")) return false;': (0, 4, 1, 1),
+               '    if (!recursion_guard_(b, l, "ghost")) return false;': (0, 4, 1, 1),
+               "    r = ghost(b, l + 1);": (0, 3, 0, 0),
+               "    r = consumeToken(b, ERL_OP_MINUS);": (0, 3, 0, 0)}
+        java, method = [], None
+        for cov, text in JAVA:
+            if "static boolean " in text:
+                method = text.split("static boolean ", 1)[1].split("(", 1)[0]
+            if method == "item" and text.startswith("    r = add_op("):
+                java += item_lines
+            elif method == "item" and text.startswith("    if (!r) r = "):
+                continue
+            elif method in ("dead", "ghost") and text == "    return r;":
+                java.append(((0, 2, 0, 0), text))
+            else:
+                java.append((ran.get(text, cov) if method in ("dead", "ghost") else cov, text))
+        self.write("gen/org/intellij/erlang/parser/ErlangParser.java", "\n".join(t for _, t in java) + "\n")
+        res, _ = self.result(report=self.write("delegating.xml", report_xml(java)))
+        return {r["name"]: r for r in res["parser"]["rules"]}["dead"]
+
+    def test_delegating_rule_needs_its_caller_to_use_the_result(self):
+        first = ((0, 3, 0, 0), "    r = dead(b, l + 1);")
+        # the line after the call never ran: dead never returned true, though ghost matched
+        dead = self.delegating([first, ((7, 2, 1, 1), "    r = r && add_op(b, l + 1);")])
+        self.assertEqual((dead["verdict"], dead["why"]), ("not-reached", "called, never matched its first element"))
+        dead = self.delegating([first, ((0, 9, 1, 1), "    r = r && add_op(b, l + 1);")])
+        self.assertEqual((dead["verdict"], dead.get("match_unknown")), ("reached", None))
+        # after a pin the next line runs anyway, and so does the end of a method: nothing shows the result
+        for after in ([((0, 2, 0, 0), "    p = r; // pin = 1"), ((0, 9, 3, 3), "    r = p && add_op(b, l + 1) && r;")], []):
+            dead = self.delegating([first] + after)
+            self.assertEqual((dead["verdict"], dead.get("match_unknown")), ("reached", True))
+            self.assertIn("cannot show that it matched", dead["why"])
 
     def test_report_without_the_parser_fails(self):
         report = self.write("empty.xml", '<?xml version="1.0"?><report name="x"></report>')

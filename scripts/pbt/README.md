@@ -84,9 +84,12 @@ missed, one that ran at most 4, so the limit is 5. Other lines ran when they hav
 
 - A rule made only of token alternatives (`'+' | '-'`) is "matched" when the line after an alternative saw `r` true,
   or when its caller used the result (the line after the call ran). Executed token checks alone are not evidence.
-  A rule that only delegates to another rule (`r = exprs(...)`) takes the verdict of that rule: success of the call
-  itself cannot be told from the lines, so it can be reported as reached when only other callers of the rule
-  matched.
+  Caller evidence is not read where the next line runs anyway: after a pin (`r = p && ...`), at the end of a
+  method, or after an alternative that follows a successful one.
+- A rule that only passes on the result of another rule (`r = exprs(...)`) has no branch of its own. It is matched
+  when that rule matched and a caller used the result. When no call site can show the result, the rule is counted
+  as reached, marked `match_unknown` in the JSON and listed under "NOT KNOWN WHETHER THEY MATCHED" (8 rules with
+  today's grammar, `try_expressions_clause` among them): the other rule may have matched only for another caller.
 - "Reached" means that the code ran, and for most rules that the rule matched at least once. It does not mean that
   every token alternative matched.
 - The judgement from line counts depends on the code shapes of today's Grammar-Kit. After a Grammar-Kit update,

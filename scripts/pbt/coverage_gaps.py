@@ -13,6 +13,7 @@ import json
 import os
 import re
 import sys
+import textwrap
 import xml.etree.ElementTree as ET
 
 PARSER_CLASS = "org/intellij/erlang/parser/ErlangParser"
@@ -259,7 +260,8 @@ class ParserAnalysis:
         self.line_rule = {}  # line -> rule, for lines outside ordinary methods (Pratt blocks, lambdas)
         self.pratt_blocks = {}  # rule -> {"cond": line, "body": [lines]}
         self._split_pratt()
-        self.caller_evidence = self._caller_evidence()
+        self.caller_used, self.caller_telling = self._caller_evidence()
+        self.unknown_match = set()
         self.matched = self._fixpoint()
 
     def _check_alignment(self):
@@ -351,32 +353,36 @@ class ParserAnalysis:
         return bool(cov) and cov[1] > 0 and (cov[3] >= 2 or cov[0] > 0)
 
     def _caller_evidence(self):
-        """The methods whose result a caller used as true at least once: the line after the call ran only for that."""
-        out = set()
+        """Two sets of methods. used: a caller used the result as true at least once, because the line after the call
+        ran only for that. telling: some call site could show it. A site cannot when the next line runs anyway
+        (`r = p && ...` after a pin, the end of the method) or when r may be true from an earlier alternative."""
+        used, telling = set(), set()
         for m in self.methods.values():
             calls = [c for c in m["calls"] if c["kind"] != "shortcut"]
             for idx, c in enumerate(calls):
                 names = [n for k, n in c["callees"] if k == "method"]
-                if not names:
+                if not names or (c["kind"] == "alt" and self._ever_true(c)):
                     continue
+                nxt = calls[idx + 1] if idx + 1 < len(calls) else None
                 if c["kind"] == "pratt_cond":
-                    nxt = self.cov(c["line"] + 1)
-                    used = bool(nxt) and nxt[1] > 0
-                elif idx + 1 < len(calls) and calls[idx + 1]["kind"] == "seq":
-                    used = call_executed("seq", self.cov(calls[idx + 1]["line"]))
-                elif idx + 1 < len(calls) and calls[idx + 1]["kind"] == "alt":
-                    used = self._ever_true(calls[idx + 1])
+                    body = self.cov(c["line"] + 1)
+                    seen = bool(body) and body[1] > 0
+                elif nxt and nxt["kind"] == "seq" and nxt["text"].startswith("r = r && "):
+                    seen = call_executed("seq", self.cov(nxt["line"]))
+                elif nxt and nxt["kind"] == "alt":
+                    seen = self._ever_true(nxt)
                 else:
-                    used = False
-                if used:
-                    out.update(names)
-        return out
+                    continue
+                telling.update(names)
+                if seen:
+                    used.update(names)
+        return used, telling
 
     def _token_alternatives_matched(self, m, calls):
         """For a method that is only token alternatives: executed tokens do not show that one matched. Some alternative
         before the last one matched when the line after it saw r true; the last one is known only from the caller."""
         alts = [c for c in calls if c["kind"] == "alt"]
-        return any(self._ever_true(c) for c in alts) or m["name"] in self.caller_evidence
+        return any(self._ever_true(c) for c in alts) or m["name"] in self.caller_used
 
     # matched(method): the method returned true at least once (see README for how this is read from lines)
     def _fixpoint(self):
@@ -422,7 +428,21 @@ class ParserAnalysis:
         if any(c["kind"] == "alt" for c in with_callees) and \
                 all(k == "token" for c in with_callees for k, _ in c["callees"]):
             return self._token_alternatives_matched(m, with_callees)
-        return any(self._callee_matched(c, matched) for c in with_callees)
+        if not any(self._callee_matched(c, matched) for c in with_callees):
+            return False
+        if self._only_delegates(with_callees):
+            # The call line has no branch, and the callee may have matched for another caller.
+            if m["name"] in self.caller_telling:
+                return m["name"] in self.caller_used
+            self.unknown_match.add(m["name"])
+        return True
+
+    @staticmethod
+    def _only_delegates(with_callees):
+        if len(with_callees) != 1:
+            return False
+        c = with_callees[0]
+        return c["kind"] == "plain" and c["text"].startswith("r = ") and [k for k, _ in c["callees"]] == ["method"]
 
     # ------------------------------------------------------------ per rule
     def rule_report(self):
@@ -479,6 +499,10 @@ class ParserAnalysis:
                 if "verdict" not in entry:
                     entry["verdict"] = "partly" if entry["gaps"] else "reached"
                     entry["why"] = ("%d parts never ran" % len(entry["gaps"])) if entry["gaps"] else "every part ran"
+                    if main in self.unknown_match:
+                        entry["match_unknown"] = True
+                        entry["why"] += "; it only passes on the result of another rule, so the report cannot " \
+                                        "show that it matched"
             out.append(entry)
         erl = self.reachable(skip=self.other_contexts)
         for e in out:
@@ -786,6 +810,12 @@ def print_text(res, show_all, top):
         if not d["rules"] and not d["methods"]:
             w("  no change in the verdicts of the rules or in the methods of the extra classes\n")
         w("\n")
+
+    unknown = [r["name"] for r in p["rules"] if r.get("match_unknown")]
+    if unknown:
+        w("NOT KNOWN WHETHER THEY MATCHED (%d rules that only pass on the result of another rule; counted as\n"
+          "          reached because that rule matched somewhere)\n  %s\n\n"
+          % (len(unknown), "\n  ".join(textwrap.wrap(", ".join(unknown), 110))))
 
     gaps = res["top_gaps"]
     w("TOP GAPS (not-reached rules; first those not inside another gap, by how many not-reached rules\n"
