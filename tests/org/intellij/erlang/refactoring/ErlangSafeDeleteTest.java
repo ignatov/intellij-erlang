@@ -38,6 +38,7 @@ public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
 
   public void testFunction()    { doTest(); }
   public void testWithExports() { doTest(); }
+  public void testRecursiveFunction() { doTest(); }
 
   public void testIncludedHeader() {
     PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
