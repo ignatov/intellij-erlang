@@ -204,7 +204,7 @@ class RescueTest(unittest.TestCase):
         run = self.rescue(self.runs(('completed', iso(41)), ('completed', iso(55))))
         self.assertEqual(0, run.status, run.output)
         self.assertEqual(2, len(run.calls), run.calls)
-        self.assertIn('run list -R owner/repo -w factory-tick.yml', run.calls[0])
+        self.assertIn('run list -R owner/repo -w factory-tick.yml -b master', run.calls[0])  # ticks of master only
         self.assertEqual('workflow run factory-tick.yml -R owner/repo --ref master -f live=true', run.calls[1])
         self.assertIn('the clock stopped. Starting a tick.', run.output)
 

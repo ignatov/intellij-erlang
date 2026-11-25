@@ -5,9 +5,10 @@ name: Factory rescue
 # timer's dispatch got one HTTP 500 from GitHub and no tick ran for 1.5 hours. The dispatches retry now, but a longer
 # outage, a cancelled timer or a tick that ends before it arms the timer still break the chain.
 #
-# This job looks at the runs of factory-tick.yml. When none is queued or running and the last one ended more than
-# 40 minutes ago (ticks normally come every 10 to 25 minutes), it starts a tick of master with live. GitHub drops
-# many scheduled runs, so the job is asked for every 10 minutes; any run that GitHub keeps is enough.
+# This job looks at the runs of factory-tick.yml on master (a run of another branch is refused and arms no timer).
+# When none is queued or running and the last one ended more than 40 minutes ago (ticks normally come every 10 to
+# 25 minutes), it starts a tick of master with live. GitHub drops many scheduled runs, so the job is asked for every
+# 10 minutes; any run that GitHub keeps is enough.
 #
 # Two ticks never run at once: factory-tick.yml has the concurrency group factory-tick without cancel-in-progress,
 # so a tick started here while another one starts waits for it. Off unless the repository variables
@@ -71,7 +72,7 @@ jobs:
               sleep "$wait"
             done
           }
-          if ! runs=$(gh run list -R "$REPO" -w factory-tick.yml -L 20 --json status,updatedAt); then
+          if ! runs=$(gh run list -R "$REPO" -w factory-tick.yml -b master -L 20 --json status,updatedAt); then
             echo "::warning::The runs of the tick could not be listed; the next check looks again."
             exit 0
           fi
