@@ -120,6 +120,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testMapKeyInFunHead()   { doTest(); }
   public void testNamedFunVariables() { doTest(); }
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
+  public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }

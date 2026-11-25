@@ -70,9 +70,14 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (psiElement.equals(myOrigin)) return true;
     if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
-      if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
-      if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
+      boolean inOriginArgList = PsiTreeUtil.isAncestor(originArgList, psiElement, false);
+      // a map key in a fun head refers to an outer variable; any other variable there shadows the outer ones
+      // and matches only an earlier occurrence in the same head
+      if (inMapPatternKey(myOrigin)) {
+        if (inOriginArgList) return true;
+      }
+      else if (!inOriginArgList || psiElement.getTextOffset() > myOrigin.getTextOffset()) return true;
     }
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     
