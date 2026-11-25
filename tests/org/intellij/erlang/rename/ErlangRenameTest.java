@@ -96,6 +96,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testNamedFunName()                  { doTest("Fact"); }
   public void testNamedFunShadowingArgument()     { doTest("Arg"); }
   public void testAnonymousFunLaterClauseVariable() { doTest("Zz"); }
+  public void testGeneratorExpressionVariable()   { doTest("Zz"); } // issue 1641
 
   // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
   public void testLongOperatorChain() {
