@@ -287,6 +287,17 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       runCase(index, true);
       done = 1;
     }
+    else if (env("PBT_FILES") != null) {
+      for (Path f : erlFiles(Paths.get(env("PBT_FILES")))) {
+        String text = Files.readString(f);
+        System.out.println("=== " + f + "\n" + text);
+        PbtOracle.Result answer = oracle(text);
+        Input in = new Input("file/" + f.getFileName(), null, text);
+        if (answer.hasSyntaxError()) checkRejected(in, answer, true);
+        else checkModule(in, answer, false, true);
+        done++;
+      }
+    }
     else {
       for (int i = 0; i < cases; i++) {
         if (budgetMs > 0 && System.currentTimeMillis() - start > budgetMs) {
@@ -504,7 +515,12 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
    */
   static Set<String> otherErrors(PbtOracle.Result r) {
     Set<String> tags = new java.util.TreeSet<>();
-    for (PbtOracle.Item i : r.items()) if (i.error() && !WARNING_KINDS.contains(i.tag())) tags.add(i.module() + ":" + i.tag());
+    for (PbtOracle.Item i : r.items()) {
+      if (!i.error()) continue;
+      if (!WARNING_KINDS.contains(i.tag())) tags.add(i.module() + ":" + i.tag());
+      // `_` used as an expression is an artifact of the token reduction, not a variable of the module
+      else if ("_".equals(i.name())) tags.add(i.module() + ":" + i.tag() + " _");
+    }
     return tags;
   }
 
@@ -564,7 +580,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
           return false;
         }
       };
-      Shrunk shrunk = in.tree != null ? shrinkTree(in.tree, pred) : shrinkText(in.text, pred);
+      // a text has no tree to reduce, so its reduction by lines and tokens gets more tests
+      Shrunk shrunk = in.tree != null ? shrinkTree(in.tree, pred) : shrinkText(in.text, pred, myShrinkTests * 3);
       String name = String.format("%s-%08x-%d.erl", prop, signature.hashCode(), s.shrunkTexts.size() + 1);
       Path file = myOut.resolve(name);
       String header = "%% " + signature + "\n%% case " + in.id + ", " + shrunk.tests + " tests\n";
@@ -932,12 +949,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
    */
   private List<String> controls(JsonArray out) throws IOException {
     List<String> failures = new ArrayList<>();
-    Path dir = Paths.get("testData/pbt/controls");
-    List<Path> files = new ArrayList<>();
-    try (var stream = Files.list(dir)) {
-      stream.filter(p -> p.toString().endsWith(".erl")).sorted().forEach(files::add);
-    }
-    for (Path f : files) {
+    for (Path f : erlFiles(Paths.get("testData/pbt/controls"))) {
       String text = Files.readString(f);
       Map<String, Integer> before = violationCounts();
       myLastAgreed = 0;
@@ -988,6 +1000,16 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (problem != null) failures.add("positive control " + prop + ": " + problem);
     }
     return failures;
+  }
+
+  /** The file itself, or the {@code .erl} files of the directory, sorted. */
+  private static List<Path> erlFiles(Path path) throws IOException {
+    if (!Files.isDirectory(path)) return List.of(path);
+    List<Path> files = new ArrayList<>();
+    try (var stream = Files.list(path)) {
+      stream.filter(p -> p.toString().endsWith(".erl")).sorted().forEach(files::add);
+    }
+    return files;
   }
 
   private static boolean isPlanted(String prop, String sig) {
