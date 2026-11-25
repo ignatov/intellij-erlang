@@ -55,6 +55,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
   public void testMismatchedHead()    { doTest(); }
+  public void testFunClausesArityMismatch() { doTest(); } // issue 1666
   public void test154()               { doTest(); }
   public void test154_2()             { doTest(); }
   public void test155()               { doTest(); }
