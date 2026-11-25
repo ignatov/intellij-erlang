@@ -20,8 +20,13 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
+
+import java.util.List;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.ALL;
@@ -34,6 +39,10 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   }
 
   public void testSimple()                  { doTest(); }
+  public void testLeadingOperandsOfChain()  { doTest(); }
+  public void testLeadingOperandsOfChainOccurrence() { doTest(); }
+  public void testOccurrenceAfterLeadingOperands() { doTest(); }
+  public void testOccurrenceInSameChain()   { doTest(); }
   public void testCaseExpression()          { doTest(); }
   public void testFunctionArguments()       { doTest(); }
   public void testFunctionClauseScope()     { doTest(); }
@@ -41,6 +50,28 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+
+  public void testChooserOffersLeadingOperandsOfChain() {
+    myFixture.configureByText("a.erl", "f(A, B, C) -> <caret>A + B - C bor A.");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    List<String> targets = ContainerUtil.map(ErlangRefactoringUtil.getIntroduceTargets(element), PsiElement::getText);
+    assertEquals(List.of("A", "A + B", "A + B - C", "A + B - C bor A"), targets);
+  }
+
+  public void testLeadingOperandsRangeInChooser() {
+    myFixture.configureByText("a.erl", "f(A, B, C) -> foo(<caret>A + B - C).");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    ErlangExpression run = ErlangRefactoringUtil.getIntroduceTargets(element).get(1);
+    assertEquals("A + B", ErlangRefactoringUtil.getRange(run).substring(myFixture.getEditor().getDocument().getText()));
+  }
+
+  public void testChooserOffersFewLeadingOperandsOfLongChain() {
+    myFixture.configureByText("a.erl", "f(A) -> X = <caret>A" + " + 1".repeat(3000) + ", X.");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    List<ErlangExpression> targets = ErlangRefactoringUtil.getIntroduceTargets(element);
+    assertEquals(12, targets.size());
+    assertEquals("A" + " + 1".repeat(10), targets.get(10).getText());
+  }
 
   private void doTest() { doTest(ALL); }
 

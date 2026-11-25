@@ -20,14 +20,20 @@ import com.intellij.codeInsight.PsiEquivalenceUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Pass;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.IntroduceTargetChooser;
+import com.intellij.util.SmartList;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +43,90 @@ import java.util.Collections;
 import java.util.List;
 
 public class ErlangRefactoringUtil {
+  // Each run is parsed from its text, so the chooser offers only a few of them
+  private static final int MAX_LEADING_RUNS = 10;
+  private static final Key<ErlangExpression> RUN_END = Key.create("ERLANG_LEADING_RUN_END");
+
   private ErlangRefactoringUtil() {
+  }
+
+  // The operand of an additive chain where a run of operands from the start of the chain up to element ends,
+  // or null when the run is the whole chain
+  @Nullable
+  public static ErlangExpression getLeadingRunEnd(@NotNull ErlangAdditiveExpression chain, @NotNull PsiElement element) {
+    while (element != null && element.getParent() != chain) element = element.getParent();
+    if (element == null) return null;
+    ErlangExpression end = element instanceof ErlangExpression e ? e : PsiTreeUtil.getNextSiblingOfType(element, ErlangExpression.class);
+    return end == null || end == chain.getExpressionList().getLast() ? null : end;
+  }
+
+  // A non-physical expression with the text of the operands of the chain up to end
+  @NotNull
+  public static ErlangExpression createLeadingRun(@NotNull ErlangAdditiveExpression chain, @NotNull ErlangExpression end) {
+    String text = chain.getText().substring(0, end.getStartOffsetInParent() + end.getTextLength());
+    ErlangExpression run = ErlangElementFactory.createExpressionFromText(chain.getProject(), text);
+    run.putUserData(RUN_END, end);
+    return run;
+  }
+
+  // The physical operands of a leading run, or the expression itself
+  @NotNull
+  public static List<ErlangExpression> getOperands(@NotNull ErlangExpression expression) {
+    ErlangExpression end = expression.getUserData(RUN_END);
+    if (end == null) return new SmartList<>(expression);
+    List<ErlangExpression> operands = ((ErlangAdditiveExpression) end.getParent()).getExpressionList();
+    return new ArrayList<>(operands.subList(0, operands.indexOf(end) + 1));
+  }
+
+  // The physical element where a leading run is, or the element itself
+  @NotNull
+  public static PsiElement getPlace(@NotNull PsiElement element) {
+    ErlangExpression end = element.getUserData(RUN_END);
+    return end != null ? end.getParent() : element;
+  }
+
+  @NotNull
+  public static TextRange getRange(@NotNull PsiElement element) {
+    ErlangExpression end = element.getUserData(RUN_END);
+    return end == null ? element.getTextRange() : new TextRange(end.getParent().getTextRange().getStartOffset(), end.getTextRange().getEndOffset());
+  }
+
+  // Puts the operands of a leading run under one physical node with the same text, so that it can be replaced
+  @NotNull
+  public static PsiElement materialize(@NotNull PsiElement element) {
+    ErlangExpression end = element.getUserData(RUN_END);
+    if (end == null) return element;
+    PsiElement chain = end.getParent();
+    PsiElement first = chain.getFirstChild();
+    PsiElement run = chain.addBefore(element, first);
+    chain.deleteChildRange(first, end);
+    run.putUserData(RUN_END, null);
+    return run;
+  }
+
+  // The operands and operators of an additive expression or a leading run
+  @Nullable
+  private static List<PsiElement> getRunParts(@NotNull PsiElement element) {
+    ErlangExpression end = element.getUserData(RUN_END);
+    PsiElement chain = end != null ? end.getParent() : element;
+    if (!(chain instanceof ErlangAdditiveExpression)) return null;
+    List<PsiElement> parts = new ArrayList<>();
+    for (PsiElement child = chain.getFirstChild(); child != null; child = child.getNextSibling()) {
+      if (!(child instanceof PsiWhiteSpace || child instanceof PsiComment)) parts.add(child);
+      if (child == end) break;
+    }
+    return parts;
+  }
+
+  private static boolean startsWith(@NotNull List<PsiElement> parts, @NotNull List<PsiElement> prefix) {
+    if (parts.size() < prefix.size()) return false;
+    for (int i = 0; i < prefix.size(); i++) {
+      PsiElement part = parts.get(i);
+      PsiElement other = prefix.get(i);
+      boolean same = part instanceof ErlangExpression ? PsiEquivalenceUtil.areElementsEquivalent(part, other) : part.textMatches(other);
+      if (!same) return false;
+    }
+    return true;
   }
 
   @NotNull
@@ -46,9 +135,17 @@ public class ErlangRefactoringUtil {
       return Collections.emptyList();
     }
     final List<PsiElement> occurrences = new ArrayList<>();
+    List<PsiElement> patternParts = getRunParts(pattern);
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       public void visitElement(@NotNull PsiElement element) {
-        if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
+        List<PsiElement> parts = patternParts != null && element instanceof ErlangAdditiveExpression ? getRunParts(element) : null;
+        if (parts != null && startsWith(parts, patternParts)) {
+          PsiElement end = parts.get(patternParts.size() - 1);
+          occurrences.add(parts.size() == patternParts.size() ? element : createLeadingRun((ErlangAdditiveExpression) element, (ErlangExpression) end));
+          for (PsiElement next = end.getNextSibling(); next != null; next = next.getNextSibling()) next.accept(this);
+          return;
+        }
+        if (patternParts == null && PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
           occurrences.add(element);
           return;
         }
@@ -85,13 +182,10 @@ public class ErlangRefactoringUtil {
     return visitor.result();
   }
 
-  public static void smartIntroduce(@NotNull final Editor editor, 
-                                    @NotNull PsiFile file, 
-                                    @NotNull final Extractor extractor) {
-    int offset = editor.getCaretModel().getOffset();
-    PsiElement element = file.findElementAt(offset);
-    if (!extractor.checkContext(file, editor, element)) return;
+  @NotNull
+  static List<ErlangExpression> getIntroduceTargets(@Nullable PsiElement element) {
     List<ErlangExpression> expressions = new ArrayList<>();
+    PsiElement previous = null;
     while (element != null) {
       if (element instanceof ErlangClauseBody) {
         break;
@@ -100,11 +194,30 @@ public class ErlangRefactoringUtil {
         boolean isQualifiedFunCall = element instanceof ErlangFunctionCallExpression &&
                                      element.getParent() instanceof ErlangGlobalFunctionCallExpression;
         if (!isQualifiedFunCall && !ErlangPsiImplUtil.inLeftPartOfAssignment(element, false)) {
+          ErlangExpression end = element instanceof ErlangAdditiveExpression chain && previous != null ? getLeadingRunEnd(chain, previous) : null;
+          if (end != null) {
+            List<ErlangExpression> operands = ((ErlangAdditiveExpression) element).getExpressionList();
+            int from = Math.max(operands.indexOf(end), 1);
+            for (int i = from; i < Math.min(operands.size() - 1, from + MAX_LEADING_RUNS); i++) {
+              expressions.add(createLeadingRun((ErlangAdditiveExpression) element, operands.get(i)));
+            }
+          }
           expressions.add((ErlangExpression) element);
         }
       }
+      previous = element;
       element = element.getParent();
     }
+    return expressions;
+  }
+
+  public static void smartIntroduce(@NotNull final Editor editor, 
+                                    @NotNull PsiFile file, 
+                                    @NotNull final Extractor extractor) {
+    int offset = editor.getCaretModel().getOffset();
+    PsiElement element = file.findElementAt(offset);
+    if (!extractor.checkContext(file, editor, element)) return;
+    List<ErlangExpression> expressions = getIntroduceTargets(element);
     if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
       extractor.process(editor, expressions.getFirst());
     }
@@ -116,7 +229,7 @@ public class ErlangRefactoringUtil {
             extractor.process(editor, expression);
           }
         },
-                                         PsiElement::getText
+                                         PsiElement::getText, "Expressions", ErlangRefactoringUtil::getRange
       );
     }
   }
