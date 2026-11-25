@@ -6651,7 +6651,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // 4: BINARY(andalso_expression)
   // 5: BINARY(comp_op_expression)
   // 6: BINARY(list_op_expression)
-  // 7: BINARY(additive_expression)
+  // 7: N_ARY(additive_expression)
   // 8: BINARY(multiplicative_expression)
   // 9: ATOM(atom_with_arity_expression)
   // 10: PREFIX(prefix_expression)
@@ -6711,7 +6711,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
         exit_section_(b, l, m, ERL_LIST_OP_EXPRESSION, r, true, null);
       }
       else if (g < 7 && add_op(b, l + 1)) {
-        r = expression(b, l, 7);
+        int c = current_position_(b);
+        while (true) {
+          r = report_error_(b, expression(b, l, 7));
+          if (!add_op(b, l + 1)) break;
+          if (!empty_element_parsed_guard_(b, "additive_expression", c)) break;
+          c = current_position_(b);
+        }
         exit_section_(b, l, m, ERL_ADDITIVE_EXPRESSION, r, true, null);
       }
       else if (g < 8 && multiplicative_expression_0(b, l + 1)) {
