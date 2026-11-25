@@ -226,12 +226,20 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return false;
   }
 
-  // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern
+  // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;
+  // a map key of the pattern is a use of a variable bound before the pattern, never a binding
   private boolean outsideOwnGeneratorPattern(PsiElement psiElement) {
+    if (inMapPatternKey(psiElement) && inGeneratorPattern(psiElement)) return true;
     ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinition.class);
     if (pattern == null || !(pattern.getParent() instanceof ErlangLcExpression)) return false;
-    if (isBinaryWidthExpression(myOrigin) || inMapPatternKey(myOrigin)) return false;
-    return !PsiTreeUtil.isAncestor(pattern, psiElement, false);
+    if (isBinaryWidthExpression(myOrigin)) return false;
+    boolean inPattern = PsiTreeUtil.isAncestor(pattern, psiElement, false);
+    return inMapPatternKey(myOrigin) == inPattern;
+  }
+
+  private static boolean inGeneratorPattern(PsiElement psiElement) {
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return pattern != null && pattern.getParent() instanceof ErlangLcExpression;
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {
