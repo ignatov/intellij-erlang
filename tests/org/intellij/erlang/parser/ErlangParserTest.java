@@ -91,7 +91,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test325()                                 { doTest(true);  }
   public void test390()                                 { doTest(true);  }
   public void testMapConstruct()                        { doTest(false); }
-  public void testMapSingleValueAcc()                   { doTest(false); }
+  public void testMapSingleValueAcc()                   { doTest(true);  }
   public void testMapUpdate()                           { doTest(false); }
   public void testMapMatch()                            { doTest(false); }
   public void testMapTypes()                            { doTest(false); }
@@ -194,6 +194,17 @@ public class ErlangParserTest extends ErlangParserTestBase {
       if (!PsiTreeUtil.hasErrorElements(file)) accepted.add(body);
     }
     assertEmpty("Parsed without a syntax error", accepted);
+  }
+
+  // #1643: a macro alone can expand to a whole entry, which erlc accepts.
+  public void testMapEntryMacroWithoutOperator() {
+    String[] bodies = {"#{?E}", "X#{?E, b => 2}", "#{?F(1)}", "case X of #{?M} -> ok end"};
+    List<String> rejected = new ArrayList<>();
+    for (String body : bodies) {
+      PsiFile file = parseText("-module(t).\n-define(E, a => 1).\n-define(F(V), a => V).\n-define(M, a := 1).\nf(X) -> " + body + ".\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(body);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
   }
 
   private PsiFile parseText(String text) {

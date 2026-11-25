@@ -31,6 +31,8 @@ ERL_FILE
                 ERL_Q_ATOM
                   ERL_ATOM
                     PsiElement(atom_name)('key')
+              PsiErrorElement:'#', '(', '*', '+', '++', '-', '--', '.', '/', '/=', ':', ':=', <, '=/=', '=:=', '=<', '==', '=>', '>', '>=', '?', and, band, bor, bsl, bsr, bxor, div, or, rem or xor expected, got '}'
+                <empty list>
             PsiElement(})('}')
         PsiElement(,)(',')
         ERL_MAP_EXPRESSION
@@ -44,5 +46,7 @@ ERL_FILE
               ERL_MAX_EXPRESSION
                 ERL_Q_VAR
                   PsiElement(var)('M')
+              PsiErrorElement:'#', '(', '*', '+', '++', '-', '--', '/', '/=', ':', ':=', <, '=/=', '=:=', '=<', '==', '=>', '>', '>=', '?', and, band, bor, bsl, bsr, bxor, div, or, rem or xor expected, got '}'
+                <empty list>
             PsiElement(})('}')
     PsiElement(.)('.')
