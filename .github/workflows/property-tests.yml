@@ -1,0 +1,295 @@
+name: Property tests
+
+# One run of the property-based tests against erlc: tests/org/intellij/erlang/pbt/ErlangPropertyTest (see the README
+# next to it) with one Erlang/OTP release as the oracle, one seed and one time budget. The workflow only runs what it is
+# given and uploads what the runner wrote. What to run next, the known signatures and the triage of the findings are
+# kept outside this repository, as for the robustness sweep; nothing here opens an issue or writes to the repository.
+
+run-name: >-
+  property tests otp ${{ inputs.otp }} ${{ inputs.plant && 'controls' || inputs.props || 'all' }} seed ${{ inputs.seed }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      otp:
+        description: >-
+          Major release of Erlang/OTP that is the oracle; the mock SDK of the plugin is the same release. Each one is a
+          pinned build from builds.hex.pm with a pinned sha256.
+        type: choice
+        default: '27'
+        options:
+          - '27'
+          - '28'
+          - '29'
+      seed:
+        description: Seed of the run, a non-negative number. Empty takes the time.
+        default: ''
+      budget_minutes:
+        description: The runner stops before the next case after this many minutes (5 to 55).
+        default: '40'
+      cases:
+        description: Most generated modules to check; empty is no limit other than the time budget.
+        default: ''
+      props:
+        description: Comma-separated subset of parse, parse-reject and warnings; empty runs all of them.
+        default: ''
+      plant:
+        description: Run the controls instead of the cases; the run fails when a control does not behave.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One run at a time: a run takes most of an hour of a runner, and the runners of the account are shared with every
+# pull request. A second dispatch waits for the first one.
+concurrency:
+  group: property-tests
+  cancel-in-progress: false
+
+jobs:
+  property-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 85
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Check the inputs
+      # Every input reaches the shell through the environment only, and only a value that matches its pattern is
+      # passed on to the later steps.
+      env:
+        OTP: ${{ inputs.otp }}
+        SEED: ${{ inputs.seed }}
+        BUDGET_MINUTES: ${{ inputs.budget_minutes }}
+        CASES: ${{ inputs.cases }}
+        PROPS: ${{ inputs.props }}
+        PLANT: ${{ inputs.plant }}
+      run: |
+        fail() {
+          echo "::error::$1"
+          exit 1
+        }
+        [[ "$OTP" =~ ^(27|28|29)$ ]] || fail "otp must be 27, 28 or 29"
+        [[ "$SEED" =~ ^[0-9]{0,18}$ ]] || fail "seed must be a non-negative number of at most 18 digits"
+        [[ "$BUDGET_MINUTES" =~ ^[0-9]{1,2}$ ]] || fail "budget_minutes must be 5 to 55"
+        (( 10#$BUDGET_MINUTES >= 5 && 10#$BUDGET_MINUTES <= 55 )) || fail "budget_minutes must be 5 to 55"
+        [[ "$CASES" =~ ^[0-9]{0,7}$ ]] || fail "cases must be empty or a number of at most 7 digits"
+        if [[ -n "$CASES" ]]; then
+          (( 10#$CASES >= 1 )) || fail "cases must be empty or at least 1"
+        fi
+        prop='(parse|parse-reject|warnings)'
+        [[ -z "$PROPS" || "$PROPS" =~ ^$prop(,$prop){0,2}$ ]] || fail "props must be a comma-separated subset of parse, parse-reject and warnings"
+        [[ "$PLANT" =~ ^(true|false)$ ]] || fail "plant must be true or false"
+        if [[ -z "$SEED" ]]; then
+          SEED="$(date +%s)"
+        fi
+        if [[ -z "$CASES" ]]; then
+          # No cap: the time budget ends the run.
+          CASES=1000000
+        fi
+        {
+          echo "PBT_OTP_MAJOR=$OTP"
+          echo "PBT_SDK_RELEASE=$OTP"
+          echo "PBT_SEED=$((10#$SEED))"
+          echo "PBT_CASES=$((10#$CASES))"
+          echo "PBT_BUDGET_MINUTES=$((10#$BUDGET_MINUTES))"
+          if [[ -n "$PROPS" ]]; then
+            echo "PBT_PROPS=$PROPS"
+          fi
+          if [[ "$PLANT" == true ]]; then
+            echo "PBT_PLANT=1"
+          fi
+        } >> "$GITHUB_ENV"
+        # What was asked, also when the runner writes no report.
+        mkdir -p build/pbt
+        python3 - "$OTP" "$((10#$SEED))" "$((10#$BUDGET_MINUTES))" "$((10#$CASES))" "$PROPS" "$PLANT" \
+          > build/pbt/dispatch.json <<'EOF'
+        import json
+        import os
+        import sys
+
+        otp, seed, budget, cases, props, plant = sys.argv[1:]
+        print(json.dumps({
+            "run_id": os.environ["GITHUB_RUN_ID"],
+            "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+            "sha": os.environ["GITHUB_SHA"],
+            "otp": otp,
+            "seed": int(seed),
+            "budget_minutes": int(budget),
+            "cases": int(cases),
+            "props": props,
+            "plant": plant == "true",
+        }, indent=2))
+        EOF
+    - name: Install Erlang/OTP
+      # The oracle runs erl, so a real Erlang/OTP is installed, in the same way as the compilation-tests job of
+      # gradle.yml: a build from builds.hex.pm for Ubuntu 24.04 on amd64. 27 is the release that gradle.yml pins. The
+      # sha256 of each build is pinned here; it is the one that builds.txt of builds.hex.pm lists for that build.
+      run: |
+        case "$PBT_OTP_MAJOR" in
+          27)
+            version=27.3.4.9
+            sha256=a9864f486e575e5e1c8e507641168bc31dbb43d7cfa8e124d5e8b67a6f6248d2
+            ;;
+          28)
+            version=28.5.0.8
+            sha256=9d1e254f31554bf26595a6a03164f8e38f48c74d5f60c00b589d581b8ad67781
+            ;;
+          29)
+            version=29.1.2
+            sha256=2cfca446976fc61962585a1c77e5d11ddb6f5fed83e84668a2c4acfaad60d22e
+            ;;
+          *)
+            echo "::error::No pinned build of Erlang/OTP $PBT_OTP_MAJOR"
+            exit 1
+            ;;
+        esac
+        . /etc/os-release
+        if [ "$(dpkg --print-architecture)" != amd64 ] || [ "$VERSION_ID" != 24.04 ]; then
+          echo "::error::The pinned builds are for Ubuntu 24.04 on amd64, the runner is Ubuntu $VERSION_ID on $(dpkg --print-architecture)"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://builds.hex.pm/builds/otp/amd64/ubuntu-24.04/OTP-$version.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "$PBT_OTP_MAJOR" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected $PBT_OTP_MAJOR"
+          exit 1
+        fi
+        echo "PBT_ERL=/usr/local/bin/erl" >> "$GITHUB_ENV"
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      # Restore only: the cache is saved by pushes to master in gradle.yml.
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Run the property tests
+      # The runner stops before the next case when the budget is over and writes the report. A JVM that hangs is
+      # stopped 20 minutes after the budget; the journal, written as the cases run, is uploaded all the same.
+      env:
+        PBT_REPORT: ${{ github.workspace }}/build/pbt/report.json
+        PBT_OUT: ${{ github.workspace }}/build/pbt/out
+        PBT_WORK: ${{ github.workspace }}/build/pbt/work
+      run: |
+        mkdir -p build/pbt
+        code=0
+        timeout -k 1m "$((PBT_BUDGET_MINUTES + 20))m" \
+          ./gradlew --no-daemon test --rerun --tests 'org.intellij.erlang.pbt.ErlangPropertyTest' \
+          > build/pbt/gradle.log 2>&1 || code=$?
+        tail -n 30 build/pbt/gradle.log
+        if (( code == 124 || code == 137 )); then
+          echo "::error::The run did not end within $((PBT_BUDGET_MINUTES + 20)) minutes; see the journal in the artifact"
+          exit 1
+        fi
+        if [[ ! -f "$PBT_REPORT" ]]; then
+          echo "::error::The runner wrote no report (exit code $code); see build/pbt/gradle.log in the artifact"
+          exit 1
+        fi
+        # A finished run is a success whatever it found. The controls fail the test when one does not behave.
+        if [[ -n "${PBT_PLANT:-}" ]]; then
+          if (( code != 0 )); then
+            echo "::error::A control did not behave (exit code $code); see the summary and build/pbt/gradle.log"
+          fi
+          exit "$code"
+        fi
+        if (( code != 0 )); then
+          echo "::warning::Gradle ended with exit code $code after the report was written; see build/pbt/gradle.log"
+        fi
+    - name: Summarise the report
+      if: always()
+      env:
+        PBT_REPORT: ${{ github.workspace }}/build/pbt/report.json
+      run: |
+        mkdir -p build/pbt
+        if [[ ! -f "$PBT_REPORT" ]]; then
+          echo "No report was written." | tee build/pbt/summary.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        python3 - "$PBT_REPORT" > build/pbt/summary.md <<'EOF'
+        import json
+        import sys
+
+        report = json.load(open(sys.argv[1], encoding="utf-8"))
+        run = report.get("run", {})
+
+
+        def cell(text):
+            return str(text).replace("|", "\\|").replace("\n", " ").replace("<", "&lt;")[:300]
+
+
+        print("## Property tests")
+        print()
+        print("| | |")
+        print("|---|---|")
+        for key in ("revision", "otp_release", "sdk_release", "seed", "props", "plant", "cases_requested", "cases_run",
+                    "complete", "oracle_restarts"):
+            if key in run:
+                print("| %s | %s |" % (key, cell(run[key])))
+        print("| wall, minutes | %.1f |" % (run.get("elapsed_ms", 0) / 60000.0))
+        print("| discards | %s |" % cell(report.get("discards", {}).get("count")))
+        print("| crashes | %s |" % len(report.get("crashes", [])))
+        never = report.get("generator", {}).get("never_generated", [])
+        print("| never generated | %s |" % cell(", ".join(never) if never else "none"))
+        print()
+        properties = report.get("properties", {})
+        if properties:
+            print("| Property | Checked | From mutants | Skipped | Violations | Signatures |")
+            print("|---|---|---|---|---|---|")
+            for name, p in properties.items():
+                print("| %s | %s | %s | %s | %s | %s |" % (
+                    cell(name), p.get("checked"), p.get("from_mutants"), p.get("skipped"), p.get("violations"),
+                    len(p.get("signatures", []))))
+            print()
+        rows = [(name, s) for name, p in properties.items() for s in p.get("signatures", [])]
+        if rows:
+            print("| Property | Signature | Count | First case | Shrunk files in out/ |")
+            print("|---|---|---|---|---|")
+            for name, s in rows[:100]:
+                print("| %s | `%s` | %s | %s | %s |" % (
+                    cell(name), cell(s.get("signature")).replace("`", "'").replace("&lt;", "<"), s.get("count"),
+                    cell(s.get("first_case")), cell(", ".join(f.rsplit("/", 1)[-1] for f in s.get("shrunk_files", [])))))
+            if len(rows) > 100:
+                print()
+                print("And %d more signatures in the report." % (len(rows) - 100))
+        else:
+            print("No violations.")
+        controls = report.get("controls", [])
+        if controls:
+            bad = [c for c in controls if not c.get("ok")]
+            print()
+            print("Controls: %d, not behaving: %d" % (len(controls), len(bad)))
+            for c in bad:
+                print("- %s" % cell(c.get("control")))
+        EOF
+        cat build/pbt/summary.md >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload the report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: property-tests-${{ github.run_id }}
+        path: |
+          build/pbt/dispatch.json
+          build/pbt/report.json
+          build/pbt/report.json.journal.jsonl
+          build/pbt/summary.md
+          build/pbt/out
+          build/pbt/gradle.log
+          build/test-results/test/TEST-org.intellij.erlang.pbt.ErlangPropertyTest.xml
+        if-no-files-found: warn
