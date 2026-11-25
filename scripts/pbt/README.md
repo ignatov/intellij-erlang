@@ -12,8 +12,10 @@ From the root of the repository, with JDK 21:
 ```sh
 ./gradlew --no-daemon clean test --rerun --tests 'org.intellij.erlang.parser.ErlangParserTest' -Pcoverage
 python3 scripts/pbt/coverage_gaps.py build/reports/jacoco/coverageReport/coverageReport.xml \
-  --bnf grammars/erlang.bnf --json build/coverage.json [--diff old-coverage.json]
+  --bnf grammars/erlang.bnf --json build/coverage.json
 ```
+
+Add `--diff old-coverage.json` (the JSON of an earlier run) to list what changed since that run.
 
 - Use `clean` after any change in `src/` or `gen/` since the last coverage build. Without it the incremental
   `instrumentCode` gives wrong counts. A change only in `tests/` or `testData/` keeps the counts right.
@@ -80,6 +82,11 @@ missed, one that ran at most 4, so the limit is 5. Other lines ran when they hav
 
 ## Limits
 
+- A rule made only of token alternatives (`'+' | '-'`) is "matched" when the line after an alternative saw `r` true,
+  or when its caller used the result (the line after the call ran). Executed token checks alone are not evidence.
+  A rule that only delegates to another rule (`r = exprs(...)`) takes the verdict of that rule: success of the call
+  itself cannot be told from the lines, so it can be reported as reached when only other callers of the rule
+  matched.
 - "Reached" means that the code ran, and for most rules that the rule matched at least once. It does not mean that
   every token alternative matched.
 - The judgement from line counts depends on the code shapes of today's Grammar-Kit. After a Grammar-Kit update,

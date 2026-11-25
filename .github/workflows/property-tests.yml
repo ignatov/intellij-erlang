@@ -65,10 +65,12 @@ permissions:
   contents: read
 
 # One run at a time: a run takes most of an hour of a runner, and the runners of the account are shared with every
-# pull request. A second dispatch waits for the first one.
+# pull request. A second dispatch waits for the first one, and so do the following ones (queue: max keeps them all;
+# by default a third dispatch would cancel the second).
 concurrency:
   group: property-tests
   cancel-in-progress: false
+  queue: max
 
 jobs:
   property-tests:
@@ -346,8 +348,11 @@ jobs:
           fi
           exit "$code"
         fi
+        # The test records findings without failing, so a nonzero exit code is a failure of the test or of the build;
+        # the steps that collect the report and the artifact run anyway.
         if (( code != 0 )); then
-          echo "::warning::Gradle ended with exit code $code after the report was written; see build/pbt/gradle.log"
+          echo "::error::Gradle ended with exit code $code after the report was written; see build/pbt/gradle.log"
+          exit "$code"
         fi
     - name: Run the coverage tool
       # The JaCoCo report covers the plugin classes that the run loaded; the tool maps it to the rules of the grammar

@@ -85,18 +85,24 @@ def parse_bnf(path):
         m = head.match(line)
         if m and all(w in MODIFIERS for w in m.group(1).split()):
             cur = {"name": m.group(2), "line": no, "modifiers": m.group(1).split(),
-                   "body": line[m.end():], "text": raw_lines[no - 1].strip()}
+                   "body": line[m.end():], "text": raw_lines[no - 1].strip(), "raw": raw_lines[no - 1]}
             rules.append(cur)
         elif cur is not None:
             cur["body"] += "\n" + line
+            cur["raw"] += "\n" + raw_lines[no - 1]
     names = {r["name"] for r in rules}
     for r in rules:
         refs = []
         for ident in re.findall(r"[A-Za-z_]\w*", r["body"]):
             if ident in names and ident not in refs:
                 refs.append(ident)
+        # recoverWhile=X makes the generated parser call X, so X is part of the rule although it is in an attribute block
+        for ident in re.findall(r"recoverWhile\s*=\s*([A-Za-z_]\w*)", r["raw"]):
+            if ident in names and ident not in refs:
+                refs.append(ident)
         r["refs"] = refs
         del r["body"]
+        del r["raw"]
     # tokens: NAME = "text"
     tokens = {}
     for m in re.finditer(r"^\s*([A-Z_][A-Z0-9_]*)\s*=\s*\"([^\"]*)\"", text, re.M):
@@ -241,6 +247,10 @@ class ParserAnalysis:
         self.cls = cls
         self.lines = sources.get(PARSER_CLASS.rsplit("/", 1)[0] + "/ErlangParser.java", {})
         self.warnings = []
+        if self.lines and max(self.lines) > len(self.src):
+            raise SystemExit("error: the report has coverage for line %d, but %s has %d lines: the report and the Java "
+                             "source come from different commits; give the ErlangParser.java of the report's revision "
+                             "with --parser-java" % (max(self.lines), java_path, len(self.src)))
         self._check_alignment()
         rule_names = set(self.rule_by_name)
         for name, m in self.methods.items():
@@ -249,6 +259,7 @@ class ParserAnalysis:
         self.line_rule = {}  # line -> rule, for lines outside ordinary methods (Pratt blocks, lambdas)
         self.pratt_blocks = {}  # rule -> {"cond": line, "body": [lines]}
         self._split_pratt()
+        self.caller_evidence = self._caller_evidence()
         self.matched = self._fixpoint()
 
     def _check_alignment(self):
@@ -334,6 +345,39 @@ class ParserAnalysis:
                 return r
         return name if name in self.rule_by_name else None
 
+    def _ever_true(self, call):
+        """The `if (!r) r = X` line of an alternative ran with r true at least once."""
+        cov = self.cov(call["line"])
+        return bool(cov) and cov[1] > 0 and (cov[3] >= 2 or cov[0] > 0)
+
+    def _caller_evidence(self):
+        """The methods whose result a caller used as true at least once: the line after the call ran only for that."""
+        out = set()
+        for m in self.methods.values():
+            calls = [c for c in m["calls"] if c["kind"] != "shortcut"]
+            for idx, c in enumerate(calls):
+                names = [n for k, n in c["callees"] if k == "method"]
+                if not names:
+                    continue
+                if c["kind"] == "pratt_cond":
+                    nxt = self.cov(c["line"] + 1)
+                    used = bool(nxt) and nxt[1] > 0
+                elif idx + 1 < len(calls) and calls[idx + 1]["kind"] == "seq":
+                    used = call_executed("seq", self.cov(calls[idx + 1]["line"]))
+                elif idx + 1 < len(calls) and calls[idx + 1]["kind"] == "alt":
+                    used = self._ever_true(calls[idx + 1])
+                else:
+                    used = False
+                if used:
+                    out.update(names)
+        return out
+
+    def _token_alternatives_matched(self, m, calls):
+        """For a method that is only token alternatives: executed tokens do not show that one matched. Some alternative
+        before the last one matched when the line after it saw r true; the last one is known only from the caller."""
+        alts = [c for c in calls if c["kind"] == "alt"]
+        return any(self._ever_true(c) for c in alts) or m["name"] in self.caller_evidence
+
     # matched(method): the method returned true at least once (see README for how this is read from lines)
     def _fixpoint(self):
         matched = {name: False for name in self.methods}
@@ -375,6 +419,9 @@ class ParserAnalysis:
         with_callees = [c for c in calls if c["callees"]]
         if not with_callees:
             return True
+        if any(c["kind"] == "alt" for c in with_callees) and \
+                all(k == "token" for c in with_callees for k, _ in c["callees"]):
+            return self._token_alternatives_matched(m, with_callees)
         return any(self._callee_matched(c, matched) for c in with_callees)
 
     # ------------------------------------------------------------ per rule
@@ -737,7 +784,7 @@ def print_text(res, show_all, top):
                                                             m["lines"][0], m["lines"][1], m["branches"][0],
                                                             m["branches"][1]))
         if not d["rules"] and not d["methods"]:
-            w("  no change\n")
+            w("  no change in the verdicts of the rules or in the methods of the extra classes\n")
         w("\n")
 
     gaps = res["top_gaps"]

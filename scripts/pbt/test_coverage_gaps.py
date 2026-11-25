@@ -106,7 +106,7 @@ JAVA = [
     ((0, 3, 0, 0), "    r = consumeToken(b, ERL_PAR_LEFT);"),
     ((0, 2, 0, 0), "    p = r; // pin = 1"),
     ((7, 2, 1, 1), "    r = r && report_error_(b, call_1(b, l + 1));"),
-    ((6, 3, 2, 2), "    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;"),
+    ((7, 2, 5, 1), "    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;"),
     ((0, 7, 0, 0), "    exit_section_(b, l, m, r, p, null);"),
     ((0, 4, 1, 1), "    return r || p;"),
     (RAN, "  }"),
@@ -124,7 +124,7 @@ JAVA = [
 EXTRA = "org/intellij/erlang/inspection/ErlangUnusedVariableInspection"
 
 
-def report_xml(java, method_line_shift=0, extra_size=0):
+def report_xml(java, method_line_shift=0, extra_size=0, line_shift=0):
     """A JaCoCo XML report of the parser lines of `java` and of one inspection class."""
     methods = []
     lines = []
@@ -135,7 +135,7 @@ def report_xml(java, method_line_shift=0, extra_size=0):
             methods.append('<method name="%s" desc="(Lcom/intellij/lang/PsiBuilder;I)Z" line="%d"/>'
                            % (name, no + 1 + method_line_shift))
         if cov is not None:
-            lines.append('<line nr="%d" mi="%d" ci="%d" mb="%d" cb="%d"/>' % ((no,) + cov))
+            lines.append('<line nr="%d" mi="%d" ci="%d" mb="%d" cb="%d"/>' % ((no + line_shift,) + cov))
             tot = [a + b for a, b in zip(tot, cov)]
     mi, ci, mb, cb = tot
     parser_counters = ('<counter type="INSTRUCTION" missed="%d" covered="%d"/>'
@@ -308,6 +308,33 @@ class CoverageGapsTest(unittest.TestCase):
         self.assertIn("different commits", res["meta"]["warnings"][0])
         self.assertTrue(text.startswith("WARNING: "))
 
+    def test_report_longer_than_the_source_fails_with_a_message(self):
+        report = self.write("longer.xml", report_xml(JAVA, method_line_shift=500, line_shift=500))
+        with self.assertRaises(SystemExit) as e:
+            self.run_tool(report=report)
+        self.assertIn("different commits", str(e.exception.code))
+        self.assertIn("--parser-java", str(e.exception.code))
+
+    def test_recover_while_is_a_reference_of_the_rule(self):
+        bnf = self.write("recover.bnf", "forms ::= form *\nform ::= '+' {pin=1 recoverWhile=form_recover}\n"
+                                        "private form_recover ::= !'+'\nextra ::= '-' {extends=form}\n")
+        rules, _, _ = coverage_gaps.parse_bnf(bnf)
+        refs = {r["name"]: r["refs"] for r in rules}
+        self.assertEqual(refs["form"], ["form_recover"])
+        self.assertEqual(refs["extra"], [])
+
+    def test_executed_token_alternatives_are_not_a_match(self):
+        # the caller's next line saw r false only: no alternative of add_op ever matched
+        java = [(cov if "r = dead(b, l + 1)" not in text else (0, 5, 1, 1), text) for cov, text in JAVA]
+        report = self.write("fail.xml", report_xml(java))
+        res, _ = self.result(report=report)
+        rules = {r["name"]: r for r in res["parser"]["rules"]}
+        self.assertEqual(rules["add_op"]["verdict"], "not-reached")
+        self.assertEqual(rules["add_op"]["why"], "called, never matched its first element")
+        # and with r true after the first alternative the fixture's verdict stays
+        res, _ = self.result()
+        self.assertEqual({r["name"]: r for r in res["parser"]["rules"]}["add_op"]["verdict"], "partly")
+
     def test_report_without_the_parser_fails(self):
         report = self.write("empty.xml", '<?xml version="1.0"?><report name="x"></report>')
         with self.assertRaises(SystemExit) as e:
@@ -342,7 +369,7 @@ class CoverageGapsTest(unittest.TestCase):
         self.assertEqual(len(res["diff"]["warnings"]), 1)
         self.assertIn("the whole report has a different size", res["diff"]["warnings"][0])
         self.assertIn("CHANGES SINCE", text)
-        self.assertIn("no change", text)
+        self.assertIn("no change in the verdicts", text)
 
 
 if __name__ == "__main__":
