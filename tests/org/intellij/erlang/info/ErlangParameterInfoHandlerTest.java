@@ -114,6 +114,126 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
     assertInstanceOf(getItemsToShow()[0], ErlangFunctionClause.class);
   }
 
+  public void testFunctionPresentation() {
+    doPresentationTest(FOO + "bar() -> foo(1, <caret>).", 1, "Arg1, [Arg2]");
+  }
+
+  public void testFunctionPresentationWithSpecTypes() {
+    doPresentationTest("-spec foo(integer(), atom()) -> ok.\n" + FOO + "bar() -> foo(<caret>).", 0,
+                       "[Arg1 :: integer()], Arg2 :: atom()");
+  }
+
+  public void testFunctionPresentationWithSpecTypeGuards() {
+    doPresentationTest("-spec foo(A, B) -> ok when A :: integer(), B :: atom().\n" + FOO + "bar() -> foo(1, <caret>).", 1,
+                       "Arg1 :: integer(), [Arg2 :: atom()]");
+  }
+
+  public void testFunctionPresentationWithSpecTypeGuardOfOneVariable() {
+    doPresentationTest("-spec foo(A, B) -> {A, B} when A :: integer().\n" + FOO + "bar() -> foo(<caret>).", 0,
+                       "[Arg1 :: integer()], Arg2");
+  }
+
+  public void testFunctionPresentationWithSpecVariableWithoutGuard() {
+    doPresentationTest("-spec foo(A, B) -> {A, B}.\n" + FOO + "bar() -> foo(<caret>).", 0, "[Arg1], Arg2");
+  }
+
+  public void testFunctionPresentationWithSpecOfOtherArity() {
+    doPresentationTest("-spec foo(integer()) -> ok.\n" + FOO + "bar() -> foo(<caret>).", 0, "[Arg1], Arg2");
+  }
+
+  public void testFunctionPresentationWithClauseGuard() {
+    doPresentationTest("foo(X) when is_integer(X) -> X.\nbar() -> foo(<caret>).", 0, "[X] when is_integer(X)");
+  }
+
+  public void testFunctionPresentationWithPatternArgument() {
+    doPresentationTest("foo({A, B}) -> {A, B}.\nbar() -> foo(<caret>).", 0, "[{A,B}]");
+  }
+
+  public void testFunctionPresentationParameterBeyondArity() {
+    doPresentationTest(FOO + "bar() -> foo(1, 2, <caret>).", 2, "disabled: Arg1, Arg2");
+  }
+
+  public void testFunctionWithoutParametersPresentation() {
+    doPresentationTest("foo() -> ok.\nbar() -> foo(<caret>).", 0, "disabled: <no parameters>");
+  }
+
+  public void testFunctionsOfDifferentAritiesSortedByArity() {
+    doPresentationTest("foo(A, B, C) -> {A, B, C}.\nfoo(A) -> A.\nfoo(A, B) -> {A, B}.\nbar() -> foo(<caret>).", 0,
+                       "[A]", "[A], B", "[A], B, C");
+  }
+
+  public void testBifPresentation() {
+    doPresentationTest("bar() -> hash(<caret>).", 0, "[Term], Range");
+  }
+
+  public void testBifPresentationParameterBeyondArity() {
+    doPresentationTest("bar() -> hash(1, 2, <caret>).", 2, "disabled: Term, Range");
+  }
+
+  public void testBifWithoutParametersPresentation() {
+    doPresentationTest("bar() -> self(<caret>).", 0, "[]<no parameters>");
+  }
+
+  public void testModuleInfoOfUnknownModule() {
+    doPresentationTest("bar() -> unknown_module:module_info(<caret>).", 0, "[]<no parameters>", "[Key]");
+  }
+
+  public void testRemoteCallOfUnknownFunction() {
+    assertEmpty(findItemsToShow("bar() -> unknown_module:unknown_function(<caret>)."));
+  }
+
+  public void testLocalCallOfUnknownFunction() {
+    assertEmpty(findItemsToShow("bar() -> unknown_function(<caret>)."));
+  }
+
+  public void testNoArgumentList() {
+    doTest("bar() -> <caret>ok.", -1);
+  }
+
+  public void testTupleIsNoCall() {
+    assertNull(findItemsToShow("bar() -> {1, <caret>2}."));
+  }
+
+  public void testUndefinedMacroCall() {
+    assertEmpty(findItemsToShow("bar() -> ?UNDEFINED(<caret>)."));
+  }
+
+  public void testUndefinedMacroAsGenericFunctionCall() {
+    assertNull(findItemsToShow("?UNDEFINED(foo, <caret>)."));
+  }
+
+  private Object[] findItemsToShow(String text) {
+    myFixture.configureByText("a.erl", text);
+    CreateParameterInfoContext createContext = new MockCreateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
+    findElementForParameterInfoInBackground(new ErlangParameterInfoHandler(), createContext);
+    return createContext.getItemsToShow();
+  }
+
+  public void testNullItemDisablesComponent() {
+    MockParameterInfoUIContext<PsiElement> uiContext = new MockParameterInfoUIContext<>(null);
+    uiContext.setUIComponentEnabled(true);
+    new ErlangParameterInfoHandler().updateUI(null, uiContext);
+    assertFalse(uiContext.isUIComponentEnabled());
+    assertNull(uiContext.getText());
+  }
+
+  private void doPresentationTest(String text, int highlightedParameterIndex, String... expectedPresentations) {
+    doTest(text, highlightedParameterIndex);
+    ErlangParameterInfoHandler parameterInfoHandler = new ErlangParameterInfoHandler();
+    List<String> presentations = new ArrayList<>();
+    for (Object item : getItemsToShow()) {
+      MockParameterInfoUIContext<PsiElement> uiContext = new MockParameterInfoUIContext<>(null);
+      uiContext.setCurrentParameterIndex(highlightedParameterIndex);
+      ReadAction.run(() -> parameterInfoHandler.updateUI(item, uiContext));
+      String presentation = uiContext.getText();
+      int start = uiContext.getHighlightStart();
+      int end = uiContext.getHighlightEnd();
+      presentations.add(uiContext.isTextDisabled() ? "disabled: " + presentation :
+                        presentation.substring(0, start) + "[" + presentation.substring(start, end) + "]" + presentation.substring(end));
+    }
+    assertEquals(Arrays.asList(expectedPresentations), presentations);
+  }
+
   private Object[] myItemsToShow;
 
   private Object[] getItemsToShow() {
