@@ -398,6 +398,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testReceiveParasite3() throws Exception { doEnterTest(); }
   public void testReceiveParasite4() throws Exception { doEnterTest(); }
   public void testReceiveParasite5() throws Exception { doEnterTest(); }
+
+  public void testLongAdditiveChain() throws Exception { doTest(); }
   public void testReceiveParasite6() throws Exception { doEnterTest(); }
   public void testReceiveParasite7() throws Exception { doEnterTest(); }
 
