@@ -207,6 +207,29 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEmpty("Parsed with a syntax error", rejected);
   }
 
+  public void testEmptyParenthesesAsFunctionBody() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() ->\n    ().\n");
+  }
+
+  public void testEmptyParenthesesAsMatchRight() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() -> X = (), X.\n");
+  }
+
+  public void testEmptyParenthesesAsComprehensionFilter() {
+    assertHasSyntaxError("-module(t).\n-export([f/1]).\nf(X) -> [Z || Z <- X, ()].\n");
+  }
+
+  public void testEmptyParenthesesAsIfGuard() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() -> if () -> ok end.\n");
+  }
+
+  private void assertHasSyntaxError(String text) {
+    PsiFile file = parseText(text);
+    assertTrue("erlc reports a syntax error before ')', the parser gives none:\n" +
+               toParseTreeText(file, skipSpaces(), includeRanges()),
+               PsiTreeUtil.hasErrorElements(file));
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
