@@ -106,4 +106,5 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testOtp29Comprehensions()                 { doTest(false); }
   public void testNativeRecords()                       { doTest(false); }
   public void testNativeRecordAttributesRecovery()      { doTest(true);  }
+  public void test1644()                                 { doTest(true);  }
 }

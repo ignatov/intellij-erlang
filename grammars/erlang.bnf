@@ -504,11 +504,12 @@ binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' l
 
 tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
-record_expression ::= expression record_tail {
+record_expression ::= expression record_tail_strict {
   pin=2
   methods = [getReferenceInternal]
 }
 private record_tail ::= record_head (record_field_ref | record_tuple | ()) {pin=1}
+private record_tail_strict ::= record_head (record_field_ref | record_tuple) {pin=1}
 private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
 private record_head_classic ::= record_hash record_ref {pin=1}
 private record_hash ::= '#' &(!'{')

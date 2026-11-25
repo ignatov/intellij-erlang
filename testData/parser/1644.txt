@@ -1,0 +1,57 @@
+ERL_FILE
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('f')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('X')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_PARENTHESIZED_EXPRESSION
+          PsiElement(()('(')
+          ERL_RECORD_EXPRESSION
+            ERL_MAX_EXPRESSION
+              ERL_Q_VAR
+                PsiElement(var)('X')
+            PsiElement(#)('#')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('r')
+            PsiErrorElement:'.', ':' or '{' expected, got ')'
+              <empty list>
+          PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('g')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_PARENTHESIZED_EXPRESSION
+          PsiElement(()('(')
+          ERL_RECORD_EXPRESSION
+            ERL_MAP_EXPRESSION
+              ERL_MAP_TUPLE
+                PsiElement(#)('#')
+                PsiElement({)('{')
+                PsiElement(})('}')
+            PsiElement(#)('#')
+            ERL_RECORD_REF
+              ERL_Q_ATOM
+                ERL_ATOM
+                  PsiElement(atom_name)('r')
+            PsiErrorElement:'.', ':' or '{' expected, got ')'
+              <empty list>
+          PsiElement())(')')
+    PsiElement(.)('.')

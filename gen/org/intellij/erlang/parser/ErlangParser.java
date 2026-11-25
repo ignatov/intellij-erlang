@@ -5102,6 +5102,31 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // record_head (record_field_ref | record_tuple)
+  static boolean record_tail_strict(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_tail_strict")) return false;
+    if (!nextTokenIs(b, "", ERL_QMARK, ERL_RADIX)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = record_head(b, l + 1);
+    p = r; // pin = 1
+    r = r && record_tail_strict_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // record_field_ref | record_tuple
+  private static boolean record_tail_strict_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_tail_strict_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = record_field_ref(b, l + 1);
+    if (!r) r = record_tuple(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // '{' record_fields? '}'
   public static boolean record_tuple(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_tuple")) return false;
@@ -6324,7 +6349,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
         r = true;
         exit_section_(b, l, m, ERL_ANONYMOUS_CALL_EXPRESSION, r, true, null);
       }
-      else if (g < 12 && record_tail(b, l + 1)) {
+      else if (g < 12 && record_tail_strict(b, l + 1)) {
         r = true;
         exit_section_(b, l, m, ERL_RECORD_EXPRESSION, r, true, null);
       }
