@@ -331,6 +331,15 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1655: erlc reports f1/0 and f2/0, which only call each other
+  public void testUnusedMutuallyRecursiveFunctions() { doTest(); }
+
+  // issue 1655: erlc reports t1() (used only by itself), t2() and t3() (used only by the unused t2())
+  public void testUnusedTypesUsedOnlyByUnusedTypes() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
