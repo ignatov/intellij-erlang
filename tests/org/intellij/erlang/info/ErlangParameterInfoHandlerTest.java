@@ -138,7 +138,8 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
   }
 
   public void testFunctionPresentationWithSpecOfOtherArity() {
-    doPresentationTest("-spec foo(integer()) -> ok.\n" + FOO + "bar() -> foo(<caret>).", 0, "[Arg1], Arg2");
+    doPresentationTest("-spec foo(integer()) -> integer().\n-spec foo(atom(), atom()) -> ok.\nfoo(X) -> X.\n" + FOO +
+                       "bar() -> foo(<caret>).", 0, "[X :: integer()]", "[Arg1 :: atom()], Arg2 :: atom()");
   }
 
   public void testFunctionPresentationWithClauseGuard() {
@@ -187,7 +188,9 @@ public class ErlangParameterInfoHandlerTest extends ErlangLightPlatformCodeInsig
   }
 
   public void testNoArgumentList() {
-    doTest("bar() -> <caret>ok.", -1);
+    assertNull(findItemsToShow(FOO + "bar() -> <caret>ok, foo(1, 2)."));
+    MockUpdateParameterInfoContext updateContext = new MockUpdateParameterInfoContext(myFixture.getEditor(), myFixture.getFile());
+    assertNull(new ErlangParameterInfoHandler().findElementForUpdatingParameterInfo(updateContext));
   }
 
   public void testTupleIsNoCall() {
