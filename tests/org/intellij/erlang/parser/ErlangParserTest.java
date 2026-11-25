@@ -24,7 +24,9 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
@@ -181,6 +183,17 @@ public class ErlangParserTest extends ErlangParserTestBase {
     Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
     assertEquals(1, functions.size());
     assertEquals("visible", functions.iterator().next().getName());
+  }
+
+  // #1643: erlc rejects a map entry without '=>' or ':=' ("syntax error before: '}'").
+  public void testMapEntryWithoutOperatorIsError() {
+    String[] bodies = {"#{a = 1}", "X#{a = 1}", "case X of #{a = 1} -> ok end"};
+    List<String> accepted = new ArrayList<>();
+    for (String body : bodies) {
+      PsiFile file = parseText("-module(t).\nf(X) -> " + body + ".\n");
+      if (!PsiTreeUtil.hasErrorElements(file)) accepted.add(body);
+    }
+    assertEmpty("Parsed without a syntax error", accepted);
   }
 
   private PsiFile parseText(String text) {
