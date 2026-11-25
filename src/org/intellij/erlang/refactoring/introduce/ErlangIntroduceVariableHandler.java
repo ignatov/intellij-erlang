@@ -93,7 +93,15 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
         showCannotPerformError(project, editor);
       }
       else {
-        performOnElement(editor, selectedExpression);
+        List<PsiElement> occurrences = myReplaceStrategy == ReplaceStrategy.SINGLE
+                                       ? List.of(selectedExpression)
+                                       : getOccurrences(selectedExpression);
+        if (canIntroduce(selectedExpression, occurrences)) {
+          performOnElement(editor, selectedExpression);
+        }
+        else {
+          showCannotPerformError(project, editor);
+        }
       }
       return;
     }
@@ -158,6 +166,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
                                               @NotNull ErlangExpression expression,
                                               boolean replaceAll) {
     List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : new ArrayList<>(List.of(expression));
+    if (!canIntroduce(expression, occurrences)) {
+      showCannotPerformError(expression.getProject(), editor);
+      return;
+    }
     PsiElement declaration = performElement(editor, expression, occurrences);
 
     ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);
@@ -328,6 +340,14 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     return PsiTreeUtil.getParentOfType(element, ErlangClauseBody.class) != null;
   }
 
+  private static boolean canIntroduce(@NotNull ErlangExpression expression, @NotNull List<PsiElement> occurrences) {
+    return isValidIntroduceContext(expression) || ContainerUtil.exists(occurrences, ErlangIntroduceVariableHandler::isInArgumentDefinition);
+  }
+
+  private static boolean isInArgumentDefinition(@NotNull PsiElement element) {
+    return PsiTreeUtil.getParentOfType(element, ErlangArgumentDefinition.class) != null;
+  }
+
   @Nullable
   private static PsiElement findAnchor(@NotNull List<PsiElement> occurrences) {
     PsiElement anchor = occurrences.getFirst();
@@ -370,7 +390,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
       List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, function);
       occurrences.removeIf(o -> getClausePattern(o) != null);
-      return occurrences;
+      if (ContainerUtil.exists(occurrences, ErlangIntroduceVariableHandler::isInArgumentDefinition)) {
+        return occurrences;
+      }
+      return ContainerUtil.filter(occurrences, ErlangIntroduceVariableHandler::isValidIntroduceContext);
     }
     PsiElement head = pattern.getParent();
     PsiElement scope = head instanceof ErlangArgumentDefinitionList || head instanceof ErlangLcExpression ? head.getParent() : head;

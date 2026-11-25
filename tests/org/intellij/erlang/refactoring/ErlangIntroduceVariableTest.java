@@ -22,6 +22,8 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.ui.ChooserInterceptor;
+import com.intellij.ui.UiInterceptors;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
@@ -93,6 +95,48 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
       assertEquals("Selected expression uses variables that are not bound where the new variable would be declared", e.getMessage());
     }
     assertEquals(before, myFixture.getEditor().getDocument().getText());
+  }
+
+  public void testGuardOccurrenceNotReplaced()  { doTest(); }
+  public void testSelectionInFunctionArguments() { doTest(); }
+  public void testSelectionInMacroDefinition()   { doTestCannotPerform(); }
+
+  public void testSelectionInGuardWithArgumentOccurrence() { doTest(); }
+  public void testSelectionInGuardWithArgumentOccurrenceSingle() { doTestCannotPerform(SINGLE); }
+
+  public void testSelectionInGuardWithArgumentOccurrenceOnlyThisChosen() {
+    UiInterceptors.register(new ChooserInterceptor(null, "NO"));
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
+    Throwable error = null;
+    try {
+      new ErlangIntroduceVariableHandler().invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    }
+    catch (Throwable e) {
+      error = e;
+    }
+    assertNotNull("Expected the hint", error);
+    assertTrue(error.toString(), error.getMessage() != null && error.getMessage().contains("Cannot Perform Refactoring"));
+    myFixture.checkResultByFile(name + ".erl");
+  }
+
+  public void testSelectionInFunctionClauseGuard() {
+    doTestCannotPerform();
+  }
+
+  private void doTestCannotPerform() { doTestCannotPerform(ALL); }
+
+  private void doTestCannotPerform(ReplaceStrategy replaceStrategy) {
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
+    try {
+      new ErlangIntroduceVariableHandler(replaceStrategy).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+      fail("Expected the Cannot Perform Refactoring hint");
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException e) {
+      assertEquals("Cannot Perform Refactoring", e.getMessage());
+    }
+    myFixture.checkResultByFile(name + ".erl");
   }
 
   private void doTest() { doTest(ALL); }
