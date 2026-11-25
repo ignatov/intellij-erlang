@@ -67,6 +67,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void testIfConditionalCompilation() { doTest(); }
+  public void testIfElifDefinedMacro() { doTest(); } // issue 1636
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
   public void test211()               { doTest(); }
