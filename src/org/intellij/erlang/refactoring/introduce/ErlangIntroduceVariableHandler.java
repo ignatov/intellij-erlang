@@ -48,7 +48,7 @@ import org.intellij.erlang.refactoring.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -157,7 +157,7 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
   private static void performInplaceIntroduce(@NotNull Editor editor,
                                               @NotNull ErlangExpression expression,
                                               boolean replaceAll) {
-    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : Collections.singletonList(expression);
+    List<PsiElement> occurrences = replaceAll ? getOccurrences(expression) : new ArrayList<>(List.of(expression));
     PsiElement declaration = performElement(editor, expression, occurrences);
 
     ErlangQVar target = PsiTreeUtil.findChildOfType(declaration, ErlangQVar.class);
@@ -365,8 +365,39 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   @NotNull
   private static List<PsiElement> getOccurrences(@NotNull ErlangExpression expression) {
-    ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
-    return ErlangRefactoringUtil.getOccurrences(expression, function);
+    ErlangArgumentDefinition pattern = getClausePattern(expression);
+    if (pattern == null) {
+      ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
+      List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, function);
+      occurrences.removeIf(o -> getClausePattern(o) != null);
+      return occurrences;
+    }
+    PsiElement head = pattern.getParent();
+    PsiElement scope = head instanceof ErlangArgumentDefinitionList || head instanceof ErlangLcExpression ? head.getParent() : head;
+    List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, scope);
+    occurrences.removeIf(o -> {
+      ErlangArgumentDefinition otherPattern = getClausePattern(o);
+      if (otherPattern != null && otherPattern.getParent() != head) return true;
+      return head instanceof ErlangLcExpression && otherPattern == null && isEvaluatedBeforeGenerator(o, (ErlangLcExpression) head);
+    });
+    return occurrences;
+  }
+
+  private static boolean isEvaluatedBeforeGenerator(@NotNull PsiElement element, @NotNull ErlangLcExpression generator) {
+    for (PsiElement child : generator.getParent().getChildren()) {
+      if (child instanceof ErlangLcExpression && PsiTreeUtil.isAncestor(child, element, false)) {
+        return child.getTextRange().getStartOffset() <= generator.getTextRange().getStartOffset();
+      }
+    }
+    return false;
+  }
+
+  @Nullable
+  private static ErlangArgumentDefinition getClausePattern(@NotNull PsiElement element) {
+    ErlangArgumentDefinition argDef = PsiTreeUtil.getParentOfType(element, ErlangArgumentDefinition.class);
+    if (argDef == null) return null;
+    PsiElement parent = argDef.getParent();
+    return parent instanceof ErlangArgumentDefinitionList && parent.getParent() instanceof ErlangFunctionClause ? null : argDef;
   }
 
   @Override

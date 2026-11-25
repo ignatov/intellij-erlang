@@ -42,6 +42,22 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+  public void testCasePatternIsNotAParameter() { doTest(); }
+  public void testSiblingCasePatterns()     { doTest(); }
+  public void testLaterCaseClauseUse()      { doTest(); }
+  public void testReceivePattern()          { doTest(); }
+  public void testTryPattern()              { doTest(); }
+  public void testFunPattern()              { doTest(); }
+  public void testGeneratorPattern()        { doTest(); }
+  public void testNestedHeadPattern()       { doTest(); }
+  public void testSelectedCasePattern()     { doTest(); }
+  public void testSelectedCasePatternSingle() { doTest(SINGLE); }
+  public void testSelectedGeneratorPatternNotInSource() { doTest(); }
+  public void testSelectedGeneratorPattern() { doTest(); }
+  public void testSelectedCasePatternUsedInGuard() { doTest(); }
+  public void testSelectedReceivePattern() { doTest(); }
+  public void testSelectedCasePatternUsedInBody() { doTest(); }
+  public void testSelectedFunPattern() { doTest(); }
   public void testQuotedAtom()              { doTest(); }
   public void testQuotedAtomWithoutLetters() { doTest(); }
   public void testQuotedFunctionCall()      { doTest(); }
