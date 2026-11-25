@@ -222,6 +222,13 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnresolvedMacrosFeatureUndefNoDefineHeader.erl", "UnresolvedMacrosFeatureUndefNoDefineHeader.hrl");
   }
 
+  public void testUnresolvedMacrosFeatureUndefNoDefineNestedHeader() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureUndefNoDefineNestedHeader.erl", "UnresolvedMacrosFeatureUndefNoDefineNestedHeader.hrl",
+           "UnresolvedMacrosFeatureUndefNoDefineHeader.hrl");
+  }
+
   public void testUnresolvedMacrosFeatureUndefNoDefineHeaderConditional() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     enableUnresolvedMacroInspection();
