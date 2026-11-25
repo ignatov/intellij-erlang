@@ -9,6 +9,7 @@ import io
 import json
 import os
 import re
+import tempfile
 import threading
 import unittest
 import unittest.mock
@@ -28,6 +29,8 @@ WATCH_YML = os.path.join(REPOSITORY, '.github', 'workflows', 'compat-watch.yml')
 GRADLE_YML = os.path.join(REPOSITORY, '.github', 'workflows', 'gradle.yml')
 PINNED = compat.read_pins(GRADLE_YML)['OTP_VERSION']
 MAJOR = int(PINNED.split('.')[0])
+BUILD_GRADLE = os.path.join(REPOSITORY, 'build.gradle')
+CEILING = watch.read_ide_ceiling(BUILD_GRADLE)
 
 SHA = 'a' * 40
 SHA2 = 'b' * 40
@@ -239,11 +242,11 @@ class World:
         raise AssertionError('unexpected call %s %s' % (method, path))
 
 
-def cycle(world, now=None, dry_run=False):
+def cycle(world, now=None, dry_run=False, build_gradle=BUILD_GRADLE):
     """One cycle of the watcher at `now`; (exit code, output)."""
     world.now = now or world.now
     out = io.StringIO()
-    argv = ['--gradle-yml', GRADLE_YML] + (['--dry-run'] if dry_run else [])
+    argv = ['--gradle-yml', GRADLE_YML, '--build-gradle', build_gradle] + (['--dry-run'] if dry_run else [])
     with unittest.mock.patch.dict(os.environ, {'GITHUB_REPOSITORY': 'owner/repo'}):
         code = watch.main(argv, http=world, now=world.now, out=out)
     return code, out.getvalue()
@@ -554,6 +557,36 @@ class LaterCycleTest(Seeded):
         self.assertEqual(issue['title'], 'Compatibility: IntelliJ IDEA 2026.3.1 (263.8000.12)')
         self.assertIn('<!-- compat-watch:ide:263.8000.12 -->', issue['body'])
         self.assertIn('org.A.testB: boom', issue['body'])
+
+    def test_ide_branches_above_supported_until_build_are_not_watched(self):
+        world = self.world
+        above = '%d.100.1' % (CEILING + 1)
+        world.ide_feed['IIU'].insert(0, {'build': above, 'version': None, 'type': 'eap'})
+        code, out = cycle(world, T0 + 2 * HOUR)
+        self.assertEqual(code, 0, out)
+        self.assertIn('1 builds of branches above %d (supportedUntilBuild) are not watched' % CEILING, out)
+        state = world.state()
+        self.assertNotIn(above, state['seen']['ide'])
+        self.assertFalse(any(e['version'] == above for e in state['entries']))
+        self.assertNotIn({'ide': above, 'ref': SHA}, [i for _, i in world.dispatched])
+        # Once the bound is raised, the build is new and is checked.
+        with tempfile.TemporaryDirectory() as directory:
+            raised = os.path.join(directory, 'build.gradle')
+            with open(raised, 'w', encoding='utf-8') as f:
+                f.write("def supportedUntilBuild = '%d.*'\n" % (CEILING + 1))
+            cycle(world, T0 + 3 * HOUR, build_gradle=raised)
+        self.assertIn({'ide': above, 'ref': SHA}, [i for _, i in world.dispatched])
+
+    def test_a_build_gradle_without_supported_until_build_stops_the_cycle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            broken = os.path.join(directory, 'build.gradle')
+            with open(broken, 'w', encoding='utf-8') as f:
+                f.write("def supportedUntilBuild = '263.12'\n")
+            dispatched = len(self.world.dispatched)
+            code, out = cycle(self.world, T0 + 2 * HOUR, build_gradle=broken)
+        self.assertEqual(code, 1)
+        self.assertIn("has no line def supportedUntilBuild = '<branch>.*'", out)
+        self.assertEqual(len(self.world.dispatched), dispatched)
 
     def test_a_baseline_whose_result_is_gone_is_run_again(self):
         world = self.world
@@ -1656,9 +1689,11 @@ class CompareTest(unittest.TestCase):
         self.assertEqual(watch.lines_of(watch.compare('ide', ide, ide_base)['sections']),
                          [('test', 'skipped tests', ['A.testNew'])])
         # Every list that compat.py writes with compat.trimmed is in LISTS, or is a list of the Plugin Verifier.
+        # skippedFiles is not compared: it lists the files that the corpus check skips on purpose, as not Erlang
+        # sources, and never fails the check.
         with open(os.path.join(os.path.dirname(os.path.abspath(compat.__file__)), 'compat.py'), encoding='utf-8') as f:
             written = set(re.findall(r"\[?'(\w+)'\]?(?: =|:) trimmed\(", f.read()))
-        self.assertEqual(written, {'errors', 'failedTests', 'skippedTests', 'exceptions', 'slowFiles'})
+        self.assertEqual(written, {'errors', 'failedTests', 'skippedTests', 'exceptions', 'slowFiles', 'skippedFiles'})
 
     def test_an_exit_code_that_is_zero_in_the_baseline_only_is_a_problem(self):
         base = otp_result(SHA, PINNED, 1, errors=BASE_ERRORS)
@@ -1710,6 +1745,14 @@ class CompareTest(unittest.TestCase):
                          [('compilationTests', 'skipped compilation tests', ['R.testRebar'])])
         unknown = otp_result(SHA, '30.0', 2, known=False)
         self.assertEqual(watch.compare('otp', unknown, otp_result(SHA, PINNED, 1))['sections'][0][0], 'knownRelease')
+
+    def test_a_check_that_does_not_apply_is_no_problem(self):
+        base = ide_result(SHA, BASE_IDE, 1)
+        result = ide_result(SHA, '262.1.1', 2)
+        base['checks']['releasedPlugin'] = {'status': 'passed', 'reports': []}
+        result['checks']['releasedPlugin'] = {'status': 'not-run', 'notApplicable': True,
+                                              'reason': 'the IDE build is below the since-build 262.4852'}
+        self.assertEqual(watch.compare('ide', result, base), {'sections': [], 'notes': []})
 
     def test_only_the_gated_levels_of_the_plugin_verifier_are_problems(self):
         def check(status, problems, failing=()):
@@ -1848,6 +1891,8 @@ class WorkflowTest(unittest.TestCase):
             paths = checkout['with']['sparse-checkout'].split()
             self.assertIn('scripts/compat', paths)
             self.assertIn('.github/workflows', paths)
+            # Cone mode, so that build.gradle, a file of the root, is checked out.
+            self.assertNotIn(checkout['with'].get('sparse-checkout-cone-mode'), (False, 'false'))
             self.assertFalse(checkout['with']['persist-credentials'])
 
 

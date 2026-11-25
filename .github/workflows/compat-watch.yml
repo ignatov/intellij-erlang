@@ -46,7 +46,8 @@ jobs:
       uses: actions/checkout@v7
       with:
         persist-credentials: false
-        # watch.py imports compat.py and reads the pinned Erlang/OTP version from gradle.yml.
+        # watch.py imports compat.py, reads the pinned Erlang/OTP version from gradle.yml and the newest watched IDE
+        # branch from build.gradle (a file of the root, which a cone-mode sparse checkout always has).
         sparse-checkout: |
           scripts/compat
           .github/workflows

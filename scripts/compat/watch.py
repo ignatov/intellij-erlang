@@ -8,7 +8,8 @@ Called by .github/workflows/compat-watch.yml (see AGENTS.md). One cycle does, in
   2. collect the results of the runs that earlier cycles started, compare each with the baseline (the result of the
      default inputs on the same commit) and file one issue for each version with problems that neither the baseline
      has nor an earlier issue of the same major Erlang/OTP release or IDE branch showed;
-  3. discover new versions in the feeds of builds.hex.pm and data.services.jetbrains.com;
+  3. discover new versions in the feeds of builds.hex.pm and data.services.jetbrains.com; IDE branches above the
+     supportedUntilBuild of build.gradle are not watched;
   4. start runs of compat.yml: the baseline run of the head commit of the default branch when no complete baseline
      can be used, and otherwise, only for a commit that has a complete baseline, the runs of the versions;
   5. write the state.
@@ -158,6 +159,19 @@ def order(version):
     base, _, rc = version.partition('-rc')
     numbers = tuple(int(part) for part in base.split('.'))
     return (numbers, 0, int(rc)) if rc else (numbers, 1, 0)
+
+
+def read_ide_ceiling(build_gradle):
+    """The newest watched IDE branch: the branch of supportedUntilBuild in `build_gradle` ('263.*' is 263)."""
+    try:
+        with open(build_gradle, encoding='utf-8') as f:
+            text = f.read()
+    except OSError as e:
+        raise WatchError('%s cannot be read: %s' % (build_gradle, e))
+    match = re.search(r"^def supportedUntilBuild = '([0-9]{3})\.\*'$", text, re.M)
+    if not match:
+        raise WatchError("%s has no line def supportedUntilBuild = '<branch>.*'" % build_gradle)
+    return int(match.group(1))
 
 
 def build_number(value):
@@ -813,7 +827,9 @@ def compare(kind, result, baseline, full_corpus=None):
                         'Erlang/OTP %s: ErlangSdkRelease constant %s, %s' % (
                             check.get('release'), check.get('sdkReleaseConstant') or 'missing',
                             check.get('mockSdk') or 'no testData/mockSdk-R%s' % check.get('release')))]))
+        # A check that does not apply to the checked version (releasedPlugin below its since-build) is no problem.
         if (base_check.get('status') == compat.PASSED and status in (compat.FAILED, compat.NOT_RUN)
+                and not (status == compat.NOT_RUN and check.get('notApplicable') is True)
                 and not lists and not general):
             general.append(Section(name, 'status', [problem(name, 'status', status, (
                 '%s: passed in the baseline, %s here%s' % (name, status, because)))]))
@@ -918,10 +934,12 @@ def issue_body(entry, sections, run_url, baseline_url, earlier=None):
 
 
 class Watcher:
-    def __init__(self, github, http, pins, now, server_url='https://github.com', dry_run=False, out=None):
+    def __init__(self, github, http, pins, now, server_url='https://github.com', dry_run=False, out=None,
+                 ide_ceiling=None):
         self.github = github
         self.http = http
         self.pins = pins
+        self.ide_ceiling = ide_ceiling
         self.now = now
         self.server_url = server_url.rstrip('/')
         self.dry_run = dry_run
@@ -1429,6 +1447,13 @@ class Watcher:
                 # The rejected strings are not printed: nothing from a feed but a valid version reaches the log.
                 print('::warning::%s: %d entries without a valid version were ignored' % (KINDS[kind], rejected),
                       file=self.out)
+            if kind == 'ide' and self.ide_ceiling is not None:
+                # Not recorded as seen: once the bound is raised, the newest build of the new branch is checked.
+                above = [v for v in versions if group(v) > self.ide_ceiling]
+                versions = {v: n for v, n in versions.items() if group(v) <= self.ide_ceiling}
+                if above:
+                    self.log('%s: %d builds of branches above %d (supportedUntilBuild) are not watched'
+                             % (KINDS[kind], len(above), self.ide_ceiling))
             self.discover_kind(kind, versions)
 
     def is_baseline(self, kind, version):
@@ -1488,10 +1513,14 @@ class Watcher:
             seen.update(new)
             self.log('%s: %d new versions' % (KINDS[kind], len(new)))
             self.queue_newest(kind, new, superseding=True, known=known)
-        if floor is not None:
-            seen = {v for v in seen if group(v) >= floor}
+        ceiling = self.ide_ceiling if kind == 'ide' else None
+        if floor is not None or ceiling is not None:
+            def outside(version):
+                return (floor is not None and group(version) < floor
+                        or ceiling is not None and group(version) > ceiling)
+            seen = {v for v in seen if not outside(v)}
             for entry in list(state['entries']):
-                if entry['kind'] == kind and entry['state'] == QUEUED and group(entry['version']) < floor:
+                if entry['kind'] == kind and entry['state'] == QUEUED and outside(entry['version']):
                     state['entries'].remove(entry)
         state['seen'][kind] = sorted(seen, key=order)
 
@@ -1596,6 +1625,9 @@ def main(argv=None, http=None, now=None, out=None):
     parser.add_argument('--gradle-yml', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..',
                                                              '.github', 'workflows', 'gradle.yml'),
                         help='the gradle.yml whose OTP_VERSION is the oldest watched major release')
+    parser.add_argument('--build-gradle', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..',
+                                                               'build.gradle'),
+                        help='the build.gradle whose supportedUntilBuild is the newest watched IDE branch')
     args = parser.parse_args(argv)
     out = out or sys.stdout
     repository = os.environ.get('GITHUB_REPOSITORY', '')
@@ -1606,10 +1638,11 @@ def main(argv=None, http=None, now=None, out=None):
             pins = compat.validate_pins(compat.read_pins(args.gradle_yml))
         except (compat.InfrastructureError, compat.InputError) as e:
             raise WatchError(str(e))
+        ide_ceiling = read_ide_ceiling(args.build_gradle)
         http = http or Http(os.environ.get('GH_TOKEN'))
         github = GitHub(http, repository, os.environ.get('GITHUB_API_URL', 'https://api.github.com'))
         watcher = Watcher(github, http, pins, now or datetime.datetime.now(datetime.timezone.utc),
-                          os.environ.get('GITHUB_SERVER_URL', 'https://github.com'), args.dry_run, out)
+                          os.environ.get('GITHUB_SERVER_URL', 'https://github.com'), args.dry_run, out, ide_ceiling)
         if args.dry_run:
             print('Dry run: nothing is started, written or filed.', file=out)
         return watcher.cycle()
