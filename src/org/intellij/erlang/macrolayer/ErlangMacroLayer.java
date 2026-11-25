@@ -1071,6 +1071,19 @@ public final class ErlangMacroLayer {
     return copy != null && copy.functionsMadeByMacros().containsKey(function.getName() + "/" + function.getArity());
   }
 
+  /**
+   * With the layer on, a top-level function that the recovery made from the rest of a split form ({@code setup?PAR, hello().})
+   * is no function of the source: the first function of the source with the same name and arity ({@code hello() -> ok.}),
+   * even a later one, is the one meant. The function itself when it is one of the source or when the source has no such one.
+   */
+  public static @Nullable ErlangFunction preferSourceFunction(@NotNull ErlangFile file, @Nullable ErlangFunction function) {
+    if (function == null || !isEnabled() || isSourceFunction(file, function)) return function;
+    for (ErlangFunction other : file.getFunctionsByName(function.getName())) {
+      if (other.getArity() == function.getArity() && isSourceFunction(file, other)) return other;
+    }
+    return function;
+  }
+
   /** The top-level element continues a form that the parser's recovery split: the element before it ends no form. */
   public static boolean continuesASplitForm(@NotNull PsiElement topLevel) {
     PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(topLevel);
