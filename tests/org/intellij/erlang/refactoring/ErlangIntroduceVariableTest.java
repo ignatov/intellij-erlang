@@ -57,6 +57,25 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
                 beforeComprehension.contains("X * 2"));
   }
 
+  public void testExpressionUsingGeneratorVariableInFilter() { doTestRefused(); }
+  public void testExpressionUsingBinaryGeneratorVariable()   { doTestRefused(); }
+  public void testExpressionUsingVariableBoundInSameStatement(){ doTestRefused(); }
+  public void testGeneratorSourceExtracted()                 { doTest(); }
+  public void testFunClauseVariable()                        { doTest(); }
+
+  private void doTestRefused() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    String before = myFixture.getEditor().getDocument().getText();
+    try {
+      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+      fail("The refactoring must be refused");
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException e) {
+      assertEquals("Selected expression uses variables that are not bound where the new variable would be declared", e.getMessage());
+    }
+    assertEquals(before, myFixture.getEditor().getDocument().getText());
+  }
+
   private void doTest() { doTest(ALL); }
 
   private void doTestWithRename(String newName) {
