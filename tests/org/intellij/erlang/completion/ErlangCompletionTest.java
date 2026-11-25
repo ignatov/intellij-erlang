@@ -1192,4 +1192,9 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     myFixture.configureByText("a.erl", "foo(FirstVar, FirstVar1) -> {ok, FirstVar} = {ok, First<caret>}.");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "First");
   }
+
+  public void testVariableAtEndOfLongAdditionChain() {
+    String chain = "f(Xyz) -> 1" + " + 1".repeat(20000) + " + ";
+    doCheckResult(chain + "Xy<caret>.", chain + "Xyz<caret>.");
+  }
 }
