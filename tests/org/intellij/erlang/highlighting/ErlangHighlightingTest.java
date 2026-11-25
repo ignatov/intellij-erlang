@@ -160,6 +160,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
+  public void testFunArgShadowsOtherCaseClauseVariable() { doTest(); } // issue 1654
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
