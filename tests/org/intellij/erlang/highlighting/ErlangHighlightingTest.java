@@ -103,6 +103,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
   public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
+  public void testUnresolvedBnotOperator() { doTest(); } // issue 1600
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
   public void test365()               { doTest(); }
