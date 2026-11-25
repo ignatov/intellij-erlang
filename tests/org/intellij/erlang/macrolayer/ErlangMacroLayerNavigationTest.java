@@ -220,4 +220,22 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
     myFixture.doHighlighting();
     assertEquals("greet.erl:18:hello", navigate("greet.erl", "hello/0", 0));
   }
+
+  /** #1604: a call in a later clause, after a fragment macro in an earlier one, goes to {@code hello} in {@code ?DEF(hello).}. */
+  public void testCallInLaterClauseAfterFragmentMacro() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet2.erl", read(Paths.get("testData/macroLayer/nav", "greet2.erl")));
+    myFiles.put("greet2.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet2.erl:15:hello", navigate("greet2.erl", "hello().", 0));
+  }
+
+  /** #1604: usages of {@code hello/0} made by {@code ?DEF(hello).} include the call in the later clause. */
+  public void testUsagesOfFunctionNamedByMacroArgumentIncludeCallInLaterClause() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet2.erl", read(Paths.get("testData/macroLayer/nav", "greet2.erl")));
+    myFiles.put("greet2.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet2.erl:11:hello greet2.erl:2:hello", usages(startAt("greet2.erl", "hello/0", 0)));
+  }
 }
