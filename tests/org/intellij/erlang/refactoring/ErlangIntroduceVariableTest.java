@@ -20,8 +20,12 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
+
+import java.util.List;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.ALL;
@@ -34,6 +38,8 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   }
 
   public void testSimple()                  { doTest(); }
+  public void testLeadingOperandsOfChain()  { doTest(); }
+  public void testLeadingOperandsOfChainOccurrence() { doTest(); }
   public void testCaseExpression()          { doTest(); }
   public void testFunctionArguments()       { doTest(); }
   public void testFunctionClauseScope()     { doTest(); }
@@ -41,6 +47,13 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+
+  public void testChooserOffersLeadingOperandsOfChain() {
+    myFixture.configureByText("a.erl", "f(A, B, C) -> <caret>A + B - C bor A.");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    List<String> targets = ContainerUtil.map(ErlangRefactoringUtil.getIntroduceTargets(element), PsiElement::getText);
+    assertEquals(List.of("A", "A + B", "A + B - C", "A + B - C bor A"), targets);
+  }
 
   private void doTest() { doTest(ALL); }
 

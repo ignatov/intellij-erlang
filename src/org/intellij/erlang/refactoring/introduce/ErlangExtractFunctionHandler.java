@@ -98,7 +98,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
                                              @Override
                                              public void process(@NotNull Editor editor,
                                                                  @NotNull ErlangExpression expression) {
-                                               perform(new SmartList<>(expression));
+                                               perform(ErlangRefactoringUtil.getOperands(expression));
                                              }
                                            });
     }
@@ -128,6 +128,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
     if (commonParent instanceof ErlangExpression) {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
+      ErlangExpression end = commonParent instanceof ErlangAdditiveExpression chain ? ErlangRefactoringUtil.getLeadingRunEnd(chain, second) : null;
+      if (end != null) return ErlangRefactoringUtil.getOperands(ErlangRefactoringUtil.createLeadingRun((ErlangAdditiveExpression) commonParent, end));
       return new SmartList<>((ErlangExpression) commonParent);
     }
 
@@ -159,7 +161,11 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     List<ErlangNamedElement> inParams = analyze.first;
     List<ErlangNamedElement> outParams = analyze.second;
 
-    String shorten = ErlangRefactoringUtil.shorten(last, "extracted");
+    PsiElement parent = first.getParent();
+    String runText = selection.size() > 1 && parent instanceof ErlangAdditiveExpression
+                     ? parent.getText().substring(first.getStartOffsetInParent(), last.getStartOffsetInParent() + last.getTextLength())
+                     : null;
+    String shorten = ErlangRefactoringUtil.shorten(runText != null ? ErlangElementFactory.createExpressionFromText(project, runText) : last, "extracted");
     String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, shorten);
     ErlangExtractFunctionDialog dialog = new ErlangExtractFunctionDialog(project, name, inParams);
 
@@ -171,7 +177,7 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
       final String signature = generateSignature(functionName, inParams);
       final String functionText = signature + " ->\n" +
-                                  StringUtil.join(selection, PsiElement::getText, ",\n") + bindingsEx + ".";
+                                  (runText != null ? runText : StringUtil.join(selection, PsiElement::getText, ",\n")) + bindingsEx + ".";
 
       try {
         PsiFile file = first.getContainingFile();
@@ -183,7 +189,6 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
           functionParent.addBefore(ErlangElementFactory.createLeafFromText(project, "\n"), added);
           functionParent.addAfter(ErlangElementFactory.createLeafFromText(project, "\n"), function);
 
-          PsiElement parent = first.getParent();
           parent.addBefore(ErlangElementFactory.createExpressionFromText(project, bindingsS + signature), first);
           parent.deleteChildRange(first, last);
         });

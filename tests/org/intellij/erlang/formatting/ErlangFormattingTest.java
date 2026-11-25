@@ -584,6 +584,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals("f() -> 1" + chain + ".", myFixture.getEditor().getDocument().getText().replaceAll("\\s+", " ").trim());
   }
 
+  public void testAdditiveChainChopDown() throws Exception {
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().BINARY_OPERATION_WRAP = CommonCodeStyleSettings.WRAP_ON_EVERY_ITEM;
+    doTest();
+  }
+
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();
     settings.RIGHT_MARGIN = 40;
