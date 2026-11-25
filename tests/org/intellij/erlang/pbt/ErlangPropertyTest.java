@@ -50,6 +50,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -58,7 +59,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -228,8 +232,22 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         Process p = new ProcessBuilder(erl, "-noshell", "-eval",
                                        "io:format(\"~s~n~s~n\", [erlang:system_info(otp_release), code:root_dir()]), halt().")
           .redirectErrorStream(true).start();
-        List<String> lines = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim().lines().toList();
-        p.waitFor();
+        CompletableFuture<byte[]> output = CompletableFuture.supplyAsync(() -> {
+          try {
+            return p.getInputStream().readAllBytes();
+          }
+          catch (IOException e) {
+            return new byte[0];
+          }
+        });
+        byte[] bytes;
+        try {
+          bytes = output.get(60, TimeUnit.SECONDS);
+        }
+        finally {
+          p.destroyForcibly();
+        }
+        List<String> lines = new String(bytes, StandardCharsets.UTF_8).trim().lines().toList();
         if (release == null && !lines.isEmpty()) release = lines.get(0).trim();
         if (lines.size() > 1) root = lines.get(1).trim();
       }
@@ -322,9 +340,15 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     Files.createDirectories(myOut);
     Files.createDirectories(report.getParent());
     Path journal = Paths.get(env("PBT_JOURNAL", report + ".journal.jsonl")).toAbsolutePath();
+    Files.createDirectories(journal.getParent());
     myJournal = Files.newBufferedWriter(journal, StandardCharsets.UTF_8);
     enableInspections();
     myOracle = new PbtOracle(erl, Paths.get("testData/pbt/pbt_oracle.erl"), 60_000);
+    try {
+      PbtGen.ourOtpRelease = Integer.parseInt(myOracle.otpRelease().replaceAll("\\D.*", ""));
+    }
+    catch (NumberFormatException ignored) {
+    }
 
     JsonObject run = new JsonObject();
     run.addProperty("t", "run");
@@ -355,6 +379,12 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         String text = Files.readString(f);
         System.out.println("=== " + f + "\n" + text);
         PbtOracle.Result answer = oracle(text);
+        PbtOracle.Item first = answer.firstSyntaxError();
+        if (first != null && first.module().equals("epp") && first.tag().equals("include")) {
+          // the text is checked as pbt.erl in another directory, so it cannot find a header beside the original
+          System.out.println("skipped: " + f + " needs an include file; only self-contained modules are supported");
+          continue;
+        }
         Input in = new Input("file/" + f.getFileName(), null, text);
         if (answer.hasSyntaxError()) checkRejected(in, answer, true);
         else checkModule(in, answer, false, true);
@@ -566,6 +596,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     boolean wantWarnings = myProps.contains("warnings") && !mutant;
     if (!wantParse && !wantWarnings) return;
     View view = plugin(in.text, wantWarnings, false, erl);
+    if (view.failed) return;
     if (verbose) System.out.println("plugin errors: " + view.errorSigs + "\nplugin warnings: " + view.warnings + "\nerlc: " + erl.items());
     if (wantParse) {
       Prop p = myStats.get("parse");
@@ -576,7 +607,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         Set<String> errors = otherErrors(erl);
         violation("parse", sig, in, view.errorDetail, text -> {
           PbtOracle.Result r = oracle(text);
-          return !r.hasSyntaxError() && errors.containsAll(otherErrors(r)) && plugin(text, false, false, null).errorSigs.contains(sig);
+          if (r.hasSyntaxError() || !errors.containsAll(otherErrors(r))) return false;
+          View v = plugin(text, false, false, null);
+          return !v.failed && v.errorSigs.contains(sig);
         });
       }
     }
@@ -596,7 +629,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
           PbtOracle.Result r = oracle(text);
           if (r.hasSyntaxError() || !errors.containsAll(otherErrors(r))) return false;
           View v = plugin(text, true, false, r);
-          return v.errorSigs.isEmpty() && mismatches(r, v).containsKey(sig);
+          return !v.failed && v.errorSigs.isEmpty() && mismatches(r, v).containsKey(sig);
         });
       }
     }
@@ -620,10 +653,12 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
 
   /** {@code parse-reject}: erlc reports a syntax error, so the plugin must have an error element or an error highlight. */
   private void checkRejected(Input in, PbtOracle.Result erl, boolean verbose) throws IOException {
+    if (!myProps.contains("parse-reject")) return;
     Prop p = myStats.get("parse-reject");
+    View view = plugin(in.text, false, true, erl);
+    if (view.failed) return;
     p.checked++;
     p.fromMutants++;
-    View view = plugin(in.text, false, true, erl);
     if (verbose) System.out.println("plugin rejects: " + view.rejects() + "\nerlc: " + erl.firstSyntaxError());
     if (view.rejects()) return;
     PbtOracle.Item e = erl.firstSyntaxError();
@@ -636,7 +671,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (first == null || syntaxErrorCount(r) > errors) return false;
       if (!sig.startsWith("parse-reject @ " + first.module() + " : " + normalize(first.message()) + " @ ")) return false;
       View v = plugin(text, false, true, r);
-      return !v.rejects() && sig.equals(rejectSignature(first, v));
+      return !v.failed && !v.rejects() && sig.equals(rejectSignature(first, v));
     });
   }
 
@@ -680,6 +715,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     v.addProperty("case", in.id);
     v.addProperty("detail", detail);
     if (s.known != null) v.addProperty("known", s.known);
+    // written before the shrinking, which can take long and can be cut short
+    journal(v);
     // a known signature is counted and marked, not shrunk again
     if (s.known == null && s.shrunkTexts.size() < 2) {
       long t0 = System.currentTimeMillis();
@@ -703,8 +740,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       v.addProperty("shrink_tests", shrunk.tests);
       v.addProperty("shrink_ms", System.currentTimeMillis() - t0);
       v.addProperty("shrunk_still_fails", pred.test(shrunk.text));
+      v.addProperty("t", "shrink");
+      journal(v);
     }
-    journal(v);
   }
 
   record Shrunk(String text, int tests) {
@@ -799,8 +837,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     boolean progress = true;
     while (progress && tests[0] < maxTests) {
       progress = false;
-      for (List<String> cand : structureCandidates(cur)) {
+      for (Supplier<List<String>> candidate : structureCandidates(cur)) {
         if (tests[0] >= maxTests) break;
+        List<String> cand = candidate.get();
         if (cand.isEmpty()) continue;
         if (fails.test(String.join("", cand))) {
           cur = cand;
@@ -812,7 +851,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     return cur;
   }
 
-  private static List<List<String>> structureCandidates(List<String> units) {
+  /** The candidates are made one at a time, when the reducer is ready to test them. */
+  private static List<Supplier<List<String>>> structureCandidates(List<String> units) {
     int n = units.size();
     String[] tok = new String[n];
     for (int i = 0; i < n; i++) tok[i] = units.get(i).strip();
@@ -871,21 +911,25 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (SEPARATORS.contains(tok[it[1]]) && it[1] > it[0]) removals.add(new int[]{it[0], it[1] - 1});
       if (it[0] > 0 && SEPARATORS.contains(tok[it[0] - 1])) removals.add(new int[]{it[0] - 1, it[1]});
     }
-    List<List<String>> out = new ArrayList<>();
+    List<Supplier<List<String>>> out = new ArrayList<>();
     removals.sort((a, b) -> Integer.compare(b[1] - b[0], a[1] - a[0]));
     for (int[] r : removals) {
-      List<String> cand = new ArrayList<>(units);
-      cand.subList(r[0], r[1] + 1).clear();
-      out.add(cand);
+      out.add(() -> {
+        List<String> cand = new ArrayList<>(units);
+        cand.subList(r[0], r[1] + 1).clear();
+        return cand;
+      });
     }
     replacements.sort((a, b) -> Integer.compare(b[1] - b[0], a[1] - a[0]));
     for (int[] r : replacements) {
       if (r[1] - r[0] < 1) continue;
-      List<String> cand = new ArrayList<>(units.subList(0, r[0]));
-      String last = units.get(r[1]);
-      cand.add("ok" + last.substring(last.stripTrailing().length()));
-      cand.addAll(units.subList(r[1] + 1, n));
-      out.add(cand);
+      out.add(() -> {
+        List<String> cand = new ArrayList<>(units.subList(0, r[0]));
+        String last = units.get(r[1]);
+        cand.add("ok" + last.substring(last.stripTrailing().length()));
+        cand.addAll(units.subList(r[1] + 1, n));
+        return cand;
+      });
     }
     return out;
   }
@@ -951,6 +995,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     final List<String> errorSigs = new ArrayList<>();
     String errorDetail = "";
     boolean errorHighlight;
+    /** The plugin threw or logged an error while the text was checked, so this is not a complete answer to compare. */
+    boolean failed;
     /** The PSI parent of the token at the first syntax error of erlc, for the signature of {@code parse-reject}. */
     String syntaxErrorAt = "?";
     /** (kind, line, column, name) of the plugin's warnings, with the place around each and what the plugin thinks of it. */
@@ -983,7 +1029,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     long t0 = System.currentTimeMillis();
     myPluginCalls++;
     View view = new View();
-    List<Throwable> logged = new ArrayList<>();
+    // inspections run on background threads and can log at the same time
+    List<Throwable> logged = Collections.synchronizedList(new ArrayList<>());
     LoggedErrorProcessor processor = new LoggedErrorProcessor() {
       @Override
       public @NotNull Set<Action> processError(@NotNull String category, @NotNull String message, String @NotNull [] details,
@@ -1066,7 +1113,12 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     catch (Throwable t) {
       logged.add(t);
     }
-    for (Throwable t : logged) crash(t);
+    List<Throwable> crashed;
+    synchronized (logged) {
+      crashed = new ArrayList<>(logged);
+    }
+    for (Throwable t : crashed) crash(t);
+    view.failed = !crashed.isEmpty();
     myPluginMs += System.currentTimeMillis() - t0;
     return view;
   }
@@ -1174,10 +1226,16 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         it.remove();
       }
     }
-    // erlc reports an unbound variable at its first use only, the plugin at every use
-    Set<String> unbound = new HashSet<>();
-    for (Key m : erlcKeys(erl).keySet()) if ("unbound_var".equals(m.kind)) unbound.add(m.name);
-    extra.removeIf(k -> "unbound_var".equals(k.kind) && unbound.contains(k.name));
+    // erlc reports an unbound variable at its first use only, the plugin at every use: the uses after the first one
+    // of erlc are not extra. The match is by name, so in a file with the same unbound name in two functions it is loose.
+    Map<String, Key> firstUnbound = new HashMap<>();
+    for (Key m : erlcKeys(erl).keySet()) {
+      if ("unbound_var".equals(m.kind)) firstUnbound.merge(m.name, m, (x, y) -> x.line <= y.line ? x : y);
+    }
+    extra.removeIf(k -> {
+      Key first = "unbound_var".equals(k.kind) ? firstUnbound.get(k.name) : null;
+      return first != null && (k.line > first.line || k.line == first.line && k.column >= first.column);
+    });
     return new Pairing(extra, missing);
   }
 
@@ -1377,7 +1435,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       c.addProperty("erlc_syntax_error", erl.hasSyntaxError());
       // a control may say how many warnings both sides must report, so that it cannot pass by both saying nothing
       Matcher agree = Pattern.compile("%% agree: (\\d+)").matcher(text);
-      int want = agree.find() ? Integer.parseInt(agree.group(1)) : 0;
+      int want = agree.find() && myProps.contains("warnings") ? Integer.parseInt(agree.group(1)) : 0;
       c.addProperty("agreed_warnings", myLastAgreed);
       boolean ok = after.equals(before) && myLastAgreed >= want;
       c.addProperty("ok", ok);
@@ -1388,17 +1446,17 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     for (String prop : myProps) {
       myPlanted = prop;
       Prop p = myStats.get(prop);
-      int before = p.violations;
+      Map<String, Integer> countsBefore = new LinkedHashMap<>();
+      for (Sig s : p.sigs.values()) countsBefore.put(s.text, s.count);
       int index = 0;
-      while (p.violations == before && index < 40) runCase(index++, false);
+      while (index < 40 && plantedSig(prop, p, countsBefore) == null) runCase(index++, false);
       myPlanted = null;
       JsonObject c = new JsonObject();
       c.addProperty("control", "positive " + prop);
       c.addProperty("cases", index);
-      Sig planted = null;
-      for (Sig s : p.sigs.values()) if (!s.shrunkTexts.isEmpty() && s.count > 0 && isPlanted(prop, s.text)) planted = s;
+      Sig planted = plantedSig(prop, p, countsBefore);
       String problem = null;
-      if (p.violations == before || planted == null) {
+      if (planted == null) {
         problem = "no planted violation in " + index + " cases";
       }
       else {
@@ -1414,6 +1472,15 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (problem != null) failures.add("positive control " + prop + ": " + problem);
     }
     return failures;
+  }
+
+  /** The signature of the planted fault of the property that this run of the controls has found (and shrunk) anew. */
+  private @Nullable Sig plantedSig(String prop, Prop p, Map<String, Integer> countsBefore) {
+    Sig found = null;
+    for (Sig s : p.sigs.values()) {
+      if (!s.shrunkTexts.isEmpty() && s.count > countsBefore.getOrDefault(s.text, 0) && isPlanted(prop, s.text)) found = s;
+    }
+    return found;
   }
 
   /** The file itself, or the {@code .erl} files of the directory, sorted. */

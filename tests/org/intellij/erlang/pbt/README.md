@@ -30,7 +30,7 @@ The controls: `PBT_PLANT=1` runs them instead of the cases, and the run fails if
 | `PBT_BUDGET_MINUTES` | `0` (none) | Stop before the next case when the time is over; the report has `complete: false`. |
 | `PBT_PROPS` | all | Subset of `parse,parse-reject,warnings`. |
 | `PBT_REPORT` | `build/pbt/report.json` | The report. |
-| `PBT_JOURNAL` | report + `.journal.jsonl` | One JSON line per case, discard, violation and crash, written as they happen, so it survives a crash. |
+| `PBT_JOURNAL` | report + `.journal.jsonl` | One JSON line per case, discard, violation, shrink and crash, written as they happen (a `violation` before its shrinking, a `shrink` after it), so it survives a crash. |
 | `PBT_OUT` | `build/pbt/out` | The first two shrunk inputs of each signature, `<prop>-<hash>-<n>.erl`, with the signature and the case in a comment. |
 | `PBT_WORK` | `build/pbt/work` | Where the file for erlc (`pbt.erl`) and the SDK of the run are written. |
 | `PBT_REPLAY` | none | `<seed>:<index>`: run exactly that one case, verbose. |

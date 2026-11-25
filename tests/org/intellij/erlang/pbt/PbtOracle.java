@@ -97,10 +97,16 @@ final class PbtOracle implements AutoCloseable {
     }, "pbt-oracle-reader");
     reader.setDaemon(true);
     reader.start();
-    String hello = poll(60_000);
-    if (hello == null || hello.isEmpty()) throw new IOException("the oracle did not start: " + myErl);
-    JsonObject o = JsonParser.parseString(hello).getAsJsonObject();
-    myOtpRelease = o.get("otp").getAsString();
+    try {
+      String hello = poll(60_000);
+      if (hello == null || hello.isEmpty()) throw new IOException("the oracle did not start: " + myErl);
+      JsonObject o = JsonParser.parseString(hello).getAsJsonObject();
+      myOtpRelease = o.get("otp").getAsString();
+    }
+    catch (IOException | RuntimeException e) {
+      close();
+      throw e;
+    }
   }
 
   private @Nullable String poll(long ms) {
@@ -124,8 +130,12 @@ final class PbtOracle implements AutoCloseable {
           myIn.flush();
           String line = poll(myTimeoutMs);
           if (line != null && !line.isEmpty()) {
-            calls++;
-            return parse(line);
+            Result result = parse(line);
+            // a crash of the oracle is not an answer of erlc: ask again on a fresh process
+            if (!result.status().equals("crash")) {
+              calls++;
+              return result;
+            }
           }
         }
         catch (IOException ignored) {

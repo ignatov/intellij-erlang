@@ -48,6 +48,9 @@ final class PbtGen {
    */
   static final Set<String> OFF = Set.of(String.valueOf(System.getenv("PBT_GEN_OFF")).split(","));
 
+  /** The OTP release of the oracle: nominal types exist from OTP 28, and erlc of an older one rejects them. */
+  static volatile int ourOtpRelease = Integer.MAX_VALUE;
+
   static boolean on(String construct) {
     return !OFF.contains(construct);
   }
@@ -527,7 +530,7 @@ final class PbtGen {
 
   private PbtNode typeDef(Ty t) {
     String kind = r.nextInt(5) == 0 ? "opaque" : "type";
-    if (on("form.nominal") && "type".equals(kind) && r.nextInt(4) == 0) kind = "nominal";
+    if (on("form.nominal") && ourOtpRelease >= 28 && "type".equals(kind) && r.nextInt(4) == 0) kind = "nominal";
     List<String> vars = t.arity == 1 ? List.of("A") : List.of();
     PbtNode body = type(vars, 2);
     // a parameter must occur in the body, or erlc rejects the definition
