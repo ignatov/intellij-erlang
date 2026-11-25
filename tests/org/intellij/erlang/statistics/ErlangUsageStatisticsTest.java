@@ -19,7 +19,30 @@ package org.intellij.erlang.statistics;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.codeInsight.lookup.Lookup;
+import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.codeInsight.lookup.LookupEvent;
+import com.intellij.codeInsight.lookup.LookupListener;
+import com.intellij.codeInsight.template.Template;
+import com.intellij.codeInsight.template.TemplateManager;
+import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInspection.LocalQuickFix;
+import com.intellij.execution.Executor;
+import com.intellij.execution.configurations.RunProfile;
+import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.executors.DefaultDebugExecutor;
+import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.process.NopProcessHandler;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.openapi.fileTypes.PlainTextFileType;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowId;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.task.ProjectTaskManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.Disposer;
@@ -39,11 +62,21 @@ import com.intellij.util.ui.UIUtil;
 import com.intellij.util.xmlb.XmlSerializer;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
+import org.intellij.erlang.console.ErlangConsoleRunConfiguration;
+import org.intellij.erlang.debugger.remote.ErlangRemoteDebugRunConfiguration;
 import org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator;
+import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
+import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
+import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.psi.*;
+import org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationFactory;
+import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
+import org.intellij.erlang.runconfig.ErlangRunner;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.plaf.ColorUIResource;
@@ -968,6 +1001,233 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     assertEquals(ErlangUsageKey.OPENED_APP, ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.app.src")));
     assertEquals(ErlangUsageKey.OPENED_CONFIG, ErlangUsageListeners.openedFileKey(new LightVirtualFile("sys.config")));
     assertNull(ErlangUsageListeners.openedFileKey(new LightVirtualFile("a.txt")));
+  }
+
+  public void testRunConfigurationKindsOfEveryErlangConfiguration() {
+    Project project = getProject();
+    assertRunKeys(new ErlangConsoleRunConfiguration("console", project), ErlangUsageKey.RUN_CONSOLE, ErlangUsageKey.DEBUG_CONSOLE);
+    assertRunKeys(new ErlangUnitRunConfiguration(project, "eunit", ErlangUnitRunConfigurationType.getInstance()),
+                  ErlangUsageKey.RUN_EUNIT, ErlangUsageKey.DEBUG_EUNIT);
+    assertRunKeys(RebarEunitRunConfigurationFactory.getInstance().createTemplateConfiguration(project),
+                  ErlangUsageKey.RUN_REBAR_EUNIT, ErlangUsageKey.DEBUG_REBAR_EUNIT);
+    assertRunKeys(new RebarRunConfiguration("rebar", project), ErlangUsageKey.RUN_REBAR, ErlangUsageKey.DEBUG_REBAR);
+    assertRunKeys(new ErlangRemoteDebugRunConfiguration(project, "remote"), ErlangUsageKey.RUN_REMOTE_NODE, ErlangUsageKey.DEBUG_REMOTE_NODE);
+    // a run configuration of another plugin
+    RunProfile other = new RunProfile() {
+      @Override
+      public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
+        return null;
+      }
+
+      @Override
+      public @NotNull String getName() {
+        return "other";
+      }
+
+      @Override
+      public Icon getIcon() {
+        return null;
+      }
+    };
+    assertNull(ErlangUsageListeners.runKey(DefaultRunExecutor.EXECUTOR_ID, other));
+    assertNull(ErlangUsageListeners.runKey(DefaultDebugExecutor.EXECUTOR_ID, other));
+  }
+
+  private static void assertRunKeys(@NotNull RunProfile profile, @NotNull ErlangUsageKey run, @NotNull ErlangUsageKey debug) {
+    assertEquals(run, ErlangUsageListeners.runKey(DefaultRunExecutor.EXECUTOR_ID, profile));
+    assertEquals(debug, ErlangUsageListeners.runKey(DefaultDebugExecutor.EXECUTOR_ID, profile));
+  }
+
+  public void testExecutionListenerCountsTheStartedErlangRun() {
+    collector().setEnabled(true);
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    ExecutionEnvironment environment = new ExecutionEnvironmentBuilder(getProject(), DefaultRunExecutor.getRunExecutorInstance())
+      .runProfile(configuration).runner(new ErlangRunner()).build();
+    ErlangUsageListeners.Execution listener = new ErlangUsageListeners.Execution();
+    listener.processStarted(DefaultRunExecutor.EXECUTOR_ID, environment, new NopProcessHandler());
+    // an executor that the statistics do not know, such as coverage, counts nothing
+    listener.processStarted("Coverage", environment, new NopProcessHandler());
+    JsonObject properties = previewProperties();
+    assertEquals(1, properties.get(ErlangUsageKey.RUN_APPLICATION.jsonName()).getAsInt());
+    assertFalse(properties.has(ErlangUsageKey.DEBUG_APPLICATION.jsonName()));
+  }
+
+  public void testCompletionKindOfPsiElements() {
+    PsiFile file = myFixture.configureByText("kinds.erl", """
+      -module(kinds).
+      -record(rec, {a}).
+      -define(MAC, 1).
+      -type t() :: integer().
+      f(X) -> X.
+      """);
+    assertEquals(ErlangUsageKey.COMPLETION_FUNCTION, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangFunction.class)));
+    assertEquals(ErlangUsageKey.COMPLETION_MODULE, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangModule.class)));
+    assertEquals(ErlangUsageKey.COMPLETION_MODULE, completionKindOf(file));
+    assertEquals(ErlangUsageKey.COMPLETION_RECORD, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangRecordDefinition.class)));
+    assertEquals(ErlangUsageKey.COMPLETION_MACRO, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangMacrosDefinition.class)));
+    assertEquals(ErlangUsageKey.COMPLETION_VARIABLE, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangQVar.class)));
+    assertEquals(ErlangUsageKey.COMPLETION_TYPE, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangTypeDefinition.class)));
+    // an element of another kind is told by its lookup string and its icon
+    assertEquals(ErlangUsageKey.COMPLETION_OTHER, completionKindOf(PsiTreeUtil.findChildOfType(file, ErlangAttribute.class)));
+  }
+
+  @NotNull
+  private static ErlangUsageKey completionKindOf(@Nullable PsiElement element) {
+    assertNotNull(element);
+    return ErlangUsageListeners.completionKind(LookupElementBuilder.create(element, "name"));
+  }
+
+  public void testCompletionKindOfPlainItems() {
+    assertEquals(ErlangUsageKey.COMPLETION_KEYWORD, completionKindOf(LookupElementBuilder.create("case")));
+    assertEquals(ErlangUsageKey.COMPLETION_KEYWORD, completionKindOf(LookupElementBuilder.create("receive")));
+    assertEquals(ErlangUsageKey.COMPLETION_FUNCTION, completionKindOf(LookupElementBuilder.create("f").withIcon(ErlangIcons.FUNCTION)));
+    assertEquals(ErlangUsageKey.COMPLETION_MODULE, completionKindOf(LookupElementBuilder.create("m").withIcon(ErlangIcons.MODULE)));
+    assertEquals(ErlangUsageKey.COMPLETION_MODULE, completionKindOf(LookupElementBuilder.create("m").withIcon(ErlangIcons.FILE)));
+    assertEquals(ErlangUsageKey.COMPLETION_RECORD, completionKindOf(LookupElementBuilder.create("r").withIcon(ErlangIcons.RECORD)));
+    assertEquals(ErlangUsageKey.COMPLETION_MACRO, completionKindOf(LookupElementBuilder.create("M").withIcon(ErlangIcons.MACROS)));
+    assertEquals(ErlangUsageKey.COMPLETION_VARIABLE, completionKindOf(LookupElementBuilder.create("V").withIcon(ErlangIcons.VARIABLE)));
+    assertEquals(ErlangUsageKey.COMPLETION_TYPE, completionKindOf(LookupElementBuilder.create("t").withIcon(ErlangIcons.TYPE)));
+    // a bold item without an icon is a keyword that the lexer does not list, such as andalso
+    assertEquals(ErlangUsageKey.COMPLETION_KEYWORD, completionKindOf(LookupElementBuilder.create("andalso").bold()));
+    assertEquals(ErlangUsageKey.COMPLETION_OTHER, completionKindOf(LookupElementBuilder.create("andalso")));
+    assertEquals(ErlangUsageKey.COMPLETION_OTHER, completionKindOf(LookupElementBuilder.create("a").withIcon(ErlangIcons.ATOM).bold()));
+  }
+
+  @NotNull
+  private static ErlangUsageKey completionKindOf(@NotNull LookupElement item) {
+    return ErlangUsageListeners.completionKind(item);
+  }
+
+  public void testCompletionListenerCountsTheItemSelectedInAnErlangFile() {
+    collector().setEnabled(true);
+    PsiFile erlang = myFixture.configureByText("a.erl", "-module(a).\n");
+    PsiFile text = PsiFileFactory.getInstance(getProject()).createFileFromText("a.txt", PlainTextFileType.INSTANCE, "text");
+    List<LookupListener> listeners = new ArrayList<>();
+    ErlangUsageListeners.Completion completion = new ErlangUsageListeners.Completion();
+    completion.activeLookupChanged(null, null);
+    completion.activeLookupChanged(null, fakeLookup(text, listeners));
+    assertEmpty(listeners);
+
+    Lookup lookup = fakeLookup(erlang, listeners);
+    completion.activeLookupChanged(null, lookup);
+    assertSize(1, listeners);
+    listeners.get(0).itemSelected(new LookupEvent(lookup, null, Lookup.NORMAL_SELECT_CHAR));
+    assertFalse(previewProperties().has(ErlangUsageKey.COMPLETION.jsonName()));
+    listeners.get(0).itemSelected(new LookupEvent(lookup, LookupElementBuilder.create("case"), Lookup.NORMAL_SELECT_CHAR));
+    JsonObject properties = previewProperties();
+    assertEquals(1, properties.get(ErlangUsageKey.COMPLETION.jsonName()).getAsInt());
+    assertEquals(1, properties.get(ErlangUsageKey.COMPLETION_KEYWORD.jsonName()).getAsInt());
+  }
+
+  public void testCompletionListenerIgnoresLookupsWhileOff() {
+    PsiFile erlang = myFixture.configureByText("a.erl", "-module(a).\n");
+    List<LookupListener> listeners = new ArrayList<>();
+    new ErlangUsageListeners.Completion().activeLookupChanged(null, fakeLookup(erlang, listeners));
+    assertEmpty(listeners);
+  }
+
+  // a lookup in the file that keeps the listeners added to it
+  @NotNull
+  private Lookup fakeLookup(@NotNull PsiFile file, @NotNull List<LookupListener> listeners) {
+    Project project = getProject();
+    return (Lookup)Proxy.newProxyInstance(Lookup.class.getClassLoader(), new Class<?>[]{Lookup.class}, (proxy, method, args) ->
+      switch (method.getName()) {
+        case "getPsiFile" -> file;
+        case "getProject" -> project;
+        case "addLookupListener" -> {
+          listeners.add((LookupListener)args[0]);
+          yield null;
+        }
+        case "hashCode" -> System.identityHashCode(proxy);
+        case "equals" -> proxy == args[0];
+        case "toString" -> "fake lookup";
+        default -> method.getReturnType() == boolean.class ? false : null;
+      });
+  }
+
+  public void testStructureViewIsCountedForAnErlangEditor() {
+    collector().setEnabled(true);
+    ErlangUsageListeners.StructureView listener = new ErlangUsageListeners.StructureView(getProject());
+    myFixture.configureByText("a.txt", "text");
+    listener.toolWindowShown(toolWindow(ToolWindowId.STRUCTURE_VIEW));
+    assertFalse(previewProperties().has(ErlangUsageKey.STRUCTURE_VIEW.jsonName()));
+    myFixture.configureByText("a.erl", "-module(a).\n");
+    listener.toolWindowShown(toolWindow(ToolWindowId.PROJECT_VIEW));
+    assertFalse(previewProperties().has(ErlangUsageKey.STRUCTURE_VIEW.jsonName()));
+    listener.toolWindowShown(toolWindow(ToolWindowId.STRUCTURE_VIEW));
+    assertEquals(1, previewProperties().get(ErlangUsageKey.STRUCTURE_VIEW.jsonName()).getAsInt());
+  }
+
+  public void testStructureViewWithoutAnEditorIsNotCounted() {
+    collector().setEnabled(true);
+    ErlangUsageListeners.StructureView listener = new ErlangUsageListeners.StructureView(getProject());
+    listener.toolWindowShown(toolWindow(ToolWindowId.STRUCTURE_VIEW));
+    assertFalse(previewProperties().has(ErlangUsageKey.STRUCTURE_VIEW.jsonName()));
+    // a closed project has no editors to ask; asking them would fail
+    new ErlangUsageListeners.StructureView(fakeProject(new boolean[]{true})).toolWindowShown(toolWindow(ToolWindowId.STRUCTURE_VIEW));
+    assertFalse(previewProperties().has(ErlangUsageKey.STRUCTURE_VIEW.jsonName()));
+  }
+
+  @NotNull
+  private static ToolWindow toolWindow(@NotNull String id) {
+    return (ToolWindow)Proxy.newProxyInstance(ToolWindow.class.getClassLoader(), new Class<?>[]{ToolWindow.class}, (proxy, method, args) ->
+      switch (method.getName()) {
+        case "getId" -> id;
+        case "hashCode" -> System.identityHashCode(proxy);
+        case "equals" -> proxy == args[0];
+        case "toString" -> "tool window " + id;
+        default -> method.getReturnType() == boolean.class ? false : null;
+      });
+  }
+
+  public void testLiveTemplateIsCountedInAnErlangEditor() {
+    TemplateManagerImpl.setTemplateTesting(getTestRootDisposable());
+    collector().setEnabled(true);
+    myFixture.configureByText("a.erl", "-module(a).\n<caret>");
+    TemplateManager manager = TemplateManager.getInstance(getProject());
+    // the templates of in-place rename and of other code have no abbreviation
+    startTemplate(manager.createTemplate("", "", "x$END$"));
+    assertFalse(previewProperties().has(ErlangUsageKey.LIVE_TEMPLATE.jsonName()));
+    startTemplate(manager.createTemplate("hello", "test", "hello()$END$"));
+    assertEquals(1, previewProperties().get(ErlangUsageKey.LIVE_TEMPLATE.jsonName()).getAsInt());
+  }
+
+  public void testLiveTemplateIsNotCountedInOtherFilesOrWhileOff() {
+    TemplateManagerImpl.setTemplateTesting(getTestRootDisposable());
+    TemplateManager manager = TemplateManager.getInstance(getProject());
+    myFixture.configureByText("a.erl", "-module(a).\n<caret>");
+    startTemplate(manager.createTemplate("hello", "test", "hello()$END$"));
+    collector().setEnabled(true);
+    assertFalse(previewProperties().has(ErlangUsageKey.LIVE_TEMPLATE.jsonName()));
+    myFixture.configureByText("a.txt", "<caret>");
+    startTemplate(manager.createTemplate("hello", "test", "hello()$END$"));
+    assertFalse(previewProperties().has(ErlangUsageKey.LIVE_TEMPLATE.jsonName()));
+  }
+
+  private void startTemplate(@NotNull Template template) {
+    TemplateManager.getInstance(getProject()).startTemplate(myFixture.getEditor(), template);
+  }
+
+  public void testBuildWithoutErlangModulesIsNotCounted() {
+    collector().setEnabled(true);
+    new ErlangUsageListeners.Build(getProject()).finished(buildResult(false));
+    JsonObject properties = previewProperties();
+    assertFalse(properties.has(ErlangUsageKey.BUILD_BUILT_IN.jsonName()));
+    assertFalse(properties.has(ErlangUsageKey.BUILD_REBAR.jsonName()));
+  }
+
+  @NotNull
+  private static ProjectTaskManager.Result buildResult(boolean aborted) {
+    return (ProjectTaskManager.Result)Proxy.newProxyInstance(
+      ProjectTaskManager.Result.class.getClassLoader(), new Class<?>[]{ProjectTaskManager.Result.class}, (proxy, method, args) ->
+        switch (method.getName()) {
+          case "isAborted" -> aborted;
+          case "hashCode" -> System.identityHashCode(proxy);
+          case "equals" -> proxy == args[0];
+          case "toString" -> "build result";
+          default -> method.getReturnType() == boolean.class ? false : null;
+        });
   }
 
   // names and paths pushed through every public way to count must not get into the JSON or the stored state
