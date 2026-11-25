@@ -41,10 +41,17 @@ public class ErlangNavigationUtil {
 
   @NotNull
   public static List<ErlangCallbackSpec> getCallbackSpecs(@NotNull ErlangFunction function) {
-    final String functionPresentation = ErlangPsiImplUtil.createFunctionPresentation(function);
+    // the callbacks are keyed by the name as written, which the title of the function need not match: before OTP 25
+    // maybe(_) is a plain atom, whose title is 'maybe'/1
+    String name = function.getName();
+    int arity = function.getArity();
+    String plainKey = name + "/" + arity;
+    String quotedKey = "'" + name + "'/" + arity;
     return ContainerUtil.mapNotNull(((ErlangFile) function.getContainingFile()).getBehaviours(), behaviour -> {
       ErlangFile behaviourModule = ErlangPsiImplUtil.resolveToFile(behaviour.getModuleRef());
-      return behaviourModule != null ? behaviourModule.getCallbackByName(functionPresentation) : null;
+      if (behaviourModule == null) return null;
+      ErlangCallbackSpec spec = behaviourModule.getCallbackByName(plainKey);
+      return spec != null ? spec : behaviourModule.getCallbackByName(quotedKey);
     });
   }
 
