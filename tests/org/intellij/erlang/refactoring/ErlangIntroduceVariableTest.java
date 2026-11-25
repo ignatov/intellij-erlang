@@ -20,6 +20,7 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
@@ -41,6 +42,20 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+
+  public void testExpressionUsingGeneratorVariable() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    try {
+      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException ignored) {
+      // refusing the refactoring is a correct outcome
+    }
+    String text = myFixture.getEditor().getDocument().getText();
+    String beforeComprehension = text.substring(0, text.indexOf('['));
+    assertFalse("X is bound only by the generator, but the declaration was put before the comprehension:\n" + text,
+                beforeComprehension.contains("X * 2"));
+  }
 
   private void doTest() { doTest(ALL); }
 
