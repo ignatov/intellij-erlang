@@ -30,6 +30,9 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiParserFacade;
+import com.intellij.psi.PsiPolyVariantReference;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.RefactoringActionHandler;
@@ -192,6 +195,10 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
       showCannotPerformError(project, editor);
       return null;
     }
+    if (usesVariablesUnboundAtAnchor(occurrences)) {
+      showCannotPerformError(project, editor, "Selected expression uses variables that are not bound where the new variable would be declared");
+      return null;
+    }
 
     declaration = performReplace(newName, declaration, expression, occurrences);
     declaration = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(declaration);
@@ -243,6 +250,27 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     assert anchor != null;
     PsiElement parent = anchor.getParent();
     return parent.addBefore(declaration, anchor);
+  }
+
+  private static boolean usesVariablesUnboundAtAnchor(@NotNull List<PsiElement> occurrences) {
+    for (PsiElement occurrence : occurrences) {
+      if (PsiTreeUtil.getParentOfType(occurrence, ErlangArgumentDefinition.class) != null) return false;
+    }
+    PsiElement anchor = findAnchor(occurrences);
+    if (anchor == null) return false;
+    for (PsiElement occurrence : occurrences) {
+      for (ErlangQVar variable : PsiTreeUtil.findChildrenOfType(occurrence, ErlangQVar.class)) {
+        PsiReference reference = variable.getReference();
+        if (!(reference instanceof PsiPolyVariantReference polyReference)) continue;
+        for (ResolveResult result : polyReference.multiResolve(false)) {
+          PsiElement binding = result.getElement();
+          if (binding != null && PsiTreeUtil.isAncestor(anchor, binding, false) && !PsiTreeUtil.isAncestor(occurrence, binding, false)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   @Nullable
