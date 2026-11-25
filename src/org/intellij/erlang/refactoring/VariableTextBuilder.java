@@ -41,7 +41,7 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
       return;
     }
     else if (element instanceof ErlangQAtom) {
-      myResult.append(StringUtil.capitalize(element.getText()));
+      myResult.append(StringUtil.capitalize(StringUtil.unquoteString(element.getText(), '\'')));
       return;
     }
     else if (element instanceof ErlangFunctionCallExpression) {
@@ -99,11 +99,7 @@ public class VariableTextBuilder extends PsiRecursiveElementVisitor {
 
   @NotNull
   public String result(String defaultValue) {
-    String s = StringUtil.toTitleCase(myResult.toString())
-      .replaceAll("_", "")
-      .replaceAll("\\?", "")
-      .replaceAll("'", "")
-      .replaceAll(" ", "");
-    return StringUtil.notNullize(s, defaultValue);
+    String s = StringUtil.toTitleCase(myResult.toString()).replaceAll("[^A-Za-z0-9@]", "");
+    return s.matches("[A-Z][A-Za-z0-9@]*") ? s : defaultValue;
   }
 }

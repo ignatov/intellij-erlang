@@ -906,7 +906,16 @@ public final class ErlangMacroLayer {
       PsiElement attribute = PsiTreeUtil.nextVisibleLeaf(first);
       if (attribute != null && ErlangMacroExpander.isDirectiveName(attribute.getText())) return false;
     }
-    return usesNeedSubstitution(t, form, first);
+    return splitFormHasError(t, form) || usesNeedSubstitution(t, form, first);
+  }
+
+  /** A piece before the form, back to the one that ends its source form, is broken: the recovery split a broken form. */
+  private static boolean splitFormHasError(@NotNull Table t, @NotNull PsiElement form) {
+    for (PsiElement prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(form); prev != null && !endsSourceForm(prev);
+         prev = PsiTreeUtil.skipWhitespacesAndCommentsBackward(prev)) {
+      if (prev instanceof PsiErrorElement || formHasError(t, prev)) return true;
+    }
+    return false;
   }
 
   /** Some {@code ?} of the form is not a use of a plain macro in a plain slot (or of a predefined or invisible macro). */

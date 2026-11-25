@@ -103,6 +103,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
   public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
+  public void testUnresolvedBnotOperator() { doTest(); } // issue 1600
+  public void testIllegalGuardBnotOperator() { doTest(); } // issue 1600
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
   public void test365()               { doTest(); }
@@ -260,6 +262,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   }
 
   public void testUnresolvedMacrosOtpRelease() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
+  // issue 1596
+  public void testUnresolvedMacrosQuotedPredefined() {
     enableUnresolvedMacroInspection();
     doTest();
   }

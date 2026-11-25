@@ -12,6 +12,7 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.lang.parser.GeneratedParserUtilBase;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PostprocessReformattingAspect;
 import com.intellij.psi.impl.source.resolve.reference.impl.PsiMultiReference;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
@@ -295,7 +296,10 @@ public final class ErlangMacroLayerTokenReference extends PsiPolyVariantReferenc
     if (myElement instanceof ErlangAtom atom) return ErlangPsiImplUtil.setName(atom, newElementName);
     PsiElement replacement = tokenOf(newElementName);
     if (replacement != null && replacement.getNode().getElementType() == myLeaf.getNode().getElementType()) {
-      myLeaf.replace(replacement);
+      // only the token changes: the formatter would re-indent a bare token of a top-level error or dummy block
+      PostprocessReformattingAspect.getInstance(myLeaf.getProject()).disablePostprocessFormattingInside(() -> {
+        myLeaf.replace(replacement);
+      });
       return myElement;
     }
     // an atom name that needs quotes now (or had them): the name and its quotes

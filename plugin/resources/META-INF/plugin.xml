@@ -39,14 +39,7 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Export type now keeps the quotes of a quoted type name, so the module still compiles (<a href="https://github.com/ignatov/intellij-erlang/issues/1557">#1557</a>)</li>
-              <li>Renaming a function with thousands of clauses no longer freezes the IDE (<a href="https://github.com/ignatov/intellij-erlang/pull/1586">#1586</a>)</li>
-              <li>The editor now flags ?FEATURE_ENABLED() and other wrong-arity feature macro uses next to an own -define (<a href="https://github.com/ignatov/intellij-erlang/pull/1585">#1585</a>)</li>
-              <li>Using ?FEATURE_ENABLED(Feature) no longer shows an argument mismatch when the module defines the macro with other arities (<a href="https://github.com/ignatov/intellij-erlang/pull/1584">#1584</a>)</li>
-              <li>Completion after ?MODULE: in a type spec now lists the types of the current module (<a href="https://github.com/ignatov/intellij-erlang/pull/1583">#1583</a>)</li>
-              <li>Go to Declaration no longer opens a type of another arity when no type of the used arity exists (<a href="https://github.com/ignatov/intellij-erlang/pull/1570">#1570</a>)</li>
-              <li>Smart completion now offers variables bound to products and divisions written with spaces, such as 2 * 3 (<a href="https://github.com/ignatov/intellij-erlang/pull/1579">#1579</a>)</li>
-              <li>and 15 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1307">full list</a></li>
+              <li>Type completion shows the arity of each type, so tree/0 and tree/1 can be told apart (<a href="https://github.com/ignatov/intellij-erlang/pull/1575">#1575</a>)</li>
             </ul>
         ]]>
     </change-notes>

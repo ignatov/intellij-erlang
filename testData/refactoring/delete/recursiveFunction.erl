@@ -1,0 +1,1 @@
+<caret>loop(N) -> loop(N - 1).
