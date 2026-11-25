@@ -104,6 +104,10 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   private static final Pattern ATOM_PATTERN = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  // the reserved words of Erlang, which an atom must quote
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div",
+    "else", "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
   private static final Pattern DECIMAL_WITH_SEPARATORS = Pattern.compile("[0-9]+(_[0-9]+)*");
   @NotNull
   private static final Pattern QUOTED_ATOM_NAME = Pattern.compile("(\\\\\\^.|\\\\.|[^'])*"); //see https://github.com/rvirding/leex/blob/master/examples/erlang_scan.xrl
@@ -1659,7 +1663,7 @@ public class ErlangPsiImplUtil {
       //check if it's a regular atom
       Matcher matcher = ATOM_PATTERN.matcher(atomName);
       if (matcher.matches()) {
-        return ThreeState.NO;
+        return RESERVED_WORDS.contains(atomName) ? ThreeState.YES : ThreeState.NO;
       }
       //check if it's a quoted atom name
       matcher = QUOTED_ATOM_NAME.matcher(atomName);

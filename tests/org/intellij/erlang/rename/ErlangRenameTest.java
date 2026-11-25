@@ -39,6 +39,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testUnquotedFunction()  { doTest("bar"); }
   public void testQuotedFunction()    { doTest("bar"); }
   public void testQuoteFunctionName() { doTest("BAR"); }
+  public void testFunctionToReservedWord() { doTest("div"); }
   public void testMultiClauseFunction() { doTest("BAR"); }
 
   public void testMultiClauseFunctionInplace() {

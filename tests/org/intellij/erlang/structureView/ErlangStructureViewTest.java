@@ -20,6 +20,7 @@ import com.intellij.ide.structureView.newStructureView.StructureViewComponent;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.PlatformTestUtil;
+import org.intellij.erlang.ErlangBreadcrumbsProvider;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -44,6 +45,35 @@ public class ErlangStructureViewTest extends ErlangLightPlatformCodeInsightFixtu
       bar(X) -> <caret>X + 1.
       """);
     doTest(findFunction("bar").getFunctionClauseList().get(1));
+  }
+
+  public void testReservedWordFunctionNameIsQuoted() {
+    myFixture.configureByText(ErlangFileType.MODULE, """
+      -module(m).
+      -export([foo/0, 'div'/0]).
+      foo() -> ok.
+      'div'() -> ok.
+      """);
+    myFixture.testStructureView(component -> {
+      PlatformTestUtil.expandAll(component.getTree());
+      PlatformTestUtil.assertTreeEqual(component.getTree(), """
+        -aaa.erl
+         foo/0
+         'div'/0
+        """);
+    });
+  }
+
+  public void testReservedWordFunctionNameIsQuotedInBreadcrumbs() {
+    myFixture.configureByText(ErlangFileType.MODULE, """
+      -module(m).
+      -export([foo/0, 'div'/0]).
+      foo() -> ok.
+      'div'() -> ok.
+      """);
+    ErlangBreadcrumbsProvider provider = new ErlangBreadcrumbsProvider();
+    assertEquals("foo/0", provider.getElementInfo(findFunction("foo")));
+    assertEquals("'div'/0", provider.getElementInfo(findFunction("div")));
   }
 
   private ErlangFunction findFunction(String name) {

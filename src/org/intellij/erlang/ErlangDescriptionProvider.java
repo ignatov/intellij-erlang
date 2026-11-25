@@ -36,14 +36,8 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
-
 public class ErlangDescriptionProvider implements ElementDescriptionProvider {
   private final static Logger LOG = Logger.getInstance(ErlangDescriptionProvider.class);
-  // the reserved words of Erlang, which an atom must quote
-  private static final Set<String> RESERVED_WORDS = Set.of(
-    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div",
-    "else", "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
 
   @Override
   public String getElementDescription(@NotNull PsiElement o, @NotNull ElementDescriptionLocation location) {
@@ -109,9 +103,8 @@ public class ErlangDescriptionProvider implements ElementDescriptionProvider {
     PsiReference reference = o instanceof ErlangSpecFun ? null : o.getReference();
     if (reference instanceof ErlangFunctionReference ref && ref.getArity() >= 0) {
       // quoted only when the atom needs quotes, as erlc writes it: 'abs'(1) gives abs/1, erlang:'+'(1, 2) gives '+'/2
-      // and erlang:'not'(true) gives 'not'/1 (toAtomName takes a reserved word for a plain atom)
+      // and erlang:'not'(true) gives 'not'/1
       String name = ref.getName();
-      if (RESERVED_WORDS.contains(name)) return "'" + name + "'/" + ref.getArity();
       return ErlangPsiImplUtil.toAtomName(name) != null ? ref.getSignature() : name + "/" + ref.getArity();
     }
     ErlangQAtom qAtom = PsiTreeUtil.getChildOfType(o, ErlangQAtom.class);
