@@ -1,0 +1,20 @@
+# answers:13 src/errors/err_circular.erl arm=master layer=false
+## highlights
+## references
+232 PsiMultiReference -> []
+244 PsiMultiReference -> []
+274 ErlangMacrosReferenceImpl -> [null]
+278 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:294:ErlangMacrosDefinitionImpl]
+278 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:294:ErlangMacrosDefinitionImpl]
+294 ErlangMacrosReferenceImpl -> [null]
+298 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:274:ErlangMacrosDefinitionImpl]
+298 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:274:ErlangMacrosDefinitionImpl]
+317 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:274:ErlangMacrosDefinitionImpl]
+317 ErlangMacrosReferenceImpl -> [src/errors/err_circular.erl:274:ErlangMacrosDefinitionImpl]
+## completion
+294 [A, FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, begin, case, catch, fun, if, maybe, receive, try]
+278 []
+300 []
+301 [begin, case, catch, fun, if, maybe, receive, try]
+268 [define, export_record, ifdef, ifndef, import_record, include, include_lib, module, on_load, record, undef]
+277 [begin, case, catch, fun, if, maybe, receive, try]

@@ -1,0 +1,22 @@
+# answers:11 src/errors/err_bad_argument.erl arm=master layer=false
+## highlights
+386-387 ERROR(400) <expression> expected, got 'end'
+391-392 ERROR(400) '-', <attribute>, <function clause>, <q atom> or '?' expected, got '.'
+## references
+308 PsiMultiReference -> []
+320 PsiMultiReference -> []
+350 ErlangMacrosReferenceImpl -> [null]
+354 ErlangVariableReferenceImpl -> []
+357 ErlangVariableReferenceImpl -> []
+361 ErlangVariableReferenceImpl -> [src/errors/err_bad_argument.erl:354:ErlangQVarImpl]
+365 ErlangVariableReferenceImpl -> [src/errors/err_bad_argument.erl:357:ErlangQVarImpl]
+379 ErlangFunctionReferenceImpl -> []
+380 ErlangMacrosReferenceImpl -> [src/errors/err_bad_argument.erl:350:ErlangMacrosDefinitionImpl]
+380 ErlangMacrosReferenceImpl -> [src/errors/err_bad_argument.erl:350:ErlangMacrosDefinitionImpl]
+## completion
+361 [A, B, begin, case, catch, fun, if, maybe, receive, try]
+353 []
+355 [<single or none>]
+362 [<single or none>]
+363 [A, B]
+338 []

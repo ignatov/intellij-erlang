@@ -1,0 +1,60 @@
+HIGHLIGHT 10:2-10:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 10:2-10:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 13:10-13:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 13:10-13:14 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 13:2-13:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 13:2-13:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 18:2-18:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 18:2-18:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 18:9-18:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 18:9-18:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 1:1-28:1 WARNING(300) Some 'include' folders are not marked as include directories. WARNING_ATTRIBUTES
+HIGHLIGHT 20:1-20:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 20:1-20:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 21:3-21:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 21:3-21:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 22:10-22:11 ERROR(400) '.' or '{' expected, got ',' ERRORS_ATTRIBUTES
+HIGHLIGHT 22:3-22:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 22:3-22:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:10-23:11 ERROR(400) '.' or '{' expected, got ',' ERRORS_ATTRIBUTES
+HIGHLIGHT 23:3-23:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:3-23:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:3-24:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:3-24:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:6-24:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:6-24:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:6-24:12 WARNING(300) Unresolved function format/1 WARNING_ATTRIBUTES
+HIGHLIGHT 26:1-26:4 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 26:1-26:4 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:3-27:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:3-27:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 2:5-2:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 2:5-2:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 3:5-3:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 3:5-3:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 4:5-4:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 4:5-4:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 6:5-6:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 6:5-6:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 9:2-9:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 9:2-9:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+REF 9:2 module -> none
+REF 9:9 main -> none
+REF 10:2 author -> none
+REF 13:2 export -> none
+REF 13:10 main -> ErlangFunctionReferenceImpl:main.erl:20:1:main() ->
+REF 18:2 define -> none
+REF 20:1 main -> none
+REF 21:3 foo -> ErlangFunctionReferenceImpl:main.erl:26:1:foo() ->
+REF 22:3 foo -> :unresolved
+REF 22:6 ? -> none
+REF 23:3 foo -> :unresolved
+REF 23:6 ? -> none
+REF 24:3 io -> ErlangModuleReferenceImpl:unresolved
+REF 24:6 format -> ErlangFunctionReferenceImpl:unresolved
+REF 26:1 foo -> none
+REF 27:3 ok -> :unresolved
+COMPLETE 21:4 -> 68 a18c7bb1 err_arity:f err_bad_argument:f err_circular:f err_form_in_expr err_form_in_expr:f err_header_macro:f err_map_field err_map_field:bad err_map_field:good err_par_alone:f err_par_alone:foo err_redefine err_redefine:f err_undefined err_undefined:f err_undefined_fragment err_undefined_fragment:f err_unde...
+COMPLETE 24:7 -> 2 2d8bf7a2 module_info module_info
+COMPLETE 22:7 -> 45 797b8f5a err_arity err_bad_argument err_circular err_form_in_expr err_header_macro err_map_field err_par_alone err_redefine err_undefined err_undefined_fragment err_unterminated gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_basics m_chain m_count...
+COMPLETE 23:7 -> 45 797b8f5a err_arity err_bad_argument err_circular err_form_in_expr err_header_macro err_map_field err_par_alone err_redefine err_undefined err_undefined_fragment err_unterminated gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_basics m_chain m_count...

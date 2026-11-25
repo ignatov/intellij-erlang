@@ -7,8 +7,12 @@ and other IntelliJ-based products
 [PyCharm](http://www.jetbrains.com/pycharm/), 
 [WebStorm](http://www.jetbrains.com/webstorm/), etc.) to a convenient [Erlang](http://www.erlang.org/) IDE.
 
+## Macros that just work
+
+https://github.com/user-attachments/assets/1efbeed0-0f6f-4df3-9396-895511c604ce
+
 ## Requirements
-- IntelliJ IDEA 2026.1, 2026.2 or 2026.3
+- IntelliJ IDEA 2026.2 or 2026.3
 - Java 21 or later (bundled with the IDE)
 
 ## For Developers

@@ -23,9 +23,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
-import org.apache.commons.lang3.ObjectUtils;
+import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangCreateFunctionQuickFix;
@@ -35,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
   @NotNull
@@ -50,7 +53,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
                                     ((ErlangGlobalFunctionCallExpression) parent).getModuleRef() : null;
         if (call.getQAtom().getMacros() != null ||
             moduleRef != null && moduleRef.getQAtom().getMacros() != null ||
-            !(reference instanceof ErlangFunctionReference) || reference.resolve() != null) {
+            !(reference instanceof ErlangFunctionReference) || reference.resolve() != null ||
+            moduleRef == null && isPreprocessorDefinedTest(call)) {
           return;
         }
 
@@ -64,6 +68,25 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
                                 new LocalQuickFix[]{createFix(call, fixMessage)};
 
         registerProblem(holder, call.getNameIdentifier(), "Unresolved function " + presentation, fixes);
+      }
+
+      /** {@code foo} in {@code foo?PAR}: a plain atom in the tree, a call of foo/0 after expansion. */
+      @Override
+      public void visitAtom(@NotNull ErlangAtom o) {
+        inspectToken(o.getNameIdentifier(), o);
+      }
+
+      /** An atom token that error recovery left bare, which a call names after expansion. */
+      @Override
+      public void visitElement(@NotNull PsiElement o) {
+        if (o instanceof LeafPsiElement leaf && leaf.getElementType() == ErlangTypes.ERL_ATOM_NAME && !(o.getParent() instanceof ErlangAtom)) {
+          inspectToken(o, o);
+        }
+      }
+
+      private void inspectToken(@NotNull PsiElement token, @NotNull PsiElement target) {
+        String presentation = ErlangMacroLayerTokenReference.unresolvedFunctionAt(token);
+        if (presentation != null) registerProblem(holder, target, "Unresolved function " + presentation);
       }
 
       @Override
@@ -97,6 +120,14 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
     };
   }
 
+  /** {@code defined(Macro)} in an {@code -if(...)} or {@code -elif(...)} condition, which epp evaluates itself. */
+  private static boolean isPreprocessorDefinedTest(@NotNull ErlangFunctionCallExpression call) {
+    if (!"defined".equals(call.getName()) || call.getArgumentList().getExpressionList().size() != 1) return false;
+    PsiElement attribute = PsiTreeUtil.getParentOfType(call, ErlangIfAtomAttribute.class, ErlangAtomAttribute.class);
+    return attribute instanceof ErlangIfAtomAttribute ||
+           attribute instanceof ErlangAtomAttribute atomAttribute && "elif".equals(atomAttribute.getName());
+  }
+
   private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression call,
                                                         @NotNull String fixMessage) {
     final SmartPsiElementPointer<ErlangFunctionCallExpression> myPointer =
@@ -108,7 +139,7 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         ErlangFunctionCallExpression call = myPointer.getElement();
         assert call != null;
         String name = call.getName();
-        return ObjectUtils.defaultIfNull(ErlangPsiImplUtil.toAtomName(name), name);
+        return Objects.requireNonNullElse(ErlangPsiImplUtil.toAtomName(name), name);
       }
 
       @NotNull

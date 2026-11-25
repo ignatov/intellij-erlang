@@ -1,4 +1,0 @@
-<!-- Empty on purpose: plugin.xml names this file in its optional dependency on the test runner plugin of the IDE,
-     which only has to put the classes of that plugin on the class path of this one. -->
-<idea-plugin>
-</idea-plugin>

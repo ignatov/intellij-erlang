@@ -21,11 +21,14 @@ import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.usageView.UsageInfo;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
+import org.intellij.erlang.psi.ErlangFunctionWithArity;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -33,6 +36,8 @@ import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
 
 public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   @Override
@@ -61,6 +66,13 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testPreferImportFromUserModule() { doFunctionCallTest("test.erl", "incl.erl"); }
   public void testPreferLocalFunction()        { doFunctionCallTest("test.erl", "test.erl", "incl.erl"); }
   public void testPreferFirstImport()          { doFunctionCallTest("test.erl", "incl.erl", "another_incl.erl"); }
+  public void testImportArityWithDigitSeparators() { doFunctionCallTest("test.erl", "incl.erl"); }
+  public void testPreferFirstIncludedHeader() {
+    doFunctionCallTest("test.erl", "a.hrl", "b.hrl", "c.hrl", "d.hrl", "e.hrl", "g.hrl", "h.hrl", "i.hrl");
+  }
+  public void testPreferNestedIncludeInSourceOrder() {
+    doFunctionCallTest("test.erl", "a.hrl", "outer.hrl", "b.hrl", "c.hrl", "d.hrl", "e.hrl", "g.hrl", "h.hrl", "i.hrl");
+  }
 
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }
@@ -70,6 +82,57 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testExportOfAutoImportedBif()       { doUnresolvedExportTest("test.erl"); }
   public void testExportOfLocalImportedFunction() { doExportTest("test.erl", "test.erl", "incl.erl"); }
   public void testExportOfIncludedFunction()      { doExportTest("test.erl", "incl.hrl"); }
+
+  public void testExportArityWithDigitSeparators() {
+    myFixture.configureByText("test.erl", """
+      -export([<caret>g/1_0]).
+      g(_, _, _, _, _, _, _, _, _, _) -> ok.
+      g() -> ok.
+      """);
+    assertResolvesTo(getElementAtCaret(ErlangExportFunction.class).getReference(), "test.erl", "g", 10);
+  }
+
+  public void testFunArityWithDigitSeparators() {
+    myFixture.configureByText("test.erl", """
+      g(_, _, _, _, _, _, _, _, _, _) -> ok.
+      g() -> ok.
+      h() -> fun <caret>g/1_0.
+      """);
+    assertResolvesTo(getElementAtCaret(ErlangFunctionWithArity.class).getReference(), "test.erl", "g", 10);
+  }
+
+  // issue 1609: the call hello() after setup?PAR, is no function of the source; the export names the real hello/0
+  public void testExportOfFunctionAfterSplitForm() {
+    myFixture.configureByText("greet.erl", """
+      -module(greet).
+      -export([start/0, setup/0, <caret>hello/0]).
+      -define(PAR, ()).
+      start() -> setup?PAR, hello().
+      setup() -> ok.
+      hello() -> ok.
+      """);
+    PsiReference reference = getElementAtCaret(ErlangExportFunction.class).getReference();
+    assertResolvesTo(reference, "greet.erl", "hello", 0);
+    ErlangFunction resolved = (ErlangFunction)reference.resolve();
+    assertEquals("hello() -> ok.", resolved.getText());
+  }
+
+  // issue 1609: Find Usages of the real hello/0 finds the -export entry
+  public void testUsagesOfFunctionAfterSplitForm() {
+    myFixture.configureByText("greet.erl", """
+      -module(greet).
+      -export([start/0, setup/0, hello/0]).
+      -define(PAR, ()).
+      start() -> setup?PAR, hello().
+      setup() -> ok.
+      <caret>hello() -> ok.
+      """);
+    ErlangFunction function = getElementAtCaret(ErlangFunction.class);
+    assertEquals("hello() -> ok.", function.getText());
+    Collection<UsageInfo> usages = myFixture.findUsages(function);
+    assertEquals(1, usages.size());
+    assertInstanceOf(ContainerUtil.getFirstItem(usages).getElement(), ErlangExportFunction.class);
+  }
 
   private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
     String[] files = {focusedFile, expectedFile};

@@ -43,13 +43,13 @@ public final class ImportedOtpApp {
   private VirtualFile myIdeaModuleFile;
   private Module myModule;
 
-  public ImportedOtpApp(@NotNull VirtualFile root, @NotNull final VirtualFile appConfig) {
+  public ImportedOtpApp(@NotNull VirtualFile root, @NotNull final VirtualFile appConfig, boolean isDependencyApp) {
     myName = StringUtil.trimEnd(StringUtil.trimEnd(appConfig.getName(), ".src"), ".app");
     myRoot = root;
 
     ApplicationManager.getApplication().runReadAction(() -> {
       addDependenciesFromAppFile(appConfig);
-      addInfoFromRebarConfig();
+      addInfoFromRebarConfig(isDependencyApp);
       addIncludePath("include");
     });
   }
@@ -119,11 +119,11 @@ public final class ImportedOtpApp {
     return result;
   }
 
-  private void addInfoFromRebarConfig() {
+  private void addInfoFromRebarConfig(boolean isDependencyApp) {
     VirtualFile rebarConfig = myRoot.findChild("rebar.config");
     ErlangFile rebarConfigPsi = rebarConfig != null ? ErlangTermFileUtil.createPsi(rebarConfig) : null;
     if (rebarConfigPsi == null) return;
-    addDependenciesFromRebarConfig(rebarConfigPsi);
+    addDependenciesFromRebarConfig(rebarConfigPsi, isDependencyApp);
     addIncludePathsFromRebarConfig(rebarConfigPsi);
     addParseTransformsFromRebarConfig(rebarConfigPsi);
   }
@@ -146,8 +146,8 @@ public final class ImportedOtpApp {
     });
   }
 
-  private void addDependenciesFromRebarConfig(ErlangFile rebarConfig) {
-    myDeps.addAll(RebarConfigUtil.getDependencyAppNames(rebarConfig));
+  private void addDependenciesFromRebarConfig(ErlangFile rebarConfig, boolean isDependencyApp) {
+    myDeps.addAll(RebarConfigUtil.getDependencyAppNames(rebarConfig, isDependencyApp));
   }
 
   private void addIncludePathsFromRebarConfig(ErlangFile rebarConfig) {

@@ -17,18 +17,22 @@
 package org.intellij.erlang.search;
 
 import com.intellij.lang.HelpID;
+import com.intellij.lang.cacheBuilder.VersionedWordsScanner;
 import com.intellij.lang.cacheBuilder.WordOccurrence;
 import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.ElementDescriptionLocation;
 import com.intellij.psi.ElementDescriptionUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.usageView.UsageViewLongNameLocation;
 import com.intellij.usageView.UsageViewNodeTextLocation;
 import com.intellij.usageView.UsageViewTypeLocation;
+import com.intellij.util.Processor;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -36,21 +40,32 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @Override
   public WordsScanner getWordsScanner() {
-    return (fileText, processor) -> {
-      ErlangLexer lexer = new ErlangLexer(null);
-      lexer.start(fileText);
-      IElementType tokenType;
-      while ((tokenType = lexer.getTokenType()) != null) {
-        //TODO process occurrences in string literals and comments
-        if (tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR) {
-          int tokenStart = lexer.getTokenStart();
-          for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
-            int start = tokenStart + wordRange.getStartOffset();
-            int end = tokenStart + wordRange.getEndOffset();
-            processor.process(new WordOccurrence(fileText, start, end, WordOccurrence.Kind.CODE));
+    return new VersionedWordsScanner() {
+      @Override
+      public void processWords(@NotNull CharSequence fileText, @NotNull Processor<? super WordOccurrence> processor) {
+        ErlangLexer lexer = new ErlangLexer(null);
+        lexer.start(fileText);
+        IElementType tokenType;
+        while ((tokenType = lexer.getTokenType()) != null) {
+          //TODO process occurrences in comments
+          WordOccurrence.Kind kind = tokenType == ErlangTypes.ERL_ATOM_NAME || tokenType == ErlangTypes.ERL_VAR ? WordOccurrence.Kind.CODE :
+                                     tokenType == ErlangTypes.ERL_STRING ? WordOccurrence.Kind.LITERALS :
+                                     null;
+          if (kind != null) {
+            int tokenStart = lexer.getTokenStart();
+            for (TextRange wordRange : StringUtil.getWordIndicesIn(lexer.getTokenText())) {
+              int start = tokenStart + wordRange.getStartOffset();
+              int end = tokenStart + wordRange.getEndOffset();
+              processor.process(new WordOccurrence(fileText, start, end, kind));
+            }
           }
+          lexer.advance();
         }
-        lexer.advance();
+      }
+
+      @Override
+      public int getVersion() {
+        return 1;
       }
     };
   }
@@ -61,6 +76,7 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
       || o instanceof ErlangRecordDefinition || o instanceof ErlangModule
       || o instanceof ErlangMacrosDefinition || o instanceof ErlangTypedExpr
       || o instanceof ErlangTypeDefinition || o instanceof ErlangQAtom
+      || o instanceof ErlangMacroLayerHeaderTarget
       ;
   }
 
@@ -72,18 +88,36 @@ public class ErlangFindUsagesProvider implements FindUsagesProvider {
   @NotNull
   @Override
   public String getType(@NotNull PsiElement element) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewTypeLocation.INSTANCE);
+    return describe(element, UsageViewTypeLocation.INSTANCE);
+  }
+
+  /**
+   * For an element no description provider knows (a bare leaf), the platform's default description asks this
+   * provider again, which recursed until StackOverflowError. Break the cycle: the inner call answers "".
+   */
+  private static final ThreadLocal<Boolean> DESCRIBING = new ThreadLocal<>();
+
+  @NotNull
+  private static String describe(@NotNull PsiElement element, @NotNull ElementDescriptionLocation location) {
+    if (DESCRIBING.get() != null) return "";
+    DESCRIBING.set(Boolean.TRUE);
+    try {
+      return ElementDescriptionUtil.getElementDescription(element, location);
+    }
+    finally {
+      DESCRIBING.remove();
+    }
   }
 
   @NotNull
   @Override
   public String getDescriptiveName(@NotNull PsiElement element) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewLongNameLocation.INSTANCE);
+    return describe(element, UsageViewLongNameLocation.INSTANCE);
   }
 
   @NotNull
   @Override
   public String getNodeText(@NotNull PsiElement element, boolean useFullName) {
-    return ElementDescriptionUtil.getElementDescription(element, UsageViewNodeTextLocation.INSTANCE);
+    return describe(element, UsageViewNodeTextLocation.INSTANCE);
   }
 }

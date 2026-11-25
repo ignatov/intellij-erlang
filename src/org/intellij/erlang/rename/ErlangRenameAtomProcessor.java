@@ -16,14 +16,17 @@
 
 package org.intellij.erlang.rename;
 
+import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.refactoring.listeners.RefactoringElementListener;
 import com.intellij.refactoring.rename.BindablePsiReference;
 import com.intellij.refactoring.rename.RenamePsiElementProcessor;
 import com.intellij.refactoring.rename.RenameUtil;
+import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.usageView.UsageInfo;
 import com.intellij.util.IncorrectOperationException;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +36,23 @@ public class ErlangRenameAtomProcessor extends RenamePsiElementProcessor {
   @Override
   public boolean canProcessElement(@NotNull PsiElement element) {
     return element instanceof ErlangQAtom;
+  }
+
+  /**
+   * An atom inside a macro that names something only the macro's expansion makes (a function, record, field
+   * or type): the rename takes that name, as from its uses. When the macro layer cannot tell yet, the rename is refused.
+   */
+  @Override
+  public @Nullable PsiElement substituteElementToRename(@NotNull PsiElement element, @Nullable Editor editor) {
+    PsiElement target = ErlangMacroLayer.renameTargetOfMacroToken(element);
+    if (target == null) refuseUntilTheMacroLayerIsReady(element, editor);
+    return target;
+  }
+
+  static void refuseUntilTheMacroLayerIsReady(@NotNull PsiElement element, @Nullable Editor editor) {
+    CommonRefactoringUtil.showErrorHint(element.getProject(), editor,
+                                        "The macro expansion of this file is not ready yet. Wait for the highlighting to finish and try again.",
+                                        "Rename", null);
   }
 
   @Override

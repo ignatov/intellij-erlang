@@ -29,9 +29,12 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuickFix {
   public static final String FUNCTION_BODY_DEFAULT_TEXT = "erlang:error(not_implemented).";
@@ -66,6 +69,7 @@ public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuick
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     int textOffset = file.getLastChild().getTextRange().getEndOffset();
     TemplateManager templateManager = TemplateManager.getInstance(project);
     Template template = templateManager.createTemplate("", "");
@@ -118,7 +122,7 @@ public class ErlangCreateFunctionQuickFix implements IntentionAction, LocalQuick
 
     @NotNull
     public String getName() {
-      return myName;
+      return Objects.requireNonNullElse(ErlangPsiImplUtil.toAtomName(myName), myName);
     }
 
     @NotNull

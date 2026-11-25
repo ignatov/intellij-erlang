@@ -18,6 +18,9 @@ package org.intellij.erlang.formatter;
 
 import com.intellij.formatting.Indent;
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.tree.IElementType;
@@ -85,7 +88,11 @@ public class ErlangIndentProcessor {
     }
 
     if ((parentType == ERL_GUARD || parentType == ERL_CLAUSE_GUARD && elementType == ERL_WHEN) && grandfatherType != ERL_IF_CLAUSE) {
-      return Indent.getNormalIndent();
+      ASTNode clauseGuard = parentType == ERL_GUARD ? grandfather : parent;
+      boolean inArgumentList = clauseGuard != null && clauseGuard.getTreeParent() != null &&
+                               clauseGuard.getTreeParent().getElementType() == ERL_ARGUMENT_LIST;
+      int guardIndentSize = myErlangSettings.GUARD_INDENT_SIZE;
+      return guardIndentSize >= 0 && !inArgumentList ? Indent.getSpaceIndent(guardIndentSize) : Indent.getNormalIndent();
     }
     if (parentType == ERL_RECORD_TUPLE) {
       // todo: not a smart solution
@@ -125,13 +132,74 @@ public class ErlangIndentProcessor {
     if (parent.getPsi() instanceof ErlangListOpExpression && (grandfather == null || grandfather.getPsi() instanceof ErlangExpression)) {
       return Indent.getNormalIndent();
     }
+    if (parentType == ERL_TOP_TYPE && prevSibling != null) {
+      return getTopTypeContinuationIndent(parent);
+    }
+    if (elementType == ERL_TOP_TYPE && parentType == ERL_TYPE_DEFINITION) {
+      return Indent.getNormalIndent();
+    }
     if (parentType == ERL_PREFIX_EXPRESSION) {
       return Indent.getNoneIndent();
     }
     if (parent.getPsi() instanceof ErlangExpression && (BIN_OPERATORS.contains(elementType) || BIN_OPERATORS.contains(prevSiblingElementType))) {
       return Indent.getNormalIndent();
     }
+    if (parentType == ERL_FUNCTION && (elementType == ERL_DOT || elementType == ERL_SEMI) && isPrecededByComma(node)) {
+      return Indent.getNormalIndent();
+    }
     return Indent.getNoneIndent();
+  }
+
+  /**
+   * Whether the code before the node ends with a comma, as in {@code ok,<caret>.} while the next expression
+   * of a clause body is being typed.
+   */
+  private static boolean isPrecededByComma(@NotNull ASTNode node) {
+    PsiElement prevLeaf = PsiTreeUtil.prevVisibleLeaf(node.getPsi());
+    while (prevLeaf instanceof PsiComment) {
+      prevLeaf = PsiTreeUtil.prevVisibleLeaf(prevLeaf);
+    }
+    return prevLeaf != null && prevLeaf.getNode().getElementType() == ERL_COMMA;
+  }
+
+  /**
+   * Indent of the lines of a multi-line type union after its first member. The indent is relative to the line
+   * where the union starts: if the union, or the list item that holds it, starts a line, the union lines are
+   * aligned with it; otherwise they get the indent the item itself would get on a new line.
+   */
+  @NotNull
+  private Indent getTopTypeContinuationIndent(@NotNull ASTNode topType) {
+    ASTNode item = topType;
+    ASTNode container = item.getTreeParent();
+    while (true) {
+      if (startsLine(item) || isForcedToNewLine(item)) return Indent.getNoneIndent();
+      if (container == null || isTopTypeContainer(container.getElementType())) break;
+      item = container;
+      container = item.getTreeParent();
+    }
+    IElementType containerType = container != null ? container.getElementType() : null;
+    boolean containerNormal = ErlangFormattingBlock.isContainerNormal(containerType);
+    boolean containerContinuation = ErlangFormattingBlock.isContainerContinuation(containerType, containerNormal);
+    return containerContinuation ? Indent.getContinuationIndent() : Indent.getNormalIndent();
+  }
+
+  /**
+   * Whether the formatter itself moves the node to a new line, which {@link #startsLine} does not see yet.
+   */
+  private boolean isForcedToNewLine(@NotNull ASTNode node) {
+    if (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.DO_NOT_FORCE) return false;
+    ASTNode prevLeaf = FormatterUtil.getPreviousNonWhitespaceLeaf(node);
+    return prevLeaf != null && prevLeaf.getElementType() == ERL_ARROW;
+  }
+
+  static boolean isTopTypeContainer(@NotNull IElementType type) {
+    return type == ERL_TYPE_DEFINITION || needIndent(type) ||
+      ErlangFormattingBlock.isContainerNormal(type) || ErlangFormattingBlock.isContainerContinuation(type, false);
+  }
+
+  static boolean startsLine(@NotNull ASTNode node) {
+    PsiElement prevLeaf = PsiTreeUtil.prevLeaf(node.getPsi());
+    return prevLeaf == null || prevLeaf instanceof PsiWhiteSpace && prevLeaf.textContains('\n');
   }
 
   private static boolean needIndent(@Nullable IElementType type) {

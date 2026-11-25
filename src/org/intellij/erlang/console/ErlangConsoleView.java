@@ -24,7 +24,10 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
@@ -42,6 +45,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class ErlangConsoleView extends LanguageConsoleImpl {
+  private static final Key<Boolean> CONSOLE_VARIABLE = Key.create("ERLANG_CONSOLE_VARIABLE");
+
   @Nullable private ConsoleHistoryController myHistoryController;
   @Nullable private OutputStreamWriter myProcessInputWriter;
 
@@ -52,6 +57,10 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     PsiFile originalFile = getFile().getOriginalFile();
     originalFile.putUserData(ErlangPsiImplUtil.ERLANG_CONSOLE, this);
     originalFile.putUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT, new HashMap<>());
+  }
+
+  public static boolean isConsoleVariable(@NotNull PsiElement element) {
+    return element.getUserData(CONSOLE_VARIABLE) != null;
   }
 
   @Override
@@ -91,6 +100,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     EditorEx consoleEditor = getConsoleEditor();
     Document editorDocument = consoleEditor.getDocument();
     String text = editorDocument.getText();
+    PsiDocumentManager.getInstance(getProject()).commitDocument(editorDocument);
 
     final Map<String, ErlangQVar> context = getFile().getOriginalFile().getUserData(ErlangVarProcessor.ERLANG_VARIABLE_CONTEXT);
     if (context != null) { // todo: process only successful statements
@@ -98,7 +108,11 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
         @Override
         public void visitQVar(@NotNull ErlangQVar o) {
           String name = o.getName();
-          if (!context.containsKey(name)) context.put(name, o);
+          if (!context.containsKey(name)) {
+            ErlangQVar copy = (ErlangQVar) o.copy();
+            copy.putUserData(CONSOLE_VARIABLE, Boolean.TRUE);
+            context.put(name, copy);
+          }
         }
 
         @Override
@@ -110,6 +124,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
       });
     }
 
+    ErlangConsoleViewDirectory.getInstance().markUsed(this);
     addToHistoryInner(new TextRange(0, text.length()), consoleEditor, true, true);
     myHistoryController.addToHistory(text);
     for (String line : text.split("\n")) {

@@ -25,11 +25,14 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -78,6 +81,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private final ErlangCodeStyleSettings myErlangSettings;
   private final SpacingBuilder mySpacingBuilder;
   private List<Block> mySubBlocks;
+  @Nullable private Alignment myItemAlignment;
 
   public ErlangFormattingBlock(@NotNull ASTNode node,
                                @Nullable Alignment alignment,
@@ -112,7 +116,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private List<Block> buildSubBlocks() {
     final List<Block> blocks = new ArrayList<>();
     final Alignment baseAlignment = Alignment.createAlignment(!(myNode.getPsi() instanceof ErlangFakeBinaryExpression));
-    final Alignment baseAlignment2 = Alignment.createAlignment(true);
+    final Alignment baseAlignment2 = Alignment.createAlignment();
     final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
     final Ref<Wrap> chopDownIfLongWrap = new Ref<>();
 
@@ -268,7 +272,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
     else {
       wrap = Wrap.createWrap(wrapType, true);
     }
-    return new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder, binaryExpressionIndex);
+    ErlangFormattingBlock block =
+      new ErlangFormattingBlock(child, alignment, alignmentStrategy, wrap, mySettings, myErlangSettings, mySpacingBuilder, binaryExpressionIndex);
+    block.myItemAlignment = ErlangIndentProcessor.isTopTypeContainer(parent.getElementType()) ? alignment : myItemAlignment;
+    return block;
   }
 
   @Nullable
@@ -282,10 +289,29 @@ public class ErlangFormattingBlock extends AbstractBlock {
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.CALL_PARAMETERS_WRAP);
     }
+    if (parentType == ERL_ARGUMENT_DEFINITION_LIST) {
+      if (!areFunctionParametersWrapped(parent)) return null;
+      boolean wrapped = myErlangSettings.NEW_LINE_BEFORE_COMMA ? node.getElementType() == ERL_COMMA : nodePsi instanceof ErlangArgumentDefinition;
+      // a fun head broken right after "fun(" pushes the aligned blocks around the fun far to the right
+      if (wrapped && myErlangSettings.ALIGN_MULTILINE_BLOCK && parentPsi.getParent() instanceof ErlangFunClause &&
+        PsiTreeUtil.getPrevSiblingOfType(nodePsi, ErlangArgumentDefinition.class) == null) {
+        return null;
+      }
+      return wrapped ? WrappingUtil.getWrapType(mySettings.METHOD_PARAMETERS_WRAP) : null;
+    }
     if (parentPsi instanceof ErlangFakeBinaryExpression && nodePsi instanceof ErlangExpression) {
       return WrappingUtil.getWrapType(mySettings.BINARY_OPERATION_WRAP);
     }
     return null;
+  }
+
+  private boolean areFunctionParametersWrapped(@NotNull ASTNode argumentDefinitionList) {
+    if (mySettings.METHOD_PARAMETERS_WRAP == CommonCodeStyleSettings.DO_NOT_WRAP) return false;
+    if (!(argumentDefinitionList.getPsi().getParent() instanceof ErlangFunClause)) return true;
+    // aligned fun clauses would anchor wrapped parameters to the clause column,
+    // and aligned commas of a wrapped comma-first fun head cannot be aligned ("Can't align block")
+    return !myErlangSettings.ALIGN_FUN_CLAUSES &&
+      !(myErlangSettings.NEW_LINE_BEFORE_COMMA && myErlangSettings.ALIGN_MULTILINE_BLOCK);
   }
 
   @Nullable
@@ -306,6 +332,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
+      if ((childType == ERL_BRACKET_RIGHT || childType == ERL_BIN_END) && myErlangSettings.ALIGN_MULTILINE_BLOCK &&
+        FormatterUtil.isPrecededBy(child, ERL_COMMA, TokenType.ERROR_ELEMENT)) {
+        return baseAlignment; // the closing bracket takes the place of the element that is being typed after the comma
+      }
       if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END &&
         childType != ERL_COMMA && childType != ERL_OP_OR) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
@@ -326,6 +356,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
       }
     }
     if (myErlangSettings.ALIGN_GUARDS && parentType == ERL_GUARD && childType != ERL_COMMA) return baseAlignment;
+    if (myErlangSettings.ALIGN_MULTILINE_BLOCK && parentType == ERL_TOP_TYPE && child != parent.getFirstChildNode() &&
+        ErlangIndentProcessor.startsLine(child)) {
+      // the lines of a type union are aligned with the aligned element that holds the union
+      return myItemAlignment;
+    }
     return null;
   }
 
@@ -392,6 +427,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
         return Spacing.createDependentLFSpacing(spaceAroundArrow, spaceAroundArrow, dependency, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
       }
       return Spacing.createSpacing(spaceAroundArrow, spaceAroundArrow, 1, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+    }
+    //comma first function parameters are wrapped before the commas, so a line break after a comma is not kept
+    if (myErlangSettings.NEW_LINE_BEFORE_COMMA && myNode.getElementType() == ERL_ARGUMENT_DEFINITION_LIST &&
+      areFunctionParametersWrapped(myNode) &&
+      child1 instanceof ErlangFormattingBlock && ((ErlangFormattingBlock) child1).getNode().getElementType() == ERL_COMMA &&
+      child2 instanceof ErlangFormattingBlock && ((ErlangFormattingBlock) child2).getNode().getPsi() instanceof ErlangArgumentDefinition) {
+      int spaceAfterComma = mySettings.SPACE_AFTER_COMMA ? 1 : 0;
+      return Spacing.createSpacing(spaceAfterComma, spaceAfterComma, 0, false, 0);
     }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
@@ -487,7 +530,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
 
     if (type == ERL_MAYBE_MATCH_EXPRS) return Indent.getNoneIndent();
 
-    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && newChildIndex == 1) return Indent.getNoneIndent();
+    if (type == ERL_TRY_EXPRESSIONS_CLAUSE && (newChildIndex == 1 || startsLine(myNode))) return Indent.getNoneIndent();
 
     if (BLOCKS_TOKEN_SET.contains(type) || type == ERL_TYPED_RECORD_FIELDS) {
       return Indent.getNormalIndent(false);
@@ -508,8 +551,37 @@ public class ErlangFormattingBlock extends AbstractBlock {
     return null;
   }
 
+  private static boolean startsLine(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
+  }
+
+  /**
+   * A function whose last child is a comma is one whose clause body the parser's recovery cut short (as at
+   * {@code setup?PAR,} with {@code -define(PAR, ()).}): a new line after it continues the body.
+   */
+  @Override
+  public boolean isIncomplete() {
+    return super.isIncomplete() || endsInRecoveredComma();
+  }
+
+  private boolean endsInRecoveredComma() {
+    if (myNode.getElementType() != ERL_FUNCTION) return false;
+    ASTNode last = myNode.getLastChildNode();
+    return last != null && last.getElementType() == ERL_COMMA;
+  }
+
+  /** With an indent, the function is the rest of a body that the recovery split: the new line keeps its column. */
+  private static boolean startsAtColumnZero(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && StringUtil.endsWithChar(prevLeaf.getChars(), '\n');
+  }
+
   @Nullable
   private Indent getChildIndentByPreviousChild(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_COMMA) {
+      return startsAtColumnZero(myNode) ? Indent.getNormalIndent() : Indent.getNoneIndent();
+    }
     if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
 
     if (type == ERL_SEMI || type == ERL_OF && newChildIndex == 3)  {

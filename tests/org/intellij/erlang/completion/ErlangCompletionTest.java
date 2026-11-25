@@ -20,11 +20,15 @@ import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementPresentation;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.util.ArrayUtilRt;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.index.ErlangModuleIndex;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -117,6 +121,8 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     }
   }
 
+  public void testVariablesFromCaseHead() { doTestInclude("foo() -> case V = 1 of _ -> <caret> end.", "V"); }
+  public void testNoFunVariablesFromCaseHead() { doTestVariants("foo() -> case (fun(Yy) -> Zz = Yy end)(1) of _ -> <caret> end.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "Yy", "Zz"); }
   public void testFunctions() {
     doTestInclude(
       """
@@ -160,6 +166,13 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "bar(A)-> #foo{<caret>}", "id", "two");
   }
   
+  public void testRecordFieldsFromTypedMacro() {
+    doTestEquals(
+      "-define(BASE(M), module = M :: atom(), id :: atom()).\n" +
+      "-record(foo, {?BASE(m), two :: integer()}).\n" +
+      "bar(A)-> #foo{<caret>}", "module", "id", "two");
+  }
+
   public void testRecordFields2() {
     doTestEquals(
       "-record(foo, {id, two}).\n" +
@@ -237,6 +250,28 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testModuleQualifiedNativeRecordFields() {
     addNativeRecordRemoteModule();
     doTestEquals("bar() -> #geometry:point{<caret>}", "x", "y");
+  }
+
+  public void testModuleQualifiedNativeRecordFieldsFromInclude() {
+    myFixture.addFileToProject("shapes.hrl", "-record #circle{radius = 0}.\n");
+    myFixture.addFileToProject(
+      "shapes.erl",
+      """
+        -module(shapes).
+        -include("shapes.hrl").
+        -export_record([circle]).
+        """);
+    doTestEquals("bar() -> #shapes:circle{<caret>}", "radius");
+  }
+
+  public void testRecordsFromInclude() {
+    myFixture.addFileToProject("records.hrl", "-record(included_record, {a}).\n");
+    doTestInclude("-include(\"records.hrl\").\nbar() -> #<caret>", "included_record");
+  }
+
+  public void testMacrosFromInclude() {
+    myFixture.addFileToProject("macros.hrl", "-define(INCLUDED_MACRO, 1).\n");
+    doTestInclude("-include(\"macros.hrl\").\nbar() -> ?<caret>", "INCLUDED_MACRO");
   }
 
   private void addNativeRecordRemoteModule() {
@@ -333,6 +368,22 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
   }
 
+  public void testLocalTypeWithTwoAritiesHasDistinctPresentations() {
+    myFixture.configureByText("a.erl", """
+      -type tree() :: tree(any()).
+      -type tree(A) :: {A, [tree(A)]}.
+      -type t() :: tre<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    List<String> presentations = ContainerUtil.mapNotNull(elements, e -> {
+      if (!e.getLookupString().equals("tree")) return null;
+      LookupElementPresentation p = LookupElementPresentation.renderElement(e);
+      return p.getItemText() + "|" + p.getTailText() + "|" + p.getTypeText();
+    });
+    assertEquals(2, presentations.size());
+    assertEquals(presentations.toString(), 2, new HashSet<>(presentations).size());
+  }
+
   public void testNoUndefinedOrDeprecatedBuiltInTypes() {
     doTestVariants("-type foo() :: <caret>.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "improper_list", "bool");
   }
@@ -351,6 +402,138 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         -type foo() :: <caret>atom().
         -type buz() :: string().
         -type tes() :: <caret>)""", "foo", "buz", "atom", "no_return");
+  }
+
+  public void testModuleQualifiedTypesInSpecResult() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> other:<caret>.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInSpecArgument() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f(other:<caret>) -> ok.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTypeDefinition() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: [other:<caret>].", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInRecordField() {
+    addTypesRemoteModule();
+    doTestEquals("-record(r, {a :: other:<caret>}).", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTuple() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> {ok, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInUnion() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f() -> ok | {error, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInSpecArgument() {
+    addTypesRemoteModule();
+    doTestEquals("-spec f({ok, other:<caret>}) -> ok.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInTypeDefinition() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: {ok, other:<caret>}.", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesInTupleInRecordField() {
+    addTypesRemoteModule();
+    doTestEquals("-record(r, {a :: {ok, other:<caret>}}).", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypesExportedInHeader() {
+    myFixture.addFileToProject("other3.hrl", """
+      -export_type([h/0, h2/0]).
+      -type h() :: ok.
+      -type h2() :: ok.
+      -type hp() :: ok.
+      """);
+    myFixture.addFileToProject("other3.erl", """
+      -module(other3).
+      -include("other3.hrl").
+      """);
+    doTestEquals("-spec f() -> other3:h<caret>.", "h", "h2");
+  }
+
+  public void testModuleQualifiedTypesOfOwnModuleInHeader() {
+    myFixture.addFileToProject("own.erl", """
+      -module(own).
+      -include("own.hrl").
+      """);
+    myFixture.configureByText("own.hrl", """
+      -type hpriv() :: ok.
+      -type hpriv2() :: ok.
+      -spec f() -> own:hp<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "hpriv", "hpriv2");
+  }
+
+  public void testModuleQualifiedTypesOfUnknownModule() {
+    doTestVariants("""
+      -type loc() :: ok.
+      -type loc2() :: ok.
+      -spec f() -> nosuch:<caret>.""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "loc", "loc2");
+  }
+
+  public void testModuleQualifiedTypesOfUnknownModuleWithPrefix() {
+    doTestVariants("""
+      -type loc() :: ok.
+      -type loc2() :: ok.
+      -spec f() -> nosuch:l<caret>.""", CompletionType.BASIC, 1, CheckType.EXCLUDES, "loc", "loc2");
+  }
+
+  public void testModuleQualifiedTypesWithPrefix() {
+    addTypesRemoteModule();
+    doTestEquals("-type t() :: other:p<caret>", "pub", "pub_param");
+  }
+
+  public void testModuleQualifiedTypeInsertion() {
+    addTypesRemoteModule();
+    doCheckResult("-spec f() -> other:pub_p<caret>.", "-spec f() -> other:pub_param(<caret>).");
+  }
+
+  public void testModuleQualifiedTypesOfOwnModule() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> own:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacro() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacroWithPrefix() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:p<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  private void addTypesRemoteModule() {
+    myFixture.addFileToProject("other.erl", """
+      -module(other).
+      -export_type([pub/0, pub_param/1]).
+      -type pub() :: atom().
+      -type pub_param(T) :: [T].
+      -type pub_priv() :: integer().
+      """);
   }
 
   public void testBif() {
@@ -463,6 +646,26 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("-export([f<caret>]). foo(A, B, C) -> ok.", "-export([foo/3<caret>]). foo(A, B, C) -> ok.");
   }
 
+  public void testExportFunctionReplacesWrongArity() {
+    doCheckResult("-export([fo<caret>/5]). foo(A) -> A.", "-export([foo/1<caret>]). foo(A) -> A.");
+  }
+
+  public void testExportFunctionReplacesWrongArityAfterSpace() {
+    doCheckResult("-export([fo<caret> /5]). foo(A) -> A.", "-export([foo/1<caret>]). foo(A) -> A.");
+  }
+
+  public void testOptionalCallbackTupleFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\nfoobar(X) -> X.", "-optional_callbacks([{foobar, 1<caret>}]).\nfoobar(X) -> X.");
+  }
+
+  public void testOptionalCallbackTupleQuotedFunction() {
+    doCheckResult("-optional_callbacks([{fo<caret>, 2}]).\n'foo bar'(X) -> X.", "-optional_callbacks([{'foo bar', 1<caret>}]).\n'foo bar'(X) -> X.");
+  }
+
+  public void testOptionalCallbackSlashFunction() {
+    doCheckResult("-optional_callbacks([fo<caret>]).\nfoobar(X) -> X.", "-optional_callbacks([foobar/1<caret>]).\nfoobar(X) -> X.");
+  }
+
   public void testLager() {
     doTestInclude("foo() -> lager:<caret>", "debug", "info", "notice", "warning", "error", "critical", "alert", "emergency");
   }
@@ -478,6 +681,41 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testModuleCompletionContainsModule() {
     myFixture.configureByFiles("module-completion/use_module.erl", "module-completion/test_module.erl");
     doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
+  }
+
+  public void testSecondBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      -export([all/0, small_order/0, big_order/0]).
+
+      small_order() -> ok.
+      big_order() -> ok.
+
+      all() ->
+        small_order(),
+        big_order(),
+        sma<caret>.""", CompletionType.BASIC, 2, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testThirdBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> small.
+      all() -> sma<caret>.""", CompletionType.BASIC, 3, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedElsewhereInFile() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma.
+      all() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedInAnotherFile() {
+    myFixture.addFileToProject("other.erl", "-module(other).\nf() -> sma.");
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
   }
 
   public void testModuleCompletionContainsFunctions() {
@@ -578,6 +816,15 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> test_modul<caret>", "foo() -> test_module:");
   }
 
+  public void testNoDeletedModulesInModuleCompletion() {
+    PsiFile deleted = myFixture.addFileToProject("deleted_module_1262.erl", "-module(deleted_module_1262).");
+    assertTrue(ErlangModuleIndex.getNames(getProject()).contains("deleted_module_1262"));
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> deleted.delete());
+    myFixture.configureByText("a.erl", "foo() -> deleted_mod<caret>");
+    myFixture.completeBasic();
+    assertEquals("foo() -> deleted_mod", myFixture.getEditor().getDocument().getText());
+  }
+
   public void testModuleCompletionWithoutColon() {
     myFixture.configureByFiles("module-completion/test_module.erl");
     doCheckResult("foo() -> bar(test_modul<caret>", "foo() -> bar(test_module");
@@ -626,6 +873,106 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     doCheckResult("foo() -> fun <caret>", "foo() -> fun foo/0", Lookup.NORMAL_SELECT_CHAR);
   }
 
+  public void testRemoteFunctionExpressionQuotedWithStartQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'те<caret>'", "тест", "foo() -> fun mymodule:'тест'/3<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithBothQuotesAscii() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:dec_<caret>'", "dec_D-1", "foo() -> fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionCallQuotedWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:dec_<caret>'", "dec_D-1", "foo() -> mymodule:'dec_D-1'(<caret>)");
+  }
+
+  public void testModuleCompletionQuotedWithEndQuote() {
+    myFixture.configureByFiles("module-completion/quoted-behaviour.erl");
+    doCheckResultWithItem("foo() -> quo<caret>'", "quoted-behaviour", "foo() -> 'quoted-behaviour':<caret>");
+  }
+
+  public void testRemoteFunctionExpressionPlainNameWithBothQuotes() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymodule:'ba<caret>'.", "bar", "foo() -> fun mymodule:'bar'/1<caret>.");
+  }
+
+  public void testRemoteFunctionCallPlainNameWithEndQuote() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:ba<caret>'.", "bar", "foo() -> mymodule:'bar'(<caret>).");
+  }
+
+  public void testModuleCompletionPlainNameWithEndQuote() {
+    myFixture.configureByText("plain_module.erl", "-module(plain_module).");
+    doCheckResultWithItem("foo() -> plain_mod<caret>'.", "plain_module", "foo() -> 'plain_module':<caret>.");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> mymod<caret>'dec_D-1'(1, 2).", "mymodule", "foo() -> mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  public void testModuleCompletionInFunExpressionBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> fun mymod<caret>'dec_D-1'/2.", "mymodule", "foo() -> fun mymodule:<caret>'dec_D-1'/2.");
+  }
+
+  public void testRemoteFunctionCallBeforeQuotedAtom() {
+    doCheckQuotedRemoteFunction("foo() -> mymodule:ba<caret>'my-atom'.", "bar", "foo() -> mymodule:bar(<caret>)'my-atom'.");
+  }
+
+  public void testLocalFunctionCallBeforeQuotedAtom() {
+    doCheckResultWithItem("bar() -> ok. foo() -> ba<caret>'my-atom'.", "bar", "bar() -> ok. foo() -> bar()<caret>'my-atom'.");
+  }
+
+  public void testLocalFunctionCallAfterQuotedAtom() {
+    doCheckResultWithItem("bar() -> ok. foo() -> 'a'ba<caret>", "bar", "bar() -> ok. foo() -> 'a'bar()<caret>");
+  }
+
+  public void testRemoteFunctionExpressionAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testRemoteFunctionExpressionWithBothQuotesAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", fun mymodule:'те<caret>'.", "тест",
+                                "foo() -> X = \"a\nit's\", fun mymodule:'тест'/3<caret>.");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineString() {
+    doCheckQuotedRemoteFunction("foo() -> X = \"a\nit's\", mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = \"a\nit's\", mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  public void testRemoteFunctionExpressionAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', fun mymodule:'dec_<caret>", "dec_D-1",
+                                "foo() -> X = 'a\nb', fun mymodule:'dec_D-1'/2<caret>");
+  }
+
+  public void testModuleCompletionBeforeQuotedAtomAfterMultiLineAtom() {
+    doCheckQuotedRemoteFunction("foo() -> X = 'a\nb', mymod<caret>'dec_D-1'(1, 2).", "mymodule",
+                                "foo() -> X = 'a\nb', mymodule:<caret>'dec_D-1'(1, 2).");
+  }
+
+  private void doCheckQuotedRemoteFunction(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("mymodule.erl",
+                              "-module(mymodule). -export(['тест'/3, 'dec_D-1'/2, bar/1]). 'тест'(A, B, C) -> ok. 'dec_D-1'(A, B) -> ok. bar(A) -> ok.");
+    doCheckResultWithItem(before, item, after);
+  }
+
+  private void doCheckResultWithItem(@NotNull String before, @NotNull String item, @NotNull String after) {
+    myFixture.configureByText("a.erl", before);
+    if (myFixture.completeBasic() != null) {
+      LookupElement element = ContainerUtil.find(myFixture.getLookupElements(), e -> item.equals(e.getLookupString()));
+      assertNotNull(element);
+      myFixture.getLookup().setCurrentItem(element);
+      myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR);
+    }
+    myFixture.checkResult(after);
+  }
+
   public void test211() {
     doTestInclude("-module(test, [Id, Name::string()]). foo() -> <caret>", "Id", "Name");
   }
@@ -669,6 +1016,85 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.EQUALS, "B4", "B3", "g");
   }
 
+  public void testSmartIntegerProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerSumOfProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 1 + 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerProductWithCommentBeforeOperator() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 % two
+                          * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatDivisionWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 / 1,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatExcludesProductWithUnknownOperand() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N * 2,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.EXCLUDES, "B");
+  }
+
+  public void testSmartFloatProductOfUnknownOperandAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N*2.0,
+                      B2 = N * 2.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "B2", "C");
+  }
+
+  public void testSmartFloatProductOfIntegerAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """
@@ -681,6 +1107,39 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         new(Func, ClauseSpecs) -> ok.""",
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
+  }
+
+  public void testSmartSecondArgumentWithLowerArityOverload() {
+    doSmartTest(
+      """
+        -spec new(atom()) -> ok.
+        new(_) -> ok.
+        -spec new(atom(), string()) -> ok.
+        new(A, B) ->
+            Str = "",
+            Str2 = "",
+            new(atom, <caret>).""",
+      CheckType.INCLUDES, "Str", "Str2"
+    );
+  }
+
+  public void testSmartFirstArgumentWithZeroArityOverload() {
+    doSmartTest(
+      """
+        -spec foo() -> ok.
+        foo() -> ok.
+        -spec foo(integer()) -> ok.
+        foo(I) ->
+            B = 1,
+            B2 = 2,
+            foo(<caret>).""",
+      CheckType.INCLUDES, "B", "B2"
+    );
+  }
+
+  public void testSmartSecondArgumentOfBifWithLowerArityOverload() {
+    myFixture.configureByText("a.erl", "foo(N) -> spawn(N, <caret>).");
+    myFixture.complete(CompletionType.SMART);
   }
 
   public void testFunctionsFromCameCaseModule() {

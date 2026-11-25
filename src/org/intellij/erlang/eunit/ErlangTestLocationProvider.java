@@ -43,7 +43,9 @@ import java.util.regex.Pattern;
 public class ErlangTestLocationProvider implements SMTestLocator {
   public static final ErlangTestLocationProvider INSTANCE = new ErlangTestLocationProvider();
 
-  private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::(\\w+)(?::(-?\\d+))?)?$");
+  private static final Pattern LOCATION_PATTERN = Pattern.compile("^(\\w+)(?::([^:]+)(?::(-?\\d+))?)?$");
+  // the name that the compiler gives to a fun, for example -gen_test_/0-fun-1-
+  private static final Pattern GENERATED_FUNCTION_PATTERN = Pattern.compile("^-(.+?)/(\\d+)-.*-$");
 
   @NotNull
   @Override
@@ -77,9 +79,31 @@ public class ErlangTestLocationProvider implements SMTestLocator {
     return locations;
   }
 
+  /**
+   * The function named in the location hint of a test made by a fun, gen_test_/0 for
+   * eunit://g_tests:-gen_test_/0-fun-1-:5 whatever is now on line 5, or null for other hints.
+   */
+  @Nullable
+  public static ErlangFunction findGeneratingFunction(@NotNull Project project, @Nullable String locationUrl) {
+    String prefix = ErlangUnitRunConfigurationType.PROTOCOL + "://";
+    if (locationUrl == null || !locationUrl.startsWith(prefix)) return null;
+    Matcher matcher = LOCATION_PATTERN.matcher(locationUrl.substring(prefix.length()));
+    Matcher generated = matcher.matches() && matcher.group(2) != null ? GENERATED_FUNCTION_PATTERN.matcher(matcher.group(2)) : null;
+    if (generated == null || !generated.matches()) return null;
+    for (ErlangFile file : getErlangFiles(project, matcher.group(1))) {
+      ErlangFunction function = file.getFunction(generated.group(1), StringUtil.parseInt(generated.group(2), -1));
+      if (function != null) return function;
+    }
+    return null;
+  }
+
   @Nullable
   private static Location getTestLocation(Project project, ErlangFile file, String function, String line) {
     ErlangFunction f = ContainerUtil.getFirstItem(file.getFunctionsByName(function));
+    Matcher generated = f == null ? GENERATED_FUNCTION_PATTERN.matcher(function) : null;
+    if (generated != null && generated.matches()) {
+      f = file.getFunction(generated.group(1), StringUtil.parseInt(generated.group(2), -1));
+    }
     String fileText = file.getText();
     int lineNumber = StringUtil.parseInt(line, -1);
     if (f == null) return null;

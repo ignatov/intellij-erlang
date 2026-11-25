@@ -54,7 +54,7 @@ public abstract class RebarRunConfigurationBase extends ModuleBasedConfiguration
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-    return new RebarRunConfigurationEditorForm();
+    return new RebarRunConfigurationEditorForm(getProject());
   }
 
   @NotNull

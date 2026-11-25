@@ -20,9 +20,12 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
+import org.intellij.erlang.psi.ErlangMacrosBody;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.ErlangRecordRef;
+import org.intellij.erlang.psi.ErlangType;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangIntroduceRecordFix;
@@ -36,6 +39,9 @@ public class ErlangUnresolvedRecordInspection extends ErlangInspectionBase {
       @Override
       public void visitRecordRef(@NotNull ErlangRecordRef o) {
         if (o.getQAtom().getMacros() != null) return;
+        // a record type in a typed macro body is resolved where the macro is used (#933)
+        if (PsiTreeUtil.getParentOfType(o, ErlangType.class, true, ErlangMacrosBody.class) != null &&
+            PsiTreeUtil.getParentOfType(o, ErlangMacrosBody.class) != null) return;
         process(o, holder);
       }
 

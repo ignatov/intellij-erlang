@@ -64,6 +64,7 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
       for (PsiReference ref : all) {
         PsiElement refElement = ref.getElement();
         if (PsiTreeUtil.getParentOfType(refElement, ErlangSpecification.class) != null) continue;
+        if (isInside(refElement, allElementsToDelete)) continue;
         final boolean inExport = PsiTreeUtil.getParentOfType(refElement, ErlangExportFunction.class, false) != null;
         result.add(new SafeDeleteReferenceSimpleDeleteUsageInfo(refElement, element, inExport) {
           @Override
@@ -95,6 +96,13 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
     return null;
   }
 
+  private static boolean isInside(@NotNull PsiElement place, @NotNull PsiElement @NotNull [] ancestors) {
+    for (PsiElement ancestor : ancestors) {
+      if (PsiTreeUtil.isAncestor(ancestor, place, false)) return true;
+    }
+    return false;
+  }
+
   @Nullable
   @Override
   public Collection<PsiElement> getAdditionalElementsToDelete(@NotNull PsiElement element,
@@ -106,12 +114,6 @@ public class ErlangSafeDeleteProcessor extends SafeDeleteProcessorDelegateBase {
         return new SmartList<>(specification.getParent());
       }
     }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Collection<String> findConflicts(@NotNull PsiElement element, @NotNull PsiElement @NotNull [] allElementsToDelete) {
     return null;
   }
 
