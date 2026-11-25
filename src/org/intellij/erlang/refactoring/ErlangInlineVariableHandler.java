@@ -79,7 +79,7 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
           ASTNode replacementNode = null;
 
           if (expr instanceof ErlangMaxExpression) {
-            if (ErlangPsiImplUtil.getExpressionPrecedence(expr.getParent()) > ErlangPsiImplUtil.getExpressionPrecedence(rightWithoutParentheses)) {
+            if (needsParentheses(expr, rightWithoutParentheses)) {
               replacementNode = expr.replace(ErlangPsiImplUtil.wrapWithParentheses(rightWithoutParentheses)).getNode();
             }
             else {
@@ -105,6 +105,20 @@ public class ErlangInlineVariableHandler extends InlineActionHandler {
 
         assignment.delete();
       });
+  }
+
+  private static boolean needsParentheses(PsiElement usage, ErlangExpression value) {
+    PsiElement parent = usage.getParent();
+    int parentPrecedence = ErlangPsiImplUtil.getExpressionPrecedence(parent);
+    int valuePrecedence = ErlangPsiImplUtil.getExpressionPrecedence(value);
+    if (parentPrecedence != valuePrecedence) return parentPrecedence > valuePrecedence;
+    if (parent instanceof ErlangCompOpExpression || parent instanceof ErlangPrefixExpression) return true;
+    boolean isLeftOperand = PsiTreeUtil.getChildOfType(parent, ErlangExpression.class) == usage;
+    if (parent instanceof ErlangAdditiveExpression || parent instanceof ErlangMultiplicativeExpression) return !isLeftOperand;
+    if (parent instanceof ErlangListOpExpression || parent instanceof ErlangSendExpression || parent instanceof ErlangAssignmentExpression) {
+      return isLeftOperand;
+    }
+    return false;
   }
 
   private static PsiElement substituteFunctionCall(Project project, PsiElement variable, ErlangExpression variableValue) {
