@@ -31,7 +31,9 @@ import com.intellij.testFramework.fixtures.impl.CodeInsightTestFixtureImpl;
 import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.ErlangArgumentDefinition;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionClause;
+import org.intellij.erlang.psi.ErlangMaybeExpression;
 import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -190,6 +192,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
           case "28" -> ErlangSdkRelease.V_28_0;
           default -> ErlangSdkRelease.V_29_0;
         };
+        // the VFS may keep the children of the home from an earlier run, before the stubs of lists and maps were there
+        VirtualFile home = com.intellij.openapi.vfs.LocalFileSystem.getInstance().refreshAndFindFileByPath(sdkHome());
+        if (home != null) com.intellij.openapi.vfs.VfsUtil.markDirtyAndRefresh(false, true, true, home);
         return ErlangSdkType.createMockSdk(sdkHome(), r);
       }
     };
@@ -236,13 +241,22 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     ourSdkHome = env("PBT_SDK_HOME", mock);
     if (env("PBT_SDK_HOME") != null || root == null) return;
     try (var libs = Files.list(Paths.get(root, "lib"))) {
-      Path erts = libs.filter(d -> d.getFileName().toString().startsWith("erts-")).findFirst().orElse(null);
+      List<Path> dirs = libs.toList();
+      Path erts = dirs.stream().filter(d -> d.getFileName().toString().startsWith("erts-")).findFirst().orElse(null);
       Path erlang = erts == null ? null : erts.resolve("src/erlang.erl");
       if (erlang == null || !Files.isRegularFile(erlang)) return;
       Path home = Paths.get(env("PBT_WORK", "build/pbt/work")).toAbsolutePath().resolve("sdk-R" + ourSdkRelease);
       Path target = home.resolve("lib").resolve(erts.getFileName()).resolve("src/erlang.erl");
       Files.createDirectories(target.getParent());
       Files.copy(erlang, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      // stubs of the stdlib functions that the generator calls remotely and imports, so that they resolve; stubs and not
+      // the real files, whose parsing for the index would add to the coverage of the parser
+      Path stdlib = home.resolve("lib/stdlib-0/src");
+      Files.createDirectories(stdlib);
+      Files.writeString(stdlib.resolve("lists.erl"), "-module(lists).\n-export([reverse/1, member/2, seq/2]).\n" +
+                                                     "reverse(_) -> [].\nmember(_, _) -> false.\nseq(_, _) -> [].\n");
+      Files.writeString(stdlib.resolve("maps.erl"), "-module(maps).\n-export([get/2, put/3, size/1]).\n" +
+                                                    "get(_, _) -> ok.\nput(_, _, _) -> #{}.\nsize(_) -> 0.\n");
       ourSdkHome = home.toString() + "/";
     }
     catch (IOException ignored) {
@@ -833,6 +847,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
         }
       }
       else if (".".equals(t) && stack.isEmpty()) {
+        // the last clause of a function, without the dot
+        if (topItem > formStart && topItem < i) items.add(new int[]{topItem, i - 1});
         forms.add(new int[]{formStart, i});
         formStart = i + 1;
         topItem = i + 1;
@@ -1012,7 +1028,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
                   int line = doc.getLineNumber(offset);
                   Key key = Key.of(m.getValue(), line + 1, offset - doc.getLineStartOffset(line) + 1, matcher.group(1));
                   if (!view.warnings.containsKey(key)) {
-                    view.warnings.put(key, warnings ? place(file, offset) + relation(file, offset, key.kind, true) : "");
+                    view.warnings.put(key, warnings ? place(file, offset) + relation(file, offset, key.kind, true) + erlcQuirk(file, offset, key.kind)
+                                                    : "");
                   }
                   break;
                 }
@@ -1090,6 +1107,25 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       if (q.getText().equals(name)) return q.getTextRange().getStartOffset();
     }
     return offset;
+  }
+
+  /**
+   * erlc 29 reports no unused variable at all in a function with a {@code maybe} inside a clause of a case, if, receive
+   * or try ({@code f() -> X = 1, case ok of _ -> maybe ok end end.}): the plugin's unused variables there say so.
+   */
+  static String erlcQuirk(PsiFile file, int offset, String kind) {
+    if (!"unused_var".equals(kind)) return "";
+    PsiElement fn = PsiTreeUtil.getParentOfType(file.findElementAt(offset), ErlangFunction.class);
+    if (fn == null) return "";
+    for (PsiElement m : SyntaxTraverser.psiTraverser(fn).filter(ErlangMaybeExpression.class)) {
+      for (PsiElement p = m.getParent(); p != null && p != fn; p = p.getParent()) {
+        String n = psiName(p);
+        if (n.equals("CrClause") || n.equals("IfClause") || n.equals("TryClause") || n.equals("TryExpressionsClause") || n.equals("AfterClauseBody")) {
+          return " [erlc: maybe in a clause]";
+        }
+      }
+    }
+    return "";
   }
 
   /** The number of warnings that erlc and the plugin agree on, for the negative controls. */
@@ -1192,7 +1228,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       String cn = c == null ? "" : psiName(c);
       if (part == null) {
         if (data == null && DATA.containsKey(name)) data = DATA.get(name);
-        if ("AssignmentExpression".equals(name)) {
+        if ("AssignmentExpression".equals(name) || "MaybeMatchExpression".equals(name)) {
           assign = true;
           if (c != null && c == p.getFirstChild()) lhs = true;
         }
@@ -1216,6 +1252,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
             yield before != null && "after".equals(before.getText()) ? "after" : "body";
           }
           case "BeginEndExpression", "CatchExpression" -> "body";
+          case "MaybeExpression" -> "MaybeMatchExprs".equals(cn) ? "body" : null;
           default -> null;
         };
         if (part != null) clause = name;
@@ -1303,7 +1340,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       m.appendReplacement(sb, Matcher.quoteReplacement(rep));
     }
     m.appendTail(sb);
-    return sb.toString();
+    // erl_parse: "head mismatch: function f1 with arities 1 and 0 is regarded as two distinct functions. ... in f1/1 ..."
+    return sb.toString().replaceAll("function \\S+ with", "function <atom> with").replaceAll("\\b[a-z]\\w*/\\d+", "<atom>/<number>")
+      .replaceAll("arities \\d+ and \\d+", "arities <number> and <number>");
   }
 
   private static @Nullable String tokenClass(String tok) {

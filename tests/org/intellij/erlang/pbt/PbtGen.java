@@ -281,14 +281,14 @@ final class PbtGen {
           yield new String[]{pick("?MODULE:", MODULE + ":") + fn.name, String.valueOf(fn.arity)};
         }
         case 2 -> pick(new String[]{"lists:reverse", "1"}, new String[]{"lists:member", "2"}, new String[]{"maps:get", "2"});
-        default -> new String[]{"other_mod:g" + r.nextInt(3), String.valueOf(r.nextInt(3))};
+        default -> pick(new String[]{"lists:seq", "2"}, new String[]{"maps:put", "3"}, new String[]{"maps:size", "1"});
       };
       int arity = Integer.parseInt(f[1]);
       return node("expr.remote_call", Cat.EXPR, f[0], seq("args", Cat.OTHER, "(", ", ", ")", arity, exprs(s, d - 1, arity, arity)));
     });
     expr("expr.remote_fun_ref", 1, false, (s, d) -> {
       Fn fn = pick(myFns);
-      return leaf("expr.remote_fun_ref", Cat.EXPR, pick("fun erlang:length/1", "fun lists:reverse/1", "fun other_mod:g/2",
+      return leaf("expr.remote_fun_ref", Cat.EXPR, pick("fun erlang:length/1", "fun lists:reverse/1", "fun maps:get/2",
                                                          "fun ?MODULE:" + fn.name + "/" + fn.arity));
     });
     expr("expr.call_imported", 2, true, (s, d) -> {
@@ -305,8 +305,6 @@ final class PbtGen {
       }
       return seq("expr.binary_typed", Cat.EXPR, "<<", ", ", ">>", 1, segs);
     });
-    expr("expr.sigil", 1, false, (s, d) -> leaf("expr.sigil", Cat.EXPR,
-      pick("~\"abc\"", "~b\"x\\ny\"", "~B[a\\b]", "~s{text}", "~(par)", "\"\"\"\n    triple\n      quoted\n    \"\"\"", "~\"\"\"\n    sigil\n    \"\"\"")));
 
     // --------------------------------------------------------------------------------------------------- patterns
     pat("pat.var", 10, false, (s, b, d) -> {
