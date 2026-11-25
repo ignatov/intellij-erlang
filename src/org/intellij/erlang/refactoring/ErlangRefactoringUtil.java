@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class ErlangRefactoringUtil {
+  // Each run is parsed from its text, so the chooser offers only a few of them
+  private static final int MAX_LEADING_RUNS = 10;
   private static final Key<ErlangExpression> RUN_END = Key.create("ERLANG_LEADING_RUN_END");
 
   private ErlangRefactoringUtil() {
@@ -140,6 +142,7 @@ public class ErlangRefactoringUtil {
         if (parts != null && startsWith(parts, patternParts)) {
           PsiElement end = parts.get(patternParts.size() - 1);
           occurrences.add(parts.size() == patternParts.size() ? element : createLeadingRun((ErlangAdditiveExpression) element, (ErlangExpression) end));
+          for (PsiElement next = end.getNextSibling(); next != null; next = next.getNextSibling()) next.accept(this);
           return;
         }
         if (patternParts == null && PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
@@ -194,7 +197,8 @@ public class ErlangRefactoringUtil {
           ErlangExpression end = element instanceof ErlangAdditiveExpression chain && previous != null ? getLeadingRunEnd(chain, previous) : null;
           if (end != null) {
             List<ErlangExpression> operands = ((ErlangAdditiveExpression) element).getExpressionList();
-            for (int i = Math.max(operands.indexOf(end), 1); i < operands.size() - 1; i++) {
+            int from = Math.max(operands.indexOf(end), 1);
+            for (int i = from; i < Math.min(operands.size() - 1, from + MAX_LEADING_RUNS); i++) {
               expressions.add(createLeadingRun((ErlangAdditiveExpression) element, operands.get(i)));
             }
           }

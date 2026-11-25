@@ -29,6 +29,7 @@ public class ErlangExtractFunctionTest extends ErlangLightPlatformCodeInsightFix
   public void testSimple() { doTest(); }
   public void testLeadingOperandsOfChain() { doTest(); }
   public void testLeadingOperandsOfLongerChain() { doTest(); }
+  public void testLeadingOperandsOfChainAtCaret() { doTest(); }
   public void testAtom()   { doTest(); }
   public void testQuotedAtom() { doTest(); }
 
