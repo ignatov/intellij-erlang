@@ -222,6 +222,19 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnresolvedMacrosFeatureUndefNoDefineHeader.erl", "UnresolvedMacrosFeatureUndefNoDefineHeader.hrl");
   }
 
+  public void testUnresolvedMacrosFeatureUndefNoDefineHeaderConditional() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureUndefNoDefineHeaderConditional.erl", "UnresolvedMacrosFeatureUndefNoDefineHeaderConditional.hrl");
+  }
+
+  public void testUnresolvedMacrosFeatureUndefNoDefineHeaderConditionalInclude() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest("UnresolvedMacrosFeatureUndefNoDefineHeaderConditionalInclude.erl",
+           "UnresolvedMacrosFeatureUndefNoDefineHeaderConditionalInclude.hrl", "UnresolvedMacrosFeatureUndefNoDefineHeader.hrl");
+  }
+
   // with the macro layer off, epp's checks of feature macros after an -undef are not made
   public void testUnresolvedMacrosFeatureUndefNoDefineOff() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
