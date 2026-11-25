@@ -472,8 +472,10 @@ final class PbtGen {
       }
       if (!imported.isEmpty()) forms.add(node("form.import", Cat.FORM, "-import(lists, ", seq("imports", Cat.OTHER, "[", ", ", "]", 0, imported), ")."));
     }
+    // made here, so that the random numbers are drawn as before, and placed after the records and types they may use
+    List<PbtNode> late = new ArrayList<>();
     if (on("form.behaviour") && r.nextInt(4) == 0) {
-      forms.add(leaf("form.behaviour", Cat.FORM, pick("-behaviour(gen_server).", "-behavior(supervisor).", "-behaviour(other_behaviour).")));
+      late.add(leaf("form.behaviour", Cat.FORM, pick("-behaviour(gen_server).", "-behavior(supervisor).", "-behaviour(other_behaviour).")));
     }
     if (on("form.callback") && r.nextInt(4) == 0) {
       List<String> names = new ArrayList<>();
@@ -481,16 +483,16 @@ final class PbtGen {
         int arity = r.nextInt(3);
         List<PbtNode> args = new ArrayList<>();
         for (int a = 0; a < arity; a++) args.add(type(List.of(), 1));
-        forms.add(node("form.callback", Cat.FORM, "-callback cb" + (i + 1), seq("spec_args", Cat.OTHER, "(", ", ", ")", arity, args), " -> ",
+        late.add(node("form.callback", Cat.FORM, "-callback cb" + (i + 1), seq("spec_args", Cat.OTHER, "(", ", ", ")", arity, args), " -> ",
                        type(List.of(), 1), "."));
         names.add("cb" + (i + 1) + "/" + arity);
       }
-      if (r.nextBoolean()) forms.add(leaf("form.optional_callbacks", Cat.FORM, "-optional_callbacks([" + names.get(0) + "])."));
+      if (r.nextBoolean()) late.add(leaf("form.optional_callbacks", Cat.FORM, "-optional_callbacks([" + names.get(0) + "])."));
     }
     if (on("form.on_load") && r.nextInt(6) == 0) {
       for (Fn f : myFns) {
         if (f.arity != 0) continue;
-        forms.add(leaf("form.on_load", Cat.FORM, "-on_load(" + f.name + "/0)."));
+        late.add(leaf("form.on_load", Cat.FORM, "-on_load(" + f.name + "/0)."));
         break;
       }
     }
@@ -502,6 +504,7 @@ final class PbtGen {
     }
     for (Rec rec : myRecs) forms.add(recordDef(rec));
     for (Ty t : myTypes) forms.add(typeDef(t));
+    forms.addAll(late);
     for (Fn f : myFns) {
       if (r.nextInt(3) == 0) forms.add(spec(f));
       forms.add(function(f));
