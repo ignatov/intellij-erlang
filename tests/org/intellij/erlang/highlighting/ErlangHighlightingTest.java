@@ -264,6 +264,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1596
+  public void testUnresolvedMacrosQuotedPredefined() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testMacroThenStringLiteral() {
     enableUnresolvedMacroInspection();
     doTest();
