@@ -54,6 +54,8 @@ import java.util.Set;
 public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
   // predefined since OTP 25, both with one argument
   private static final Set<String> FEATURE_MACROS = Set.of("FEATURE_ENABLED", "FEATURE_AVAILABLE");
+  // epp expands these predefined macros only when written unquoted: ?'FUNCTION_NAME' is an undefined macro
+  private static final Set<String> UNQUOTED_ONLY_MACROS = Set.of("FUNCTION_NAME", "FUNCTION_ARITY");
 
   @NotNull
   @Override
@@ -69,25 +71,30 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
       @Override
       public void visitMacros(@NotNull ErlangMacros o) {
         ErlangMacrosName macrosName = o.getMacrosName();
-        if (macrosName == null || ErlangPsiImplUtil.KNOWN_MACROS.contains(macrosName.getText())) return;
+        if (macrosName == null) return;
+        String name = unquote(macrosName.getText());
+        if (ErlangPsiImplUtil.KNOWN_MACROS.contains(name) &&
+            (name.equals(macrosName.getText()) || !UNQUOTED_ONLY_MACROS.contains(name))) {
+          return;
+        }
 
         PsiReference reference = o.getReference();
-        if (FEATURE_MACROS.contains(macrosName.getText())) {
+        if (FEATURE_MACROS.contains(name)) {
           PsiElement nameLeaf = ErlangPsiImplUtil.getNameIdentifier(macrosName);
           if (reference == null || ErlangMacroResolve.firstTarget(reference) == null) {
-            checkFeatureArity(o, nameLeaf, macrosName.getText(), null);
+            checkFeatureArity(o, nameLeaf, name, null);
             return;
           }
           if (!isBeforeFeatureMacros(o)) {
-            checkOwnFeatureArity(o, nameLeaf, macrosName.getText(), null);
+            checkOwnFeatureArity(o, nameLeaf, name, null);
             return;
           }
         }
-        if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, macrosName.getText())) {
+        if (reference != null && ErlangMacroResolve.firstTarget(reference) == null && !isDefinedByEnclosingCondition(o, name)) {
           registerProblem(holder, o, "Unresolved macros " + "'" + o.getText() + "'", new ErlangIntroduceMacroQuickFix());
         }
         else if (reference != null) {
-          checkArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), macrosName.getText(), null);
+          checkArity(o, ErlangPsiImplUtil.getNameIdentifier(macrosName), name, null);
         }
       }
 
@@ -125,10 +132,15 @@ public class ErlangUnresolvedMacrosInspection extends ErlangInspectionBase {
 
       /**
        * Epp's "argument mismatch for macro" for a use of a predefined feature macro (no -define of the name resolves)
-       * without exactly one argument, outside -define bodies.
+       * without exactly one argument, outside -define bodies, and its "undefined macro" after an -undef of the name
+       * (see {@link ErlangMacroResolve#isFeatureMacroUndefined}), with the macro layer on.
        */
       private void checkFeatureArity(@NotNull PsiElement target, @NotNull PsiElement nameLeaf, @NotNull String name, @Nullable TextRange range) {
         if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null) return;
+        if (ErlangMacroLayer.isEnabled() && ErlangMacroResolve.isFeatureMacroUndefined(nameLeaf, name)) {
+          registerProblem(holder, target, "Unresolved macros '?" + name + "'", range, null);
+          return;
+        }
         int arity = ErlangMacroResolve.arityAfter(nameLeaf);
         if (arity != 1 && arity != ErlangMacroResolve.UNKNOWN) {
           registerProblem(holder, target, "Argument mismatch for macro '?" + name + "'", range, null);

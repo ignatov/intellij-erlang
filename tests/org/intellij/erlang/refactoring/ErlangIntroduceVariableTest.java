@@ -44,6 +44,58 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+  public void testCasePatternIsNotAParameter() { doTest(); }
+  public void testSiblingCasePatterns()     { doTest(); }
+  public void testLaterCaseClauseUse()      { doTest(); }
+  public void testReceivePattern()          { doTest(); }
+  public void testTryPattern()              { doTest(); }
+  public void testFunPattern()              { doTest(); }
+  public void testGeneratorPattern()        { doTest(); }
+  public void testNestedHeadPattern()       { doTest(); }
+  public void testSelectedCasePattern()     { doTest(); }
+  public void testSelectedCasePatternSingle() { doTest(SINGLE); }
+  public void testSelectedGeneratorPatternNotInSource() { doTest(); }
+  public void testSelectedGeneratorPattern() { doTest(); }
+  public void testSelectedCasePatternUsedInGuard() { doTest(); }
+  public void testSelectedReceivePattern() { doTest(); }
+  public void testSelectedCasePatternUsedInBody() { doTest(); }
+  public void testSelectedFunPattern() { doTest(); }
+  public void testQuotedAtom()              { doTest(); }
+  public void testQuotedAtomWithoutLetters() { doTest(); }
+  public void testQuotedFunctionCall()      { doTest(); }
+
+  public void testExpressionUsingGeneratorVariable() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    try {
+      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException ignored) {
+      // refusing the refactoring is a correct outcome
+    }
+    String text = myFixture.getEditor().getDocument().getText();
+    String beforeComprehension = text.substring(0, text.indexOf('['));
+    assertFalse("X is bound only by the generator, but the declaration was put before the comprehension:\n" + text,
+                beforeComprehension.contains("X * 2"));
+  }
+
+  public void testExpressionUsingGeneratorVariableInFilter() { doTestRefused(); }
+  public void testExpressionUsingBinaryGeneratorVariable()   { doTestRefused(); }
+  public void testExpressionUsingVariableBoundInSameStatement(){ doTestRefused(); }
+  public void testGeneratorSourceExtracted()                 { doTest(); }
+  public void testFunClauseVariable()                        { doTest(); }
+
+  private void doTestRefused() {
+    myFixture.configureByFile(getTestName(true) + ".erl");
+    String before = myFixture.getEditor().getDocument().getText();
+    try {
+      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+      fail("The refactoring must be refused");
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException e) {
+      assertEquals("Selected expression uses variables that are not bound where the new variable would be declared", e.getMessage());
+    }
+    assertEquals(before, myFixture.getEditor().getDocument().getText());
+  }
 
   public void testGuardOccurrenceNotReplaced()  { doTest(); }
   public void testSelectionInFunctionArguments() { doTest(); }
