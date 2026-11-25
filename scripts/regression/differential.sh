@@ -11,6 +11,8 @@
 #   HEAP            heap per test JVM (default 3g)
 #   PLATFORM        -PplatformVersion of both sides (default 2026.2)
 #   PHASES          default lex,parse,format,highlight
+#   RETIME_MS       a lex, parse or highlight time of a file of at least this many ms is measured once more and the
+#                   faster one is kept (default 200; 0 never); one sample on a busy runner can be 2x off
 #   SIDES           "base candidate" (default), or one of them
 #   PARALLEL        1 (default) runs both sides at the same time, so their timings are comparable; 0 one after the other
 #   BUDGET_MINUTES  no file is started later than this many minutes after the start; 0 (default) is no limit. The
@@ -76,7 +78,7 @@ run_side() { # side ref
   (cd "$wt" && ./gradlew --no-daemon --no-build-cache -I "$init" -PplatformVersion="$platform" "$task" \
      --tests 'org.intellij.erlang.regression.RegressionDiffShard*' \
      -Ddiff.corpus="$corpus" -Ddiff.out="$out/$1.jsonl" -Ddiff.phases="$phases" -Ddiff.forkDirs=true \
-     -Ddiff.deadline="$deadline") > "$out/logs/$1.log" 2>&1
+     -Ddiff.deadline="$deadline" -Ddiff.retimeMs="${RETIME_MS:-200}") > "$out/logs/$1.log" 2>&1
   rc=$?
   for ((i = 0; i < forks; i++)); do cat "$out/$1.jsonl.$i-$forks" 2> /dev/null; done > "$out/$1.jsonl"
   n=$(grep -c '"file"' "$out/$1.jsonl" 2> /dev/null); n=${n:-0}

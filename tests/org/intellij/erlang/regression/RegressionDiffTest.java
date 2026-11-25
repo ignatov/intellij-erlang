@@ -49,7 +49,7 @@ import java.util.stream.Stream;
  * <p>
  * -Ddiff.corpus=DIR -Ddiff.out=FILE.jsonl [-Ddiff.phases=lex,parse,format,highlight] [-Ddiff.only=LISTFILE]
  * [-Ddiff.dump=DIR] [-Ddiff.repeat=N] [-Ddiff.copy=true] [-Ddiff.shard=I/N] [-Ddiff.deadline=EPOCH_MILLIS]
- * [-Ddiff.forkDirs=true] [-Ddiff.registry=KEY=VALUE,...]
+ * [-Ddiff.retimeMs=MS] [-Ddiff.forkDirs=true] [-Ddiff.registry=KEY=VALUE,...]
  * <p>
  * After the deadline no further file is started; the last line of the output, {"end": true, ...}, says whether every
  * file was done.
@@ -96,6 +96,7 @@ public class RegressionDiffTest extends ErlangLightPlatformCodeInsightFixtureTes
     String onlyList = System.getProperty("diff.only");
     String dump = System.getProperty("diff.dump");
     int repeat = Integer.parseInt(System.getProperty("diff.repeat", "1"));
+    long slowNs = Long.parseLong(System.getProperty("diff.retimeMs", "0")) * 1_000_000L;
     boolean copy = Boolean.parseBoolean(System.getProperty("diff.copy", "true"));
     int shard = shardSpec == null ? 0 : Integer.parseInt(shardSpec.split("/")[0]);
     int shards = shardSpec == null ? 1 : Integer.parseInt(shardSpec.split("/")[1]);
@@ -181,10 +182,11 @@ public class RegressionDiffTest extends ErlangLightPlatformCodeInsightFixtureTes
           try {
             long best = Long.MAX_VALUE;
             String[] res = null;
-            for (int i = 0; i < repeat; i++) {
+            for (int i = 0; ; i++) {
               long s = System.nanoTime();
               res = lex(text);
               best = Math.min(best, System.nanoTime() - s);
+              if (!again(i, repeat, best, slowNs)) break;
             }
             rec.append(", \"lexUs\": ").append(best / 1000).append(", \"tokens\": ").append(res[0])
               .append(", \"lexHash\": ").append(json(res[1]));
@@ -196,11 +198,12 @@ public class RegressionDiffTest extends ErlangLightPlatformCodeInsightFixtureTes
           try {
             long best = Long.MAX_VALUE;
             PsiFile f = null;
-            for (int i = 0; i < repeat; i++) {
+            for (int i = 0; ; i++) {
               long s = System.nanoTime();
               f = createFile(rel, text, false);
               f.getNode().getFirstChildNode();
               best = Math.min(best, System.nanoTime() - s);
+              if (!again(i, repeat, best, slowNs)) break;
             }
             rec.append(", \"parseUs\": ").append(best / 1000);
             List<String> errs = new ArrayList<>();
@@ -249,11 +252,12 @@ public class RegressionDiffTest extends ErlangLightPlatformCodeInsightFixtureTes
             myFixture.configureFromExistingVirtualFile(vf);
             long best = Long.MAX_VALUE;
             List<HighlightInfo> infos = null;
-            for (int i = 0; i < repeat; i++) {
+            for (int i = 0; ; i++) {
               if (i > 0) myFixture.getPsiManager().dropPsiCaches();
               long s = System.nanoTime();
               infos = myFixture.doHighlighting();
               best = Math.min(best, System.nanoTime() - s);
+              if (!again(i, repeat, best, slowNs)) break;
             }
             rec.append(", \"highlightUs\": ").append(best / 1000);
             List<String> problems = new ArrayList<>();
@@ -294,6 +298,15 @@ public class RegressionDiffTest extends ErlangLightPlatformCodeInsightFixtureTes
       }
       w.write("{\"end\": true, \"complete\": " + complete + ", \"files\": " + n + ", \"wanted\": " + wanted + "}\n");
     }
+  }
+
+  /**
+   * Whether to time once more after run i (0-based): until diff.repeat runs are done, and then once more when the best
+   * time so far is at least diff.retimeMs, so that a slow file is timed twice and keeps the faster time. One sample of
+   * a slow file on a busy runner can be 2x off; formatter timings are never retimed.
+   */
+  private static boolean again(int i, int repeat, long bestNs, long slowNs) {
+    return i + 1 < repeat || i + 1 == repeat && slowNs > 0 && bestNs >= slowNs;
   }
 
   /** "i/n": this run handles the files whose index modulo n is i. Subclasses fix it, so Gradle forks run shards. */
