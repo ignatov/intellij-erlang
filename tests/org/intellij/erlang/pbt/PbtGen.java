@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 
@@ -38,6 +39,18 @@ final class PbtGen {
   private final List<Fn> myFns = new ArrayList<>();
   private final List<Rec> myRecs = new ArrayList<>();
   private final List<Ty> myTypes = new ArrayList<>();
+  private final List<Fn> myImports = new ArrayList<>();
+
+  /**
+   * PBT_GEN_OFF: constructs (comma-separated names) that the generator never makes. An expression, pattern, guard or
+   * type that is off has weight 0, and a form that is off draws no random number, so with every construct of a round
+   * off the generator makes the modules of the round before it.
+   */
+  static final Set<String> OFF = Set.of(String.valueOf(System.getenv("PBT_GEN_OFF")).split(","));
+
+  static boolean on(String construct) {
+    return !OFF.contains(construct);
+  }
 
   record Fn(String name, int arity) {
   }
@@ -238,6 +251,62 @@ final class PbtGen {
       }
       return seq("expr.binary", Cat.EXPR, "<<", ", ", ">>", 0, segs);
     });
+    // round 1
+    expr("expr.maybe", 1, true, (s, d) -> {
+      List<PbtNode> stmts = new ArrayList<>();
+      Scope cur = s;
+      for (int i = 0, n = 1 + r.nextInt(3); i < n; i++) {
+        int k = r.nextInt(3);
+        if (k == 2) {
+          stmts.add(expr(cur, d - 1));
+          continue;
+        }
+        PbtNode value = expr(cur, d - 1);
+        List<String> binds = new ArrayList<>();
+        PbtNode p = pat(cur, binds, Math.min(d - 1, 2));
+        stmts.add(k == 0 ? node("maybe.cond_match", Cat.OTHER, p, " ?= ", value) : node("stmt.match", Cat.OTHER, p, " = ", value));
+        cur = cur.with(binds);
+      }
+      List<PbtNode> elses = new ArrayList<>();
+      if (r.nextBoolean()) for (int i = 0, n = 1 + r.nextInt(2); i < n; i++) elses.add(crClause("maybe_else_clause", s, d - 1));
+      return node("expr.maybe", Cat.EXPR, "maybe ", seq("body", Cat.OTHER, "", ", ", "", 1, stmts),
+                  PbtNode.optional("maybe_else", " else ", "; ", "", elses), " end");
+    });
+    expr("expr.remote_call", 2, true, (s, d) -> {
+      String[] f = switch (r.nextInt(4)) {
+        case 0 -> pick(new String[]{"erlang:length", "1"}, new String[]{"erlang:element", "2"}, new String[]{"erlang:self", "0"},
+                       new String[]{"erlang:abs", "1"}, new String[]{"erlang:atom_to_list", "1"});
+        case 1 -> {
+          Fn fn = pick(myFns);
+          yield new String[]{pick("?MODULE:", MODULE + ":") + fn.name, String.valueOf(fn.arity)};
+        }
+        case 2 -> pick(new String[]{"lists:reverse", "1"}, new String[]{"lists:member", "2"}, new String[]{"maps:get", "2"});
+        default -> new String[]{"other_mod:g" + r.nextInt(3), String.valueOf(r.nextInt(3))};
+      };
+      int arity = Integer.parseInt(f[1]);
+      return node("expr.remote_call", Cat.EXPR, f[0], seq("args", Cat.OTHER, "(", ", ", ")", arity, exprs(s, d - 1, arity, arity)));
+    });
+    expr("expr.remote_fun_ref", 1, false, (s, d) -> {
+      Fn fn = pick(myFns);
+      return leaf("expr.remote_fun_ref", Cat.EXPR, pick("fun erlang:length/1", "fun lists:reverse/1", "fun other_mod:g/2",
+                                                         "fun ?MODULE:" + fn.name + "/" + fn.arity));
+    });
+    expr("expr.call_imported", 2, true, (s, d) -> {
+      if (myImports.isEmpty()) return null;
+      Fn f = pick(myImports);
+      return node("expr.call_imported", Cat.EXPR, f.name, seq("args", Cat.OTHER, "(", ", ", ")", f.arity, exprs(s, d - 1, f.arity, f.arity)));
+    });
+    expr("expr.binary_typed", 1, true, (s, d) -> {
+      List<PbtNode> segs = new ArrayList<>();
+      for (int i = 0, n = 1 + r.nextInt(2); i < n; i++) {
+        segs.add(node("bin_seg", Cat.OTHER, segValue(s, d - 1),
+                      pick(":8/little-signed-integer", ":16/big-unsigned", ":2/unit:4-integer", "/binary-unit:8", ":32/float-native",
+                           "/utf16-little")));
+      }
+      return seq("expr.binary_typed", Cat.EXPR, "<<", ", ", ">>", 1, segs);
+    });
+    expr("expr.sigil", 1, false, (s, d) -> leaf("expr.sigil", Cat.EXPR,
+      pick("~\"abc\"", "~b\"x\\ny\"", "~B[a\\b]", "~s{text}", "~(par)", "\"\"\"\n    triple\n      quoted\n    \"\"\"", "~\"\"\"\n    sigil\n    \"\"\"")));
 
     // --------------------------------------------------------------------------------------------------- patterns
     pat("pat.var", 10, false, (s, b, d) -> {
@@ -289,6 +358,13 @@ final class PbtGen {
         segs.add(leaf("bin_pat_seg", Cat.OTHER, v + pick("/binary", "/bits")));
       }
       return seq("pat.binary", Cat.PAT, "<<", ", ", ">>", 0, segs);
+    });
+    pat("pat.binary_typed", 1, false, (s, b, d) -> {
+      String v = fresh();
+      b.add(v);
+      String size = s.vars.isEmpty() ? "8" : r.nextBoolean() ? "8" : pick(s.vars);
+      return leaf("pat.binary_typed", Cat.PAT, "<<" + v + ":" + size + pick("/little-signed-integer", "/big-unsigned-unit:1", "/integer-native") +
+                                              pick("", ", _/binary-unit:8", ", _/bits") + ">>");
     });
     pat("pat.alias", 1, true, (s, b, d) -> node("pat.alias", Cat.PAT, pat(s, b, d - 1), " = ", pat(s, b, d - 1)));
 
@@ -346,6 +422,20 @@ final class PbtGen {
     });
     type("type.record", 1, false, (vars, d) -> myRecs.isEmpty() ? null : leaf("type.record", Cat.TYPE, "#" + pick(myRecs).name + "{}"));
     type("type.binary", 1, false, (vars, d) -> leaf("type.binary", Cat.TYPE, pick("<<>>", "<<_:8>>", "<<_:_*8>>", "<<_:4, _:_*2>>")));
+    // round 1
+    type("type.record_fields", 1, true, (vars, d) -> {
+      if (myRecs.isEmpty()) return null;
+      Rec rec = pick(myRecs);
+      List<PbtNode> fields = new ArrayList<>();
+      for (String f : rec.fields) if (r.nextBoolean()) fields.add(node("field_type", Cat.OTHER, f + " :: ", type(vars, d - 1)));
+      return node("type.record_fields", Cat.TYPE, "#" + rec.name, seq("field_types", Cat.OTHER, "{", ", ", "}", 0, fields));
+    });
+    type("type.int_expr", 1, false, (vars, d) -> leaf("type.int_expr", Cat.TYPE,
+      pick("1 bsl 4", "2 * 3", "(1 + 2)..10", "-5..-(1)", "16#FF band 3", "$a..$z")));
+    type("type.remote", 1, false, (vars, d) -> leaf("type.remote", Cat.TYPE,
+      pick("erlang:timestamp()", "other_mod:t()", "other_mod:t(integer())")));
+    type("type.fun_any", 1, true, (vars, d) -> r.nextBoolean() ? leaf("type.fun_any", Cat.TYPE, pick("fun()", "fun((...) -> any())"))
+      : node("type.fun_any", Cat.TYPE, "fun((...) -> ", type(vars, d - 1), ")"));
   }
 
   private void expr(String name, int weight, boolean nests, BiFunction<Scope, Integer, PbtNode> gen) {
@@ -375,6 +465,37 @@ final class PbtGen {
     if (exports.isEmpty()) exports.add(leaf("export_entry", Cat.OTHER, myFns.get(0).name + "/" + myFns.get(0).arity));
     List<PbtNode> forms = new ArrayList<>();
     forms.add(node("form.export", Cat.FORM, "-export(", seq("exports", Cat.OTHER, "[", ", ", "]", 0, exports), ")."));
+    if (on("form.import") && r.nextInt(3) == 0) {
+      List<PbtNode> imported = new ArrayList<>();
+      for (String[] f : List.of(new String[]{"reverse", "1"}, new String[]{"member", "2"}, new String[]{"seq", "2"})) {
+        if (!r.nextBoolean()) continue;
+        myImports.add(new Fn(f[0], Integer.parseInt(f[1])));
+        imported.add(leaf("import_entry", Cat.OTHER, f[0] + "/" + f[1]));
+      }
+      if (!imported.isEmpty()) forms.add(node("form.import", Cat.FORM, "-import(lists, ", seq("imports", Cat.OTHER, "[", ", ", "]", 0, imported), ")."));
+    }
+    if (on("form.behaviour") && r.nextInt(4) == 0) {
+      forms.add(leaf("form.behaviour", Cat.FORM, pick("-behaviour(gen_server).", "-behavior(supervisor).", "-behaviour(other_behaviour).")));
+    }
+    if (on("form.callback") && r.nextInt(4) == 0) {
+      List<String> names = new ArrayList<>();
+      for (int i = 0, n = 1 + r.nextInt(2); i < n; i++) {
+        int arity = r.nextInt(3);
+        List<PbtNode> args = new ArrayList<>();
+        for (int a = 0; a < arity; a++) args.add(type(List.of(), 1));
+        forms.add(node("form.callback", Cat.FORM, "-callback cb" + (i + 1), seq("spec_args", Cat.OTHER, "(", ", ", ")", arity, args), " -> ",
+                       type(List.of(), 1), "."));
+        names.add("cb" + (i + 1) + "/" + arity);
+      }
+      if (r.nextBoolean()) forms.add(leaf("form.optional_callbacks", Cat.FORM, "-optional_callbacks([" + names.get(0) + "])."));
+    }
+    if (on("form.on_load") && r.nextInt(6) == 0) {
+      for (Fn f : myFns) {
+        if (f.arity != 0) continue;
+        forms.add(leaf("form.on_load", Cat.FORM, "-on_load(" + f.name + "/0)."));
+        break;
+      }
+    }
 
     List<PbtNode> typeExports = new ArrayList<>();
     for (Ty t : myTypes) if (r.nextInt(4) == 0) typeExports.add(leaf("export_type_entry", Cat.OTHER, t.name + "/" + t.arity));
@@ -405,6 +526,7 @@ final class PbtGen {
 
   private PbtNode typeDef(Ty t) {
     String kind = r.nextInt(5) == 0 ? "opaque" : "type";
+    if (on("form.nominal") && "type".equals(kind) && r.nextInt(4) == 0) kind = "nominal";
     List<String> vars = t.arity == 1 ? List.of("A") : List.of();
     PbtNode body = type(vars, 2);
     // a parameter must occur in the body, or erlc rejects the definition
@@ -413,10 +535,43 @@ final class PbtGen {
   }
 
   private PbtNode spec(Fn f) {
+    if (on("form.spec_variants") && r.nextInt(2) == 0) return specVariant(f);
     List<PbtNode> args = new ArrayList<>();
     for (int i = 0; i < f.arity; i++) args.add(type(List.of(), 1));
     return node("form.spec", Cat.FORM, "-spec " + f.name, seq("spec_args", Cat.OTHER, "(", ", ", ")", f.arity, args), " -> ",
                 type(List.of(), 1), ".");
+  }
+
+  /** A spec with several clauses, a {@code when} constraint, annotated arguments or in parentheses. */
+  private PbtNode specVariant(Fn f) {
+    List<PbtNode> sigs = new ArrayList<>();
+    for (int c = 0, n = 1 + r.nextInt(2); c < n; c++) {
+      List<PbtNode> args = new ArrayList<>();
+      String constrained = null;
+      for (int i = 0; i < f.arity; i++) {
+        switch (r.nextInt(3)) {
+          case 0 -> args.add(node("annotated_type", Cat.OTHER, "Arg" + (i + 1) + " :: ", type(List.of(), 1)));
+          case 1 -> {
+            if (constrained != null) {
+              args.add(type(List.of(), 1));
+              continue;
+            }
+            constrained = "V" + (i + 1);
+            args.add(leaf("type.var", Cat.TYPE, constrained));
+          }
+          default -> args.add(type(List.of(), 1));
+        }
+      }
+      List<PbtNode> guard = new ArrayList<>();
+      if (constrained != null) guard.add(node("type_guard", Cat.OTHER, " when " + constrained + " :: ", type(List.of(), 1)));
+      // every other variable that is not in the guard occurs once, which erlc accepts only for annotated ones
+      sigs.add(node("type_sig", Cat.OTHER, seq("spec_args", Cat.OTHER, "(", ", ", ")", f.arity, args), " -> ",
+                    constrained != null ? leaf("type.var", Cat.TYPE, constrained) : type(List.of(), 1),
+                    PbtNode.optional("type_guard", "", "", "", guard)));
+    }
+    boolean braces = r.nextInt(4) == 0;
+    return node("form.spec_variant", Cat.FORM, braces ? "-spec(" + f.name : "-spec " + f.name, seq("type_sigs", Cat.OTHER, "", "; ", "", 1, sigs),
+                braces ? ")." : ".");
   }
 
   private PbtNode function(Fn f) {
@@ -603,10 +758,10 @@ final class PbtGen {
   private <G> PbtNode choose(List<Choice<G>> choices, int depth, java.util.function.Function<Choice<G>, @Nullable PbtNode> run) {
     for (int attempt = 0; attempt < 50; attempt++) {
       int total = 0;
-      for (Choice<G> c : choices) if (depth > 0 || !c.nests) total += c.weight;
+      for (Choice<G> c : choices) if ((depth > 0 || !c.nests) && on(c.name)) total += c.weight;
       int x = r.nextInt(total);
       for (Choice<G> c : choices) {
-        if (depth <= 0 && c.nests) continue;
+        if (depth <= 0 && c.nests || !on(c.name)) continue;
         x -= c.weight;
         if (x < 0) {
           PbtNode n = run.apply(c);

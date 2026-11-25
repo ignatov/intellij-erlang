@@ -18,7 +18,11 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.SyntaxTraverser;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.TokenType;
+import com.intellij.psi.search.LocalSearchScope;
+import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.LoggedErrorProcessor;
 import com.intellij.testFramework.PlatformTestUtil;
@@ -26,6 +30,9 @@ import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import com.intellij.testFramework.fixtures.impl.CodeInsightTestFixtureImpl;
 import com.intellij.util.ThrowableRunnable;
 import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.psi.ErlangArgumentDefinition;
+import org.intellij.erlang.psi.ErlangFunctionClause;
+import org.intellij.erlang.psi.ErlangQVar;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
@@ -41,6 +48,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -110,20 +118,60 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     int fromMutants;
     int skipped;
     int violations;
+    int knownViolations;
     final Map<String, Sig> sigs = new LinkedHashMap<>();
   }
 
   static final class Sig {
     final String text;
+    /** The label of PBT_KNOWN for this signature, or null when it is new. */
+    final @Nullable String known;
     int count;
     String firstCase;
     final List<String> shrunkFiles = new ArrayList<>();
     final List<String> shrunkTexts = new ArrayList<>();
     final List<String> examples = new ArrayList<>();
 
-    Sig(String text) {
+    Sig(String text, @Nullable String known) {
       this.text = text;
+      this.known = known;
     }
+  }
+
+  /** PBT_KNOWN: the labels of exact signatures, and of patterns with {@code *}, in the order of the file. */
+  private final Map<String, String> myKnownExact = new LinkedHashMap<>();
+  private final List<Map.Entry<Pattern, String>> myKnownPatterns = new ArrayList<>();
+
+  /** Reads lines {@code signature<TAB>label}; blank lines and lines starting with {@code #} are skipped. */
+  private void loadKnown(@Nullable String file) throws IOException {
+    if (file == null) return;
+    for (String line : Files.readAllLines(Paths.get(file), StandardCharsets.UTF_8)) {
+      if (line.isBlank() || line.startsWith("#")) continue;
+      int tab = line.indexOf('\t');
+      if (tab < 0) throw new IllegalArgumentException("PBT_KNOWN: no tab in line: " + line);
+      String sig = line.substring(0, tab);
+      String label = line.substring(tab + 1).trim();
+      if (sig.contains("*")) {
+        String[] parts = sig.split("\\*", -1);
+        StringBuilder re = new StringBuilder();
+        for (int i = 0; i < parts.length; i++) {
+          if (i > 0) re.append(".*");
+          re.append(Pattern.quote(parts[i]));
+        }
+        myKnownPatterns.add(Map.entry(Pattern.compile(re.toString()), label));
+      }
+      else {
+        myKnownExact.put(sig, label);
+      }
+    }
+  }
+
+  /** The label of a known signature: an exact line first, else the first pattern that matches the whole signature. */
+  @Nullable String known(String signature) {
+    String label = myKnownExact.get(signature);
+    if (label != null) return label;
+    for (Map.Entry<Pattern, String> e : myKnownPatterns) if (e.getKey().matcher(signature).matches()) return e.getValue();
+    return null;
   }
 
   /** One input: a generated tree, or a text (a mutant) that only the text reducer can shrink. */
@@ -252,6 +300,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     for (String p : ALL_PROPS) myStats.put(p, new Prop());
     myPlant = env("PBT_PLANT");
     myShrinkTests = Integer.parseInt(env("PBT_SHRINK_TESTS", "400"));
+    loadKnown(env("PBT_KNOWN"));
     Path report = Paths.get(env("PBT_REPORT", "build/pbt/report.json")).toAbsolutePath();
     myOut = Paths.get(env("PBT_OUT", "build/pbt/out")).toAbsolutePath();
     myWork = Paths.get(env("PBT_WORK", "build/pbt/work")).toAbsolutePath();
@@ -299,7 +348,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       }
     }
     else {
-      for (int i = 0; i < cases; i++) {
+      List<Integer> indices = indices(env("PBT_INDICES"), cases);
+      for (int i : indices) {
         if (budgetMs > 0 && System.currentTimeMillis() - start > budgetMs) {
           complete = false;
           break;
@@ -320,6 +370,7 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     meta.addProperty("sdk_release", sdkRelease());
     meta.addProperty("sdk_home", sdkHome());
     meta.addProperty("props", String.join(",", myProps));
+    if (env("PBT_KNOWN") != null) meta.addProperty("known_file", env("PBT_KNOWN"));
     if (replay != null) meta.addProperty("replay", replay);
     if (myPlant != null) meta.addProperty("plant", myPlant);
     meta.addProperty("elapsed_ms", System.currentTimeMillis() - start);
@@ -352,11 +403,32 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     JsonObject generator = new JsonObject();
     generator.add("constructs", usage);
     generator.add("never_generated", unused);
+    JsonArray off = new JsonArray();
+    for (String c : PbtGen.OFF) if (!c.isBlank() && !"null".equals(c)) off.add(c);
+    generator.add("off", off);
     out.add("generator", generator);
     if (myPlant != null) out.add("controls", controls);
     Files.writeString(report, PRETTY.toJson(out), StandardCharsets.UTF_8);
     System.out.println("PBT report: " + report);
     if (!controlFailures.isEmpty()) fail("controls did not behave:\n" + String.join("\n", controlFailures));
+  }
+
+  /** PBT_INDICES ({@code 3,10-12} or {@code @file} with such lines), else 0 to {@code cases - 1}. */
+  static List<Integer> indices(@Nullable String spec, int cases) throws IOException {
+    List<Integer> out = new ArrayList<>();
+    if (spec == null) {
+      for (int i = 0; i < cases; i++) out.add(i);
+      return out;
+    }
+    String text = spec.startsWith("@") ? Files.readString(Paths.get(spec.substring(1))) : spec;
+    for (String part : text.split("[,\\s]+")) {
+      if (part.isBlank()) continue;
+      int dash = part.indexOf('-');
+      int from = Integer.parseInt(dash < 0 ? part : part.substring(0, dash));
+      int to = dash < 0 ? from : Integer.parseInt(part.substring(dash + 1));
+      for (int i = from; i <= to; i++) out.add(i);
+    }
+    return out;
   }
 
   private static JsonObject propJson(Prop p) {
@@ -365,10 +437,15 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     o.addProperty("from_mutants", p.fromMutants);
     o.addProperty("skipped", p.skipped);
     o.addProperty("violations", p.violations);
+    o.addProperty("known_violations", p.knownViolations);
+    o.addProperty("new_violations", p.violations - p.knownViolations);
+    // the new signatures and the known ones (PBT_KNOWN) apart, so that the new ones stand out
     JsonArray sigs = new JsonArray();
+    JsonArray knownSigs = new JsonArray();
     p.sigs.values().stream().sorted((a, b) -> Integer.compare(b.count, a.count)).forEach(s -> {
       JsonObject so = new JsonObject();
       so.addProperty("signature", s.text);
+      if (s.known != null) so.addProperty("known", s.known);
       so.addProperty("count", s.count);
       so.addProperty("first_case", s.firstCase);
       JsonArray files = new JsonArray();
@@ -380,9 +457,12 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       JsonArray ex = new JsonArray();
       for (String t : s.examples) ex.add(t);
       so.add("cases", ex);
-      sigs.add(so);
+      (s.known != null ? knownSigs : sigs).add(so);
     });
+    o.addProperty("new_signature_count", sigs.size());
+    o.addProperty("known_signature_count", knownSigs.size());
     o.add("signatures", sigs);
+    o.add("known_signatures", knownSigs);
     return o;
   }
 
@@ -529,18 +609,32 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     Prop p = myStats.get("parse-reject");
     p.checked++;
     p.fromMutants++;
-    View view = plugin(in.text, false, true, null);
+    View view = plugin(in.text, false, true, erl);
     if (verbose) System.out.println("plugin rejects: " + view.rejects() + "\nerlc: " + erl.firstSyntaxError());
     if (view.rejects()) return;
     PbtOracle.Item e = erl.firstSyntaxError();
-    String sig = "parse-reject @ " + e.module() + " : " + normalize(e.message());
+    String sig = rejectSignature(e, view);
+    int errors = syntaxErrorCount(erl);
     violation("parse-reject", sig, in, e.line() + ":" + e.column() + " " + e.message(), text -> {
       PbtOracle.Result r = oracle(text);
       PbtOracle.Item first = r.firstSyntaxError();
-      if (first == null) return false;
-      if (!sig.equals("parse-reject @ " + first.module() + " : " + normalize(first.message()))) return false;
-      return !plugin(text, false, true, null).rejects();
+      // the same first error, and no new one in another form
+      if (first == null || syntaxErrorCount(r) > errors) return false;
+      if (!sig.startsWith("parse-reject @ " + first.module() + " : " + normalize(first.message()) + " @ ")) return false;
+      View v = plugin(text, false, true, r);
+      return !v.rejects() && sig.equals(rejectSignature(first, v));
     });
+  }
+
+  /** The erlc module and message of the first syntax error, and the PSI parent of the plugin at its place. */
+  private static String rejectSignature(PbtOracle.Item e, View view) {
+    return "parse-reject @ " + e.module() + " : " + normalize(e.message()) + " @ " + view.syntaxErrorAt;
+  }
+
+  private static int syntaxErrorCount(PbtOracle.Result r) {
+    int n = 0;
+    for (PbtOracle.Item i : r.items()) if (i.syntax()) n++;
+    return n;
   }
 
   private PbtOracle.Result oracle(String text) throws IOException {
@@ -560,7 +654,8 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
   private void violation(String prop, String signature, Input in, String detail, Check stillFails) throws IOException {
     Prop p = myStats.get(prop);
     p.violations++;
-    Sig s = p.sigs.computeIfAbsent(signature, Sig::new);
+    Sig s = p.sigs.computeIfAbsent(signature, sig -> new Sig(sig, known(sig)));
+    if (s.known != null) p.knownViolations++;
     s.count++;
     if (s.firstCase == null) s.firstCase = in.id;
     if (s.examples.size() < 10) s.examples.add(in.id);
@@ -570,7 +665,9 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     v.addProperty("signature", signature);
     v.addProperty("case", in.id);
     v.addProperty("detail", detail);
-    if (s.shrunkTexts.size() < 2) {
+    if (s.known != null) v.addProperty("known", s.known);
+    // a known signature is counted and marked, not shrunk again
+    if (s.known == null && s.shrunkTexts.size() < 2) {
       long t0 = System.currentTimeMillis();
       Predicate<String> pred = text -> {
         try {
@@ -625,20 +722,32 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     return new Shrunk(lines.text, tests + lines.tests);
   }
 
-  private Shrunk shrinkText(String text, Predicate<String> fails) {
-    return shrinkText(text, fails, myShrinkTests);
-  }
-
-  /** Removal of chunks of lines, then of chunks of tokens, while the failure stays. */
+  /**
+   * Reduction of a text: chunks of lines, then rounds of the structured token reduction and of chunks of tokens, while
+   * the failure stays and the budget lasts. Every distinct candidate is tested once.
+   */
   private Shrunk shrinkText(String text, Predicate<String> fails, int maxTests) {
     int[] tests = {0};
+    Set<String> seen = new HashSet<>();
+    seen.add(text);
+    Predicate<String> once = t -> {
+      if (!seen.add(t)) return false;
+      tests[0]++;
+      return fails.test(t);
+    };
     List<String> lines = new ArrayList<>(List.of(text.split("(?<=\n)")));
-    lines = ddmin(lines, fails, tests, maxTests);
+    lines = ddmin(lines, once, tests, maxTests);
     List<String> tokens = tokenUnits(String.join("", lines));
-    tokens = ddmin(tokens, fails, tests, maxTests);
+    while (tests[0] < maxTests) {
+      int before = String.join("", tokens).length();
+      tokens = reduceStructure(tokens, once, tests, maxTests);
+      tokens = ddmin(tokens, once, tests, maxTests);
+      if (String.join("", tokens).length() >= before) break;
+    }
     return new Shrunk(String.join("", tokens), tests[0]);
   }
 
+  /** Removal of chunks of units, halves first; {@code fails} counts the tests. */
   private static List<String> ddmin(List<String> units, Predicate<String> fails, int[] tests, int maxTests) {
     List<String> cur = new ArrayList<>(units);
     for (int chunk = Integer.highestOneBit(Math.max(1, cur.size() / 2)); chunk >= 1; chunk /= 2) {
@@ -649,7 +758,6 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
           List<String> cand = new ArrayList<>(cur);
           cand.subList(from, from + chunk).clear();
           if (cand.isEmpty()) break;
-          tests[0]++;
           if (fails.test(String.join("", cand))) {
             cur = cand;
             changed = true;
@@ -661,6 +769,109 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       }
     }
     return cur;
+  }
+
+  private static final Set<String> OPEN = Set.of("(", "[", "{", "<<", "begin", "case", "if", "receive", "try", "maybe");
+  private static final Set<String> CLOSE = Set.of(")", "]", "}", ">>", "end");
+  private static final Set<String> SEPARATORS = Set.of(",", ";");
+
+  /**
+   * Hierarchical delta debugging on the tokens: remove a whole form, a bracketed group or {@code case ... end} block
+   * with a separator next to it, an item between separators of a group, the inside of a group; replace a group by
+   * {@code ok}. Largest candidates first; after each success the candidates are made again from the new text.
+   */
+  private static List<String> reduceStructure(List<String> units, Predicate<String> fails, int[] tests, int maxTests) {
+    List<String> cur = units;
+    boolean progress = true;
+    while (progress && tests[0] < maxTests) {
+      progress = false;
+      for (List<String> cand : structureCandidates(cur)) {
+        if (tests[0] >= maxTests) break;
+        if (cand.isEmpty()) continue;
+        if (fails.test(String.join("", cand))) {
+          cur = cand;
+          progress = true;
+          break;
+        }
+      }
+    }
+    return cur;
+  }
+
+  private static List<List<String>> structureCandidates(List<String> units) {
+    int n = units.size();
+    String[] tok = new String[n];
+    for (int i = 0; i < n; i++) tok[i] = units.get(i).strip();
+    // groups by matching brackets and keyword blocks; a `fun` opens a block only when a clause follows it
+    List<int[]> groups = new ArrayList<>();
+    List<int[]> items = new ArrayList<>();
+    List<int[]> forms = new ArrayList<>();
+    java.util.ArrayDeque<int[]> stack = new java.util.ArrayDeque<>();  // {open index, start of the current item}
+    int formStart = 0;
+    int topItem = 0;
+    for (int i = 0; i < n; i++) {
+      String t = tok[i];
+      boolean funBlock = "fun".equals(t) && i + 1 < n &&
+                         ("(".equals(tok[i + 1]) || i + 2 < n && tok[i + 1].matches("[A-Z_]\\w*") && "(".equals(tok[i + 2]));
+      if (OPEN.contains(t) || funBlock) {
+        stack.push(new int[]{i, i + 1});
+      }
+      else if (CLOSE.contains(t) && !stack.isEmpty()) {
+        int[] g = stack.pop();
+        if (g[1] < i) items.add(new int[]{g[1], i - 1});
+        groups.add(new int[]{g[0], i});
+      }
+      else if (SEPARATORS.contains(t) || "->".equals(t) || "of".equals(t) || "||".equals(t)) {
+        int[] g = stack.peek();
+        if (g != null) {
+          if (SEPARATORS.contains(t) && g[1] < i) items.add(new int[]{g[1], i});
+          g[1] = i + 1;
+        }
+        else if (SEPARATORS.contains(t)) {
+          if (topItem < i) items.add(new int[]{topItem, i});
+          topItem = i + 1;
+        }
+      }
+      else if (".".equals(t) && stack.isEmpty()) {
+        forms.add(new int[]{formStart, i});
+        formStart = i + 1;
+        topItem = i + 1;
+      }
+    }
+    List<int[]> removals = new ArrayList<>();  // {from, to inclusive}
+    List<int[]> replacements = new ArrayList<>();
+    removals.addAll(forms);
+    for (int[] g : groups) {
+      int o = g[0], c = g[1];
+      if (c + 1 < n && SEPARATORS.contains(tok[c + 1])) removals.add(new int[]{o, c + 1});
+      if (o > 0 && SEPARATORS.contains(tok[o - 1])) removals.add(new int[]{o - 1, c});
+      removals.add(new int[]{o, c});
+      if (c - o > 1 && !"end".equals(tok[c])) removals.add(new int[]{o + 1, c - 1});
+      replacements.add(new int[]{o, c});
+    }
+    for (int[] it : items) {
+      removals.add(it);
+      // an item without its separator, or with the separator before it
+      if (SEPARATORS.contains(tok[it[1]]) && it[1] > it[0]) removals.add(new int[]{it[0], it[1] - 1});
+      if (it[0] > 0 && SEPARATORS.contains(tok[it[0] - 1])) removals.add(new int[]{it[0] - 1, it[1]});
+    }
+    List<List<String>> out = new ArrayList<>();
+    removals.sort((a, b) -> Integer.compare(b[1] - b[0], a[1] - a[0]));
+    for (int[] r : removals) {
+      List<String> cand = new ArrayList<>(units);
+      cand.subList(r[0], r[1] + 1).clear();
+      out.add(cand);
+    }
+    replacements.sort((a, b) -> Integer.compare(b[1] - b[0], a[1] - a[0]));
+    for (int[] r : replacements) {
+      if (r[1] - r[0] < 1) continue;
+      List<String> cand = new ArrayList<>(units.subList(0, r[0]));
+      String last = units.get(r[1]);
+      cand.add("ok" + last.substring(last.stripTrailing().length()));
+      cand.addAll(units.subList(r[1] + 1, n));
+      out.add(cand);
+    }
+    return out;
   }
 
   /** The text cut into tokens, each with the whitespace after it. */
@@ -724,9 +935,11 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     final List<String> errorSigs = new ArrayList<>();
     String errorDetail = "";
     boolean errorHighlight;
-    /** (kind, line, name) of the plugin's warnings, with the construct around each. */
+    /** The PSI parent of the token at the first syntax error of erlc, for the signature of {@code parse-reject}. */
+    String syntaxErrorAt = "?";
+    /** (kind, line, column, name) of the plugin's warnings, with the place around each and what the plugin thinks of it. */
     final Map<Key, String> warnings = new LinkedHashMap<>();
-    /** The construct at each erlc location, keyed by "line:column". */
+    /** The place at each erlc item of the five kinds, with what the plugin thinks of it, keyed by "kind@line:column". */
     final Map<String, String> constructAt = new LinkedHashMap<>();
 
     boolean rejects() {
@@ -734,10 +947,18 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     }
   }
 
-  record Key(String kind, int line, String name) {
+  /**
+   * A warning of one of the five kinds. The column is there only for variables; erlc and the plugin put the warnings
+   * about functions and types at different columns, so for them it is 0.
+   */
+  record Key(String kind, int line, int column, String name) {
+    static Key of(String kind, int line, int column, String name) {
+      return new Key(kind, line, kind.endsWith("_var") ? column : 0, name);
+    }
+
     @Override
     public String toString() {
-      return kind + "@" + line + ":" + name;
+      return kind + "@" + line + ":" + column + ":" + name;
     }
   }
 
@@ -788,19 +1009,30 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
                 Matcher matcher = m.getKey().matcher(desc);
                 if (matcher.matches()) {
                   int offset = info.getStartOffset();
-                  Key key = new Key(m.getValue(), doc.getLineNumber(offset) + 1, matcher.group(1));
-                  view.warnings.putIfAbsent(key, construct(file, offset));
+                  int line = doc.getLineNumber(offset);
+                  Key key = Key.of(m.getValue(), line + 1, offset - doc.getLineStartOffset(line) + 1, matcher.group(1));
+                  if (!view.warnings.containsKey(key)) {
+                    view.warnings.put(key, warnings ? place(file, offset) + relation(file, offset, key.kind, true) : "");
+                  }
                   break;
                 }
               }
             }
-            if (locations != null) {
+            if (warnings && locations != null) {
               for (PbtOracle.Item item : locations.items()) {
-                if (item.line() < 1 || item.line() > doc.getLineCount()) continue;
-                int offset = Math.min(doc.getLineStartOffset(item.line() - 1) + Math.max(0, item.column() - 1), doc.getTextLength());
-                view.constructAt.put(item.line() + ":" + item.column(), construct(file, offset));
+                if (!WARNING_KINDS.contains(item.tag())) continue;
+                int offset = varOffset(file, offsetOf(doc, item), item.name());
+                if (offset < 0) continue;
+                view.constructAt.put(item.tag() + "@" + item.line() + ":" + item.column(),
+                                     place(file, offset) + relation(file, offset, item.tag(), false));
               }
             }
+          }
+          PbtOracle.Item syntax = locations == null ? null : locations.firstSyntaxError();
+          if (rejectCheck && syntax != null) {
+            int offset = offsetOf(doc, syntax);
+            PsiElement at = offset < 0 || offset >= doc.getTextLength() ? null : file.findElementAt(offset);
+            view.syntaxErrorAt = at == null ? "EOF" : psiName(at.getParent());
           }
         }
         finally {
@@ -840,14 +1072,32 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
     journal(c);
   }
 
-  /** The mismatches of the five warning kinds, by signature, with a detail. */
+  /** The offset of the line and column of an erlc item, or -1 when it is not in the text. */
+  private static int offsetOf(Document doc, PbtOracle.Item item) {
+    if (item.line() < 1 || item.line() > doc.getLineCount()) return -1;
+    return Math.min(doc.getLineStartOffset(item.line() - 1) + Math.max(0, item.column() - 1), doc.getTextLength());
+  }
+
+  /**
+   * erlc puts an unused name of a named fun at the {@code fun} keyword: then the offset of the name in that fun, else
+   * the offset itself.
+   */
+  private static int varOffset(PsiFile file, int offset, @Nullable String name) {
+    if (offset < 0 || name == null) return offset;
+    PsiElement leaf = file.findElementAt(offset);
+    if (leaf == null || !"fun".equals(leaf.getText()) || PsiTreeUtil.getParentOfType(leaf, ErlangQVar.class, false) != null) return offset;
+    for (ErlangQVar q : SyntaxTraverser.psiTraverser(leaf.getParent()).filter(ErlangQVar.class)) {
+      if (q.getText().equals(name)) return q.getTextRange().getStartOffset();
+    }
+    return offset;
+  }
+
   /** The number of warnings that erlc and the plugin agree on, for the negative controls. */
   private int myLastAgreed;
 
   private static int agreed(PbtOracle.Result erl, View view) {
-    int n = 0;
-    for (Key k : erlcKeys(erl).keySet()) if (view.warnings.containsKey(k)) n++;
-    return n;
+    Pairing p = pair(erl, view);
+    return erlcKeys(erl).size() - p.missing.size();
   }
 
   private static Map<Key, PbtOracle.Item> erlcKeys(PbtOracle.Result erl) {
@@ -857,50 +1107,175 @@ public class ErlangPropertyTest extends ErlangLightPlatformCodeInsightFixtureTes
       String name = i.name();
       // the plugin names a type without its arity
       if ("unused_type".equals(i.tag()) && name.contains("/")) name = name.substring(0, name.indexOf('/'));
-      ours.putIfAbsent(new Key(i.tag(), i.line(), name), i);
+      ours.putIfAbsent(Key.of(i.tag(), i.line(), i.column(), name), i);
     }
     return ours;
   }
 
-  private static Map<String, String> mismatches(PbtOracle.Result erl, View view) {
-    Map<Key, PbtOracle.Item> ours = erlcKeys(erl);
-    Map<String, String> out = new LinkedHashMap<>();
-    for (Map.Entry<Key, String> e : view.warnings.entrySet()) {
-      if (ours.containsKey(e.getKey())) continue;
-      out.putIfAbsent("warnings:extra " + e.getKey().kind + " @ " + e.getValue(), "plugin only: " + e.getKey());
+  /** The warnings of the plugin and of erlc that have no partner on the other side. */
+  record Pairing(List<Key> extra, Map<Key, PbtOracle.Item> missing) {
+  }
+
+  /**
+   * Pairs the warnings: first with the same key, then the rest of one kind, line and name at another column, one to
+   * one. erlc puts an unused name of a named fun at the {@code fun} keyword, the plugin at the name.
+   */
+  private static Pairing pair(PbtOracle.Result erl, View view) {
+    Map<Key, PbtOracle.Item> missing = new LinkedHashMap<>(erlcKeys(erl));
+    List<Key> extra = new ArrayList<>();
+    for (Key k : view.warnings.keySet()) if (missing.remove(k) == null) extra.add(k);
+    for (java.util.Iterator<Key> it = extra.iterator(); it.hasNext(); ) {
+      Key k = it.next();
+      Key partner = null;
+      for (Key m : missing.keySet()) {
+        if (m.kind.equals(k.kind) && m.line == k.line && m.name.equals(k.name)) {
+          partner = m;
+          break;
+        }
+      }
+      if (partner != null) {
+        missing.remove(partner);
+        it.remove();
+      }
     }
-    for (Map.Entry<Key, PbtOracle.Item> e : ours.entrySet()) {
-      if (view.warnings.containsKey(e.getKey())) continue;
+    // erlc reports an unbound variable at its first use only, the plugin at every use
+    Set<String> unbound = new HashSet<>();
+    for (Key m : erlcKeys(erl).keySet()) if ("unbound_var".equals(m.kind)) unbound.add(m.name);
+    extra.removeIf(k -> "unbound_var".equals(k.kind) && unbound.contains(k.name));
+    return new Pairing(extra, missing);
+  }
+
+  /** The mismatches of the five warning kinds, by signature, with a detail. */
+  private static Map<String, String> mismatches(PbtOracle.Result erl, View view) {
+    Pairing p = pair(erl, view);
+    Map<String, String> out = new LinkedHashMap<>();
+    for (Key k : p.extra) out.putIfAbsent("warnings:extra " + k.kind + " @ " + view.warnings.get(k), "plugin only: " + k);
+    for (Map.Entry<Key, PbtOracle.Item> e : p.missing.entrySet()) {
       PbtOracle.Item i = e.getValue();
-      String construct = view.constructAt.getOrDefault(i.line() + ":" + i.column(), "?");
+      String construct = view.constructAt.getOrDefault(i.tag() + "@" + i.line() + ":" + i.column(), "?");
       out.putIfAbsent("warnings:missing " + e.getKey().kind + " @ " + construct, "erlc only: " + e.getKey() + " (" + i.message() + ")");
     }
     return out;
   }
 
-  /** Constructs that name where a warning is, innermost first wins. */
-  private static final List<String> CONSTRUCTS = List.of(
-    "CaseExpression", "IfExpression", "ReceiveExpression", "TryExpression", "CatchExpression", "FunExpression",
-    "ListComprehension", "BeginEndExpression", "MapExpression", "RecordExpression", "BinaryExpression",
-    "FunctionClause", "TypeDefinition", "Specification", "RecordDefinition", "Export", "ExportTypeAttribute", "Attribute", "Function");
-  private static final Map<String, String> ROLES = Map.of(
-    "ArgumentDefinitionList", "args", "ClauseGuard", "guard", "LcExpression", "qualifier", "CrClause", "clause",
-    "TryClause", "catch", "AfterClauseBody", "after", "FunClause", "clause", "ArgumentList", "call");
+  /** The constructs that name the place of a warning; the innermost one wins. */
+  private static final Set<String> SCOPES = Set.of(
+    "CaseExpression", "IfExpression", "ReceiveExpression", "TryExpression", "MaybeExpression", "CatchExpression", "FunExpression",
+    "ListComprehension", "BeginEndExpression", "FunctionClause", "TypeDefinition", "Specification", "RecordDefinition", "Export",
+    "ExportTypeAttribute", "Attribute", "Function");
+  /** The data constructors that a place mentions after its scope: {@code FunctionClause/head in Binary}. */
+  private static final Map<String, String> DATA = Map.of(
+    "BinaryExpression", "Binary", "MapExpression", "Map", "MapTuple", "Map", "RecordExpression", "Record", "RecordTuple", "Record");
 
-  /** The innermost construct around the offset, with the role of the element in it: {@code CaseExpression/clause}. */
-  static String construct(PsiFile file, int offset) {
+  static String place(PsiFile file, int offset) {
     PsiElement e = file.findElementAt(offset);
-    String role = null;
-    for (PsiElement p = e; p != null && !(p instanceof PsiFile); p = p.getParent()) {
+    return e == null ? "EOF" : place(e);
+  }
+
+  /**
+   * The place of an element: the innermost scope around it, the part of the scope's clause it is in, and the innermost
+   * data constructor between them. Parts: {@code head} (the patterns of a clause), {@code name} (of a named fun),
+   * {@code guard}, {@code body}, {@code subject} (of a case), {@code timeout} (of an after), {@code gen-pattern},
+   * {@code gen-expr}, {@code filter} and {@code template} (of a comprehension). A try names its parts {@code body},
+   * {@code of-head}, {@code catch-head}, {@code after} and so on. A head inside a pattern {@code P = Q} gets
+   * {@code -alias}, a body inside the left side of a match {@code -match}. Example: {@code TryExpression/catch-head-alias}.
+   */
+  static String place(PsiElement e) {
+    String data = null;
+    String part = null;
+    String clause = null;
+    boolean assign = false;
+    boolean lhs = false;
+    PsiElement c = null;
+    for (PsiElement p = e; p != null && !(p instanceof PsiFile); c = p, p = p.getParent()) {
       String name = psiName(p);
-      if (role == null && ROLES.containsKey(name)) role = ROLES.get(name);
-      if (role == null && "AssignmentExpression".equals(name) && p.getFirstChild() != null &&
-          p.getFirstChild().getTextRange().contains(offset)) {
-        role = "match";
+      String cn = c == null ? "" : psiName(c);
+      if (part == null) {
+        if (data == null && DATA.containsKey(name)) data = DATA.get(name);
+        if ("AssignmentExpression".equals(name)) {
+          assign = true;
+          if (c != null && c == p.getFirstChild()) lhs = true;
+        }
+        part = switch (name) {
+          case "FunctionClause", "CrClause", "TryClause", "FunClause", "IfClause" -> switch (cn) {
+            case "ArgumentDefinitionList" -> "head";
+            case "ArgumentDefinition" -> "FunClause".equals(name) ? "name" : "head";
+            case "ClauseGuard", "Guard" -> "guard";
+            case "ClauseBody" -> "body";
+            default -> null;
+          };
+          case "AfterClauseBody" -> "ClauseBody".equals(cn) ? "body" : "timeout";
+          case "LcExpression" -> "ArgumentDefinition".equals(cn) ? "gen-pattern"
+                                                                 : PsiTreeUtil.getChildOfType(p, ErlangArgumentDefinition.class) != null
+                                                                   ? "gen-expr" : "filter";
+          case "ListComprehension" -> "template";
+          case "CaseExpression" -> "subject";
+          case "TryExpression" -> {
+            if (!"TryExpressionsClause".equals(cn)) yield null;
+            PsiElement before = PsiTreeUtil.skipWhitespacesAndCommentsBackward(c);
+            yield before != null && "after".equals(before.getText()) ? "after" : "body";
+          }
+          case "BeginEndExpression", "CatchExpression" -> "body";
+          default -> null;
+        };
+        if (part != null) clause = name;
       }
-      if (CONSTRUCTS.contains(name)) return role == null ? name : name + "/" + role;
+      if (!SCOPES.contains(name)) continue;
+      StringBuilder sb = new StringBuilder(name);
+      if (part != null) {
+        String prefix = "";
+        if ("TryClause".equals(clause)) prefix = "catch-";
+        else if ("CrClause".equals(clause) && "TryExpression".equals(name)) prefix = "of-";
+        else if ("CrClause".equals(clause) && "MaybeExpression".equals(name)) prefix = "else-";
+        else if ("AfterClauseBody".equals(clause)) prefix = "after-";
+        sb.append('/').append(prefix).append(part);
+        boolean pattern = part.equals("head") || part.equals("name") || part.equals("gen-pattern");
+        if (pattern && assign) sb.append("-alias");
+        if (!pattern && lhs) sb.append("-match");
+      }
+      if (data != null) sb.append(" in ").append(data);
+      return sb.toString();
     }
     return "File";
+  }
+
+  /**
+   * What the plugin thinks of the variable at the offset, in parentheses, for the signature of a warning about it; empty
+   * for other warnings. {@code extra}: the plugin warns and erlc does not.
+   * <ul>
+   *   <li>unused variable that only erlc reports: what the variable resolves to, else its first use, else {@code no use};</li>
+   *   <li>unused variable that only the plugin reports: what the next occurrence of the name resolves to;</li>
+   *   <li>unbound variable that only the plugin reports: the first occurrence of the name in the clause;</li>
+   *   <li>unbound variable that only erlc reports: what the variable resolves to.</li>
+   * </ul>
+   */
+  static String relation(PsiFile file, int offset, String kind, boolean extra) {
+    if (!kind.endsWith("_var")) return "";
+    ErlangQVar v = PsiTreeUtil.getParentOfType(file.findElementAt(offset), ErlangQVar.class, false);
+    if (v == null) return "";
+    PsiElement scope = PsiTreeUtil.getParentOfType(v, ErlangFunctionClause.class);
+    if (scope == null) scope = file;
+    List<ErlangQVar> same = new ArrayList<>();
+    for (ErlangQVar q : SyntaxTraverser.psiTraverser(scope).filter(ErlangQVar.class)) if (q.getText().equals(v.getText())) same.add(q);
+    int at = same.indexOf(v);
+    PsiElement target = v.getReference().resolve();
+    boolean resolves = target != null && target != v;
+    if ("unused_var".equals(kind) && !extra) {
+      if (resolves) return " (resolves to " + place(target) + ")";
+      for (PsiReference ref : ReferencesSearch.search(v, new LocalSearchScope(scope)).findAll()) {
+        if (ref.getElement() != v) return " (used at " + place(ref.getElement()) + ")";
+      }
+      return " (no use)";
+    }
+    if ("unused_var".equals(kind)) {
+      if (at < 0 || at + 1 >= same.size()) return " (no next)";
+      ErlangQVar next = same.get(at + 1);
+      PsiElement t = next.getReference().resolve();
+      if (t == null || t == next) return " (next unresolved)";
+      return t == v ? " (next resolves to it)" : " (next resolves to " + place(t) + ")";
+    }
+    if (extra) return at > 0 ? " (first at " + place(same.get(0)) + ")" : " (no earlier)";
+    return resolves ? " (resolves to " + place(target) + ")" : " (unresolved)";
   }
 
   static String psiName(@Nullable PsiElement e) {
