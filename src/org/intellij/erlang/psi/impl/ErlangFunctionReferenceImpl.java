@@ -75,7 +75,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     ErlangFile file = ObjectUtils.tryCast(getElement().getContainingFile(), ErlangFile.class);
     if (file == null) return null;
 
-    ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
+    ErlangFunction declaredFunction = ErlangMacroLayer.preferSourceFunction(file, file.getFunction(myReferenceName, myArity));
     if (declaredFunction != null) return declaredFunction;
 
     boolean inExport = isInExport();
