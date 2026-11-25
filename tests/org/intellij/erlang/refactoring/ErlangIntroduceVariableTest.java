@@ -42,6 +42,9 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+  public void testQuotedAtom()              { doTest(); }
+  public void testQuotedAtomWithoutLetters() { doTest(); }
+  public void testQuotedFunctionCall()      { doTest(); }
 
   public void testExpressionUsingGeneratorVariable() {
     myFixture.configureByFile(getTestName(true) + ".erl");
