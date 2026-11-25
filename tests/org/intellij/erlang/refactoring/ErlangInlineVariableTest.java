@@ -24,6 +24,7 @@ public class ErlangInlineVariableTest extends LightJavaCodeInsightFixtureTestCas
   public void testSimple()                             { doTest(); }
   public void testFunExpression()                      { doTest(); }
   public void testLowPrecedence()                      { doTest(); }
+  public void testSamePrecedenceRightOperand()         { doTest(); }
   public void testCaseExpression()                     { doTest(); }
   public void testNestedCaseFormatting()               { doTest(); }
   public void testFunExpressionInline1()               { doTest(); }
