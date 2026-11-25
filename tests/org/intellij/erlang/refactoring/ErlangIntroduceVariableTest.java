@@ -20,6 +20,7 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.refactoring.util.CommonRefactoringUtil;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
 
@@ -41,6 +42,19 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+
+  public void testSelectionInFunctionClauseGuard() {
+    String name = getTestName(true);
+    myFixture.configureByFile(name + ".erl");
+    try {
+      new ErlangIntroduceVariableHandler(ALL).invoke(myFixture.getProject(), myFixture.getEditor(), myFixture.getFile(), null);
+      fail("Expected the Cannot Perform Refactoring hint");
+    }
+    catch (CommonRefactoringUtil.RefactoringErrorHintException e) {
+      assertEquals("Cannot Perform Refactoring", e.getMessage());
+    }
+    myFixture.checkResultByFile(name + ".erl");
+  }
 
   private void doTest() { doTest(ALL); }
 
