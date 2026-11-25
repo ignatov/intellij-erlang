@@ -46,6 +46,23 @@ public class ErlangStructureViewTest extends ErlangLightPlatformCodeInsightFixtu
     doTest(findFunction("bar").getFunctionClauseList().get(1));
   }
 
+  public void testReservedWordFunctionNameIsQuoted() {
+    myFixture.configureByText(ErlangFileType.MODULE, """
+      -module(m).
+      -export([foo/0, 'div'/0]).
+      foo() -> ok.
+      'div'() -> ok.
+      """);
+    myFixture.testStructureView(component -> {
+      PlatformTestUtil.expandAll(component.getTree());
+      PlatformTestUtil.assertTreeEqual(component.getTree(), """
+        -aaa.erl
+         foo/0
+         'div'/0
+        """);
+    });
+  }
+
   private ErlangFunction findFunction(String name) {
     for (ErlangFunction function : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangFunction.class)) {
       if (name.equals(function.getName())) return function;
