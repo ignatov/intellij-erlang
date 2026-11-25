@@ -36,11 +36,14 @@ The first build downloads IntelliJ IDEA 2026.2 (several GB) from JetBrains hosts
 | Compatibility check on GitHub | `gh workflow run compat.yml -f ide=263.7307.44 -f otp=28.0` |
 | Release smoke, machine half (CI job `release-smoke`, JDK 25) | `scripts/smoke/run.sh` (phases and settings in its header) |
 | Unit tests of the release smoke scripts | `python3 -m unittest discover -s scripts/smoke -p 'test_*.py' -v` |
+| Regression check: the plugin at a ref against the last release, file by file (CI: `regression.yml`, nightly, report-only) | `scripts/regression/differential.sh v0.11.<N> origin/master CORPUS OUT` (settings in its header) |
+| Unit tests of the regression check scripts | `python3 -m unittest discover -s scripts/regression -p 'test_*.py' -v` |
 | Refresh the parser baseline of the release smoke | `scripts/smoke/run.sh inputs parser-baseline` |
 | Refresh the expected inspection problems of the release smoke | `scripts/smoke/run.sh inputs build inspect-baseline` |
 | Code areas (map `scripts/areas/areas.yml`; a new package needs an entry): check, area of files, unit tests | `python3 scripts/areas/check_areas.py`, `... which PATH...` or `... touched`; `python3 -m unittest discover -s scripts/areas -p 'test_*.py' -v` |
 
 - `test` excludes the `org/intellij/erlang/build/**` and `org/intellij/erlang/jps/**` packages. Those tests run only in `testCompilation`.
+- `test` also excludes `org/intellij/erlang/regression/**`, the probe of the regression check. It runs only in `regressionDiff`, which `differential.sh` starts; `scripts/regression/known.json` lists the known and accepted differences.
 - The CI job `compilation-tests` runs `testCompilation` on `ubuntu-24.04` with the pinned Erlang/OTP 27 from builds.hex.pm and the pinned rebar3 escript (versions and sha256 are in `gradle.yml`, the same as in `copilot-setup-steps.yml` and `coverage.yml`). It fails if any test was skipped.
 - The workflow `coverage.yml` runs `test` and `testCompilation` with `-Pcoverage` on each push to master. It uploads the artifact `coverage-report` and writes the totals into its job summary; it never blocks or fails anything because of a test. Without `testCompilation`, the classes that only the compilation tests run (`compilation/`, the eunit and rebar run states, `jps-plugin/`) are not measured, which is not 0% tested. Code that runs in the external build process, another JVM, is never measured; the JPS builder is measured only through the tests of `jps-plugin`, which run it in the test JVM. Sum lines over source files (`scripts/coverage/totals.py`), not over the classes of a CSV, and use `clean`: an incremental build can instrument classes twice and inflate the branch count.
 - The rebar tests skip themselves when `rebar.path` is unset. The Copilot setup steps put `rebar3` on `PATH`, so `command -v rebar3` finds it.
