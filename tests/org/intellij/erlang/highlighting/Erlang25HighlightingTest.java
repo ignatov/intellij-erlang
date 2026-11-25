@@ -197,6 +197,13 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1597: erlc says "undefined macro 'FEATURE_ENABLED/1'"
+  public void testUnresolvedMacrosFeatureUndefNoDefine() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testUnresolvedMacrosFeatureHeaderUndef() {
     ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
     enableUnresolvedMacroInspection();
