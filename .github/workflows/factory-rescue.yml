@@ -1,0 +1,107 @@
+name: Factory rescue
+
+# The net under the clock of the project's automation. Each dispatcher tick (factory-tick.yml) arms
+# factory-timer.yml, and the timer starts the next tick: one failed dispatch breaks that chain. On 2026-11-25 the
+# timer's dispatch got one HTTP 500 from GitHub and no tick ran for 1.5 hours. The dispatches retry now, but a longer
+# outage, a cancelled timer or a tick that ends before it arms the timer still break the chain.
+#
+# This job looks at the runs of factory-tick.yml. When none is queued or running and the last one ended more than
+# 40 minutes ago (ticks normally come every 10 to 25 minutes), it starts a tick of master with live. GitHub drops
+# many scheduled runs, so the job is asked for every 10 minutes; any run that GitHub keeps is enough.
+#
+# Two ticks never run at once: factory-tick.yml has the concurrency group factory-tick without cancel-in-progress,
+# so a tick started here while another one starts waits for it. Off unless the repository variables
+# FACTORY_TICK_LIVE and FACTORY_TIMER are both "true", the same switches as the tick and the timer.
+#
+# No "uses:" step, no checkout and no secret: the job starts factory-tick.yml with its own GITHUB_TOKEN
+# (workflow_dispatch is one of the two events that this token may start a run with).
+
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  # One check runs and at most one waits; the waiting one looks at the runs again.
+  group: factory-rescue
+  cancel-in-progress: false
+
+jobs:
+  rescue:
+    if: vars.FACTORY_TICK_LIVE == 'true' && vars.FACTORY_TIMER == 'true'
+    runs-on: ubuntu-24.04
+    # The retries of the dispatch take up to 16 minutes.
+    timeout-minutes: 20
+    permissions:
+      actions: write
+    steps:
+      - name: Start a tick when the clock stopped
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          STALE_MINUTES: '40'
+          # 7 tries over about 16 minutes.
+          WAITS: 15 30 60 120 240 480
+        run: |
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
+          if ! runs=$(gh run list -R "$REPO" -w factory-tick.yml -L 20 --json status,updatedAt); then
+            echo "::warning::The runs of the tick could not be listed; the next check looks again."
+            exit 0
+          fi
+          # "busy", "fresh <end of the last tick>" or "stale <end of the last tick>".
+          verdict=$(python3 -I -c '
+          import datetime, json, sys
+          runs, limit = json.loads(sys.argv[1]), int(sys.argv[2])
+          if any(r["status"] != "completed" for r in runs):
+              print("busy")
+              sys.exit()
+          ends = [datetime.datetime.strptime(r["updatedAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc)
+                  for r in runs]
+          if not ends:
+              print("stale never")
+              sys.exit()
+          last = max(ends)
+          age = datetime.datetime.now(datetime.timezone.utc) - last
+          print(("stale " if age > datetime.timedelta(minutes=limit) else "fresh ") + last.strftime("%Y-%m-%d %H:%M UTC"))
+          ' "$runs" "$STALE_MINUTES") || verdict=""
+          case "$verdict" in
+            busy)
+              echo "A tick is queued or running." ;;
+            fresh\ *)
+              echo "The last tick ended at ${verdict#fresh }: the clock runs." ;;
+            stale\ *)
+              echo "::warning::No tick since ${verdict#stale } and none is queued: the clock stopped. Starting a tick."
+              if ! retry gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
+                echo "::error::The clock stopped and a tick could not be started."
+                exit 1
+              fi ;;
+            *)
+              echo "::warning::The runs of the tick could not be read; the next check looks again." ;;
+          esac
