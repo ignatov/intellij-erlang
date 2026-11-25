@@ -63,7 +63,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Property-based tests of the parser and of five inspections against erlc. Tooling, not a regression test: without
+ * Property-based tests of the parser and of six inspections against erlc. Tooling, not a regression test: without
  * {@code PBT_ERL} it does nothing and passes. See README.md in this package for the knobs and the report.
  * <p>
  * Properties, with erlc as the reference:
