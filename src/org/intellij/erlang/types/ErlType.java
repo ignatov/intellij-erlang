@@ -25,6 +25,8 @@ import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * Describes an Erlang type with optional type parameters.
  */
@@ -206,10 +208,13 @@ public class ErlType {
 
       @Override
       public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression addExpr) {
-        ErlType leftType = fromExpression(addExpr.getLeft());
-        ErlType rightType = fromExpression(addExpr.getRight());
-
-        if (leftType.equals(rightType)) result.set(leftType);
+        List<ErlangExpression> operands = addExpr.getExpressionList();
+        if (operands.size() < 2) return;
+        ErlType type = fromExpression(operands.get(0));
+        for (ErlangExpression operand : operands.subList(1, operands.size())) {
+          if (!type.equals(fromExpression(operand))) return;
+        }
+        result.set(type);
       }
 
       @Override
