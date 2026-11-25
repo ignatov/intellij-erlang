@@ -246,6 +246,28 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertSize(1, PsiTreeUtil.findChildrenOfType(file, ErlangRecordDefinition.class));
   }
 
+  // #1667: erlc accepts only `Var :: Type` and `Name(Type, ...)` as a spec constraint after `when`.
+  public void testSpecConstraintNotVarTypeOrSubtypeIsError() {
+    String[] constraints = {"(other_mod)", "x", "V", "1", "foo()", "(V :: atom())", "V :: atom(), (x)"};
+    List<String> accepted = new ArrayList<>();
+    for (String constraint : constraints) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(term()) -> V when " + constraint + ".\nf(X) -> X.\n");
+      if (!PsiTreeUtil.hasErrorElements(file)) accepted.add(constraint);
+    }
+    assertEmpty("Parsed without a syntax error", accepted);
+  }
+
+  // #1667: the constraint forms that erlc accepts.
+  public void testSpecConstraintVarTypeAndSubtype() {
+    String[] constraints = {"V :: atom()", "is_subtype(V, atom())", "V :: atom(), is_subtype(V, term())"};
+    List<String> rejected = new ArrayList<>();
+    for (String constraint : constraints) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(term()) -> V when " + constraint + ".\nf(X) -> X.\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(constraint);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
