@@ -5,7 +5,8 @@ name: Factory tick
 # repository until 2026-11-17; it runs here because the Actions minutes of a public repository are free.
 #
 # Started by factory-timer.yml (the clock), factory-wake.yml (a push to master, an owner's "/" command in a pull
-# request), a person (workflow_dispatch) and an hourly schedule, the backstop for a broken timer chain.
+# request), a person (workflow_dispatch), factory-rescue.yml when no tick ran for 40 minutes, and an hourly schedule;
+# the last two are the backstop for a broken timer chain.
 # It acts (--live) only when the run is scheduled or was started with "live", the repository variable
 # FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is set. Otherwise it is a dry run that only reads.
 # A live tick also needs the deploy gate: when the code of the private main changed since its tests last passed
@@ -50,7 +51,8 @@ defaults:
 jobs:
   tick:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # The deploy gate takes up to 10 minutes and the retries of "Arm the timer for the next tick" up to 8.
+    timeout-minutes: 30
     # Re-arming the timer: GITHUB_TOKEN starts factory-timer.yml with workflow_dispatch.
     permissions:
       actions: write
@@ -411,14 +413,41 @@ jobs:
         if: >-
           always() && steps.mode.outputs.mode == 'live' && vars.FACTORY_TIMER == 'true'
           && steps.tick.outcome != 'skipped' && steps.state.outcome == 'success'
+        # Shorter retries than in the timer: this job holds the concurrency group of the tick, and factory-rescue.yml
+        # starts a tick when the timer stays unarmed.
+        timeout-minutes: 10
         env:
           GH_TOKEN: ${{ github.token }}
           PACE: ${{ steps.tick.outputs.pace }}
           REPO: ${{ github.repository }}
+          # 6 tries over about 8 minutes.
+          WAITS: 15 30 60 120 240
         run: |
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
           case "$PACE" in active|idle|settle) ;; *) PACE=idle ;; esac
-          if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
-            echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
+          if ! retry gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
+            echo "::warning::The timer could not be armed; the next tick waits for factory-rescue.yml, the hourly schedule or an event."
           fi
 
       - name: Start a build of the hosted console
