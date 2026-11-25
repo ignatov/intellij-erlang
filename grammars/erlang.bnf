@@ -541,7 +541,7 @@ map_construct_expression ::= map_tuple {elementType=map_expression}
 map_expression ::= expression map_tuple {pin=2}
 map_tuple ::= '#' '{' map_entries? '}' {pin=2}
 private map_entries ::= map_entry (',' map_entry)* {pin(".*")=1}
-map_entry ::= expression (('=>' | ':=') expression)? {pin=1 recoverWhile=tuple_recoverer}
+map_entry ::= expression ('=>' | ':=') expression {pin=1 recoverWhile=tuple_recoverer}
 
 global_function_call_expression ::= module_ref ':' (function_call_expression)
 function_call_expression ::= q_atom argument_list &not_function_definition {
