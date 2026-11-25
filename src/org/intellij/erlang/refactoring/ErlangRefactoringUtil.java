@@ -17,16 +17,23 @@
 package org.intellij.erlang.refactoring;
 
 import com.intellij.codeInsight.PsiEquivalenceUtil;
+import com.intellij.lang.ASTFactory;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Pass;
+import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.source.tree.CompositeElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.IntroduceTargetChooser;
+import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +52,9 @@ public class ErlangRefactoringUtil {
     if (context == null) {
       return Collections.emptyList();
     }
+    if (pattern instanceof ErlangAdditiveExpression additive) {
+      splitChainsStartingWith(additive, context);
+    }
     final List<PsiElement> occurrences = new ArrayList<>();
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       public void visitElement(@NotNull PsiElement element) {
@@ -57,6 +67,68 @@ public class ErlangRefactoringUtil {
     };
     context.accept(visitor);
     return occurrences;
+  }
+
+  /**
+   * A chain of additive operators such as {@code A + B + C} is one flat expression, while its leading operands
+   * {@code A + B} are a subexpression too. Returns the leading operands of {@code parent} from {@code startOffset}
+   * to {@code endOffset} as their own expression, or null when the range is not such a leading part.
+   */
+  @Nullable
+  public static ErlangExpression leadingOperands(@Nullable PsiElement parent, int startOffset, int endOffset) {
+    if (!(parent instanceof ErlangAdditiveExpression chain)) return null;
+    List<ErlangExpression> operands = chain.getExpressionList();
+    if (operands.getFirst().getTextRange().getStartOffset() != startOffset) return null;
+    for (int count = 2; count < operands.size(); count++) {
+      if (operands.get(count - 1).getTextRange().getEndOffset() == endOffset) {
+        return splitLeadingOperands(chain, count);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Moves the first {@code count} operands of {@code chain} and the operators between them into a new additive
+   * expression. The text does not change, but {@code chain} and everything in it are replaced with new elements.
+   */
+  @NotNull
+  private static ErlangExpression splitLeadingOperands(@NotNull ErlangAdditiveExpression chain, int count) {
+    Ref<PsiElement> result = Ref.create();
+    CommandProcessor.getInstance().runUndoTransparentAction(() -> ApplicationManager.getApplication().runWriteAction(() -> {
+      ASTNode copy = chain.getNode().copyElement();
+      List<ErlangExpression> operands = ((ErlangAdditiveExpression) copy.getPsi()).getExpressionList();
+      ASTNode first = operands.getFirst().getNode();
+      ASTNode afterLast = operands.get(count - 1).getNode().getTreeNext();
+      CompositeElement part = ASTFactory.composite(ErlangTypes.ERL_ADDITIVE_EXPRESSION);
+      copy.addChild(part, first);
+      part.addChildren(first, afterLast, null);
+      chain.getNode().getTreeParent().replaceChild(chain.getNode(), copy);
+      result.set(part.getPsi());
+    }));
+    return (ErlangExpression) result.get();
+  }
+
+  private static void splitChainsStartingWith(@NotNull ErlangAdditiveExpression pattern, @NotNull PsiElement context) {
+    List<ErlangExpression> patternOperands = pattern.getExpressionList();
+    int count = patternOperands.size();
+    List<ErlangAdditiveExpression> chains = new ArrayList<>(PsiTreeUtil.findChildrenOfType(context, ErlangAdditiveExpression.class));
+    Collections.reverse(chains);
+    for (ErlangAdditiveExpression chain : chains) {
+      List<ErlangExpression> operands = chain.getExpressionList();
+      if (operands.size() <= count || PsiTreeUtil.isAncestor(chain, pattern, false)) continue;
+      boolean same = true;
+      for (int i = 0; i < count && same; i++) {
+        same = PsiEquivalenceUtil.areElementsEquivalent(operands.get(i), patternOperands.get(i)) &&
+               (i == count - 1 || operatorAfter(operands.get(i)) == operatorAfter(patternOperands.get(i)));
+      }
+      if (same) splitLeadingOperands(chain, count);
+    }
+  }
+
+  @Nullable
+  private static Object operatorAfter(@NotNull ErlangExpression operand) {
+    PsiElement operator = PsiTreeUtil.skipWhitespacesAndCommentsForward(operand);
+    return operator == null ? null : operator.getNode().getElementType();
   }
 
   @NotNull
@@ -91,6 +163,8 @@ public class ErlangRefactoringUtil {
     int offset = editor.getCaretModel().getOffset();
     PsiElement element = file.findElementAt(offset);
     if (!extractor.checkContext(file, editor, element)) return;
+    splitChainsAround(file, offset);
+    element = file.findElementAt(offset);
     List<ErlangExpression> expressions = new ArrayList<>();
     while (element != null) {
       if (element instanceof ErlangClauseBody) {
@@ -118,6 +192,29 @@ public class ErlangRefactoringUtil {
         },
                                          PsiElement::getText
       );
+    }
+  }
+
+  /**
+   * Splits the additive chains around {@code offset} so that each leading part of a chain that contains
+   * {@code offset} is an expression of its own, as a tree of binary operators would have it.
+   */
+  private static void splitChainsAround(@NotNull PsiFile file, int offset) {
+    PsiElement element = file.findElementAt(offset);
+    while (element != null && !(element instanceof ErlangClauseBody)) {
+      PsiElement parent = element.getParent();
+      if (parent instanceof ErlangAdditiveExpression chain) {
+        List<ErlangExpression> operands = chain.getExpressionList();
+        int index = 0;
+        int end = element.getTextRange().getEndOffset();
+        while (index < operands.size() - 1 && operands.get(index).getTextRange().getEndOffset() < end) index++;
+        if (Math.max(2, index + 1) < operands.size()) {
+          splitLeadingOperands(chain, operands.size() - 1);
+          element = file.findElementAt(offset);
+          continue;
+        }
+      }
+      element = parent;
     }
   }
 

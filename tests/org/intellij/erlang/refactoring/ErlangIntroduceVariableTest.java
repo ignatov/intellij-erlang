@@ -39,6 +39,12 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testFunctionClauseScope()     { doTest(); }
   public void testParenthesesElimination()  { doTest(); }
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
+  public void testLeadingPartOfSum()        { doTest(); }
+  public void testLeadingPartOfDifference() { doTest(); }
+  public void testLeadingPartOccurrence()   { doTest(); }
+  public void testLeadingPartAtCaret()      { doTest(); }
+  public void testLeadingPartOfLongChainAtCaret() { doTest(); }
+  public void testTrailingPartOfSum()       { doTest(); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
 

@@ -400,6 +400,11 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testReceiveParasite5() throws Exception { doEnterTest(); }
 
   public void testLongAdditiveChain() throws Exception { doTest(); }
+  public void testChopDownAdditiveChain() throws Exception {
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().BINARY_OPERATION_WRAP = CommonCodeStyleSettings.WRAP_ON_EVERY_ITEM;
+    doTest();
+  }
   public void testReceiveParasite6() throws Exception { doEnterTest(); }
   public void testReceiveParasite7() throws Exception { doEnterTest(); }
 

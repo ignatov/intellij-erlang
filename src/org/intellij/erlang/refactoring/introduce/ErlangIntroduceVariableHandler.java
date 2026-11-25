@@ -104,6 +104,11 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
     if (parent == null) {
       return null;
     }
+    ErlangExpression leadingOperands = ErlangRefactoringUtil.leadingOperands(parent, element1.getTextRange().getStartOffset(),
+                                                                             element2.getTextRange().getEndOffset());
+    if (leadingOperands != null) {
+      return leadingOperands;
+    }
     if (parent instanceof ErlangExpression) {
       return (ErlangExpression) parent;
     }

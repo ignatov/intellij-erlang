@@ -126,6 +126,10 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
       commonParent = commonParent.getParent().getParent();
     }
 
+    ErlangExpression leadingOperands = ErlangRefactoringUtil.leadingOperands(commonParent, first.getTextRange().getStartOffset(),
+                                                                             second.getTextRange().getEndOffset());
+    if (leadingOperands != null) return new SmartList<>(leadingOperands);
+
     if (commonParent instanceof ErlangExpression) {
       if (ErlangPsiImplUtil.inLeftPartOfAssignment(commonParent, false)) return Collections.emptyList();
       return new SmartList<>((ErlangExpression) commonParent);
