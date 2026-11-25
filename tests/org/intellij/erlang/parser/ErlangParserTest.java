@@ -157,6 +157,8 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
   public void testModuleMacroQualifiedType()            { doTest(false); }
+  public void testAdditiveChain()                       { doTest(false); }
+  public void testAdditiveChainIncomplete()             { doTest(true);  }
 
   public void testSixQuoteMultilineStringAndSigil() {
     PsiFile file = parseText("-module(six_quotes).\n" +

@@ -206,10 +206,13 @@ public class ErlType {
 
       @Override
       public void visitAdditiveExpression(@NotNull ErlangAdditiveExpression addExpr) {
-        ErlType leftType = fromExpression(addExpr.getLeft());
-        ErlType rightType = fromExpression(addExpr.getRight());
-
-        if (leftType.equals(rightType)) result.set(leftType);
+        var operands = addExpr.getExpressionList();
+        if (operands.size() < 2) return;
+        ErlType type = fromExpression(operands.get(0));
+        for (var operand : operands.subList(1, operands.size())) {
+          if (!type.equals(fromExpression(operand))) return;
+        }
+        result.set(type);
       }
 
       @Override

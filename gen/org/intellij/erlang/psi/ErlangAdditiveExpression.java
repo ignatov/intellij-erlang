@@ -7,28 +7,4 @@ import com.intellij.psi.PsiElement;
 
 public interface ErlangAdditiveExpression extends ErlangFakeBinaryExpression {
 
-  @Nullable
-  PsiElement getOpMinus();
-
-  @Nullable
-  PsiElement getOpPlus();
-
-  @Nullable
-  PsiElement getBor();
-
-  @Nullable
-  PsiElement getBsl();
-
-  @Nullable
-  PsiElement getBsr();
-
-  @Nullable
-  PsiElement getBxor();
-
-  @Nullable
-  PsiElement getOr();
-
-  @Nullable
-  PsiElement getXor();
-
 }

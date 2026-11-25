@@ -3436,20 +3436,19 @@ ERL_FILE
                                           PsiElement())(')')
                                       PsiElement(,)(',')
                                       ERL_ADDITIVE_EXPRESSION
-                                        ERL_ADDITIVE_EXPRESSION
-                                          ERL_MAX_EXPRESSION
-                                            PsiElement(integer)('1')
-                                          PsiElement(bsl)('bsl')
-                                          ERL_PARENTHESIZED_EXPRESSION
-                                            PsiElement(()('(')
-                                            ERL_ADDITIVE_EXPRESSION
-                                              ERL_MAX_EXPRESSION
-                                                ERL_Q_VAR
-                                                  PsiElement(var)('N')
-                                              PsiElement(-)('-')
-                                              ERL_MAX_EXPRESSION
-                                                PsiElement(integer)('1')
-                                            PsiElement())(')')
+                                        ERL_MAX_EXPRESSION
+                                          PsiElement(integer)('1')
+                                        PsiElement(bsl)('bsl')
+                                        ERL_PARENTHESIZED_EXPRESSION
+                                          PsiElement(()('(')
+                                          ERL_ADDITIVE_EXPRESSION
+                                            ERL_MAX_EXPRESSION
+                                              ERL_Q_VAR
+                                                PsiElement(var)('N')
+                                            PsiElement(-)('-')
+                                            ERL_MAX_EXPRESSION
+                                              PsiElement(integer)('1')
+                                          PsiElement())(')')
                                         PsiElement(-)('-')
                                         ERL_MAX_EXPRESSION
                                           PsiElement(integer)('1')
@@ -3473,13 +3472,12 @@ ERL_FILE
                                         PsiElement(integer)('0')
                                       PsiElement(,)(',')
                                       ERL_ADDITIVE_EXPRESSION
-                                        ERL_ADDITIVE_EXPRESSION
-                                          ERL_MAX_EXPRESSION
-                                            PsiElement(integer)('1')
-                                          PsiElement(bsl)('bsl')
-                                          ERL_MAX_EXPRESSION
-                                            ERL_Q_VAR
-                                              PsiElement(var)('N')
+                                        ERL_MAX_EXPRESSION
+                                          PsiElement(integer)('1')
+                                        PsiElement(bsl)('bsl')
+                                        ERL_MAX_EXPRESSION
+                                          ERL_Q_VAR
+                                            PsiElement(var)('N')
                                         PsiElement(-)('-')
                                         ERL_MAX_EXPRESSION
                                           PsiElement(integer)('1')
