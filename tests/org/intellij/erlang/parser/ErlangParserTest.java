@@ -18,13 +18,16 @@ package org.intellij.erlang.parser;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
@@ -181,6 +184,18 @@ public class ErlangParserTest extends ErlangParserTestBase {
     Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
     assertEquals(1, functions.size());
     assertEquals("visible", functions.iterator().next().getName());
+  }
+
+  // #1603: erlc compiles a call whose argument list comes from a macro, so f/0 keeps its whole body.
+  public void testCallWithMacroArgumentListKeepsFunctionBody() {
+    PsiFile file = parseText("-module(par).\n" +
+                             "-export([f/0]).\n" +
+                             "-define(PAR, ()).\n" +
+                             "setup() -> 1.\n" +
+                             "f() -> A = setup?PAR, B = A + 1, B.\n");
+    assertFalse(DebugUtil.psiToString(file, true), PsiTreeUtil.hasErrorElements(file));
+    List<String> names = ContainerUtil.map(PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class), ErlangFunction::getName);
+    assertEquals(List.of("setup", "f"), names);
   }
 
   private PsiFile parseText(String text) {
