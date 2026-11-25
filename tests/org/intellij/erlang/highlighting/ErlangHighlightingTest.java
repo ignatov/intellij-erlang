@@ -70,6 +70,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIfElifDefinedMacro() { doTest(); } // issue 1636
   public void testGeneratorExpressionDoesNotSeeOwnPattern() { doTest(); } // issue 1641
   public void testGeneratorPatternScope() { doTest(); } // issue 1641
+  public void testRepeatedGeneratorPatterns() { doTest(); } // issue 1641
   public void testDefinedOutsideIfElif() { doTest(); } // issue 1636
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }

@@ -18,10 +18,8 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
@@ -57,9 +55,7 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
 
   @NotNull
   static List<ErlangQVar> processVariables(@NotNull ErlangQVar element, @NotNull ErlangVarProcessor processor) {
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(element, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, element);
-    ResolveUtil.treeWalkUp(place, processor);
+    ResolveUtil.treeWalkUp(element, processor);
     List<ErlangQVar> result = processor.getAllResults();
     if (!result.isEmpty()) return result;
 
