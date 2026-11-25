@@ -21,6 +21,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.BaseRefactoringProcessor;
 import com.intellij.refactoring.safeDelete.SafeDeleteHandler;
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase;
+import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 
 public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
   @Override
@@ -39,6 +41,39 @@ public class ErlangSafeDeleteTest extends LightJavaCodeInsightFixtureTestCase {
   public void testFunction()    { doTest(); }
   public void testWithExports() { doTest(); }
   public void testRecursiveFunction() { doTest(); }
+
+  public void testQualifiedRecursiveCall() {
+    ErlangFile file = (ErlangFile) myFixture.configureByText("a.erl", "-module(a).\nloop(N) -> a:loop(N - 1).\n");
+    SafeDeleteHandler.invoke(myFixture.getProject(), new PsiElement[]{file.getFunction("loop", 1)}, false);
+    assertEmpty(file.getFunctions());
+  }
+
+  public void testMutuallyRecursiveFunctionsDeletedTogether() {
+    ErlangFile file = (ErlangFile) myFixture.configureByText("a.erl", "-module(a).\nping(N) -> pong(N).\npong(N) -> ping(N).\n");
+    SafeDeleteHandler.invoke(myFixture.getProject(), file.getFunctions().toArray(PsiElement.EMPTY_ARRAY), false);
+    assertEmpty(file.getFunctions());
+  }
+
+  public void testOneOfMutuallyRecursiveFunctions() {
+    ErlangFile file = (ErlangFile) myFixture.configureByText("a.erl", "-module(a).\nping(N) -> pong(N).\npong(N) -> ping(N).\n");
+    assertConflict(file.getFunction("ping", 1));
+  }
+
+  public void testRecursiveFunctionCalledFromOtherFunction() {
+    ErlangFile file = (ErlangFile) myFixture.configureByText("a.erl", "-module(a).\nloop(N) -> loop(N - 1).\nmain() -> loop(1).\n");
+    assertConflict(file.getFunction("loop", 1));
+  }
+
+  private void assertConflict(ErlangFunction function) {
+    try {
+      SafeDeleteHandler.invoke(myFixture.getProject(), new PsiElement[]{function}, false);
+      fail("The call from another function must be reported");
+    }
+    catch (BaseRefactoringProcessor.ConflictsInTestsException e) {
+      assertTrue(e.getMessage(), e.getMessage().contains("not safe to delete"));
+    }
+    assertTrue(function.isValid());
+  }
 
   public void testIncludedHeader() {
     PsiFile header = myFixture.addFileToProject("header.hrl", "-define(HEADER, 1).\n");
