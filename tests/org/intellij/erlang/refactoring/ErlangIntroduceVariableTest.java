@@ -51,6 +51,12 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testNestedHeadPattern()       { doTest(); }
   public void testSelectedCasePattern()     { doTest(); }
   public void testSelectedCasePatternSingle() { doTest(SINGLE); }
+  public void testSelectedGeneratorPatternNotInSource() { doTest(); }
+  public void testSelectedGeneratorPattern() { doTest(); }
+  public void testSelectedCasePatternUsedInGuard() { doTest(); }
+  public void testSelectedReceivePattern() { doTest(); }
+  public void testSelectedCasePatternUsedInBody() { doTest(); }
+  public void testSelectedFunPattern() { doTest(); }
 
   private void doTest() { doTest(ALL); }
 

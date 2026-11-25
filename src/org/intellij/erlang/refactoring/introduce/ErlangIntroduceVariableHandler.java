@@ -337,18 +337,39 @@ public class ErlangIntroduceVariableHandler implements RefactoringActionHandler 
 
   @NotNull
   private static List<PsiElement> getOccurrences(@NotNull ErlangExpression expression) {
-    if (isInClausePattern(expression)) return new ArrayList<>(List.of(expression));
-    ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
-    List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, function);
-    occurrences.removeIf(ErlangIntroduceVariableHandler::isInClausePattern);
+    ErlangArgumentDefinition pattern = getClausePattern(expression);
+    if (pattern == null) {
+      ErlangFunctionClause function = PsiTreeUtil.getParentOfType(expression, ErlangFunctionClause.class);
+      List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, function);
+      occurrences.removeIf(o -> getClausePattern(o) != null);
+      return occurrences;
+    }
+    PsiElement head = pattern.getParent();
+    PsiElement scope = head instanceof ErlangArgumentDefinitionList || head instanceof ErlangLcExpression ? head.getParent() : head;
+    List<PsiElement> occurrences = ErlangRefactoringUtil.getOccurrences(expression, scope);
+    occurrences.removeIf(o -> {
+      ErlangArgumentDefinition otherPattern = getClausePattern(o);
+      if (otherPattern != null && otherPattern.getParent() != head) return true;
+      return head instanceof ErlangLcExpression && otherPattern == null && isEvaluatedBeforeGenerator(o, (ErlangLcExpression) head);
+    });
     return occurrences;
   }
 
-  private static boolean isInClausePattern(@NotNull PsiElement element) {
+  private static boolean isEvaluatedBeforeGenerator(@NotNull PsiElement element, @NotNull ErlangLcExpression generator) {
+    for (PsiElement child : generator.getParent().getChildren()) {
+      if (child instanceof ErlangLcExpression && PsiTreeUtil.isAncestor(child, element, false)) {
+        return child.getTextRange().getStartOffset() <= generator.getTextRange().getStartOffset();
+      }
+    }
+    return false;
+  }
+
+  @Nullable
+  private static ErlangArgumentDefinition getClausePattern(@NotNull PsiElement element) {
     ErlangArgumentDefinition argDef = PsiTreeUtil.getParentOfType(element, ErlangArgumentDefinition.class);
-    if (argDef == null) return false;
+    if (argDef == null) return null;
     PsiElement parent = argDef.getParent();
-    return !(parent instanceof ErlangArgumentDefinitionList && parent.getParent() instanceof ErlangFunctionClause);
+    return parent instanceof ErlangArgumentDefinitionList && parent.getParent() instanceof ErlangFunctionClause ? null : argDef;
   }
 
   @Override
