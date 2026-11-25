@@ -21,12 +21,14 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.util.Pass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiRecursiveElementVisitor;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.refactoring.IntroduceTargetChooser;
+import com.intellij.refactoring.RefactoringBundle;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -41,15 +43,28 @@ public class ErlangRefactoringUtil {
   }
 
   @NotNull
-  public static List<PsiElement> getOccurrences(@NotNull final PsiElement pattern, @Nullable PsiElement context) {
+  public static List<ErlangExpressionTarget> getOccurrences(@NotNull final ErlangExpressionTarget pattern, @Nullable PsiElement context) {
     if (context == null) {
       return Collections.emptyList();
     }
-    final List<PsiElement> occurrences = new ArrayList<>();
+    final List<ErlangExpression> patternOperands = pattern.isPrefix() ? pattern.getOperands() :
+                                                   pattern.getExpression() instanceof ErlangAdditiveExpression chain ? chain.getExpressionList() :
+                                                   null;
+    final List<ErlangExpressionTarget> occurrences = new ArrayList<>();
     PsiRecursiveElementVisitor visitor = new PsiRecursiveElementVisitor() {
       public void visitElement(@NotNull PsiElement element) {
-        if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern)) {
-          occurrences.add(element);
+        if (patternOperands != null) {
+          if (element instanceof ErlangAdditiveExpression chain && startsWith(chain, patternOperands)) {
+            occurrences.add(ErlangExpressionTarget.prefix(chain, patternOperands.size()));
+            List<ErlangExpression> operands = chain.getExpressionList();
+            for (ErlangExpression operand : operands.subList(patternOperands.size(), operands.size())) {
+              operand.accept(this);
+            }
+            return;
+          }
+        }
+        else if (PsiEquivalenceUtil.areElementsEquivalent(element, pattern.getExpression())) {
+          occurrences.add(ErlangExpressionTarget.of((ErlangExpression) element));
           return;
         }
         super.visitElement(element);
@@ -57,6 +72,22 @@ public class ErlangRefactoringUtil {
     };
     context.accept(visitor);
     return occurrences;
+  }
+
+  private static boolean startsWith(@NotNull ErlangAdditiveExpression chain, @NotNull List<ErlangExpression> patternOperands) {
+    List<ErlangExpression> operands = chain.getExpressionList();
+    if (operands.size() < patternOperands.size()) return false;
+    for (int i = 0; i < patternOperands.size(); i++) {
+      if (!PsiEquivalenceUtil.areElementsEquivalent(operands.get(i), patternOperands.get(i))) return false;
+      if (i > 0 && operatorBefore(operands.get(i)) != operatorBefore(patternOperands.get(i))) return false;
+    }
+    return true;
+  }
+
+  @Nullable
+  private static IElementType operatorBefore(@NotNull ErlangExpression operand) {
+    PsiElement operator = PsiTreeUtil.skipWhitespacesAndCommentsBackward(operand);
+    return operator == null ? null : operator.getNode().getElementType();
   }
 
   @NotNull
@@ -91,7 +122,23 @@ public class ErlangRefactoringUtil {
     int offset = editor.getCaretModel().getOffset();
     PsiElement element = file.findElementAt(offset);
     if (!extractor.checkContext(file, editor, element)) return;
-    List<ErlangExpression> expressions = new ArrayList<>();
+    List<ErlangExpressionTarget> targets = getIntroduceTargets(element);
+    if (targets.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
+      extractor.process(editor, targets.getFirst());
+    }
+    else if (targets.size() > 1) {
+      IntroduceTargetChooser.showIntroduceTargetChooser(editor, targets, target -> extractor.process(editor, target),
+                                                        RefactoringBundle.message("introduce.target.chooser.expressions.title"), -1);
+    }
+  }
+
+  /**
+   * The expressions around {@code element} to choose from, innermost first.
+   */
+  @NotNull
+  public static List<ErlangExpressionTarget> getIntroduceTargets(@Nullable PsiElement element) {
+    List<ErlangExpressionTarget> targets = new ArrayList<>();
+    PsiElement child = null;
     while (element != null) {
       if (element instanceof ErlangClauseBody) {
         break;
@@ -100,29 +147,36 @@ public class ErlangRefactoringUtil {
         boolean isQualifiedFunCall = element instanceof ErlangFunctionCallExpression &&
                                      element.getParent() instanceof ErlangGlobalFunctionCallExpression;
         if (!isQualifiedFunCall && !ErlangPsiImplUtil.inLeftPartOfAssignment(element, false)) {
-          expressions.add((ErlangExpression) element);
+          if (element instanceof ErlangAdditiveExpression chain && child != null) {
+            addPrefixes(targets, chain, child);
+          }
+          targets.add(ErlangExpressionTarget.of((ErlangExpression) element));
         }
       }
+      child = element;
       element = element.getParent();
     }
-    if (expressions.size() == 1 || ApplicationManager.getApplication().isUnitTestMode()) {
-      extractor.process(editor, expressions.getFirst());
+    return targets;
+  }
+
+  /**
+   * Adds the prefixes of {@code chain} that contain {@code child}, its child, and are not the whole chain.
+   */
+  private static void addPrefixes(@NotNull List<ErlangExpressionTarget> targets,
+                                  @NotNull ErlangAdditiveExpression chain,
+                                  @NotNull PsiElement child) {
+    List<ErlangExpression> operands = chain.getExpressionList();
+    int before = 0;
+    while (before < operands.size() && operands.get(before).getTextRange().getEndOffset() <= child.getTextRange().getStartOffset()) {
+      before++;
     }
-    else if (expressions.size() > 1) {
-      IntroduceTargetChooser.showChooser(editor, expressions,
-        new Pass<ErlangExpression>() {
-          @Override
-          public void pass(@NotNull ErlangExpression expression) {
-            extractor.process(editor, expression);
-          }
-        },
-                                         PsiElement::getText
-      );
+    for (int k = Math.max(before + 1, 2); k < operands.size(); k++) {
+      targets.add(ErlangExpressionTarget.prefix(chain, k));
     }
   }
 
   public interface Extractor {
     boolean checkContext(@NotNull PsiFile file, @NotNull Editor editor, @Nullable PsiElement element);
-    void process(@NotNull Editor editor, @NotNull ErlangExpression expression);
+    void process(@NotNull Editor editor, @NotNull ErlangExpressionTarget target);
   }
 }

@@ -575,6 +575,14 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
 
   public void testTerminatorOnOwnLine() throws Exception { doTest(); }
 
+  public void testWrappedLastOperandOfAdditiveChain()         throws Exception { doTest(); }
+  public void testWrappedLastOperandOfAdditiveChain__IR_OFF() throws Exception { doTest(); }
+  public void testAdditiveChainChopDown() throws Exception {
+    getCommonSettings().RIGHT_MARGIN = 40;
+    getCommonSettings().BINARY_OPERATION_WRAP = CommonCodeStyleSettings.WRAP_ON_EVERY_ITEM;
+    doTest();
+  }
+
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();
     settings.RIGHT_MARGIN = 40;

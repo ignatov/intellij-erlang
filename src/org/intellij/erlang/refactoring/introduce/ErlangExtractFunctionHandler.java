@@ -47,7 +47,9 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.refactoring.ErlangExpressionTarget;
 import org.intellij.erlang.refactoring.ErlangRefactoringUtil;
+import org.intellij.erlang.refactoring.VariableTextBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,8 +99,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
                                              @Override
                                              public void process(@NotNull Editor editor,
-                                                                 @NotNull ErlangExpression expression) {
-                                               perform(new SmartList<>(expression));
+                                                                 @NotNull ErlangExpressionTarget target) {
+                                               perform(target.getOperands());
                                              }
                                            });
     }
@@ -120,6 +122,12 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
         }
       }
     }
+    ErlangExpressionTarget prefix = ErlangExpressionTarget.prefixOfSelection(first, second);
+    if (prefix != null) {
+      if (ErlangPsiImplUtil.inLeftPartOfAssignment(prefix.getExpression(), false)) return Collections.emptyList();
+      return new ArrayList<>(prefix.getOperands());
+    }
+
     PsiElement commonParent = PsiTreeUtil.findCommonParent(first, second);
 
     if (commonParent != null && commonParent.getParent() instanceof ErlangQAtom) {
@@ -159,7 +167,17 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
     List<ErlangNamedElement> inParams = analyze.first;
     List<ErlangNamedElement> outParams = analyze.second;
 
-    String shorten = ErlangRefactoringUtil.shorten(last, "extracted");
+    ErlangExpressionTarget prefix = selection.size() > 1 && first.getParent() instanceof ErlangAdditiveExpression chain ?
+                                    ErlangExpressionTarget.prefix(chain, selection.size()) : null;
+    String shorten;
+    if (prefix != null) {
+      VariableTextBuilder builder = new VariableTextBuilder();
+      prefix.accept(builder);
+      shorten = builder.result("extracted");
+    }
+    else {
+      shorten = ErlangRefactoringUtil.shorten(last, "extracted");
+    }
     String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, shorten);
     ErlangExtractFunctionDialog dialog = new ErlangExtractFunctionDialog(project, name, inParams);
 
@@ -171,7 +189,8 @@ public class ErlangExtractFunctionHandler implements RefactoringActionHandler {
 
       final String signature = generateSignature(functionName, inParams);
       final String functionText = signature + " ->\n" +
-                                  StringUtil.join(selection, PsiElement::getText, ",\n") + bindingsEx + ".";
+                                  (prefix != null ? prefix.getText() : StringUtil.join(selection, PsiElement::getText, ",\n")) +
+                                  bindingsEx + ".";
 
       try {
         PsiFile file = first.getContainingFile();

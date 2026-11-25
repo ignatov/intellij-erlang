@@ -20,8 +20,12 @@ import com.intellij.codeInsight.template.impl.TemplateManagerImpl;
 import com.intellij.codeInsight.template.impl.TemplateState;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler;
+
+import java.util.List;
 
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy;
 import static org.intellij.erlang.refactoring.introduce.ErlangIntroduceVariableHandler.ReplaceStrategy.ALL;
@@ -41,6 +45,17 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testSingleOccurrenceReplace() { doTest(SINGLE); }
   public void testCaseExpressionRenamed()   { doTestWithRename("C"); }
   public void testIfExpressionRenamed()     { doTestWithRename("Sign"); }
+  public void testAdditivePrefix()          { doTest(); }
+  public void testSubtractivePrefix()       { doTest(); }
+  public void testOccurrenceStartingLongerChain()      { doTest(); }
+  public void testChainOccurrenceStartingLongerChain() { doTest(); }
+
+  public void testTargetsInsideChain() {
+    myFixture.configureByText("a.erl", "foo(A, B, C, D) ->\n  X = A + <caret>B - C + D,\n  X.\n");
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    List<String> targets = ContainerUtil.map(ErlangRefactoringUtil.getIntroduceTargets(element), ErlangExpressionTarget::render);
+    assertEquals(List.of("B", "A + B", "A + B - C", "A + B - C + D"), targets);
+  }
 
   private void doTest() { doTest(ALL); }
 
