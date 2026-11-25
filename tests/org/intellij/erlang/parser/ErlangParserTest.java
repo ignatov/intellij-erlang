@@ -183,6 +183,23 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEquals("visible", functions.iterator().next().getName());
   }
 
+  // #1645: erlc gives "syntax error before: ','" for a map entry without '=>' or ':='.
+  public void testMapEntryWithoutOperatorInPatternIsError() {
+    PsiFile file = parseText("-module(t).\n" +
+                             "-export([f/1]).\n" +
+                             "f(#{a, b}) ->\n" +
+                             "    ok.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  public void testMapEntryWithoutOperatorInExpressionIsError() {
+    PsiFile file = parseText("-module(e).\n" +
+                             "-export([f/0]).\n" +
+                             "f() ->\n" +
+                             "    #{a, b}.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
