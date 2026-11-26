@@ -87,6 +87,6 @@ public class ErlangApplicationRunConfigurationProducer extends ErlangDebuggableR
 
   @NotNull
   private static String moduleNameAndFunction(@NotNull String moduleName, @NotNull String functionName) {
-    return ErlangRunningState.toAtom(moduleName) + " " + ErlangRunningState.toAtom(functionName);
+    return ErlangRunningState.quotedAtom(moduleName) + " " + ErlangRunningState.quotedAtom(functionName);
   }
 }

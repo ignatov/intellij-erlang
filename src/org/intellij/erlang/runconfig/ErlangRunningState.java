@@ -166,7 +166,7 @@ public abstract class ErlangRunningState extends CommandLineState {
   private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
     commandLine.addParameters("-eval",
-      toAtom(entryPoint.getModuleName()) + ":" + toAtom(entryPoint.getFunctionName()) +
+      quotedAtom(entryPoint.getModuleName()) + ":" + quotedAtom(entryPoint.getFunctionName()) +
         "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ").");
   }
 
@@ -177,7 +177,7 @@ public abstract class ErlangRunningState extends CommandLineState {
 
   // the atom with the given name as Erlang source: quoted and escaped unless it is a plain atom
   @NotNull
-  public static String toAtom(@NotNull String name) {
+  public static String quotedAtom(@NotNull String name) {
     if (PLAIN_ATOM.matcher(name).matches() && !RESERVED_WORDS.contains(name)) return name;
     StringBuilder sb = new StringBuilder("'");
     for (int i = 0; i < name.length(); i++) {
