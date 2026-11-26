@@ -166,6 +166,65 @@ public class ErlangCompilerOptionsConfigurableTest extends ErlangLightPlatformCo
     }
   }
 
+  // Opening the page with "compile with rebar" stored as on and no rebar path must not modify the page; #1470
+  public void testOpeningWithoutRebarPathKeepsStoredRebarCompiler() {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    ErlangCompilerSettings compilerSettings = ErlangCompilerSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    boolean oldUseRebar = compilerSettings.isUseRebarCompilerEnabled();
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      rebarSettings.setRebarPath("");
+      compilerSettings.setUseRebarCompilerEnabled(true);
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      fireShown(component);
+
+      assertFalse(configurable.isModified());
+      configurable.apply();
+      assertTrue(compilerSettings.isUseRebarCompilerEnabled());
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+      compilerSettings.setUseRebarCompilerEnabled(oldUseRebar);
+      configurable.disposeUIResources();
+    }
+  }
+
+  public void testUntickingThenRemovingRebarPathStoresRebarCompilerOff() {
+    RebarSettings rebarSettings = RebarSettings.getInstance(getProject());
+    ErlangCompilerSettings compilerSettings = ErlangCompilerSettings.getInstance(getProject());
+    String oldRebarPath = rebarSettings.getRebarPath();
+    boolean oldUseRebar = compilerSettings.isUseRebarCompilerEnabled();
+    ErlangCompilerOptionsConfigurable configurable = new ErlangCompilerOptionsConfigurable(getProject());
+    try {
+      rebarSettings.setRebarPath("");
+      compilerSettings.setUseRebarCompilerEnabled(true);
+      JComponent component = configurable.createComponent();
+      configurable.reset();
+      fireShown(component);
+      JCheckBox useRebar = findCheckBox(component, "rebar");
+
+      rebarSettings.setRebarPath("/usr/bin/rebar3");
+      fireShown(component);
+      assertTrue(useRebar.isSelected());
+      useRebar.setSelected(false);
+
+      rebarSettings.setRebarPath("");
+      fireShown(component);
+
+      assertFalse(useRebar.isSelected());
+      assertTrue(configurable.isModified());
+      configurable.apply();
+      assertFalse(compilerSettings.isUseRebarCompilerEnabled());
+    }
+    finally {
+      rebarSettings.setRebarPath(oldRebarPath);
+      compilerSettings.setUseRebarCompilerEnabled(oldUseRebar);
+      configurable.disposeUIResources();
+    }
+  }
+
   private static void fireShown(JComponent component) {
     AncestorEvent shown = new AncestorEvent(component, AncestorEvent.ANCESTOR_ADDED, component, component.getParent());
     for (AncestorListener listener : component.getAncestorListeners()) {
