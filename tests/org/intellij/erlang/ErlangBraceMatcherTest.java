@@ -74,6 +74,25 @@ public class ErlangBraceMatcherTest extends ErlangLightPlatformCodeInsightFixtur
     doTestFunTypeIsNotBrace("-callback f() -> <caret>fun((...) -> ok).");
   }
 
+  public void testFunTypeWithConstraintInSpecIsNotBrace() {
+    doTestFunTypeIsNotBrace("-spec f(X) -> <caret>fun() when X :: integer().\nf(_) -> fun() -> ok end.");
+  }
+
+  public void testFunTypeWithConstraintInCallbackIsNotBrace() {
+    doTestFunTypeIsNotBrace("-callback f(X) -> <caret>fun() when X :: atom().");
+  }
+
+  public void testNavigationIgnoresFunTypeWithConstraintInSpec() {
+    doTestCaretStays(IdeActions.ACTION_EDITOR_MATCH_BRACE,
+                     "-module(a).\n-spec f(X) -> fun() when X :: integer().\nf(_) -> fun() -> ok end.\ng(X) -> X +<caret> 1.\n");
+    doTestCaretStays("EditorCodeBlockStart",
+                     "-module(a).\n-spec f(X) -> fun() when X :: integer().\nf(_) -> fun() -> ok end.\ng(X) -> X +<caret> 1.\n");
+  }
+
+  public void testLambdaWithGuardSequenceMatchesEnd() {
+    doTest(true, "f() -> <caret>fun() when a; b, c -> ok <match>end.");
+  }
+
   public void testFunTypeInRecordFieldIsNotBrace() {
     doTestFunTypeIsNotBrace("-record(r, {f = fun() -> ok end :: <caret>fun(() -> ok)}).");
   }
@@ -99,7 +118,11 @@ public class ErlangBraceMatcherTest extends ErlangLightPlatformCodeInsightFixtur
   }
 
   private void doTestCaretStays(String actionId) {
-    myFixture.configureByText("a.erl", "-module(a).\n-spec f(fun((a) -> b)) -> ok.\nf(_) -> ok.\ng(X) -> X +<caret> 1.\n");
+    doTestCaretStays(actionId, "-module(a).\n-spec f(fun((a) -> b)) -> ok.\nf(_) -> ok.\ng(X) -> X +<caret> 1.\n");
+  }
+
+  private void doTestCaretStays(String actionId, String text) {
+    myFixture.configureByText("a.erl", text);
     int offset = myFixture.getCaretOffset();
     myFixture.performEditorAction(actionId);
     assertEquals(offset, myFixture.getCaretOffset());

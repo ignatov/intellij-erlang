@@ -96,7 +96,8 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
         return !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_PAR_LEFT;
       }
       if (iterator.atEnd() || iterator.getTokenType() != ErlangTypes.ERL_PAR_LEFT) return false;
-      // A fun type has '->' inside its parentheses, or is 'fun()' without '->' or 'when' after it.
+      // A fun type has '->' inside its parentheses, or is 'fun()' followed by neither '->' nor a guard:
+      // a 'when' after it in a spec or a callback starts constraints ('X :: T'), which have no '->'.
       int depth = 1;
       while (depth > 0) {
         steps += advanceToSignificantToken(iterator);
@@ -107,7 +108,14 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
         else if (type == ErlangTypes.ERL_ARROW && depth == 1) return false;
       }
       steps += advanceToSignificantToken(iterator);
-      return iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_ARROW || iterator.getTokenType() == ErlangTypes.ERL_WHEN;
+      if (iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_ARROW) return true;
+      if (iterator.getTokenType() != ErlangTypes.ERL_WHEN) return false;
+      while (true) {
+        steps += advanceToSignificantToken(iterator);
+        if (iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_ARROW) return true;
+        IElementType type = iterator.getTokenType();
+        if (type == ErlangTypes.ERL_DOT || type == ErlangTypes.ERL_COLON_COLON) return false;
+      }
     }
     finally {
       for (int i = 0; i < steps; i++) iterator.retreat();
