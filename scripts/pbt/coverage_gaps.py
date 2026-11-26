@@ -260,7 +260,7 @@ class ParserAnalysis:
         self.line_rule = {}  # line -> rule, for lines outside ordinary methods (Pratt blocks, lambdas)
         self.pratt_blocks = {}  # rule -> {"cond": line, "body": [lines]}
         self._split_pratt()
-        self.caller_used, self.caller_telling = self._caller_evidence()
+        self.caller_used, self.caller_telling, self.caller_silent = self._caller_evidence()
         self.unknown_match = set()
         self.matched = self._fixpoint()
 
@@ -353,15 +353,20 @@ class ParserAnalysis:
         return bool(cov) and cov[1] > 0 and (cov[3] >= 2 or cov[0] > 0)
 
     def _caller_evidence(self):
-        """Two sets of methods. used: a caller used the result as true at least once, because the line after the call
-        ran only for that. telling: some call site could show it. A site cannot when the next line runs anyway
-        (`r = p && ...` after a pin, the end of the method) or when r may be true from an earlier alternative."""
-        used, telling = set(), set()
+        """Three sets of methods. used: a caller used the result as true at least once, because the line after the
+        call ran only for that. telling: some call site could show it. silent: a call site ran and cannot show it,
+        because the next line runs anyway (`r = p && ...` after a pin, the end of the method) or r may be true from
+        an earlier alternative."""
+        used, telling, silent = set(), set(), set()
         for m in self.methods.values():
             calls = [c for c in m["calls"] if c["kind"] != "shortcut"]
             for idx, c in enumerate(calls):
                 names = [n for k, n in c["callees"] if k == "method"]
-                if not names or (c["kind"] == "alt" and self._ever_true(c)):
+                if not names:
+                    continue
+                if c["kind"] == "alt" and self._ever_true(c):
+                    if call_executed("alt", self.cov(c["line"])):
+                        silent.update(names)
                     continue
                 nxt = calls[idx + 1] if idx + 1 < len(calls) else None
                 if c["kind"] == "pratt_cond":
@@ -372,11 +377,13 @@ class ParserAnalysis:
                 elif nxt and nxt["kind"] == "alt":
                     seen = self._ever_true(nxt)
                 else:
+                    if call_executed(c["kind"], self.cov(c["line"])):
+                        silent.update(names)
                     continue
                 telling.update(names)
                 if seen:
                     used.update(names)
-        return used, telling
+        return used, telling, silent
 
     def _token_alternatives_matched(self, m, calls):
         """For a method that is only token alternatives: executed tokens do not show that one matched. Some alternative
@@ -432,8 +439,10 @@ class ParserAnalysis:
             return False
         if self._only_delegates(with_callees):
             # The call line has no branch, and the callee may have matched for another caller.
-            if m["name"] in self.caller_telling:
-                return m["name"] in self.caller_used
+            if m["name"] in self.caller_used:
+                return True
+            if m["name"] in self.caller_telling and m["name"] not in self.caller_silent:
+                return False
             self.unknown_match.add(m["name"])
         return True
 

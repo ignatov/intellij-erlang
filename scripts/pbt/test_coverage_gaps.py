@@ -373,6 +373,10 @@ class CoverageGapsTest(unittest.TestCase):
         self.assertEqual((dead["verdict"], dead["why"]), ("not-reached", "called, never matched its first element"))
         dead = self.delegating([first, ((0, 9, 1, 1), "    r = r && add_op(b, l + 1);")])
         self.assertEqual((dead["verdict"], dead.get("match_unknown")), ("reached", None))
+        # one site shows a failure, another one ran and shows nothing: dead may have matched there
+        dead = self.delegating([first, ((7, 2, 1, 1), "    r = r && add_op(b, l + 1);"),
+                                ((0, 5, 1, 1), "    if (!r) r = dead(b, l + 1);")])
+        self.assertEqual((dead["verdict"], dead.get("match_unknown")), ("reached", True))
         # after a pin the next line runs anyway, and so does the end of a method: nothing shows the result
         for after in ([((0, 2, 0, 0), "    p = r; // pin = 1"), ((0, 9, 3, 3), "    r = p && add_op(b, l + 1) && r;")], []):
             dead = self.delegating([first] + after)
