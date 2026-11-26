@@ -346,6 +346,20 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1687: erlc -Wall does not warn about a type that only an included header uses
+  public void testTypeUsedOnlyInIncludedHeaderIsNotUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("h.hrl", "-record(r, {a :: loc()}).\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type loc() :: integer().
+      -type <warning descr="Unused type 'unused'">unused</warning>() :: atom().
+      -include("h.hrl").
+      f() -> #r{a = 1}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
