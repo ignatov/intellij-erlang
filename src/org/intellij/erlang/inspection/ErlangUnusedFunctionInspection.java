@@ -61,10 +61,10 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   }
 
   // a function is used when a call or a fun of it is reachable from the roots: the exports, -on_load and the other
-  // attributes, and the functions that are never reported; uses in specs and by the function itself do not count
-  private static @NotNull Set<ErlangFunction> unusedFunctions(@NotNull ErlangFile file) {
+  // attributes, and the functions that are never reported or are suppressed; uses in specs and by the function itself do not count
+  private @NotNull Set<ErlangFunction> unusedFunctions(@NotNull ErlangFile file) {
     return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
-      ErlangUnusedCode.unreachable(file, ContainerUtil.filter(file.getFunctions(), f -> isChecked(file, f)), ErlangFunction.class,
+      ErlangUnusedCode.unreachable(file, ContainerUtil.filter(file.getFunctions(), f -> isChecked(file, f) && !isSuppressedFor(f.getNameIdentifier())), ErlangFunction.class,
                                    element -> PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) != null),
       PsiModificationTracker.MODIFICATION_COUNT, ErlangMacroLayer.modeTracker()));
   }

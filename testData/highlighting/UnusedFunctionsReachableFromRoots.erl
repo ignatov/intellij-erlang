@@ -10,3 +10,6 @@ helper2(X) -> X.
 <warning descr="Unused function 'spec_only/0'">spec_only</warning>() -> dead_callee().
 <warning descr="Unused function 'dead_callee/0'">dead_callee</warning>() -> spec_only().
 <warning descr="Unused function 'self_loop/0'">self_loop</warning>() -> self_loop().
+%% noinspection ErlangUnusedFunction
+suppressed() -> called_by_suppressed().
+called_by_suppressed() -> ok.
