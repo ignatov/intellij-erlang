@@ -67,6 +67,13 @@ public final class ExtProcessUtil {
   // SIGKILL, because a BEAM stuck in a dirty NIF does not stop on SIGTERM.
   @NotNull
   public static ExtProcessOutput execAndGetFirstLine(long timeout, @NotNull String... command) {
+    return execAndGetFirstLine(timeout, Map.of(), command);
+  }
+
+  @NotNull
+  public static ExtProcessOutput execAndGetFirstLine(long timeout,
+                                                      @NotNull Map<String, String> environment,
+                                                      @NotNull String... command) {
     File workDirectory = null;
     Process process = null;
     boolean interrupted = false;
@@ -78,7 +85,7 @@ public final class ExtProcessUtil {
       // A new directory, random name and owner-only: rebar3 evaluates rebar.config.script from its working directory, a crash
       // dump stays out of the IDE's directory (#1239), and it is not deleted under a running command (a BEAM hangs in getcwd()).
       workDirectory = Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")), "erlang-ext-process-").toFile();
-      CommandLine commandLine = new CommandLine(withAbsoluteExecutable(command), workDirectory);
+      CommandLine commandLine = new CommandLine(withAbsoluteExecutable(command), workDirectory, environment);
       process = commandLine.createProcess();
       if (running != null && !running.register(process, workDirectory)) return new ExtProcessOutput("", "");
       process.getOutputStream().close();
@@ -126,9 +133,10 @@ public final class ExtProcessUtil {
     final File myStdOut;
     final File myStdErr;
 
-    CommandLine(@NotNull String[] command, @NotNull File workDirectory) {
+    CommandLine(@NotNull String[] command, @NotNull File workDirectory, @NotNull Map<String, String> environment) {
       super(command);
       withWorkDirectory(workDirectory);
+      environment.forEach(this::withEnvironment);
       myStdOut = new File(workDirectory, "stdout");
       myStdErr = new File(workDirectory, "stderr");
     }

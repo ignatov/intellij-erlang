@@ -1,0 +1,3 @@
+-ifdef(NEVER).
+-undef(FEATURE_ENABLED).
+-endif.

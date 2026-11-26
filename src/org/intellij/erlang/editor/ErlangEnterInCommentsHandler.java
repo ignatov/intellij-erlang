@@ -25,6 +25,7 @@ import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.tree.IElementType;
@@ -46,6 +47,7 @@ public class ErlangEnterInCommentsHandler extends EnterHandlerDelegateAdapter {
     }
 
     Document document = editor.getDocument();
+    PsiDocumentManager.getInstance(file.getProject()).commitDocument(document);
     CharSequence text = document.getCharsSequence();
     int caret = CharArrayUtil.shiftForward(text, caretOffset.get().intValue(), " \t");
     if (caret < text.length() && text.charAt(caret) == '\n') {

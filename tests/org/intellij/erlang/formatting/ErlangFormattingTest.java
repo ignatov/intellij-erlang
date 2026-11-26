@@ -133,6 +133,9 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void test444()    throws Exception { alignBlocks(); doTest(); }
   public void test478()    throws Exception { doTest(); }
   public void test754()    throws Exception { doTest(); }
+  public void test778()    throws Exception { setUpCommaFirst(); doTest(); }
+  public void test778CommaFirst()   throws Exception { setUpCommaFirst(); doTest(); }
+  public void test778RecordFields() throws Exception { getErlangSettings().ALIGN_RECORD_FIELD_ASSIGNMENTS = true; setUpCommaFirst(); doTest(); }
   public void test830()    throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
   public void test830Fun() throws Exception { setUpFunctionParametersWrapIfLong(); doTest(); }
   public void test830CommaFirst() throws Exception { setUpCommaFirst(); setUpFunctionParametersWrapIfLong(); doTest(); }
@@ -542,8 +545,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testMapComprehensionAfterLastExpr()    throws Exception { doEnterTest(); }
   
   public void testListAlignOnEnter()                 throws Exception { alignBlocks(); doEnterTest(); }
+  public void testListAlignOnEnterBeforeBracket()    throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportAlignOnEnter()               throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportTypeAlignOnEnter()           throws Exception { alignBlocks(); doEnterTest(); }
+  public void testExportOnEnter()                    throws Exception { doEnterTest(); }
 
   public void testCommaFirstEnterRecords() throws Exception { setUpCommaFirst(); doEnterTest(); }
+  public void testCommaFirstEnterExport()  throws Exception { setUpCommaFirst(); doEnterTest(); }
 
   public void testCommaFirstEnter()        throws Exception { setUpCommaFirst(); doEnterTest(); }
   public void testCommaFirstEnter2()       throws Exception { setUpCommaFirst(); doEnterTest(); }
@@ -564,6 +572,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE;
     doTest();
   }
+
+  public void testTerminatorOnOwnLine() throws Exception { doTest(); }
 
   private void setUpFunctionParametersWrapIfLong() {
     CommonCodeStyleSettings settings = getCommonSettings();

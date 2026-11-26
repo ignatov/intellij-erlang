@@ -50,7 +50,8 @@ jobs:
         && github.event.comment.user.login == github.repository_owner
         && startsWith(github.event.comment.body, '/'))
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    # The retries of "Start a tick" take up to 16 minutes.
+    timeout-minutes: 20
     permissions:
       actions: write
     steps:
@@ -58,8 +59,32 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          # 7 tries over about 16 minutes.
+          WAITS: 15 30 60 120 240 480
         run: |
-          if ! gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
+          if ! retry gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
             echo "::error::The tick could not be started."
             exit 1
           fi

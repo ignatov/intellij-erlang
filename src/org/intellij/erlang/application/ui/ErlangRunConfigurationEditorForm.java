@@ -22,7 +22,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogPanel;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
-import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.runconfig.ui.ErlangDebuggableRunConfigurationEditor;
 import org.intellij.erlang.utils.ErlangUiUtil;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +48,7 @@ public class ErlangRunConfigurationEditorForm extends ErlangDebuggableRunConfigu
 
   @Override
   protected void doResetEditorFrom(ErlangApplicationConfiguration configuration) {
-    myComboModules.fillModules(configuration.getProject(), ErlangModuleType.getInstance());
+    ErlangUiUtil.fillModules(myComboModules, configuration.getProject());
     myComboModules.setSelectedModule(configuration.getConfigurationModule().getModule());
     myParamsField.setText(configuration.getParams());
     myStopErlangInterpreterCheckBox.setSelected(configuration.isStopErlang());

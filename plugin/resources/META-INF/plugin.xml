@@ -31,47 +31,22 @@
     <p>
         If you find this plugin useful, consider making a <a href="https://github.com/sponsors/ignatov">donation</a> to support the project.
     </p>
+    <p>
+        The plugin can send anonymous usage counts once a day, only if you allow it. See the <a href="https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md">privacy policy</a>.
+    </p>
     ]]>
     </description>
     <change-notes>
         <![CDATA[
             <ul>
-              <li>EUnit tests run with Erlang/OTP 27 and later again (#1171)</li>
-              <li>Starting a debug session no longer freezes the IDE, and it no longer leaves directories in the system temp directory for each session (#1355)</li>
-              <li>?OTP_RELEASE is a predefined macro and is no longer reported as unresolved (#1354)</li>
-              <li>Works in IntelliJ IDEA 2026.2 and 2026.3</li>
-              <li>Run configurations: erl flags, console arguments and rebar commands accept double-quoted arguments with spaces, for example -pa "/Users/John Smith/ebin". A double quote in an existing configuration is now read as quoting (#1220)</li>
-              <li>Formatter: the "Function parameters" option in Settings | Editor | Code Style | Erlang | Wrapping and Braces now wraps the parameters of functions, funs, macros and types. It is "Do not wrap" by default, so formatting does not change until you turn it on (#830)</li>
-              <li>Formatter: new "Guard indent" option for a when guard on its own line (#450)</li>
-              <li>Formatter fixes: continuation lines of multi-line type unions, fun bodies with relative indents, andalso/orelse chains with "Align multiline blocks", the indent on Enter after a comma in a try body, and end after the case live template (#1128, #707, #1156, #1163, #226)</li>
-              <li>New opt-in inspection "Single-clause 'case' expression", the same check as Elvis no_single_clause_case (#991)</li>
-              <li>Parameter info (Ctrl+P) for macro calls (#436)</li>
-              <li>Ctrl+hover over a function call shows its module, name/arity and -spec (#1159)</li>
-              <li>Go to Symbol accepts module:name, for example module1:test, to list only the symbols of that module (#1195)</li>
-              <li>Completion: variables for a lowercase prefix when "Match case" is off, and all Erlang built-in types (nonempty_list, iodata, dynamic and others, also in highlighting). Completion no longer offers modules whose files were deleted, or functions of the erlang module that are not auto-imported (#1143, #1197, #1263, #1142)</li>
-              <li>Fewer false syntax errors on valid Erlang: the -if(Expr) attribute, quoted attribute names, {Name, Arity} in -optional_callbacks, a macro followed by a string, a variable or a case expression as the template of a binary comprehension, macros and integer expressions in binary type sizes, and integer constant expressions in types (#1082, #1063, #1120, #1119, #1169, #1052, #1123)</li>
-              <li>Triple-quoted strings and sigils: correct lexing and highlighting when they open with more than three quotes, and no false error on spaces after the opening quotes (#1114, #1256)</li>
-              <li>.app and .app.src files: {vsn, git} and other vsn terms, and a runtime_dependencies list with more than one entry, are no longer syntax errors (#968, #1343)</li>
-              <li>Fewer false errors and warnings on variables: unbound or unused variables bound in a case head, a bound variable used as a map key in a fun head, and the names of named funs (#1152, #1104, #438, #1248)</li>
-              <li>Fewer false errors on macros: "Illegal pattern" on macros in patterns, fun F/Arity passed to a macro, ?M inside -ifdef(M), and record fields defined by a macro with typed fields (#1125, #1204, #1176, #933)</li>
-              <li>Fewer other false errors and warnings: object() and bindings() inside ets:fun2ms and dbg:fun2ms, "Undefined callback" for -callback(Name(Args) -&gt; Ret), an incorrect module name in header files, and the io:format check of sigils (#940, #1109, #1207, #1210, #1127)</li>
-              <li>New errors that the compiler also reports: fun Var/Arity without a module, and -export entries that name imported functions or auto-imported BIFs (#1162, #1111)</li>
-              <li>Debugger: Evaluate Expression uses the selected stack frame, watches at the same breakpoint each show their own value, and a value nested too deeply no longer stops the session (#1278, #1310, #1309)</li>
-              <li>Debugger fixes: no "Read access is allowed from inside read-action only" errors at a breakpoint, no split debugger error in the IDE log each time a debug session starts, remote node debugging works when "Debug node args" was never set, and no SEVERE error when you create or save a Remote Node configuration (#1347, #1173, #1359, #1358)</li>
-              <li>Debugger robustness: stopping a remote debug session no longer breaks the interpreted modules on the remote node, stopping a session before the node connects closes the debugger port, and a corrupted or stalled message ends the session instead of using all memory or misreading later messages (#1187, #1292, #1289, #1305)</li>
-              <li>Run configurations: environment variables (for example ERL_LIBS) for Erlang Application and EUnit configurations. The erl flags go before the entry point. The "Stop Erlang interpreter automatically after execution" option is saved. With "Compile project with rebar" and rebar3, run and debug put _build/default/lib/&lt;app&gt;/ebin on the code path. Rerun Failed Tests of an Erlang Eunit configuration keeps its working directory (#480, #1177, #1336, #838, #1370)</li>
-              <li>Rebar run configurations honour "Include system environment variables". Rebar EUnit applies the project's rebar.config.script and keeps ERL_FLAGS and the environment variables of the configuration, also on rerun. It works with CRLF line endings in rebar.config, with report or no_tty inside eunit_opts, and with a space in the temp directory path (#1338, #1232, #1218, #1154, #1214, #1340)</li>
-              <li>File | Open of a rebar project imports its OTP applications, including apps in _checkouts, saves the rebar path and turns on "Compile project with rebar" (#1242)</li>
-              <li>Rebar path: rebar3 and escript are found on Windows and a rebar3.cmd wrapper works. The version check uses the escript of the project SDK, waits 10 seconds instead of 3, no longer leaves rebar3.crashdump files and shows only the version of the current path. Without an Erlang SDK (small IDEs), Rebar run configurations, get-deps and the version check use the escript on PATH and no longer fail (#1222, #1227, #1344, #1239, #1330, #1265)</li>
-              <li>The rebar and Emacs version checks kill the whole process tree when they time out, so no rebar3 --version processes stay alive. Each check runs in a private directory of its own, so a rebar.config.script in the shared temp directory is not evaluated, and the check is no longer slow in a large temp directory (#1365)</li>
-              <li>Windows: the SDK dialog suggests the Erlang/OTP install directory, and the Erlang build keeps the drive letter of content roots on the erlc code path (#1216, #1219)</li>
-              <li>Build: the built-in build fills in the modules list of .app.src files, as rebar3 does, and "Add debug info" now works for rebar builds (#921, #1101)</li>
-              <li>Erlang SDK: the SDK release follows a change of the SDK home or version without an IDE restart, and OTP 27.0 and 27.0.1 are recognised as OTP 27. A new SDK whose home is an installation prefix (/usr, /opt/homebrew) uses lib/erlang/lib as its root. In small IDEs, includes resolve when rebar3 copies an app into _build (#1300, #1279, #1308, #1185)</li>
-              <li>Dialyzer: findings use the severity and scopes of "Dialyzer based inspections" in the inspection profile, a timeout is reported instead of showing the file as clean, and wrapped warnings are shown in full without the column number (#775, #1323, #1350)</li>
-              <li>Refactoring: Safe Delete warns when a header is still included, and renaming or moving a header updates its -include attributes. Renaming a module file to a non-module name (for example .bak) no longer renames the module (#670, #1110)</li>
-              <li>Editing: the "Export function" quick fix writes macro and quoted names as written and shows once in Alt+Enter. Join Lines on comments removes the % prefix. Brace matching no longer pairs end with fun M:F/A. Autoscroll from Source works in the structure view. Parameter name hints show correct pattern summaries (#1113, #1353, #714, #990, #844, #1211)</li>
-              <li>Send Selection to Erlang Console goes to the running console that was started or used most recently, and a stopped console no longer hides the action (#1379)</li>
-              <li>Fixed a StackOverflowError on very long operator chains, stub mismatch errors on files with syntax errors, and a UI freeze when the settings of an Erlang run configuration open (#1298, #1296, #1172)</li>
+              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
+              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
+              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
+              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
+              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
+              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
+              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
             </ul>
         ]]>
     </change-notes>

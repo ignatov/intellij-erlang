@@ -26,6 +26,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.intellij.erlang.types.ErlType;
 import org.intellij.erlang.types.ErlTypeUnion;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +47,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     var function = PsiTreeUtil.getParentOfType(descriptor.getPsiElement(), ErlangFunction.class, false);
 
     if (function != null) {
@@ -131,17 +133,20 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     }
   }
 
-  private static ErlType computeCommonType(List<ErlangExpression> expressions) {
-    var types = expressions.stream().map(ErlType::fromExpression).toList();
-    var unionType = new ErlTypeUnion(types);
+  private static String computeCommonType(List<ErlangExpression> expressions) {
+    var unionType = new ErlTypeUnion(null);
+
+    for (ErlangExpression expression : expressions) {
+      unionType.add(ErlType.fromExpression(expression));
+    }
 
     // Empty union by default converges to NONE_TYPE, but we want ANY_TYPE instead
     return unionType.isEmpty()
-           ? ErlType.ANY_TYPE
-           : types.getFirst();
+           ? ErlType.ANY_TYPE.toString()
+           : unionType.toString();
   }
 
-  private static ErlType computeReturnType(ErlangFunction function) {
+  private static String computeReturnType(ErlangFunction function) {
     var clauses = function.getFunctionClauseList();
     var lastExpressions = new ArrayList<ErlangExpression>(clauses.size());
 
@@ -160,10 +165,10 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     var template = TemplateManager.getInstance(project).createTemplate("", "");
     template.setToReformat(true);
 
-    template.addTextSegment("-spec " + function.getName() + "(");
+    template.addTextSegment("-spec " + function.getAtomName().getText() + "(");
     addArgsTypeSpecsAsTemplateFields(template, function);
     template.addTextSegment(") -> ");
-    template.addVariable("RETURN", new ConstantNode(computeReturnType(function).toString()), true);
+    template.addVariable("RETURN", new ConstantNode(computeReturnType(function)), true);
     template.addTextSegment(".\n");
 
     template.addEndVariable();
@@ -176,7 +181,7 @@ public class ErlangGenerateSpecFix extends ErlangQuickFixBase {
     if (!(containingFile instanceof ErlangFile)) return;
 
     var project = Objects.requireNonNull(editor.getProject());
-    var textOffset = function.getTextOffset();
+    var textOffset = function.getTextRange().getStartOffset();
     var template = createErlangSpecTemplate(function, project);
 
     editor.getCaretModel().moveToOffset(textOffset);

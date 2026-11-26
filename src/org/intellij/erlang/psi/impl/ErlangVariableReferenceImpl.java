@@ -18,10 +18,10 @@ package org.intellij.erlang.psi.impl;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.*;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.intellij.util.ObjectUtils;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHeaderTarget;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,30 +38,50 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @NotNull
   @Override
   public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
-    ErlangVarProcessor processor = new ErlangVarProcessor(myElement.getText(), myElement);
-    ErlangLcExpression lc = PsiTreeUtil.getParentOfType(myElement, ErlangLcExpression.class);
-    ErlangCompositeElement place = ObjectUtils.chooseNotNull(lc, myElement);
-    ResolveUtil.treeWalkUp(place, processor);
-    List<ErlangQVar> result = processor.getAllResults();
-    if (!result.isEmpty()) return PsiElementResolveResult.createResults(result);
+    ResolveResult[] results = multiResolveOnMaster();
+    // when master's path finds nothing, ask the macro expansion layer
+    return results.length > 0 ? results : ErlangMacroLayer.multiResolveFallback(this);
+  }
 
-    ErlangModule module = getErlangModule();
-    if (module == null) return ResolveResult.EMPTY_ARRAY;
+  /** The macro layer's answers when master's path resolves nothing; else none. */
+  public ResolveResult @NotNull [] resolveOnlyThroughMacroLayer() {
+    return multiResolveOnMaster().length == 0 ? ErlangMacroLayer.multiResolveFallback(this) : ResolveResult.EMPTY_ARRAY;
+  }
+
+  private ResolveResult @NotNull [] multiResolveOnMaster() {
+    List<ErlangQVar> result = processVariables(myElement, new ErlangVarProcessor(myElement.getText(), myElement));
+    return result.isEmpty() ? ResolveResult.EMPTY_ARRAY : PsiElementResolveResult.createResults(result);
+  }
+
+  @NotNull
+  static List<ErlangQVar> processVariables(@NotNull ErlangQVar element, @NotNull ErlangVarProcessor processor) {
+    ResolveUtil.treeWalkUp(element, processor);
+    List<ErlangQVar> result = processor.getAllResults();
+    if (!result.isEmpty()) return result;
+
+    ErlangModule module = getErlangModule(element);
+    if (module == null) return result;
     module.processDeclarations(processor, ResolveState.initial(), module, module);
 
-    List<ErlangQVar> allResults = processor.getAllResults();
-    return PsiElementResolveResult.createResults(allResults);
+    return processor.getAllResults();
   }
 
   @Nullable
   @Override
   public PsiElement resolveInner() {
-    ResolveResult[] resolveResults = multiResolve(false);
+    ResolveResult[] resolveResults = multiResolveOnMaster();
     return resolveResults.length > 0 ? resolveResults[0].getElement() : null;
   }
 
   @Override
   public boolean isReferenceTo(@NotNull PsiElement element) {
+    if (element instanceof ErlangMacroLayerHeaderTarget) {
+      // A variable bound in the body of a header macro (the macro layer's answer)
+      for (ResolveResult result : multiResolve(false)) {
+        if (element.isEquivalentTo(result.getElement())) return true;
+      }
+      return false;
+    }
     if (!(element instanceof ErlangQVar)) return false;
     for (ResolveResult result : multiResolve(false)) {
       PsiElement resultElement = result.getElement();
@@ -72,8 +92,8 @@ public class ErlangVariableReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   }
 
   @Nullable
-  private ErlangModule getErlangModule() {
-    PsiFile file = myElement.getContainingFile();
+  private static ErlangModule getErlangModule(@NotNull PsiElement element) {
+    PsiFile file = element.getContainingFile();
     ErlangFile erlangFile = file instanceof ErlangFile ? (ErlangFile) file : null;
     return erlangFile != null ? erlangFile.getModule() : null;
   }

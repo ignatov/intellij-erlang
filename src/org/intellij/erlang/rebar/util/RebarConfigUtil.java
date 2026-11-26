@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -51,13 +52,35 @@ public final class RebarConfigUtil {
     return includePaths;
   }
 
+  /**
+   * Returns the deps of the top level and of the profiles. rebar3 applies only the prod profile to a dependency,
+   * so for the rebar.config of a dependency app only the deps of that profile are read.
+   */
   @NotNull
-  public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig) {
+  public static List<String> getDependencyAppNames(@NotNull ErlangFile rebarConfig, boolean isDependencyApp) {
     final List<String> dependencyAppNames = new ArrayList<>();
-    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", tuplesList -> {
-      List<ErlangTupleExpression> dependencyTuples = ErlangTermFileUtil.findNamedTuples(tuplesList);
-      for (ErlangTupleExpression namedTuple : dependencyTuples) {
-        dependencyAppNames.add(ErlangTermFileUtil.getNameOfNamedTuple(namedTuple));
+    Consumer<ErlangExpression> depsConsumer = depsList -> {
+      if (!(depsList instanceof ErlangListExpression)) return;
+      for (ErlangExpression dependency : ((ErlangListExpression) depsList).getExpressionList()) {
+        String name = ErlangTermFileUtil.getNameOfNamedTuple(dependency);
+        if (name == null && dependency instanceof ErlangConfigExpression) {
+          PsiElement qAtom = dependency.getFirstChild();
+          ErlangAtom atom = qAtom instanceof ErlangQAtom ? ((ErlangQAtom) qAtom).getAtom() : null;
+          name = atom != null ? atom.getName() : null;
+        }
+        ContainerUtil.addIfNotNull(dependencyAppNames, name);
+      }
+    };
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "deps", depsConsumer);
+    ErlangTermFileUtil.processConfigSection(rebarConfig, "profiles", profilesList -> {
+      if (!(profilesList instanceof ErlangListExpression)) return;
+      for (ErlangExpression profile : ((ErlangListExpression) profilesList).getExpressionList()) {
+        String profileName = ErlangTermFileUtil.getNameOfNamedTuple(profile);
+        if (profileName == null || isDependencyApp && !"prod".equals(profileName)) continue;
+        List<ErlangExpression> profileTuple = ((ErlangTupleExpression) profile).getExpressionList();
+        if (profileTuple.size() >= 2) {
+          ErlangTermFileUtil.processConfigSection(profileTuple.get(1), "deps", depsConsumer);
+        }
       }
     });
     return dependencyAppNames;

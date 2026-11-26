@@ -64,6 +64,8 @@ import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -86,9 +88,14 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
+  // The temporary breakpoint of Run to Cursor, removed at the next suspend unless a user breakpoint is on its line then.
+  // The interpreter has one breakpoint per line, which a user breakpoint added there meanwhile shares.
+  private final Object myRunToPositionLock = new Object();
+  private ErlangSourcePosition myRunToPosition; // guarded by myRunToPositionLock
   // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
   // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
   private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
+  private volatile boolean myStartFailed = false;
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env, @NotNull SetUp setUp) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -104,17 +111,24 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
 
     try {
-      //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
       myDebuggerNode = new ErlangDebuggerNode(this);
     }
     catch (ErlangDebuggerNodeException e) {
       throw new ExecutionException(e);
     }
 
-    // it's important to set modules to interpret before running the debug target
-    myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
-    //TODO split running debug target and debugger process spawning
-    myErlangProcessHandler = runDebugTarget(setUp);
+    try {
+      // it's important to set modules to interpret before running the debug target
+      myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
+      //TODO split running debug target and debugger process spawning
+      myErlangProcessHandler = runDebugTarget(setUp);
+    }
+    catch (ExecutionException | RuntimeException | Error e) {
+      // the session is not created, so nothing else would stop the debugger node
+      myStartFailed = true;
+      myDebuggerNode.stop();
+      throw e;
+    }
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
@@ -275,6 +289,19 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
+    boolean runToPositionFailed;
+    synchronized (myRunToPositionLock) {
+      runToPositionFailed = myRunToPosition != null && myRunToPosition.getErlangModuleName().equals(module) &&
+                            myRunToPosition.getLine() == line;
+      if (runToPositionFailed) {
+        myRunToPosition = null;
+      }
+    }
+    if (runToPositionFailed) {
+      // the process has been resumed already, so it runs on as after Resume Program
+      getSession().reportMessage("Run to Cursor cannot stop at line " + (line + 1) + " of " + module + ": " + errorMessage,
+                                 MessageType.WARNING);
+    }
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
     if (breakpoint != null) {
@@ -297,6 +324,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
     ErlangSuspendContext suspendContext = new ErlangSuspendContext(this, pid, snapshots);
     if (breakpoint == null) {
+      removeRunToPositionBreakpoint();
       getSession().positionReached(suspendContext);
     }
     else {
@@ -304,11 +332,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       if (!shouldSuspend) {
         resume(suspendContext);
       }
+      else {
+        removeRunToPositionBreakpoint();
+      }
     }
   }
 
   @Override
   public void debuggerStopped() {
+    // the start error is already reported, and a session without a debug process has nothing to stop
+    if (myStartFailed) return;
     getSession().reportMessage("Debug process stopped", MessageType.INFO);
     getSession().stop();
   }
@@ -423,18 +456,21 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
     failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOut();
   }
 
@@ -459,7 +495,27 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-    //TODO implement me
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    removeRunToPositionBreakpoint();
+    ErlangSourcePosition target = ErlangSourcePosition.create(position);
+    synchronized (myRunToPositionLock) {
+      // a user breakpoint on the line stops the process there already, and must outlive this run
+      if (!myPositionToLineBreakpointMap.containsKey(target)) {
+        myRunToPosition = target;
+        myDebuggerNode.setBreakpoint(target.getErlangModuleName(), target.getLine());
+      }
+    }
+    myDebuggerNode.resume();
+  }
+
+  private void removeRunToPositionBreakpoint() {
+    synchronized (myRunToPositionLock) {
+      ErlangSourcePosition target = myRunToPosition;
+      myRunToPosition = null;
+      if (target != null && !myPositionToLineBreakpointMap.containsKey(target)) {
+        myDebuggerNode.removeBreakpoint(target.getErlangModuleName(), target.getLine());
+      }
+    }
   }
 
   @Nullable
@@ -471,15 +527,23 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   void addBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
-    myPositionToLineBreakpointMap.put(breakpointPosition, breakpoint);
-    myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    synchronized (myRunToPositionLock) {
+      myPositionToLineBreakpointMap.put(breakpointPosition, breakpoint);
+      // a second int:break on the line of the temporary breakpoint fails with break_exists
+      if (breakpointPosition.equals(myRunToPosition)) return;
+      myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    }
   }
 
   void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
-    myPositionToLineBreakpointMap.remove(breakpointPosition);
-    myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    synchronized (myRunToPositionLock) {
+      myPositionToLineBreakpointMap.remove(breakpointPosition);
+      // the temporary breakpoint still needs it, and removes it at the next suspend
+      if (breakpointPosition.equals(myRunToPosition)) return;
+      myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    }
   }
 
   @Nullable
@@ -496,7 +560,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @NotNull
   private OSProcessHandler runDebugTarget(@NotNull SetUp setUp) throws ExecutionException {
-    OSProcessHandler erlangProcessHandler;
+    OSProcessHandler erlangProcessHandler = null;
     LOG.debug("Preparing to run debug target.");
     try {
       GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -534,8 +598,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
       }
     }
-    catch (ExecutionException e) {
+    catch (ExecutionException | RuntimeException | Error e) {
       LOG.debug("Failed to run debug target.", e);
+      if (erlangProcessHandler != null) {
+        // the handler is not start-notified yet, so destroyProcess() would not kill it
+        erlangProcessHandler.getProcess().destroy();
+      }
       throw e;
     }
     LOG.debug("Debug target should now be running.");

@@ -40,4 +40,23 @@ public class ErlangSdkForSmallIdesTest extends ErlangLightPlatformCodeInsightFix
       () -> RebarRunningStateUtil.findEscriptExecutable(getProject())).get();
     assertEquals(expected, actual);
   }
+
+  public void testNoKnownReleaseWithoutLibrary() {
+    assertNull(ErlangSdkType.getKnownProjectSdkRelease(getProject()));
+    assertNull(ErlangSdkType.getProjectSdkRelease(getProject()));
+  }
+
+  public void testKnownReleaseOfLibrary() {
+    String home = "testData/mockSdk-R29/";
+    ErlangSdkType.createMockSdk(home, ErlangSdkRelease.V_29_0); // pre-caches the release of that home
+    ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), home);
+    try {
+      assertEquals(home, ErlangSdkType.getSdkPath(getProject()));
+      assertSame(ErlangSdkRelease.V_29_0, ErlangSdkType.getKnownProjectSdkRelease(getProject()));
+      assertSame(ErlangSdkRelease.V_29_0, ErlangSdkType.getProjectSdkRelease(getProject()));
+    }
+    finally {
+      ErlangSdkForSmallIdes.setUpOrUpdateSdk(getProject(), "");
+    }
+  }
 }

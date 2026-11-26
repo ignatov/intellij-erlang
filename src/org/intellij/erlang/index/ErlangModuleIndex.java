@@ -125,8 +125,9 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     public int compare(@NotNull VirtualFile f1, @NotNull VirtualFile f2) {
       // according to http://www.erlang.org/doc/man/code.html, modules that belong to
       // 'kernel' and 'stdlib' applications always appear before any user-defined modules
-      if (isKernelOrStdlibModule(f1)) return -1;
-      if (isKernelOrStdlibModule(f2)) return 1;
+      boolean f1IsKernelOrStdlib = isKernelOrStdlibModule(f1);
+      boolean f2IsKernelOrStdlib = isKernelOrStdlibModule(f2);
+      if (f1IsKernelOrStdlib != f2IsKernelOrStdlib) return f1IsKernelOrStdlib ? -1 : 1;
 
       boolean f1IsInSource = isInSource(f1);
       boolean f2IsInSource = isInSource(f2);
@@ -136,11 +137,15 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
       boolean f2IsHidden = isUnderHiddenDirectory(f2);
       if (f1IsHidden != f2IsHidden) return f1IsHidden ? 1 : -1;
 
+      // user modules come before SDK and library modules (see "Code Path" at http://www.erlang.org/doc/man/code.html)
       boolean f1IsInLibrary = isInLibrary(f1);
       boolean f2IsInLibrary = isInLibrary(f2);
-      if (f1IsInLibrary != f2IsInLibrary) return f1IsInLibrary ? -1 : 1;
+      if (f1IsInLibrary != f2IsInLibrary) return f1IsInLibrary ? 1 : -1;
 
-      return f1.getPath().length() - f2.getPath().length();
+      String f1Path = f1.getPath();
+      String f2Path = f2.getPath();
+      if (f1Path.length() != f2Path.length()) return f1Path.length() - f2Path.length();
+      return f1.getUrl().compareTo(f2.getUrl());
     }
 
     private boolean isKernelOrStdlibModule(@NotNull VirtualFile file) {
