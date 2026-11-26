@@ -46,6 +46,8 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.intellij.erlang.ErlangTypes.ERL_BIN_END;
 import static org.intellij.erlang.ErlangTypes.ERL_BIN_START;
@@ -164,8 +166,107 @@ public abstract class ErlangRunningState extends CommandLineState {
   private void setEntryPoint(GeneralCommandLine commandLine) throws ExecutionException {
     ErlangEntryPoint entryPoint = getEntryPoint();
     commandLine.addParameters("-eval",
-      entryPoint.getModuleName() + ":" + entryPoint.getFunctionName() +
+      quotedAtom(entryPoint.getModuleName()) + ":" + quotedAtom(entryPoint.getFunctionName()) +
         "(" + StringUtil.join(entryPoint.getArgsList(), ", ") + ").");
+  }
+
+  private static final Pattern PLAIN_ATOM = Pattern.compile("[a-z][a-zA-Z_@0-9]*");
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div",
+    "else", "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
+
+  // the atom with the given name as Erlang source: quoted and escaped unless it is a plain atom
+  @NotNull
+  public static String quotedAtom(@NotNull String name) {
+    if (PLAIN_ATOM.matcher(name).matches() && !RESERVED_WORDS.contains(name)) return name;
+    StringBuilder sb = new StringBuilder("'");
+    for (int i = 0; i < name.length(); i++) {
+      char c = name.charAt(i);
+      switch (c) {
+        case '\\' -> sb.append("\\\\");
+        case '\'' -> sb.append("\\'");
+        case '\n' -> sb.append("\\n");
+        case '\r' -> sb.append("\\r");
+        case '\t' -> sb.append("\\t");
+        default -> {
+          if (c < ' ' || c == 127) sb.append("\\x{").append(Integer.toHexString(c)).append('}');
+          else sb.append(c);
+        }
+      }
+    }
+    return sb.append('\'').toString();
+  }
+
+  // the name of an atom from its PSI name: the text between the quotes with escapes, or '' for the empty atom
+  @NotNull
+  public static String atomName(@NotNull String psiName) {
+    return "''".equals(psiName) ? "" : unescape(psiName);
+  }
+
+  @NotNull
+  private static String unescape(@NotNull String text) {
+    StringBuilder sb = new StringBuilder();
+    int length = text.length();
+    int i = 0;
+    while (i < length) {
+      char c = text.charAt(i++);
+      if (c != '\\' || i >= length) {
+        sb.append(c);
+        continue;
+      }
+      char e = text.charAt(i++);
+      switch (e) {
+        case 'b' -> sb.append('\b');
+        case 'd' -> sb.append((char) 127);
+        case 'e' -> sb.append((char) 27);
+        case 'f' -> sb.append('\f');
+        case 'n' -> sb.append('\n');
+        case 'r' -> sb.append('\r');
+        case 's' -> sb.append(' ');
+        case 't' -> sb.append('\t');
+        case 'v' -> sb.append((char) 11);
+        case '^' -> {
+          if (i < length) {
+            char control = text.charAt(i++);
+            sb.append(control == '?' ? (char) 127 : (char) (control & 31));
+          }
+        }
+        case 'x' -> {
+          int end;
+          int start;
+          if (i < length && text.charAt(i) == '{') {
+            start = i + 1;
+            end = text.indexOf('}', start);
+            if (end < 0) end = length;
+            i = Math.min(end + 1, length);
+          }
+          else {
+            start = i;
+            end = Math.min(i + 2, length);
+            i = end;
+          }
+          try {
+            sb.appendCodePoint(Integer.parseInt(text.substring(start, end), 16));
+          }
+          catch (IllegalArgumentException ignored) {
+            sb.append(text, start, end);
+          }
+        }
+        default -> {
+          if (e >= '0' && e <= '7') {
+            int code = e - '0';
+            for (int n = 0; n < 2 && i < length && text.charAt(i) >= '0' && text.charAt(i) <= '7'; n++) {
+              code = code * 8 + text.charAt(i++) - '0';
+            }
+            sb.append((char) code);
+          }
+          else {
+            sb.append(e);
+          }
+        }
+      }
+    }
+    return sb.toString();
   }
 
   public final void setErlangFlags(GeneralCommandLine commandLine) {
@@ -209,14 +310,43 @@ public abstract class ErlangRunningState extends CommandLineState {
 
     @Nullable
     public static ErlangEntryPoint fromModuleAndFunction(@NotNull String moduleAndFunction, @NotNull String params) {
-      List<String> split = StringUtil.split(moduleAndFunction, " ");
-      if (split.size() != 2) return null;
+      List<String> split = splitAtoms(moduleAndFunction);
+      if (split == null || split.size() != 2) return null;
       String module = split.get(0);
       String function = split.get(1);
 
       List<String> args = parseArguments(params);
       
       return new ErlangEntryPoint(module, function, args);
+    }
+
+    // the names are atoms, plain or in quotes; a quoted one may contain spaces and is returned without the quotes and escapes
+    @Nullable
+    private static List<String> splitAtoms(@NotNull String moduleAndFunction) {
+      List<String> atoms = new SmartList<>();
+      int length = moduleAndFunction.length();
+      int i = 0;
+      while (i < length) {
+        char c = moduleAndFunction.charAt(i);
+        if (Character.isWhitespace(c)) {
+          i++;
+        }
+        else if (c == '\'') {
+          int start = ++i;
+          while (i < length && moduleAndFunction.charAt(i) != '\'') {
+            i += moduleAndFunction.charAt(i) == '\\' ? 2 : 1;
+          }
+          if (i >= length) return null;
+          atoms.add(unescape(moduleAndFunction.substring(start, i++)));
+          if (i < length && !Character.isWhitespace(moduleAndFunction.charAt(i))) return null;
+        }
+        else {
+          int start = i;
+          while (i < length && !Character.isWhitespace(moduleAndFunction.charAt(i))) i++;
+          atoms.add(moduleAndFunction.substring(start, i));
+        }
+      }
+      return atoms;
     }
 
     @NotNull
