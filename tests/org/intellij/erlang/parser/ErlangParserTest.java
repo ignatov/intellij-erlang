@@ -236,6 +236,27 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEquals(2, functions.size());
   }
 
+  // #1647: erlc parses a macro body and a macro argument only after the expansion, where () can be a fragment.
+  public void testEmptyParenthesesInMacros() {
+    String[] modules = {
+      "-define(F, () -> ok).\n",
+      "-define(P, (), ok).\n",
+      "-define(E, (())).\n",
+      "-define(P, ()) .\n",
+      "-define(CALL(F, A), F A).\nf() -> ?CALL(g, ()).\n",
+      "-define('CALL'(F, A), F A).\nf() -> ?'CALL'(g, ()).\n",
+    };
+    List<String> rejected = new ArrayList<>();
+    for (String module : modules) {
+      if (PsiTreeUtil.hasErrorElements(parseText("-module(t).\n" + module))) rejected.add(module);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
+  public void testEmptyParenthesesAsCallArgument() {
+    assertHasSyntaxError("-module(t).\nf() -> g(()).\n");
+  }
+
   private void assertHasSyntaxError(String text) {
     PsiFile file = parseText(text);
     assertTrue("erlc reports a syntax error before ')', the parser gives none:\n" +

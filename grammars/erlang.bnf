@@ -147,7 +147,7 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
   methods = [getName setName getNameIdentifier getTextOffset]
   stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
-macros_body ::= &('(' ')' properly_parsed) <<consumeMacroBody>> | (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
+macros_body ::= (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
 private macros_typed_body ::= typed_exprs &properly_parsed
 private properly_parsed ::= ')''.' | <<isInCompletion>> | <<eof>>
 
@@ -434,7 +434,7 @@ comp_op_expression ::= expression comp_op expression
 list_op_expression ::= expression list_op expression { rightAssociative=true }
 multiplicative_expression ::= expression mult_op &(!(atom (',' | '>>'))) expression // for #141
 additive_expression ::= expression add_op expression
-parenthesized_expression ::= '(' expression ')' {pin=1}
+parenthesized_expression ::= '(' (<<isMacroFragment>> &')' | expression) ')' {pin=1}
 
 private max_group ::=
     function_call_expression
