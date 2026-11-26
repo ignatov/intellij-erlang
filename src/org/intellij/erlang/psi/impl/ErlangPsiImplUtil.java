@@ -636,13 +636,10 @@ public class ErlangPsiImplUtil {
    * Check whether expression is used in a binary expression after the colon, like <<_:Var>>
    */
   public static boolean isBinaryWidthExpression(PsiElement psiElement) {
-    ErlangMaxExpression maxParent = PsiTreeUtil.getParentOfType(psiElement, ErlangMaxExpression.class);
-    if (maxParent == null || !(maxParent.getParent() instanceof ErlangBinElement)) return false;
-
-    PsiElement prevSib = PsiTreeUtil.getPrevSiblingOfType(maxParent, PsiElement.class);
-    if (prevSib == null) return false;
-
-    return prevSib.textMatches(":");
+    // the size of a segment is everything after its ':', as in <<X:N>>, <<X : N>> or <<X:(N * 8)>>
+    ErlangBinElement element = PsiTreeUtil.getParentOfType(psiElement, ErlangBinElement.class);
+    PsiElement colon = element != null ? element.getColon() : null;
+    return colon != null && psiElement.getTextOffset() > colon.getTextOffset();
   }
 
   public static boolean inLeftPartOfAssignment(@NotNull PsiElement psiElement) {

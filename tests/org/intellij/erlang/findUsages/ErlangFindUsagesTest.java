@@ -42,6 +42,7 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testCaseHeadRematch()                   { doTest(2); }
   public void testCaseHeadRematchArgument()           { doTest(3); }
   public void testFunHeadRepeatedVariable()           { doTest(2); } // issue 1640
+  public void testBinarySizeInFunHead()               { doTest(2); } // issue 1665
 
   // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
   public void testLongOperatorChain() {
