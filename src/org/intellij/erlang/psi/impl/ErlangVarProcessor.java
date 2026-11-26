@@ -206,9 +206,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
-      ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
+      // the variables bound in the clauses of a case or a receive are visible after it
+      PsiElement clauseOwner = narrowestParentScopeOwner.getParent() instanceof ErlangReceiveExpression receive
+                               ? receive : PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
       if (Comparing.equal(
-        PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
+        PsiTreeUtil.getParentOfType(clauseOwner, ErlangClauseBody.class),
         PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
@@ -231,8 +233,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   // the left side of a match is bound after its right side is evaluated, and a clause body after the head and the guard of its clause
   private boolean boundAfterOrigin(PsiElement psiElement) {
     for (PsiElement parent = psiElement.getParent(); parent != null && !(parent instanceof PsiFile); parent = parent.getParent()) {
-      if (parent instanceof ErlangFakeBinaryExpression match && (parent instanceof ErlangAssignmentExpression || parent instanceof ErlangMaybeMatchExpression)) {
-        if (PsiTreeUtil.isAncestor(match.getLeft(), psiElement, false) && PsiTreeUtil.isAncestor(match.getRight(), myOrigin, false) && !inPattern(match)) return true;
+      if (parent instanceof ErlangFakeBinaryExpression match && isEvaluatedMatch(match)) {
+        if (PsiTreeUtil.isAncestor(match.getLeft(), psiElement, false) && PsiTreeUtil.isAncestor(match.getRight(), myOrigin, false)) return true;
       }
       else if (parent instanceof ErlangClauseBody body) {
         if (!PsiTreeUtil.isAncestor(body, myOrigin, false) && PsiTreeUtil.isAncestor(body.getParent(), myOrigin, false)) return true;
@@ -241,10 +243,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return false;
   }
 
-  // in a pattern, like the head of a clause or the left side of a match, `=` is an alias and both of its sides are bound together
-  private static boolean inPattern(@NotNull PsiElement match) {
-    return PsiTreeUtil.getParentOfType(match, ErlangArgumentDefinition.class, true, ErlangClauseBody.class) != null
-           || inLeftPartOfAssignment(match);
+  // a match whose right side is evaluated before its left side is bound; in a pattern, like the head of a clause or the left side
+  // of a match, `=` is an alias and both of its sides are bound together
+  static boolean isEvaluatedMatch(@NotNull ErlangFakeBinaryExpression match) {
+    return (match instanceof ErlangAssignmentExpression || match instanceof ErlangMaybeMatchExpression)
+           && PsiTreeUtil.getParentOfType(match, ErlangArgumentDefinition.class, true, ErlangClauseBody.class) == null
+           && !inLeftPartOfAssignment(match);
   }
 
   // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;

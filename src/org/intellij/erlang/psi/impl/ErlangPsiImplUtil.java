@@ -1269,6 +1269,9 @@ public class ErlangPsiImplUtil {
     for (ErlangCrClause c : crClauseList) {
       ErlangClauseBody clauseBody = c.getClauseBody();
       if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+      // the patterns of the clauses bind after the head, so a variable in the head does not see them
+      ErlangArgumentDefinition pattern = c.getArgumentDefinition();
+      if (pattern != null && (head == null || head != lastParent)) result &= processDeclarationRecursive(pattern, processor, state);
     }
     return result;
   }
@@ -1282,7 +1285,7 @@ public class ErlangPsiImplUtil {
     return processDeclarationRecursive(o, processor, state, false);
   }
 
-  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
+  static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
