@@ -27,6 +27,11 @@ public class Erlang29HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testErlang29RecordNameReservedWordOrVar() {
+    enableErlang29SyntaxInspection();
+    doTest();
+  }
+
   public void testAutoImportByRelease29() {
     addErlangModuleWithFunctionsAutoImportedSince28();
     doTest();
