@@ -109,6 +109,37 @@ public class ErlangMacroResolveTest extends ErlangLightPlatformCodeInsightFixtur
     assertEquals(List.of("-define(X, a).", "-define(X, b).", "-define(X, c)."), resolveAllBare(f, "X"));
   }
 
+  /**
+   * Both definitions are in a branch that erlc skips (a use is "undefined macro 'X'"); go to declaration still offers
+   * them, as the plugin does when no definition is in force.
+   */
+  public void testResolveAllWithoutAUseEveryDefinitionInactive() {
+    ErlangFile f = module("-module(m).\n-define(T, 1).\n-ifndef(T).\n-define(X, a).\n-define(X, b).\n-endif.\n");
+    for (ErlangMacrosDefinition d : ErlangMacroResolve.candidates(f, "X")) {
+      assertEquals(d.getText(), ErlangMacroResolve.INACTIVE, ErlangMacroResolve.branchState(d));
+    }
+    assertEquals(List.of("-define(X, a).", "-define(X, b)."), resolveAllBare(f, "X"));
+  }
+
+  /** A branch that the file decides as skipped stays skipped inside an -if: erlc -P gives b. */
+  public void testResolveAllWithoutAUseInactiveBranchInsideAnIf() {
+    ErlangFile f = module("-module(m).\n-define(T, 1).\n-if(true).\n-ifndef(T).\n-define(X, a).\n-endif.\n-endif.\n-define(X, b).\n");
+    List<ErlangMacrosDefinition> c = ErlangMacroResolve.candidates(f, "X");
+    assertEquals(ErlangMacroResolve.INACTIVE, ErlangMacroResolve.branchState(c.get(0)));
+    assertEquals(ErlangMacroResolve.ACTIVE, ErlangMacroResolve.branchState(c.get(1)));
+    assertEquals(List.of("-define(X, b)."), resolveAllBare(f, "X"));
+  }
+
+  /** The same inside -ifdef of a flag the file does not define: erlc -P gives b with and without -DUNKNOWN_FLAG. */
+  public void testResolveAllWithoutAUseInactiveBranchInsideAnUnknownIfdef() {
+    ErlangFile f = module("-module(m).\n-define(T, 1).\n-ifdef(UNKNOWN_FLAG).\n-ifndef(T).\n-define(X, a).\n-endif.\n-endif.\n" +
+                          "-define(X, b).\n");
+    List<ErlangMacrosDefinition> c = ErlangMacroResolve.candidates(f, "X");
+    assertEquals(ErlangMacroResolve.INACTIVE, ErlangMacroResolve.branchState(c.get(0)));
+    assertEquals(ErlangMacroResolve.ACTIVE, ErlangMacroResolve.branchState(c.get(1)));
+    assertEquals(List.of("-define(X, b)."), resolveAllBare(f, "X"));
+  }
+
   public void testResolveAllWithoutAUseOneDefinition() {
     ErlangFile f = module("-module(m).\n-define(X, a).\n-define(Y(A), A).\n");
     assertEquals(List.of("-define(X, a)."), resolveAllBare(f, "X"));
