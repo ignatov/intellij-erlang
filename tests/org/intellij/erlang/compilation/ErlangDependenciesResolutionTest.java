@@ -159,7 +159,9 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
     List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
                                                           path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
-    assertOrderedEquals(erlangModules, "n", "a");
+    // a.erl and z.erl sort on both sides of n.erl, so the order holds only through their edges to n.erl.
+    assertSameElements(erlangModules, "a", "n", "z");
+    assertEquals(erlangModules.toString(), "n", erlangModules.get(0));
   }
 
   public void testTestsDependency() throws Exception {
