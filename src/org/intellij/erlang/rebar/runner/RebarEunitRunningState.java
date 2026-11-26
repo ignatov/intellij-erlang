@@ -22,6 +22,7 @@ import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.ParametersList;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
@@ -123,6 +124,10 @@ public class RebarEunitRunningState extends CommandLineState {
 
     boolean rebar3 = RebarSettings.getInstance(configuration.getProject()).isRebar3();
     if (rebar3) {
+      ParametersList parameters = commandLine.getParametersList();
+      List<String> arguments = RebarEunitConfigurationUtil.toRebar3Arguments(parameters.getList());
+      parameters.clearAll();
+      parameters.addAll(arguments);
       commandLine.getEnvironment().put("REBAR_CONFIG", new File(reportsRoot, CONFIG_FILE_NAME).getPath());
     }
     else {
