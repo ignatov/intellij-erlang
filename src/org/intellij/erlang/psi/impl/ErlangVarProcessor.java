@@ -23,6 +23,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
@@ -37,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -45,11 +48,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
-  // the earlier bindings of the variables met in this resolve; null when the processor collects only the variables it meets
+  // the earlier bindings of the variables of the file met so far; null when the processor collects only the variables it meets
   @Nullable private final Map<ErlangQVar, List<ErlangQVar>> myEarlierBindings;
 
   public ErlangVarProcessor(String requestedName, PsiElement origin) {
-    this(requestedName, origin, new HashMap<>());
+    this(requestedName, origin, getEarlierBindingsOfFile(origin));
   }
 
   private ErlangVarProcessor(String requestedName, PsiElement origin, @Nullable Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
@@ -120,9 +123,17 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return true;
   }
 
+  // the earlier bindings of a variable depend only on the file, so all resolves in the file share them until the file changes
+  @NotNull
+  private static Map<ErlangQVar, List<ErlangQVar>> getEarlierBindingsOfFile(@NotNull PsiElement origin) {
+    PsiFile file = origin.getContainingFile();
+    if (file == null) return new HashMap<>();
+    return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(new ConcurrentHashMap<>(), file));
+  }
+
   // a variable that matches an earlier binding, like X in `X = 1, case X = g() of ...`, is not a binding itself.
   // Only earlier variables are followed, so the lookup always moves towards the start of the file and terminates.
-  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per resolve.
+  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per version of the file.
   @NotNull
   private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
     Map<ErlangQVar, List<ErlangQVar>> candidates = new HashMap<>();

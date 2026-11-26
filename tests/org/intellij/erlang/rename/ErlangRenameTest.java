@@ -82,6 +82,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testCaseHeadRematchInLaterCase() { doTest("New"); }
   public void testCaseHeadPattern()            { doTest("New"); }
   public void testCaseHeadPatternFromPattern() { doTest("New"); }
+  public void testCaseClauseRematchTwice()     { doTest("New"); }
+  public void testCaseClauseBodyRematchTwice() { doTest("New"); }
+  public void testCaseClauseNestedCasePattern() { doTest("New"); }
+  public void testCaseClauseNestedCaseTwoClauses() { doTest("New"); }
   public void testNamedFunShadowsFromCall()     { doTest("New"); }
   public void testNamedFunShadowsFromOuter()    { doTest("New"); }
   public void testNamedFunShadowsCaseHead()     { doTest("New"); }
@@ -102,8 +106,11 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testFilterVariableAfterTwoGenerators() { doTest("Zz"); } // issue 1641
   public void testGeneratorMapKeyFromEarlierGenerator() { doTest("Zz"); } // issue 1641
   public void testGeneratorMapKeyRenamedFromKey() { doTest("Zz"); } // issue 1641
+  public void testFunArgumentShadowsGeneratorVariable() { doTest("Zz"); } // issue 1652
+  public void testGeneratorVariableShadowedByFunArgument() { doTest("Zz"); } // issue 1652
   public void testFunHeadRepeatedVariable() { doTest("New"); } // issue 1640
   public void testFunHeadRepeatedVariableFromSecond() { doTest("B"); } // issue 1640
+  public void testCatchClassVarAssignment()       { doTest("New"); } // issue 1648
 
   // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
   public void testLongOperatorChain() {

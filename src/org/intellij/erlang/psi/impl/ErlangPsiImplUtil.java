@@ -637,7 +637,7 @@ public class ErlangPsiImplUtil {
    */
   public static boolean isBinaryWidthExpression(PsiElement psiElement) {
     ErlangMaxExpression maxParent = PsiTreeUtil.getParentOfType(psiElement, ErlangMaxExpression.class);
-    if (maxParent == null) return false;
+    if (maxParent == null || !(maxParent.getParent() instanceof ErlangBinElement)) return false;
 
     PsiElement prevSib = PsiTreeUtil.getPrevSiblingOfType(maxParent, PsiElement.class);
     if (prevSib == null) return false;
@@ -1267,12 +1267,14 @@ public class ErlangPsiImplUtil {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
+      // the earlier part of the clause that holds the place is already walked; the rest of it comes later than the place
+      if (c == lastParent) continue;
       ErlangClauseBody clauseBody = c.getClauseBody();
-      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
-      // the patterns of the clauses bind after the head, so a variable in the head does not see them;
-      // the variable processor rejects the patterns of the other clauses
+      boolean found = clauseBody != null && !processDeclarationRecursive(clauseBody, processor, state);
+      // a case met as an earlier sibling also exports the variables bound in its clause patterns
       ErlangArgumentDefinition pattern = c.getArgumentDefinition();
-      if (processor instanceof ErlangVarProcessor && pattern != null && (head == null || head != lastParent)) result &= processDeclarationRecursive(pattern, processor, state);
+      if (!found && lastParent == null && pattern != null) found = !processDeclarationRecursive(pattern, processor, state);
+      result &= !found;
     }
     return result;
   }

@@ -17,10 +17,12 @@
 package org.intellij.erlang.parser;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
 import java.io.IOException;
@@ -205,6 +207,43 @@ public class ErlangParserTest extends ErlangParserTestBase {
       if (PsiTreeUtil.hasErrorElements(file)) rejected.add(body);
     }
     assertEmpty("Parsed with a syntax error", rejected);
+  }
+
+  // #1646: erlc gives "t.erl:3:18: syntax error before: '.'"
+  public void testLoneDotAfterAttributeIsError() {
+    PsiFile file = parseText("-module(t).\n" +
+                             "-export([f/0]).\n" +
+                             "-record(r, {a}). .\n" +
+                             "f() -> #r{}.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  // #1646: erlc gives "t2.erl:1:1: syntax error before: '.'"
+  public void testLoneDotBeforeFirstFormIsError() {
+    PsiFile file = parseText(".\n" +
+                             "-module(t2).\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  // #1646: erlc gives "t4.erl:3:12: syntax error before: '.'"; the dot after a function is marked only at the end of the file
+  public void testLoneDotAfterFunctionBeforeNextFormIsError() {
+    PsiFile file = parseText("-module(t4).\n" +
+                             "-export([f/0, g/0]).\n" +
+                             "f() -> ok. .\n" +
+                             "g() -> ok.\n");
+    assertTrue("PsiFile contains no error elements", PsiTreeUtil.hasErrorElements(file));
+  }
+
+  // #1646: one error per lone dot, and the forms after it still parse
+  public void testLoneDotKeepsFollowingForms() {
+    PsiFile file = parseText("-module(t).\n" +
+                             "-record(r, {a}). . % comment\n" +
+                             "f() -> #r{}.\n" +
+                             ".\n" +
+                             "g() -> ok.\n");
+    assertSize(2, PsiTreeUtil.findChildrenOfType(file, PsiErrorElement.class));
+    assertSize(2, PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class));
+    assertSize(1, PsiTreeUtil.findChildrenOfType(file, ErlangRecordDefinition.class));
   }
 
   private PsiFile parseText(String text) {

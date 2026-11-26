@@ -2624,7 +2624,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // console_expression | application_file_expression | form_with_period *
+  // console_expression | application_file_expression | <<strayPeriodOr form_with_period>> *
   static boolean forms(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "forms")) return false;
     boolean r;
@@ -2636,12 +2636,12 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // form_with_period *
+  // <<strayPeriodOr form_with_period>> *
   private static boolean forms_2(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "forms_2")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!form_with_period(b, l + 1)) break;
+      if (!strayPeriodOr(b, l + 1, ErlangParser::form_with_period)) break;
       if (!empty_element_parsed_guard_(b, "forms_2", c)) break;
     }
     return true;
