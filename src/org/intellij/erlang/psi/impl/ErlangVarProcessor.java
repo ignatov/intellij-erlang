@@ -20,6 +20,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -105,6 +106,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (hasNarrowerParentScope(psiElement)) return true;
       if (boundInOwnOrLaterQualifier(psiElement)) return true;
       if (outsideOwnGeneratorPattern(psiElement)) return true;
+      if (boundAfterOrigin(psiElement)) return true;
       // put all possible variables to list
       ErlangQVar var = (ErlangQVar) psiElement;
       List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
@@ -224,6 +226,25 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       }
     }
     return false;
+  }
+
+  // the left side of a match is bound after its right side is evaluated, and a clause body after the head and the guard of its clause
+  private boolean boundAfterOrigin(PsiElement psiElement) {
+    for (PsiElement parent = psiElement.getParent(); parent != null && !(parent instanceof PsiFile); parent = parent.getParent()) {
+      if (parent instanceof ErlangFakeBinaryExpression match && (parent instanceof ErlangAssignmentExpression || parent instanceof ErlangMaybeMatchExpression)) {
+        if (PsiTreeUtil.isAncestor(match.getLeft(), psiElement, false) && PsiTreeUtil.isAncestor(match.getRight(), myOrigin, false) && !inPattern(match)) return true;
+      }
+      else if (parent instanceof ErlangClauseBody body) {
+        if (!PsiTreeUtil.isAncestor(body, myOrigin, false) && PsiTreeUtil.isAncestor(body.getParent(), myOrigin, false)) return true;
+      }
+    }
+    return false;
+  }
+
+  // in a pattern, like the head of a clause or the left side of a match, `=` is an alias and both of its sides are bound together
+  private static boolean inPattern(@NotNull PsiElement match) {
+    return PsiTreeUtil.getParentOfType(match, ErlangArgumentDefinition.class, true, ErlangClauseBody.class) != null
+           || inLeftPartOfAssignment(match);
   }
 
   // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;

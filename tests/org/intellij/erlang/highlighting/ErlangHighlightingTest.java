@@ -162,6 +162,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnboundInRecursiveFun() { doTest(); } // issue 1650
   public void testUnboundInOwnMatchRight() { doTest(); } // issue 1650
   public void testUnboundInGuardBoundInBody() { doTest(); } // issue 1650
+  public void testUnboundInOwnBindingNeighbours() { doTest(); } // issue 1650
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
