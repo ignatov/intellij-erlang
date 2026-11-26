@@ -39,7 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Type completion shows the arity of each type, so tree/0 and tree/1 can be told apart (<a href="https://github.com/ignatov/intellij-erlang/pull/1575">#1575</a>)</li>
+              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
+              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
+              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
+              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
+              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
+              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
+              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
             </ul>
         ]]>
     </change-notes>
