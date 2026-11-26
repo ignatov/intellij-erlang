@@ -63,6 +63,12 @@ public class ErlangIntroduceVariableTest extends BasePlatformTestCase {
   public void testQuotedAtom()              { doTest(); }
   public void testQuotedAtomWithoutLetters() { doTest(); }
   public void testQuotedFunctionCall()      { doTest(); }
+  public void testEmptyBinary()             { doTest(); }
+  public void testCharLiteral()             { doTest(); }
+  public void testEmptyMap()                { doTest(); }
+  public void testEmptyBinaryCaret()        { doTest(); }
+  public void testCharLiteralCaret()        { doTest(); }
+  public void testUnderscoreAtom()          { doTest(); }
 
   public void testExpressionUsingGeneratorVariable() {
     myFixture.configureByFile(getTestName(true) + ".erl");
