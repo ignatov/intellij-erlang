@@ -37,6 +37,60 @@ public class ErlangStringManipulator extends AbstractElementManipulator<ErlangSt
   }
 
   private static TextRange getStringTokenRange(ErlangStringLiteral element) {
-    return TextRange.from(1, element.getTextLength() - 2);
+    String text = element.getText();
+    int length = text.length();
+    int start = 0;
+    if (start < length && text.charAt(start) == '~') {
+      start++;
+      if (start < length && "bBsS".indexOf(text.charAt(start)) >= 0) start++;
+    }
+    int quotes = 0;
+    while (start + quotes < length && text.charAt(start + quotes) == '"') quotes++;
+    if (quotes >= 3) {
+      int contentStart = start + quotes;
+      int end = length >= contentStart + quotes && endsWithQuotes(text, quotes) ? length - quotes : length;
+      return tripleQuotedContentRange(text, contentStart, end);
+    }
+    if (start >= length) return TextRange.create(length, length);
+    char open = text.charAt(start);
+    int contentStart = start + 1;
+    int end = length > contentStart && text.charAt(length - 1) == closingDelimiter(open) ? length - 1 : length;
+    return TextRange.create(contentStart, end);
+  }
+
+  private static boolean endsWithQuotes(String text, int quotes) {
+    for (int i = text.length() - quotes; i < text.length(); i++) {
+      if (text.charAt(i) != '"') return false;
+    }
+    return true;
+  }
+
+  // The rest of the opening line and the line of the closing quotes are not part of the string (EEP 64)
+  private static TextRange tripleQuotedContentRange(String text, int start, int end) {
+    int lastLineStart = end;
+    while (lastLineStart > start && isBlank(text.charAt(lastLineStart - 1))) lastLineStart--;
+    int contentEnd = end;
+    if (lastLineStart > start && text.charAt(lastLineStart - 1) == '\n') {
+      contentEnd = lastLineStart - 1;
+      if (contentEnd > start && text.charAt(contentEnd - 1) == '\r') contentEnd--;
+    }
+    int lineBreak = start;
+    while (lineBreak < end && isBlank(text.charAt(lineBreak))) lineBreak++;
+    if (lineBreak < end && text.charAt(lineBreak) == '\n') start = lineBreak + 1;
+    return TextRange.create(start, Math.max(start, contentEnd));
+  }
+
+  private static boolean isBlank(char c) {
+    return c == ' ' || c == '\t' || c == '\r';
+  }
+
+  private static char closingDelimiter(char open) {
+    return switch (open) {
+      case '(' -> ')';
+      case '[' -> ']';
+      case '{' -> '}';
+      case '<' -> '>';
+      default -> open;
+    };
   }
 }
