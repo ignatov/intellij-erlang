@@ -47,6 +47,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
+  public void testLoneDot()           { doTest(); } // issue 1646
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
@@ -123,6 +124,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNamedFunUnusedName() { doTest(); } // issue 1642
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
   public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
+  public void testFunArgumentShadowsEarlierGeneratorVariable() { doTest(); } // issue 1652
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }
@@ -159,6 +161,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testCatchClassVarAssignment() { doTest(); } // issue 1648
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {

@@ -22,6 +22,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.project.Project;
@@ -32,8 +33,10 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.text.CharArrayUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +45,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
+  private static final TokenSet TOKENS_AFTER_CONSTRUCT = TokenSet.create(
+    ErlangTypes.ERL_PAR_RIGHT, ErlangTypes.ERL_BRACKET_RIGHT, ErlangTypes.ERL_CURLY_RIGHT, ErlangTypes.ERL_BIN_END,
+    ErlangTypes.ERL_DOT, ErlangTypes.ERL_COMMA, ErlangTypes.ERL_SEMI, ErlangTypes.ERL_END);
 
   @Override
   public Result preprocessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull Ref<Integer> caretOffset, @NotNull Ref<Integer> caretAdvance, @NotNull DataContext dataContext, EditorActionHandler originalHandler) {
@@ -95,12 +101,45 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
     parent = expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
 
-    if (parent != null) {
-      appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));
-      return  true;
-    }
+    if (parent == null) return false;
 
-    return false;
+    int endOffset = getEndInsertionOffset(file, editor, lastElement.getParent(), lastElement.getTextRange().getEndOffset());
+    if (endOffset < 0) return false;
+
+    appendEndAndMoveCaret(file, editor, endOffset, needCommaAfter(parent));
+    return true;
+  }
+
+  private static int getEndInsertionOffset(@NotNull PsiFile file, @NotNull Editor editor, @NotNull PsiElement construct,
+                                           int keywordEndOffset) {
+    Document document = editor.getDocument();
+    CharSequence text = document.getCharsSequence();
+    int caretOffset = editor.getCaretModel().getOffset();
+    int lineEndOffset = document.getLineEndOffset(document.getLineNumber(caretOffset));
+    int nonSpaceOffset = CharArrayUtil.shiftForward(text, caretOffset, lineEndOffset, " \t");
+    if (nonSpaceOffset >= lineEndOffset) return keywordEndOffset;
+    if (text.charAt(nonSpaceOffset) == '%') return lineEndOffset;
+    PsiElement next = file.findElementAt(nonSpaceOffset);
+    if (next == null) return -1;
+    IElementType nextType = next.getNode().getElementType();
+    boolean continuesConstruct = PsiTreeUtil.isAncestor(construct, next, false) &&
+                                 !TOKENS_AFTER_CONSTRUCT.contains(nextType) &&
+                                 !belongsToEnclosingConstruct(construct, nextType);
+    return continuesConstruct ? -1 : keywordEndOffset;
+  }
+
+  private static boolean belongsToEnclosingConstruct(@NotNull PsiElement construct, @NotNull IElementType keyword) {
+    Class<? extends PsiElement>[] owners = getOwnersOf(keyword);
+    if (owners.length == 0 || PsiTreeUtil.instanceOf(construct, owners)) return false;
+    return PsiTreeUtil.getParentOfType(construct, owners) != null;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Class<? extends PsiElement> @NotNull [] getOwnersOf(@NotNull IElementType keyword) {
+    if (keyword == ErlangTypes.ERL_CATCH) return new Class[]{ErlangTryExpression.class};
+    if (keyword == ErlangTypes.ERL_AFTER) return new Class[]{ErlangTryExpression.class, ErlangReceiveExpression.class};
+    if (keyword == ErlangTypes.ERL_ELSE) return new Class[]{ErlangMaybeExpression.class};
+    return new Class[0];
   }
 
   @Nullable

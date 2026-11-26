@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.resolve;
 
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiPolyVariantReference;
 import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -86,6 +89,62 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertEquals(vars.subList(0, 3), targets);
   }
 
+  // #1503: resolving every variable of the clause grows linearly with the number of matches, not quadratically.
+  // From 25 to 200 repetitions the total grows about 8x when it is linear and 64x when it is quadratic
+  public void testResolvingEveryVariableOfClauseIsNotQuadratic() {
+    long small = fastestResolveOfEveryVariable(25);
+    long big = fastestResolveOfEveryVariable(200);
+    assertTrue("25 repetitions: " + small + " ns, 200 repetitions: " + big + " ns, ratio " + (double) big / Math.max(small, 1L),
+               big < 24 * Math.max(small, 1_000_000L));
+  }
+
+  // #1503: the earlier bindings that resolves share are dropped when the file changes
+  public void testResolveAfterEditDropsEarlierBindings() {
+    myFixture.configureByText("rep.erl", """
+      -module(rep).
+      -export([f/0]).
+      f() ->
+          X = a,
+          X = b,
+          X = c,
+          X.
+      """);
+    List<ErlangQVar> vars = xVars();
+    assertEquals(vars.get(0), multiResolve(vars.get(3))[0].getElement());
+    assertEquals(vars.get(0), multiResolve(vars.get(2))[0].getElement());
+    Document document = myFixture.getEditor().getDocument();
+    int start = document.getText().indexOf("X = a,");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      document.deleteString(start, start + "X = a,".length());
+      PsiDocumentManager.getInstance(getProject()).commitDocument(document);
+    });
+    vars = xVars();
+    assertEquals(3, vars.size());
+    ResolveResult[] results = multiResolve(vars.get(2));
+    assertEquals(1, results.length);
+    assertEquals(vars.get(0), results[0].getElement());
+  }
+
+  private List<ErlangQVar> xVars() {
+    List<ErlangQVar> vars = new ArrayList<>(PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class));
+    vars.removeIf(v -> !"X".equals(v.getText()));
+    return vars;
+  }
+
+  // each timed pass runs on a new text of the file, so that it is the first resolve after an edit and finds no shared memo
+  private long fastestResolveOfEveryVariable(int repetitions) {
+    List<ErlangQVar> vars = configure(repetitions);
+    for (ErlangQVar v : vars) multiResolve(v);
+    long fastest = Long.MAX_VALUE;
+    for (int i = 0; i < 3; i++) {
+      vars = configure(repetitions, i);
+      long start = System.nanoTime();
+      for (ErlangQVar v : vars) multiResolve(v);
+      fastest = Math.min(fastest, System.nanoTime() - start);
+    }
+    return fastest;
+  }
+
   // the fastest of several warmed-up resolves of each size, so that a pause of the machine during one resolve does not count.
   // The resolve grows about 2x from 8 to 16 repetitions and 256x when it doubles, so the 32x limit leaves room for a busy machine
   private void assertResolveDoesNotDouble(String prefix) {
@@ -100,6 +159,8 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     for (int i = 0; i < 5; i++) multiResolve(last);
     long fastest = Long.MAX_VALUE;
     for (int i = 0; i < 10; i++) {
+      vars = configure(repetitions, i);
+      last = vars.get(vars.size() - 1);
       long start = System.nanoTime();
       multiResolve(last);
       fastest = Math.min(fastest, System.nanoTime() - start);
@@ -112,7 +173,12 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
   }
 
   private List<ErlangQVar> configure(int repetitions) {
-    String text = "-module(rep).\n-export([f/1]).\nf(A) ->\n" + REPEATED_PAIR.repeat(repetitions) + "    X.\n";
+    return configure(repetitions, -1);
+  }
+
+  // a different sample gives a different text, so the file is changed and nothing cached for an earlier text is reused
+  private List<ErlangQVar> configure(int repetitions, int sample) {
+    String text = "-module(rep).\n-export([f/1]).\nf(A) ->\n" + REPEATED_PAIR.repeat(repetitions) + "    X.\n%% sample " + sample + "\n";
     myFixture.configureByText("rep.erl", text);
     List<ErlangQVar> vars = new ArrayList<>();
     for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangQVar.class)) {
