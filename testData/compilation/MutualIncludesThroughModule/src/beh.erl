@@ -1,0 +1,2 @@
+-module(beh).
+-include("a.hrl").

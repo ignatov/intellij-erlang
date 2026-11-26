@@ -36,8 +36,13 @@ import org.jetbrains.jps.model.library.sdk.JpsSdk;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.util.JpsPathUtil;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, ErlangTarget> {
@@ -80,10 +85,9 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     }
 
     JpsSdk<JpsDummyElement> sdk = ErlangTargetBuilderUtil.getSdk(context, module);
-    String escriptPath = JpsErlangSdkType.getScriptInterpreterExecutable(sdk.getHomePath()).getAbsolutePath();
     for (String contentRootUrl : module.getContentRootsList().getUrls()) {
       if (!hasRebarConfig(contentRootUrl)) continue;
-      runRebar(escriptPath, rebarPath, JpsPathUtil.urlToPath(contentRootUrl), compilerOptions.myAddDebugInfoEnabled, context);
+      runRebar(sdk.getHomePath(), rebarPath, JpsPathUtil.urlToPath(contentRootUrl), compilerOptions.myAddDebugInfoEnabled, context);
     }
   }
 
@@ -104,21 +108,25 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
     return NAME;
   }
 
-  private static void runRebar(@NotNull String escriptPath,
+  private static void runRebar(@NotNull String sdkHome,
                                @NotNull String rebarPath,
                                @Nullable String contentRootPath,
                                boolean addDebugInfo,
                                @NotNull CompileContext context) throws ProjectBuildException {
     List<String> command = new ArrayList<>();
-    command.add(escriptPath);
+    Map<String, String> environment = new HashMap<>();
+    if (isEscript(rebarPath)) {
+      command.add(JpsErlangSdkType.getScriptInterpreterExecutable(sdkHome).getAbsolutePath());
+    }
+    else {
+      environment.put("PATH", getPathWithSdkFirst(sdkHome, System.getenv("PATH")));
+    }
     command.add(rebarPath);
     command.add("compile");
 
-    Map<String, String> environment = null;
     if (addDebugInfo && System.getenv(ERL_COMPILER_OPTIONS) == null) {
       // The compiler reads its default options from ERL_COMPILER_OPTIONS, so this works for rebar and rebar3 and
       // overrides no_debug_info in erl_opts. ERL_FLAGS="+debug_info", used before, is an emulator flag and had no effect.
-      environment = new HashMap<>();
       environment.put(ERL_COMPILER_OPTIONS, "[debug_info]");
     }
 
@@ -163,5 +171,29 @@ public class RebarBuilder extends TargetBuilder<ErlangSourceRootDescriptor, Erla
       }
     }
     return rebarPath;
+  }
+
+  /**
+   * Whether the rebar path is run with the escript of the Erlang SDK. A script for another interpreter, whose first line
+   * is a shebang that does not name escript, such as the sh script that `rebar3 local install` writes, is run directly
+   * instead, with {@link #getPathWithSdkFirst} as PATH, so that the erl it runs is the SDK's.
+   */
+  public static boolean isEscript(@NotNull String rebarPath) {
+    try (BufferedReader reader = Files.newBufferedReader(Paths.get(rebarPath), StandardCharsets.ISO_8859_1)) {
+      String firstLine = reader.readLine();
+      return firstLine == null || !firstLine.startsWith("#!") || firstLine.contains("escript");
+    }
+    catch (IOException | InvalidPathException e) {
+      return true;
+    }
+  }
+
+  /**
+   * The PATH with the bin directory of the Erlang SDK first.
+   */
+  @NotNull
+  public static String getPathWithSdkFirst(@NotNull String sdkHome, @Nullable String path) {
+    String sdkBin = JpsErlangSdkType.getByteCodeInterpreterExecutable(sdkHome).getParent();
+    return StringUtil.isEmpty(path) ? sdkBin : sdkBin + File.pathSeparator + path;
   }
 }

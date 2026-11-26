@@ -62,12 +62,15 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
     assertEquals(List.of("with1"), List.of(failedGeneratedTests.getFirst().getName()));
   }
 
-  public void testRebar3RerunsModuleOfFailedFunOfGenerator() {
+  public void testRebar3RerunsGeneratorOfFailedFunOfGenerator() {
     useRebar("rebar3");
     myFixture.addFileToProject("a.erl", A);
     myFixture.addFileToProject("c.erl", C);
-    assertEquals("eunit --module=c --test=a:a2_test",
+    assertEquals("eunit --test=a:a2_test --generator=c:c4_test_",
                  createRerunCommand(new ArrayList<>(), "eunit://c:-c4_test_/0-fun-2-:3", "eunit://a:a2_test"));
+    // no generator function in the project: the module named in the hint is rerun
+    assertEquals("eunit --module=d --test=a:a2_test",
+                 createRerunCommand(new ArrayList<>(), "eunit://d:-d_test_/0-fun-0-:3", "eunit://a:a2_test"));
   }
 
   public void testRebar3RerunsFailedTestNotItsSuite() {
@@ -78,7 +81,7 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
     SMTestProxy suiteB = createSuite("eunit://b", "eunit://b:b_test");
     List<SMTestProxy> failed = List.of(suiteA, suiteA.getChildren().getFirst(), suiteB, suiteB.getChildren().getFirst());
     assertEquals("eunit --test=a:a2_test,b:b_test",
-                 RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), failed, new ArrayList<>()));
+                 RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), failed, new ArrayList<>(), new ArrayList<>()));
   }
 
   private static SMTestProxy createSuite(String suiteUrl, String failedTestUrl) {
@@ -107,7 +110,7 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
       proxy.setLocator(ErlangTestLocationProvider.INSTANCE);
       proxies.add(proxy);
     }
-    return RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), proxies, failedGeneratedTests);
+    return RebarEunitRerunFailedTestsAction.createRerunCommand(getProject(), proxies, failedGeneratedTests, new ArrayList<>());
   }
 
   private void useRebar(String rebarName) {

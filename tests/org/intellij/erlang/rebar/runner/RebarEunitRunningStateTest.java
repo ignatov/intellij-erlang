@@ -17,9 +17,11 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.configuration.EnvironmentVariablesData;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
@@ -34,6 +36,9 @@ import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Map;
 
 public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -183,10 +188,58 @@ public class RebarEunitRunningStateTest extends ErlangLightPlatformCodeInsightFi
     assertEquals(MODIFIED_CONFIG, config);
   }
 
+  public void testWriteModifiedConfigRemovesReportBetweenOtherOptions() throws Exception {
+    String config = doWriteModifiedConfig(
+      "{eunit_opts, [verbose, {report, {eunit_surefire, [{dir, \".\"}]}}, {print_depth, 10}]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",verbose, {print_depth, 10}]}.\n", config);
+  }
+
+  public void testWriteModifiedConfigRemovesNoTtyBetweenOtherOptions() throws Exception {
+    String config = doWriteModifiedConfig("{eunit_opts, [verbose, {no_tty, false}, {print_depth, 10}]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",verbose, {print_depth, 10}]}.\n", config);
+  }
+
+  public void testWriteModifiedConfigRemovesAdjacentReportAndNoTtyBetweenOtherOptions() throws Exception {
+    String config = doWriteModifiedConfig("{eunit_opts, [a, {report, x}, {no_tty, true}, b]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ",a, b]}.\n", config);
+  }
+
+  public void testWriteModifiedConfigRemovesFirstAndLastReportAndNoTty() throws Exception {
+    String config = doWriteModifiedConfig("{eunit_opts, [{report, x}, a, {no_tty, true}]}.\n");
+    assertEquals("{eunit_opts, [" + NO_TTY_OPTION + "," + REPORT_OPTION + ", a]}.\n", config);
+  }
+
   public void testWriteModifiedConfigWithoutOldConfig() throws Exception {
     String config = doWriteModifiedConfig(null);
     assertTrue(config, config.contains(REPORT_OPTION));
     assertTrue(config, config.contains(NO_TTY_OPTION));
+  }
+
+  // Without a project SDK the release is unknown, so the run gets the reporter that OTP 26 and later load.
+  public void testReporterModuleWithoutProjectSdk() throws Exception {
+    Sdk sdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+    WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(null));
+    try {
+      assertReporterModule("otp_27_plus");
+    }
+    finally {
+      WriteAction.run(() -> ProjectRootManager.getInstance(getProject()).setProjectSdk(sdk));
+    }
+  }
+
+  public void testReporterModuleOfOlderProjectSdk() throws Exception {
+    assertReporterModule("otp_pre_27");
+  }
+
+  private void assertReporterModule(String beamDirectory) throws Exception {
+    File projectDirectory = FileUtil.createTempDirectory("rebar_project", null);
+    File reportsRoot = RebarEunitRunningState.createEunitReportsEnvironment(getProject(), projectDirectory.getPath());
+    FileDocumentManager.getInstance().saveAllDocuments();
+    byte[] actual = Files.readAllBytes(new File(reportsRoot, ErlangEunitReporterModule.MODULE_NAME + ".beam").toPath());
+    try (InputStream expected = getClass().getResourceAsStream("/eunit/beams/" + beamDirectory + "/eunit_teamcity.beam")) {
+      assertNotNull(expected);
+      assertTrue(beamDirectory, Arrays.equals(expected.readAllBytes(), actual));
+    }
   }
 
   private String getErlFlags(String userErlFlags, File reportsRoot) {

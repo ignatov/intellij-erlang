@@ -33,6 +33,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.module.ErlangModuleType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.roots.ErlangIncludeDirectoryUtil;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -82,6 +83,7 @@ public class ErlangIncludeDirectoriesInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+      ErlangUsageCounters.countQuickFix(project, getClass());
       if (myDoFix) {
         for (Module module : ModuleManager.getInstance(project).getModules()) {
           doFix(module);

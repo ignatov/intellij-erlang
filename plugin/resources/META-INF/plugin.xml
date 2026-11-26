@@ -31,21 +31,22 @@
     <p>
         If you find this plugin useful, consider making a <a href="https://github.com/sponsors/ignatov">donation</a> to support the project.
     </p>
+    <p>
+        The plugin can send anonymous usage counts once a day, only if you allow it. See the <a href="https://github.com/ignatov/intellij-erlang/blob/master/PRIVACY.md">privacy policy</a>.
+    </p>
     ]]>
     </description>
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Fixed builds that silently produced no .beam files: a missing Erlang build plugin, a failing erlc or a module without rebar.config is now reported instead of ending as "successful" (#1077, #1028)</li>
-              <li>Fixed erlc warnings with column numbers (OTP 24+) being reported as errors and failing the build</li>
-              <li>Fixed build order for parse transforms when the IDE and JPS project names differ</li>
-              <li>Fixed false 'multi-valued comprehension' error on map comprehensions (#1093)</li>
-              <li>Quick documentation for OTP functions, types and modules works with the new erlang.org documentation (OTP 27+), including links between pages; documentation is downloaded using the IDE proxy settings</li>
-              <li>Parameter name hints are shorter (parameter name, spec name or a short pattern summary) and can be turned off in Settings | Editor | Inlay Hints | Parameter names | Erlang (#1064)</li>
-              <li>Works in IntelliJ IDEA 2026.2 and 2026.3: one build serves both</li>
-              <li>Added support for Erlang/OTP 29 syntax and native records</li>
-              <li>Added support for Erlang/OTP 28 comprehension generators, based float literals and nominal types</li>
-              <li>Added support for Erlang/OTP 27 sigil string literals</li>
+              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
+              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
+              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
+              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
+              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
+              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
+              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
             </ul>
         ]]>
     </change-notes>

@@ -11,7 +11,7 @@
 -define(NAME, none).
 -endif.
 
--if(<warning descr="Unresolved function defined/1">defined</warning>(LEVEL)).
+-if(defined(LEVEL)).
 -define(DEFINED, true).
 -else.
 -define(DEFINED, false).

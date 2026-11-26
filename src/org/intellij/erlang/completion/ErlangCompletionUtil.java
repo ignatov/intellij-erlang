@@ -65,10 +65,9 @@ class ErlangCompletionUtil {
       List<ErlangTypeSig> sigs = signature != null ? signature.getTypeSigList() : ContainerUtil.emptyList();
       for (ErlangTypeSig sig : sigs) {
         ErlangFunTypeArguments arguments = sig.getFunType().getFunTypeArguments();
-        ErlangType type = arguments.getTypeList().get(argIndex);
-        if (type != null) {
-          collectExpressionTypes(type, expectedArgumentTypes);
-        }
+        List<ErlangType> types = arguments.getTypeList();
+        if (types.size() <= argIndex) continue;
+        collectExpressionTypes(types.get(argIndex), expectedArgumentTypes);
       }
     }
 

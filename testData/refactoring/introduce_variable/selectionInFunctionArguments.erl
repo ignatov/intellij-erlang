@@ -1,0 +1,1 @@
+foo(<selection>expr</selection>, expr) -> expr.

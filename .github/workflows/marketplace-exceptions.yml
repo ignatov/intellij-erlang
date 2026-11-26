@@ -1,0 +1,117 @@
+name: Marketplace exceptions
+
+# Copies the exception reports of the plugin on JetBrains Marketplace (plugin 7083, the Exceptions tab) into issues of
+# this repository, one issue per group, so that the bug-fixing factory can fix them. scripts/marketplace/exceptions.py
+# does the work; its docstring has the rules (which groups are filed, updates, reopening, caps and privacy).
+#
+# Modes:
+#   probe    only check access: the HTTP status of /exceptions/resolved and the top-level JSON type and keys.
+#   dry-run  read the reports and print what a run would do: counts, issue titles, comments and the body of the
+#            first new issue. It writes nothing.
+#   run      write the issues.
+# The log and the job summary of this public repository are public. A dry run prints the same redacted text that a
+# run would put into public issues, and nothing more.
+#
+# When the workflow reads Marketplace:
+#   - A scheduled run does nothing at all (no request to Marketplace, one line in the job summary) unless the
+#     repository variable MARKETPLACE_EXCEPTIONS is "true"; then it runs in the mode run.
+#   - A manual run (workflow_dispatch) uses the mode of its input, default dry-run.
+#
+# The token:
+#   - The step "Copy the reports" uses the secret MARKETPLACE_EXCEPTIONS_TOKEN when it exists (a repository secret or
+#     a secret of the environment marketplace-exceptions), else the publishing token JETBRAINS_MARKETPLACE_TOKEN of
+#     release.yml. The owner chose to reuse the publishing token; a dedicated read-only token can replace it later by
+#     adding the one secret, with no change here.
+#   - Why the token must stay in: the publishing token can upload a new plugin version to every user, and this job
+#     reads and parses data from outside (the reports of users). So the token reaches only that one step. The job
+#     mode, which decides whether to run at all, has no secret. There is no pull_request trigger. The script sends
+#     the token only to https://plugins.jetbrains.com (it refuses any other host, and never sends it to the storage
+#     link that Marketplace may redirect to or to GitHub), never prints it, and never sends a POST to Marketplace.
+#   - The environment marketplace-exceptions needs no setup: GitHub creates it, without rules, on the first run that
+#     uses it, and repository secrets stay available in it. The owner can later restrict it to master and keep a
+#     dedicated token there.
+# Variables: MARKETPLACE_EXCEPTIONS ("true" turns the scheduled run on), MARKETPLACE_EXCEPTIONS_MIN_VERSION (optional;
+# the oldest plugin release whose reports are filed, default 0.11.1300).
+
+on:
+  schedule:
+    - cron: '37 3 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: probe (check access only), dry-run (print what it would do; the log is public) or run (write the issues)
+        type: choice
+        options:
+          - probe
+          - dry-run
+          - run
+        default: dry-run
+
+permissions:
+  issues: write
+  contents: read
+
+concurrency:
+  group: marketplace-exceptions
+  cancel-in-progress: false
+
+jobs:
+  mode:
+    if: github.repository == 'ignatov/intellij-erlang'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions: {}
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+    - name: Choose the mode
+      id: mode
+      env:
+        EVENT: ${{ github.event_name }}
+        INPUT_MODE: ${{ inputs.mode }}
+        ENABLED: ${{ vars.MARKETPLACE_EXCEPTIONS }}
+      run: |
+        if [[ "$EVENT" == workflow_dispatch ]]; then
+          mode="$INPUT_MODE"
+        elif [[ "$ENABLED" == true ]]; then
+          mode=run
+        else
+          echo "The repository variable MARKETPLACE_EXCEPTIONS is not true, so the scheduled run did nothing." \
+            >> "$GITHUB_STEP_SUMMARY"
+          mode=none
+        fi
+        case "$mode" in
+          probe|dry-run|run|none) ;;
+          *) echo "::error::Unknown mode: $mode"; exit 1 ;;
+        esac
+        echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+  copy:
+    needs: mode
+    if: needs.mode.outputs.mode == 'probe' || needs.mode.outputs.mode == 'dry-run' || needs.mode.outputs.mode == 'run'
+    runs-on: ubuntu-24.04
+    # The script starts no new change after 300 seconds; the requests that are under way take at most a few minutes.
+    timeout-minutes: 15
+    environment:
+      name: marketplace-exceptions
+      # Used only for a dedicated secret and a branch rule that the owner may add later; this is not a deployment.
+      deployment: false
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Test the script
+      run: python3 -m unittest discover -s scripts/marketplace -p 'test_*.py'
+    - name: Copy the reports
+      env:
+        # The dedicated token wins when it exists; else the publishing token. See "The token" at the top.
+        MARKETPLACE_TOKEN: ${{ secrets.MARKETPLACE_EXCEPTIONS_TOKEN || secrets.JETBRAINS_MARKETPLACE_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
+        MARKETPLACE_MIN_VERSION: ${{ vars.MARKETPLACE_EXCEPTIONS_MIN_VERSION }}
+        MODE: ${{ needs.mode.outputs.mode }}
+      run: |
+        if [[ -z "$MARKETPLACE_TOKEN" ]]; then
+          echo "::error::Neither MARKETPLACE_EXCEPTIONS_TOKEN nor JETBRAINS_MARKETPLACE_TOKEN is set."
+          exit 1
+        fi
+        python3 scripts/marketplace/exceptions.py "--$MODE"

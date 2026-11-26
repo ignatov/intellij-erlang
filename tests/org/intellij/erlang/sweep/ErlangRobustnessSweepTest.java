@@ -147,6 +147,7 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
   private long mySlowMs;
   private long myHangMs;
   private long myOpBudgetMs;
+  private long myInputBudgetMs;
   private int myCompletions;
   private int myPicks;
   private long myBudgetMs;
@@ -253,8 +254,11 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
     myShardCount = Integer.parseInt(shard.substring(shard.indexOf('/') + 1));
     myOnly = env("SWEEP_ONLY");
     mySlowMs = Long.parseLong(env("SWEEP_SLOW_MS", myPlant != null ? "1000" : "10000"));
-    myHangMs = Long.parseLong(env("SWEEP_HANG_SECONDS", "300")) * 1000;
+    // A hang halts the JVM and the rerun starts it again: in a run of the synthetic inputs only, which are small but for
+    // a few stress inputs with known hangs, a shorter wait leaves the time to the other inputs.
+    myHangMs = Long.parseLong(env("SWEEP_HANG_SECONDS", "only".equals(synth) ? "60" : "300")) * 1000;
     myOpBudgetMs = Long.parseLong(env("SWEEP_OP_BUDGET_MS", "30000"));
+    myInputBudgetMs = Long.parseLong(env("SWEEP_INPUT_BUDGET_SECONDS", "120")) * 1000;
     myCompletions = Integer.parseInt(env("SWEEP_COMPLETIONS", "3"));
     myPicks = Integer.parseInt(env("SWEEP_PICKS", "3"));
     myBudgetMs = Long.parseLong(env("SWEEP_BUDGET_MINUTES", "0")) * 60_000;
@@ -313,6 +317,7 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
     config.addProperty("picks", myPicks);
     config.addProperty("slowMs", mySlowMs);
     config.addProperty("opBudgetMs", myOpBudgetMs);
+    config.addProperty("inputBudgetMs", myInputBudgetMs);
     config.addProperty("hangMs", myHangMs);
     config.addProperty("budgetMinutes", myBudgetMs / 60_000);
     config.addProperty("maxHeapMb", Runtime.getRuntime().maxMemory() / (1024 * 1024));
@@ -340,9 +345,8 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
         if ("hang".equals(myPlant) && !skip("plant/plant_hang.erl")) runInput(new Input("plant/plant_hang.erl", "plant_hang.erl", "-module(plant_hang).\nplant_hang() -> ok.\n"), mySink);
         for (JsonObject c : SweepPlants.controls(myMode, myOps, myAcc)) mySink.accept(c);
       }
-      if (scale) scalingProbe();
       if (synth != null) {
-        for (Input in : Synthetic.inputs()) {
+        for (Input in : Synthetic.inputs(mySeed, this::tokens)) {
           if (budgetExceeded(start)) {
             complete = false;
             break;
@@ -351,6 +355,8 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
           runInput(in, mySink);
         }
       }
+      // After the synthetic inputs: the probe is slow and has found only known problems, so a budget stop cuts it first.
+      if (scale && complete && !scalingProbe(start)) complete = false;
       if (root != null && !"only".equals(synth)) {
         List<Path> selected = selectFiles(root);
         files = selected.size();
@@ -588,12 +594,21 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
       if (t.equals("op")) pendingOp = o;
       if (t.equals("done")) pendingOp = null;
       if (t.equals("input-done")) myDoneInputs.add(o.get("id").getAsString());
-      if (t.equals("fail") && "hang".equals(str(o, "detector"))) myDoneInputs.add(o.get("id").getAsString());
+      if (t.equals("fail") && "hang".equals(str(o, "detector"))) {
+        String id = o.get("id").getAsString();
+        myDoneInputs.add(id);
+        // A hang in a pass of the scaling probe skips the whole generator: the next pass is the same input or larger.
+        java.util.regex.Matcher probe = SCALE_PASS.matcher(id);
+        if (probe.matches()) myDoneInputs.add(probe.group(1));
+      }
       myAcc.accept(o);
     }
     // An operation that started and never finished killed the JVM (halt of the watchdog, OOM, a crash): skip its input.
     if (pendingOp != null) myDoneInputs.add(pendingOp.get("id").getAsString());
   }
+
+  /** The input id of a pass of the scaling probe, scale/<generator>-<n>.erl#p<pass>. */
+  static final java.util.regex.Pattern SCALE_PASS = java.util.regex.Pattern.compile("(scale/.+)-\\d+\\.erl#p\\d+");
 
   static @Nullable String str(JsonObject o, String key) {
     JsonElement e = o.get(key);
@@ -778,7 +793,16 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
       return 1;
     });
     if (ready) {
-      for (String op : myOps) {
+      long inputStart = System.currentTimeMillis();
+      for (int i = 0; i < myOps.size(); i++) {
+        String op = myOps.get(i);
+        // An operation cannot be stopped, but the next ones of a slow input can be skipped: one slow input must not take
+        // the time budget of the whole run. Its slow operations are findings of their own already.
+        if (myInputBudgetMs > 0 && i > 0 && System.currentTimeMillis() - inputStart > myInputBudgetMs) {
+          property(sink, "input-capped", in, "the input took more than " + myInputBudgetMs / 1000 + " s; skipped " +
+                                             String.join(",", myOps.subList(i, myOps.size())));
+          break;
+        }
         runOp("restore", sink, () -> {
           restore(original[0]);
           return 0;
@@ -1583,27 +1607,34 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
 
   // =================================================================================================== scaling probe
 
-  private void scalingProbe() {
+  /** Returns false when it stopped on the time budget of the run. */
+  private boolean scalingProbe(long start) {
     for (Synthetic.Scalable s : Synthetic.scalables()) {
       if (skip("scale/" + s.name)) continue;
+      if (budgetExceeded(start)) return false;
       Map<Integer, Map<String, Long>> times = new LinkedHashMap<>();
       // The first run at the base size warms up the JIT and the caches and is not measured.
       for (int pass = 0; pass < 3; pass++) {
         int n = pass == 2 ? s.n * 4 : s.n;
         Map<String, Long> ms = new LinkedHashMap<>();
+        boolean[] capped = new boolean[1];
         Consumer<JsonObject> sink = rec -> {
-          if (rec.get("t").getAsString().equals("done")) ms.put(rec.get("op").getAsString(), rec.get("ms").getAsLong());
-          if (rec.get("t").getAsString().equals("fail")) {
+          String t = rec.get("t").getAsString();
+          if (t.equals("done")) ms.put(rec.get("op").getAsString(), rec.get("ms").getAsLong());
+          if (t.equals("prop") && "input-capped".equals(str(rec, "kind"))) capped[0] = true;
+          if (t.equals("fail") || t.equals("prop")) {
             journal(rec);
             myAcc.accept(rec);
           }
         };
         runInput(new Input("scale/" + s.name + "-" + n + ".erl#p" + pass, "scale_" + s.name + ".erl", s.text.apply(n)), sink);
         if (pass > 0) times.put(n, ms);
+        // The base size already took the time of a whole input: the larger one would take four times that at least.
+        if (capped[0]) break;
       }
       for (String op : myOps) {
-        Long base = times.get(s.n).get(op);
-        Long big = times.get(s.n * 4).get(op);
+        Long base = times.getOrDefault(s.n, Map.of()).get(op);
+        Long big = times.getOrDefault(s.n * 4, Map.of()).get(op);
         if (base == null || big == null) continue;
         JsonObject r = rec("scale");
         r.addProperty("input", s.name);
@@ -1633,7 +1664,12 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
           mySink.accept(f);
         }
       }
+      // A resumed run skips the generators that are done.
+      JsonObject probed = rec("input-done");
+      probed.addProperty("id", "scale/" + s.name);
+      journal(probed);
     }
+    return true;
   }
 
   // =================================================================================================== minimiser
@@ -1787,7 +1823,8 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
       return new Input("synthetic/" + name, file, bytes);
     }
 
-    static List<Input> inputs() {
+    /** The fixed inputs, then the generated ones ({@link SweepGenerated}, partly seeded), then the large ones. */
+    static List<Input> inputs(long seed, java.util.function.Function<String, List<int[]>> tokens) {
       List<Input> r = new ArrayList<>();
       r.add(in("empty", "empty.erl", ""));
       r.add(in("empty-hrl", "empty.hrl", ""));
@@ -1817,6 +1854,17 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
       r.add(in("cyclic-types", "cyctype.erl", "-module(cyctype).\n-export([f/1]).\n-type a() :: b().\n-type b() :: a().\n-type c() :: c().\n-opaque d() :: {d(), a()}.\n-export_type([a/0, d/0]).\n-spec f(a()) -> c().\nf(X) -> X.\n"));
       r.add(in("cyclic-macros", "cycmac.erl", "-module(cycmac).\n-export([f/0]).\n-define(A, ?B).\n-define(B, ?A).\n-define(C(X), ?C(X)).\nf() -> {?A, ?C(1), ?C}.\n"));
       r.add(in("cyclic-import", "cycimp.erl", "-module(cycimp).\n-import(cycimp, [f/0]).\n-import(cycimp, [f/0]).\n-export([f/0, f/0]).\nf() -> f().\n"));
+      r.addAll(SweepGenerated.inputs(seed, tokens));
+      // Char-by-char typing session: every prefix of a small module is an input of its own.
+      String session = "-module(typed).\n-export([f/1]).\n-record(r, {a = 1 :: integer()}).\n-define(M(X), {X}).\n" +
+                       "-spec f(list()) -> map().\nf(X) when is_list(X) ->\n  case X of\n    [] -> #{a => \"s\"};\n" +
+                       "    [H|T] -> {H, T, <<\"b\">>, fun(Y) -> ?M(Y) end, #r{a = 2}}\n  end.\n";
+      for (int i = 1; i <= session.length(); i++) {
+        Input p = in("typing-session-" + i, "typed.erl", session.substring(0, i));
+        p.mutation = "prefix@" + i;
+        r.add(p);
+      }
+      // The large stress inputs last: they are the slowest, and their findings are known.
       r.add(in("long-chain", "scale_chain.erl", chain(20000)));
       r.add(in("deep-tuples", "scale_tuples.erl", nestedTuples(2000)));
       r.add(in("deep-lists", "scale_lists.erl", nestedLists(2000)));
@@ -1833,15 +1881,6 @@ public class ErlangRobustnessSweepTest extends ErlangLightPlatformCodeInsightFix
       r.add(in("many-macros", "scale_macros.erl", macros(3000)));
       r.add(in("same-name-20k", "scale_same.erl", sameName(20000)));
       r.add(in("huge-repeat-20k", "scale_repeat.erl", repeat(20000)));
-      // Char-by-char typing session: every prefix of a small module is an input of its own.
-      String session = "-module(typed).\n-export([f/1]).\n-record(r, {a = 1 :: integer()}).\n-define(M(X), {X}).\n" +
-                       "-spec f(list()) -> map().\nf(X) when is_list(X) ->\n  case X of\n    [] -> #{a => \"s\"};\n" +
-                       "    [H|T] -> {H, T, <<\"b\">>, fun(Y) -> ?M(Y) end, #r{a = 2}}\n  end.\n";
-      for (int i = 1; i <= session.length(); i++) {
-        Input p = in("typing-session-" + i, "typed.erl", session.substring(0, i));
-        p.mutation = "prefix@" + i;
-        r.add(p);
-      }
       return r;
     }
 

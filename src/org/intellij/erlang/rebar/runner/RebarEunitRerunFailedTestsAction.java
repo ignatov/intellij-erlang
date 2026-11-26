@@ -43,6 +43,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.eunit.ErlangUnitRerunFailedTestsAction;
 import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -111,11 +112,16 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
       }
 
       private RebarEunitRunConfiguration createRerunFailedTestsRunConfiguration() {
+        final Project project = getProject();
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
-        String command = createRerunCommand(getProject(), getFailedTests(getProject()), failedGeneratedTests);
+        final List<String> testsNotRerun = new ArrayList<>();
+        String command = createRerunCommand(project, getFailedTests(project), failedGeneratedTests, testsNotRerun);
 
         if (!failedGeneratedTests.isEmpty()) {
           notifyGeneratedTestsFailed(failedGeneratedTests);
+        }
+        if (!testsNotRerun.isEmpty()) {
+          ErlangUnitRerunFailedTestsAction.notifyTestsNotRerun(project, testsNotRerun, false);
         }
 
         return createRerunConfiguration((RebarEunitRunConfiguration) getPeer(), command);
@@ -148,34 +154,45 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
     };
   }
 
-  // With rebar3 a failed test that is not a function, such as a fun of a generator (eunit://m:-g_test_/0-fun-0-:9) or a line
-  // in a generator, reruns its module, so that no failed test is left out.
+  // With rebar3 a failed test that has no test or generator function to rerun reruns its module, so that no failed
+  // test is left out.
   @VisibleForTesting
   @NotNull
   static String createRerunCommand(@NotNull Project project,
                                    @NotNull List<? extends AbstractTestProxy> failedTestProxies,
-                                   @NotNull List<ErlangFunction> failedGeneratedTests) {
+                                   @NotNull List<ErlangFunction> failedGeneratedTests,
+                                   @NotNull List<String> testsNotRerun) {
+    boolean rebar3 = RebarSettings.getInstance(project).isRebar3();
     Set<String> otherModules = new LinkedHashSet<>();
-    List<ErlangFunction> failedTests = ContainerUtil.mapNotNull(failedTestProxies, testProxy -> {
-      Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
-      PsiElement psiElement = location != null ? location.getPsiElement() : null;
-      ErlangFunction function = psiElement instanceof ErlangFunction ? (ErlangFunction) psiElement : null;
-      if (function != null && function.getArity() != 0) {
-        failedGeneratedTests.add(function);
+    List<ErlangFunction> failedTests = new ArrayList<>();
+    for (AbstractTestProxy testProxy : failedTestProxies) {
+      List<String> notRerun = new ArrayList<>();
+      List<ErlangFunction> functions =
+        ErlangUnitRerunFailedTestsAction.findTestFunctionsToRerun(project, List.of(testProxy), notRerun);
+      for (ErlangFunction function : functions) {
+        if (failedTests.contains(function)) continue;
+        failedTests.add(function);
+        if (function.getArity() != 0) failedGeneratedTests.add(function);
       }
       // A suite (eunit://m) is a defect when one of its tests failed; those tests are rerun by themselves.
-      if (function == null && !ContainerUtil.exists(testProxy.getChildren(), child -> child.isDefect() || child.isInterrupted())) {
-        ContainerUtil.addIfNotNull(otherModules, getModuleName(psiElement, testProxy.getLocationUrl()));
+      if (rebar3 && functions.isEmpty() &&
+          !ContainerUtil.exists(testProxy.getChildren(), child -> child.isDefect() || child.isInterrupted())) {
+        Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
+        String module = getModuleName(location != null ? location.getPsiElement() : null, testProxy.getLocationUrl());
+        if (module != null) {
+          otherModules.add(module);
+          continue;
+        }
       }
-      return function;
-    });
+      testsNotRerun.addAll(notRerun);
+    }
     Set<ErlangFile> suites = new LinkedHashSet<>();
     for (ErlangFunction function : failedTests) {
       PsiFile containingFile = function.getContainingFile();
       if (containingFile instanceof ErlangFile) suites.add((ErlangFile) containingFile);
     }
 
-    if (RebarSettings.getInstance(project).isRebar3()) {
+    if (rebar3) {
       return RebarEunitConfigurationUtil.createRebar3Command(suites, failedTests, otherModules, false);
     }
     return RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false, false);

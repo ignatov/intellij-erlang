@@ -74,6 +74,39 @@ public class ErlangRunConfigurationEnvironmentTest extends ErlangLightPlatformCo
     assertEquals("+P 1000", restored.getErlFlags());
   }
 
+  public void testStopErlangIsSerialized() {
+    ErlangApplicationConfiguration configuration = createApplicationConfiguration();
+    configuration.setStopErlang(false);
+
+    ErlangApplicationConfiguration restored = createApplicationConfiguration();
+    restored.readExternal(writeExternal(configuration));
+
+    assertFalse(restored.isStopErlang());
+  }
+
+  public void testStopErlangIsKeptByCopy() throws ExecutionException {
+    ErlangApplicationConfiguration configuration = createApplicationConfiguration();
+    configuration.setModuleAndFunction("sample start");
+    configuration.setStopErlang(false);
+
+    ErlangApplicationConfiguration copy = (ErlangApplicationConfiguration)configuration.clone();
+
+    assertFalse(copy.isStopErlang());
+    GeneralCommandLine commandLine = getCommand(new ErlangApplicationRunningState(null, getModule(), copy));
+    assertFalse(commandLine.getCommandLineString(), commandLine.getParametersList().getList().contains("stop"));
+  }
+
+  public void testStopErlangDefaultsToTrueWhenNotStored() {
+    Element element = writeExternal(createApplicationConfiguration());
+    assertTrue(element.getChildren("option").removeIf(option -> "stopErlang".equals(option.getAttributeValue("name"))));
+    assertFalse(JDOMUtil.write(element).contains("stopErlang"));
+
+    ErlangApplicationConfiguration restored = createApplicationConfiguration();
+    restored.readExternal(element);
+
+    assertTrue(restored.isStopErlang());
+  }
+
   public void testUnitEnvironmentIsSerialized() {
     ErlangUnitRunConfiguration configuration = createUnitConfiguration();
     configuration.getConfigData().setModuleNames(Set.of("sample_tests"));
