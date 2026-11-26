@@ -125,6 +125,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
   public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
   public void testFunArgumentShadowsEarlierGeneratorVariable() { doTest(); } // issue 1652
+  public void testUnboundUseBeforeMatch() { doTest(); } // issue 1670
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }
