@@ -23,6 +23,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.source.resolve.reference.impl.PsiMultiReference;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangBareMacroReference;
@@ -66,6 +67,9 @@ public class ErlangTargetElementEvaluator extends TargetElementEvaluatorEx2 impl
       }
     }
     PsiElement element = ref.getElement();
-    return element instanceof ErlangQAtom && ref.resolve() == null ? element : null;
+    if (!(element instanceof ErlangQAtom) || ref.resolve() != null) return null;
+    // the argument of ?TEST(big_order, ...) that makes a function name: its leaf is the declaration (#1484)
+    PsiElement leaf = PsiTreeUtil.firstChild(element);
+    return leaf != null && ErlangMacroLayer.isMadeNameDeclaration(leaf) ? leaf : element;
   }
 }

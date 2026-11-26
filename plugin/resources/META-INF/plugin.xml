@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>The plugin asks whether it may send anonymous usage counts once a day; it is off unless you say yes (<a href="https://github.com/ignatov/intellij-erlang/pull/1401">#1401</a>)</li>
-              <li>Rebar: support the rebar3 script made by rebar3 local install in run configurations and the rebar build, running it on the project's… (<a href="https://github.com/ignatov/intellij-erlang/issues/1233">#1233</a>)</li>
-              <li>Show the "Project SDK is not defined" banner again in IntelliJ IDEA for .erl and .hrl files when no SDK is set (<a href="https://github.com/ignatov/intellij-erlang/issues/1269">#1269</a>)</li>
-              <li>-include_lib and module resolve now pick the highest application version when version components differ in length (for example 1.10… (<a href="https://github.com/ignatov/intellij-erlang/issues/1383">#1383</a>)</li>
-              <li>Behaviour names of files that are not open are read from the index, without parsing the file (<a href="https://github.com/ignatov/intellij-erlang/issues/1382">#1382</a>)</li>
-              <li>Calls to modules that exist twice in a project, such as an OTP module and a copy in deps, resolve to the same file every time (<a href="https://github.com/ignatov/intellij-erlang/pull/1424">#1424</a>)</li>
-              <li>The example in the usage statistics dialog stays readable after the theme changes (<a href="https://github.com/ignatov/intellij-erlang/pull/1418">#1418</a>)</li>
-              <li>and 13 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1304">full list</a></li>
+              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
+              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
+              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
+              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
+              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
+              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
+              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
             </ul>
         ]]>
     </change-notes>

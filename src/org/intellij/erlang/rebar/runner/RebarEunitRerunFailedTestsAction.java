@@ -17,6 +17,7 @@
 package org.intellij.erlang.rebar.runner;
 
 import com.intellij.execution.Executor;
+import com.intellij.execution.Location;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -37,13 +38,17 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentContainer;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.eunit.ErlangUnitRerunFailedTestsAction;
+import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.runconfig.ErlangModuleBasedConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +56,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -109,18 +115,7 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         final Project project = getProject();
         final List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
         final List<String> testsNotRerun = new ArrayList<>();
-        List<ErlangFunction> failedTests =
-          ErlangUnitRerunFailedTestsAction.findTestFunctionsToRerun(project, getFailedTests(project), testsNotRerun);
-        for (ErlangFunction function : failedTests) {
-          if (function.getArity() != 0) {
-            failedGeneratedTests.add(function);
-          }
-        }
-        Set<ErlangFile> suites = ContainerUtil.map2Set(failedTests, function -> {
-          PsiFile containingFile = function.getContainingFile();
-          return containingFile instanceof ErlangFile ? (ErlangFile) containingFile : null;
-        });
-        suites.remove(null);
+        String command = createRerunCommand(project, getFailedTests(project), failedGeneratedTests, testsNotRerun);
 
         if (!failedGeneratedTests.isEmpty()) {
           notifyGeneratedTestsFailed(failedGeneratedTests);
@@ -129,7 +124,6 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
           ErlangUnitRerunFailedTestsAction.notifyTestsNotRerun(project, testsNotRerun, false);
         }
 
-        String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false);
         return createRerunConfiguration((RebarEunitRunConfiguration) getPeer(), command);
       }
 
@@ -158,6 +152,61 @@ public class RebarEunitRerunFailedTestsAction extends AbstractRerunFailedTestsAc
         return result;
       }
     };
+  }
+
+  // With rebar3 a failed test that has no test or generator function to rerun reruns its module, so that no failed
+  // test is left out.
+  @VisibleForTesting
+  @NotNull
+  static String createRerunCommand(@NotNull Project project,
+                                   @NotNull List<? extends AbstractTestProxy> failedTestProxies,
+                                   @NotNull List<ErlangFunction> failedGeneratedTests,
+                                   @NotNull List<String> testsNotRerun) {
+    boolean rebar3 = RebarSettings.getInstance(project).isRebar3();
+    Set<String> otherModules = new LinkedHashSet<>();
+    List<ErlangFunction> failedTests = new ArrayList<>();
+    for (AbstractTestProxy testProxy : failedTestProxies) {
+      List<String> notRerun = new ArrayList<>();
+      List<ErlangFunction> functions =
+        ErlangUnitRerunFailedTestsAction.findTestFunctionsToRerun(project, List.of(testProxy), notRerun);
+      for (ErlangFunction function : functions) {
+        if (failedTests.contains(function)) continue;
+        failedTests.add(function);
+        if (function.getArity() != 0) failedGeneratedTests.add(function);
+      }
+      // A suite (eunit://m) is a defect when one of its tests failed; those tests are rerun by themselves.
+      if (rebar3 && functions.isEmpty() &&
+          !ContainerUtil.exists(testProxy.getChildren(), child -> child.isDefect() || child.isInterrupted())) {
+        Location location = testProxy.getLocation(project, GlobalSearchScope.allScope(project));
+        String module = getModuleName(location != null ? location.getPsiElement() : null, testProxy.getLocationUrl());
+        if (module != null) {
+          otherModules.add(module);
+          continue;
+        }
+      }
+      testsNotRerun.addAll(notRerun);
+    }
+    Set<ErlangFile> suites = new LinkedHashSet<>();
+    for (ErlangFunction function : failedTests) {
+      PsiFile containingFile = function.getContainingFile();
+      if (containingFile instanceof ErlangFile) suites.add((ErlangFile) containingFile);
+    }
+
+    if (rebar3) {
+      return RebarEunitConfigurationUtil.createRebar3Command(suites, failedTests, otherModules, false);
+    }
+    return RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, failedTests, false, false);
+  }
+
+  @Nullable
+  private static String getModuleName(@Nullable PsiElement psiElement, @Nullable String locationUrl) {
+    PsiFile file = psiElement != null ? psiElement.getContainingFile() : null;
+    VirtualFile virtualFile = file instanceof ErlangFile ? file.getVirtualFile() : null;
+    if (virtualFile != null) return virtualFile.getNameWithoutExtension();
+    String prefix = ErlangUnitRunConfigurationType.PROTOCOL + "://";
+    if (locationUrl == null || !locationUrl.startsWith(prefix)) return null;
+    String module = StringUtil.substringBefore(locationUrl.substring(prefix.length()) + ":", ":");
+    return StringUtil.isEmpty(module) ? null : module;
   }
 
   @VisibleForTesting

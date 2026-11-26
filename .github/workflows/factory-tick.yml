@@ -5,9 +5,13 @@ name: Factory tick
 # repository until 2026-11-17; it runs here because the Actions minutes of a public repository are free.
 #
 # Started by factory-timer.yml (the clock), factory-wake.yml (a push to master, an owner's "/" command in a pull
-# request), a person (workflow_dispatch) and an hourly schedule, the backstop for a broken timer chain.
+# request), a person (workflow_dispatch), factory-rescue.yml when no tick ran for 40 minutes, and an hourly schedule;
+# the last two are the backstop for a broken timer chain.
 # It acts (--live) only when the run is scheduled or was started with "live", the repository variable
 # FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is set. Otherwise it is a dry run that only reads.
+# A live tick also needs the deploy gate: when the code of the private main changed since its tests last passed
+# here, the dispatcher tests run first, and when they fail no dispatcher code runs (not even dry, so that it
+# never runs next to the tokens) and the job fails (see the step "Test the dispatcher code").
 #
 # What keeps the secrets in:
 #   - They are secrets of the environment factory-dispatch, which only jobs of master can use. There is no
@@ -25,7 +29,8 @@ name: Factory tick
 # Secrets of factory-dispatch: FACTORY_TOKEN (the maintainer's token for this repository and the agent tasks API,
 # as in the private repository) and, optionally, FACTORY_DESK_TOKEN for the private repository (clone, push,
 # cards and the panel); when it is empty, FACTORY_TOKEN is used for the private repository too. FACTORY_LOG_TOKEN
-# (optional) goes only to the step "Tick"; see there.
+# (optional) goes only to the step "Tick"; see there. AMPLITUDE_API_KEY and AMPLITUDE_SECRET_KEY (optional) go only to
+# the step "Tick" too: the dispatcher reads the plugin's usage statistics back from Amplitude with them.
 
 on:
   workflow_dispatch:
@@ -46,7 +51,8 @@ defaults:
 jobs:
   tick:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # The deploy gate takes up to 10 minutes and the retries of "Arm the timer for the next tick" up to 8.
+    timeout-minutes: 30
     # Re-arming the timer: GITHUB_TOKEN starts factory-timer.yml with workflow_dispatch.
     permissions:
       actions: write
@@ -162,6 +168,85 @@ jobs:
             exit 1
           fi
 
+      - name: Test the dispatcher code
+        # The deploy gate: a push to main of the private repository runs live at the next tick, so a live tick
+        # first tests the code when it changed. One hash of the files that decide what the tick does (every
+        # dispatcher/*.py, the tests too, config.json, the prompts, the scripts of the robustness sweep that
+        # sweep.py loads, and triage-config.json) is compared with dispatcher/tested-code.txt, the hash of the
+        # last code whose tests passed here. Another hash runs the dispatcher tests: when they pass, the hash is
+        # written and the state commit records it; when they fail, or this step fails or times out, the step
+        # "Tick" runs no dispatcher code at all (not dispatch.py, not pace.py: code whose tests failed must not
+        # run next to the tokens), nothing is committed to main, the timer still waits as idle, and the job
+        # fails at its end.
+        # No secret reaches the tests: this step maps none, the tests run under env -i (no askpass, no GIT_CONFIG_*
+        # and no token variable) with a scratch HOME, on a copy of the checkout without .git. Their output goes to
+        # last-tests.log of the branch tick-log only, not into last-tick.log, whose lines the watch and the
+        # console parse; this log shows only the counts.
+        id: gate
+        if: steps.mode.outputs.mode == 'live'
+        timeout-minutes: 10
+        continue-on-error: true
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        run: |
+          desk="$RUNNER_TEMP/desk"
+          log="$RUNNER_TEMP/tick.log"
+          # sha256 over "<path> NUL <size> NUL <content>" of each file, in the order of the paths: content only.
+          hash=$(cd "$desk" && python3 -I -c '
+          import glob, hashlib, os
+          paths = set()
+          for pattern in ("dispatcher/*.py", "dispatcher/config.json", "dispatcher/*-prompt.md",
+                          "discovery/robustness-sweep/*.py", "triage-config.json"):
+              paths.update(p for p in glob.glob(pattern) if os.path.isfile(p))
+          h = hashlib.sha256()
+          for p in sorted(paths):
+              with open(p, "rb") as f:
+                  data = f.read()
+              h.update(p.encode() + b"\0" + str(len(data)).encode() + b"\0" + data)
+          print(h.hexdigest())
+          ')
+          [ "${#hash}" = 64 ] || { echo "::error::Deploy gate: the code hash could not be computed."; exit 1; }
+          short=${hash:0:12}
+          tested=$(head -n 1 "$desk/dispatcher/tested-code.txt" 2> /dev/null) || tested=""
+          if [ "$hash" = "$tested" ]; then
+            echo "Deploy gate: this code passed its tests before."
+            echo "deploy gate: the code $short passed its tests before" >> "$log"
+            echo "result=tested" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The askpass script reads the token from the environment of git and holds none; the clone keeps none.
+          if grep -Eqi 'extraheader|x-access-token:|gh[pousr]_|github_pat_' "$desk/.git/config"; then
+            echo "::error::Deploy gate: the configuration of the checkout holds a credential; the tests do not run."
+            echo "deploy gate: dispatcher tests failed on $short, the tick did not run (a credential in .git/config)" >> "$log"
+            echo "result=failed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tree="$RUNNER_TEMP/gate-tree"
+          home="$RUNNER_TEMP/gate-home"
+          out="$RUNNER_TEMP/last-tests.log"
+          mkdir "$tree" "$home"
+          tar -C "$desk" --exclude=.git -cf - . | tar -C "$tree" -xf -
+          { echo "run: $RUN_URL"; echo "main: $(git -C "$desk" rev-parse HEAD)"; echo "code: $hash"; echo; } > "$out"
+          py=$(command -v python3)
+          status=0
+          (cd "$tree" && env -i PATH="$PATH" HOME="$home" LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+            "$py" -m unittest discover -s dispatcher -p 'test_*.py') >> "$out" 2>&1 || status=$?
+          # Only numbers and fixed words of the summary of unittest reach this public log.
+          ran=$(grep -Eo '^Ran [0-9]+ tests?' "$out" | tail -n 1 | grep -Eo '[0-9]+') || ran=0
+          summary=$(grep -E '^(OK|FAILED)( \(((failures|errors|skipped|expected failures|unexpected successes)=[0-9]+(, )?)+\))?$' \
+            "$out" | tail -n 1) || summary=""
+          if [ "$status" = 0 ] && [ "${summary%% *}" = OK ] && [ "$ran" -gt 0 ]; then
+            printf '%s\n%s\n' "$hash" "# The code hash of the last dispatcher tests that passed in factory-tick.yml of the public repository." \
+              > "$desk/dispatcher/tested-code.txt"
+            echo "Deploy gate: the dispatcher tests passed: $ran tests, $summary."
+            echo "deploy gate: dispatcher tests passed on $short ($ran tests), the output is last-tests.log of the branch tick-log" >> "$log"
+            echo "result=passed" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Deploy gate: the dispatcher tests failed (exit status $status, $ran tests, ${summary:-no summary line}); the tick does not run."
+            echo "deploy gate: dispatcher tests failed on $short, the tick did not run; the output is last-tests.log of the branch tick-log" >> "$log"
+            echo "result=failed" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Tick
         id: tick
         env:
@@ -169,12 +254,35 @@ jobs:
           # Optional: an OAuth token of the GitHub CLI, only for reading session logs on the Copilot API host, which
           # rejects personal access tokens. Without it the dispatcher cannot read what a review session concluded.
           FACTORY_LOG_TOKEN: ${{ secrets.FACTORY_LOG_TOKEN }}
+          # Optional: the API key and the secret key of the Amplitude project of the plugin's usage statistics, only for
+          # the Export API of Amplitude (analytics.eu.amplitude.com), once a day. Without them the dispatcher reads no
+          # usage (dispatcher/usage.py of the private repository).
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
           CARD_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
           PYTHONUNBUFFERED: '1'
           MODE: ${{ steps.mode.outputs.mode }}
+          GATE: ${{ steps.gate.outputs.result }}
         run: |
           cd "$RUNNER_TEMP/desk"
           log="$RUNNER_TEMP/tick.log"
+          # A live tick only on code that passed its tests (the step "Test the dispatcher code"). Otherwise no
+          # code of the private repository runs here, not even dry: it would run next to the tokens. The public
+          # lines stay the same, and the step ends green so that the log, the timer (idle) and the console go
+          # on as after any tick; the last step of the job fails it.
+          if [ "$MODE" = live ] && [ "$GATE" != passed ] && [ "$GATE" != tested ]; then
+            if [ "$GATE" != failed ]; then
+              echo "deploy gate: dispatcher tests failed on unknown, the tick did not run (the gate step did not finish)" >> "$log"
+            fi
+            echo "Mode: skipped (deploy gate)"
+            echo "Exit status: 0"
+            count=$(wc -l < "$log")
+            echo "Log lines: $((count))"
+            echo "requests: (no such line in the log)"
+            echo "Pace: idle"
+            echo "pace=idle" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           status=0
           python3 dispatcher/dispatch.py "--$MODE" >> "$log" 2>&1 || status=$?
           echo "Mode: $MODE"
@@ -201,19 +309,32 @@ jobs:
         env:
           DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
           RUN_ID: ${{ github.run_id }}
+          GATE: ${{ steps.gate.outputs.result }}
         run: |
           export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
           cd "$RUNNER_TEMP/desk"
           out="$RUNNER_TEMP/state-push.log"
+          # No tick ran when the deploy gate did not pass: there is nothing to record.
+          if [ "$GATE" != passed ] && [ "$GATE" != tested ]; then
+            echo "State: not committed, the tick did not run (the deploy gate did not pass)."
+            exit 0
+          fi
           git add dispatcher/state.json dispatcher/journal.csv
+          # The monthly archives of finished items that the dispatcher moves out of the state. The state keeps
+          # only a stub of each such item, so the state must never be committed without them: a failure here stops
+          # the step, as for the state itself. The folder does not exist until the dispatcher makes it.
+          if [ -e dispatcher/data ]; then
+            git add -- dispatcher/data
+          fi
           # What the driver of the robustness sweep keeps beside the state: the coverage ledger, the known
           # signatures and the summaries of the collected runs. And what the hypothesis hunt keeps there: its
-          # coverage ledger, the hypotheses and the card of each unit, and the issue drafts. A path that the tick
-          # has not made yet is skipped, and one that cannot be added must not keep the state from being committed.
+          # coverage ledger, the hypotheses and the card of each unit, and the issue drafts. And the hash of the
+          # code whose tests passed (the deploy gate). A path that the tick has not made yet is skipped, and one
+          # that cannot be added must not keep the state from being committed.
           for path in discovery/robustness-sweep/ledger.jsonl discovery/robustness-sweep/known-signatures.tsv \
-              discovery/robustness-sweep/runs discovery/robustness-hunt dispatcher/steps.csv; do
+              discovery/robustness-sweep/runs discovery/robustness-hunt dispatcher/steps.csv dispatcher/tested-code.txt; do
             if [ -e "$path" ] && ! git add -- "$path" >> "$out" 2>&1; then
-              echo "::warning::A file of the robustness sweep, of the hypothesis hunt or of the step record could not be added to the state commit."
+              echo "::warning::A file of the robustness sweep, of the hypothesis hunt, of the step record or of the deploy gate could not be added to the state commit."
             fi
           done
           if git diff --cached --quiet; then
@@ -251,15 +372,28 @@ jobs:
           if [ -s "$RUNNER_TEMP/state-push.log" ]; then
             { echo; echo "--- git, the state commit"; cat "$RUNNER_TEMP/state-push.log"; } >> "$file"
           fi
-          # tick-log is a history of its own that holds only last-tick.log: no workflow file, so its pushes start
-          # no workflow there. A new commit on its tip, made without touching the checkout of main.
+          # tick-log is a history of its own that holds only last-tick.log and last-tests.log (the output of the
+          # last dispatcher tests of the deploy gate): no workflow file, so its pushes start no workflow there. A
+          # new commit on its tip, made without touching the checkout of main.
           blob=$(git hash-object -w "$file")
-          tree=$(printf '100644 blob %s\tlast-tick.log\n' "$blob" | git mktree)
+          tests=""
+          if [ -s "$RUNNER_TEMP/last-tests.log" ]; then
+            tests=$(git hash-object -w "$RUNNER_TEMP/last-tests.log")
+          fi
           for _ in 1 2; do
             parent=""
             if git fetch --quiet --depth 1 origin refs/heads/tick-log > /dev/null 2>&1; then
               parent=$(git rev-parse FETCH_HEAD)
             fi
+            # last-tests.log of this run, else the one the branch has.
+            kept=""
+            if [ -n "$tests" ]; then
+              kept=$(printf '100644 blob %s\tlast-tests.log' "$tests")
+            elif [ -n "$parent" ]; then
+              kept=$(git ls-tree "$parent" -- last-tests.log 2> /dev/null) || kept=""
+            fi
+            tree=$({ printf '100644 blob %s\tlast-tick.log\n' "$blob"; [ -z "$kept" ] || printf '%s\n' "$kept"; } \
+              | git mktree) || tree=$(printf '100644 blob %s\tlast-tick.log\n' "$blob" | git mktree)
             commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} -m "Record the log of a tick [skip ci]" \
               -m "Run $RUN_ID, $MODE.")
             if git push --quiet origin "$commit:refs/heads/tick-log" > /dev/null 2>&1; then
@@ -279,12 +413,65 @@ jobs:
         if: >-
           always() && steps.mode.outputs.mode == 'live' && vars.FACTORY_TIMER == 'true'
           && steps.tick.outcome != 'skipped' && steps.state.outcome == 'success'
+        # Shorter retries than in the timer: this job holds the concurrency group of the tick, and factory-rescue.yml
+        # starts a tick when the timer stays unarmed.
+        timeout-minutes: 10
         env:
           GH_TOKEN: ${{ github.token }}
           PACE: ${{ steps.tick.outputs.pace }}
           REPO: ${{ github.repository }}
+          # 6 tries over about 8 minutes.
+          WAITS: 15 30 60 120 240
         run: |
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
           case "$PACE" in active|idle|settle) ;; *) PACE=idle ;; esac
-          if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
-            echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
+          if ! retry gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
+            echo "::warning::The timer could not be armed; the next tick waits for factory-rescue.yml, the hourly schedule or an event."
           fi
+
+      - name: Start a build of the hosted console
+        # factory-console.yml publishes a new snapshot of the console, which now shows this tick. It gets no
+        # secret from here; its concurrency group queues builds. Off unless the repository variable
+        # FACTORY_CONSOLE is "true".
+        if: ${{ !cancelled() && vars.FACTORY_CONSOLE == 'true' && steps.clone.outcome == 'success' }}
+        # A hung gh must not hold the tick (and the next tick, which waits in its concurrency group).
+        timeout-minutes: 2
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if ! gh workflow run factory-console.yml -R "$REPO" --ref master; then
+            echo "::warning::The console build could not be started; the daily schedule or the next tick starts one."
+          fi
+
+      - name: Fail when the deploy gate stopped the tick
+        # Last, so that the log, the timer and the console come first: the timer keeps starting ticks until the
+        # code is fixed, and the next tick tests the new code.
+        if: >-
+          !cancelled() && steps.mode.outputs.mode == 'live' && steps.gate.outcome != 'skipped'
+          && steps.gate.outputs.result != 'passed' && steps.gate.outputs.result != 'tested'
+        run: |
+          echo "::error::Deploy gate: the dispatcher tests failed on main of the private repository, or could not run, so the tick did not run. Their output is last-tests.log of the branch tick-log there."
+          exit 1

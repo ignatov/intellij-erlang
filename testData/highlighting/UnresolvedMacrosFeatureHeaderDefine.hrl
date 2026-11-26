@@ -1,0 +1,1 @@
+-define(FEATURE_AVAILABLE(A, B), {A, B}).

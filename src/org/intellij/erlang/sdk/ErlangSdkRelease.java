@@ -32,7 +32,9 @@ public final class ErlangSdkRelease {
   public static final ErlangSdkRelease V_R16B = new ErlangSdkRelease("R16B", "5.10.1");
   public static final ErlangSdkRelease V_17_0 = new ErlangSdkRelease("17", "6.0");
   public static final ErlangSdkRelease V_18_0 = new ErlangSdkRelease("18", "7.0");
+  public static final ErlangSdkRelease V_20_0 = new ErlangSdkRelease("20", "9.0");
   public static final ErlangSdkRelease V_25_0 = new ErlangSdkRelease("25", "13.0");
+  public static final ErlangSdkRelease V_26_0 = new ErlangSdkRelease("26", "14.0");
   public static final ErlangSdkRelease V_27_0 = new ErlangSdkRelease("27", "15.0");
   public static final ErlangSdkRelease V_28_0 = new ErlangSdkRelease("28", "16.0");
   public static final ErlangSdkRelease V_29_0 = new ErlangSdkRelease("29", "17.0");
@@ -112,5 +114,10 @@ public final class ErlangSdkRelease {
 
   public boolean erlangFeatureMaybe() {
     return this.erlangIsAtLeast25();
+  }
+
+  // True, if \^ in strings must be followed by a control name (OTP 26, erts-14.0, and later); older releases take any character
+  public boolean erlangControlEscapeNeedsControlName() {
+    return VersionComparatorUtil.compare(myErtsVersion, "14") >= 0;
   }
 }

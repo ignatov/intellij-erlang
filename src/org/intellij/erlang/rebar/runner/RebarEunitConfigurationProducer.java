@@ -71,8 +71,11 @@ public class RebarEunitConfigurationProducer extends LazyRunConfigurationProduce
     Collection<ErlangFunction> functions = ErlangUnitTestElementUtil.findFunctionTestElements(psiElement);
     Collection<ErlangFile> suites = ErlangUnitTestElementUtil.findFileTestElements(context.getProject(), context.getDataContext());
     String command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, functions, true);
+    // A configuration saved before rebar3 got its own options holds the rebar 2 command, which is still run correctly.
+    String rebar2Command = RebarEunitConfigurationUtil.createDefaultRebarCommand(suites, functions, true, false);
 
-    return configuration.getCommand().equals(command) && configuration.isSkipDependencies();
+    return (configuration.getCommand().equals(command) || configuration.getCommand().equals(rebar2Command)) &&
+           configuration.isSkipDependencies();
   }
 
   private static String createConfigurationName(Collection<ErlangFunction> functions, Collection<ErlangFile> suites) {

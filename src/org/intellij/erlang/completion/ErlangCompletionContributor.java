@@ -243,7 +243,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
             GlobalSearchScope scope = module != null && moduleScope ? GlobalSearchScope.moduleScope(module) : ProjectScope.getProjectScope(project);
 
             Collection<String> names = ErlangAtomIndex.getNames(project, scope);
+            String typedAtom = atomOnlyAtCaret(parameters, scope);
             for (String name : names) {
+              if (name.equals(typedAtom)) continue;
               result.addElement(PrioritizedLookupElement.withPriority(
                 LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), ATOM_PRIORITY));
             }
@@ -254,6 +256,32 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (!(parent instanceof ErlangRecordExpression) && grandPa instanceof ErlangFunctionWithArityVariables) {
           result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, true, null));
         }
+      }
+
+      // the atom being typed is in the index too, as the text of the file holds it; offer it only if it occurs elsewhere
+      @Nullable
+      private static String atomOnlyAtCaret(@NotNull CompletionParameters parameters, @NotNull GlobalSearchScope scope) {
+        PsiFile original = parameters.getOriginalFile();
+        int offset = ErlangMacroLayerCompletionContributor.originalOffset(parameters);
+        ErlangQAtom atomAtCaret = null;
+        for (int o : new int[]{offset, offset - 1}) {
+          ErlangQAtom qAtom = o >= 0 ? PsiTreeUtil.getParentOfType(original.findElementAt(o), ErlangQAtom.class) : null;
+          if (qAtom != null && standaloneAtom(qAtom)) {
+            atomAtCaret = qAtom;
+            break;
+          }
+        }
+        if (atomAtCaret == null) return null;
+        String name = atomAtCaret.getText();
+        ErlangQAtom caretAtom = atomAtCaret;
+        boolean elsewhereInFile = !PsiTreeUtil.processElements(original, ErlangQAtom.class,
+          a -> a == caretAtom || !standaloneAtom(a) || !name.equals(a.getText()));
+        if (elsewhereInFile) return null;
+        VirtualFile originalFile = original.getVirtualFile();
+        for (VirtualFile f : ErlangAtomIndex.getContainingFiles(name, scope)) {
+          if (!f.equals(originalFile)) return null;
+        }
+        return name;
       }
 
       private static boolean isDot(@NotNull PsiElement position) {

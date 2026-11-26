@@ -64,4 +64,65 @@ public class ErlangMacroLayerAutoPopupTest extends BasePlatformTestCase {
     assertTrue(String.valueOf(items), items.containsAll(List.of("Abc1", "Abc2")));
     assertEquals("the auto-popup did not wait for the daemon's copy", 0, waits);
   }
+
+  /**
+   * #1537: the auto-popup offers a function that a macro makes ({@code small_order/0} from {@code ?TEST(small_order, ok)}),
+   * as explicit completion does, also when the copy of the typed text is not built yet. Another module matches the prefix,
+   * so the popup is shown either way.
+   */
+  public void testAutoPopupOffersAFunctionMadeByAMacro() {
+    EdtTestUtil.runInEdtAndWait(() -> {
+      myFixture.addFileToProject("ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1]).\nstart_link(_) -> ok.\n");
+      myFixture.configureByText("shop_tests.erl", "-module(shop_tests).\n-export([all/0, small_order/0, big_order/0]).\n\n" +
+                                                  "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                                  "?TEST(small_order, ok).\n?TEST(big_order, too_big).\n\n" +
+                                                  "all() ->\n  small_order(),\n  big_order()<caret>.\n");
+      myFixture.doHighlighting();
+    });
+    myTester.typeWithPauses(",\n  sma");
+    myTester.joinAutopopup();
+    myTester.joinCompletion();
+    List<String> items = EdtTestUtil.runInEdtAndGet(() -> myFixture.getLookupElementStrings());
+    assertNotNull("the popup is shown", items);
+    assertTrue(String.valueOf(items), items.contains("small_order"));
+  }
+
+  /** #1537: the auto-popup after {@code ssl_manager:} offers its functions, not the small_order/0 that a macro makes here. */
+  public void testAutoPopupAfterAnotherModuleOffersNoFunctionMadeByAMacro() {
+    EdtTestUtil.runInEdtAndWait(() -> {
+      myFixture.addFileToProject("ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1]).\nstart_link(_) -> ok.\n");
+      myFixture.configureByText("shop_tests.erl", "-module(shop_tests).\n-export([all/0, small_order/0, big_order/0]).\n\n" +
+                                                  "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                                  "?TEST(small_order, ok).\n?TEST(big_order, too_big).\n\n" +
+                                                  "all() ->\n  small_order(),\n  big_order()<caret>.\n");
+      myFixture.doHighlighting();
+    });
+    myTester.typeWithPauses(",\n  ssl_manager:s");
+    myTester.joinAutopopup();
+    myTester.joinCompletion();
+    List<String> items = EdtTestUtil.runInEdtAndGet(() -> myFixture.getLookupElementStrings());
+    assertNotNull("the popup is shown", items);
+    assertTrue(String.valueOf(items), items.contains("start_link"));
+    assertFalse(String.valueOf(items), items.contains("small_order"));
+  }
+
+  /** #1537: the auto-popup in the import list of ssl_manager offers its functions, not the small_order/0 that a macro makes here. */
+  public void testAutoPopupInAnImportListOffersNoFunctionMadeByAMacro() {
+    EdtTestUtil.runInEdtAndWait(() -> {
+      myFixture.addFileToProject("ssl_manager.erl", "-module(ssl_manager).\n-export([start_link/1]).\nstart_link(_) -> ok.\n");
+      myFixture.configureByText("shop_tests.erl", "-module(shop_tests).\n-export([all/0, small_order/0, big_order/0]).\n" +
+                                                  "-import(ssl_manager, [<caret>]).\n\n" +
+                                                  "-define(TEST(Name, Expr), Name() -> Expr).\n\n" +
+                                                  "?TEST(small_order, ok).\n?TEST(big_order, too_big).\n\n" +
+                                                  "all() ->\n  small_order(),\n  big_order().\n");
+      myFixture.doHighlighting();
+    });
+    myTester.typeWithPauses("s");
+    myTester.joinAutopopup();
+    myTester.joinCompletion();
+    List<String> items = EdtTestUtil.runInEdtAndGet(() -> myFixture.getLookupElementStrings());
+    assertNotNull("the popup is shown", items);
+    assertTrue(String.valueOf(items), items.contains("start_link"));
+    assertFalse(String.valueOf(items), items.contains("small_order"));
+  }
 }

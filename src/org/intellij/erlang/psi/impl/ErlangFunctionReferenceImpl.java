@@ -75,7 +75,7 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     ErlangFile file = ObjectUtils.tryCast(getElement().getContainingFile(), ErlangFile.class);
     if (file == null) return null;
 
-    ErlangFunction declaredFunction = file.getFunction(myReferenceName, myArity);
+    ErlangFunction declaredFunction = ErlangMacroLayer.preferSourceFunction(file, file.getFunction(myReferenceName, myArity));
     if (declaredFunction != null) return declaredFunction;
 
     boolean inExport = isInExport();
@@ -124,12 +124,13 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     // A call that only the macro layer resolves (a function made by a macro) has the layer's answer as its
     // result, as resolve() has; with incompleteCode it comes first, before master's candidates of the same name
     PsiElement layerAnswer = null;
-    if (resolveWithoutLayer() == null) {
+    PsiElement masterAnswer = resolveWithoutLayer();
+    if (masterAnswer == null || preferLayerAnswer(masterAnswer)) {
       layerAnswer = ErlangMacroLayer.resolveFallback(this);
       if (layerAnswer != null && !incompleteCode) return PsiElementResolveResult.createResults(layerAnswer);
     }
     // todo: use incompleteCode
-    else if (!incompleteCode) return ResolveResult.EMPTY_ARRAY;
+    if (masterAnswer != null && !incompleteCode) return ResolveResult.EMPTY_ARRAY;
 
     Collection<ErlangFunction> result;
     if (myModuleAtom != null) {
@@ -174,6 +175,14 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
       result.addAll(file.getFunctionsByName(myReferenceName));
     }
     return result;
+  }
+
+  // a function that the parser's recovery made from the rest of a form it split (setup?PAR, hello().) is no function
+  // of the source: a function of the same name made by a macro is the one meant
+  @Override
+  protected boolean preferLayerAnswer(@NotNull PsiElement masterAnswer) {
+    return ErlangMacroLayer.isEnabled() && masterAnswer instanceof ErlangFunction &&
+           masterAnswer.getParent() == getElement().getContainingFile() && ErlangMacroLayer.continuesASplitForm(masterAnswer);
   }
 
   private boolean isInExport() {

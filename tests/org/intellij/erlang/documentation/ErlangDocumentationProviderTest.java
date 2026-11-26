@@ -23,6 +23,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -109,6 +110,48 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     test() ->
                         erl<caret>ang:length([]).
                   """);
+  }
+
+  public void testExternalUrlSdkFunctionInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#request/1",
+                  """
+                    -module(test).
+                    test() ->
+                        httpc:req<caret>uest(u).
+                    """);
+  }
+
+  public void testExternalUrlSdkModuleInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html",
+                  """
+                    -module(test).
+                    test() ->
+                        htt<caret>pc:request(u).
+                    """);
+  }
+
+  public void testExternalUrlSdkTypeInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#t:request_id/0",
+                  """
+                    -module(test).
+                    -spec test(httpc:request<caret>_id()) -> ok.
+                    test(_RequestId) -> ok.
+                    """);
+  }
+
+  public void testGenerateDocSdkFunctionInNestedSourceDir() {
+    doTestExternalDoc(
+      "<html>\n" +
+      ErlangSdkDocProviderBase.HTTP_STYLE +
+      "<body>\n" +
+      "    <p><a name=\"request-1\"></a><span class=\"bold_code\">request(Url) -&gt; Result</span><br>" +
+      "<div class=\"REFBODY\"><p>Sends a request to <span class=\"code\">Url</span>.</p></div></p>\n" +
+      "</body></html>\n",
+      """
+        -module(test).
+        test() ->
+            httpc:req<caret>uest(u).
+        """);
   }
 
   public void testGenerateModernDocSdkFunction() throws Exception {
@@ -688,6 +731,29 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
+  public void testResolveModernLinkTypeWithArity() {
+    myFixture.addFileToProject("trees.erl", """
+      -module(trees).
+      -export_type([tree/0, tree/1]).
+      -type tree() :: tree(term()).
+      -type tree(T) :: nil | {node, T, tree(T), tree(T)}.
+      """);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "trees#t:tree/1", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+    assertEquals(1, ((ErlangTypeDefinition) psiElement).getArity());
+  }
+
+  public void testResolveModernLinkTypeWithUnknownArity() {
+    myFixture.addFileToProject("trees.erl", """
+      -module(trees).
+      -export_type([tree/1]).
+      -type tree(T) :: nil | {node, T, tree(T), tree(T)}.
+      """);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "trees#t:tree/0", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+    assertEquals(1, ((ErlangTypeDefinition) psiElement).getArity());
+  }
+
   public void testResolveLinkUnknownAnchor() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#module-error-information", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
@@ -759,6 +825,155 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
+  public void testFunctionDocKeepsAngleBracketsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(frame).
+                                                 -export([pack/1, demo/0]).
+
+                                                 %% Packs Data as <<Len:16, Data/binary>>.
+                                                 pack(Data) -> <<(byte_size(Data)):16, Data/binary>>.
+
+                                                 demo() -> pa<caret>ck(<<"abc">>).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> Packs Data as &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testFunctionDocKeepsPlaceholdersAndTagsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(cli).
+                                                 -export([run/1, demo/0]).
+
+                                                 %% @doc Usage: run <file> [<options>] & more.
+                                                 run(Args) -> Args.
+
+                                                 demo() -> r<caret>un([]).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> <b>@doc</b> Usage: run &lt;file&gt; [&lt;options&gt;] &amp; more.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testModuleDocKeepsAngleBracketsOfComment() {
+    myFixture.configureByText("frame.erl", """
+      %%% Frames are <<Len:16, Data/binary>>.
+      -module(frame).
+      """);
+    PsiElement element = myFixture.configureByText("test.erl", """
+      -module(test).
+      demo() -> fra<caret>me:pack(<<>>).
+      """).findReferenceAt(myFixture.getEditor().getCaretModel().getOffset()).resolve();
+    assertInstanceOf(element, ErlangModule.class);
+    assertEquals("<pre> Frames are &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testFunctionDocIgnoresFileHeaderComment() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentOfRecordAbove() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, bar/0]).
+                        foo() -> ba<caret>r().
+                        %% The state of the server.
+                        -record(state, {n}).
+                        bar() -> #state{n = 1}.
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentDirectlyAbove() {
+    doTestGenerateDoc("<pre><b>Comment:</b><br/> Starts it.</pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/><b>Comment:</b><br/> Starts it.<br/> More.</pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        %% More.
+                        -spec start() -> ok.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentAboveDistantSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/></pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% The state of the server.
+                        -spec start() -> ok.
+                        -record(state, {n}).
+                        start() -> #state{n = 1}, ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveGroupedSpecs() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo(a) -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/1, foo/2, f/0]).
+                        %% Does foo.
+                        -spec foo(a) -> ok.
+                        -spec foo(a, b) -> ok.
+                        foo(A) -> foo(A, b).
+                        foo(_A, _B) -> ok.
+                        f() -> fo<caret>o(a).
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveSpecAndCompileAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -spec foo() -> ok.
+                        -compile({inline, [foo/0]}).
+                        -dialyzer({nowarn_function, foo/0}).
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveDocAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -doc "Foo.".
+                        -spec foo() -> ok.
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
+  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
@@ -771,6 +986,12 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
           SdkModificator sdkModificator = mockSdk.getSdkModificator();
           VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
           sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
+          // An OTP application whose module source lies in a subdirectory of src, as inets keeps httpc.erl in src/http_client
+          VirtualFile nestedSdkLib = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkLib/");
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.SOURCES);
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.CLASSES);
+          VirtualFile nestedSdkDoc = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkDoc/");
+          sdkModificator.addRoot(nestedSdkDoc, JavadocOrderRootType.getInstance());
           sdkModificator.commitChanges();
           return mockSdk;
         });
@@ -814,6 +1035,89 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                                -module(test).
                                -export([f/0]).
                                f() -> fun ab<caret>s/1.
+                               """);
+  }
+
+  // #1467: the title of a self-resolving reference is its name and arity, not the raw source text of the owner
+  public void testDescriptionsOfBifInFunWithArityOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun ab<caret>s  /
+                                 1.
+                               """);
+  }
+
+  public void testDescriptionsOfBifCallOverTwoLines() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(
+                                 1).
+                               """);
+  }
+
+  public void testDescriptionsOfBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> ab<caret>s(-1).
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInRemoteFunWithArity() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([g/0]).
+                               g() -> fun lists:module_<caret>info/0.
+                               """);
+  }
+
+  public void testDescriptionsOfModuleInfoInExportOverTwoLines() {
+    doTestTargetDescriptions("module_info/0", """
+                               -module(test).
+                               -export([module_<caret>info /
+                                         0]).
+                               """);
+  }
+
+  public void testDescriptionsOfQuotedOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'<caret>+'/2.
+                               """);
+  }
+
+  public void testDescriptionsOfQuotedOperatorInRemoteCall() {
+    doTestTargetDescriptions("'+'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'<caret>+'(1, 2).
+                               """);
+  }
+
+  public void testDescriptionsOfWordOperatorInRemoteFunWithArity() {
+    doTestTargetDescriptions("'not'/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> fun erlang:'n<caret>ot'/1.
+                               """);
+  }
+
+  public void testDescriptionsOfWordOperatorInRemoteCall() {
+    doTestTargetDescriptions("'div'/2", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> erlang:'d<caret>iv'(4, 2).
+                               """);
+  }
+
+  public void testDescriptionsOfNeedlesslyQuotedBifCall() {
+    doTestTargetDescriptions("abs/1", """
+                               -module(test).
+                               -export([f/0]).
+                               f() -> 'ab<caret>s'(1).
                                """);
   }
 

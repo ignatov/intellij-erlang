@@ -189,17 +189,21 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
    */
   static final Key<Made> MADE_NAMES = Key.create("erlang.macro.layer.completion.made.names");
 
-  /** The names that expansions make in the completion's file, or null; never builds for the auto-popup. */
+  /**
+   * The names that expansions make in the completion's file, or null. The auto-popup too builds the table and the copy
+   * if they are not there, under the completion's own indicator (the next key cancels it), as the take-over path does:
+   * the cached ones are stale after every typed key, so it offered no made name (#1537).
+   */
   private static @Nullable Made made(@NotNull CompletionParameters parameters) {
     ErlangFile real = ErlangMacroLayer.layerFile(parameters.getOriginalFile());
     if (real == null || real != parameters.getOriginalFile()) return null;
     boolean auto = parameters.isAutoPopup();
-    ErlangMacroLayer.Table t = auto ? ErlangMacroLayer.cachedTable(real) : ErlangMacroLayer.table(real);
+    ErlangMacroLayer.Table t = ErlangMacroLayer.table(real);
     if (t == null) return auto ? real.getUserData(MADE_NAMES) : null;
     if (t.refusal != null || t.names.isEmpty()) return null;
     // only a top-level form that starts with a macro use, or a broken one, can make a name (and then it needs the copy)
     if (!ErlangMacroLayer.anyFormNeedsCopy(real, t) || !ErlangMacroLayer.hasTopLevelMacroForm(real, t)) return null;
-    ErlangMacroLayer.Copy copy = auto ? ErlangMacroLayer.cachedCopy(real) : ErlangMacroLayer.getCopy(real, "completion-names");
+    ErlangMacroLayer.Copy copy = ErlangMacroLayer.getCopy(real, "completion-names");
     if (copy == null) return auto ? real.getUserData(MADE_NAMES) : null;
     Made m = Made.of(copy);
     real.putUserData(MADE_NAMES, m.namesOnly());
@@ -222,17 +226,33 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     boolean inBraces = PsiTreeUtil.getParentOfType(position, ErlangRecordTuple.class, ErlangRecordField.class) != null;
     List<String> fields = inBraces && recordRef != null ? made.fields().get(recordRef.getText()) : null;
     Set<String> seen = new HashSet<>();
+    Set<String> seenFunctions = new HashSet<>();
     boolean[] saw = new boolean[2];
     result.runRemainingContributors(parameters, r -> {
       PsiElement psi = r.getLookupElement().getPsiElement();
-      if (psi instanceof ErlangFunction) saw[0] = true;
+      if (psi instanceof ErlangFunction f) {
+        saw[0] = true;
+        // only the file's own functions: other:hello/0 does not offer this module's hello/0
+        PsiFile fnFile = f.getContainingFile();
+        if (fnFile != null && fnFile.getOriginalFile() == parameters.getOriginalFile()) seenFunctions.add(f.getName() + "/" + f.getArity());
+      }
       if (psi instanceof ErlangRecordDefinition) saw[1] = true;
       seen.add(r.getLookupElement().getLookupString());
       result.passResult(r);
     });
     ErlangFile real = (ErlangFile)parameters.getOriginalFile();
-    if ((saw[0] || export || functionPosition(position)) && !afterRadix && !inBraces) {
+    // after module: only that module's exports: the made functions only after this module's own name, and only the exported ones;
+    // after a variable or another expression the main provider offers the file's functions, and the made ones with them
+    ErlangColonQualifiedExpression qualified = PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class);
+    ErlangQAtom moduleAtom = ErlangPsiImplUtil.getQAtom(qualified);
+    boolean ownModule = moduleAtom != null && isOwnModule(moduleAtom, real);
+    // in -import(other, [...]) only other's functions: importing a function the file defines is an error
+    boolean imports = PsiTreeUtil.getParentOfType(position, ErlangImportFunctions.class) != null;
+    if ((moduleAtom == null ? saw[0] || export || functionPosition(position) : ownModule) && !afterRadix && !inBraces && !imports) {
       for (Map.Entry<String, PsiElement> e : made.functions().entrySet()) {
+        // a function the recovery made from the rest of a split form has the same name/arity: offered once
+        if (seenFunctions.contains(e.getKey())) continue;
+        if (ownModule && !real.isExported(e.getKey())) continue;
         int slash = e.getKey().lastIndexOf('/');
         String name = e.getKey().substring(0, slash);
         int arity = Integer.parseInt(e.getKey().substring(slash + 1));
@@ -264,6 +284,12 @@ public final class ErlangMacroLayerCompletionContributor extends CompletionContr
     PsiElement grandPa = parent == null ? null : parent.getParent();
     return grandPa instanceof ErlangExpression && PsiTreeUtil.getParentOfType(position, ErlangColonQualifiedExpression.class) == null &&
            PsiTreeUtil.getParentOfType(position, ErlangFunction.class) != null;
+  }
+
+  /** The qualifier of {@code module:} is the name of the completion's own module. */
+  private static boolean isOwnModule(@NotNull ErlangQAtom atom, @NotNull ErlangFile real) {
+    ErlangModule module = real.getModule();
+    return module != null && ErlangPsiImplUtil.getName(atom).equals(module.getName());
   }
 
   private static @Nullable PsiElement realTarget(@Nullable PsiElement e, @NotNull ErlangFile real) {

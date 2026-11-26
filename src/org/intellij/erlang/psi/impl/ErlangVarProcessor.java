@@ -20,8 +20,11 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.Comparing;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.SmartList;
 import com.intellij.util.containers.ContainerUtil;
@@ -36,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -44,11 +48,11 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
   private final List<ErlangQVar> myVarList = new SmartList<>();
   private final String myRequestedName;
   private final PsiElement myOrigin;
-  // the earlier bindings of the variables met in this resolve; null when the processor collects only the variables it meets
+  // the earlier bindings of the variables of the file met so far; null when the processor collects only the variables it meets
   @Nullable private final Map<ErlangQVar, List<ErlangQVar>> myEarlierBindings;
 
   public ErlangVarProcessor(String requestedName, PsiElement origin) {
-    this(requestedName, origin, new HashMap<>());
+    this(requestedName, origin, getEarlierBindingsOfFile(origin));
   }
 
   private ErlangVarProcessor(String requestedName, PsiElement origin, @Nullable Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
@@ -70,9 +74,14 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (psiElement.equals(myOrigin)) return true;
     if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
-      if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
-      if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
+      boolean inOriginArgList = PsiTreeUtil.isAncestor(originArgList, psiElement, false);
+      // a map key in a fun head refers to an outer variable; any other variable there shadows the outer ones
+      // and matches only an earlier occurrence in the same head
+      if (inMapPatternKey(myOrigin)) {
+        if (inOriginArgList) return true;
+      }
+      else if (!inOriginArgList || psiElement.getTextOffset() > myOrigin.getTextOffset()) return true;
     }
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     
@@ -98,6 +107,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
+      if (boundInOwnOrLaterQualifier(psiElement)) return true;
+      if (outsideOwnGeneratorPattern(psiElement)) return true;
       // put all possible variables to list
       ErlangQVar var = (ErlangQVar) psiElement;
       List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
@@ -111,9 +122,17 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     return true;
   }
 
+  // the earlier bindings of a variable depend only on the file, so all resolves in the file share them until the file changes
+  @NotNull
+  private static Map<ErlangQVar, List<ErlangQVar>> getEarlierBindingsOfFile(@NotNull PsiElement origin) {
+    PsiFile file = origin.getContainingFile();
+    if (file == null) return new HashMap<>();
+    return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(new ConcurrentHashMap<>(), file));
+  }
+
   // a variable that matches an earlier binding, like X in `X = 1, case X = g() of ...`, is not a binding itself.
   // Only earlier variables are followed, so the lookup always moves towards the start of the file and terminates.
-  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per resolve.
+  // The lookup is iterative and remembers the answer for every variable, so each variable is resolved once per version of the file.
   @NotNull
   private static List<ErlangQVar> getEarlierBindings(@NotNull ErlangQVar var, @NotNull Map<ErlangQVar, List<ErlangQVar>> earlierBindings) {
     Map<ErlangQVar, List<ErlangQVar>> candidates = new HashMap<>();
@@ -203,6 +222,36 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
         PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
+  }
+
+  // a qualifier of a comprehension sees neither the pattern of its own generator nor the later qualifiers
+  private boolean boundInOwnOrLaterQualifier(PsiElement psiElement) {
+    for (ErlangLcExpression qualifier = PsiTreeUtil.getParentOfType(myOrigin, ErlangLcExpression.class);
+         qualifier != null;
+         qualifier = PsiTreeUtil.getParentOfType(qualifier, ErlangLcExpression.class)) {
+      ErlangArgumentDefinition pattern = qualifier.getArgumentDefinition();
+      if (pattern != null && !PsiTreeUtil.isAncestor(pattern, myOrigin, false) && PsiTreeUtil.isAncestor(pattern, psiElement, false)) return true;
+      for (PsiElement next = qualifier.getNextSibling(); next != null; next = next.getNextSibling()) {
+        if (next instanceof ErlangLcExpression && PsiTreeUtil.isAncestor(next, psiElement, false)) return true;
+      }
+    }
+    return false;
+  }
+
+  // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;
+  // a map key of the pattern is a use of a variable bound before the pattern, never a binding
+  private boolean outsideOwnGeneratorPattern(PsiElement psiElement) {
+    if (inMapPatternKey(psiElement) && inGeneratorPattern(psiElement)) return true;
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinition.class);
+    if (pattern == null || !(pattern.getParent() instanceof ErlangLcExpression)) return false;
+    if (isBinaryWidthExpression(myOrigin)) return false;
+    boolean inPattern = PsiTreeUtil.isAncestor(pattern, psiElement, false);
+    return inMapPatternKey(myOrigin) == inPattern;
+  }
+
+  private static boolean inGeneratorPattern(PsiElement psiElement) {
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return pattern != null && pattern.getParent() instanceof ErlangLcExpression;
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {

@@ -19,7 +19,9 @@ package org.intellij.erlang.highlighting;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangExportType;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
 import org.intellij.erlang.psi.ErlangTypeRef;
@@ -42,7 +44,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testExportResolve()     { doTest(); }
   public void testUnusedFunction()    { doTest(); }
   public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
+  public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
   public void testDuplicate()         { doTest(); }
+  public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
+  public void testLoneDot()           { doTest(); } // issue 1646
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
@@ -55,12 +60,20 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test155()               { doTest(); }
   public void test158()               { doTest(); }
   public void testIoFormat()          { doTest(); }
+  public void testIoFormatTwoArgumentControls() { doTest(); }
+  public void testIoFormatTwoArgumentControlsOneArgument() { doTest(); }
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
   public void testBinaryComprehensionTemplate() { doTest(); }
   public void test190()               { doTest(); }
   public void testMacrosResolve()     { doTest(); }
   public void testIfConditionalCompilation() { doTest(); }
+  public void testIfElifDefinedMacro() { doTest(); } // issue 1636
+  public void testGeneratorExpressionDoesNotSeeOwnPattern() { doTest(); } // issue 1641
+  public void testGeneratorPatternScope() { doTest(); } // issue 1641
+  public void testRepeatedGeneratorPatterns() { doTest(); } // issue 1641
+  public void testGeneratorMapKeyPattern() { doTest(); } // issue 1641
+  public void testDefinedOutsideIfElif() { doTest(); } // issue 1636
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
   public void test211()               { doTest(); }
@@ -71,6 +84,13 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInclude()           { doTest(); }
   public void testIncludeLib()        { doTest(); }
   public void testIllegalGuard()      { doTest(); }
+  // issue 1506: ceil/1 and floor/1 are guard BIFs since OTP 20, min/2 and max/2 since OTP 26
+  public void testIllegalGuardCeilFloorMinMaxR15() {
+    myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR15.erl");
+    myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testIllegalPattern()    { doTest(); }
   public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
   public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
@@ -88,7 +108,11 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternMapKeyRecordGuard() { doTest(); }
   public void testIllegalPatternGuardMatch() { doTest(); }
   public void testIllegalPatternCatchClassMacroCall() { doTest(); }
+  public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
+  public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
+  public void testUnresolvedBnotOperator() { doTest(); } // issue 1600
+  public void testIllegalGuardBnotOperator() { doTest(); } // issue 1600
   public void test354()               { doTest(); }
   public void test364()               { doTest(); }
   public void test365()               { doTest(); }
@@ -97,7 +121,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testInFunClause()       { doTest(); }
   public void testMapKeyInFunHead()   { doTest(); }
   public void testNamedFunVariables() { doTest(); }
+  public void testNamedFunUnusedName() { doTest(); } // issue 1642
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
+  public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
+  public void testFunArgumentShadowsEarlierGeneratorVariable() { doTest(); } // issue 1652
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }
@@ -127,9 +154,14 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testFunVarArityInPredefinedMacroArguments() { doTest(); }
   public void test536()               { doTest("536.erl", "536.hrl"); }
   public void testExportPseudoFunctions() { doTest(); }
+  public void testBasedIntegers()         { doTest(); }
+  public void testBasedIntegersErrors()   { doTest(); }
+  public void testHexEscapeCodePoints()   { doTest(); }
+  public void testHexEscapeCodePointsErrors() { doTest(); }
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testCatchClassVarAssignment() { doTest(); } // issue 1648
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
   public void testAttributeAnnotations() {
@@ -246,6 +278,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1596
+  public void testUnresolvedMacrosQuotedPredefined() {
+    enableUnresolvedMacroInspection();
+    doTest();
+  }
+
   public void testMacroThenStringLiteral() {
     enableUnresolvedMacroInspection();
     doTest();
@@ -287,6 +325,61 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1502: erlc never warns about unused types of an included file
+  public void testNoUnusedTypeInHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
+  }
+
+  // issue 1561
+  public void testModuleMacroQualifiedType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -export([f/0]).
+      -type priv() :: integer().
+      -type <warning descr="Unused type 'unused'">unused</warning>() :: atom().
+      -spec f() -> ?MODULE:priv().
+      f() -> 1.""");
+    myFixture.checkHighlighting();
+    ErlangTypeRef ref = null;
+    for (ErlangTypeRef r : PsiTreeUtil.findChildrenOfType(myFixture.getFile(), ErlangTypeRef.class)) {
+      if (r.getParent().getText().equals("?MODULE:priv()")) ref = r;
+    }
+    assertNotNull(ref);
+    PsiElement resolved = ref.getReference().resolve();
+    assertInstanceOf(resolved, ErlangTypeDefinition.class);
+    assertEquals("priv", ((ErlangTypeDefinition) resolved).getName());
+  }
+
+  // issue 1561: ?MOD:t() is not a use of the local type t
+  public void testOtherMacroQualifiedTypeIsNotUseOfLocalType() {
+    doTestOtherMacroQualifiedTypeIsNotUseOfLocalType();
+  }
+
+  public void testOtherMacroQualifiedTypeIsNotUseOfLocalTypeWithoutMacroLayer() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    doTestOtherMacroQualifiedTypeIsNotUseOfLocalType();
+  }
+
+  private void doTestOtherMacroQualifiedTypeIsNotUseOfLocalType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("other.erl", "-module(other).\n-export_type([t/0]).\n-type t() :: atom().\n");
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -export_type([u/0]).
+      -define(MOD, other).
+      -type <warning descr="Unused type 't'">t</warning>() :: integer().
+      -type u() :: ?MOD:t().""");
+    myFixture.checkHighlighting();
+  }
+
+  // issue 1554: a bare atom in a type is not a use of the type with the same name
+  public void testAtomInTypeIsNotUseOfType() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1435
   public void testTypeReferenceResolvesByArity() {
     myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");
@@ -322,6 +415,74 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type t() :: tree(atom()).\n-type u() :: tree().\n");
     assertResolvesToArity(findTypeRef("tree(atom())").getReference(), 1);
     assertResolvesToArity(findTypeRef("tree()").getReference(), 0);
+  }
+
+  // issue 1553: erlc reports "type t() undefined" and "type t(_,_,_) undefined" here
+  public void testTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3]).\n-type t(A) :: {A}.\n-type u() :: t().\n");
+    ErlangExportType export = PsiTreeUtil.findChildOfType(myFixture.getFile(), ErlangExportType.class);
+    assertNotNull(export);
+    PsiElement exported = export.getReference().resolve();
+    PsiElement used = findTypeRef("t()").getReference().resolve();
+    assertTrue("t/3 resolved to " + describe(exported) + ", t() resolved to " + describe(used), exported == null && used == null);
+  }
+
+  public void testTypeWithUndefinedArityIsUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([t/3, u/0]).\n" +
+                                        "-type <warning descr=\"Unused type 't'\">t</warning>(A) :: {A}.\n-type u() :: t().\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRemoteTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.erl", "-module(ov).\n-export_type([tree/1]).\n-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-type u() :: ov:tree().\n");
+    assertNull(findTypeRef("ov:tree()").getReference().resolve());
+  }
+
+  public void testIncludedTypeWithUndefinedArityDoesNotResolve() {
+    myFixture.addFileToProject("ov.hrl", "-type tree(A) :: {node, A}.\n");
+    myFixture.configureByText("user.erl", "-module(user).\n-include(\"ov.hrl\").\n-type u() :: tree().\n");
+    assertNull(findTypeRef("tree()").getReference().resolve());
+  }
+
+  // a macro argument can expand to several arguments: ?TWO makes t(?TWO) a use of t/2
+  public void testRenameTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(TWO, a, b).\n-type <caret>t(A, B) :: {A, B}.\n-type u() :: t(?TWO) | t(a, b).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(TWO, a, b).\n-type zz(A, B) :: {A, B}.\n-type u() :: zz(?TWO) | zz(a, b).\n");
+  }
+
+  public void testTypeUsedWithMacroArgumentIsNotUnused() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("ar.erl", "-module(ar).\n-export_type([u/0]).\n-define(TWO, a, b).\n" +
+                                        "-type t(A, B) :: {A, B}.\n-type u() :: t(?TWO).\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // a macro argument still prefers the counted arity: t(?X) is a use of t/1 even when t/0 comes first
+  public void testTypeUsedWithMacroArgumentPrefersCountedArity() {
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    assertResolvesToArity(findTypeRef("t(?X)").getReference(), 1);
+  }
+
+  public void testTypeUsedWithMacroArgumentLeavesOtherArityUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByText("c.erl", "-module(c).\n-export_type([u/0]).\n-define(X, a).\n" +
+                                       "-type <warning descr=\"Unused type 't'\">t</warning>() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testRenameOtherArityKeepsTypeUsedWithMacroArgumentInHeader() {
+    myFixture.configureByText("h.hrl", "-define(X, a).\n-type <caret>t() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+    myFixture.renameElementAtCaret("zz");
+    myFixture.checkResult("-define(X, a).\n-type zz() :: a.\n-type t(A) :: {A}.\n-type u() :: t(?X).\n");
+  }
+
+  private static String describe(PsiElement element) {
+    return element instanceof ErlangTypeDefinition type ? type.getName() + "/" + type.getArity() : String.valueOf(element);
   }
 
   private ErlangTypeRef findTypeRef(String typeText) {
