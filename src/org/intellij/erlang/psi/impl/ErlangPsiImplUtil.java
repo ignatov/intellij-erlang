@@ -637,7 +637,7 @@ public class ErlangPsiImplUtil {
    */
   public static boolean isBinaryWidthExpression(PsiElement psiElement) {
     ErlangMaxExpression maxParent = PsiTreeUtil.getParentOfType(psiElement, ErlangMaxExpression.class);
-    if (maxParent == null) return false;
+    if (maxParent == null || !(maxParent.getParent() instanceof ErlangBinElement)) return false;
 
     PsiElement prevSib = PsiTreeUtil.getPrevSiblingOfType(maxParent, PsiElement.class);
     if (prevSib == null) return false;
