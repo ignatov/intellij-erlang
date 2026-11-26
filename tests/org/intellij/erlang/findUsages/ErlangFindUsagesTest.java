@@ -16,6 +16,9 @@
 
 package org.intellij.erlang.findUsages;
 
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
@@ -42,6 +45,20 @@ public class ErlangFindUsagesTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testCaseHeadRematch()                   { doTest(2); }
   public void testCaseHeadRematchArgument()           { doTest(3); }
   public void testFunHeadRepeatedVariable()           { doTest(2); } // issue 1640
+
+  // issue 1683: headers that define the same function under -ifdef alternatives, the call uses either one
+  public void testFunctionInFirstIncludedHeader() { doHeaderFunctionTest("functionInFirstIncludedHeader.hrl"); }
+  public void testFunctionInLaterIncludedHeader() { doHeaderFunctionTest("functionInLaterIncludedHeader.hrl"); }
+
+  private void doHeaderFunctionTest(String header) {
+    myFixture.copyFileToProject("functionInFirstIncludedHeader.hrl");
+    myFixture.copyFileToProject("functionInLaterIncludedHeader.hrl");
+    myFixture.configureByFile("functionInIncludedHeadersUser.erl");
+    PsiFile headerFile = myFixture.getPsiManager().findFile(myFixture.findFileInTempDir(header));
+    ErlangFunction function = PsiTreeUtil.findChildOfType(headerFile, ErlangFunction.class);
+    assertNotNull(function);
+    assertEquals(1, myFixture.findUsages(function).size());
+  }
 
   // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
   public void testLongOperatorChain() {
