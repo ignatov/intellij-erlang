@@ -27,6 +27,7 @@ import com.intellij.openapi.actionSystem.PlatformCoreDataKeys;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.MapDataContext;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -111,6 +112,17 @@ public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFix
     assertInstanceOf(getOnlyLocation("my-mod_tests", scope), ErlangModule.class);
     assertEquals("a_test", ((ErlangFunction) getOnlyLocation("my-mod_tests:a_test:-1", scope)).getName());
     assertEquals("my-case_test", ((ErlangFunction) getOnlyLocation("my-mod_tests:my-case_test:-1", scope)).getName());
+  }
+
+  public void testGeneratedFunInModuleThatNeedsQuotes() {
+    myFixture.configureByText("my-gen_tests.erl", "-module('my-gen_tests').\n\ngen_test_() ->\n  [fun() -> ok end].\n");
+    GlobalSearchScope scope = GlobalSearchScope.projectScope(getProject());
+    PsiElement location = getOnlyLocation("my-gen_tests:-gen_test_/0-fun-0-:4", scope);
+    assertEquals("gen_test_", PsiTreeUtil.getParentOfType(location, ErlangFunction.class, false).getName());
+    ErlangFunction generator =
+      ErlangTestLocationProvider.findGeneratingFunction(getProject(), "eunit://my-gen_tests:-gen_test_/0-fun-0-:4");
+    assertNotNull(generator);
+    assertEquals("gen_test_", generator.getName());
   }
 
   private PsiElement getOnlyLocation(String path, GlobalSearchScope scope) {
