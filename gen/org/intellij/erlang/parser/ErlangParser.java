@@ -4070,55 +4070,88 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
+  // &('(' ')' properly_parsed) <<consumeMacroBody>> | (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
   public static boolean macros_body(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MACROS_BODY, "<macros body>");
     r = macros_body_0(b, l + 1);
+    if (!r) r = macros_body_1(b, l + 1);
     if (!r) r = withoutErrors(b, l + 1, ErlangParser::macros_typed_body);
     if (!r) r = consumeMacroBody(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
-  // expression ((',' | ';' | '->') expression)* &properly_parsed
+  // &('(' ')' properly_parsed) <<consumeMacroBody>>
   private static boolean macros_body_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros_body_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
+    r = macros_body_0_0(b, l + 1);
+    r = r && consumeMacroBody(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &('(' ')' properly_parsed)
+  private static boolean macros_body_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = macros_body_0_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // '(' ')' properly_parsed
+  private static boolean macros_body_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = consumeTokens(b, 0, ERL_PAR_LEFT, ERL_PAR_RIGHT);
+    r = r && properly_parsed(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // expression ((',' | ';' | '->') expression)* &properly_parsed
+  private static boolean macros_body_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
     r = expression(b, l + 1, -1);
-    r = r && macros_body_0_1(b, l + 1);
-    r = r && macros_body_0_2(b, l + 1);
+    r = r && macros_body_1_1(b, l + 1);
+    r = r && macros_body_1_2(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // ((',' | ';' | '->') expression)*
-  private static boolean macros_body_0_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_0_1")) return false;
+  private static boolean macros_body_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1_1")) return false;
     while (true) {
       int c = current_position_(b);
-      if (!macros_body_0_1_0(b, l + 1)) break;
-      if (!empty_element_parsed_guard_(b, "macros_body_0_1", c)) break;
+      if (!macros_body_1_1_0(b, l + 1)) break;
+      if (!empty_element_parsed_guard_(b, "macros_body_1_1", c)) break;
     }
     return true;
   }
 
   // (',' | ';' | '->') expression
-  private static boolean macros_body_0_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_0_1_0")) return false;
+  private static boolean macros_body_1_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1_1_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = macros_body_0_1_0_0(b, l + 1);
+    r = macros_body_1_1_0_0(b, l + 1);
     r = r && expression(b, l + 1, -1);
     exit_section_(b, m, null, r);
     return r;
   }
 
   // ',' | ';' | '->'
-  private static boolean macros_body_0_1_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_0_1_0_0")) return false;
+  private static boolean macros_body_1_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1_1_0_0")) return false;
     boolean r;
     r = consumeToken(b, ERL_COMMA);
     if (!r) r = consumeToken(b, ERL_SEMI);
@@ -4127,8 +4160,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   // &properly_parsed
-  private static boolean macros_body_0_2(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "macros_body_0_2")) return false;
+  private static boolean macros_body_1_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macros_body_1_2")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _AND_);
     r = properly_parsed(b, l + 1);
@@ -6716,7 +6749,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // 12: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression)
   //    POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
   // 13: ATOM(max_expression)
-  // 14: PREFIX(parenthesized_expression)
+  // 14: ATOM(parenthesized_expression)
   public static boolean expression(PsiBuilder b, int l, int g) {
     if (!recursion_guard_(b, l, "expression")) return false;
     addVariant(b, "<expression>");
@@ -7073,16 +7106,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
+  // '(' expression ')'
   public static boolean parenthesized_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parenthesized_expression")) return false;
     if (!nextTokenIsSmart(b, ERL_PAR_LEFT)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
+    Marker m = enter_section_(b, l, _NONE_, ERL_PARENTHESIZED_EXPRESSION, "<expression>");
     r = consumeTokenSmart(b, ERL_PAR_LEFT);
-    p = r;
-    r = p && expression(b, l, -1);
-    r = p && report_error_(b, consumeToken(b, ERL_PAR_RIGHT)) && r;
-    exit_section_(b, l, m, ERL_PARENTHESIZED_EXPRESSION, r, p, null);
+    p = r; // pin = 1
+    r = r && report_error_(b, expression(b, l + 1, -1));
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
     return r || p;
   }
 

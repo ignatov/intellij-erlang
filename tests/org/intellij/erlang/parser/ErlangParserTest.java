@@ -223,6 +223,19 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() -> if () -> ok end.\n");
   }
 
+  public void testEmptyParenthesesOutsideExpressions() {
+    PsiFile file = parseText("-module(t).\n-export([f/0]).\n-type t() :: ok.\n-spec f() -> t().\n-callback c() -> ok.\n-define(PAR, ()).\n" +
+                             "f() -> F = fun() -> ok end, F(), g(), X = (1), <<(X), (X):8>>, ((X)).\n");
+    assertFalse(toParseTreeText(file, skipSpaces(), includeRanges()), PsiTreeUtil.hasErrorElements(file));
+  }
+
+  public void testEmptyParenthesesErrorKeepsNextFunction() {
+    PsiFile file = parseText("-module(t).\nf() -> ().\ng() -> ok.\n");
+    assertTrue(PsiTreeUtil.hasErrorElements(file));
+    Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
+    assertEquals(2, functions.size());
+  }
+
   private void assertHasSyntaxError(String text) {
     PsiFile file = parseText(text);
     assertTrue("erlc reports a syntax error before ')', the parser gives none:\n" +
