@@ -47,6 +47,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
+  public void testLoneDot()           { doTest(); } // issue 1646
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }

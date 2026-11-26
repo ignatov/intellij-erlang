@@ -89,7 +89,7 @@
   implements("case_expression|try_expression|receive_expression|maybe_expression")="org.intellij.erlang.psi.ErlangClauseOwner"
 }
 
-forms ::= console_expression | application_file_expression | form_with_period *
+forms ::= console_expression | application_file_expression | <<strayPeriodOr form_with_period>> *
 private application_file_expression ::= is_app app_expression period {recoverWhile=form_recover pin=2}
 private console_expression ::= is_console empty console_expression_or_empty {pin=2}
 private console_expression_or_empty ::= exprs period | empty {pin(".*")=1}
