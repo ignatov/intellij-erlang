@@ -125,13 +125,43 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertOrderedEquals(erlangModules, "pt", "m");
   }
 
-  public void testMutualIncludesThroughModule() {
+  // b.hrl declares the behaviour of beh.erl, which includes it: erlc compiles beh.erl with only a warning (#1469).
+  public void testMutualIncludesThroughModule() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "beh");
+  }
+
+  public void testMutualIncludesThroughParseTransform() {
     try {
       ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
       fail("Expected a cyclic dependency exception to be thrown.");
     }
     catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
     }
+  }
+
+  // erlc compiles a module that names itself as its behaviour with only a warning "behaviour m undefined" (#1469).
+  public void testSelfBehaviour() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    assertSameErlangFiles(moduleBuildOrder, "m");
+  }
+
+  public void testSelfBehaviourInHeader() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    assertOrderedEquals(erlangModules, "n");
+  }
+
+  public void testSelfBehaviourInHeaderIncludedByOtherModule() throws Exception {
+    List<ErlangFileDescriptor> moduleBuildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> erlangModules = ContainerUtil.mapNotNull(getModulePaths(moduleBuildOrder),
+                                                          path -> path.endsWith(".erl") ? FileUtil.getNameWithoutExtension(new File(path)) : null);
+    // a.erl and z.erl sort on both sides of n.erl, so the order holds only through their edges to n.erl.
+    assertSameElements(erlangModules, "a", "n", "z");
+    assertEquals(erlangModules.toString(), "n", erlangModules.get(0));
   }
 
   public void testTestsDependency() throws Exception {
@@ -189,6 +219,16 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertSameElements(dependencies.get("m.erl"), "pt.erl", "beh.erl");
     assertTrue(files.toString(), files.indexOf("pt.erl") < files.indexOf("m.erl"));
     assertTrue(files.toString(), files.indexOf("beh.erl") < files.indexOf("m.erl"));
+  }
+
+  // The guessed edges of a module without Erlang PSI to every header are no includes of its own behaviour (#1469).
+  public void testLargeBehavioursInHeader() throws Exception {
+    writeAboveSizeLimit("abig.erl", "-module(abig).\n-callback init() -> ok.\n");
+    writeAboveSizeLimit("zbig.erl", "-module(zbig).\n-callback init() -> ok.\n");
+    List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> files = ContainerUtil.map(getModulePaths(buildOrder), path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("abig.erl") < files.indexOf("m.erl"));
+    assertTrue(files.toString(), files.indexOf("zbig.erl") < files.indexOf("m.erl"));
   }
 
   public void testLargeParseTransformInHeaderIsNotCyclic() throws Exception {
