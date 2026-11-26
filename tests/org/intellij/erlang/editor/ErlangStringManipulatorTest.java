@@ -55,6 +55,53 @@ public class ErlangStringManipulatorTest extends ErlangLightPlatformCodeInsightF
     assertEquals("f() -> ~\"xyz\".", myFixture.getEditor().getDocument().getText());
   }
 
+  public void testPlainStringContentRange() {
+    assertEquals("abc", ElementManipulators.getValueText(literalAtCaret("f() -> \"a<caret>bc\".")));
+  }
+
+  public void testEmptyPlainStringContentRange() {
+    assertEquals("", ElementManipulators.getValueText(literalAtCaret("f() -> <caret>\"\".")));
+  }
+
+  public void testSigilDelimitersContentRange() {
+    String[][] delimiters = {{"\"", "\""}, {"'", "'"}, {"(", ")"}, {"[", "]"}, {"{", "}"}, {"<", ">"},
+      {"/", "/"}, {"|", "|"}, {"`", "`"}, {"#", "#"}};
+    for (String prefix : new String[]{"~", "~b", "~B", "~s", "~S"}) {
+      for (String[] delimiter : delimiters) {
+        String sigil = prefix + delimiter[0] + "abc" + delimiter[1];
+        assertEquals(sigil, "abc", ElementManipulators.getValueText(literalAtCaret("f() -> <caret>" + sigil + ".")));
+      }
+    }
+  }
+
+  public void testEmptySigilContentRange() {
+    assertEquals("", ElementManipulators.getValueText(literalAtCaret("f() -> <caret>~\"\".")));
+  }
+
+  public void testTripleQuotedValueText() {
+    assertEquals("  {\"a\": 1}", ElementManipulators.getValueText(literalAtCaret("f() -> \"\"\"\n  {\"a\": <caret>1}\n  \"\"\".")));
+  }
+
+  public void testMoreThanThreeQuotesValueText() {
+    assertEquals("  a \"\"\" b", ElementManipulators.getValueText(literalAtCaret("f() -> \"\"\"\"\n  a \"\"\" <caret>b\n  \"\"\"\".")));
+  }
+
+  public void testTripleQuotedSigilValueText() {
+    assertEquals("x\ny", ElementManipulators.getValueText(literalAtCaret("f() -> ~b\"\"\"\"\n<caret>x\ny\n\"\"\"\".")));
+  }
+
+  public void testEmptyTripleQuotedValueText() {
+    assertEquals("", ElementManipulators.getValueText(literalAtCaret("f() -> \"\"\"\n  <caret>\"\"\".")));
+  }
+
+  public void testTripleQuotedContentChange() {
+    ErlangStringLiteral literal = literalAtCaret("f() -> ~\"\"\"\n  a<caret>bc\n  \"\"\".");
+    WriteCommandAction.runWriteCommandAction(getProject(), () -> {
+      ElementManipulators.handleContentChange(literal, "  xyz");
+    });
+    assertEquals("f() -> ~\"\"\"\n  xyz\n  \"\"\".", myFixture.getEditor().getDocument().getText());
+  }
+
   private ErlangStringLiteral literalAtCaret(String text) {
     myFixture.configureByText("a.erl", text);
     return getElementAtCaret(ErlangStringLiteral.class);
