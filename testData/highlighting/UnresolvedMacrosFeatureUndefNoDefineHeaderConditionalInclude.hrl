@@ -1,0 +1,3 @@
+-ifdef(NEVER).
+-include("UnresolvedMacrosFeatureUndefNoDefineHeader.hrl").
+-endif.

@@ -39,6 +39,8 @@ import com.intellij.util.containers.MultiMap;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.stubs.ErlangCallbackSpecStub;
@@ -52,7 +54,7 @@ import java.util.*;
 import static java.util.Collections.*;
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
-public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner {
+public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameIdentifierOwner, HintedReferenceHost {
   private final CachedValue<ErlangModule> myModuleValue =
     createCachedValue(new ValueProvider<>() {
       @Nullable
@@ -279,6 +281,49 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     super(viewProvider, ErlangLanguage.INSTANCE);
   }
 
+  /**
+   * Also the references of the bare macro uses between the top-level forms ({@link ErlangBareMacroReference}),
+   * cached until the file changes: a text search asks the file for its references at every occurrence of a word.
+   */
+  @Override
+  public PsiReference @NotNull [] getReferences() {
+    PsiReference[] own = super.getReferences();
+    if (!isContentsLoaded()) return own;
+    // with the layer off or without read access, master's references and nothing kept in the cache below; the cache
+    // also depends on the switch, so a flip drops it
+    if (!ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return own;
+    PsiReference[] bare = bareMacroUses();
+    return ErlangMacroLayerTokenReference.append(this, bare.length == 0 ? own : ArrayUtil.mergeArrays(own, bare));
+  }
+
+  private PsiReference @NotNull [] bareMacroUses() {
+    return CachedValuesManager.getCachedValue(
+      this, () -> CachedValueProvider.Result.create(ErlangBareMacroReference.find(this), this, ErlangMacroLayer.modeTracker()));
+  }
+
+  /**
+   * The references of {@link #getReferences()} that hold the offset, in the same order. Find usages asks the file once
+   * per occurrence of the word; a file that hosts many token references gives the few at the offset, without a walk
+   * over all of them.
+   */
+  @Override
+  public PsiReference @NotNull [] getReferences(@NotNull PsiReferenceService.Hints hints) {
+    Integer offset = hints.offsetInElement;
+    if (offset == null) return getReferences();
+    PsiReference[] own = super.getReferences();
+    if (!isContentsLoaded() || !ErlangMacroLayer.isEnabled() || ErlangMacroLayer.noReadAccess()) return own;
+    List<PsiReference> result = new SmartList<>();
+    for (PsiReference r : own) if (ReferenceRange.containsOffsetInElement(r, offset)) result.add(r);
+    for (PsiReference r : bareMacroUses()) if (ReferenceRange.containsOffsetInElement(r, offset)) result.add(r);
+    ErlangMacroLayerTokenReference.addAt(ErlangMacroLayerTokenReference.find(this), offset, result);
+    return result.toArray(PsiReference.EMPTY_ARRAY);
+  }
+
+  @Override
+  public boolean shouldAskParentForReferences(@NotNull PsiReferenceService.Hints hints) {
+    return true;
+  }
+
   @Override
   public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
     if (FileTypeRegistry.getInstance().getFileTypeByFileName(name) != ErlangFileType.MODULE) {
@@ -384,7 +429,7 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
       for (ErlangExportFunction exportFunction : list) {
         PsiElement integer = exportFunction.getInteger();
         if (integer == null) continue;
-        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + integer.getText();
+        String s = ErlangPsiImplUtil.getExportFunctionName(exportFunction) + "/" + ErlangPsiImplUtil.getArity(integer);
         result.add(s);
       }
     }
@@ -489,7 +534,9 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
     ErlangFileStub stub = getStub();
     if (stub != null) return stub.isBehaviour();
 
-    ErlangFunction behaviourInfo = getFunction("behaviour_info", 1);
+    // The stub builder calls this method, so it must not read the cached values that ask for the stub (#1444).
+    ErlangFunction behaviourInfo = ContainerUtil.find(collectChildrenDummyAware(ErlangFunction.class),
+                                                      f -> "behaviour_info".equals(f.getName()) && f.getArity() == 1);
     return behaviourInfo != null && behaviourInfo.isExported() || !getCallbackMap().isEmpty();
   }
 
@@ -611,6 +658,14 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
   @Override
   public ErlangTypeDefinition getType(@NotNull String name) {
     return myTypeMap.getValue().get(name);
+  }
+
+  @Override
+  public ErlangTypeDefinition getType(@NotNull String name, int arity) {
+    for (ErlangTypeDefinition type : getTypes()) {
+      if (type.getArity() == arity && name.equals(type.getName())) return type;
+    }
+    return null;
   }
 
   @NotNull

@@ -38,6 +38,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +48,9 @@ import java.util.*;
 
 public class ErlangUnitRunningState extends ErlangRunningState {
   private static final int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
+  // EUnit gives each test of a group of several tests 5 seconds whatever the timeout of the group is, so a test that
+  // waits at a breakpoint is killed. scale_timeouts (OTP 26.2 and later; older releases ignore it) lengthens them all.
+  private static final int DEBUG_TIMEOUT_SCALE = Integer.MAX_VALUE;
   private final ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -59,6 +63,17 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     try {
       List<String> reporterModuleCodePath = Arrays.asList("-pa", createReporterModuleDirectory());
       return ContainerUtil.concat(reporterModuleCodePath, super.getCodePath());
+    }
+    catch (IOException e) {
+      throw new ExecutionException("Failed to setup eunit reports environment", e);
+    }
+  }
+
+  @NotNull
+  @Override
+  public List<File> createCodePathDirectories() throws ExecutionException {
+    try {
+      return List.of(new File(createReporterModuleDirectory()));
     }
     catch (IOException e) {
       throw new ExecutionException("Failed to setup eunit reports environment", e);
@@ -130,7 +145,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {
-    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
+    String options = "{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}" +
+                     (debug ? ", {scale_timeouts, " + DEBUG_TIMEOUT_SCALE + "}" : "");
+    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[" + options + "]");
     return new ErlangEntryPoint("eunit", "test", args);
   }
 
@@ -151,7 +168,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
         for (String function : e.getValue()) {
           boolean isGenerator = ErlangPsiImplUtil.isEunitTestGeneratorFunctionName(function);
           result.append(isGenerator ? "{generator, " : "")
-                .append("fun ").append(moduleName).append(':').append(function).append("/0")
+                .append("fun ").append(toAtom(moduleName)).append(':').append(toAtom(function)).append("/0")
                 .append(isGenerator ? "}" : "")
                 .append(", ");
         }
@@ -169,6 +186,11 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return debug ? "{timeout, " + DEBUG_TEST_TIMEOUT + ", [" + tests + "]}" : tests;
   }
 
+  @NotNull
+  private static String toAtom(@NotNull String name) {
+    return StringUtil.notNullize(ErlangPsiImplUtil.toAtomName(name), name);
+  }
+
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
     Map<String, List<String>> result = new HashMap<>(qualifiedFunctionNames.size());
     for (String qualifiedFunctionName : qualifiedFunctionNames) {
@@ -184,9 +206,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return result;
   }
 
-  private static String createReporterModuleDirectory() throws IOException {
+  private String createReporterModuleDirectory() throws IOException {
     File tempDirectory = FileUtil.createTempDirectory(ErlangEunitReporterModule.MODULE_NAME, null);
-    ErlangEunitReporterModule.putReporterModuleTo(tempDirectory);
+    ErlangEunitReporterModule.putReporterModuleTo(tempDirectory, ErlangSdkType.getRelease(getModule()));
     return PathUtil.toSystemIndependentName(tempDirectory.getPath());
   }
 }

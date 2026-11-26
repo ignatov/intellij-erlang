@@ -85,7 +85,7 @@ public class ErlangApplicationConfiguration extends ErlangRunConfigurationBase<E
     myModuleAndFunction = moduleAndFunction;
   }
 
-  public boolean stopErlang() {
+  public boolean isStopErlang() {
     return myStopErlang;
   }
 

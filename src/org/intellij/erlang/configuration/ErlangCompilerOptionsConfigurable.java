@@ -45,6 +45,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
   private JLabel myAdditionalErlcArgumentsLabel;
   private final ErlangCompilerSettings mySettings;
   private final Project myProject;
+  private boolean myRestoreUseRebarCompiler;
 
   public ErlangCompilerOptionsConfigurable(Project project) {
     super(project);
@@ -65,7 +66,7 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
     myRootPanel.addAncestorListener(new AncestorAdapter() {
       @Override
       public void ancestorAdded(AncestorEvent event) {
-        reset();
+        updateRebarState();
       }
     });
     myUseRebarCompilerCheckBox.addItemListener(e -> setUseRebarCompiler(myUseRebarCompilerCheckBox.isSelected()));
@@ -89,27 +90,45 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   @Override
   public void reset() {
+    myRestoreUseRebarCompiler = false;
+    setUseRebarCompiler(mySettings.isUseRebarCompilerEnabled());
+    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
+    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    updateRebarState();
+  }
+
+  private void updateRebarState() {
     boolean rebarPathIsSet = StringUtil.isNotEmpty(RebarSettings.getInstance(myProject).getRebarPath());
     myUseRebarCompilerCheckBox.setEnabled(rebarPathIsSet);
     myConfigureRebarButton.setVisible(!rebarPathIsSet);
-    setUseRebarCompiler(rebarPathIsSet && mySettings.isUseRebarCompilerEnabled());
-    myAddDebugInfoCheckBox.setSelected(mySettings.isAddDebugInfoEnabled());
-    myAdditionalErlcArgumentsEditor.setText(argumentsString(mySettings.getAdditionalErlcArguments()));
+    if (!rebarPathIsSet && myUseRebarCompilerCheckBox.isSelected()) {
+      myRestoreUseRebarCompiler = true;
+      setUseRebarCompiler(false);
+    }
+    else if (rebarPathIsSet && myRestoreUseRebarCompiler) {
+      myRestoreUseRebarCompiler = false;
+      setUseRebarCompiler(true);
+    }
   }
 
   @Override
   public void apply() {
-    mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
+    mySettings.setUseRebarCompilerEnabled(isUseRebarCompilerSelected());
     mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
     mySettings.setAdditionalErlcArguments(arguments(myAdditionalErlcArgumentsEditor.getText()));
   }
 
   @Override
   public boolean isModified() {
-    return myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled() ||
+    return isUseRebarCompilerSelected() != mySettings.isUseRebarCompilerEnabled() ||
            myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled() ||
            !StringUtil.equals(myAdditionalErlcArgumentsEditor.getText(),
                               argumentsString(mySettings.getAdditionalErlcArguments()));
+  }
+
+  // The check box is unticked while no rebar path is set; the choice it held is kept until a path is set again
+  private boolean isUseRebarCompilerSelected() {
+    return myUseRebarCompilerCheckBox.isSelected() || myRestoreUseRebarCompiler;
   }
 
   private void setUseRebarCompiler(boolean useRebarCompiler) {

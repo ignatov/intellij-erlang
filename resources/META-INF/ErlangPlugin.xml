@@ -25,6 +25,12 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <registryKey key="erlang.macro.layer" defaultValue="true" restartRequired="false"
+                     description="Erlang: the macro expansion layer (references, completion, rename and error checks in code that uses macros). Off gives the plugin's behaviour without the layer."/>
+        <!-- macro layer: no syntax error in a form whose macro expansion parses -->
+        <highlightErrorFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerErrorFilter"/>
+        <!-- macro layer: names inside -define bodies, resolved through the expanded uses of the macro -->
+        <gotoDeclarationHandler implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerGotoDeclarationHandler"/>
         <createFromTemplateHandler implementation="org.intellij.erlang.template.ErlangCreateFromTemplateHandler"/>
         <internalFileTemplate name="Erlang Module"/>
         <internalFileTemplate name="Erlang Header"/>
@@ -53,9 +59,9 @@
 
         <!-- file types -->
         <fileType language="Erlang" name="Erlang" extensions="erl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="MODULE"/>
-        <fileType language="Erlang" name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
-        <fileType language="Erlang" name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
-        <fileType language="Erlang" name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
+        <fileType name="Erlang Header" extensions="hrl" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="HEADER"/>
+        <fileType name="Erlang/OTP app" extensions="app;app.src" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="APP"  patterns="*.app.src;*.app"/>
+        <fileType name="Erlang Terms" extensions="config;routes;rel" implementationClass="org.intellij.erlang.ErlangFileType" fieldName="TERMS"/>
 
         <lang.formatter language="Erlang" implementationClass="org.intellij.erlang.formatter.ErlangFormattingModelBuilder"/>
         <iconProvider implementation="org.intellij.erlang.icons.ErlangIconProvider"/>
@@ -73,6 +79,8 @@
         <lang.refactoringSupport language="Erlang" implementationClass="org.intellij.erlang.refactoring.ErlangRefactoringSupportProvider"/>
         <lang.namesValidator language="Erlang" implementationClass="org.intellij.erlang.ErlangNamesValidator"/>
         <refactoring.safeDeleteProcessor implementation="org.intellij.erlang.refactoring.ErlangSafeDeleteProcessor" />
+        <!-- macro layer: completion in a part of a form that the main tree lost, through the expanded copy -->
+        <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor" id="ErlangMacroLayerCompletion" order="first"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangVariableCompletionContributor" id="ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangCompletionContributor" id="ErlangCompletion" order="after ErlangVariableCompletion"/>
         <completion.contributor language="Erlang" implementationClass="org.intellij.erlang.completion.ErlangKeywordsCompletionContributor" order="before ErlangCompletion"/>
@@ -81,6 +89,10 @@
         <renameInputValidator implementation="org.intellij.erlang.rename.ErlangRenameInputValidator"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameVariableProcessor"/>
         <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameAtomProcessor"/>
+        <!-- the definitions of a macro in the branches of a conditional are renamed together -->
+        <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangRenameMacroProcessor"/>
+        <!-- macro layer: names made or used by macros, and their conflicts -->
+        <renamePsiElementProcessor implementation="org.intellij.erlang.rename.ErlangMacroLayerRenameProcessor"/>
 
         <psi.referenceContributor implementation="org.intellij.erlang.ErlangReferenceContributor" language="Erlang"/>
 
@@ -167,6 +179,8 @@
         <actionPromoter implementation="org.intellij.erlang.console.ErlangConsoleActionPromoter"/>
 
         <findUsagesHandlerFactory implementation="org.intellij.erlang.search.ErlangFindUsagesHandlerFactory"/>
+        <!-- macro layer: builds the copies of files just typed in before a reference search reads answers -->
+        <referencesSearch implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerReferencesSearcher" order="first"/>
         <referencesSearch implementation="org.intellij.erlang.search.ErlangAtomSearch"/>
         <targetElementEvaluator language="Erlang" implementationClass="org.intellij.erlang.search.ErlangTargetElementEvaluator"/>
 
@@ -290,6 +304,9 @@
                          implementationClass="org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection"/>
 
         <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator"/>
+        <externalAnnotator language="Erlang" implementationClass="org.intellij.erlang.macrolayer.ErlangMacroLayerExpansionErrorAnnotator"/>
+        <!-- macro layer: no external-tool pass (and its 300 ms queue) for a file where the expansion-error pass has nothing to check -->
+        <daemon.externalAnnotatorsFilter implementation="org.intellij.erlang.macrolayer.ErlangMacroLayerExternalAnnotatorsFilter"/>
         <notificationGroup id="Dialyzer-based inspections" displayType="NONE"/>
 
         <spellchecker.bundledDictionaryProvider implementation="org.intellij.erlang.spellchecker.ErlangBundledDictionaryProvider"/>
@@ -318,6 +335,37 @@
         </intentionAction>
         <additionalTextAttributes scheme="Default" file="colorSchemes/ErlangDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/ErlangDarcula.xml"/>
+    </extensions>
+    <!-- Opt-in usage statistics: one summary of counts a day, see PRIVACY.md -->
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="org.intellij.erlang.statistics.ErlangUsageListeners$Startup"/>
+    </extensions>
+    <applicationListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageActionListener"
+                  topic="com.intellij.openapi.actionSystem.ex.AnActionListener"/>
+    </applicationListeners>
+    <projectListeners>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Completion"
+                  topic="com.intellij.codeInsight.lookup.LookupManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Execution"
+                  topic="com.intellij.execution.ExecutionListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Debugger"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$Build"
+                  topic="com.intellij.task.ProjectTaskListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$StructureView"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$LiveTemplates"
+                  topic="com.intellij.codeInsight.template.TemplateManagerListener"/>
+        <listener class="org.intellij.erlang.statistics.ErlangUsageListeners$OpenedFiles"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <!-- the notification about a new version of the plugin waits for an opened Erlang file -->
+        <listener class="org.intellij.erlang.update.ErlangUpdateNoticeListener"
+                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+    <!-- The notification about a new version of the plugin, with an action that installs it -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Erlang plugin updates" displayType="STICKY_BALLOON"/>
     </extensions>
     <actions>
         <action id="Erlang.NewErlangFile" class="org.intellij.erlang.actions.CreateErlangFileAction"

@@ -1,0 +1,2 @@
+foo() -> 
+  <caret>ok, ok.

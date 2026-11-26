@@ -28,10 +28,13 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.io.FileUtil;
@@ -40,7 +43,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.PathUtil;
 import com.intellij.util.ResourceUtil;
-import com.intellij.util.SlowOperations;
+import com.intellij.util.concurrency.ThreadingAssertions;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -60,11 +63,13 @@ import org.intellij.erlang.debugger.xdebug.xvalue.ErlangXValueFactory;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.runconfig.ErlangRunConfigurationBase;
 import org.intellij.erlang.runconfig.ErlangRunningState;
-import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.intellij.erlang.utils.ErlangModulesUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
 
 import java.io.*;
 import java.util.*;
@@ -83,9 +88,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   private final XBreakpointHandler<?>[] myBreakpointHandlers = new XBreakpointHandler[]{new ErlangLineBreakpointHandler(this)};
   private final ConcurrentHashMap<ErlangSourcePosition, XLineBreakpoint<ErlangLineBreakpointProperties>> myPositionToLineBreakpointMap =
     new ConcurrentHashMap<>();
-  private XDebuggerEvaluator.XEvaluationCallback myEvalCallback = null;
+  // The temporary breakpoint of Run to Cursor, removed at the next suspend unless a user breakpoint is on its line then.
+  // The interpreter has one breakpoint per line, which a user breakpoint added there meanwhile shares.
+  private final Object myRunToPositionLock = new Object();
+  private ErlangSourcePosition myRunToPosition; // guarded by myRunToPositionLock
+  // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
+  // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
+  private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
+  private volatile boolean myStartFailed = false;
 
-  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env) throws ExecutionException {
+  public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env, @NotNull SetUp setUp) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
     super(session);
     mySession = session;
@@ -99,22 +111,42 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
 
     try {
-      //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
       myDebuggerNode = new ErlangDebuggerNode(this);
     }
     catch (ErlangDebuggerNodeException e) {
       throw new ExecutionException(e);
     }
 
-    // it's important to set modules to interpret before running the debug target
-    SlowOperations.allowSlowOperations(this::setModulesToInterpret);
-    //TODO split running debug target and debugger process spawning
-    myErlangProcessHandler = runDebugTarget();
+    try {
+      // it's important to set modules to interpret before running the debug target
+      myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
+      //TODO split running debug target and debugger process spawning
+      myErlangProcessHandler = runDebugTarget(setUp);
+    }
+    catch (ExecutionException | RuntimeException | Error e) {
+      // the session is not created, so nothing else would stop the debugger node
+      myStartFailed = true;
+      myDebuggerNode.stop();
+      throw e;
+    }
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
                                                          runConfig.getConfigurationModule().getModule(),
                                                          runConfig.isUseTestCodePath());
+  }
+
+  @TestOnly
+  ErlangXDebugProcess(@NotNull XDebugSession session,
+                      @NotNull ErlangDebuggerNode debuggerNode,
+                      @NotNull ErlangDebugLocationResolver locationResolver) {
+    super(session);
+    mySession = session;
+    myExecutionEnvironment = null;
+    myRunningState = null;
+    myDebuggerNode = debuggerNode;
+    myErlangProcessHandler = null;
+    myLocationResolver = locationResolver;
   }
 
   @NotNull
@@ -127,15 +159,101 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
                                               @NotNull ErlangTraceElement traceElement) {
     // need to pause the debugging session otherwise the callback might get invalidated
     mySession.pause();
-    myEvalCallback = callback;
-    myDebuggerNode.evaluate(expression, traceElement);
+    PendingEvaluation evaluation = new PendingEvaluation(myDebuggerNode.getLastSuspendedPid(), expression, callback, traceElement);
+    myEvaluations.addLast(evaluation);
+    if (myEvaluations.size() == 1) {
+      send(evaluation);
+    }
   }
 
   @Override
   public synchronized void handleEvaluationResponse(OtpErlangObject response) {
-    if (myEvalCallback != null) {
-      myEvalCallback.evaluated(ErlangXValueFactory.create(response));
-      mySession.resume();
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        send(next);
+      }
+      // the evaluation is already off the queue: an overflow must fail it here, not take the next one
+      try {
+        evaluation.callback().evaluated(ErlangXValueFactory.create(response));
+      }
+      catch (StackOverflowError e) {
+        evaluation.callback().errorOccurred("The result is nested too deeply to show");
+      }
+      // resuming before the queued evaluations are answered would let them reach a running process
+      if (next == null) {
+        mySession.resume();
+      }
+    }
+  }
+
+  // An evaluation for a process that is no longer at a breakpoint gets no answer, so it must not keep the queue.
+  // A process that is evaluating an expression at its breakpoint is reported as running, or as waiting in a receive
+  // of interpreted code; its answer is on the way.
+  @NotNull
+  private synchronized List<PendingEvaluation> dropEvaluationsOfProcessesNotAtBreak(@NotNull List<ErlangProcessSnapshot> snapshots) {
+    PendingEvaluation sent = myEvaluations.peekFirst();
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+      PendingEvaluation evaluation = iterator.next();
+      boolean atBreak = ContainerUtil.exists(snapshots, snapshot -> snapshot.getPid().equals(evaluation.pid()) &&
+                                                                   ("break".equals(snapshot.getStatus()) ||
+                                                                    "running".equals(snapshot.getStatus()) ||
+                                                                    "waiting".equals(snapshot.getStatus())));
+      if (!atBreak) {
+        iterator.remove();
+        dropped.add(evaluation);
+      }
+    }
+    PendingEvaluation head = myEvaluations.peekFirst();
+    if (head != null && head != sent) {
+      send(head);
+    }
+    return dropped;
+  }
+
+  // An evaluation that is queued but not sent would reach the process after it has been resumed or stepped, and kill it.
+  private void failUnsentEvaluationsOfLastSuspendedProcess() {
+    List<PendingEvaluation> dropped = new ArrayList<>();
+    synchronized (this) {
+      OtpErlangPid pid = myDebuggerNode.getLastSuspendedPid();
+      PendingEvaluation sent = myEvaluations.peekFirst();
+      for (Iterator<PendingEvaluation> iterator = myEvaluations.iterator(); iterator.hasNext(); ) {
+        PendingEvaluation evaluation = iterator.next();
+        if (evaluation != sent && evaluation.pid().equals(pid)) {
+          iterator.remove();
+          dropped.add(evaluation);
+        }
+      }
+    }
+    for (PendingEvaluation evaluation : dropped) {
+      evaluation.callback().errorOccurred("The process has been resumed");
+    }
+  }
+
+  private void send(@NotNull PendingEvaluation evaluation) {
+    myDebuggerNode.evaluate(evaluation.pid(), evaluation.expression(), evaluation.traceElement());
+  }
+
+  private record PendingEvaluation(@NotNull OtpErlangPid pid,
+                                   @NotNull String expression,
+                                   @NotNull XDebuggerEvaluator.XEvaluationCallback callback,
+                                   @NotNull ErlangTraceElement traceElement) {
+  }
+
+  @Override
+  public synchronized void evaluationFailed(String errorMessage) {
+    PendingEvaluation evaluation = myEvaluations.pollFirst();
+    if (evaluation != null) {
+      PendingEvaluation next = myEvaluations.peekFirst();
+      if (next != null) {
+        send(next);
+      }
+      evaluation.callback().errorOccurred(errorMessage);
+      if (next == null) {
+        mySession.resume();
+      }
     }
   }
 
@@ -171,6 +289,19 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void failedToSetBreakpoint(String module, int line, String errorMessage) {
+    boolean runToPositionFailed;
+    synchronized (myRunToPositionLock) {
+      runToPositionFailed = myRunToPosition != null && myRunToPosition.getErlangModuleName().equals(module) &&
+                            myRunToPosition.getLine() == line;
+      if (runToPositionFailed) {
+        myRunToPosition = null;
+      }
+    }
+    if (runToPositionFailed) {
+      // the process has been resumed already, so it runs on as after Resume Program
+      getSession().reportMessage("Run to Cursor cannot stop at line " + (line + 1) + " of " + module + ": " + errorMessage,
+                                 MessageType.WARNING);
+    }
     ErlangSourcePosition sourcePosition = ErlangSourcePosition.create(myLocationResolver, module, line);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(sourcePosition);
     if (breakpoint != null) {
@@ -184,12 +315,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void breakpointReached(final OtpErlangPid pid, List<ErlangProcessSnapshot> snapshots) {
+    for (PendingEvaluation evaluation : dropEvaluationsOfProcessesNotAtBreak(snapshots)) {
+      evaluation.callback().errorOccurred("The process is no longer at a breakpoint");
+    }
     ErlangProcessSnapshot processInBreakpoint = ContainerUtil.find(snapshots, erlangProcessSnapshot -> erlangProcessSnapshot.getPid().equals(pid));
     assert processInBreakpoint != null;
     ErlangSourcePosition breakPosition = ErlangSourcePosition.create(myLocationResolver, processInBreakpoint);
     XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint = getLineBreakpoint(breakPosition);
     ErlangSuspendContext suspendContext = new ErlangSuspendContext(this, pid, snapshots);
     if (breakpoint == null) {
+      removeRunToPositionBreakpoint();
       getSession().positionReached(suspendContext);
     }
     else {
@@ -197,11 +332,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       if (!shouldSuspend) {
         resume(suspendContext);
       }
+      else {
+        removeRunToPositionBreakpoint();
+      }
     }
   }
 
   @Override
   public void debuggerStopped() {
+    // the start error is already reported, and a session without a debug process has nothing to stop
+    if (myStartFailed) return;
     getSession().reportMessage("Debug process stopped", MessageType.INFO);
     getSession().stop();
   }
@@ -211,10 +351,50 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     return sourcePosition != null ? myPositionToLineBreakpointMap.get(sourcePosition) : null;
   }
 
-  private void setModulesToInterpret() {
-    Project project = myExecutionEnvironment.getProject();
+  // the file I/O and the scan of the sources of a session, which ErlangDebugRunner does before the platform creates
+  // the debug process on the EDT
+  @NotNull
+  static SetUp prepare(@NotNull ExecutionEnvironment environment, @NotNull ErlangRunningState runningState) throws ExecutionException {
+    ThreadingAssertions.assertBackgroundThread();
+    ErlangRunConfigurationBase<?> runConfiguration = (ErlangRunConfigurationBase<?>) environment.getRunProfile();
+    // a write action cancels a non-blocking read action, which then starts again, instead of waiting for it
+    List<String> moduleSourcePaths =
+      ReadAction.nonBlocking(() -> getModulesToInterpret(environment.getProject(), runConfiguration)).executeSynchronously();
+    List<String> modulesCodePath = ReadAction.computeBlocking(runningState::getModulesCodePath);
+    String beamSubdir = ReadAction.computeBlocking(() -> resolveBeamDirectory(runningState.getModule()));
+    File beamsDirectory = setUpErlangDebuggerCodePath(beamSubdir);
+    List<File> codePathDirectories;
+    try {
+      codePathDirectories = runningState.createCodePathDirectories();
+    }
+    catch (ExecutionException | RuntimeException e) {
+      FileUtil.delete(beamsDirectory);
+      throw e;
+    }
+    List<String> codePath = new ArrayList<>();
+    for (File directory : codePathDirectories) {
+      codePath.add("-pa");
+      codePath.add(PathUtil.toSystemIndependentName(directory.getPath()));
+    }
+    codePath.addAll(modulesCodePath);
+    return new SetUp(beamsDirectory, codePathDirectories, codePath, moduleSourcePaths);
+  }
+
+  // what prepare() made for one session; the session owns the directories once it is started
+  record SetUp(@NotNull File beamsDirectory,
+               @NotNull List<File> codePathDirectories,
+               @NotNull List<String> codePath,
+               @NotNull List<String> moduleSourcePaths) {
+    void deleteDirectories() {
+      ThreadingAssertions.assertBackgroundThread();
+      FileUtil.delete(beamsDirectory);
+      codePathDirectories.forEach(FileUtil::delete);
+    }
+  }
+
+  @NotNull
+  private static List<String> getModulesToInterpret(@NotNull Project project, @NotNull ErlangRunConfigurationBase<?> runConfiguration) {
     Collection<ErlangFile> erlangModules = ErlangModulesUtil.getErlangModules(project);
-    ErlangRunConfigurationBase<?> runConfiguration = getRunConfiguration();
     if (runConfiguration.isUseTestCodePath()) {
       HashSet<ErlangFile> erlangTestModules = new HashSet<>();
       for (Module module : runConfiguration.getModules()) {
@@ -226,12 +406,13 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     Set<String> notToInterpret = runConfiguration.getDebugOptions().getModulesNotToInterpret();
     List<String> moduleSourcePaths = new ArrayList<>(erlangModules.size());
     for (ErlangFile erlangModule : erlangModules) {
+      ProgressManager.checkCanceled();
       VirtualFile file = erlangModule.getVirtualFile();
       if (file != null && !notToInterpret.contains(file.getNameWithoutExtension())) {
         moduleSourcePaths.add(PathUtil.getLocalPath(file));
       }
     }
-    myDebuggerNode.interpretModules(moduleSourcePaths);
+    return moduleSourcePaths;
   }
 
   @NotNull
@@ -274,32 +455,67 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void startStepOver(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOver();
   }
 
   @Override
   public void startStepInto(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepInto();
   }
 
   @Override
   public void startStepOut(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    ErlangUsageCounters.count(getSession().getProject(), ErlangUsageKey.DEBUG_STEP);
     myDebuggerNode.stepOut();
   }
 
   @Override
   public void stop() {
     myDebuggerNode.stop();
+    List<PendingEvaluation> pending;
+    synchronized (this) {
+      pending = new ArrayList<>(myEvaluations);
+      myEvaluations.clear();
+    }
+    for (PendingEvaluation evaluation : pending) {
+      evaluation.callback().errorOccurred("The debug session has stopped");
+    }
   }
 
   @Override
   public void resume(@Nullable XSuspendContext context) {
+    failUnsentEvaluationsOfLastSuspendedProcess();
     myDebuggerNode.resume();
   }
 
   @Override
   public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-    //TODO implement me
+    failUnsentEvaluationsOfLastSuspendedProcess();
+    removeRunToPositionBreakpoint();
+    ErlangSourcePosition target = ErlangSourcePosition.create(position);
+    synchronized (myRunToPositionLock) {
+      // a user breakpoint on the line stops the process there already, and must outlive this run
+      if (!myPositionToLineBreakpointMap.containsKey(target)) {
+        myRunToPosition = target;
+        myDebuggerNode.setBreakpoint(target.getErlangModuleName(), target.getLine());
+      }
+    }
+    myDebuggerNode.resume();
+  }
+
+  private void removeRunToPositionBreakpoint() {
+    synchronized (myRunToPositionLock) {
+      ErlangSourcePosition target = myRunToPosition;
+      myRunToPosition = null;
+      if (target != null && !myPositionToLineBreakpointMap.containsKey(target)) {
+        myDebuggerNode.removeBreakpoint(target.getErlangModuleName(), target.getLine());
+      }
+    }
   }
 
   @Nullable
@@ -311,15 +527,23 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   void addBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
-    myPositionToLineBreakpointMap.put(breakpointPosition, breakpoint);
-    myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    synchronized (myRunToPositionLock) {
+      myPositionToLineBreakpointMap.put(breakpointPosition, breakpoint);
+      // a second int:break on the line of the temporary breakpoint fails with break_exists
+      if (breakpointPosition.equals(myRunToPosition)) return;
+      myDebuggerNode.setBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    }
   }
 
   void removeBreakpoint(XLineBreakpoint<ErlangLineBreakpointProperties> breakpoint) {
     ErlangSourcePosition breakpointPosition = getErlangSourcePosition(breakpoint);
     if (breakpointPosition == null) return;
-    myPositionToLineBreakpointMap.remove(breakpointPosition);
-    myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    synchronized (myRunToPositionLock) {
+      myPositionToLineBreakpointMap.remove(breakpointPosition);
+      // the temporary breakpoint still needs it, and removes it at the next suspend
+      if (breakpointPosition.equals(myRunToPosition)) return;
+      myDebuggerNode.removeBreakpoint(breakpointPosition.getErlangModuleName(), breakpointPosition.getLine());
+    }
   }
 
   @Nullable
@@ -335,16 +559,16 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   }
 
   @NotNull
-  private OSProcessHandler runDebugTarget() throws ExecutionException {
-    OSProcessHandler erlangProcessHandler;
+  private OSProcessHandler runDebugTarget(@NotNull SetUp setUp) throws ExecutionException {
+    OSProcessHandler erlangProcessHandler = null;
     LOG.debug("Preparing to run debug target.");
     try {
       GeneralCommandLine commandLine = new GeneralCommandLine();
       myRunningState.setExePath(commandLine);
       myRunningState.setWorkDirectory(commandLine);
       myRunningState.setEnvironment(commandLine);
-      setUpErlangDebuggerCodePath(commandLine);
-      addDebugTargetParameters(commandLine, myRunningState, myDebuggerNode.getLocalDebuggerPort());
+      commandLine.addParameters("-pa", setUp.beamsDirectory().getPath());
+      addDebugTargetParameters(commandLine, myRunningState, setUp.codePath(), myDebuggerNode.getLocalDebuggerPort());
 
       LOG.debug("Running debugger process. Command line (platform-independent): ");
       LOG.debug(commandLine.getCommandLineString());
@@ -352,6 +576,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
       Process process = commandLine.createProcess();
       erlangProcessHandler = new OSProcessHandler(process, commandLine.getCommandLineString());
       stopDebuggerNodeOnTermination(erlangProcessHandler, myDebuggerNode);
+      deleteBeamsOnTermination(erlangProcessHandler, setUp);
 
       LOG.debug("Debugger process started.");
 
@@ -373,8 +598,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
       }
     }
-    catch (ExecutionException e) {
+    catch (ExecutionException | RuntimeException | Error e) {
       LOG.debug("Failed to run debug target.", e);
+      if (erlangProcessHandler != null) {
+        // the handler is not start-notified yet, so destroyProcess() would not kill it
+        erlangProcessHandler.getProcess().destroy();
+      }
       throw e;
     }
     LOG.debug("Debug target should now be running.");
@@ -383,8 +612,9 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   static void addDebugTargetParameters(@NotNull GeneralCommandLine commandLine,
                                        @NotNull ErlangRunningState runningState,
+                                       @NotNull List<String> codePath,
                                        int debuggerPort) throws ExecutionException {
-    runningState.setCodePath(commandLine);
+    commandLine.addParameters(codePath);
     runningState.setErlangFlags(commandLine);
     commandLine.addParameters("-run", "debugnode", "main", String.valueOf(debuggerPort));
     runningState.setNoShellMode(commandLine);
@@ -402,29 +632,42 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     });
   }
 
-  private void setUpErlangDebuggerCodePath(GeneralCommandLine commandLine) throws ExecutionException {
+  // the beams are copied for one session, so they must not stay in the temp directory after it
+  static void deleteBeamsOnTermination(@NotNull ProcessHandler processHandler, @NotNull SetUp setUp) {
+    processHandler.addProcessListener(new ProcessListener() {
+      @Override
+      public void processTerminated(@NotNull ProcessEvent event) {
+        // the listeners of the session and the console come after this one
+        ApplicationManager.getApplication().executeOnPooledThread(setUp::deleteDirectories);
+      }
+    });
+  }
+
+  @NotNull
+  private static File setUpErlangDebuggerCodePath(@NotNull String beamSubdir) throws ExecutionException {
     LOG.debug("Setting up debugger environment.");
+    File tempDirectory = null;
     try {
       String[] beams = {"debugnode.beam", "remote_debugger.beam", "remote_debugger_listener.beam", "remote_debugger_notifier.beam"};
-      File tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
+      tempDirectory = FileUtil.createTempDirectory("intellij_erlang_debugger_", null);
       LOG.debug("Debugger beams will be put to: " + tempDirectory.getPath());
-      String beamSubdir = resolveBeamDirectory();
       LOG.debug("Using beam files from: " + beamSubdir + " directory");
       for (String beam : beams) {
         copyBeamTo(beamSubdir, beam, tempDirectory);
       }
       LOG.debug("Debugger beams were copied successfully.");
-      commandLine.addParameters("-pa", tempDirectory.getPath());
+      return tempDirectory;
     }
     catch (IOException e) {
+      if (tempDirectory != null) {
+        FileUtil.delete(tempDirectory);
+      }
       throw new ExecutionException("Failed to setup debugger environment: " + e.getMessage(), e);
     }
   }
 
-  private @NotNull String resolveBeamDirectory() {
-    ErlangSdkRelease release = ErlangSdkType.getRelease(myRunningState.getModule());
-    if (release.isNewerOrEqualTo(ErlangSdkRelease.V_27_0)) return "otp_27_plus";
-    return "otp_pre_27";
+  private static @NotNull String resolveBeamDirectory(@NotNull Module module) {
+    return ErlangSdkType.getRelease(module).getBundledBeamDirectory();
   }
 
   private static void copyBeamTo(String prefix, String beamName, File directory) throws IOException {

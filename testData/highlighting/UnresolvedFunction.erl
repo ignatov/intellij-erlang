@@ -24,7 +24,7 @@ op() -> erlang:'<warning>=</warning>'(3, 3),
   erlang:'<warning>orelse</warning>'(1, 2),
   'erlang':'<warning>-</warning>'(1, 1, 1),
   fun erlang:'-'/1,
-  fun erlang:'bnot'/2,
+  fun erlang:'bnot'/1,
   fun erlang:'xor'/2,
   fun erlang:'++'/2,
   fun 'erlang':'div'/2.

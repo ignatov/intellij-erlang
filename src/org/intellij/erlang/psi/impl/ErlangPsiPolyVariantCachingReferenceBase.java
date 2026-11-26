@@ -20,6 +20,8 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPolyVariantReferenceBase;
 import com.intellij.psi.impl.source.resolve.ResolveCache;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElement> extends PsiPolyVariantReferenceBase<T> {
@@ -33,9 +35,25 @@ public abstract class ErlangPsiPolyVariantCachingReferenceBase<T extends PsiElem
   @Nullable
   @Override
   public final PsiElement resolve() {
-    return getElement().isValid()
-           ? ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false)
-           : null;
+    if (!getElement().isValid()) return null;
+    PsiElement result = ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
+    // When master's (cached) path finds nothing, ask the macro expansion layer. Its answer is cached in the
+    // layer's copy, not in the ResolveCache, so a "no copy yet" answer on the UI thread is not kept.
+    if (result != null && !preferLayerAnswer(result)) return result;
+    PsiElement layerAnswer = ErlangMacroLayer.resolveFallback(this);
+    return layerAnswer != null ? layerAnswer : result;
+  }
+
+  /** Master's answer is one that the macro layer's answer, if there is one, replaces. */
+  protected boolean preferLayerAnswer(@NotNull PsiElement masterAnswer) {
+    return false;
+  }
+
+  /** Master's answer alone (cached), without the macro layer's. */
+  @Nullable
+  protected final PsiElement resolveWithoutLayer() {
+    if (!getElement().isValid()) return null;
+    return ResolveCache.getInstance(getElement().getProject()).resolveWithCaching(this, MY_RESOLVER, false, false);
   }
 
   @Nullable

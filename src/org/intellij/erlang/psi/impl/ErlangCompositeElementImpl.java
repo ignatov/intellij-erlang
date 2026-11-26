@@ -20,9 +20,12 @@ import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.ResolveState;
 import com.intellij.psi.scope.PsiScopeProcessor;
 import com.intellij.usageView.UsageViewUtil;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerHosts;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +40,18 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   @Override
   public String toString() {
     return getNode().getElementType().toString();
+  }
+
+  /**
+   * Also the references of the bare macro uses the element holds ({@link ErlangBareMacroReference}) and of its
+   * tokens that have a reference only in the expanded copy ({@link ErlangMacroLayerTokenReference}).
+   */
+  @Override
+  public PsiReference @NotNull [] getReferences() {
+    PsiReference[] own = super.getReferences();
+    // most elements host nothing: one look-up, without either find
+    if (!ErlangMacroLayerHosts.mayHostAny(this)) return own;
+    return ErlangMacroLayerTokenReference.append(this, ErlangBareMacroReference.append(this, own));
   }
 
   @Override

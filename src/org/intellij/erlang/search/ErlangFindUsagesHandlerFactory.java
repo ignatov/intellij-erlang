@@ -22,6 +22,8 @@ import com.intellij.find.findUsages.FindUsagesHandlerFactory;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.psi.PsiElement;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerFindUsages;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,12 +31,13 @@ import org.jetbrains.annotations.Nullable;
 public class ErlangFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
   @Override
   public boolean canFindUsages(@NotNull PsiElement element) {
-    return element instanceof ErlangQAtom;
+    return element instanceof ErlangQAtom || ErlangMacroLayer.isNameMadeByMacro(element);
   }
 
   @Nullable
   @Override
   public FindUsagesHandler createFindUsagesHandler(@NotNull final PsiElement element, boolean forHighlightUsages) {
+    if (ErlangMacroLayer.isNameMadeByMacro(element)) return ErlangMacroLayerFindUsages.handlerForNameMadeByMacro(element);
     if (element instanceof ErlangQAtom) {
       return new FindUsagesHandler(element) {
         @NotNull
