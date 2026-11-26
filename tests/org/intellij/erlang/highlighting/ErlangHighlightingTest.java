@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
@@ -344,6 +345,15 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNoUnusedTypeInHeader() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
+  }
+
+  // issue 1684: a header whose extension is not lowercase is still an Erlang header
+  public void testNoUnusedTypeInUppercaseHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByFiles("UnusedTypeInUppercaseHeader.HRL", "unused_type_in_uppercase_header_user.erl");
+    assertEquals(ErlangFileType.HEADER, myFixture.getFile().getFileType());
+    setUpInspections(myFixture);
+    myFixture.checkHighlighting(true, false, false);
   }
 
   // issue 1561
