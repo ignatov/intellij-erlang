@@ -1267,8 +1267,14 @@ public class ErlangPsiImplUtil {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
+      // the earlier part of the clause that holds the place is already walked; the rest of it comes later than the place
+      if (c == lastParent) continue;
       ErlangClauseBody clauseBody = c.getClauseBody();
-      if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
+      boolean found = clauseBody != null && !processDeclarationRecursive(clauseBody, processor, state);
+      // a case met as an earlier sibling also exports the variables bound in its clause patterns
+      ErlangArgumentDefinition pattern = c.getArgumentDefinition();
+      if (!found && lastParent == null && pattern != null) found = !processDeclarationRecursive(pattern, processor, state);
+      result &= !found;
     }
     return result;
   }
