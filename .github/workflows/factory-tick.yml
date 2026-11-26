@@ -5,7 +5,8 @@ name: Factory tick
 # repository until 2026-11-17; it runs here because the Actions minutes of a public repository are free.
 #
 # Started by factory-timer.yml (the clock), factory-wake.yml (a push to master, an owner's "/" command in a pull
-# request), a person (workflow_dispatch) and an hourly schedule, the backstop for a broken timer chain.
+# request), a person (workflow_dispatch), factory-rescue.yml when no tick ran for 40 minutes, and an hourly schedule;
+# the last two are the backstop for a broken timer chain.
 # It acts (--live) only when the run is scheduled or was started with "live", the repository variable
 # FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is set. Otherwise it is a dry run that only reads.
 # A live tick also needs the deploy gate: when the code of the private main changed since its tests last passed
@@ -28,7 +29,8 @@ name: Factory tick
 # Secrets of factory-dispatch: FACTORY_TOKEN (the maintainer's token for this repository and the agent tasks API,
 # as in the private repository) and, optionally, FACTORY_DESK_TOKEN for the private repository (clone, push,
 # cards and the panel); when it is empty, FACTORY_TOKEN is used for the private repository too. FACTORY_LOG_TOKEN
-# (optional) goes only to the step "Tick"; see there.
+# (optional) goes only to the step "Tick"; see there. AMPLITUDE_API_KEY and AMPLITUDE_SECRET_KEY (optional) go only to
+# the step "Tick" too: the dispatcher reads the plugin's usage statistics back from Amplitude with them.
 
 on:
   workflow_dispatch:
@@ -49,7 +51,8 @@ defaults:
 jobs:
   tick:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # The deploy gate takes up to 10 minutes and the retries of "Arm the timer for the next tick" up to 8.
+    timeout-minutes: 30
     # Re-arming the timer: GITHUB_TOKEN starts factory-timer.yml with workflow_dispatch.
     permissions:
       actions: write
@@ -251,6 +254,11 @@ jobs:
           # Optional: an OAuth token of the GitHub CLI, only for reading session logs on the Copilot API host, which
           # rejects personal access tokens. Without it the dispatcher cannot read what a review session concluded.
           FACTORY_LOG_TOKEN: ${{ secrets.FACTORY_LOG_TOKEN }}
+          # Optional: the API key and the secret key of the Amplitude project of the plugin's usage statistics, only for
+          # the Export API of Amplitude (analytics.eu.amplitude.com), once a day. Without them the dispatcher reads no
+          # usage (dispatcher/usage.py of the private repository).
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
           CARD_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
           PYTHONUNBUFFERED: '1'
           MODE: ${{ steps.mode.outputs.mode }}
@@ -312,6 +320,12 @@ jobs:
             exit 0
           fi
           git add dispatcher/state.json dispatcher/journal.csv
+          # The monthly archives of finished items that the dispatcher moves out of the state. The state keeps
+          # only a stub of each such item, so the state must never be committed without them: a failure here stops
+          # the step, as for the state itself. The folder does not exist until the dispatcher makes it.
+          if [ -e dispatcher/data ]; then
+            git add -- dispatcher/data
+          fi
           # What the driver of the robustness sweep keeps beside the state: the coverage ledger, the known
           # signatures and the summaries of the collected runs. And what the hypothesis hunt keeps there: its
           # coverage ledger, the hypotheses and the card of each unit, and the issue drafts. And the hash of the
@@ -399,14 +413,41 @@ jobs:
         if: >-
           always() && steps.mode.outputs.mode == 'live' && vars.FACTORY_TIMER == 'true'
           && steps.tick.outcome != 'skipped' && steps.state.outcome == 'success'
+        # Shorter retries than in the timer: this job holds the concurrency group of the tick, and factory-rescue.yml
+        # starts a tick when the timer stays unarmed.
+        timeout-minutes: 10
         env:
           GH_TOKEN: ${{ github.token }}
           PACE: ${{ steps.tick.outputs.pace }}
           REPO: ${{ github.repository }}
+          # 6 tries over about 8 minutes.
+          WAITS: 15 30 60 120 240
         run: |
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
           case "$PACE" in active|idle|settle) ;; *) PACE=idle ;; esac
-          if ! gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
-            echo "::warning::The timer could not be armed; the next tick waits for the hourly schedule or an event."
+          if ! retry gh workflow run factory-timer.yml -R "$REPO" --ref master -f pace="$PACE"; then
+            echo "::warning::The timer could not be armed; the next tick waits for factory-rescue.yml, the hourly schedule or an event."
           fi
 
       - name: Start a build of the hosted console

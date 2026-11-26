@@ -9,7 +9,8 @@ name: Factory timer
 #      minutes otherwise, settle 25 minutes while stale pull requests wait for master to settle); no runner is
 #      used while it waits;
 #   2. the job "wake" starts the next tick, factory-tick.yml of master with live.
-# A new run cancels the one that is still waiting, so there is always one timer.
+# A new run cancels the one that is still waiting, so there is always one timer. When the chain breaks all the same,
+# factory-rescue.yml starts a tick.
 #
 # Both the tick and this timer start each other with their own GITHUB_TOKEN: workflow_dispatch is one of the two
 # events that this token may start a run with. No secret is used here.
@@ -46,7 +47,8 @@ jobs:
   wake:
     needs: wait
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    # The retries of "Start the next tick" take up to 16 minutes.
+    timeout-minutes: 20
     permissions:
       actions: write
     steps:
@@ -68,8 +70,32 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          # 7 tries over about 16 minutes.
+          WAITS: 15 30 60 120 240 480
         run: |
-          if ! gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
+          # Runs a gh command again when GitHub failed on its side (HTTP 5xx, 408, 429, a rate limit) or the network
+          # did, after each wait of WAITS (seconds). Any other HTTP 4xx (a bad token, no such workflow) is final.
+          # On 2026-11-25 one HTTP 500 of a dispatch stopped the clock for 1.5 hours. The same function is in
+          # factory-tick.yml, factory-timer.yml, factory-wake.yml and factory-rescue.yml; scripts/factory tests them.
+          retry() {
+            local wait out
+            for wait in $WAITS last; do
+              if out=$("$@" 2>&1); then
+                [ -z "$out" ] || printf '%s\n' "$out"
+                return 0
+              fi
+              printf '%s\n' "$out"
+              if grep -Eq 'HTTP 4[0-9]{2}|could not find any workflows' <<< "$out" \
+                && ! grep -Eqi 'HTTP (408|429)|rate limit' <<< "$out"; then
+                echo "A final error: no retry."
+                return 1
+              fi
+              [ "$wait" != last ] || return 1
+              echo "Retrying in $wait seconds."
+              sleep "$wait"
+            done
+          }
+          if ! retry gh workflow run factory-tick.yml -R "$REPO" --ref master -f live=true; then
             echo "::error::The next tick could not be started."
             exit 1
           fi

@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>*Lexer: accept digit separators in based integers (also in the base) and the \^?, \^a, \xHH, \x{...} and generic \C escapes… (<a href="https://github.com/ignatov/intellij-erlang/issues/929">#929</a>)</li>
-              <li>Show Usages and Find Usages work from a macro argument that names a function or record (<a href="https://github.com/ignatov/intellij-erlang/pull/1492">#1492</a>)</li>
-              <li>Remove duplicate export now keeps comments and line breaks in the module's export lists (<a href="https://github.com/ignatov/intellij-erlang/pull/1527">#1527</a>)</li>
-              <li>Introduce record field no longer breaks records whose fields contain braces, such as tuple or map defaults (<a href="https://github.com/ignatov/intellij-erlang/pull/1524">#1524</a>)</li>
-              <li>Guards that call ceil, floor, min or max are no longer marked as illegal guard expressions (<a href="https://github.com/ignatov/intellij-erlang/pull/1514">#1514</a>)</li>
-              <li>Format strings with the map key order modifiers ~kp and ~Kp no longer get an "Invalid control sequence" warning (<a href="https://github.com/ignatov/intellij-erlang/pull/1515">#1515</a>)</li>
-              <li>The build now compiles a module after its parse transform or behaviour even when that file is very large (<a href="https://github.com/ignatov/intellij-erlang/pull/1511">#1511</a>)</li>
-              <li>and 9 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1306">full list</a></li>
+              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
+              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
+              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
+              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
+              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
+              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
+              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
             </ul>
         ]]>
     </change-notes>

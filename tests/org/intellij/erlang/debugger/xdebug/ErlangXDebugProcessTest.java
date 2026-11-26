@@ -17,12 +17,16 @@
 package org.intellij.erlang.debugger.xdebug;
 
 import com.ericsson.otp.erlang.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.containers.ContainerUtil;
+import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
+import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XValue;
 import org.intellij.erlang.debugger.node.ErlangDebuggerEventListener;
@@ -30,6 +34,9 @@ import org.intellij.erlang.debugger.node.ErlangDebuggerNode;
 import org.intellij.erlang.debugger.node.ErlangDebuggerNodeTest;
 import org.intellij.erlang.debugger.node.ErlangProcessSnapshot;
 import org.intellij.erlang.debugger.node.ErlangTraceElement;
+import org.intellij.erlang.statistics.ErlangUsageKey;
+import org.intellij.erlang.statistics.ErlangUsageListeners;
+import org.intellij.erlang.statistics.ErlangUsageStatistics;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 import org.jetbrains.annotations.NotNull;
 
@@ -614,6 +621,46 @@ public class ErlangXDebugProcessTest extends ErlangLightPlatformCodeInsightFixtu
     finally {
       node.stop();
     }
+  }
+
+  // the usage statistics count a started debug session of this plugin only
+  public void testUsageStatisticsCountErlangDebugSessions() throws Exception {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.resetForTests();
+    ErlangUsageStatistics.setAllowedForTests(true);
+    ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+    ErlangDebuggerNode node = new ErlangDebuggerNode(new ResponseForwardingListener(new ErlangXDebugProcess[1], new CountDownLatch(0)));
+    try {
+      statistics.getCollector().setEnabled(true);
+      XDebugSession session = (XDebugSession)Proxy.newProxyInstance(
+        ErlangXDebugProcessTest.class.getClassLoader(), new Class[]{XDebugSession.class}, (proxy, method, args) ->
+          switch (method.getName()) {
+            case "getProject" -> getProject();
+            default -> method.getReturnType() == boolean.class ? Boolean.FALSE : null;
+          });
+      ErlangUsageListeners.Debugger listener = new ErlangUsageListeners.Debugger();
+      listener.processStarted(new XDebugProcess(session) {
+        @Override
+        public @NotNull XDebuggerEditorsProvider getEditorsProvider() {
+          throw new UnsupportedOperationException();
+        }
+      });
+      assertFalse(usageProperties(statistics).has(ErlangUsageKey.DEBUG_SESSION.jsonName()));
+      listener.processStarted(new ErlangXDebugProcess(session, node, new ErlangDebugLocationResolver(getProject(), null, false)));
+      assertEquals(1, usageProperties(statistics).get(ErlangUsageKey.DEBUG_SESSION.jsonName()).getAsInt());
+    }
+    finally {
+      node.stop();
+      statistics.resetForTests();
+      ErlangUsageStatistics.setAllowedForTests(null);
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), null);
+    }
+  }
+
+  @NotNull
+  private static JsonObject usageProperties(@NotNull ErlangUsageStatistics statistics) {
+    return JsonParser.parseString(statistics.getCollector().previewToday()).getAsJsonObject().getAsJsonArray("events").get(0)
+      .getAsJsonObject().getAsJsonObject("event_properties");
   }
 
   @NotNull

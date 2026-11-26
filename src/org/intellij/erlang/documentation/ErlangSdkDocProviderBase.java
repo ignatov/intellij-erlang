@@ -350,7 +350,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private static String legacyHttpDocRelPath(@NotNull VirtualFile virtualFile) {
-    String appDirName = virtualFile.getParent().getParent().getName();
+    String appDirName = getApplicationDirName(virtualFile);
     String prefix;
     if (appDirName.startsWith("erts")) {
       prefix = "";
@@ -363,9 +363,23 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private static String modernHttpDocRelPath(@NotNull VirtualFile virtualFile) {
-    String appDirName = virtualFile.getParent().getParent().getName();
+    String appDirName = getApplicationDirName(virtualFile);
     String appName = getApplicationName(appDirName);
     return "apps/" + appName + "/" + virtualFile.getNameWithoutExtension() + ".html";
+  }
+
+  /**
+   * The application directory is the parent of the {@code src} directory. Some applications keep sources
+   * in a subdirectory of {@code src}, as inets keeps {@code httpc.erl} in {@code src/http_client}.
+   */
+  @NotNull
+  private static String getApplicationDirName(@NotNull VirtualFile virtualFile) {
+    VirtualFile dir = virtualFile.getParent();
+    VirtualFile parent = dir.getParent();
+    if (!"src".equals(dir.getName()) && parent != null && "src".equals(parent.getName()) && parent.getParent() != null) {
+      dir = parent;
+    }
+    return dir.getParent().getName();
   }
 
   @NotNull

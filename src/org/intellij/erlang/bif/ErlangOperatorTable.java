@@ -40,7 +40,7 @@ public class ErlangOperatorTable {
     "'-'/2",
     "'*'/2",
     "'/'/2",
-    "bnot/2",
+    "bnot/1",
     "div/2",
     "rem/2",
     "band/2",
