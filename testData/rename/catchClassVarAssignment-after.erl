@@ -1,4 +1,4 @@
 f() ->
     try error(oops)
-    catch error:Ne<caret>w = oops -> New
+    catch error:New<caret> = oops -> New
     end.
