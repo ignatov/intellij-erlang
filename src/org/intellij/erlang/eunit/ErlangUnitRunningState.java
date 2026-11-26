@@ -187,6 +187,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @NotNull
   private static String moduleNameToAtom(@NotNull String name) {
     if (name.length() > 1 && name.startsWith("'") && name.endsWith("'")) return name;
+    if (name.length() > 1 && name.startsWith("\"") && name.endsWith("\"")) return name;
     return toAtom(name.replace("\\", "\\\\").replace("'", "\\'"));
   }
 

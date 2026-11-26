@@ -88,6 +88,11 @@ public class ErlangUnitQuotedNamesTest extends ErlangLightPlatformCodeInsightFix
     assertEquals("[{timeout, " + Integer.MAX_VALUE + ", ['my-mod_tests']}]", debugTests);
   }
 
+  public void testStringInModulesFieldIsWrittenUnchanged() throws ExecutionException {
+    assertEquals("[\".\", sample_tests]",
+                 getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "\".\"", "sample_tests"));
+  }
+
   public void testReservedWordModuleName() throws ExecutionException {
     assertEquals("['maybe', 'receive', 'div']",
                  getTestObjects(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE, "maybe", "receive", "div"));
