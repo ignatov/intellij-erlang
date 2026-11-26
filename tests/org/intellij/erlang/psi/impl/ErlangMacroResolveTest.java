@@ -55,11 +55,13 @@ public class ErlangMacroResolveTest extends ErlangLightPlatformCodeInsightFixtur
   }
 
   public void testMatchingWithoutAUseChoosesByArity() {
-    ErlangFile f = module("-module(m).\n-define(M, none).\n-define(M(A), one).\n-define(M(A, B), two).\n-define(N(A), n1).\n");
+    ErlangFile f = module("-module(m).\n-define(M, none).\n-define(M(A), one).\n-define(M(A, B), two).\n-define(N(A), n1).\n" +
+                          "-define(K, k).\n");
     assertEquals(List.of("-define(M(A), one)."), texts(ErlangMacroResolve.matching(f, "M", 1)));
     assertEquals(List.of("-define(M(A, B), two)."), texts(ErlangMacroResolve.matching(f, "M", 2)));
-    // ?M(a, b, c): epp expands the definition without a parameter list and leaves the parentheses as a call
-    assertEquals(List.of("-define(M, none)."), texts(ErlangMacroResolve.matching(f, "M", 3)));
+    assertEquals(List.of("-define(M, none)."), texts(ErlangMacroResolve.matching(f, "M", ErlangMacroResolve.NO_ARGUMENTS)));
+    // ?K(a, b): the only definition has no parameter list, epp expands it and leaves the parentheses as a call
+    assertEquals(List.of("-define(K, k)."), texts(ErlangMacroResolve.matching(f, "K", 2)));
     assertEquals(List.of("-define(M, none).", "-define(M(A), one).", "-define(M(A, B), two)."),
                  texts(ErlangMacroResolve.matching(f, "M", ErlangMacroResolve.UNKNOWN)));
     // ?N(): argument mismatch, no definition fits
@@ -117,7 +119,7 @@ public class ErlangMacroResolveTest extends ErlangLightPlatformCodeInsightFixtur
   public void testDefinedBeforeSeesTheHeadersOfAHeader() {
     ErlangFile f = moduleWithHeaders("-module(m).\n-ifdef(X).\n-endif.\n-include(\"x.hrl\").\n-include(\"h.hrl\").\n-ifdef(X).\n-endif.\n",
                                      "h.hrl", "-include(\"x.hrl\").\n-include_lib(\"y.hrl\").\n",
-                                     "x.hrl", "-define(X, 1).\n",
+                                     "x.hrl", "-ifndef(X_HRL).\n-define(X_HRL, true).\n-define(X, 1).\n-endif.\n",
                                      "y.hrl", "-define(X(A), A).\n");
     ErlangAttribute first = attributeAt(f, "-if|def(X).\n-endif.\n-include");
     ErlangAttribute second = attributeAt(f, "h.hrl\").\n-if|def(X)");
