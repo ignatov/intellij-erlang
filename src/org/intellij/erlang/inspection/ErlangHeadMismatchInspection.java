@@ -23,6 +23,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -34,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-//TODO add arity mismatch checks
 public class ErlangHeadMismatchInspection extends ErlangInspectionBase implements DumbAware {
   @NotNull
   @Override
@@ -90,7 +90,22 @@ public class ErlangHeadMismatchInspection extends ErlangInspectionBase implement
           registerProblem(problemsHolder, funClause, problemDescription, range, null, new ChangeFunExpressionNameQuickFix(firstClauseName));
         }
       }
+      else if (getFunExpressionClauseArity(funClause) != getFunExpressionClauseArity(firstClause) &&
+               !hasMacros(firstClause) && !hasMacros(funClause)) {
+        ErlangArgumentDefinitionList arguments = funClause.getArgumentDefinitionList();
+        TextRange range = TextRange.create(0, arguments.getStartOffsetInParent() + arguments.getTextLength());
+        registerProblem(problemsHolder, funClause,
+          "Head mismatch: should have arity " + getFunExpressionClauseArity(firstClause), range, null);
+      }
     }
+  }
+
+  private static int getFunExpressionClauseArity(ErlangFunClause clause) {
+    return clause.getArgumentDefinitionList().getArgumentDefinitionList().size();
+  }
+
+  private static boolean hasMacros(ErlangFunClause clause) {
+    return PsiTreeUtil.findChildOfType(clause.getArgumentDefinitionList(), ErlangMacros.class) != null;
   }
 
   @Nullable
