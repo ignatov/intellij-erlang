@@ -102,6 +102,8 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testFilterVariableAfterTwoGenerators() { doTest("Zz"); } // issue 1641
   public void testGeneratorMapKeyFromEarlierGenerator() { doTest("Zz"); } // issue 1641
   public void testGeneratorMapKeyRenamedFromKey() { doTest("Zz"); } // issue 1641
+  public void testFunArgumentShadowsGeneratorVariable() { doTest("Zz"); } // issue 1652
+  public void testGeneratorVariableShadowedByFunArgument() { doTest("Zz"); } // issue 1652
   public void testFunHeadRepeatedVariable() { doTest("New"); } // issue 1640
   public void testFunHeadRepeatedVariableFromSecond() { doTest("B"); } // issue 1640
 
