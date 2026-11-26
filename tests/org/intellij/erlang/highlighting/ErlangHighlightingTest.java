@@ -99,6 +99,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternListPrefix() { doTest(); }
   public void testIllegalPatternCatchClass() { doTest(); }
   public void testIllegalPatternMapKey() { doTest(); }
+  public void testMapConstructionMatchOperator() { doTest(); } // issue 1671
   public void testIllegalPatternPredefinedMacro() { doTest(); }
   public void testIllegalPatternBinarySegmentListOp() { doTest(); }
   public void testIllegalPatternCatchClassMatch() { doTest(); }
