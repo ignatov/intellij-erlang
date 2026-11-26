@@ -163,6 +163,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testCaseHeadVariable()  { doTest(); } // issue 982
   public void testCaseClauseRematchTwice() { doTest(); } // issue 1651
   public void testCaseClauseUseBeforeMatch() { doTest(); } // issue 1651
+  public void testCaseClauseNestedCasePattern() { doTest(); } // issue 1651
   public void testCatchClassVarAssignment() { doTest(); } // issue 1648
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
 
