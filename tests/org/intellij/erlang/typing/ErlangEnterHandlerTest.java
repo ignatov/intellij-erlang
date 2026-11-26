@@ -31,10 +31,12 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testBeginEndWithSucceedingTryCatchBlock()  { doTest(); }
   public void testBeginEndWithSucceedingAfterClause()    { doTest(); }
   public void testBeginEndWithSpace()                    { doTest(); }
+  public void testBeginEndWithCodeAfterCaret()           { doTest(); }
 
   public void testCaseOfSimple()                         { doTest(); }
   public void testCaseOfWithSucceedingFunctions()        { doTest(); }
   public void testCaseOfWithSpace()                      { doTest(); }
+  public void testCaseOfWithCodeAfterCaret()             { doTest(); }
 
   public void testReceiveSimple()                        { doTest(); }
   public void testReceiveWithSucceedingFunctions()       { doTest(); }
