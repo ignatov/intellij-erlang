@@ -1,0 +1,163 @@
+name: Regression check
+
+# The nightly regression check: the plugin at master (the candidate) against the last published release (the base),
+# on the pinned corpus of the release smoke (scripts/smoke/inputs.sh: Erlang/OTP stdlib and kernel, cowboy src and
+# test). scripts/regression/differential.sh builds both sides in one job at the same time, on the same IDE, so their
+# timings are comparable, runs the probe RegressionDiffTest over every file with each build and writes report.json
+# (diffreport.py): new parse errors, new problems of inspections that are on by default, formatter token changes, new
+# exceptions and slowdowns, without what scripts/regression/known.json lists. The report and its summary are the
+# artifact regression-report; the summary is also the job summary.
+#
+# Report-only: findings never fail the run. A red run is an infrastructure error: a side that wrote no records, a
+# report that could not be written, a ref that does not resolve, or the inputs that could not be downloaded. The
+# nightly run starts at 00:30 UTC and ends within about an hour, before the release window. A pull request that
+# changes the check runs it too.
+
+run-name: >-
+  ${{ github.event_name == 'pull_request' && format('regression check of #{0}', github.event.pull_request.number)
+  || format('regression check {0} to {1}', inputs.base || 'last release', inputs.candidate || 'master') }}
+
+on:
+  schedule:
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+    inputs:
+      base:
+        description: The base, a tag v<version>.<N>; empty takes the published release with the largest N.
+        default: ''
+      candidate:
+        description: The candidate, a branch, a tag or a full commit SHA of this repository; empty is master.
+        default: ''
+  pull_request:
+    paths:
+      - .github/workflows/regression.yml
+      - scripts/regression/**
+      - tests/org/intellij/erlang/regression/**
+
+permissions:
+  contents: read
+
+# One nightly or dispatched run at a time; a newer push to a pull request replaces its older run.
+concurrency:
+  group: regression-${{ github.event_name == 'pull_request' && github.ref || 'nightly' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        # The base is a release tag and the candidate any commit: both sides are worktrees of this clone.
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Test the scripts
+      run: python3 -m unittest discover -b -s scripts/regression -p 'test_*.py'
+    - name: Resolve the base and the candidate
+      # The inputs reach the shell through the environment only, and only a value that matches its pattern is used.
+      env:
+        GH_TOKEN: ${{ github.token }}
+        BASE: ${{ inputs.base }}
+        CANDIDATE: ${{ inputs.candidate }}
+        EVENT: ${{ github.event_name }}
+      run: |
+        set -euo pipefail
+        fail() {
+          echo "::error::$1"
+          exit 1
+        }
+        if [[ -z "$BASE" ]]; then
+          BASE=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1000 --json tagName \
+            | python3 scripts/compat/compat.py release-tag --gradle-properties gradle.properties)
+        fi
+        [[ "$BASE" =~ ^v[0-9]+(\.[0-9]+){1,3}$ ]] || fail "base must be a release tag like v0.11.1308"
+        git rev-parse --verify --quiet "refs/tags/$BASE^{commit}" > /dev/null || fail "no tag $BASE"
+        base_ref="refs/tags/$BASE"
+        if [[ "$EVENT" == pull_request ]]; then
+          cand_ref=$(git rev-parse HEAD)
+        elif [[ -z "$CANDIDATE" ]]; then
+          cand_ref=refs/remotes/origin/master
+        elif [[ "$CANDIDATE" =~ ^[0-9a-f]{40}$ ]]; then
+          cand_ref=$CANDIDATE
+        elif [[ "$CANDIDATE" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$ ]]; then
+          if git rev-parse --verify --quiet "refs/remotes/origin/$CANDIDATE^{commit}" > /dev/null; then
+            cand_ref="refs/remotes/origin/$CANDIDATE"
+          else
+            cand_ref="refs/tags/$CANDIDATE"
+          fi
+        else
+          fail "candidate must be a branch, a tag or a full commit SHA"
+        fi
+        git rev-parse --verify --quiet "$cand_ref^{commit}" > /dev/null || fail "no commit $CANDIDATE"
+        echo "Base $base_ref ($(git rev-parse --short "$base_ref^{commit}")), candidate $cand_ref ($(git rev-parse --short "$cand_ref^{commit}"))"
+        {
+          echo "BASE_REF=$base_ref"
+          echo "CANDIDATE_REF=$cand_ref"
+        } >> "$GITHUB_ENV"
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      # Restore only: the cache is saved by pushes to master in gradle.yml.
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Cache the pinned inputs
+      # inputs.sh takes the cached Erlang/OTP and cowboy only when they match their pins, and downloads again otherwise.
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/regression-inputs
+        key: regression-inputs-${{ hashFiles('scripts/smoke/inputs.sh') }}
+    - name: Make the corpus
+      run: |
+        set -euo pipefail
+        scripts/smoke/inputs.sh "$RUNNER_TEMP/regression-inputs"
+        python3 scripts/smoke/smoke.py corpus --out "$RUNNER_TEMP/regression-corpus" \
+          --smoke-app testData/smoke/smoke_app --cowboy "$RUNNER_TEMP/regression-inputs/cowboy" \
+          --otp "$RUNNER_TEMP/regression-inputs/otp"
+    - name: Run the regression check
+      # Both sides at the same time, two test JVMs each, on the four cores of the runner. No file is started after
+      # BUDGET_MINUTES; the report then compares the files that both sides did and says it is incomplete.
+      timeout-minutes: 58
+      env:
+        FORKS: '2'
+        HEAP: 3g
+        PLATFORM: '2026.2'
+        BUDGET_MINUTES: '45'
+      run: scripts/regression/differential.sh "$BASE_REF" "$CANDIDATE_REF" "$RUNNER_TEMP/regression-corpus" "$RUNNER_TEMP/regression-out"
+    - name: Write the job summary
+      if: always()
+      run: |
+        out=$RUNNER_TEMP/regression-out
+        if [[ -f "$out/summary.md" ]]; then
+          cat "$out/summary.md" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "No report was written; see the logs in the artifact regression-report." >> "$GITHUB_STEP_SUMMARY"
+        fi
+        for log in "$out/logs/base.log" "$out/logs/candidate.log"; do
+          if [[ -f "$log" ]]; then
+            echo "== $log"
+            grep -E 'BUILD (SUCCESSFUL|FAILED)|regression-diff:|FAILED|Exception' "$log" | tail -n 20
+          fi
+        done
+    - name: Upload the report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: regression-report
+        retention-days: 30
+        path: |
+          ${{ runner.temp }}/regression-out/report.json
+          ${{ runner.temp }}/regression-out/summary.md
+          ${{ runner.temp }}/regression-out/base.jsonl
+          ${{ runner.temp }}/regression-out/candidate.jsonl
+          ${{ runner.temp }}/regression-out/logs/*.log
+        if-no-files-found: warn

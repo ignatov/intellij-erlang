@@ -53,6 +53,8 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
       if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) continue;
       // the rest of a split form (setup?PAR, hello().) when a macro makes hello/0: the references go to the made one
       if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(function)) continue;
+      // or when the source has hello/0 (hello() -> ok.): the references go to that one
+      if (ErlangMacroLayer.preferSourceFunction(file, function) != function) continue;
       if (!isUnusedFunction(file, function)) continue;
 
       PsiElement identifier = function.getNameIdentifier();

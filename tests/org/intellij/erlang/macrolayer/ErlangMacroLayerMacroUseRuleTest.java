@@ -270,8 +270,8 @@ public class ErlangMacroLayerMacroUseRuleTest extends ErlangLightPlatformCodeIns
     ErlangMacroLayerExpansionErrorAnnotator annotator = new ErlangMacroLayerExpansionErrorAnnotator();
     ErlangMacroLayerExpansionErrorAnnotator.Info info = ReadAction.compute(() -> annotator.collectInformation(myFile));
     assertNotNull(info);
-    ErlangMacroLayerExpansionErrorAnnotator.Result result = ApplicationManager.getApplication().executeOnPooledThread(
-      () -> ProgressManager.getInstance().runProcess(() -> annotator.doAnnotate(info), new EmptyProgressIndicator())).get();
+    ErlangMacroLayerExpansionErrorAnnotator.Result result = waitForTask(ApplicationManager.getApplication().executeOnPooledThread(
+      () -> ProgressManager.getInstance().runProcess(() -> annotator.doAnnotate(info), new EmptyProgressIndicator())));
     assertInsideTheQuietTime(typed, "the expansion-error pass");
     assertNotNull(result);
     List<String> problems = new ArrayList<>();

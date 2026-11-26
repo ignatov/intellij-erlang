@@ -211,9 +211,9 @@ final class ErlangMacroLayerAnswers {
   /** A record, record field or local type reference: the names a macro can make besides functions. */
   static boolean isMadeNameReference(@NotNull PsiReference ref) {
     if (!(ref instanceof ErlangQAtomBasedReferenceImpl) || ref instanceof ErlangModuleReferenceImpl) return false;
-    if (ref instanceof ErlangTypeReferenceImpl) {
-      // remote types (m:t()) are not made in this file
-      return PsiTreeUtil.getPrevSiblingOfType(ref.getElement(), ErlangModuleRef.class) == null;
+    if (ref instanceof ErlangTypeReferenceImpl tr) {
+      // remote types (m:t()) are not made in this file; a bare atom is not a type
+      return !tr.isBareAtom() && PsiTreeUtil.getPrevSiblingOfType(ref.getElement(), ErlangModuleRef.class) == null;
     }
     return true;
   }

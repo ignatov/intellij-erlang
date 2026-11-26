@@ -556,8 +556,32 @@ public class ErlangFormattingBlock extends AbstractBlock {
     return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
   }
 
+  /**
+   * A function whose last child is a comma is one whose clause body the parser's recovery cut short (as at
+   * {@code setup?PAR,} with {@code -define(PAR, ()).}): a new line after it continues the body.
+   */
+  @Override
+  public boolean isIncomplete() {
+    return super.isIncomplete() || endsInRecoveredComma();
+  }
+
+  private boolean endsInRecoveredComma() {
+    if (myNode.getElementType() != ERL_FUNCTION) return false;
+    ASTNode last = myNode.getLastChildNode();
+    return last != null && last.getElementType() == ERL_COMMA;
+  }
+
+  /** With an indent, the function is the rest of a body that the recovery split: the new line keeps its column. */
+  private static boolean startsAtColumnZero(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && StringUtil.endsWithChar(prevLeaf.getChars(), '\n');
+  }
+
   @Nullable
   private Indent getChildIndentByPreviousChild(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_COMMA) {
+      return startsAtColumnZero(myNode) ? Indent.getNormalIndent() : Indent.getNoneIndent();
+    }
     if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
 
     if (type == ERL_SEMI || type == ERL_OF && newChildIndex == 3)  {

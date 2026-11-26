@@ -180,6 +180,64 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertSameElements(dependencies.get("pt.erl"), "big.hrl");
   }
 
+  public void testLargeParseTransformAndBehaviourAreDependencies() throws Exception {
+    writeAboveSizeLimit("pt.erl", "-module(pt).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
+    writeAboveSizeLimit("beh.erl", "-module(beh).\n-callback init() -> ok.\n");
+    List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> files = ContainerUtil.map(getModulePaths(buildOrder), path -> new File(path).getName());
+    Map<String, List<String>> dependencies = getDependencies(buildOrder);
+    assertSameElements(dependencies.get("m.erl"), "pt.erl", "beh.erl");
+    assertTrue(files.toString(), files.indexOf("pt.erl") < files.indexOf("m.erl"));
+    assertTrue(files.toString(), files.indexOf("beh.erl") < files.indexOf("m.erl"));
+  }
+
+  public void testLargeParseTransformInHeaderIsNotCyclic() throws Exception {
+    writeAboveSizeLimit("pt.erl", "-module(pt).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
+    List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> files = ContainerUtil.map(getModulePaths(buildOrder), path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("pt.erl") < files.indexOf("m.erl"));
+    Map<String, List<String>> dependencies = getDependencies(buildOrder);
+    assertSameElements(dependencies.get("h.hrl"), "pt.erl");
+    assertSameElements(dependencies.get("pt.erl"), "h.hrl");
+  }
+
+  public void testLargeParseTransformOfHeaderParseTransformIsBuiltFirst() throws Exception {
+    String text = "-module(%s).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n";
+    writeAboveSizeLimit("abig.erl", String.format(text, "abig"));
+    writeAboveSizeLimit("zbig.erl", String.format(text, "zbig"));
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("abig.erl") < files.indexOf("x.erl"));
+    assertTrue(files.toString(), files.indexOf("zbig.erl") < files.indexOf("x.erl"));
+    assertTrue(files.toString(), files.indexOf("x.erl") < files.indexOf("m.erl"));
+  }
+
+  public void testLargeModulesAfterParseTransformInHeaderWithGuardedCycle() throws Exception {
+    List<String> largeModules = List.of("abig.erl", "zbig.erl", "big1.erl", "mbig.erl");
+    for (String largeModule : largeModules) {
+      writeAboveSizeLimit(largeModule, "-module(" + FileUtil.getNameWithoutExtension(largeModule) + ").\n-include(\"h.hrl\").\n");
+    }
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    for (String largeModule : largeModules) {
+      assertTrue(files.toString(), files.indexOf("pt.erl") < files.indexOf(largeModule));
+    }
+  }
+
+  public void testLargeModulesAfterParseTransformInHeaderWithLargeParseTransformCycle() throws Exception {
+    writeAboveSizeLimit("lpt.erl", "-module(lpt).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
+    List<String> largeModules = List.of("abig.erl", "zbig.erl", "rbig.erl", "mbig.erl", "big1.erl", "big2.erl");
+    for (String largeModule : largeModules) {
+      writeAboveSizeLimit(largeModule, "-module(" + FileUtil.getNameWithoutExtension(largeModule) + ").\n-include(\"h2.hrl\").\n");
+    }
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("lpt.erl") < files.indexOf("m.erl"));
+    for (String largeModule : ContainerUtil.append(largeModules, "lpt.erl")) {
+      assertTrue(files.toString(), files.indexOf("q.erl") < files.indexOf(largeModule));
+    }
+  }
+
   private void writeAboveSizeLimit(String fileName, String text) throws IOException {
     // A file above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
     String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";

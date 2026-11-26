@@ -1,5 +1,6 @@
 package org.intellij.erlang.psi.impl;
 
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.text.StringUtil;
@@ -14,6 +15,7 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.parser.macro.ErlangMacroArgSplitter;
 import org.intellij.erlang.parser.macro.ErlangMacroExpander;
@@ -266,6 +268,12 @@ public final class ErlangMacroResolve {
     if (use == null || use.getContainingFile() != file || PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null) {
       return candidates(file, name);
     }
+    List<ErlangMacrosDefinition> r = inForceAt(file, name, use);
+    return r.isEmpty() ? candidates(file, name) : r;
+  }
+
+  /** The definitions of the name in force at a use of the file outside -define bodies, as {@link #candidatesAt}, without its fallback. */
+  private static @NotNull List<ErlangMacrosDefinition> inForceAt(@NotNull ErlangFile file, @NotNull String name, @NotNull PsiElement use) {
     int at = use.getTextRange().getStartOffset();
     Map<Integer, List<ErlangMacrosDefinition>> byArity = new LinkedHashMap<>();
     for (Event e : visible(file).events) {
@@ -287,7 +295,7 @@ public final class ErlangMacroResolve {
     }
     List<ErlangMacrosDefinition> r = new ArrayList<>();
     for (List<ErlangMacrosDefinition> list : byArity.values()) r.addAll(list);
-    return r.isEmpty() ? candidates(file, name) : r;
+    return r;
   }
 
   /** One top-level step of the file for {@link #candidatesAt}: a definition, an undef, or the definitions of an include. */
@@ -404,6 +412,12 @@ public final class ErlangMacroResolve {
     if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return null;
     int arity = arityAfter(nameLeaf);
     if (arity == UNKNOWN) return null;
+    // epp's predefined ?FEATURE_ENABLED(F) and ?FEATURE_AVAILABLE(F) stay next to own definitions of other arities,
+    // until an -undef of the name
+    if (arity == 1 && ("FEATURE_ENABLED".equals(name) || "FEATURE_AVAILABLE".equals(name)) &&
+        undefBefore(file, name, nameLeaf, false) != UNDEF_SURE) {
+      return null;
+    }
     List<ErlangMacrosDefinition> candidates = candidates(file, name);
     if (candidates.isEmpty()) return null;
     for (ErlangMacrosDefinition d : candidates) {
@@ -413,6 +427,123 @@ public final class ErlangMacroResolve {
     if (isInConditional(nameLeaf) || isTestedByConditional(file, name)) return null;
     String uses = arity == NO_ARGUMENTS ? "no arguments" : arity == 1 ? "1 argument" : arity + " arguments";
     return "Argument mismatch for macro '?" + name + "': no definition takes " + uses;
+  }
+
+  /**
+   * Epp's "argument mismatch for macro" at a use of a predefined feature macro ({@code FEATURE_ENABLED},
+   * {@code FEATURE_AVAILABLE}) that the file defines too. Epp keeps the predefined definition, which takes one argument,
+   * next to the file's own ones, so a definition without a parameter list matches only a use without arguments, and
+   * only the definitions in force at the use count. For a use outside -define bodies (epp checks a body where the macro
+   * is expanded; the caller skips those), and only where it is certain, as {@link #argumentMismatch}; an {@code -undef} of the name in the
+   * file or in a header it includes may remove the predefined definition, so then nothing is certain. In a header the
+   * modules that include it are unknown, so only a use that is a mismatch with and without the predefined definition.
+   */
+  public static boolean isFeatureArgumentMismatch(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || !allIncludesResolve(file)) return false;
+    int arity = arityAfter(nameLeaf);
+    if (arity == UNKNOWN || arity == 1) return false;
+    if (file.getFileType() == ErlangFileType.HEADER) return argumentMismatch(nameLeaf, name) != null;
+    for (ErlangMacrosDefinition d : inForceAt(file, name, nameLeaf)) if (arity(d) == arity) return false;
+    return !isInConditional(nameLeaf) && !isTestedByConditional(file, name) && !undefines(file, name, new HashSet<>());
+  }
+
+  /**
+   * Epp's "undefined macro" at a use of a predefined feature macro that no -define resolves: an {@code -undef} of the
+   * name comes before it outside every conditional, both of the module and, for an {@code -undef} in a header, of every
+   * file along the include chain ({@link #undefBefore} with {@code surely}). For a use outside -define bodies, and only
+   * where it is certain, as {@link #argumentMismatch}; in a header the modules that include it are unknown.
+   */
+  public static boolean isFeatureMacroUndefined(@NotNull PsiElement nameLeaf, @NotNull String name) {
+    if (!(nameLeaf.getContainingFile() instanceof ErlangFile file) || file.getFileType() == ErlangFileType.HEADER) return false;
+    if (PsiTreeUtil.getParentOfType(nameLeaf, ErlangMacrosDefinition.class) != null || !allIncludesResolve(file)) return false;
+    return undefBefore(file, name, nameLeaf, true) == UNDEF_SURE && !isInConditional(nameLeaf) && !isTestedByConditional(file, name);
+  }
+
+  private static final int UNDEF_NONE = 0, UNDEF_SURE = 1, UNDEF_MAYBE = 2;
+
+  /**
+   * Whether an {@code -undef} of the name, in the file or in a header it includes (directly or not), comes before the use
+   * (anywhere in the file for a use inside a {@code -define} body): {@link #UNDEF_SURE} when one of them is outside
+   * every conditional of the file, {@link #UNDEF_MAYBE} when all of them are inside conditionals, else
+   * {@link #UNDEF_NONE}. With {@code surely}, an {@code -undef} in a header counts only when it is outside every
+   * conditional of the header and is reached only through includes outside every conditional of their files.
+   */
+  private static int undefBefore(@NotNull ErlangFile file, @NotNull String name, @NotNull PsiElement use, boolean surely) {
+    int at = PsiTreeUtil.getParentOfType(use, ErlangMacrosDefinition.class) != null ? Integer.MAX_VALUE
+                                                                                   : use.getTextRange().getStartOffset();
+    int depth = 0, r = UNDEF_NONE;
+    Set<ErlangFile> seen = new HashSet<>();
+    seen.add(file);
+    for (PsiElement c = file.getFirstChild(); c != null && c.getTextRange().getStartOffset() < at; c = c.getNextSibling()) {
+      ProgressManager.checkCanceled();
+      ErlangInclude include = c instanceof ErlangInclude i ? i : PsiTreeUtil.getChildOfType(c, ErlangInclude.class);
+      ErlangIncludeLib includeLib = c instanceof ErlangIncludeLib i ? i : PsiTreeUtil.getChildOfType(c, ErlangIncludeLib.class);
+      boolean undef = false;
+      if (include != null || includeLib != null) {
+        List<ErlangFile> headers = include != null ? ErlangPsiImplUtil.getDirectlyIncludedFiles(include, file)
+                                                   : ErlangPsiImplUtil.getDirectlyIncludedFiles(includeLib, file);
+        for (ErlangFile h : headers) undef |= surely ? surelyUndefines(h, name, seen) : undefines(h, name, seen);
+      }
+      else if (c instanceof ErlangAttribute attribute) {
+        ErlangAtomAttribute atom = attribute.getAtomAttribute();
+        String a = attribute.getIfAtomAttribute() != null ? "if" : atom != null ? atom.getName() : null;
+        if ("if".equals(a) || "ifdef".equals(a) || "ifndef".equals(a)) depth++;
+        else if ("endif".equals(a)) depth = Math.max(0, depth - 1);
+        else if ("undef".equals(a)) undef = isUndefOf(atom, name);
+      }
+      if (undef) {
+        if (depth == 0) return UNDEF_SURE;
+        r = UNDEF_MAYBE;
+      }
+    }
+    return r;
+  }
+
+  /** The header, or a header it includes, has an {@code -undef} of the name. */
+  private static boolean undefines(@NotNull ErlangFile file, @NotNull String name, @NotNull Set<ErlangFile> seen) {
+    if (!seen.add(file)) return false;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      ProgressManager.checkCanceled();
+      if (c instanceof ErlangAttribute attribute && isUndefOf(attribute.getAtomAttribute(), name)) return true;
+    }
+    for (ErlangInclude inc : file.getIncludes()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (undefines(h, name, seen)) return true;
+    }
+    for (ErlangIncludeLib inc : file.getIncludeLibs()) {
+      for (ErlangFile h : ErlangPsiImplUtil.getDirectlyIncludedFiles(inc, file)) if (undefines(h, name, seen)) return true;
+    }
+    return false;
+  }
+
+  /** The header, or a header it includes, has an {@code -undef} of the name outside every conditional of the include chain. */
+  private static boolean surelyUndefines(@NotNull ErlangFile file, @NotNull String name, @NotNull Set<ErlangFile> seen) {
+    if (!seen.add(file)) return false;
+    int depth = 0;
+    for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+      ProgressManager.checkCanceled();
+      ErlangInclude include = c instanceof ErlangInclude i ? i : PsiTreeUtil.getChildOfType(c, ErlangInclude.class);
+      ErlangIncludeLib includeLib = c instanceof ErlangIncludeLib i ? i : PsiTreeUtil.getChildOfType(c, ErlangIncludeLib.class);
+      if (include != null || includeLib != null) {
+        if (depth > 0) continue;
+        List<ErlangFile> headers = include != null ? ErlangPsiImplUtil.getDirectlyIncludedFiles(include, file)
+                                                   : ErlangPsiImplUtil.getDirectlyIncludedFiles(includeLib, file);
+        for (ErlangFile h : headers) if (surelyUndefines(h, name, seen)) return true;
+      }
+      else if (c instanceof ErlangAttribute attribute) {
+        ErlangAtomAttribute atom = attribute.getAtomAttribute();
+        String a = attribute.getIfAtomAttribute() != null ? "if" : atom != null ? atom.getName() : null;
+        if ("if".equals(a) || "ifdef".equals(a) || "ifndef".equals(a)) depth++;
+        else if ("endif".equals(a)) depth = Math.max(0, depth - 1);
+        else if (depth == 0 && isUndefOf(atom, name)) return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isUndefOf(@Nullable ErlangAtomAttribute atom, @NotNull String name) {
+    if (atom == null || !"undef".equals(atom.getName())) return false;
+    ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+    return m != null && name.equals(StringUtil.unquoteString(m.getText(), '\''));
   }
 
   /** The element is in a top-level form inside an {@code -if}, {@code -ifdef} or {@code -ifndef} branch of its file. */

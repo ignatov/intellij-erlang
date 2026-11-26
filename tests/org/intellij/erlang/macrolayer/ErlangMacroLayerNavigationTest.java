@@ -153,12 +153,12 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
       manager.getFindUsagesHandler(t, com.intellij.find.findUsages.FindUsagesHandlerFactory.OperationMode.USAGES_WITH_DEFAULT_OPTIONS);
     if (handler == null) return "NO HANDLER";
     com.intellij.find.findUsages.FindUsagesOptions options = handler.getFindUsagesOptions(null);
-    List<com.intellij.usageView.UsageInfo> found = com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
+    List<com.intellij.usageView.UsageInfo> found = waitForTask(com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread(() -> {
       com.intellij.util.CommonProcessors.CollectProcessor<com.intellij.usageView.UsageInfo> p =
         new com.intellij.util.CommonProcessors.CollectProcessor<>(Collections.synchronizedList(new ArrayList<>()));
       for (PsiElement e : handler.getPrimaryElements()) handler.processElementUsages(e, p, options);
       return new ArrayList<>(p.getResults());
-    }).get();
+    }));
     return inBackground(() -> {
       Set<String> r = new TreeSet<>();
       for (com.intellij.usageView.UsageInfo u : found) {
@@ -219,5 +219,23 @@ public class ErlangMacroLayerNavigationTest extends ErlangLightPlatformCodeInsig
     myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
     myFixture.doHighlighting();
     assertEquals("greet.erl:18:hello", navigate("greet.erl", "hello/0", 0));
+  }
+
+  /** #1604: a call in a later clause, after a fragment macro in an earlier one, goes to {@code hello} in {@code ?DEF(hello).}. */
+  public void testCallInLaterClauseAfterFragmentMacro() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet2.erl", read(Paths.get("testData/macroLayer/nav", "greet2.erl")));
+    myFiles.put("greet2.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet2.erl:15:hello", navigate("greet2.erl", "hello().", 0));
+  }
+
+  /** #1604: usages of {@code hello/0} made by {@code ?DEF(hello).} include the call in the later clause. */
+  public void testUsagesOfFunctionNamedByMacroArgumentIncludeCallInLaterClause() throws Exception {
+    PsiFile greet = myFixture.addFileToProject("nav/greet2.erl", read(Paths.get("testData/macroLayer/nav", "greet2.erl")));
+    myFiles.put("greet2.erl", greet);
+    myFixture.configureFromExistingVirtualFile(greet.getVirtualFile());
+    myFixture.doHighlighting();
+    assertEquals("greet2.erl:11:hello greet2.erl:2:hello", usages(startAt("greet2.erl", "hello/0", 0)));
   }
 }

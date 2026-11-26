@@ -33,11 +33,12 @@ The test JVM halts with exit code 3 after a hang and 4 after an `OutOfMemoryErro
 | `SWEEP_SHARD` | `0/1` | `i/n`: the files whose CRC32 of the path is `i` modulo `n` (`lib/stdlib-7.1/` counts as `lib/stdlib/`). The order inside a shard depends on the seed. |
 | `SWEEP_LIMIT` | `0` | First N files of the shard, for smoke runs. |
 | `SWEEP_ONLY` | none | Comma-separated substrings of the input id (`path#orig`, `path#m0`, `synthetic/name`, `scale/name`). |
-| `SWEEP_SYNTH` | none | `1` adds the synthetic inputs, `only` runs just them. |
+| `SWEEP_SYNTH` | none | `1` adds the synthetic inputs, `only` runs just them (see Synthetic inputs). |
 | `SWEEP_SCALE`, `SWEEP_SCALE_RATIO` | none, `8` | The scaling probe: each generator at n and 4n; a time ratio over the limit is a finding. |
 | `SWEEP_PLANT` | none | `1`: the positive controls. `hang`: the hang control too (use `SWEEP_HANG_SECONDS=30`). |
 | `SWEEP_BUDGET_MINUTES` | `0` | Stop before the next input when the time is over; the report has `complete: false`. |
-| `SWEEP_SLOW_MS`, `SWEEP_HANG_SECONDS`, `SWEEP_OP_BUDGET_MS` | `10000`, `300`, `30000` | Slow-operation threshold; hang threshold; time limit of the resolve loop. |
+| `SWEEP_SLOW_MS`, `SWEEP_HANG_SECONDS`, `SWEEP_OP_BUDGET_MS` | `10000`, `300` (`60` with `SWEEP_SYNTH=only`), `30000` | Slow-operation threshold; hang threshold; time limit of the resolve loop. |
+| `SWEEP_INPUT_BUDGET_SECONDS` | `120` | After this much time on one input, its next operations are skipped (property `input-capped`); `0` is no limit. |
 | `SWEEP_COMPLETIONS`, `SWEEP_PICKS` | `3`, `3` | Completion offsets per input; named elements per kind for find usages and rename. |
 | `SWEEP_REPORT`, `SWEEP_JOURNAL` | `build/sweep/report.json`, report + `.journal.jsonl` | Outputs. The journal is written line by line, so it survives a halt. |
 | `SWEEP_LEDGER` | none | A JSONL file; one record of what the run covered is appended. |
@@ -46,6 +47,12 @@ The test JVM halts with exit code 3 after a hang and 4 after an `OutOfMemoryErro
 | `SWEEP_RESUME` | none | Continue from the journal. |
 | `SWEEP_REVISION` | `GITHUB_SHA`, else `git rev-parse HEAD` | Plugin revision in the report. |
 | `SWEEP_MINIMIZE`, `SWEEP_MIN_OUT` | none, `build/sweep/min` | Reduce every file of `SWEEP_CORPUS` while some failure signature still contains the given text. |
+
+## Synthetic inputs
+In this order: the fixed small inputs of the runner (empty files, BOMs, line ends, cycles of includes, records, types and macros); the generated inputs of `SweepGenerated`; every prefix of a small module (a typing session); the large stress inputs; with `SWEEP_SCALE`, the scaling probe last. A run that stops on its time budget cuts the slow ones first.
+The ids of the generated inputs are `synthetic/<family>-<name>`:
+- the same in every run: `deep-*` (each construct nested 100 deep), `long-*` (long lines and terms, huge binaries, maps and numbers), `unicode-*` (odd Unicode and invalid UTF-8 in atoms, strings, comments and file names), `odd-*` (records and macros in unusual places), `inc-*` (includes with broken or odd header files), `maybe-*` (`maybe`/`else` and `-feature`), `sigil-*` (sigils and triple-quoted strings), `attr-*` (broken attributes);
+- from the seed, so each run has new ones: `cut-*` (a construct of each grammar rule cut at a token boundary), `soup-*` (random tokens of the lexer's token set), `gen-*` (random, mostly valid modules).
 
 ## What runs
 Each input is written into the light project as bytes and opened in the editor. Every operation runs on its own, from the original text, and its failure does not stop the others: stub/text consistency, highlighting with every inspection of the plugin (the Dialyzer one excepted), resolve of every reference, structure view, folding, completion at seeded offsets, find usages and rename of seeded named elements, reformat twice, reparse after seeded edits, a small function typed char by char. `resolve-bg`, `structure-bg` and `folding-bg` repeat three of them on a pooled thread in a read action.

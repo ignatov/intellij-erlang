@@ -196,8 +196,11 @@ public class ErlangPsiImplUtil {
   public static Pair<List<ErlangTypedExpr>, List<ErlangQAtom>> getRecordFields(PsiElement element) {
     List<ErlangTypedExpr> result = new SmartList<>();
     List<ErlangQAtom> atoms = new SmartList<>();
-    ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
-    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() : null;
+    PsiElement parent = element.getParent();
+    ErlangRecordExpression recordExpression = parent instanceof ErlangFieldType ? null : PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
+    ErlangRecordRef recordTypeRef = parent instanceof ErlangFieldType ? PsiTreeUtil.getChildOfType(parent.getParent(), ErlangRecordRef.class) : null;
+    PsiReference reference = recordExpression != null ? recordExpression.getReferenceInternal() :
+                             recordTypeRef != null ? recordTypeRef.getReference() : null;
     PsiElement resolve = reference != null ? reference.resolve() : null;
 
     if (resolve == null && recordExpression != null) {
@@ -467,7 +470,7 @@ public class ErlangPsiImplUtil {
     return new ErlangFunctionReferenceImpl(o, nameAtom, isModule ? null : moduleAtom, getArity(arity));
   }
 
-  private static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
+  static boolean isModule(@Nullable ErlangModuleRef moduleReference) {
     if (moduleReference == null) return false;
     return moduleReference.getQAtom().getText().equals("?MODULE");
   }
@@ -519,24 +522,29 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangTypeRef o) {
-    return getModuleReference(o, o.getQAtom(), getTypeRefArity(o));
+    List<ErlangType> arguments = getTypeRefArguments(o);
+    if (arguments == null) return getModuleReference(o, o.getQAtom(), -1, false);
+    // a macro can expand to several arguments, so the counted arity may be wrong
+    boolean uncertain = ContainerUtil.exists(arguments, a -> PsiTreeUtil.findChildOfType(a, ErlangMacros.class, false) != null);
+    return getModuleReference(o, o.getQAtom(), arguments.size(), uncertain);
   }
 
-  private static int getTypeRefArity(@NotNull ErlangTypeRef o) {
+  @Nullable
+  private static List<ErlangType> getTypeRefArguments(@NotNull ErlangTypeRef o) {
     PsiElement parent = o.getParent();
-    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return -1;
-    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class).size();
+    if (!(parent instanceof ErlangType type) || type.getParLeft() == null) return null;
+    return PsiTreeUtil.getChildrenOfTypeAsList(type, ErlangType.class);
   }
 
   @NotNull
-  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity) {
+  private static PsiReference getModuleReference(@NotNull ErlangCompositeElement o, @NotNull ErlangQAtom atom, int arity, boolean arityUncertain) {
     ErlangModuleRef moduleRef = PsiTreeUtil.getPrevSiblingOfType(o, ErlangModuleRef.class);
-    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity);
+    return new ErlangTypeReferenceImpl(o, atom, moduleRef, arity, arityUncertain);
   }
 
   @NotNull
   public static PsiReference getReference(@NotNull ErlangExportType o) {
-    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()));
+    return getModuleReference(o, o.getQAtom(), getArity(o.getInteger()), false);
   }
 
   public static boolean inDefinitionBeforeArgumentList(PsiElement psiElement) {
@@ -921,7 +929,7 @@ public class ErlangPsiImplUtil {
       List<LookupElement> foundedTypes = ContainerUtil.map(
         types,
         rd -> PrioritizedLookupElement.withPriority(
-          LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
+          LookupElementBuilder.create(rd).withIcon(ErlangIcons.TYPE).withTailText("/" + getArity(rd)).withInsertHandler(getInsertHandler(rd.getName(), getArity(rd), withArity)),
           ErlangCompletionContributor.TYPE_PRIORITY));
       return ContainerUtil.concat(foundedTypes, builtInTypes);
     }
@@ -929,7 +937,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  private static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
+  public static Set<String> getExportedTypeSignatures(@NotNull ErlangFile file) {
     Set<String> result = new HashSet<>();
     List<ErlangFile> files = new ArrayList<>(getIncludedFiles(file));
     files.add(file);
@@ -1122,10 +1130,33 @@ public class ErlangPsiImplUtil {
 
   @NotNull
   public static PsiElement setName(@NotNull ErlangFunction o, @NotNull String newName) {
+    List<ErlangAtom> atoms = new ArrayList<>();
     for (ErlangFunctionClause clause : o.getFunctionClauseList()) {
-      renameQAtom(clause.getQAtom(), newName);
+      ErlangQAtom qAtom = clause.getQAtom();
+      ErlangAtom atom = qAtom != null ? qAtom.getAtom() : null;
+      if (atom != null) atoms.add(atom);
+    }
+    if (!renameAtomsInDocument(o.getContainingFile(), atoms, newName)) {
+      for (ErlangAtom atom : atoms) renameAtom(atom, newName);
     }
     return o;
+  }
+
+  // one document change and one commit for all the clause names: a PSI replace per clause checks the whole file
+  // and adds a reformat range each time, which makes a function with many clauses take quadratic time (#1580)
+  private static boolean renameAtomsInDocument(@Nullable PsiFile file, @NotNull List<ErlangAtom> atoms, @NotNull String newName) {
+    String text = toAtomName(newName);
+    if (file == null || atoms.size() < 2 || text == null) return false;
+    PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
+    Document document = manager.getDocument(file);
+    if (document == null) return false;
+    manager.doPostponedOperationsAndUnblockDocument(document);
+    List<TextRange> ranges = new ArrayList<>(atoms.size());
+    for (ErlangAtom atom : atoms) ranges.add(atom.getTextRange());
+    ranges.sort(Comparator.comparingInt(TextRange::getStartOffset).reversed());
+    for (TextRange range : ranges) document.replaceString(range.getStartOffset(), range.getEndOffset(), text);
+    manager.commitDocument(document);
+    return true;
   }
 
   @NotNull
@@ -1210,7 +1241,18 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
-    return processDeclarationRecursive(o, processor, state);
+    if (lastParent == null) return processDeclarationRecursive(o, processor, state);
+    // the qualifiers nearest to the place first: a qualifier sees the earlier ones, the template sees all of them, the last one first
+    List<ErlangLcExpression> qualifiers = PsiTreeUtil.getChildrenOfTypeAsList(o, ErlangLcExpression.class);
+    int index = qualifiers.indexOf(lastParent);
+    if (index >= 0) {
+      ErlangArgumentDefinition pattern = qualifiers.get(index).getArgumentDefinition();
+      if (pattern != null && PsiTreeUtil.isAncestor(pattern, place, false) && !processDeclarationRecursive(pattern, processor, state)) return false;
+    }
+    for (int i = (index >= 0 ? index : qualifiers.size()) - 1; i >= 0; i--) {
+      if (!processDeclarationRecursive(qualifiers.get(i), processor, state)) return false;
+    }
+    return index >= 0 || processDeclarationRecursive(o, processor, state);
   }
 
   @SuppressWarnings("UnusedParameters")
@@ -1931,7 +1973,10 @@ public class ErlangPsiImplUtil {
         return true;
       }
     }
-    return false;
+    // eunit.hrl declares this parse transform, so a file that includes it with -include counts too
+    Set<String> parseTransforms = new HashSet<>();
+    file.addDeclaredParseTransforms(parseTransforms);
+    return parseTransforms.contains("eunit_autoexport");
   }
 
   @NotNull

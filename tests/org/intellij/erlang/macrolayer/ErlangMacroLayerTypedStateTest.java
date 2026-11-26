@@ -110,4 +110,11 @@ public class ErlangMacroLayerTypedStateTest extends ErlangLightPlatformCodeInsig
     myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
     for (String h : highlights(f)) assertFalse(h, h.contains("Unused function"));
   }
+
+  /** #1604: resolving the call in a later clause after a fragment macro through the copy reports no problem in the file. */
+  public void testNoProblemForACallInALaterClauseOfASplitForm() throws Exception {
+    PsiFile f = myFixture.addFileToProject("greet2/greet2.erl", read(Paths.get("testData/macroLayer/nav", "greet2.erl")));
+    myFixture.configureFromExistingVirtualFile(f.getVirtualFile());
+    assertEquals(List.of(), highlights(f));
+  }
 }

@@ -74,9 +74,14 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (psiElement.equals(myOrigin)) return true;
     if (isNamedFunDeclaration(myOrigin)) return true;
     if (inFunArgList(myOrigin)) {
-      if (!inMapPatternKey(myOrigin)) return true;
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
-      if (PsiTreeUtil.isAncestor(originArgList, psiElement, false)) return true;
+      boolean inOriginArgList = PsiTreeUtil.isAncestor(originArgList, psiElement, false);
+      // a map key in a fun head refers to an outer variable; any other variable there shadows the outer ones
+      // and matches only an earlier occurrence in the same head
+      if (inMapPatternKey(myOrigin)) {
+        if (inOriginArgList) return true;
+      }
+      else if (!inOriginArgList || psiElement.getTextOffset() > myOrigin.getTextOffset()) return true;
     }
     if (inFunArgList(psiElement) && inMapPatternKey(psiElement)) return true;
     
@@ -102,6 +107,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
+      if (boundInOwnOrLaterQualifier(psiElement)) return true;
+      if (outsideOwnGeneratorPattern(psiElement)) return true;
       // put all possible variables to list
       ErlangQVar var = (ErlangQVar) psiElement;
       List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
@@ -215,6 +222,36 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
         PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
+  }
+
+  // a qualifier of a comprehension sees neither the pattern of its own generator nor the later qualifiers
+  private boolean boundInOwnOrLaterQualifier(PsiElement psiElement) {
+    for (ErlangLcExpression qualifier = PsiTreeUtil.getParentOfType(myOrigin, ErlangLcExpression.class);
+         qualifier != null;
+         qualifier = PsiTreeUtil.getParentOfType(qualifier, ErlangLcExpression.class)) {
+      ErlangArgumentDefinition pattern = qualifier.getArgumentDefinition();
+      if (pattern != null && !PsiTreeUtil.isAncestor(pattern, myOrigin, false) && PsiTreeUtil.isAncestor(pattern, psiElement, false)) return true;
+      for (PsiElement next = qualifier.getNextSibling(); next != null; next = next.getNextSibling()) {
+        if (next instanceof ErlangLcExpression && PsiTreeUtil.isAncestor(next, psiElement, false)) return true;
+      }
+    }
+    return false;
+  }
+
+  // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;
+  // a map key of the pattern is a use of a variable bound before the pattern, never a binding
+  private boolean outsideOwnGeneratorPattern(PsiElement psiElement) {
+    if (inMapPatternKey(psiElement) && inGeneratorPattern(psiElement)) return true;
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinition.class);
+    if (pattern == null || !(pattern.getParent() instanceof ErlangLcExpression)) return false;
+    if (isBinaryWidthExpression(myOrigin)) return false;
+    boolean inPattern = PsiTreeUtil.isAncestor(pattern, psiElement, false);
+    return inMapPatternKey(myOrigin) == inPattern;
+  }
+
+  private static boolean inGeneratorPattern(PsiElement psiElement) {
+    ErlangArgumentDefinition pattern = PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentDefinition.class);
+    return pattern != null && pattern.getParent() instanceof ErlangLcExpression;
   }
 
   private boolean inDifferentCrClauses(PsiElement psiElement) {

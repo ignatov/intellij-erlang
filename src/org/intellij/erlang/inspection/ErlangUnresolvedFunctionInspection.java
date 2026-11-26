@@ -53,7 +53,8 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
                                     ((ErlangGlobalFunctionCallExpression) parent).getModuleRef() : null;
         if (call.getQAtom().getMacros() != null ||
             moduleRef != null && moduleRef.getQAtom().getMacros() != null ||
-            !(reference instanceof ErlangFunctionReference) || reference.resolve() != null) {
+            !(reference instanceof ErlangFunctionReference) || reference.resolve() != null ||
+            moduleRef == null && isPreprocessorDefinedTest(call)) {
           return;
         }
 
@@ -117,6 +118,14 @@ public class ErlangUnresolvedFunctionInspection extends ErlangInspectionBase {
         registerProblem(holder, target, "Unresolved function " + functionPresentation, qfs);
       }
     };
+  }
+
+  /** {@code defined(Macro)} in an {@code -if(...)} or {@code -elif(...)} condition, which epp evaluates itself. */
+  private static boolean isPreprocessorDefinedTest(@NotNull ErlangFunctionCallExpression call) {
+    if (!"defined".equals(call.getName()) || call.getArgumentList().getExpressionList().size() != 1) return false;
+    PsiElement attribute = PsiTreeUtil.getParentOfType(call, ErlangIfAtomAttribute.class, ErlangAtomAttribute.class);
+    return attribute instanceof ErlangIfAtomAttribute ||
+           attribute instanceof ErlangAtomAttribute atomAttribute && "elif".equals(atomAttribute.getName());
   }
 
   private static ErlangCreateFunctionQuickFix createFix(@NotNull ErlangFunctionCallExpression call,

@@ -20,6 +20,7 @@ import com.intellij.codeInsight.CodeInsightSettings;
 import com.intellij.codeInsight.completion.CompletionType;
 import com.intellij.codeInsight.lookup.Lookup;
 import com.intellij.codeInsight.lookup.LookupElement;
+import com.intellij.codeInsight.lookup.LookupElementPresentation;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.psi.PsiFile;
@@ -367,6 +368,22 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
     assertEquals(2, ContainerUtil.count(Arrays.asList(elements), e -> e.getLookupString().equals("list")));
   }
 
+  public void testLocalTypeWithTwoAritiesHasDistinctPresentations() {
+    myFixture.configureByText("a.erl", """
+      -type tree() :: tree(any()).
+      -type tree(A) :: {A, [tree(A)]}.
+      -type t() :: tre<caret>.""");
+    LookupElement[] elements = myFixture.completeBasic();
+    assertNotNull(elements);
+    List<String> presentations = ContainerUtil.mapNotNull(elements, e -> {
+      if (!e.getLookupString().equals("tree")) return null;
+      LookupElementPresentation p = LookupElementPresentation.renderElement(e);
+      return p.getItemText() + "|" + p.getTailText() + "|" + p.getTypeText();
+    });
+    assertEquals(2, presentations.size());
+    assertEquals(presentations.toString(), 2, new HashSet<>(presentations).size());
+  }
+
   public void testNoUndefinedOrDeprecatedBuiltInTypes() {
     doTestVariants("-type foo() :: <caret>.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "improper_list", "bool");
   }
@@ -488,6 +505,24 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       -type priv() :: integer().
       -type priv_list() :: [priv()].
       -spec f() -> own:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacro() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:<caret>.""");
+    doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
+  }
+
+  public void testModuleQualifiedTypesOfModuleMacroWithPrefix() {
+    myFixture.configureByText("own.erl", """
+      -module(own).
+      -type priv() :: integer().
+      -type priv_list() :: [priv()].
+      -spec f() -> ?MODULE:p<caret>.""");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EQUALS, "priv", "priv_list");
   }
 
@@ -646,6 +681,41 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   public void testModuleCompletionContainsModule() {
     myFixture.configureByFiles("module-completion/use_module.erl", "module-completion/test_module.erl");
     doTestVariantsInner(CompletionType.BASIC, 2, CheckType.INCLUDES, "test_module");
+  }
+
+  public void testSecondBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      -export([all/0, small_order/0, big_order/0]).
+
+      small_order() -> ok.
+      big_order() -> ok.
+
+      all() ->
+        small_order(),
+        big_order(),
+        sma<caret>.""", CompletionType.BASIC, 2, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testThirdBasicCompletionDoesNotOfferTypedWord() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> small.
+      all() -> sma<caret>.""", CompletionType.BASIC, 3, CheckType.EXCLUDES, "sma");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedElsewhereInFile() {
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma.
+      all() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
+  }
+
+  public void testSecondBasicCompletionOffersTypedWordUsedInAnotherFile() {
+    myFixture.addFileToProject("other.erl", "-module(other).\nf() -> sma.");
+    doTestVariants("""
+      -module(shop_tests).
+      small_order() -> sma<caret>.""", CompletionType.BASIC, 2, CheckType.INCLUDES, "sma", "small_order");
   }
 
   public void testModuleCompletionContainsFunctions() {
@@ -946,6 +1016,85 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
                 CheckType.EQUALS, "B4", "B3", "g");
   }
 
+  public void testSmartIntegerProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerSumOfProductWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 1 + 2 * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartIntegerProductWithCommentBeforeOperator() {
+    doSmartTest("""
+                  -spec g(A :: integer()) -> integer().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 % two
+                          * 3,
+                      C = 1,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatDivisionWithSpaces() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 / 1,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
+  public void testSmartFloatExcludesProductWithUnknownOperand() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N * 2,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.EXCLUDES, "B");
+  }
+
+  public void testSmartFloatProductOfUnknownOperandAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo(N) ->
+                      B = N*2.0,
+                      B2 = N * 2.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "B2", "C");
+  }
+
+  public void testSmartFloatProductOfIntegerAndFloat() {
+    doSmartTest("""
+                  -spec g(A :: float()) -> float().
+                  g(A) -> A.
+                  foo() ->
+                      B = 2 * 3.0,
+                      C = 1.0,
+                      g(<caret>);""",
+                CheckType.INCLUDES, "B", "C");
+  }
+
   public void testSmartCompositeTypes() {
     doSmartTest(
       """
@@ -958,6 +1107,39 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
         new(Func, ClauseSpecs) -> ok.""",
       CheckType.EQUALS, "Fun", "Fun2" , "Str"
     );
+  }
+
+  public void testSmartSecondArgumentWithLowerArityOverload() {
+    doSmartTest(
+      """
+        -spec new(atom()) -> ok.
+        new(_) -> ok.
+        -spec new(atom(), string()) -> ok.
+        new(A, B) ->
+            Str = "",
+            Str2 = "",
+            new(atom, <caret>).""",
+      CheckType.INCLUDES, "Str", "Str2"
+    );
+  }
+
+  public void testSmartFirstArgumentWithZeroArityOverload() {
+    doSmartTest(
+      """
+        -spec foo() -> ok.
+        foo() -> ok.
+        -spec foo(integer()) -> ok.
+        foo(I) ->
+            B = 1,
+            B2 = 2,
+            foo(<caret>).""",
+      CheckType.INCLUDES, "B", "B2"
+    );
+  }
+
+  public void testSmartSecondArgumentOfBifWithLowerArityOverload() {
+    myFixture.configureByText("a.erl", "foo(N) -> spawn(N, <caret>).");
+    myFixture.complete(CompletionType.SMART);
   }
 
   public void testFunctionsFromCameCaseModule() {

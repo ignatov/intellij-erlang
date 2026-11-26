@@ -23,6 +23,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SdkModificator;
 import com.intellij.openapi.roots.JavadocOrderRootType;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -109,6 +110,48 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                     test() ->
                         erl<caret>ang:length([]).
                   """);
+  }
+
+  public void testExternalUrlSdkFunctionInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#request/1",
+                  """
+                    -module(test).
+                    test() ->
+                        httpc:req<caret>uest(u).
+                    """);
+  }
+
+  public void testExternalUrlSdkModuleInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html",
+                  """
+                    -module(test).
+                    test() ->
+                        htt<caret>pc:request(u).
+                    """);
+  }
+
+  public void testExternalUrlSdkTypeInNestedSourceDir() {
+    doTestGetUrls("https://www.erlang.org/doc/apps/inets/httpc.html#t:request_id/0",
+                  """
+                    -module(test).
+                    -spec test(httpc:request<caret>_id()) -> ok.
+                    test(_RequestId) -> ok.
+                    """);
+  }
+
+  public void testGenerateDocSdkFunctionInNestedSourceDir() {
+    doTestExternalDoc(
+      "<html>\n" +
+      ErlangSdkDocProviderBase.HTTP_STYLE +
+      "<body>\n" +
+      "    <p><a name=\"request-1\"></a><span class=\"bold_code\">request(Url) -&gt; Result</span><br>" +
+      "<div class=\"REFBODY\"><p>Sends a request to <span class=\"code\">Url</span>.</p></div></p>\n" +
+      "</body></html>\n",
+      """
+        -module(test).
+        test() ->
+            httpc:req<caret>uest(u).
+        """);
   }
 
   public void testGenerateModernDocSdkFunction() throws Exception {
@@ -688,6 +731,29 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
   }
 
+  public void testResolveModernLinkTypeWithArity() {
+    myFixture.addFileToProject("trees.erl", """
+      -module(trees).
+      -export_type([tree/0, tree/1]).
+      -type tree() :: tree(term()).
+      -type tree(T) :: nil | {node, T, tree(T), tree(T)}.
+      """);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "trees#t:tree/1", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+    assertEquals(1, ((ErlangTypeDefinition) psiElement).getArity());
+  }
+
+  public void testResolveModernLinkTypeWithUnknownArity() {
+    myFixture.addFileToProject("trees.erl", """
+      -module(trees).
+      -export_type([tree/1]).
+      -type tree(T) :: nil | {node, T, tree(T), tree(T)}.
+      """);
+    PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "trees#t:tree/0", null);
+    assertTrue("Not a type: " + psiElement, psiElement instanceof ErlangTypeDefinition);
+    assertEquals(1, ((ErlangTypeDefinition) psiElement).getArity());
+  }
+
   public void testResolveLinkUnknownAnchor() {
     PsiElement psiElement = myErlangDocProvider.getDocumentationElementForLink(getPsiManager(), "file#module-error-information", null);
     assertTrue("Not a module: " + psiElement, psiElement instanceof ErlangModule);
@@ -759,6 +825,48 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
     assertNull(myErlangDocProvider.getQuickNavigateInfo(element, null));
   }
 
+  public void testFunctionDocKeepsAngleBracketsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(frame).
+                                                 -export([pack/1, demo/0]).
+
+                                                 %% Packs Data as <<Len:16, Data/binary>>.
+                                                 pack(Data) -> <<(byte_size(Data)):16, Data/binary>>.
+
+                                                 demo() -> pa<caret>ck(<<"abc">>).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> Packs Data as &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testFunctionDocKeepsPlaceholdersAndTagsOfComment() {
+    PsiElement element = resolveElementAtCaret("""
+                                                 -module(cli).
+                                                 -export([run/1, demo/0]).
+
+                                                 %% @doc Usage: run <file> [<options>] & more.
+                                                 run(Args) -> Args.
+
+                                                 demo() -> r<caret>un([]).
+                                                 """);
+    assertEquals("<pre><b>Comment:</b><br/> <b>@doc</b> Usage: run &lt;file&gt; [&lt;options&gt;] &amp; more.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
+  public void testModuleDocKeepsAngleBracketsOfComment() {
+    myFixture.configureByText("frame.erl", """
+      %%% Frames are <<Len:16, Data/binary>>.
+      -module(frame).
+      """);
+    PsiElement element = myFixture.configureByText("test.erl", """
+      -module(test).
+      demo() -> fra<caret>me:pack(<<>>).
+      """).findReferenceAt(myFixture.getEditor().getCaretModel().getOffset()).resolve();
+    assertInstanceOf(element, ErlangModule.class);
+    assertEquals("<pre> Frames are &lt;&lt;Len:16, Data/binary&gt;&gt;.</pre>",
+                 myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
@@ -771,6 +879,12 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
           SdkModificator sdkModificator = mockSdk.getSdkModificator();
           VirtualFile localDocDir = LocalFileSystem.getInstance().findFileByPath("testData/mockSdk-R15B02/");
           sdkModificator.addRoot(localDocDir, JavadocOrderRootType.getInstance());
+          // An OTP application whose module source lies in a subdirectory of src, as inets keeps httpc.erl in src/http_client
+          VirtualFile nestedSdkLib = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkLib/");
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.SOURCES);
+          sdkModificator.addRoot(nestedSdkLib, OrderRootType.CLASSES);
+          VirtualFile nestedSdkDoc = LocalFileSystem.getInstance().findFileByPath("testData/documentation/nestedSdkDoc/");
+          sdkModificator.addRoot(nestedSdkDoc, JavadocOrderRootType.getInstance());
           sdkModificator.commitChanges();
           return mockSdk;
         });

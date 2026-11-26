@@ -1,6 +1,7 @@
 package org.intellij.erlang.macrolayer;
 
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.projectRoots.Sdk;
@@ -14,8 +15,10 @@ import com.intellij.psi.stubs.StubTree;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import com.intellij.usageView.UsageViewTypeLocation;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.indexing.ID;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -310,5 +313,179 @@ public class ErlangMacroLayerGateTest extends ErlangLightPlatformCodeInsightFixt
   private static void assertNoCopy(String what, @NotNull PsiElement e) {
     PsiFile f = e.getContainingFile();
     assertTrue(what + ": " + where(e), e.isPhysical() && f != null && f.getUserData(ErlangMacroLayer.COPY_OF) == null);
+  }
+
+  // ---------------------------------------------------------------------------------------------- entry points
+
+  public void testModeFollowsTheSwitch() {
+    assertEquals(ErlangMacroLayer.Mode.LAYER, ErlangMacroLayer.getMode());
+    Disposable off = Disposer.newDisposable();
+    try {
+      ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, off);
+      assertEquals(ErlangMacroLayer.Mode.OFF, ErlangMacroLayer.getMode());
+    }
+    finally {
+      Disposer.dispose(off);
+    }
+    assertEquals(ErlangMacroLayer.Mode.LAYER, ErlangMacroLayer.getMode());
+  }
+
+  public void testQuietMillisForTests() {
+    ErlangMacroLayer.setQuietMillisForTests(321, getTestRootDisposable());
+    assertEquals(321, ErlangMacroLayer.quietMillis());
+  }
+
+  public void testMacroUsesInText() {
+    assertTrue(ErlangMacroLayer.usesKnownMacro("f() -> ?'my macro'(1).", Set.of("my macro")));
+    assertTrue(ErlangMacroLayer.usesKnownMacro("f() -> ? M.", Set.of("M")));
+    // ??X stringifies the argument X of a macro: it is not a use of the macro X
+    assertFalse(ErlangMacroLayer.usesKnownMacro("-define(S(X), ??X).", Set.of("X")));
+    assertFalse(ErlangMacroLayer.usesKnownMacro("f() -> ?'other'.", Set.of("my macro")));
+    assertEquals(Set.of("q q", "B"), ErlangMacroLayer.macroNamesIn("??A ?'q q' ?B ?C ?", Set.of("A", "q q", "B")));
+    assertEquals(Set.of(), ErlangMacroLayer.macroNamesIn("??A ? ", Set.of("A")));
+  }
+
+  public void testExplicitTableAndFormUse() throws Exception {
+    PsiFile file = myFixture.configureByText("tbl.erl", """
+      -module(tbl).
+      -export([f/0, g/0]).
+      -define(K, 1).
+      f() -> ?K.
+      g() -> ok.
+      """);
+    ErlangFunction f = ((ErlangFile)file).getFunction("f", 0);
+    ErlangFunction g = ((ErlangFile)file).getFunction("g", 0);
+    assertNotNull(f);
+    assertNotNull(g);
+    List<Object> r = LayerTestSupport.inBackground(() -> {
+      ErlangMacroLayer.Table t = ErlangMacroLayer.table((ErlangFile)file, true);
+      assertNotNull(t);
+      return List.of(t.refusal == null, t.names.contains("K"), ErlangMacroLayer.formUsesMacroForTests(t, f),
+                     ErlangMacroLayer.formUsesMacroForTests(t, g), ErlangMacroLayer.formUsesMacroForTests(t, null));
+    });
+    assertEquals(List.of(true, true, true, false, false), r);
+  }
+
+  public void testFormUseWithMissingIncludeAtEndOfFile() throws Exception {
+    PsiFile file = myFixture.configureByText("mi.erl", """
+      -module(mi).
+      -include("missing_header.hrl").
+      -define(K, 1).
+      g() -> ?FROM_HEADER(1).
+      f() -> ?K
+      """);
+    ErlangFunction f = ((ErlangFile)file).getFunction("f", 0);
+    ErlangFunction g = ((ErlangFile)file).getFunction("g", 0);
+    assertNotNull(f);
+    assertNotNull(g);
+    List<Object> r = LayerTestSupport.inBackground(() -> {
+      ErlangMacroLayer.Table t = ErlangMacroLayer.table((ErlangFile)file, true);
+      assertNotNull(t);
+      return List.of(t.refusal == null, t.missingInclude, ErlangMacroLayer.formUsesMacroForTests(t, ErlangMacroLayer.topForm(f)),
+                     ErlangMacroLayer.formUsesMacroForTests(t, ErlangMacroLayer.topForm(g)));
+    });
+    // the last form uses a macro the file sees and runs to the end of the file; the one before uses a macro that may
+    // come from the missing header, which leaves it to master
+    assertEquals(List.of(true, true, true, false), r);
+  }
+
+  public void testExitGuard() throws Exception {
+    PsiFile file = myFixture.configureByText("ex.erl", """
+      -module(ex).
+      -export([f/0]).
+      -define(K, local()).
+      local() -> ok.
+      f() -> ?K.
+      """);
+    ErlangMacroLayer.Copy copy = LayerTestSupport.inBackground(() -> ErlangMacroLayer.getCopy(file));
+    assertNotNull(copy);
+    assertNotNull(copy.copyFile);
+    PsiElement real = ((ErlangFile)file).getFunction("local", 0);
+    assertNotNull(real);
+    PsiElement inCopy = copy.copyFile.getFunction("local", 0);
+    assertNotNull(inCopy);
+    assertNull(ErlangMacroLayer.exit(null, file));
+    assertSame(real, ErlangMacroLayer.exit(real, file));
+    int violations = ErlangMacroLayer.GUARD_VIOLATIONS.get();
+    try {
+      ErlangMacroLayer.exit(inCopy, file);
+      fail("an element of the copy left the layer");
+    }
+    catch (AssertionError e) {
+      assertTrue(e.getMessage(), e.getMessage().startsWith("macro layer: an element of an expanded copy left the layer"));
+    }
+    assertEquals(violations + 1, ErlangMacroLayer.GUARD_VIOLATIONS.get());
+  }
+
+  public void testIsMacroParameter() {
+    PsiFile file = myFixture.configureByText("par.erl", """
+      -module(par).
+      -define(M(A, B), {A, B, C}).
+      -define(N, C).
+      """);
+    List<ErlangMacrosDefinition> defs = new ArrayList<>(PsiTreeUtil.findChildrenOfType(file, ErlangMacrosDefinition.class));
+    assertEquals(2, defs.size());
+    assertTrue(ErlangMacroLayer.isMacroParameter(defs.get(0), "A"));
+    assertTrue(ErlangMacroLayer.isMacroParameter(defs.get(0), "B"));
+    assertFalse(ErlangMacroLayer.isMacroParameter(defs.get(0), "C"));
+    assertFalse(ErlangMacroLayer.isMacroParameter(defs.get(1), "C"));
+  }
+
+  public void testNoLayerDescriptionOfAPlainName() {
+    PsiFile file = myFixture.configureByText("desc.erl", """
+      -module(desc).
+      -export([f/0]).
+      -define(K, 1).
+      f() -> {plain, ?K}.
+      """);
+    PsiElement leaf = file.findElementAt(file.getText().indexOf("plain"));
+    assertNotNull(leaf);
+    assertEquals("plain", leaf.getText());
+    assertFalse(ErlangMacroLayer.isNameMadeByMacro(leaf));
+    assertNull(ErlangMacroLayer.describeLayerTarget(leaf, UsageViewTypeLocation.INSTANCE));
+  }
+
+  public void testRenameTargetOfMadeNameIsUnknownWithoutCopyOnUiThread() throws Exception {
+    ErlangMacroLayer.setEdtBuildForTests(false, getTestRootDisposable());
+    PsiFile file = myFixture.configureByText("rt.erl", """
+      -module(rt).
+      -export([made/0]).
+      -define(MK(N), N() -> ok).
+      ?MK(made).
+      """);
+    int at = file.getText().indexOf("made).");
+    ErlangQAtom q = PsiTreeUtil.getParentOfType(file.findElementAt(at), ErlangQAtom.class);
+    assertNotNull(q);
+    assertTrue(ErlangMacroLayer.isNameMadeByMacro(PsiTreeUtil.firstChild(q)));
+    // on the UI thread no copy is built, so the layer cannot tell yet what to rename
+    assertNull(ErlangMacroLayer.renameTargetOfMacroToken(q));
+    assertNotNull(LayerTestSupport.inBackground(() -> ErlangMacroLayer.getCopy(file)));
+    // with the copy there, the name's own token
+    PsiElement target = ErlangMacroLayer.renameTargetOfMacroToken(q);
+    assertNotNull(target);
+    assertNotSame(q, target);
+    assertEquals("made", target.getText());
+    assertEquals(at, target.getTextRange().getStartOffset());
+  }
+
+  private static PsiErrorElement lastError(PsiFile file) {
+    List<PsiErrorElement> errors = new ArrayList<>(PsiTreeUtil.findChildrenOfType(file, PsiErrorElement.class));
+    assertFalse(errors.isEmpty());
+    return errors.get(errors.size() - 1);
+  }
+
+  public void testSyntaxErrorAtEndOfExpandedFormIsShown() throws Exception {
+    // erlc: "syntax error before:" at the end of the file, the last form has no dot
+    PsiFile file = myFixture.configureByText("eof.erl", "-module(eof).\n-export([f/0]).\n-define(X, 1).\nf() -> ?X\n");
+    PsiErrorElement error = lastError(file);
+    assertEquals(file.getText().indexOf("?X\n") + 2, error.getTextRange().getStartOffset());
+    ErlangMacroLayer.Copy copy = LayerTestSupport.inBackground(() -> ErlangMacroLayer.getCopy(file));
+    assertNotNull(copy);
+    assertNotNull(copy.copyFile);
+    ErlangMacroExpander.Form last = copy.expansion.forms.get(copy.expansion.forms.size() - 1);
+    assertEquals(ErlangMacroExpander.FormStatus.EXPANDED, last.status);
+    assertTrue(copy.isBroken(last));
+    assertFalse(copy.isClean(last));
+    assertFalse(LayerTestSupport.inBackground(() -> ErlangMacroLayer.isErrorExplainedByExpansion(error)));
   }
 }
