@@ -103,14 +103,15 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
     if (parent == null) return false;
 
-    int endOffset = getEndInsertionOffset(file, editor, lastElement.getTextRange().getEndOffset());
+    int endOffset = getEndInsertionOffset(file, editor, lastElement.getParent(), lastElement.getTextRange().getEndOffset());
     if (endOffset < 0) return false;
 
     appendEndAndMoveCaret(file, editor, endOffset, needCommaAfter(parent));
     return true;
   }
 
-  private static int getEndInsertionOffset(@NotNull PsiFile file, @NotNull Editor editor, int keywordEndOffset) {
+  private static int getEndInsertionOffset(@NotNull PsiFile file, @NotNull Editor editor, @NotNull PsiElement construct,
+                                           int keywordEndOffset) {
     Document document = editor.getDocument();
     CharSequence text = document.getCharsSequence();
     int caretOffset = editor.getCaretModel().getOffset();
@@ -119,8 +120,26 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     if (nonSpaceOffset >= lineEndOffset) return keywordEndOffset;
     if (text.charAt(nonSpaceOffset) == '%') return lineEndOffset;
     PsiElement next = file.findElementAt(nonSpaceOffset);
-    ASTNode nextNode = next != null ? next.getNode() : null;
-    return nextNode != null && TOKENS_AFTER_CONSTRUCT.contains(nextNode.getElementType()) ? keywordEndOffset : -1;
+    if (next == null) return -1;
+    IElementType nextType = next.getNode().getElementType();
+    boolean continuesConstruct = PsiTreeUtil.isAncestor(construct, next, false) &&
+                                 !TOKENS_AFTER_CONSTRUCT.contains(nextType) &&
+                                 !belongsToEnclosingConstruct(construct, nextType);
+    return continuesConstruct ? -1 : keywordEndOffset;
+  }
+
+  private static boolean belongsToEnclosingConstruct(@NotNull PsiElement construct, @NotNull IElementType keyword) {
+    Class<? extends PsiElement>[] owners = getOwnersOf(keyword);
+    if (owners.length == 0 || PsiTreeUtil.instanceOf(construct, owners)) return false;
+    return PsiTreeUtil.getParentOfType(construct, owners) != null;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Class<? extends PsiElement> @NotNull [] getOwnersOf(@NotNull IElementType keyword) {
+    if (keyword == ErlangTypes.ERL_CATCH) return new Class[]{ErlangTryExpression.class};
+    if (keyword == ErlangTypes.ERL_AFTER) return new Class[]{ErlangTryExpression.class, ErlangReceiveExpression.class};
+    if (keyword == ErlangTypes.ERL_ELSE) return new Class[]{ErlangMaybeExpression.class};
+    return new Class[0];
   }
 
   @Nullable
