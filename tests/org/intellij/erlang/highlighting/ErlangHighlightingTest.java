@@ -48,6 +48,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
   public void testLoneDot()           { doTest(); } // issue 1646
+  public void testDuplicateAfterSplitFormMadeFunction() { doTest(); } // issue 1677
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
