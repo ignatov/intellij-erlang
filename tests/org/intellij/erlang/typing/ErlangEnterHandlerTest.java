@@ -41,6 +41,9 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testReceiveSimple()                        { doTest(); }
   public void testReceiveWithSucceedingFunctions()       { doTest(); }
   public void testReceiveWithSpace()                     { doTest(); }
+  public void testReceiveWithCodeAfterCaret()            { doTest(); }
+  public void testCaseOfWithCommentAfterCaret()          { doTest(); }
+  public void testIfWithCodeAfterCaretInUnfinishedCase() { doTest(); }
 
   public void testIfSimple()                             { doTest(); }
   public void testIfWithSucceedingFunctions()            { doTest(); }

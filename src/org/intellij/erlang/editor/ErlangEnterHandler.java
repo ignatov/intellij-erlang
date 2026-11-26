@@ -22,6 +22,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 import com.intellij.openapi.project.Project;
@@ -34,6 +35,7 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ObjectUtils;
+import com.intellij.util.text.CharArrayUtil;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -95,12 +97,23 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
     PsiElement parent = lastElement != null ? lastElement.getParent() : null;
     parent = expectedParentClass.isInstance(parent) && !hasEnd(parent) ? parent : null;
 
-    if (parent != null) {
-      appendEndAndMoveCaret(file, editor, lastElement.getTextRange().getEndOffset(), needCommaAfter(parent));
-      return  true;
-    }
+    if (parent == null) return false;
 
-    return false;
+    int endOffset = getEndInsertionOffset(editor, lastElement.getTextRange().getEndOffset());
+    if (endOffset < 0) return false;
+
+    appendEndAndMoveCaret(file, editor, endOffset, needCommaAfter(parent));
+    return true;
+  }
+
+  private static int getEndInsertionOffset(@NotNull Editor editor, int keywordEndOffset) {
+    Document document = editor.getDocument();
+    CharSequence text = document.getCharsSequence();
+    int caretOffset = editor.getCaretModel().getOffset();
+    int lineEndOffset = document.getLineEndOffset(document.getLineNumber(caretOffset));
+    int nonSpaceOffset = CharArrayUtil.shiftForward(text, caretOffset, lineEndOffset, " \t");
+    if (nonSpaceOffset >= lineEndOffset) return keywordEndOffset;
+    return text.charAt(nonSpaceOffset) == '%' ? lineEndOffset : -1;
   }
 
   @Nullable
