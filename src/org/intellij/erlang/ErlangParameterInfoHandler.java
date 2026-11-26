@@ -29,6 +29,7 @@ import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.bif.ErlangBifDescriptor;
 import org.intellij.erlang.bif.ErlangBifTable;
 import org.intellij.erlang.psi.*;
+import org.intellij.erlang.psi.impl.ErlangMacroResolve;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +73,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
     PsiElement callee = PsiTreeUtil.skipWhitespacesAndCommentsBackward(args);
     ErlangMacros macros = callee instanceof ErlangQAtom ? ((ErlangQAtom) callee).getMacros() : ObjectUtils.tryCast(callee, ErlangMacros.class);
     PsiReference reference = macros != null ? macros.getReference() : null;
-    PsiElement resolve = reference != null ? reference.resolve() : null;
+    PsiElement resolve = ErlangMacroResolve.firstTarget(reference);
     if (!(resolve instanceof ErlangMacrosDefinition) || !(resolve.getContainingFile() instanceof ErlangFile)) return Collections.emptyList();
     ErlangMacrosDefinition resolved = (ErlangMacrosDefinition) resolve;
     ErlangFile file = (ErlangFile) resolve.getContainingFile();
@@ -151,7 +152,7 @@ public class ErlangParameterInfoHandler implements ParameterInfoHandler<ErlangAr
         ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
         String directive = atomAttribute != null ? atomAttribute.getName() :
                            attribute.getElseAtomAttribute() != null ? "else" :
-                           attribute.getNode().findChildByType(ErlangTypes.ERL_IF) != null ? "if" : "";
+                           attribute.getIfAtomAttribute() != null ? "if" : "";
         switch (directive) {
           case "if", "ifdef", "ifndef" -> open.add(nextBranch++);
           case "else", "elif" -> {

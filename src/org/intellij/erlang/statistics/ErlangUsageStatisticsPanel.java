@@ -1,0 +1,182 @@
+/*
+ * Copyright 2012-2026 Sergey Ignatov
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.intellij.erlang.statistics;
+
+import com.intellij.ide.BrowserUtil;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.ActionLink;
+import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextArea;
+import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.TestOnly;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionListener;
+
+/**
+ * The "Usage Statistics" section of the Erlang External Tools settings page.
+ */
+public final class ErlangUsageStatisticsPanel extends JPanel {
+  public static final String CHECKBOX_TEXT = "Send anonymous usage statistics";
+  static final String PREVIEW_SENT = "The summary of today so far. If the statistics are on, it is sent tomorrow.";
+  static final String PREVIEW_NOT_SENT = "The summary of today so far. Today has no Erlang work yet, so it is not sent.";
+  static final String SWITCHED_OFF_TEXT = "Switched off in this IDE session by DO_NOT_TRACK, -Derlang.usage.statistics=false, " +
+                                          "a development build or headless mode.";
+  private final JBCheckBox myCheckBox = new JBCheckBox(CHECKBOX_TEXT);
+  // the value shown by the last reset; a second settings dialog that did not touch the check box changes nothing
+  private boolean myShownValue;
+
+  public ErlangUsageStatisticsPanel() {
+    super(new BorderLayout());
+    // no gap on the left, so that the button lines up with the text above it
+    JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+    JButton show = new JButton("Show what is sent");
+    show.addActionListener(e -> showPreview(this));
+    actions.add(show);
+    actions.add(Box.createHorizontalStrut(JBUI.scale(12)));
+    actions.add(new ActionLink("Privacy policy", (ActionListener)e -> BrowserUtil.browse(ErlangUsageStatistics.PRIVACY_URL)));
+    FormBuilder builder = FormBuilder.createFormBuilder()
+      .addComponent(new TitledSeparator("Usage Statistics"))
+      .addComponent(myCheckBox);
+    if (!ErlangUsageStatistics.isAllowed()) {
+      // the environment switches the statistics off, so the check box cannot store an answer
+      myCheckBox.setEnabled(false);
+      JBLabel off = new JBLabel(ErlangUsageAskDialog.wrapped(SWITCHED_OFF_TEXT));
+      off.setForeground(UIUtil.getContextHelpForeground());
+      builder.addComponent(off);
+    }
+    JPanel form = builder
+      .addComponent(new JBLabel(ErlangUsageAskDialog.wrapped("Once a day: counts of the features used, the IDE, the OS and the " +
+                                                             "Erlang/OTP release. Never code, names or paths.")))
+      .addComponent(actions)
+      .getPanel();
+    add(form, BorderLayout.CENTER);
+    reset();
+  }
+
+  public boolean isModified() {
+    return myCheckBox.isSelected() != myShownValue;
+  }
+
+  public void apply() {
+    if (!isModified()) return;
+    ErlangUsageStatistics.getInstance().setEnabled(myCheckBox.isSelected());
+    myShownValue = myCheckBox.isSelected();
+  }
+
+  public void reset() {
+    myShownValue = isEnabled(ErlangUsageStatistics.getInstance());
+    myCheckBox.setSelected(myShownValue);
+  }
+
+  @TestOnly
+  void setSelectedForTests(boolean selected) {
+    myCheckBox.setSelected(selected);
+  }
+
+  @TestOnly
+  boolean isCheckBoxEnabledForTests() {
+    return myCheckBox.isEnabled();
+  }
+
+  // the JSON of today's summary so far, in a read-only dialog
+  static void showPreview(@NotNull Component parent) {
+    ErlangUsageCollector collector = ErlangUsageStatistics.getInstance().getCollector();
+    new PreviewDialog(parent, previewNote(collector), collector.previewToday()).show();
+  }
+
+  // what the preview says about the send of today; while the statistics are off nothing is counted, so it stays general
+  @NotNull
+  static String previewNote(@NotNull ErlangUsageCollector collector) {
+    return !collector.isCounting() || collector.hasActivityToday() ? PREVIEW_SENT : PREVIEW_NOT_SENT;
+  }
+
+  private static boolean isEnabled(@NotNull ErlangUsageStatistics statistics) {
+    return statistics.getCollector().getConsent() == ErlangUsageCollector.Consent.YES;
+  }
+
+  private static final class PreviewDialog extends DialogWrapper {
+    private final String myNote;
+    private final String myJson;
+
+    PreviewDialog(@NotNull Component parent, @NotNull String note, @NotNull String json) {
+      super(parent, false);
+      myNote = note;
+      myJson = json;
+      setTitle("What Is Sent");
+      init();
+    }
+
+    @Override
+    protected @Nullable JComponent createCenterPanel() {
+      JBTextArea text = new JBTextArea(prettyPrint(myJson), 24, 72);
+      text.setEditable(false);
+      text.setFont(JBUI.Fonts.create(Font.MONOSPACED, text.getFont().getSize()));
+      JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(8)));
+      panel.add(new JBLabel(myNote), BorderLayout.NORTH);
+      panel.add(new JBScrollPane(text), BorderLayout.CENTER);
+      return panel;
+    }
+
+    @Override
+    protected Action @NotNull [] createActions() {
+      return new Action[]{getOKAction()};
+    }
+  }
+
+  @NotNull
+  static String prettyPrint(@NotNull String json) {
+    StringBuilder result = new StringBuilder();
+    int indent = 0;
+    boolean inString = false;
+    for (int i = 0; i < json.length(); i++) {
+      char c = json.charAt(i);
+      if (inString) {
+        result.append(c);
+        if (c == '\\' && i + 1 < json.length()) result.append(json.charAt(++i));
+        else if (c == '"') inString = false;
+        continue;
+      }
+      switch (c) {
+        case '"' -> {
+          inString = true;
+          result.append(c);
+        }
+        case '{', '[' -> {
+          indent++;
+          result.append(c).append('\n').append("  ".repeat(indent));
+        }
+        case '}', ']' -> {
+          indent--;
+          result.append('\n').append("  ".repeat(Math.max(indent, 0))).append(c);
+        }
+        case ',' -> result.append(c).append('\n').append("  ".repeat(indent));
+        case ':' -> result.append(": ");
+        default -> result.append(c);
+      }
+    }
+    return result.toString();
+  }
+}

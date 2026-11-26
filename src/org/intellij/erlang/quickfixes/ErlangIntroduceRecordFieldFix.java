@@ -18,15 +18,18 @@ package org.intellij.erlang.quickfixes;
 
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
 import org.intellij.erlang.psi.ErlangRecordExpression;
+import org.intellij.erlang.psi.ErlangTypedExpr;
 import org.intellij.erlang.psi.ErlangTypedRecordFields;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
   @NotNull
@@ -37,6 +40,7 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement element = descriptor.getPsiElement();
     ErlangRecordExpression recordExpression = PsiTreeUtil.getParentOfType(element, ErlangRecordExpression.class);
     if (recordExpression != null) {
@@ -44,14 +48,28 @@ public class ErlangIntroduceRecordFieldFix extends ErlangQuickFixBase {
       PsiElement resolve = reference != null ? reference.resolve() : null;
       if (resolve != null) {
         ErlangTypedRecordFields fields = ((ErlangRecordDefinition) resolve).getTypedRecordFields();
-        if (fields != null) {
-          String replace = fields.getText().replaceFirst("\\{", "").replace("}", "");
-          boolean empty = StringUtil.isEmptyOrSpaces(replace);
-
-          String newFields = replace + (empty ? "" : " ,") + element.getText();
-          PsiElement recordFieldsFromText = ErlangElementFactory.createRecordFieldsFromText(project, newFields);
-
-          fields.replace(recordFieldsFromText);
+        PsiElement rightBrace = fields != null ? fields.getCurlyRight() : null;
+        if (rightBrace != null) {
+          PsiElement lastField = PsiTreeUtil.skipWhitespacesAndCommentsBackward(rightBrace);
+          List<ErlangTypedExpr> fieldsFromText = ((ErlangTypedRecordFields) ErlangElementFactory
+            .createRecordFieldsFromText(project, "x, " + element.getText())).getTypedExprList();
+          if (lastField == null || fieldsFromText.size() != 2) return;
+          PsiElement comma = fieldsFromText.get(0).getNextSibling();
+          PsiElement newField = fieldsFromText.get(1);
+          if (lastField == fields.getCurlyLeft()) {
+            fields.addBefore(newField, rightBrace);
+          }
+          else {
+            PsiElement lastComment = PsiTreeUtil.skipWhitespacesBackward(rightBrace);
+            if (lastComment == lastField) {
+              fields.addRangeAfter(comma, newField, lastField);
+            }
+            else {
+              fields.addAfter(comma, lastField);
+              PsiElement addedField = fields.addAfter(newField, lastComment);
+              fields.addBefore(ErlangElementFactory.createWhitespaceFromText(project, "\n"), addedField);
+            }
+          }
         }
       }
     }

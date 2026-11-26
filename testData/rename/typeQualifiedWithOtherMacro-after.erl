@@ -1,0 +1,5 @@
+-module(own).
+-export_type([u/0]).
+-define(MOD, other).
+-type <caret>zz() :: integer().
+-type u() :: {zz(), ?MODULE:zz(), ?MOD:t()}.

@@ -25,6 +25,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
+import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.formatter.WrappingUtil;
 import com.intellij.psi.formatter.common.AbstractBlock;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -115,7 +116,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private List<Block> buildSubBlocks() {
     final List<Block> blocks = new ArrayList<>();
     final Alignment baseAlignment = Alignment.createAlignment(!(myNode.getPsi() instanceof ErlangFakeBinaryExpression));
-    final Alignment baseAlignment2 = Alignment.createAlignment(true);
+    final Alignment baseAlignment2 = Alignment.createAlignment();
     final AlignmentStrategy alignmentStrategy = createOrGetAlignmentStrategy();
     final Ref<Wrap> chopDownIfLongWrap = new Ref<>();
 
@@ -331,6 +332,10 @@ public class ErlangFormattingBlock extends AbstractBlock {
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
     }
     if (BRACKETS_CONTAINERS.contains(parentType)) {
+      if ((childType == ERL_BRACKET_RIGHT || childType == ERL_BIN_END) && myErlangSettings.ALIGN_MULTILINE_BLOCK &&
+        FormatterUtil.isPrecededBy(child, ERL_COMMA, TokenType.ERROR_ELEMENT)) {
+        return baseAlignment; // the closing bracket takes the place of the element that is being typed after the comma
+      }
       if (childType != ERL_BRACKET_LEFT && childType != ERL_BRACKET_RIGHT && childType != ERL_BIN_START && childType != ERL_BIN_END &&
         childType != ERL_COMMA && childType != ERL_OP_OR) {if (myErlangSettings.ALIGN_MULTILINE_BLOCK) return baseAlignment;}
       else if (myErlangSettings.NEW_LINE_BEFORE_COMMA) return baseAlignment2;
@@ -551,8 +556,32 @@ public class ErlangFormattingBlock extends AbstractBlock {
     return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && prevLeaf.textContains('\n');
   }
 
+  /**
+   * A function whose last child is a comma is one whose clause body the parser's recovery cut short (as at
+   * {@code setup?PAR,} with {@code -define(PAR, ()).}): a new line after it continues the body.
+   */
+  @Override
+  public boolean isIncomplete() {
+    return super.isIncomplete() || endsInRecoveredComma();
+  }
+
+  private boolean endsInRecoveredComma() {
+    if (myNode.getElementType() != ERL_FUNCTION) return false;
+    ASTNode last = myNode.getLastChildNode();
+    return last != null && last.getElementType() == ERL_COMMA;
+  }
+
+  /** With an indent, the function is the rest of a body that the recovery split: the new line keeps its column. */
+  private static boolean startsAtColumnZero(@NotNull ASTNode node) {
+    ASTNode prevLeaf = TreeUtil.prevLeaf(node);
+    return prevLeaf == null || prevLeaf.getElementType() == TokenType.WHITE_SPACE && StringUtil.endsWithChar(prevLeaf.getChars(), '\n');
+  }
+
   @Nullable
   private Indent getChildIndentByPreviousChild(@Nullable IElementType type, int newChildIndex) {
+    if (getNode().getPsi() instanceof ErlangFunction && type == ERL_COMMA) {
+      return startsAtColumnZero(myNode) ? Indent.getNormalIndent() : Indent.getNoneIndent();
+    }
     if (getNode().getPsi() instanceof ErlangFunction && type == ERL_SEMI) return Indent.getNoneIndent();
 
     if (type == ERL_SEMI || type == ERL_OF && newChildIndex == 3)  {

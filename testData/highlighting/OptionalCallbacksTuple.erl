@@ -1,0 +1,3 @@
+-callback foo(integer()) -> ok.
+-callback bar() -> ok.
+-optional_callbacks([{foo, 1}, bar/0]).

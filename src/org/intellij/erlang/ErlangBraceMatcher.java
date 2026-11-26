@@ -46,6 +46,37 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
     super(new ErlangPairedBraceMatcher(), ErlangLanguage.INSTANCE);
   }
 
+  @Override
+  public @Nullable BracePair findPair(boolean left, @NotNull HighlighterIterator iterator, @NotNull CharSequence fileText, @NotNull FileType fileType) {
+    if (left && iterator.getTokenType() == ErlangTypes.ERL_IF && isIfAttribute(iterator)) return null;
+    return super.findPair(left, iterator, fileText, fileType);
+  }
+
+  // The 'if' of '-if(Expr).' starts a form, while '- if ... end' in an expression follows an operand or an operator.
+  private static boolean isIfAttribute(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    try {
+      steps += retreatOverWhitespaceAndComments(iterator);
+      if (iterator.atEnd() || iterator.getTokenType() != ErlangTypes.ERL_OP_MINUS) return false;
+      steps += retreatOverWhitespaceAndComments(iterator);
+      return iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_DOT;
+    }
+    finally {
+      for (int i = 0; i < steps; i++) iterator.advance();
+    }
+  }
+
+  private static int retreatOverWhitespaceAndComments(@NotNull HighlighterIterator iterator) {
+    int steps = 0;
+    do {
+      iterator.retreat();
+      steps++;
+    }
+    while (!iterator.atEnd() &&
+           (iterator.getTokenType() == TokenType.WHITE_SPACE || ErlangParserDefinition.COMMENTS.contains(iterator.getTokenType())));
+    return steps;
+  }
+
   /**
    * The lexer returns ERL_FUN both for a fun block ({@code fun (...) -> ... end}, {@code fun Name(...) -> ... end})
    * and for a fun reference ({@code fun [M:]F/A}), which has no {@code end}.

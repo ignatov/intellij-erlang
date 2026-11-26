@@ -32,6 +32,7 @@ import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangModule;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -82,6 +83,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
       WriteAction.run(() -> module.setName(sanitize(project)));
@@ -114,6 +116,7 @@ public class ErlangIncorrectModuleNameInspection extends ErlangInspectionBase {
 
     @Override
     public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+      ErlangUsageCounters.countQuickFix(project, getClass());
       ErlangModule module = PsiTreeUtil.getParentOfType(problemDescriptor.getPsiElement(), ErlangModule.class);
       if (module == null) return;
       try {

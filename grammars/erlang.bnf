@@ -147,7 +147,8 @@ macros_definition ::= '-' 'define' '(' macros_name argument_definition_list? ','
   methods = [getName setName getNameIdentifier getTextOffset]
   stubClass="org.intellij.erlang.stubs.ErlangMacrosDefinitionStub"
 }
-macros_body ::= (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<consumeMacroBody>>
+macros_body ::= (expression ((',' | ';' | '->') expression)* &properly_parsed) | <<withoutErrors macros_typed_body>> | <<consumeMacroBody>>
+private macros_typed_body ::= typed_exprs &properly_parsed
 private properly_parsed ::= ')''.' | <<isInCompletion>> | <<eof>>
 
 include ::= '-' 'include' '(' include_string ')' {
@@ -175,6 +176,7 @@ attribute ::= '-' (
   | behaviour
   | on_load
   | ifdef_ifndef_undef_attribute
+  | if_atom_attribute
   | else_atom_attribute <<enterMode "ELSE">>
   | <<withOn "ATOM_ATTRIBUTE" atom_attribute>>
   ) {pin=1}
@@ -229,6 +231,7 @@ type_ref ::= q_atom {
 }
 
 ifdef_ifndef_undef_attribute ::= &('ifdef'|'ifndef'|'undef') atom_name '(' macros_name ')' {pin=2 elementType=atom_attribute}
+if_atom_attribute ::= 'if' '(' expression ')' {pin=1}
 else_atom_attribute ::= 'else' {pin=1}
 on_load ::= &'on_load' atom_name '(' function_with_arity ')'{pin=2 elementType=atom_attribute}
 atom_attribute ::= (atom_name | single_quote atom_name single_quote) ['(' typed_attr_val ')' | typed_attr_val | attr_val] {methods=[getName]}
@@ -261,8 +264,8 @@ unqualified_record_ref ::= q_atom {
 
 optional_callback_functions ::= '[' callback_function_list? ']' {pin=1}
 private callback_function_list ::= callback_function (',' callback_function)*
-callback_function ::= q_atom '/' integer {
-  pin = 1
+callback_function ::= q_atom '/' integer | '{' q_atom ',' integer '}' {
+  pin(".*") = "q_atom"
   methods = [getReference]
   stubClass="org.intellij.erlang.stubs.ErlangCallbackFunctionStub"
 }
@@ -309,7 +312,7 @@ record_like_type ::= '{' top_type_list? '}'
 private parenthesized_type ::= !('(' int_type ')' ('..' | int_type_op)) '(' top_type ')' {pin=2}
 
 int_type ::= int_type_operand (int_type_op int_type_operand)*
-private int_type_operand ::= int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+private int_type_operand ::= int_type_prefix_op* (integer | macros !':' argument_list? | char | '(' int_type ')')
 private int_type_prefix_op ::= '+' | '-' | bnot
 private int_type_op ::= '+' | '-' | '*' | div | rem | band | bor | bxor | bsl | bsr
 fun_type_100_t ::= '(' ('...' | top_type_list?) ')' top_type_clause {extends=type pin(".*")=1}
@@ -370,14 +373,14 @@ app_parameter ::= '{'
   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   | <<app_atom_named ('mod')>> ',' app_mod
   | <<app_atom_named ('start_phases')>> ',' config_expression
-  | <<app_atom_named ('runtime_dependencies')>> ',' app_runtime_deps
+  | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   | config_exprs)
   '}' {elementType=tuple_expression}
+private runtime_dependency ::= string_literal !string_literal | config_expression
 app_module_expression ::= module_ref {elementType=config_expression}
 app_integer ::= &integer atomic {elementType=config_expression}
 app_env_expression ::= '{' app_atom ',' config_expression '}' {elementType=tuple_expression}
 app_mod ::= '{' app_module_expression ',' config_expression '}' {elementType=tuple_expression}
-app_runtime_deps ::= '[' string_literal? ']' {elementType=list_expression}
 
 config_expression ::=
     config_tuple_expression
@@ -501,10 +504,11 @@ opt_bit_type_list ::= '/' bit_type_list {pin=1}
 private bit_type_list ::= bit_type ('-' bit_type)*
 bit_type ::= q_atom [':' integer]
 
-binary_comprehension ::= '<<' <<comprehension_element binary_expression>> '||' lc_exprs '>>' {
-  pin=3
+binary_comprehension ::= '<<' <<isBinaryComprehension>> <<comprehension_element bin_comprehension_template>> '||' lc_exprs '>>' {
+  pin=4
   elementType=list_comprehension
 }
+private bin_comprehension_template ::= &(macros '(') generic_function_call_expression | bin_expression {name="expression"}
 
 tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
@@ -545,7 +549,8 @@ map_construct_expression ::= map_tuple {elementType=map_expression}
 map_expression ::= expression map_tuple {pin=2}
 map_tuple ::= '#' '{' map_entries? '}' {pin=2}
 private map_entries ::= map_entry (',' map_entry)* {pin(".*")=1}
-map_entry ::= expression (('=>' | ':=') expression)? {pin=1 recoverWhile=tuple_recoverer}
+map_entry ::= &map_macro_entry expression | expression (('=>' | ':=') expression) {pin(".*")=1 recoverWhile=tuple_recoverer}
+private map_macro_entry ::= macros argument_list? (',' | '}') // the macro can expand to a whole entry: #{?ENTRY}
 
 global_function_call_expression ::= module_ref ':' (function_call_expression)
 function_call_expression ::= q_atom argument_list &not_function_definition {

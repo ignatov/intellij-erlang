@@ -36,9 +36,11 @@ import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.documentation.ErlangDocUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
+import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 
@@ -48,6 +50,21 @@ public class ErlangAnnotator implements Annotator, DumbAware {
     if (o instanceof PsiComment) {
       highlightEdocTags((PsiComment) o, annotationHolder);
       return;
+    }
+
+    if (o instanceof LeafPsiElement leaf) {
+      IElementType type = leaf.getElementType();
+      if (type == ErlangTypes.ERL_INTEGER) {
+        checkBasedInteger(leaf, annotationHolder);
+        return;
+      }
+      if (type == ErlangTypes.ERL_CHAR || type == ErlangTypes.ERL_STRING || type == ErlangTypes.ERL_SIGIL_STRING) {
+        checkEscapes(leaf, annotationHolder);
+        return;
+      }
+      if (type == ErlangTypes.ERL_ATOM_NAME) {
+        checkEscapes(leaf, annotationHolder);
+      }
     }
 
     if (o instanceof LeafPsiElement && ((LeafPsiElement) o).getElementType() == ErlangTypes.ERL_ATOM_NAME) {
@@ -123,6 +140,11 @@ public class ErlangAnnotator implements Annotator, DumbAware {
       }
 
       @Override
+      public void visitIfAtomAttribute(@NotNull ErlangIfAtomAttribute o) {
+        markFirstChild(o, annotationHolder, ErlangSyntaxHighlighter.ATTRIBUTE);
+      }
+
+      @Override
       public void visitMacrosName(@NotNull ErlangMacrosName o) {
         PsiElement firstChild = o.getFirstChild();
         if (firstChild != null) {
@@ -173,6 +195,96 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
     });
+  }
+
+  private static void checkBasedInteger(@NotNull PsiElement integer, @NotNull AnnotationHolder holder) {
+    String text = integer.getText();
+    int hash = text.indexOf('#');
+    if (hash < 0) return;
+    int start = integer.getTextRange().getStartOffset();
+    BigInteger base = new BigInteger(text.substring(0, hash).replace("_", ""));
+    if (base.compareTo(BigInteger.TWO) < 0 || base.compareTo(BigInteger.valueOf(36)) > 0) {
+      holder.newAnnotation(HighlightSeverity.ERROR, "illegal base '" + base + "'").range(TextRange.from(start, hash)).create();
+      return;
+    }
+    // erl_scan ends the integer before the first character that is not a digit of the base
+    int radix = base.intValue();
+    int end = hash + 1;
+    while (end < text.length()) {
+      if (Character.digit(text.charAt(end), radix) >= 0) {
+        end++;
+      }
+      else if (text.charAt(end) == '_' && end > hash + 1 && end + 1 < text.length() && Character.digit(text.charAt(end + 1), radix) >= 0) {
+        end += 2;
+      }
+      else {
+        break;
+      }
+    }
+    if (end == hash + 1) {
+      holder.newAnnotation(HighlightSeverity.ERROR, "illegal integer").range(integer).create();
+    }
+    else if (end < text.length()) {
+      holder.newAnnotation(HighlightSeverity.ERROR, "syntax error before: " + text.substring(end))
+        .range(TextRange.create(start + end, start + text.length())).create();
+    }
+  }
+
+  private static void checkEscapes(@NotNull PsiElement literal, @NotNull AnnotationHolder holder) {
+    String text = literal.getText();
+    if (isVerbatim(text)) return;
+    int start = literal.getTextRange().getStartOffset();
+    int i = text.indexOf('\\');
+    while (i >= 0 && i + 1 < text.length()) {
+      char next = text.charAt(i + 1);
+      int escapeEnd = i + (next == '^' ? 3 : 2);
+      // erl_scan of OTP 26+ rejects the control escape and goes on at the character after the caret; older releases take any character.
+      // Sigils exist only from OTP 27 on, so they are checked whatever the SDK.
+      if (next == '^' && (i + 2 >= text.length() || !isControlName(text.charAt(i + 2))) &&
+          (text.startsWith("~") || ErlangSdkType.getRelease(literal.getProject()).erlangControlEscapeNeedsControlName())) {
+        holder.newAnnotation(HighlightSeverity.ERROR, "illegal character")
+          .range(TextRange.create(start + i, start + i + 2)).create();
+        escapeEnd = i + 2;
+      }
+      if (next == 'x' && i + 2 < text.length() && text.charAt(i + 2) == '{') {
+        int close = text.indexOf('}', i + 3);
+        if (close > i + 3 && isHexDigits(text, i + 3, close)) {
+          if (!isUnicodeCodePoint(new BigInteger(text.substring(i + 3, close), 16))) {
+            holder.newAnnotation(HighlightSeverity.ERROR, "illegal character")
+              .range(TextRange.create(start + i, start + close + 1)).create();
+          }
+          escapeEnd = close + 1;
+        }
+      }
+      i = text.indexOf('\\', escapeEnd);
+    }
+  }
+
+  private static boolean isVerbatim(@NotNull String text) {
+    if (text.startsWith("\"\"\"")) return true;
+    if (!text.startsWith("~") || text.length() < 2) return false;
+    char modifier = text.charAt(1);
+    if (modifier == 'B' || modifier == 'S') return true;
+    return text.startsWith("\"\"\"", 1);
+  }
+
+  // The characters that erl_scan accepts after \^
+  private static boolean isControlName(char c) {
+    return c >= '@' && c <= '_' || c >= 'a' && c <= 'z' || c == '?';
+  }
+
+  private static boolean isHexDigits(@NotNull String text, int from, int to) {
+    for (int i = from; i < to; i++) {
+      if (Character.digit(text.charAt(i), 16) < 0) return false;
+    }
+    return true;
+  }
+
+  // The ?UNICODE check of erl_scan
+  private static boolean isUnicodeCodePoint(@NotNull BigInteger value) {
+    if (value.bitLength() > 31) return false;
+    int c = value.intValue();
+    return c < 0xD800 || c > 0xDFFF && c < 0xFFFE || c > 0xFFFF && c <= 0x10FFFF;
   }
 
   private static void markCall(@Nullable ErlangQAtom atom, @NotNull AnnotationHolder annotationHolder, TextAttributesKey key) {

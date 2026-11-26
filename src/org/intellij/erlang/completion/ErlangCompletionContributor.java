@@ -24,6 +24,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.util.Pair;
@@ -52,6 +53,7 @@ import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.index.ErlangApplicationIndex;
 import org.intellij.erlang.index.ErlangAtomIndex;
 import org.intellij.erlang.index.ErlangModuleIndex;
+import org.intellij.erlang.macrolayer.ErlangMacroLayerCompletionContributor;
 import org.intellij.erlang.parser.ErlangParserUtil;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -102,7 +104,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
       || is(previousByOffset, ErlangTypes.ERL_RADIX)
       || (previousByOffset != null && previousByOffset.getParent() instanceof ErlangRecordField
       || parent instanceof ErlangRecordTuple || recordTuple != null || parent instanceof ErlangRecordField) && !is(previousByOffset, ErlangTypes.ERL_OP_EQ)
-      || typeParent != null || isRecordFunctionCallCompletion(previousByOffset) || behaviour != null) {
+      || typeParent != null || prevIsTypeModuleColon(previousByOffset) || isRecordFunctionCallCompletion(previousByOffset) || behaviour != null) {
       context.setDummyIdentifier("a");
     }
   }
@@ -111,6 +113,25 @@ public class ErlangCompletionContributor extends CompletionContributor {
     PsiElement prevSibling = previousByOffset != null ? previousByOffset.getPrevSibling() : null;
     if (prevSibling == null) return false;
     return is(previousByOffset, ErlangTypes.ERL_COMMA) && inIsRecord(0).accepts(prevSibling, new ProcessingContext());
+  }
+
+  private static boolean isModuleQualifiedType(@Nullable PsiElement element) {
+    return element instanceof ErlangTypeRef && PsiTreeUtil.getPrevSiblingOfType(element, ErlangModuleRef.class) != null;
+  }
+
+  private static boolean prevIsTypeModuleColon(@Nullable PsiElement previousByOffset) {
+    if (!is(previousByOffset, ErlangTypes.ERL_COLON)) return false;
+    PsiElement moduleName = PsiTreeUtil.prevVisibleLeaf(previousByOffset);
+    // A broken type, such as a tuple, is rolled back, so look further back for the start of the type
+    for (PsiElement leaf = moduleName != null ? PsiTreeUtil.prevVisibleLeaf(moduleName) : null;
+         leaf != null && !is(leaf, ErlangTypes.ERL_DOT) && !is(leaf, ErlangTypes.ERL_OP_EQ);
+         leaf = PsiTreeUtil.prevVisibleLeaf(leaf)) {
+      if (is(leaf, ErlangTypes.ERL_COLON_COLON)
+          || PsiTreeUtil.getParentOfType(leaf, ErlangTypeSig.class, ErlangTypedRecordFields.class, ErlangTypeDefinition.class) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean prevIsRecordModuleColon(@Nullable PsiElement previousByOffset) {
@@ -137,12 +158,13 @@ public class ErlangCompletionContributor extends CompletionContributor {
           parent = parent.getParent();
         }
         PsiElement grandPa = parent.getParent();
-        PsiElement originalPosition = parameters.getOriginalPosition();
+        // the macro layer may run this provider at a position in its expanded text: the real original position
+        PsiElement originalPosition = ErlangMacroLayerCompletionContributor.originalPosition(parameters);
         PsiElement originalParent = originalPosition != null ? originalPosition.getParent() : null;
 
         if (originalParent instanceof ErlangIncludeString && originalPosition instanceof LeafPsiElement &&
             ErlangTypes.ERL_STRING == ((LeafPsiElement) originalPosition).getElementType()) {
-          TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, parameters.getOffset());
+          TextRange range = new TextRange(((LeafPsiElement) originalPosition).getStartOffset() + 1, ErlangMacroLayerCompletionContributor.originalOffset(parameters));
           String includeText = range.getLength() >= 0 ? range.substring(file.getText()) : "";
           if (grandPa instanceof ErlangInclude) {
             result.addAllElements(getModulePathLookupElements(file, includeText));
@@ -155,7 +177,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (originalParent instanceof ErlangStringLiteral || originalPosition instanceof PsiComment) return;
 
         if (grandPa instanceof ErlangType && PsiTreeUtil.getParentOfType(position, ErlangExportTypeAttribute.class) == null) {
-          result.addAllElements(getTypeLookupElements(file, true, false));
+          result.addAllElements(getTypeLookupElements(file, true, false, false));
         }
 
         ErlangRecordRef recordRef = PsiTreeUtil.getParentOfType(originalPosition, ErlangRecordRef.class);
@@ -176,7 +198,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
             ErlangColonQualifiedExpression originalColonQExpr = PsiTreeUtil.getParentOfType(originalPosition, ErlangColonQualifiedExpression.class);
             String moduleName = moduleAtom != null ? getName(moduleAtom) : null;
             String prefix = originalColonQExpr != null ?
-                            StringUtil.first(originalColonQExpr.getText(), parameters.getOffset() - originalColonQExpr.getTextOffset(), false) :
+                            StringUtil.first(originalColonQExpr.getText(), ErlangMacroLayerCompletionContributor.originalOffset(parameters) - originalColonQExpr.getTextOffset(), false) :
                             moduleName != null ? moduleName + ":" : null;
             (StringUtil.isEmpty(prefix) ? result : result.withPrefixMatcher(result.getPrefixMatcher().cloneWithPrefix(prefix)))
               .addAllElements(getAllExportedFunctionsWithModuleLookupElements(file.getProject(), false, moduleName));
@@ -191,7 +213,7 @@ public class ErlangCompletionContributor extends CompletionContributor {
           else if (grandPa instanceof ErlangMacros) {
             return;
           }
-          else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null) {
+          else if (PsiTreeUtil.getParentOfType(position, ErlangExport.class) == null && !isModuleQualifiedType(grandPa)) {
             boolean inside = PsiTreeUtil.getParentOfType(position, ErlangClauseBody.class, ErlangFunTypeSigs.class, ErlangTypeRef.class) != null;
             boolean insideImport = PsiTreeUtil.getParentOfType(position, ErlangImportDirective.class, ErlangImportFunctions.class) instanceof ErlangImportDirective;
             boolean insideBehaviour = PsiTreeUtil.getParentOfType(position, ErlangBehaviour.class) != null;
@@ -221,7 +243,9 @@ public class ErlangCompletionContributor extends CompletionContributor {
             GlobalSearchScope scope = module != null && moduleScope ? GlobalSearchScope.moduleScope(module) : ProjectScope.getProjectScope(project);
 
             Collection<String> names = ErlangAtomIndex.getNames(project, scope);
+            String typedAtom = atomOnlyAtCaret(parameters, scope);
             for (String name : names) {
+              if (name.equals(typedAtom)) continue;
               result.addElement(PrioritizedLookupElement.withPriority(
                 LookupElementBuilder.create(name).withLookupString(name.toLowerCase()).withIcon(ErlangIcons.ATOM), ATOM_PRIORITY));
             }
@@ -232,6 +256,32 @@ public class ErlangCompletionContributor extends CompletionContributor {
         if (!(parent instanceof ErlangRecordExpression) && grandPa instanceof ErlangFunctionWithArityVariables) {
           result.addAllElements(ErlangPsiImplUtil.getFunctionLookupElements(file, true, null));
         }
+      }
+
+      // the atom being typed is in the index too, as the text of the file holds it; offer it only if it occurs elsewhere
+      @Nullable
+      private static String atomOnlyAtCaret(@NotNull CompletionParameters parameters, @NotNull GlobalSearchScope scope) {
+        PsiFile original = parameters.getOriginalFile();
+        int offset = ErlangMacroLayerCompletionContributor.originalOffset(parameters);
+        ErlangQAtom atomAtCaret = null;
+        for (int o : new int[]{offset, offset - 1}) {
+          ErlangQAtom qAtom = o >= 0 ? PsiTreeUtil.getParentOfType(original.findElementAt(o), ErlangQAtom.class) : null;
+          if (qAtom != null && standaloneAtom(qAtom)) {
+            atomAtCaret = qAtom;
+            break;
+          }
+        }
+        if (atomAtCaret == null) return null;
+        String name = atomAtCaret.getText();
+        ErlangQAtom caretAtom = atomAtCaret;
+        boolean elsewhereInFile = !PsiTreeUtil.processElements(original, ErlangQAtom.class,
+          a -> a == caretAtom || !standaloneAtom(a) || !name.equals(a.getText()));
+        if (elsewhereInFile) return null;
+        VirtualFile originalFile = original.getVirtualFile();
+        for (VirtualFile f : ErlangAtomIndex.getContainingFiles(name, scope)) {
+          if (!f.equals(originalFile)) return null;
+        }
+        return name;
       }
 
       private static boolean isDot(@NotNull PsiElement position) {
@@ -417,8 +467,12 @@ public class ErlangCompletionContributor extends CompletionContributor {
   private static void suggestModules(@NotNull CompletionResultSet result, @NotNull PsiElement position, boolean withColon) {
     Project project = position.getProject();
 
+    GlobalSearchScope scope = GlobalSearchScope.allScope(project);
     Collection<String> names = ErlangModuleIndex.getNames(project);
     for (String name : names) {
+      ProgressManager.checkCanceled();
+      if (!result.getPrefixMatcher().prefixMatches(name)) continue;
+      if (ErlangModuleIndex.getVirtualFilesByName(project, name, scope).isEmpty()) continue;
       result.addElement(
         PrioritizedLookupElement.withPriority(
           LookupElementBuilder.create(name)
