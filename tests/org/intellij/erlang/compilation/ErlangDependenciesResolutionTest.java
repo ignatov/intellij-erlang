@@ -221,6 +221,16 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertTrue(files.toString(), files.indexOf("beh.erl") < files.indexOf("m.erl"));
   }
 
+  // The guessed edges of a module without Erlang PSI to every header are no includes of its own behaviour (#1469).
+  public void testLargeBehavioursInHeader() throws Exception {
+    writeAboveSizeLimit("abig.erl", "-module(abig).\n-callback init() -> ok.\n");
+    writeAboveSizeLimit("zbig.erl", "-module(zbig).\n-callback init() -> ok.\n");
+    List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+    List<String> files = ContainerUtil.map(getModulePaths(buildOrder), path -> new File(path).getName());
+    assertTrue(files.toString(), files.indexOf("abig.erl") < files.indexOf("m.erl"));
+    assertTrue(files.toString(), files.indexOf("zbig.erl") < files.indexOf("m.erl"));
+  }
+
   public void testLargeParseTransformInHeaderIsNotCyclic() throws Exception {
     writeAboveSizeLimit("pt.erl", "-module(pt).\n-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
     List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);

@@ -425,7 +425,8 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     @NotNull
     private Set<String> getIncludedHeaders(@NotNull String modulePath) {
       Set<String> includedHeaders = new HashSet<>();
-      Deque<String> toVisit = new ArrayDeque<>(myPathsToOrderingDependenciesMap.get(modulePath));
+      // The guessed edges of a module without Erlang PSI to every header are no includes.
+      Deque<String> toVisit = new ArrayDeque<>(getKnownOrderingDependencies(modulePath));
       while (!toVisit.isEmpty()) {
         String dependency = toVisit.pop();
         if (isHeader(dependency) && includedHeaders.add(dependency)) {
