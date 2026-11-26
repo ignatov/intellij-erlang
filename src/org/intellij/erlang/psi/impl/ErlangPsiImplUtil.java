@@ -2279,6 +2279,14 @@ public class ErlangPsiImplUtil {
     return stub != null ? StringUtil.notNullize(stub.getName()) : null;
   }
 
+  // the name of a clause of a named fun, like the second Loop in `fun Loop(0) -> ok; Loop(_) -> ok end`
+  public static boolean isNamedFunClauseName(@NotNull PsiElement element) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(element, ErlangArgumentDefinition.class);
+    return definition != null
+           && definition.getParent() instanceof ErlangFunClause clause
+           && clause.getArgumentDefinition() == definition;
+  }
+
   public static boolean fromTheSameCaseExpression(@NotNull PsiElement origin, @NotNull PsiElement element) {
     if (element instanceof ErlangQVar && Objects.equals(origin.getText(), element.getText())) {
       ErlangCompositeElement cr2 = PsiTreeUtil.getParentOfType(element, ErlangCrClause.class);
