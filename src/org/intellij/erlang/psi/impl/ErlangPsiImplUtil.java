@@ -1269,9 +1269,10 @@ public class ErlangPsiImplUtil {
     for (ErlangCrClause c : crClauseList) {
       ErlangClauseBody clauseBody = c.getClauseBody();
       if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
-      // the patterns of the clauses bind after the head, so a variable in the head does not see them
+      // the patterns of the clauses bind after the head, so a variable in the head does not see them;
+      // the variable processor rejects the patterns of the other clauses
       ErlangArgumentDefinition pattern = c.getArgumentDefinition();
-      if (pattern != null && (head == null || head != lastParent)) result &= processDeclarationRecursive(pattern, processor, state);
+      if (processor instanceof ErlangVarProcessor && pattern != null && (head == null || head != lastParent)) result &= processDeclarationRecursive(pattern, processor, state);
     }
     return result;
   }
