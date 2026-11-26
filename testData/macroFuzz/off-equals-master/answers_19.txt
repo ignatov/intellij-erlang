@@ -1,0 +1,17 @@
+# answers:19 src/errors/err_map_field.erl arm=master layer=false
+## highlights
+## references
+340 PsiMultiReference -> []
+352 PsiMultiReference -> []
+382 ErlangMacrosReferenceImpl -> [null]
+414 ErlangMacrosReferenceImpl -> [src/errors/err_map_field.erl:382:ErlangMacrosDefinitionImpl]
+414 ErlangMacrosReferenceImpl -> [src/errors/err_map_field.erl:382:ErlangMacrosDefinitionImpl]
+435 ErlangMacrosReferenceImpl -> [src/errors/err_map_field.erl:382:ErlangMacrosDefinitionImpl]
+435 ErlangMacrosReferenceImpl -> [src/errors/err_map_field.erl:382:ErlangMacrosDefinitionImpl]
+## completion
+383 [FILE, FUNCTION_ARITY, FUNCTION_NAME]
+395 []
+442 []
+394 []
+387 []
+382 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, begin, case, catch, fun, if, maybe, receive, try]

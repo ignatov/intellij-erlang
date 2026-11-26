@@ -1,0 +1,10 @@
+{application, smoke_app,
+ [{description, "Release smoke application"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {smoke_app_app, []}},
+  {applications, [kernel, stdlib]},
+  {env, []},
+  {modules, []},
+  {licenses, ["Apache-2.0"]},
+  {links, []}]}.

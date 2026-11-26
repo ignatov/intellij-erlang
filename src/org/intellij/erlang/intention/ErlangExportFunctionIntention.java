@@ -29,6 +29,7 @@ import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,6 +64,7 @@ public class ErlangExportFunctionIntention extends ErlangBaseNamedElementIntenti
 
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    ErlangUsageCounters.countIntention(project, getClass());
     ErlangFunction function = findFunction(file, editor.getCaretModel().getOffset());
     if (function != null) {
       new ErlangExportFunctionFix(function).invoke(project, file, editor, function, null);

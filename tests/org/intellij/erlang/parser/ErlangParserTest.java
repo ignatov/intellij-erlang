@@ -24,7 +24,9 @@ import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangStringLiteral;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ErlangParserTest extends ErlangParserTestBase {
   public ErlangParserTest() {
@@ -89,7 +91,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void test325()                                 { doTest(true);  }
   public void test390()                                 { doTest(true);  }
   public void testMapConstruct()                        { doTest(false); }
-  public void testMapSingleValueAcc()                   { doTest(false); }
+  public void testMapSingleValueAcc()                   { doTest(true);  }
   public void testMapUpdate()                           { doTest(false); }
   public void testMapMatch()                            { doTest(false); }
   public void testMapTypes()                            { doTest(false); }
@@ -106,6 +108,19 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testMacroCallsInCompoundStringLiterals()  { doTest(false); }
   public void testTypo()                                { doTest(true);  }
   public void testNewNumbers()                          { doTest(true);  }
+  public void testBasedIntegerSeparators()              { doTest(false); }
+  public void testBasedIntegerSeparatorsErrors()        { doTest(true);  }
+  public void testControlEscapes()                      { doTest(false); }
+  public void testControlEscapesErrors()                { doTest(true);  }
+  public void testGenericEscapes()                      { doTest(false); }
+  public void testHexEscapes()                          { doTest(false); }
+  public void testHexEscapesErrors()                    { doTest(true);  }
+  public void testControlEscapeAtStringEnd()            { doTest(false); }
+  public void testBasedIntegerBaseSeparators()          { doTest(false); }
+  public void testBasedIntegerBaseSeparatorsErrors()    { doTest(true);  }
+  public void testVerbatimSigilControlEscape()          { doTest(false); }
+  public void testHexEscapeInBraceSigil()               { doTest(false); }
+  public void testHexEscapeInBraceSigilErrors()         { doTest(true);  }
   public void testTripleQuotes()                        { doTest(true);  }
   public void testSigils()                              { doTest(true);  }
   public void testTripleQuotesMoreThanThree()           { doTest(false); }
@@ -143,6 +158,7 @@ public class ErlangParserTest extends ErlangParserTestBase {
   public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
   public void testQuotedAttributeNames()                { doTest(false); }
+  public void testModuleMacroQualifiedType()            { doTest(false); }
 
   public void testSixQuoteMultilineStringAndSigil() {
     PsiFile file = parseText("-module(six_quotes).\n" +
@@ -167,6 +183,28 @@ public class ErlangParserTest extends ErlangParserTestBase {
     Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
     assertEquals(1, functions.size());
     assertEquals("visible", functions.iterator().next().getName());
+  }
+
+  // #1643: erlc rejects a map entry without '=>' or ':=' ("syntax error before: '}'").
+  public void testMapEntryWithoutOperatorIsError() {
+    String[] bodies = {"#{a = 1}", "X#{a = 1}", "case X of #{a = 1} -> ok end"};
+    List<String> accepted = new ArrayList<>();
+    for (String body : bodies) {
+      PsiFile file = parseText("-module(t).\nf(X) -> " + body + ".\n");
+      if (!PsiTreeUtil.hasErrorElements(file)) accepted.add(body);
+    }
+    assertEmpty("Parsed without a syntax error", accepted);
+  }
+
+  // #1643: a macro alone can expand to a whole entry, which erlc accepts.
+  public void testMapEntryMacroWithoutOperator() {
+    String[] bodies = {"#{?E}", "X#{?E, b => 2}", "#{?F(1)}", "case X of #{?M} -> ok end"};
+    List<String> rejected = new ArrayList<>();
+    for (String body : bodies) {
+      PsiFile file = parseText("-module(t).\n-define(E, a => 1).\n-define(F(V), a => V).\n-define(M, a := 1).\nf(X) -> " + body + ".\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(body);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
   }
 
   private PsiFile parseText(String text) {

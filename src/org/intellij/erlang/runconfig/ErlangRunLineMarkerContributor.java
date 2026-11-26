@@ -23,6 +23,7 @@ import com.intellij.lang.injection.InjectedLanguageManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.marker.ErlangBehaviourMarkerProvider;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
@@ -38,6 +39,8 @@ public class ErlangRunLineMarkerContributor extends RunLineMarkerContributor imp
 
     PsiFile psiFile = element.getContainingFile();
     if (!(psiFile instanceof ErlangFile)) return null;
+    // the rest of a form that the parser's recovery split (setup?PAR, hello().) is no function head
+    if (function.getParent() == psiFile && ErlangMacroLayer.continuesASplitForm(function)) return null;
     InjectedLanguageManager injectedLanguageManager = InjectedLanguageManager.getInstance(element.getProject());
     if (injectedLanguageManager.isInjectedFragment(psiFile)) return null;
 

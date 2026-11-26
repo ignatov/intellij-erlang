@@ -143,6 +143,7 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
 
         List<VirtualFile> rebarConfigFiles = findRebarConfigs(myProjectRoot, indicator);
         final LinkedHashSet<ImportedOtpApp> importedOtpApps = new LinkedHashSet<>(rebarConfigFiles.size());
+        final List<ImportedOtpApp> testProfileOtpApps = new ArrayList<>();
 
         VfsUtilCore.visitChildrenRecursively(projectRoot, new VirtualFileVisitor<Void>() {
           @Override
@@ -153,13 +154,25 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
               indicator.setText2(file.getPath());
               if (isExamplesDirectory(file) || isRelDirectory(projectRoot.getPath(), file.getPath())) return false;
               String relativePath = VfsUtilCore.getRelativePath(file, projectRoot);
-              if ("_build/test".equals(relativePath)) return false;
+              if ("_build/test".equals(relativePath)) {
+                VirtualFile libDir = file.findChild("lib");
+                for (VirtualFile appRoot : libDir != null ? libDir.getChildren() : VirtualFile.EMPTY_ARRAY) {
+                  if (appRoot.isDirectory()) ContainerUtil.addIfNotNull(testProfileOtpApps, createImportedOtpApp(appRoot, projectRoot));
+                }
+                return false;
+              }
             }
 
-            ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file));
+            ContainerUtil.addAllNotNull(importedOtpApps, createImportedOtpApp(file, projectRoot));
             return true;
           }
         });
+
+        // _build/test/lib also holds links to the apps of the other profiles; import only the apps found nowhere else.
+        Set<String> foundAppNames = ContainerUtil.map2Set(importedOtpApps, ImportedOtpApp::getName);
+        for (ImportedOtpApp testProfileOtpApp : testProfileOtpApps) {
+          if (!foundAppNames.contains(testProfileOtpApp.getName())) importedOtpApps.add(testProfileOtpApp);
+        }
 
         myFoundOtpApps = new ArrayList<>(importedOtpApps);
       }
@@ -361,12 +374,21 @@ public class RebarProjectImportBuilder extends ProjectImportBuilder<ImportedOtpA
   }
 
   @Nullable
-  private static ImportedOtpApp createImportedOtpApp(@NotNull VirtualFile appRoot) {
+  private static ImportedOtpApp createImportedOtpApp(@NotNull VirtualFile appRoot, @NotNull VirtualFile projectRoot) {
     VirtualFile appResourceFile = findAppResourceFile(appRoot);
     if (appResourceFile == null) {
       return null;
     }
-    return new ImportedOtpApp(appRoot, appResourceFile);
+    return new ImportedOtpApp(appRoot, appResourceFile, isDependencyApp(appRoot, projectRoot));
+  }
+
+  private static boolean isDependencyApp(@NotNull VirtualFile appRoot, @NotNull VirtualFile projectRoot) {
+    String relativePath = VfsUtilCore.getRelativePath(appRoot, projectRoot);
+    if (relativePath == null) return false;
+    for (String dirName : StringUtil.split(relativePath, "/")) {
+      if ("deps".equals(dirName) || "_build".equals(dirName) || "_checkouts".equals(dirName)) return true;
+    }
+    return false;
   }
 
   @Nullable

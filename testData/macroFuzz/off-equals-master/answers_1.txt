@@ -1,0 +1,26 @@
+# answers:1 libs/mylib/src/mylib.erl arm=master layer=false
+## highlights
+## references
+110 ErlangFunctionReferenceImpl -> []
+118 ErlangFunctionReferenceImpl -> []
+140  -> [libs/mylib/include/mylib.hrl:0:ErlangFileImpl]
+181 ErlangMacrosReferenceImpl -> [libs/mylib/include/mylib.hrl:387:ErlangMacrosDefinitionImpl]
+181 ErlangMacrosReferenceImpl -> [libs/mylib/include/mylib.hrl:387:ErlangMacrosDefinitionImpl]
+210 ErlangRecordReferenceImpl -> [libs/mylib/include/mylib.hrl:579:ErlangRecordDefinitionImpl]
+221  -> [libs/mylib/include/mylib.hrl:592:ErlangTypedExprImpl]
+229 ErlangFunctionReferenceImpl -> []
+230 ErlangMacrosReferenceImpl -> [libs/mylib/include/mylib.hrl:453:ErlangMacrosDefinitionImpl]
+230 ErlangMacrosReferenceImpl -> [libs/mylib/include/mylib.hrl:453:ErlangMacrosDefinitionImpl]
+244 PsiMultiReference -> []
+261 ErlangRecordReferenceImpl -> [libs/mylib/include/mylib.hrl:579:ErlangRecordDefinitionImpl]
+272  -> [libs/mylib/include/mylib.hrl:592:ErlangTypedExprImpl]
+280 ErlangVariableReferenceImpl -> []
+289 ErlangVariableReferenceImpl -> [libs/mylib/src/mylib.erl:280:ErlangQVarImpl]
+99 ErlangFunctionReferenceImpl -> []
+## completion
+243 [MYLIB_DEFAULT, MYLIB_DEFAULTS]
+230 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, MYLIB_CALL, MYLIB_DEFAULT, MYLIB_DEFAULTS, MYLIB_HRL, MYLIB_VERSION, OTP_RELEASE]
+231 [FUNCTION_NAME, MACHINE, MODULE, MODULE_STRING, MYLIB_CALL, MYLIB_DEFAULT, MYLIB_DEFAULTS, MYLIB_HRL, MYLIB_VERSION]
+194 [<single or none>]
+292 []
+108 []

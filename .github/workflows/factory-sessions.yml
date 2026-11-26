@@ -1,0 +1,191 @@
+name: Factory sessions
+
+# Keeps the logs of ended Copilot agent sessions: it runs the session archiver (dispatcher/session_archive.py of
+# the private repository ignatov/intellij-erlang-triage), which saves the log and the record of each ended
+# session of this repository into a branch of the private repository. It runs here, as factory-tick.yml does,
+# because the Actions minutes of a public repository are free.
+#
+# Started by the dispatcher's tick (workflow_dispatch with the maintainer's token, once in several live ticks), by
+# a person (workflow_dispatch, no inputs) and by a daily schedule, the backstop for a tick that does not start it.
+# It acts (--live) only when the repository variable FACTORY_TICK_LIVE is "true" and the secret FACTORY_TOKEN is
+# set. Otherwise it is a dry run that only reads. The archiver has its own switch in the private configuration as
+# well; when that is off, it does nothing and says so.
+#
+# What keeps the secrets in (the same rules as factory-tick.yml):
+#   - They are secrets of the environment factory-dispatch, which only jobs of master can use. There is no
+#     pull_request or pull_request_target trigger, so a pull request or a fork never runs this workflow.
+#   - This job holds the maintainer's token, so it has no "uses:" step and never checks out this repository: it
+#     runs nothing from this repository's tree. It fetches the private repository with plain git, the token
+#     coming from an askpass script that reads it from the environment (never on a command line or in a URL),
+#     and runs the private archiver from that checkout.
+#   - The log of a public run is public. The archiver's output and its errors go to files, and this log shows only
+#     the mode, the exit status and the archiver's one line of counts, when it has exactly the expected form. No
+#     artifact (an artifact of a public run is public) and no step summary. The full log is committed as
+#     last-run.log to the branch session-archive-log of the private repository on every run, also a dry or
+#     failed one.
+#   - Values from the event reach the scripts only through env, never inside a script.
+#
+# Secrets of factory-dispatch: FACTORY_TOKEN (the maintainer's token for the agent tasks API) and, optionally,
+# FACTORY_DESK_TOKEN for the private repository (clone and push); when it is empty, FACTORY_TOKEN is used for the
+# private repository too. FACTORY_LOG_TOKEN goes only to the step "Archive"; see there.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * *'
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sessions:
+    runs-on: ubuntu-24.04
+    # The archiver stops reading after its budget of 20 minutes; the rest is the fetch and the pushes.
+    # Keep it equal to SESSION_ARCHIVE_JOB_MINUTES of the step "Archive".
+    timeout-minutes: 30
+    environment:
+      name: factory-dispatch
+      # The environment is used for its secrets and its branch policy only; this is not a deployment.
+      deployment: false
+    # One run and at most one waiting; two runs at once would race for the same pushes.
+    concurrency:
+      group: factory-sessions
+      cancel-in-progress: false
+    env:
+      DESK_REPO: ignatov/intellij-erlang-triage
+      GIT_TERMINAL_PROMPT: '0'
+      # No credential helper of the runner stores or offers anything; the askpass script answers.
+      GIT_CONFIG_NOSYSTEM: '1'
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: credential.helper
+      GIT_CONFIG_VALUE_0: ''
+      GIT_AUTHOR_NAME: github-actions[bot]
+      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_COMMITTER_NAME: github-actions[bot]
+      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+    steps:
+      - name: Choose the mode
+        id: mode
+        env:
+          HAS_TOKEN: ${{ secrets.FACTORY_TOKEN != '' }}
+          LIVE_VAR: ${{ vars.FACTORY_TICK_LIVE }}
+        run: |
+          mode=dry-run
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "The secret FACTORY_TOKEN is not set: dry run."
+          elif [ "$LIVE_VAR" != "true" ]; then
+            echo "The repository variable FACTORY_TICK_LIVE is not true: dry run."
+          else
+            mode=live
+          fi
+          echo "Mode: $mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the private repository
+        id: clone
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        run: |
+          if [ -z "$DESK_TOKEN" ]; then
+            echo "::error::Neither FACTORY_DESK_TOKEN nor FACTORY_TOKEN is set in the environment factory-dispatch."
+            exit 1
+          fi
+          # The askpass script holds no secret: it prints the token from the environment of the git process.
+          cat > "$RUNNER_TEMP/askpass.sh" <<'SCRIPT'
+          #!/bin/sh
+          case "$1" in
+            Username*) echo x-access-token ;;
+            *) printf '%s\n' "$DESK_TOKEN" ;;
+          esac
+          SCRIPT
+          chmod 700 "$RUNNER_TEMP/askpass.sh"
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          desk="$RUNNER_TEMP/desk"
+          git clone --quiet --depth 1 --single-branch --branch main "https://github.com/$DESK_REPO.git" "$desk" \
+            > "$RUNNER_TEMP/clone.log" 2>&1 || {
+            echo "::error::The private repository could not be fetched."
+            exit 1
+          }
+          { echo "run: $RUN_URL"; echo "mode: $MODE"; echo "main: $(git -C "$desk" rev-parse HEAD)"; echo; } \
+            > "$RUNNER_TEMP/sessions.log"
+          echo "Fetched main of the private repository."
+          if [ -f "$desk/dispatcher/session_archive.py" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The session archiver is not in the private repository yet: nothing to do."
+            echo "The session archiver is not on main: nothing done." >> "$RUNNER_TEMP/sessions.log"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Archive
+        id: archive
+        if: steps.clone.outputs.present == 'true'
+        env:
+          FACTORY_TOKEN: ${{ secrets.FACTORY_TOKEN }}
+          # Optional: an OAuth token of the GitHub CLI, only for reading session logs on the Copilot API host, which
+          # rejects personal access tokens. Without it the archiver cannot download a log.
+          FACTORY_LOG_TOKEN: ${{ secrets.FACTORY_LOG_TOKEN }}
+          # For git, through the askpass script: the archiver reads and pushes its branch of the private repository.
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          PYTHONUNBUFFERED: '1'
+          # The job's time limit for the archiver; it must stay equal to timeout-minutes of the job.
+          SESSION_ARCHIVE_JOB_MINUTES: '30'
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          cd "$RUNNER_TEMP/desk"
+          log="$RUNNER_TEMP/sessions.log"
+          out="$RUNNER_TEMP/sessions.out"
+          err="$RUNNER_TEMP/sessions.err"
+          status=0
+          # stdout and stderr (a traceback, an argument error) to files of their own; both go to the private log.
+          python3 dispatcher/session_archive.py "--$MODE" --log "$log" > "$out" 2> "$err" || status=$?
+          { echo; echo "--- stderr"; cat "$err"; echo "--- stdout"; cat "$out"; } >> "$log"
+          echo "Mode: $MODE"
+          echo "Exit status: $status"
+          # Only a line of exactly this form: counts, nothing of the sessions. Or one of the archiver's fixed lines.
+          counts_re='^session archive \((live|dry run)\): sessions [0-9]+, ended [0-9]+, still running [0-9]+, already there [0-9]+, missing [0-9]+, archived [0-9]+, held [0-9]+, failed [0-9]+, left for later [0-9]+, tasks not read [0-9]+$'
+          fixed_re='^session archive: (off \(session_archive\.enabled is not true\)|the config is not readable|no FACTORY_TOKEN in the environment); nothing done$'
+          line=$(grep -E "$counts_re|$fixed_re" "$out" | tail -n 1) || line=""
+          echo "${line:-session archive: (no line of the expected form)}"
+          exit "$status"
+
+      - name: Keep the log in the private repository
+        if: always() && steps.clone.outcome == 'success'
+        env:
+          DESK_TOKEN: ${{ secrets.FACTORY_DESK_TOKEN || secrets.FACTORY_TOKEN }}
+          MODE: ${{ steps.mode.outputs.mode }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          # A failure here is a warning only, and no git output reaches this log.
+          warn() {
+            echo "::warning::The log could not be pushed to the branch session-archive-log of the private repository."
+            exit 0
+          }
+          export GIT_ASKPASS="$RUNNER_TEMP/askpass.sh"
+          cd "$RUNNER_TEMP/desk" || warn
+          file="$RUNNER_TEMP/last-run.log"
+          cp "$RUNNER_TEMP/sessions.log" "$file" 2> /dev/null || warn
+          # session-archive-log is a history of its own that holds only last-run.log: no workflow file, so its
+          # pushes start no workflow there. A new commit on its tip, made without touching the checkout of main.
+          blob=$(git hash-object -w "$file" 2> /dev/null) || warn
+          tree=$(printf '100644 blob %s\tlast-run.log\n' "$blob" | git mktree 2> /dev/null) || warn
+          for _ in 1 2; do
+            parent=""
+            if git fetch --quiet --depth 1 origin refs/heads/session-archive-log > /dev/null 2>&1; then
+              parent=$(git rev-parse FETCH_HEAD 2> /dev/null) || parent=""
+            fi
+            if commit=$(git commit-tree "$tree" ${parent:+-p "$parent"} 2> /dev/null \
+                -m "Record the log of a session archive run [skip ci]" -m "Run $RUN_ID, $MODE.") \
+              && git push --quiet origin "$commit:refs/heads/session-archive-log" > /dev/null 2>&1; then
+              echo "The log is on the branch session-archive-log of the private repository."
+              exit 0
+            fi
+            sleep 5
+          done
+          warn

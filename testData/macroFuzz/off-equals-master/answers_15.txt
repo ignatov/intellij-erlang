@@ -1,0 +1,20 @@
+# answers:15 src/errors/err_form_in_expr.erl arm=master layer=false
+## highlights
+## references
+326 PsiMultiReference -> []
+338 PsiMultiReference -> []
+368 ErlangMacrosReferenceImpl -> [null]
+372 ErlangVariableReferenceImpl -> []
+379 ErlangVariableReferenceImpl -> [src/errors/err_form_in_expr.erl:372:ErlangQVarImpl]
+389 PsiMultiReference -> []
+404 ErlangFunctionReferenceImpl -> []
+405 ErlangMacrosReferenceImpl -> [src/errors/err_form_in_expr.erl:368:ErlangMacrosDefinitionImpl]
+405 ErlangMacrosReferenceImpl -> [src/errors/err_form_in_expr.erl:368:ErlangMacrosDefinitionImpl]
+409 PsiMultiReference -> []
+## completion
+386 [Name]
+390 []
+361 [behavior, behaviour, callback, define, else, export, export_record, export_type, if, ifdef, ifndef, import, import_record, include, include_lib, module, nominal, on_load, opaque, optional_callbacks, record, spec, type, undef]
+406 [DEF, MODULE, MODULE_STRING]
+367 [<single or none>]
+380 [Name]

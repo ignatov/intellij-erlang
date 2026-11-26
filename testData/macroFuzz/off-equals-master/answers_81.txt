@@ -1,0 +1,41 @@
+# answers:81 src/otp/m_otp_qlc.erl arm=master layer=false
+## highlights
+323-345 ERROR(400) Unresolved include_lib: file not found
+426-427 WARNING(300) Unresolved function q/1
+453-458 WARNING(300) Unresolved function table/1
+487-488 WARNING(300) Unresolved function e/1
+## references
+297 ErlangFunctionReferenceImpl -> []
+323  -> [null]
+358 ErlangMacrosReferenceImpl -> [null]
+378 ErlangMacrosReferenceImpl -> [null]
+383 ErlangVariableReferenceImpl -> []
+386 ErlangVariableReferenceImpl -> []
+391 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:383:ErlangQVarImpl]
+394 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:386:ErlangQVarImpl]
+406 ErlangVariableReferenceImpl -> []
+418 ErlangVariableReferenceImpl -> []
+422 ErlangModuleReferenceImpl -> [null]
+426 ErlangFunctionReferenceImpl -> []
+429 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:440:ErlangQVarImpl]
+434 ErlangFunctionReferenceImpl -> []
+435 ErlangMacrosReferenceImpl -> [src/otp/m_otp_qlc.erl:378:ErlangMacrosDefinitionImpl]
+435 ErlangMacrosReferenceImpl -> [src/otp/m_otp_qlc.erl:378:ErlangMacrosDefinitionImpl]
+440 ErlangVariableReferenceImpl -> []
+443 ErlangVariableReferenceImpl -> []
+449 ErlangModuleReferenceImpl -> [null]
+453 ErlangFunctionReferenceImpl -> []
+459 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:406:ErlangQVarImpl]
+467 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:443:ErlangQVarImpl]
+472 ErlangMacrosReferenceImpl -> [src/otp/m_otp_qlc.erl:358:ErlangMacrosDefinitionImpl]
+472 ErlangMacrosReferenceImpl -> [src/otp/m_otp_qlc.erl:358:ErlangMacrosDefinitionImpl]
+483 ErlangModuleReferenceImpl -> [null]
+487 ErlangFunctionReferenceImpl -> []
+489 ErlangVariableReferenceImpl -> [src/otp/m_otp_qlc.erl:418:ErlangQVarImpl]
+## completion
+392 [<single or none>]
+382 []
+413 [when]
+436 [FILE, FUNCTION_ARITY, FUNCTION_NAME, ITEM, LIMIT, LINE, MACHINE, MODULE_STRING]
+366 []
+352 [define, export_record, ifdef, ifndef, import_record, include, include_lib, module, on_load, record, undef]

@@ -17,6 +17,7 @@
 package org.intellij.erlang.index;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.util.CommonProcessors;
@@ -35,7 +36,7 @@ import java.util.Map;
 
 public class ErlangAtomIndex extends ScalarIndexExtension<String> {
   private static final ID<String, Void> ERLANG_ATOM_INDEX = ID.create("erlang.atom.index");
-  private static final int INDEX_VERSION = 1;
+  private static final int INDEX_VERSION = 2;
 
   @NotNull
   @Override
@@ -93,5 +94,10 @@ public class ErlangAtomIndex extends ScalarIndexExtension<String> {
     CommonProcessors.CollectUniquesProcessor<String> processor = new CommonProcessors.CollectUniquesProcessor<>();
     FileBasedIndex.getInstance().processAllKeys(ERLANG_ATOM_INDEX, processor, searchScope, IdFilter.getProjectIdFilter(project, false));
     return processor.getResults();
+  }
+
+  @NotNull
+  public static Collection<VirtualFile> getContainingFiles(@NotNull String name, @NotNull GlobalSearchScope searchScope) {
+    return FileBasedIndex.getInstance().getContainingFiles(ERLANG_ATOM_INDEX, name, searchScope);
   }
 }

@@ -1,0 +1,11 @@
+# Differences between the branch with the macro layer off and master that are accepted (MacroFuzzOffEqualsMasterTest).
+# A reference whose branch targets include master's targets (every definition in the branches of a conditional, D2)
+# is accepted by the test itself. Each line here: <golden file>|<offset> <reference class>, a reference whose target
+# differs from master's where the branch's target is the one epp uses at the use (checked with epp, D3).
+answers_57.txt|1494 ErlangMacrosReferenceImpl
+# F5: -undef(TIMEOUT) in local/m_redefine.erl undefines the definition of shared.hrl (included before it); master gave
+# the -define(TIMEOUT, 10) after the -undef.
+answers_49.txt|666 ErlangMacrosReferenceImpl
+# C4: the definition in force at the use (?SIZE after its redefinition; ?TIMEOUT before the -undef: shared.hrl's).
+answers_23.txt|367 ErlangMacrosReferenceImpl
+answers_49.txt|649 ErlangMacrosReferenceImpl

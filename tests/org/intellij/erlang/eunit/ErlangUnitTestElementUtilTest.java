@@ -54,6 +54,26 @@ public class ErlangUnitTestElementUtilTest extends ErlangLightPlatformCodeInsigh
     assertEquals(myFixture.getFile(), files.iterator().next());
   }
 
+  public void testSingleFileSelectionEunitIsNotTheFirstIncludeLib() {
+    myFixture.configureByFile("tests_not_first_include_lib.erl");
+    MyMockDataContext dataContext = new MyMockDataContext(myFixture.getFile().getVirtualFile());
+    Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
+
+    assertNotNull(files);
+    assertEquals(1, files.size());
+    assertEquals(myFixture.getFile(), files.iterator().next());
+  }
+
+  public void testSingleFileSelectionEunitHrlIncludedWithInclude() {
+    myFixture.configureByFiles("tests_include_eunit_hrl.erl", "eunit.hrl");
+    MyMockDataContext dataContext = new MyMockDataContext(myFixture.getFile().getVirtualFile());
+    Collection<ErlangFile> files = ErlangUnitTestElementUtil.findFileTestElements(myFixture.getProject(), dataContext);
+
+    assertNotNull(files);
+    assertEquals(1, files.size());
+    assertEquals(myFixture.getFile(), files.iterator().next());
+  }
+
   public void testMultipleFilesSelection() {
     PsiFile[] psiFiles = myFixture.configureByFiles("tests1.erl", "tests2.erl");
     MyMockDataContext dataContext = new MyMockDataContext(getVirtualFiles(psiFiles));

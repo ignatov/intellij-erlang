@@ -52,6 +52,17 @@ public class ErlangUnitTestElementUtil {
     return ContainerUtil.createMaybeSingletonList(getZeroArityFunction(element));
   }
 
+  /**
+   * The function to rerun for the location of a failed test: the function itself, or, for a test made by
+   * a fun ({@code generated}), the zero-arity test or generator function that contains the location.
+   */
+  @Nullable
+  public static ErlangFunction findRerunnableTestFunction(@Nullable PsiElement location, boolean generated) {
+    if (!generated) return location instanceof ErlangFunction function ? function : null;
+    ErlangFunction function = getZeroArityFunction(location);
+    return function != null && ErlangPsiImplUtil.isEunitTestFunction(function) ? function : null;
+  }
+
   public static Collection<ErlangFile> findFileTestElements(Project project, DataContext dataContext) {
     VirtualFile[] selectedFiles = CommonDataKeys.VIRTUAL_FILE_ARRAY.getData(dataContext);
 

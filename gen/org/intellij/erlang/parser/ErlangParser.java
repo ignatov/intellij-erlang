@@ -241,7 +241,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   //   | config_exprs)
   //   '}'
   public static boolean app_parameter(PsiBuilder b, int l) {
@@ -269,7 +269,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   //   | <<app_atom_named ('env')>> ',' <<list_of app_env_expression>>
   //   | <<app_atom_named ('mod')>> ',' app_mod
   //   | <<app_atom_named ('start_phases')>> ',' config_expression
-  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  //   | <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   //   | config_exprs
   private static boolean app_parameter_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1")) return false;
@@ -578,7 +578,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // <<app_atom_named ('runtime_dependencies')>> ',' <<list_of string_literal>>
+  // <<app_atom_named ('runtime_dependencies')>> ',' <<list_of runtime_dependency>>
   private static boolean app_parameter_1_12(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "app_parameter_1_12")) return false;
     boolean r, p;
@@ -586,7 +586,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = app_atom_named(b, l + 1, ErlangParser::app_parameter_1_12_0_0);
     p = r; // pin = 1
     r = r && report_error_(b, consumeToken(b, ERL_COMMA));
-    r = p && list_of(b, l + 1, ErlangParser::string_literal) && r;
+    r = p && list_of(b, l + 1, ErlangParser::runtime_dependency) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -3464,7 +3464,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // int_type_prefix_op* (integer | macros argument_list? | char | '(' int_type ')')
+  // int_type_prefix_op* (integer | macros !':' argument_list? | char | '(' int_type ')')
   static boolean int_type_operand(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand")) return false;
     boolean r;
@@ -3486,7 +3486,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return true;
   }
 
-  // integer | macros argument_list? | char | '(' int_type ')'
+  // integer | macros !':' argument_list? | char | '(' int_type ')'
   private static boolean int_type_operand_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1")) return false;
     boolean r;
@@ -3499,20 +3499,31 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // macros argument_list?
+  // macros !':' argument_list?
   private static boolean int_type_operand_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = macros(b, l + 1);
     r = r && int_type_operand_1_1_1(b, l + 1);
+    r = r && int_type_operand_1_1_2(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // argument_list?
+  // !':'
   private static boolean int_type_operand_1_1_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "int_type_operand_1_1_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !consumeToken(b, ERL_COLON);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // argument_list?
+  private static boolean int_type_operand_1_1_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "int_type_operand_1_1_2")) return false;
     argument_list(b, l + 1);
     return true;
   }
@@ -4300,39 +4311,66 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression (('=>' | ':=') expression)?
+  // &map_macro_entry expression | expression (('=>' | ':=') expression)
   public static boolean map_entry(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_entry")) return false;
-    boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, ERL_MAP_ENTRY, "<map entry>");
-    r = expression(b, l + 1, -1);
-    p = r; // pin = 1
-    r = r && map_entry_1(b, l + 1);
-    exit_section_(b, l, m, r, p, ErlangParser::tuple_recoverer);
-    return r || p;
-  }
-
-  // (('=>' | ':=') expression)?
-  private static boolean map_entry_1(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "map_entry_1")) return false;
-    map_entry_1_0(b, l + 1);
-    return true;
-  }
-
-  // ('=>' | ':=') expression
-  private static boolean map_entry_1_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "map_entry_1_0")) return false;
     boolean r;
-    Marker m = enter_section_(b);
-    r = map_entry_1_0_0(b, l + 1);
-    r = r && expression(b, l + 1, -1);
-    exit_section_(b, m, null, r);
+    Marker m = enter_section_(b, l, _NONE_, ERL_MAP_ENTRY, "<map entry>");
+    r = map_entry_0(b, l + 1);
+    if (!r) r = map_entry_1(b, l + 1);
+    exit_section_(b, l, m, r, false, ErlangParser::tuple_recoverer);
     return r;
   }
 
+  // &map_macro_entry expression
+  private static boolean map_entry_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_0")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = map_entry_0_0(b, l + 1);
+    p = r; // pin = 1
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // &map_macro_entry
+  private static boolean map_entry_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = map_macro_entry(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // expression (('=>' | ':=') expression)
+  private static boolean map_entry_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_1")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = expression(b, l + 1, -1);
+    p = r; // pin = 1
+    r = r && map_entry_1_1(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // ('=>' | ':=') expression
+  private static boolean map_entry_1_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_1_1")) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = map_entry_1_1_0(b, l + 1);
+    p = r; // pin = 1
+    r = r && expression(b, l + 1, -1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
   // '=>' | ':='
-  private static boolean map_entry_1_0_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "map_entry_1_0_0")) return false;
+  private static boolean map_entry_1_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_entry_1_1_0")) return false;
     boolean r;
     r = consumeToken(b, ERL_ASSOC);
     if (!r) r = consumeToken(b, ERL_MATCH);
@@ -4407,6 +4445,36 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && map_entry_type(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  /* ********************************************************** */
+  // macros argument_list? (',' | '}')
+  static boolean map_macro_entry(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_macro_entry")) return false;
+    if (!nextTokenIs(b, ERL_QMARK)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = macros(b, l + 1);
+    r = r && map_macro_entry_1(b, l + 1);
+    r = r && map_macro_entry_2(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // argument_list?
+  private static boolean map_macro_entry_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_macro_entry_1")) return false;
+    argument_list(b, l + 1);
+    return true;
+  }
+
+  // ',' | '}'
+  private static boolean map_macro_entry_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "map_macro_entry_2")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_COMMA);
+    if (!r) r = consumeToken(b, ERL_CURLY_RIGHT);
+    return r;
   }
 
   /* ********************************************************** */
@@ -5562,6 +5630,39 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "rule_clause_2")) return false;
     clause_guard(b, l + 1);
     return true;
+  }
+
+  /* ********************************************************** */
+  // string_literal !string_literal | config_expression
+  static boolean runtime_dependency(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = runtime_dependency_0(b, l + 1);
+    if (!r) r = config_expression(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // string_literal !string_literal
+  private static boolean runtime_dependency_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = string_literal(b, l + 1);
+    r = r && runtime_dependency_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // !string_literal
+  private static boolean runtime_dependency_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "runtime_dependency_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _NOT_);
+    r = !string_literal(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   /* ********************************************************** */

@@ -1,0 +1,70 @@
+HIGHLIGHT 13:2-13:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 13:2-13:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 15:10-15:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 15:10-15:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 15:2-15:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 15:2-15:8 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:2-17:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 17:2-17:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 19:10-19:11 ERROR(400) '(' or ':' expected, got '.' ERRORS_ATTRIBUTES
+HIGHLIGHT 1:1-32:1 WARNING(300) Some 'include' folders are not marked as include directories. WARNING_ATTRIBUTES
+HIGHLIGHT 21:1-21:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 21:1-21:6 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 22:8-22:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 22:8-22:15 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:3-23:6 WARNING(300) Unused variable 'Ref' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 23:9-23:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:9-23:17 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 23:9-23:17 WARNING(300) Unresolved function make_ref/0 WARNING_ATTRIBUTES
+HIGHLIGHT 24:12-24:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:12-24:19 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:31-24:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:31-24:38 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:40-24:44 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:40-24:44 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:5-24:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:5-24:9 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 24:57-24:58 ERROR(400) '.' or '{' expected, got '(' ERRORS_ATTRIBUTES
+HIGHLIGHT 25:16-25:20 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 25:16-25:20 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 25:24-25:25 ERROR(400) '.' or '{' expected, got '}' ERRORS_ATTRIBUTES
+HIGHLIGHT 25:4-25:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 25:4-25:12 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 25:4-25:12 WARNING(300) Unresolved function app_name/0 WARNING_ATTRIBUTES
+HIGHLIGHT 27:1-27:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:1-27:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 27:1-27:5 WARNING(300) Unused function 'wait/2' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 30:1-30:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:1-30:5 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 30:1-30:5 WARNING(300) Unused function 'ping/0' NOT_USED_ELEMENT_ATTRIBUTES
+HIGHLIGHT 31:3-31:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+HIGHLIGHT 31:3-31:7 INFORMATION(10) null INFORMATION_ATTRIBUTES
+REF 13:2 module -> none
+REF 13:9 m_shared_a -> none
+REF 15:2 export -> none
+REF 15:10 start -> ErlangFunctionReferenceImpl:m_shared_a.erl:21:1:start(User) ->
+REF 17:2 include -> none
+REF 19:1 ? -> none
+REF 21:1 start -> none
+REF 22:8 request -> ErlangRecordReferenceImpl:shared.hrl:27:1:-record(request, {user :: binary(), retr...
+REF 22:16 user -> :shared.hrl:27:19:user :: binary()
+REF 23:9 make_ref -> ErlangFunctionReferenceImpl:unresolved
+REF 24:4 ? -> ErlangFunctionReferenceImpl:unresolved, ErlangMacrosReferenceImpl:shared.hrl:19:1:-define(WRAP(X), {?APP, X})., ErlangMacrosReferenceImpl:shared.hrl:19:1:-define(WRAP(X), {?APP, X}).
+REF 24:12 request -> ErlangRecordReferenceImpl:shared.hrl:27:1:-record(request, {user :: binary(), retr...
+REF 24:20 retries -> :shared.hrl:27:37:retries = ?RETRIES :: integer()
+REF 24:30 ? -> ErlangMacrosReferenceImpl:shared.hrl:14:1:-define(RETRIES, 3)., ErlangMacrosReferenceImpl:shared.hrl:14:1:-define(RETRIES, 3).
+REF 24:40 wait -> :unresolved
+REF 24:44 ? -> none
+REF 25:4 app_name -> ErlangFunctionReferenceImpl:unresolved
+REF 25:16 ping -> :unresolved
+REF 25:20 ? -> none
+REF 27:1 wait -> none
+REF 30:1 ping -> none
+REF 31:3 pong -> :unresolved
+COMPLETE 23:10 -> 129 8b2396a1 err_bad_argument err_bad_argument:f err_form_in_expr err_form_in_expr:f err_header_macro err_header_macro:f err_map_field err_map_field:bad err_map_field:good err_undefined_fragment err_undefined_fragment:f err_undefined_fragment:foo err_unterminated err_unterminated:f err_unterminated:g gap_module_...
+COMPLETE 25:5 -> 97 4928c4be case catch err_arity err_arity:f err_bad_argument err_bad_argument:f err_circular err_circular:f err_header_macro err_header_macro:f err_map_field err_map_field:bad err_map_field:good err_par_alone err_par_alone:f err_par_alone:foo err_undefined_fragment err_undefined_fragment:f err_undefined_fragme...
+COMPLETE 19:2 -> 0 0 
+COMPLETE 24:5 -> 20 9ebf26b0 APP FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MAX MODULE MODULE_STRING NAME_FUN OTP_RELEASE PAR R RETRIES Ref SHARED_HRL TIMEOUT User WITH_TIMEOUT WRAP
+COMPLETE 24:31 -> 20 9ebf26b0 APP FILE FUNCTION_ARITY FUNCTION_NAME LINE MACHINE MAX MODULE MODULE_STRING NAME_FUN OTP_RELEASE PAR R RETRIES Ref SHARED_HRL TIMEOUT User WITH_TIMEOUT WRAP
+COMPLETE 24:45 -> 48 7727bec0 R Ref User err_arity err_bad_argument err_circular err_form_in_expr err_header_macro err_map_field err_par_alone err_redefine err_undefined err_undefined_fragment err_unterminated gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_basics m_ch...
+COMPLETE 25:21 -> 48 7727bec0 R Ref User err_arity err_bad_argument err_circular err_form_in_expr err_header_macro err_map_field err_par_alone err_redefine err_undefined err_undefined_fragment err_unterminated gap_function_twice gap_module_prefix gap_par_with_args gap_stringify_non_param gap_unbound_after_expansion m_basics m_ch...

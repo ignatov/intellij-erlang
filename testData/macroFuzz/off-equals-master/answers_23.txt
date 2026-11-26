@@ -1,0 +1,16 @@
+# answers:23 src/errors/err_redefine.erl arm=master layer=false
+## highlights
+## references
+286 PsiMultiReference -> []
+298 PsiMultiReference -> []
+328 ErlangMacrosReferenceImpl -> [null]
+346 ErlangMacrosReferenceImpl -> [null]
+367 ErlangMacrosReferenceImpl -> [src/errors/err_redefine.erl:328:ErlangMacrosDefinitionImpl]
+367 ErlangMacrosReferenceImpl -> [src/errors/err_redefine.erl:328:ErlangMacrosDefinitionImpl]
+## completion
+332 [<single or none>]
+346 [FILE, FUNCTION_ARITY, FUNCTION_NAME, LINE, MACHINE, MODULE, MODULE_STRING, OTP_RELEASE, SIZE, begin, case, catch, fun, if, maybe, receive, try]
+334 [begin, case, catch, fun, if, maybe, receive, try]
+329 [MODULE_STRING, OTP_RELEASE, SIZE]
+351 [begin, case, catch, fun, if, maybe, receive, try]
+276 []

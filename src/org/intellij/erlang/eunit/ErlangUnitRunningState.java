@@ -51,6 +51,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   private static final Set<String> RESERVED_WORDS = Set.of(
     "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div", "else",
     "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
+  // EUnit gives each test of a group of several tests 5 seconds whatever the timeout of the group is, so a test that
+  // waits at a breakpoint is killed. scale_timeouts (OTP 26.2 and later; older releases ignore it) lengthens them all.
+  private static final int DEBUG_TIMEOUT_SCALE = Integer.MAX_VALUE;
   private final ErlangUnitRunConfiguration myConfiguration;
 
   public ErlangUnitRunningState(ExecutionEnvironment env, Module module, ErlangUnitRunConfiguration configuration) {
@@ -145,7 +148,9 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   private ErlangEntryPoint getEntryPointInternal(boolean debug) throws ExecutionException {
-    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}]");
+    String options = "{report, {" + ErlangEunitReporterModule.MODULE_NAME + ",[]}}, {no_tty, true}" +
+                     (debug ? ", {scale_timeouts, " + DEBUG_TIMEOUT_SCALE + "}" : "");
+    List<String> args = Arrays.asList("[" + getTestObjectsString(debug) + "]", "[" + options + "]");
     return new ErlangEntryPoint("eunit", "test", args);
   }
 

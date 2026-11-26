@@ -20,6 +20,7 @@ import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import org.intellij.erlang.psi.ErlangQVar;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
 import org.jetbrains.annotations.NotNull;
 
 public class ErlangRenameVariableFix extends ErlangQuickFixBase {
@@ -31,6 +32,7 @@ public class ErlangRenameVariableFix extends ErlangQuickFixBase {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor descriptor) {
+    ErlangUsageCounters.countQuickFix(project, getClass());
     PsiElement element = descriptor.getPsiElement();
 
     if (element instanceof ErlangQVar) {

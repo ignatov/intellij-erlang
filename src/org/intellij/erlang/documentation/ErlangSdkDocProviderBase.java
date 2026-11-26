@@ -33,6 +33,8 @@ import com.intellij.util.io.HttpRequests;
 import com.intellij.util.io.URLUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
+import org.intellij.erlang.statistics.ErlangUsageCounters;
+import org.intellij.erlang.statistics.ErlangUsageKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,12 +122,16 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @Nullable
   private String fetchDoc(@NotNull String urlString) {
+    boolean web = false;
     try {
       String protocol = URLUtil.containsScheme(urlString) ? urlString.substring(0, urlString.indexOf(URLUtil.SCHEME_SEPARATOR)) : null;
       if (protocol != null && isHttpProtocol(protocol)) {
-        return HttpRequests.request(urlString)
+        web = true;
+        String doc = HttpRequests.request(urlString)
           .productNameAsUserAgent()
           .connect(request -> retrieveDoc(request.getReader()));
+        ErlangUsageCounters.count(myProject, doc != null ? ErlangUsageKey.OTP_DOCS_WEB_OK : ErlangUsageKey.OTP_DOCS_WEB_FAILED);
+        return doc;
       }
       if (protocol == null || protocol.equals(URLUtil.FILE_PROTOCOL)) {
         Path path = Path.of(protocol == null ? urlString : VfsUtilCore.urlToPath(urlString));
@@ -136,6 +142,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
       }
     }
     catch (IOException | InvalidPathException e) {
+      if (web) ErlangUsageCounters.count(myProject, ErlangUsageKey.OTP_DOCS_WEB_FAILED);
       LOG.debug("Cannot fetch Erlang SDK documentation from " + urlString, e);
     }
     return null;
@@ -343,7 +350,7 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private static String legacyHttpDocRelPath(@NotNull VirtualFile virtualFile) {
-    String appDirName = virtualFile.getParent().getParent().getName();
+    String appDirName = getApplicationDirName(virtualFile);
     String prefix;
     if (appDirName.startsWith("erts")) {
       prefix = "";
@@ -356,9 +363,23 @@ abstract class ErlangSdkDocProviderBase implements ElementDocProvider {
 
   @NotNull
   private static String modernHttpDocRelPath(@NotNull VirtualFile virtualFile) {
-    String appDirName = virtualFile.getParent().getParent().getName();
+    String appDirName = getApplicationDirName(virtualFile);
     String appName = getApplicationName(appDirName);
     return "apps/" + appName + "/" + virtualFile.getNameWithoutExtension() + ".html";
+  }
+
+  /**
+   * The application directory is the parent of the {@code src} directory. Some applications keep sources
+   * in a subdirectory of {@code src}, as inets keeps {@code httpc.erl} in {@code src/http_client}.
+   */
+  @NotNull
+  private static String getApplicationDirName(@NotNull VirtualFile virtualFile) {
+    VirtualFile dir = virtualFile.getParent();
+    VirtualFile parent = dir.getParent();
+    if (!"src".equals(dir.getName()) && parent != null && "src".equals(parent.getName()) && parent.getParent() != null) {
+      dir = parent;
+    }
+    return dir.getParent().getName();
   }
 
   @NotNull
