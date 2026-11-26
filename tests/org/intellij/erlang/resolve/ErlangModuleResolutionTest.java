@@ -66,6 +66,16 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     assertEquals("/src/eunit.erl", resolvedPath(call.getModuleRef().getReference()));
   }
 
+  // #1688: the project copy that the module name goes to has no start/0, so the call must not resolve to the SDK copy
+  public void testUserModuleLacksFunction() {
+    myFixture.configureByFiles("test.erl", "eunit.erl");
+    ErlangGlobalFunctionCallExpression call = getElementAtCaret(ErlangGlobalFunctionCallExpression.class);
+    assertEquals("/src/eunit.erl", resolvedPath(call.getModuleRef().getReference()));
+    PsiReference reference = getElementAtCaret(ErlangFunctionCallExpression.class).getReference();
+    PsiElement target = reference != null ? reference.resolve() : null;
+    assertNull("start/0 resolved to " + (target != null ? target.getContainingFile().getVirtualFile().getPath() : null), target);
+  }
+
   public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }
   public void testModuleTypeInSpec()     { doParameterTest("typeInArguments.erl", "typeInArguments.erl"); }
 
