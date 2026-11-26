@@ -20,9 +20,9 @@ import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.LocalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.CachedValueProvider;
+import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.psi.util.PsiModificationTracker;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangFileType;
@@ -35,7 +35,7 @@ import org.intellij.erlang.quickfixes.ErlangExportFunctionFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Set;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   public static final String SHORT_NAME = "ErlangUnusedFunction";
@@ -47,16 +47,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull ProblemsHolder holder) {
-    for (ErlangFunction function : file.getFunctions()) {
-      // with the macro layer: a "function" named by a macro use that continues a form the recovery split
-      // (guarded3(X) ?HH2(X) -> X.) is no function of the source; ?test(A) -> A. after a whole form still is one
-      if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) continue;
-      // the rest of a split form (setup?PAR, hello().) when a macro makes hello/0: the references go to the made one
-      if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(function)) continue;
-      // or when the source has hello/0 (hello() -> ok.): the references go to that one
-      if (ErlangMacroLayer.preferSourceFunction(file, function) != function) continue;
-      if (!isUnusedFunction(file, function)) continue;
-
+    for (ErlangFunction function : unusedFunctions(file)) {
       PsiElement identifier = function.getNameIdentifier();
       String message = "Unused function " + "'" + function.getName() + "/" + function.getArity() + "'";
       LocalQuickFix[] fixes = {new ErlangRemoveFunctionFix(), new ErlangExportFunctionFix(function)};
@@ -66,17 +57,26 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   }
 
   public boolean isReported(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
-    return canRunOn(file) && !isSuppressedFor(function.getNameIdentifier()) && isUnusedFunction(file, function);
+    return canRunOn(file) && !isSuppressedFor(function.getNameIdentifier()) && unusedFunctions(file).contains(function);
   }
 
-  private static boolean isUnusedFunction(@NotNull ErlangFile file, @NotNull final ErlangFunction function) {
-    if (ErlangPsiImplUtil.isEunitImported(file) && ErlangPsiImplUtil.isEunitTestFunction(function)) return false;
-    LocalSearchScope scope = new LocalSearchScope(file);
-    // filtered specs out
-    List<PsiReference> refs = ContainerUtil.filter(ReferencesSearch.search(function, scope).findAll(), psiReference -> {
-      PsiElement element = psiReference.getElement();
-      return PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) == null && !ErlangPsiImplUtil.isRecursiveCall(element, function);
-    });
-    return ContainerUtil.getFirstItem(refs) == null;
+  // a function is used when a call or a fun of it is reachable from the roots: the exports, -on_load and the other
+  // attributes, and the functions that are never reported; uses in specs and by the function itself do not count
+  private static @NotNull Set<ErlangFunction> unusedFunctions(@NotNull ErlangFile file) {
+    return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
+      ErlangUnusedCode.unreachable(file, ContainerUtil.filter(file.getFunctions(), f -> isChecked(file, f)), ErlangFunction.class,
+                                   element -> PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) != null),
+      PsiModificationTracker.MODIFICATION_COUNT, ErlangMacroLayer.modeTracker()));
+  }
+
+  private static boolean isChecked(@NotNull ErlangFile file, @NotNull ErlangFunction function) {
+    // with the macro layer: a "function" named by a macro use that continues a form the recovery split
+    // (guarded3(X) ?HH2(X) -> X.) is no function of the source; ?test(A) -> A. after a whole form still is one
+    if (ErlangMacroLayer.isEnabled() && function.getName().startsWith("?") && ErlangMacroLayer.continuesASplitForm(function)) return false;
+    // the rest of a split form (setup?PAR, hello().) when a macro makes hello/0: the references go to the made one
+    if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(function)) return false;
+    // or when the source has hello/0 (hello() -> ok.): the references go to that one
+    if (ErlangMacroLayer.preferSourceFunction(file, function) != function) return false;
+    return !(ErlangPsiImplUtil.isEunitImported(file) && ErlangPsiImplUtil.isEunitTestFunction(function));
   }
 }

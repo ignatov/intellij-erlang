@@ -18,10 +18,6 @@ package org.intellij.erlang.inspection;
 
 import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
-import com.intellij.psi.PsiReference;
-import com.intellij.psi.search.LocalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.util.Query;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangTypeDefinition;
@@ -37,15 +33,13 @@ public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
-    for (ErlangTypeDefinition o : file.getTypes()) {
-      Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(o.getContainingFile()));
-      if (search.findFirst() == null) {
-        problemsHolder.registerProblem(o.getNameIdentifier(),
-          "Unused type " + "'" + o.getName() + "'",
-          ProblemHighlightType.LIKE_UNUSED_SYMBOL,
-          new ErlangRemoveTypeFix(),
-          new ErlangExportTypeFix());
-      }
+    // a type is used when a use of it is reachable from a spec, a callback, a record, -export_type or a used type
+    for (ErlangTypeDefinition o : ErlangUnusedCode.unreachable(file, file.getTypes(), ErlangTypeDefinition.class, element -> false)) {
+      problemsHolder.registerProblem(o.getNameIdentifier(),
+        "Unused type " + "'" + o.getName() + "'",
+        ProblemHighlightType.LIKE_UNUSED_SYMBOL,
+        new ErlangRemoveTypeFix(),
+        new ErlangExportTypeFix());
     }
   }
 }

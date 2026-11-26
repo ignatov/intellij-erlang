@@ -340,6 +340,15 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1655: -on_load and funs from used code are roots; a spec and a use by the function itself are no uses
+  public void testUnusedFunctionsReachableFromRoots() { doTest(); }
+
+  // issue 1655: -export_type, records, callbacks and specs, even of unused functions, are roots, as in erlc
+  public void testUnusedTypesReachableFromRoots() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
