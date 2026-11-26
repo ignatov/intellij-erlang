@@ -31,14 +31,30 @@ public class ErlangEnterHandlerTest extends ErlangLightPlatformCodeInsightFixtur
   public void testBeginEndWithSucceedingTryCatchBlock()  { doTest(); }
   public void testBeginEndWithSucceedingAfterClause()    { doTest(); }
   public void testBeginEndWithSpace()                    { doTest(); }
+  public void testBeginEndWithCodeAfterCaret()           { doTest(); }
 
   public void testCaseOfSimple()                         { doTest(); }
   public void testCaseOfWithSucceedingFunctions()        { doTest(); }
   public void testCaseOfWithSpace()                      { doTest(); }
+  public void testCaseOfWithCodeAfterCaret()             { doTest(); }
 
   public void testReceiveSimple()                        { doTest(); }
   public void testReceiveWithSucceedingFunctions()       { doTest(); }
   public void testReceiveWithSpace()                     { doTest(); }
+  public void testReceiveWithCodeAfterCaret()            { doTest(); }
+  public void testCaseOfWithCommentAfterCaret()          { doTest(); }
+  public void testCaseOfBeforeClosingParen()             { doTest(); }
+  public void testBeginBeforeClosingBracket()            { doTest(); }
+  public void testCaseOfBeforeDot()                      { doTest(); }
+  public void testIfBeforeClosingCurly()                 { doTest(); }
+  public void testBeginBeforeComma()                     { doTest(); }
+  public void testBeginBeforeComprehensionGenerators()   { doTest(); }
+  public void testBeginBeforeListTail()                  { doTest(); }
+  public void testBeginBeforeOuterOf()                   { doTest(); }
+  public void testBeginBeforeOrelse()                    { doTest(); }
+  public void testCaseOfBeforeOuterCatch()               { doTest(); }
+  public void testReceiveBeforeOwnAfter()                { doTest(); }
+  public void testIfWithCodeAfterCaretInUnfinishedCase() { doTest(); }
 
   public void testIfSimple()                             { doTest(); }
   public void testIfWithSucceedingFunctions()            { doTest(); }
