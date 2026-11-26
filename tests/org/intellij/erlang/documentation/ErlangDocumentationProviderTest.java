@@ -867,6 +867,113 @@ public class ErlangDocumentationProviderTest extends ErlangLightPlatformCodeInsi
                  myErlangDocProvider.generateDoc(element, null));
   }
 
+  public void testFunctionDocIgnoresFileHeaderComment() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentOfRecordAbove() {
+    doTestGenerateDoc("<pre></pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, bar/0]).
+                        foo() -> ba<caret>r().
+                        %% The state of the server.
+                        -record(state, {n}).
+                        bar() -> #state{n = 1}.
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentDirectlyAbove() {
+    doTestGenerateDoc("<pre><b>Comment:</b><br/> Starts it.</pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/><b>Comment:</b><br/> Starts it.<br/> More.</pre>",
+                      """
+                        %% Copyright (c) 2020 Acme. All rights reserved.
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% Starts it.
+                        %% More.
+                        -spec start() -> ok.
+                        start() -> ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocIgnoresCommentAboveDistantSpec() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> start() -> ok<br/><br/></pre>",
+                      """
+                        -module(m).
+                        -export([start/0, f/0]).
+                        %% The state of the server.
+                        -spec start() -> ok.
+                        -record(state, {n}).
+                        start() -> #state{n = 1}, ok.
+                        f() -> sta<caret>rt().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveGroupedSpecs() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo(a) -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/1, foo/2, f/0]).
+                        %% Does foo.
+                        -spec foo(a) -> ok.
+                        -spec foo(a, b) -> ok.
+                        foo(A) -> foo(A, b).
+                        foo(_A, _B) -> ok.
+                        f() -> fo<caret>o(a).
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveSpecAndCompileAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -spec foo() -> ok.
+                        -compile({inline, [foo/0]}).
+                        -dialyzer({nowarn_function, foo/0}).
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
+  public void testFunctionDocShowsCommentAboveDocAttribute() {
+    doTestGenerateDoc("<pre><b>Specification:</b><br/> foo() -> ok<br/><br/><b>Comment:</b><br/> Does foo.</pre>",
+                      """
+                        -module(m).
+                        -export([foo/0, f/0]).
+                        %% Does foo.
+                        -doc "Foo.".
+                        -spec foo() -> ok.
+                        foo() -> ok.
+                        f() -> fo<caret>o().
+                        """);
+  }
+
+  private void doTestGenerateDoc(@NotNull String expected, @NotNull String text) {
+    PsiElement element = resolveElementAtCaret(text);
+    assertEquals(expected, myErlangDocProvider.generateDoc(element, null));
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {

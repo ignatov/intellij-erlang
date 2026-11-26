@@ -17,8 +17,12 @@
 package org.intellij.erlang.documentation;
 
 import com.intellij.psi.PsiComment;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ObjectUtils;
 import org.intellij.erlang.ErlangParserDefinition;
+import org.intellij.erlang.psi.ErlangAtomAttribute;
+import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangSpecification;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -26,8 +30,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Set;
 
 final class ErlangFunctionDocProvider implements ElementDocProvider {
+  private static final Set<String> FUNCTION_ANNOTATIONS = Set.of("doc", "compile", "dialyzer");
+
   @NotNull
   private final ErlangFunction myErlangFunction;
 
@@ -46,7 +53,11 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
   public String getDocText() {
     ErlangFunction prevFunction = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, ErlangFunction.class);
     ErlangSpecification spec = myErlangFunction.findSpecification();
-    PsiComment comment = PsiTreeUtil.getPrevSiblingOfType(myErlangFunction, PsiComment.class);
+    PsiElement prev = PsiTreeUtil.skipWhitespacesBackward(myErlangFunction);
+    while (prev instanceof ErlangAttribute attribute && isFunctionAnnotation(attribute)) {
+      prev = PsiTreeUtil.skipWhitespacesBackward(prev);
+    }
+    PsiComment comment = ObjectUtils.tryCast(prev, PsiComment.class);
 
     String commentText = "";
     if (spec != null && ErlangPsiImplUtil.notFromPreviousFunction(spec, prevFunction)) {
@@ -58,5 +69,11 @@ final class ErlangFunctionDocProvider implements ElementDocProvider {
         ErlangDocUtil.collectPrevComments(comment), "%%", ErlangDocUtil.EDOC_FUNCTION_TAGS);
     }
     return ErlangDocUtil.wrapInPreTag(commentText);
+  }
+
+  private static boolean isFunctionAnnotation(@NotNull ErlangAttribute attribute) {
+    if (attribute.getSpecification() != null) return true;
+    ErlangAtomAttribute atomAttribute = attribute.getAtomAttribute();
+    return atomAttribute != null && FUNCTION_ANNOTATIONS.contains(atomAttribute.getName());
   }
 }
