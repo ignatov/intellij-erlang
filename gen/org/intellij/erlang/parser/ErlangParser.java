@@ -4043,6 +4043,30 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // macros (',' | ';' | '.' | ')')
+  static boolean macro_type_guard(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_type_guard")) return false;
+    if (!nextTokenIs(b, ERL_QMARK)) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = macros(b, l + 1);
+    r = r && macro_type_guard_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ',' | ';' | '.' | ')'
+  private static boolean macro_type_guard_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "macro_type_guard_1")) return false;
+    boolean r;
+    r = consumeToken(b, ERL_COMMA);
+    if (!r) r = consumeToken(b, ERL_SEMI);
+    if (!r) r = consumeToken(b, ERL_DOT);
+    if (!r) r = consumeToken(b, ERL_PAR_RIGHT);
+    return r;
+  }
+
+  /* ********************************************************** */
   // '?' macros_name
   public static boolean macros(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "macros")) return false;
@@ -6304,13 +6328,13 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '(' top_type_list ')' | top_type
+  // q_atom '(' top_type_list ')' | &(q_var '::' | macro_type_guard) top_type
   public static boolean type_guard(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_guard")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_TYPE_GUARD, "<type guard>");
     r = type_guard_0(b, l + 1);
-    if (!r) r = top_type(b, l + 1);
+    if (!r) r = type_guard_1(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -6324,6 +6348,49 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && consumeToken(b, ERL_PAR_LEFT);
     r = r && top_type_list(b, l + 1);
     r = r && consumeToken(b, ERL_PAR_RIGHT);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &(q_var '::' | macro_type_guard) top_type
+  private static boolean type_guard_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = type_guard_1_0(b, l + 1);
+    r = r && top_type(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &(q_var '::' | macro_type_guard)
+  private static boolean type_guard_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = type_guard_1_0_0(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // q_var '::' | macro_type_guard
+  private static boolean type_guard_1_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = type_guard_1_0_0_0(b, l + 1);
+    if (!r) r = macro_type_guard(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // q_var '::'
+  private static boolean type_guard_1_0_0_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1_0_0_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = q_var(b, l + 1);
+    r = r && consumeToken(b, ERL_COLON_COLON);
     exit_section_(b, m, null, r);
     return r;
   }

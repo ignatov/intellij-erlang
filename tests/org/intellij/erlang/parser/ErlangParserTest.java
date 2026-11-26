@@ -268,6 +268,23 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEmpty("Parsed with a syntax error", rejected);
   }
 
+  // #1667: a macro can expand to a whole constraint, erlc compiles -define(C, V :: atom()) with each of these.
+  public void testSpecConstraintMacro() {
+    String[] specs = {
+      "-spec f(term()) -> V when ?C.",
+      "-spec f(term()) -> V when ?C, is_subtype(V, term()).",
+      "-spec f(term()) -> V when ?C; (atom()) -> atom().",
+      "-spec(f(term()) -> V when ?C).",
+      "-callback f(term()) -> V when ?C."
+    };
+    List<String> rejected = new ArrayList<>();
+    for (String spec : specs) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-define(C, V :: atom()).\n" + spec + "\nf(X) -> X.\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(spec);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
