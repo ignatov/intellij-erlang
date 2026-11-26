@@ -25,6 +25,8 @@ import org.intellij.erlang.quickfixes.ErlangExportTypeFix;
 import org.intellij.erlang.quickfixes.ErlangRemoveTypeFix;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Set;
+
 public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
@@ -33,8 +35,10 @@ public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
 
   @Override
   protected void checkFile(@NotNull ErlangFile file, @NotNull final ProblemsHolder problemsHolder) {
+    Set<String> outOfSight = ErlangUnusedCode.namesUsedOutOfSight(file);
     // a type is used when a use of it is reachable from a spec, a callback, a record, -export_type or a used type
-    for (ErlangTypeDefinition o : ErlangUnusedCode.unreachable(file, file.getTypes(), ErlangTypeDefinition.class, element -> false)) {
+    for (ErlangTypeDefinition o : ErlangUnusedCode.unreachable(file, file.getTypes(), ErlangTypeDefinition.class, element -> false,
+                                                                    t -> outOfSight.contains(t.getName()))) {
       problemsHolder.registerProblem(o.getNameIdentifier(),
         "Unused type " + "'" + o.getName() + "'",
         ProblemHighlightType.LIKE_UNUSED_SYMBOL,

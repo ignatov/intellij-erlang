@@ -349,6 +349,21 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1655: a function the search misses (a macro argument or body, a header) keeps the functions it calls used
+  public void testUnusedFunctionsUsedOutOfSight() { doTest("UnusedFunctionsUsedOutOfSight.erl", "unused_out_of_sight.hrl"); }
+
+  // issue 1655: without the macro layer, g(?ARGS) resolves to no g/2, which still keeps h/2 used
+  public void testUnusedFunctionsUsedOutOfSightLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    doTest();
+  }
+
+  // issue 1655: a type the search misses (in a macro used by a spec) keeps the types it uses used
+  public void testUnusedTypesUsedOutOfSight() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
