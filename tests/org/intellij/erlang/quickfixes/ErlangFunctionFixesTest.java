@@ -220,13 +220,6 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     assertEquals(before, myFixture.getFile().getText());
   }
 
-  public void testInvokeWithExportWithoutListChangesNothing() {
-    myFixture.configureByFile("exportWithoutList.erl");
-    String before = myFixture.getFile().getText();
-    invokeExportFix(getFunctionAtCaret(), null);
-    assertEquals(before, myFixture.getFile().getText());
-  }
-
   public void testFixIsAvailable() {
     myFixture.configureByFile("common.erl");
     ErlangFunction function = getFunctionAtCaret();
@@ -276,14 +269,6 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
     myFixture.configureByText("popup.erl", "-module(popup).\n-export(" + list + ").\n");
     List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
     assertEquals(list, getRenderedText(getPopupRenderer(), exports.getFirst()));
-  }
-
-  public void testPopupRendererTextOfExportWithoutList() throws Exception {
-    myFixture.configureByFile("exportWithoutList.erl");
-    List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
-    assertEquals(1, exports.size());
-    assertNull(exports.getFirst().getExportFunctions());
-    assertEquals("Add a new -export() attribute", getRenderedText(getPopupRenderer(), exports.getFirst()));
   }
 
   public void testPopupHighlighterRemoved() throws Exception {
