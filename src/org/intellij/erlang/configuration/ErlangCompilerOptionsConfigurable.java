@@ -113,17 +113,22 @@ public class ErlangCompilerOptionsConfigurable extends CompilerConfigurable {
 
   @Override
   public void apply() {
-    mySettings.setUseRebarCompilerEnabled(myUseRebarCompilerCheckBox.isSelected());
+    mySettings.setUseRebarCompilerEnabled(isUseRebarCompilerSelected());
     mySettings.setAddDebugInfoEnabled(myAddDebugInfoCheckBox.isSelected());
     mySettings.setAdditionalErlcArguments(arguments(myAdditionalErlcArgumentsEditor.getText()));
   }
 
   @Override
   public boolean isModified() {
-    return myUseRebarCompilerCheckBox.isSelected() != mySettings.isUseRebarCompilerEnabled() ||
+    return isUseRebarCompilerSelected() != mySettings.isUseRebarCompilerEnabled() ||
            myAddDebugInfoCheckBox.isSelected() != mySettings.isAddDebugInfoEnabled() ||
            !StringUtil.equals(myAdditionalErlcArgumentsEditor.getText(),
                               argumentsString(mySettings.getAdditionalErlcArguments()));
+  }
+
+  // The check box is unticked while no rebar path is set; the choice it held is kept until a path is set again
+  private boolean isUseRebarCompilerSelected() {
+    return myUseRebarCompilerCheckBox.isSelected() || myRestoreUseRebarCompiler;
   }
 
   private void setUseRebarCompiler(boolean useRebarCompiler) {

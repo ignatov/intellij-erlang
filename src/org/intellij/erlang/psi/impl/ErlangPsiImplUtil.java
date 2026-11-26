@@ -1241,7 +1241,18 @@ public class ErlangPsiImplUtil {
 
   @SuppressWarnings("UnusedParameters")
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
-    return processDeclarationRecursive(o, processor, state);
+    if (lastParent == null) return processDeclarationRecursive(o, processor, state);
+    // the qualifiers nearest to the place first: a qualifier sees the earlier ones, the template sees all of them, the last one first
+    List<ErlangLcExpression> qualifiers = PsiTreeUtil.getChildrenOfTypeAsList(o, ErlangLcExpression.class);
+    int index = qualifiers.indexOf(lastParent);
+    if (index >= 0) {
+      ErlangArgumentDefinition pattern = qualifiers.get(index).getArgumentDefinition();
+      if (pattern != null && PsiTreeUtil.isAncestor(pattern, place, false) && !processDeclarationRecursive(pattern, processor, state)) return false;
+    }
+    for (int i = (index >= 0 ? index : qualifiers.size()) - 1; i >= 0; i--) {
+      if (!processDeclarationRecursive(qualifiers.get(i), processor, state)) return false;
+    }
+    return index >= 0 || processDeclarationRecursive(o, processor, state);
   }
 
   @SuppressWarnings("UnusedParameters")

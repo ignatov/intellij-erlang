@@ -95,6 +95,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
   // The answers carry no request id, and the meta process of the debugged pid loses an answer when a second
   // evaluation reaches it during the first one, so only the head of the queue is sent to the node.
   private final Deque<PendingEvaluation> myEvaluations = new ArrayDeque<>();
+  private volatile boolean myStartFailed = false;
 
   public ErlangXDebugProcess(@NotNull XDebugSession session, ExecutionEnvironment env, @NotNull SetUp setUp) throws ExecutionException {
     //TODO add debug build targets and make sure the project is built using them.
@@ -110,17 +111,24 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
     }
 
     try {
-      //TODO add the debugger node to disposable hierarchy (we may fail to initialize session so the session will not be stopped!)
       myDebuggerNode = new ErlangDebuggerNode(this);
     }
     catch (ErlangDebuggerNodeException e) {
       throw new ExecutionException(e);
     }
 
-    // it's important to set modules to interpret before running the debug target
-    myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
-    //TODO split running debug target and debugger process spawning
-    myErlangProcessHandler = runDebugTarget(setUp);
+    try {
+      // it's important to set modules to interpret before running the debug target
+      myDebuggerNode.interpretModules(setUp.moduleSourcePaths());
+      //TODO split running debug target and debugger process spawning
+      myErlangProcessHandler = runDebugTarget(setUp);
+    }
+    catch (ExecutionException | RuntimeException | Error e) {
+      // the session is not created, so nothing else would stop the debugger node
+      myStartFailed = true;
+      myDebuggerNode.stop();
+      throw e;
+    }
 
     ErlangRunConfigurationBase<?> runConfig = getRunConfiguration();
     myLocationResolver = new ErlangDebugLocationResolver(runConfig.getProject(),
@@ -332,6 +340,8 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @Override
   public void debuggerStopped() {
+    // the start error is already reported, and a session without a debug process has nothing to stop
+    if (myStartFailed) return;
     getSession().reportMessage("Debug process stopped", MessageType.INFO);
     getSession().stop();
   }
@@ -550,7 +560,7 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
 
   @NotNull
   private OSProcessHandler runDebugTarget(@NotNull SetUp setUp) throws ExecutionException {
-    OSProcessHandler erlangProcessHandler;
+    OSProcessHandler erlangProcessHandler = null;
     LOG.debug("Preparing to run debug target.");
     try {
       GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -588,8 +598,12 @@ public class ErlangXDebugProcess extends XDebugProcess implements ErlangDebugger
         myDebuggerNode.runDebugger(entryPoint.getModuleName(), entryPoint.getFunctionName(), entryPoint.getArgsList());
       }
     }
-    catch (ExecutionException e) {
+    catch (ExecutionException | RuntimeException | Error e) {
       LOG.debug("Failed to run debug target.", e);
+      if (erlangProcessHandler != null) {
+        // the handler is not start-notified yet, so destroyProcess() would not kill it
+        erlangProcessHandler.getProcess().destroy();
+      }
       throw e;
     }
     LOG.debug("Debug target should now be running.");

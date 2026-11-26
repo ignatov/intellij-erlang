@@ -68,6 +68,10 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testMacrosResolve()     { doTest(); }
   public void testIfConditionalCompilation() { doTest(); }
   public void testIfElifDefinedMacro() { doTest(); } // issue 1636
+  public void testGeneratorExpressionDoesNotSeeOwnPattern() { doTest(); } // issue 1641
+  public void testGeneratorPatternScope() { doTest(); } // issue 1641
+  public void testRepeatedGeneratorPatterns() { doTest(); } // issue 1641
+  public void testGeneratorMapKeyPattern() { doTest(); } // issue 1641
   public void testDefinedOutsideIfElif() { doTest(); } // issue 1636
   public void test200()               { doTest(); }
   public void testSpawnTest()         { doTest(); }
@@ -118,6 +122,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testNamedFunVariables() { doTest(); }
   public void testNamedFunUnusedName() { doTest(); } // issue 1642
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
+  public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }

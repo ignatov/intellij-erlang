@@ -19,9 +19,19 @@ package org.intellij.erlang.quickfixes;
 import com.intellij.codeInsight.daemon.impl.analysis.FileHighlightingSetting;
 import com.intellij.codeInsight.daemon.impl.analysis.HighlightingSettingsPerFile;
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo;
 import com.intellij.ide.PowerSaveMode;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.HighlighterTargetArea;
+import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.psi.PsiAnchor;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.inspection.ErlangAmbiguousCallOfAutoImportedFunctionInspection;
 import org.intellij.erlang.inspection.ErlangDuplicateFunctionExportInspection;
@@ -29,9 +39,13 @@ import org.intellij.erlang.inspection.ErlangUnusedFunctionInspection;
 import org.intellij.erlang.intention.ErlangExportFunctionIntention;
 import org.intellij.erlang.psi.ErlangExport;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
+import org.intellij.erlang.psi.impl.ErlangElementFactory;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
@@ -180,5 +194,124 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
 
   private static List<ErlangExport> getExportsToShow(PsiFile file) {
     return ErlangExportFunctionFix.getNotEmptyExports(ErlangExportFunctionFix.getExportPsiElements((ErlangFile) file));
+  }
+
+  public void testInvokeWithoutEditorUpdatesFirstExport() {
+    myFixture.configureByFile("invokeWithoutEditor.erl");
+    invokeExportFix(getFunctionAtCaret(), null);
+    myFixture.checkResultByFile("invokeWithoutEditor-after.erl");
+  }
+
+  public void testInvokeOnFunctionThatCannotBeExportedChangesNothing() {
+    myFixture.configureByFile("macroDefinedAfterFunction.erl");
+    String before = myFixture.getFile().getText();
+    invokeExportFix(getFunctionAtCaret(), myFixture.getEditor());
+    assertEquals(before, myFixture.getFile().getText());
+  }
+
+  public void testInvokeOnNonFunctionChangesNothing() {
+    myFixture.configureByFile("common.erl");
+    String before = myFixture.getFile().getText();
+    ErlangFunction function = getFunctionAtCaret();
+    PsiElement module = ((ErlangFile) myFixture.getFile()).getModule();
+    assertNotNull(module);
+    WriteCommandAction.runWriteCommandAction(getProject(), () ->
+      new ErlangExportFunctionFix(function).invoke(getProject(), myFixture.getFile(), myFixture.getEditor(), module, null));
+    assertEquals(before, myFixture.getFile().getText());
+  }
+
+  public void testFixIsAvailable() {
+    myFixture.configureByFile("common.erl");
+    ErlangFunction function = getFunctionAtCaret();
+    ErlangExportFunctionFix fix = new ErlangExportFunctionFix(function);
+    PsiFile file = myFixture.getFile();
+    assertTrue(fix.isAvailable(getProject(), file, function, function));
+    PsiElement module = ((ErlangFile) file).getModule();
+    assertNotNull(module);
+    assertTrue("not a function: the fix does not check", fix.isAvailable(getProject(), file, module, module));
+    PsiFile textFile = myFixture.configureByText("a.txt", "text");
+    assertTrue("not an Erlang file: the fix does not check", fix.isAvailable(getProject(), textFile, function, function));
+  }
+
+  public void testFixIsNotAvailableWhenFunctionCannotBeExported() {
+    myFixture.configureByFile("macroDefinedAfterFunction.erl");
+    ErlangFunction function = getFunctionAtCaret();
+    assertFalse(new ErlangExportFunctionFix(function).isAvailable(getProject(), myFixture.getFile(), function, function));
+  }
+
+  public void testFixPreviewIsEmpty() {
+    myFixture.configureByFile("common.erl");
+    ErlangExportFunctionFix fix = new ErlangExportFunctionFix(getFunctionAtCaret());
+    assertEquals("Export function", fix.getText());
+    assertSame(IntentionPreviewInfo.EMPTY, fix.generatePreview(getProject(), myFixture.getEditor(), myFixture.getFile()));
+  }
+
+  public void testPopupRendererText() throws Exception {
+    String longList = "aaaaaaaaaa/0, bbbbbbbbbb/0, cccccccccc/0, dddddddddd/0, eeeeeeeeee/0, ffffffffff/0, gggggggggg/0";
+    myFixture.configureByText("popup.erl", "-module(popup).\n" +
+                                           "-export([foo/0,   bar/0]).\n" +
+                                           "-export([" + longList + "]).\n" +
+                                           "foo() -> ok.\n");
+    List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
+    assertEquals(2, exports.size());
+
+    ListCellRenderer<Object> renderer = getPopupRenderer();
+    assertEquals("[foo/0, bar/0]", getRenderedText(renderer, exports.get(0)));
+    String expectedLong = ("[" + longList + "]").substring(0, 78) + "...";
+    assertEquals(expectedLong, getRenderedText(renderer, exports.get(1)));
+    assertEquals("Add a new -export() attribute",
+                 getRenderedText(renderer, ErlangElementFactory.createExportFromText(getProject(), "")));
+  }
+
+  public void testPopupRendererTextOfExportOfLengthLimit() throws Exception {
+    String list = "[" + "a".repeat(76) + "/0]";
+    assertEquals(80, list.length());
+    myFixture.configureByText("popup.erl", "-module(popup).\n-export(" + list + ").\n");
+    List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
+    assertEquals(list, getRenderedText(getPopupRenderer(), exports.getFirst()));
+  }
+
+  public void testPopupHighlighterRemoved() throws Exception {
+    myFixture.configureByFile("common.erl");
+    Editor editor = myFixture.getEditor();
+    Method removeHighlighter = ErlangExportFunctionFix.class.getDeclaredMethod("removeHighlighter", Editor.class, Ref.class);
+    removeHighlighter.setAccessible(true);
+
+    Ref<RangeHighlighter> empty = new Ref<>();
+    removeHighlighter.invoke(null, editor, empty);
+    assertNull(empty.get());
+
+    int before = editor.getMarkupModel().getAllHighlighters().length;
+    RangeHighlighter highlighter = editor.getMarkupModel().addRangeHighlighter(
+      0, 1, HighlighterLayer.SELECTION, null, HighlighterTargetArea.EXACT_RANGE);
+    Ref<RangeHighlighter> current = new Ref<>(highlighter);
+    removeHighlighter.invoke(null, editor, current);
+    assertNull(current.get());
+    assertFalse(highlighter.isValid());
+    assertEquals(before, editor.getMarkupModel().getAllHighlighters().length);
+  }
+
+  private ErlangFunction getFunctionAtCaret() {
+    PsiElement element = myFixture.getFile().findElementAt(myFixture.getCaretOffset());
+    ErlangFunction function = PsiTreeUtil.getParentOfType(element, ErlangFunction.class);
+    assertNotNull(function);
+    return function;
+  }
+
+  private void invokeExportFix(ErlangFunction function, Editor editor) {
+    WriteCommandAction.runWriteCommandAction(getProject(), () ->
+      new ErlangExportFunctionFix(function).invoke(getProject(), myFixture.getFile(), editor, function, null));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ListCellRenderer<Object> getPopupRenderer() throws Exception {
+    Method getRenderer = ErlangExportFunctionFix.class.getDeclaredMethod("getRenderer");
+    getRenderer.setAccessible(true);
+    return (ListCellRenderer<Object>) getRenderer.invoke(null);
+  }
+
+  private static String getRenderedText(ListCellRenderer<Object> renderer, PsiElement element) {
+    var component = renderer.getListCellRendererComponent(new JList<>(), PsiAnchor.create(element), 0, false, false);
+    return ((JLabel) component).getText();
   }
 }

@@ -239,4 +239,6 @@
     - "tests/org/intellij/erlang/update/**"
     - "tests/org/intellij/erlang/utils/**"
     - "tests/org/intellij/erlang/sweep/**"
+    - "tests/org/intellij/erlang/pbt/**"
+    - "testData/pbt/**"
     - "testData/smoke/**"
