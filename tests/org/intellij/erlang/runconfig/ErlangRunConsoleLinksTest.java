@@ -63,9 +63,14 @@ public class ErlangRunConsoleLinksTest extends ErlangLightPlatformCodeInsightFix
   }
 
   public void testErlangApplicationRunConsole() throws Exception {
+    ErlangApplicationRunningState state = createApplicationState();
+    // a run calls getCommand, which sets the console builder, before it creates the console
+    Method getCommand = ErlangRunningState.class.getDeclaredMethod("getCommand");
+    getCommand.setAccessible(true);
+    getCommand.invoke(state);
     Method createConsole = CommandLineState.class.getDeclaredMethod("createConsole", Executor.class);
     createConsole.setAccessible(true);
-    assertLinksOnEveryLine((ConsoleView)createConsole.invoke(createApplicationState(), DefaultRunExecutor.getRunExecutorInstance()));
+    assertLinksOnEveryLine((ConsoleView)createConsole.invoke(state, DefaultRunExecutor.getRunExecutorInstance()));
   }
 
   public void testErlangApplicationDebugConsole() {
@@ -83,6 +88,7 @@ public class ErlangRunConsoleLinksTest extends ErlangLightPlatformCodeInsightFix
   private ErlangApplicationRunningState createApplicationState() {
     ErlangApplicationConfiguration configuration =
       new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModuleAndFunction("a_module f");
     return new ErlangApplicationRunningState(null, getModule(), configuration);
   }
 
