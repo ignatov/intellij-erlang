@@ -36,6 +36,7 @@ import com.intellij.util.indexing.IndexingDataKeys;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.intellij.erlang.ErlangBraceMatcher;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.ErlangTypes;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -272,6 +273,24 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       }
     }
     GeneratedParserUtilBase.exit_section_(builder, level, marker, elementType, result, pinned, eatMore);
+  }
+
+  // a '.' that starts a form, after another '.' or at the start of the file, is a syntax error for erlc
+  public static boolean strayPeriodOr(PsiBuilder builder_, int level_, Parser form) {
+    if (!isStrayPeriod(builder_)) return form.parse(builder_, level_);
+    PsiBuilder.Marker marker = builder_.mark();
+    builder_.advanceLexer();
+    marker.error("Unexpected '.'");
+    return true;
+  }
+
+  private static boolean isStrayPeriod(PsiBuilder builder_) {
+    if (builder_.getTokenType() != ErlangTypes.ERL_DOT) return false;
+    for (int i = -1; ; i--) {
+      IElementType type = builder_.rawLookup(i);
+      if (type == null) return true;
+      if (type != TokenType.WHITE_SPACE && !ErlangParserDefinition.COMMENTS.contains(type)) return type == ErlangTypes.ERL_DOT;
+    }
   }
 
   @SuppressWarnings("UnusedParameters")
