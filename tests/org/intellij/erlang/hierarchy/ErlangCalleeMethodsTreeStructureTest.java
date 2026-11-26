@@ -26,6 +26,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ErlangCalleeMethodsTreeStructureTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
+  public void testThisClassScopeKeepsCalleesOfTheSameFile() {
+    ErlangFile file = (ErlangFile)myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([a/0]).
+      a() -> c().
+      c() -> ok.
+      """);
+    ErlangFunction a = file.getFunction("a", 0);
+    assertNotNull(a);
+    ErlangCalleeMethodsTreeStructure structure =
+      new ErlangCalleeMethodsTreeStructure(getProject(), a, HierarchyBrowserBaseEx.SCOPE_CLASS);
+    List<String> callees = new ArrayList<>();
+    for (Object child : structure.getChildElements(structure.getRootElement())) {
+      callees.add(((ErlangFunction)((HierarchyNodeDescriptor)child).getPsiElement()).getName());
+    }
+    assertSameElements(callees, "c");
+  }
+
   public void testEveryCalleeIsListedOnce() {
     ErlangFile file = (ErlangFile)myFixture.configureByText("m.erl", """
       -module(m).
