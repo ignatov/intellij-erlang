@@ -33,6 +33,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.formatter.FormatterUtil;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ObjectUtils;
 import com.intellij.util.text.CharArrayUtil;
@@ -44,6 +45,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
+  private static final TokenSet TOKENS_AFTER_CONSTRUCT = TokenSet.create(
+    ErlangTypes.ERL_PAR_RIGHT, ErlangTypes.ERL_BRACKET_RIGHT, ErlangTypes.ERL_CURLY_RIGHT, ErlangTypes.ERL_BIN_END,
+    ErlangTypes.ERL_DOT, ErlangTypes.ERL_COMMA, ErlangTypes.ERL_SEMI, ErlangTypes.ERL_END);
 
   @Override
   public Result preprocessEnter(@NotNull PsiFile file, @NotNull Editor editor, @NotNull Ref<Integer> caretOffset, @NotNull Ref<Integer> caretAdvance, @NotNull DataContext dataContext, EditorActionHandler originalHandler) {
@@ -99,21 +103,24 @@ public class ErlangEnterHandler extends EnterHandlerDelegateAdapter {
 
     if (parent == null) return false;
 
-    int endOffset = getEndInsertionOffset(editor, lastElement.getTextRange().getEndOffset());
+    int endOffset = getEndInsertionOffset(file, editor, lastElement.getTextRange().getEndOffset());
     if (endOffset < 0) return false;
 
     appendEndAndMoveCaret(file, editor, endOffset, needCommaAfter(parent));
     return true;
   }
 
-  private static int getEndInsertionOffset(@NotNull Editor editor, int keywordEndOffset) {
+  private static int getEndInsertionOffset(@NotNull PsiFile file, @NotNull Editor editor, int keywordEndOffset) {
     Document document = editor.getDocument();
     CharSequence text = document.getCharsSequence();
     int caretOffset = editor.getCaretModel().getOffset();
     int lineEndOffset = document.getLineEndOffset(document.getLineNumber(caretOffset));
     int nonSpaceOffset = CharArrayUtil.shiftForward(text, caretOffset, lineEndOffset, " \t");
     if (nonSpaceOffset >= lineEndOffset) return keywordEndOffset;
-    return text.charAt(nonSpaceOffset) == '%' ? lineEndOffset : -1;
+    if (text.charAt(nonSpaceOffset) == '%') return lineEndOffset;
+    PsiElement next = file.findElementAt(nonSpaceOffset);
+    ASTNode nextNode = next != null ? next.getNode() : null;
+    return nextNode != null && TOKENS_AFTER_CONSTRUCT.contains(nextNode.getElementType()) ? keywordEndOffset : -1;
   }
 
   @Nullable
