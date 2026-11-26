@@ -271,11 +271,19 @@ public class ErlangFunctionFixesTest extends ErlangQuickFixTestBase {
   }
 
   public void testPopupRendererTextOfExportOfLengthLimit() throws Exception {
-    String list = "[" + "a".repeat(74) + "/0]";
+    String list = "[" + "a".repeat(76) + "/0]";
     assertEquals(80, list.length());
     myFixture.configureByText("popup.erl", "-module(popup).\n-export(" + list + ").\n");
     List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
     assertEquals(list, getRenderedText(getPopupRenderer(), exports.getFirst()));
+  }
+
+  public void testPopupRendererTextOfExportWithoutList() throws Exception {
+    myFixture.configureByFile("exportWithoutList.erl");
+    List<ErlangExport> exports = ErlangExportFunctionFix.getExportPsiElements((ErlangFile) myFixture.getFile());
+    assertEquals(1, exports.size());
+    assertNull(exports.getFirst().getExportFunctions());
+    assertEquals("Add a new -export() attribute", getRenderedText(getPopupRenderer(), exports.getFirst()));
   }
 
   public void testPopupHighlighterRemoved() throws Exception {
