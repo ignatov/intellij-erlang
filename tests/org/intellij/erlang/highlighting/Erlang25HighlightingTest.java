@@ -45,6 +45,10 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testMaybeInCallArgumentNested() {
+    doTest();
+  }
+
   public void testControlEscapeAnyCharOtp25() {
     doTest();
   }
