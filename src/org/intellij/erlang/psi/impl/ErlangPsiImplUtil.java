@@ -2294,7 +2294,10 @@ public class ErlangPsiImplUtil {
       if (cr1 != null && cr2 != null) {
         ErlangCaseExpression ce1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class);
         ErlangCaseExpression ce2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class);
-        if (Comparing.equal(ce1, ce2)) return true;
+        // a fun clause or a comprehension below the case starts a new scope
+        PsiElement scope1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
+        PsiElement scope2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
+        if (Comparing.equal(ce1, ce2) && Comparing.equal(scope1, scope2)) return true;
       }
     }
     return false;
