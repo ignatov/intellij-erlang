@@ -247,6 +247,16 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testAdditiveSpacesOffKeepsUnaryOperatorApart() throws Exception {
+    getCommonSettings().SPACE_AROUND_ADDITIVE_OPERATORS = false;
+    doTest();
+  }
+
+  public void testLogicalSpacesOffKeepsUnaryMinusAndBinaryApart() throws Exception {
+    getCommonSettings().SPACE_AROUND_LOGICAL_OPERATORS = false;
+    doTest();
+  }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
 
