@@ -79,7 +79,7 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
 
   /**
    * The lexer returns ERL_FUN both for a fun block ({@code fun (...) -> ... end}, {@code fun Name(...) -> ... end})
-   * and for a fun reference ({@code fun [M:]F/A}), which has no {@code end}.
+   * and for a fun reference ({@code fun [M:]F/A}) or a fun type ({@code fun()}, {@code fun((...) -> T)}), which have no {@code end}.
    */
   @Override
   public boolean isLBraceToken(@NotNull HighlighterIterator iterator, @NotNull CharSequence fileText, @NotNull FileType fileType) {
@@ -93,8 +93,21 @@ public class ErlangBraceMatcher extends PairedBraceMatcherAdapter {
       steps += advanceToSignificantToken(iterator);
       if (!iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_VAR) {
         steps += advanceToSignificantToken(iterator);
+        return !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_PAR_LEFT;
       }
-      return !iterator.atEnd() && iterator.getTokenType() == ErlangTypes.ERL_PAR_LEFT;
+      if (iterator.atEnd() || iterator.getTokenType() != ErlangTypes.ERL_PAR_LEFT) return false;
+      // A fun type has '->' inside its parentheses, or is 'fun()' without '->' or 'when' after it.
+      int depth = 1;
+      while (depth > 0) {
+        steps += advanceToSignificantToken(iterator);
+        if (iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_DOT) return true;
+        IElementType type = iterator.getTokenType();
+        if (type == ErlangTypes.ERL_PAR_LEFT) depth++;
+        else if (type == ErlangTypes.ERL_PAR_RIGHT) depth--;
+        else if (type == ErlangTypes.ERL_ARROW && depth == 1) return false;
+      }
+      steps += advanceToSignificantToken(iterator);
+      return iterator.atEnd() || iterator.getTokenType() == ErlangTypes.ERL_ARROW || iterator.getTokenType() == ErlangTypes.ERL_WHEN;
     }
     finally {
       for (int i = 0; i < steps; i++) iterator.retreat();

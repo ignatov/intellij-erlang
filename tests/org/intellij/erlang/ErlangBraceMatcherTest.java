@@ -70,6 +70,26 @@ public class ErlangBraceMatcherTest extends ErlangLightPlatformCodeInsightFixtur
     doTestFunTypeIsNotBrace("-type h() :: <caret>fun().");
   }
 
+  public void testFunTypeInCallbackIsNotBrace() {
+    doTestFunTypeIsNotBrace("-callback f() -> <caret>fun((...) -> ok).");
+  }
+
+  public void testFunTypeInRecordFieldIsNotBrace() {
+    doTestFunTypeIsNotBrace("-record(r, {f = fun() -> ok end :: <caret>fun(() -> ok)}).");
+  }
+
+  public void testLambdaInRecordFieldDefaultMatchesEnd() {
+    doTest(true, "-record(r, {f = <caret>fun() -> ok <match>end :: fun(() -> ok)}).");
+  }
+
+  public void testLambdaWithGuardMatchesEnd() {
+    doTest(true, "f() -> <caret>fun() when true -> fun() -> ok end <match>end.");
+  }
+
+  public void testLambdaWithParenthesizedPatternMatchesEnd() {
+    doTest(true, "f() -> <caret>fun((X), {Y}) -> X(Y) <match>end.");
+  }
+
   public void testCodeBlockStartIgnoresFunTypeInSpec() {
     doTestCaretStays("EditorCodeBlockStart");
   }
