@@ -1267,6 +1267,8 @@ public class ErlangPsiImplUtil {
     List<ErlangCrClause> crClauseList = o.getCrClauseList();
     boolean result = true;
     for (ErlangCrClause c : crClauseList) {
+      // the earlier part of the clause that holds the place is already walked; the rest of it comes later than the place
+      if (c == lastParent) continue;
       ErlangClauseBody clauseBody = c.getClauseBody();
       if (clauseBody != null) result &= processDeclarationRecursive(clauseBody, processor, state);
     }
