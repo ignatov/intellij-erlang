@@ -29,6 +29,7 @@ import org.intellij.erlang.psi.ErlangExportFunction;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangFunctionWithArity;
+import org.intellij.erlang.psi.ErlangImportFunction;
 import org.intellij.erlang.psi.ErlangQAtom;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -140,6 +141,20 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
     Collection<UsageInfo> usages = myFixture.findUsages(function);
     assertEquals(1, usages.size());
     assertInstanceOf(ContainerUtil.getFirstItem(usages).getElement(), ErlangExportFunction.class);
+  }
+
+  // issue 1735: an -import entry without a module (erlc rejects it) must not resolve through itself
+  public void testImportWithoutModule() {
+    myFixture.configureByText("attr_19.erl", """
+      -module(attr_19).
+      -export([f/0]).
+      -import([<caret>map/2]).
+      -record(after_attr, {a}).
+      f() -> #after_attr{}.
+      """);
+    PsiReference reference = getElementAtCaret(ErlangImportFunction.class).getReference();
+    assertNotNull(reference);
+    assertNull(reference.resolve());
   }
 
   private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
