@@ -82,6 +82,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testCaseHeadRematchInLaterCase() { doTest("New"); }
   public void testCaseHeadPattern()            { doTest("New"); }
   public void testCaseHeadPatternFromPattern() { doTest("New"); }
+  public void testMaybeBindingInCallArgument() { doTest("New"); } // issue 1664
   public void testCaseClauseRematchTwice()     { doTest("New"); }
   public void testCaseClauseBodyRematchTwice() { doTest("New"); }
   public void testCaseClauseNestedCasePattern() { doTest("New"); }
@@ -110,6 +111,11 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testGeneratorVariableShadowedByFunArgument() { doTest("Zz"); } // issue 1652
   public void testFunHeadRepeatedVariable() { doTest("New"); } // issue 1640
   public void testFunHeadRepeatedVariableFromSecond() { doTest("B"); } // issue 1640
+  public void testFunArgShadowsOtherCaseClause() { doTest("New"); } // issue 1654
+  public void testComprehensionVarShadowsOtherCaseClause() { doTest("New"); } // issue 1654
+  public void testCaseVarUsedInFunOfOtherClause() { doTest("New"); } // issue 1654
+  public void testCaseVarUsedInComprehensionOfOtherClause() { doTest("New"); } // issue 1654
+  public void testCaseVarUsedInFunOfLaterClause() { doTest("New"); } // issue 1654
   public void testCatchClassVarAssignment()       { doTest("New"); } // issue 1648
   public void testCaseClausePatternTwice()        { doTest("Zz"); } // issue 1650
   public void testMatchLeftSeesEarlierBinding()   { doTest("Zz"); } // issue 1650

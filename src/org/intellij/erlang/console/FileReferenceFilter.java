@@ -40,7 +40,10 @@ public final class FileReferenceFilter implements Filter {
   public static final String LINE_MACROS = "$LINE$";
   private static final String COLUMN_MACROS = "$COLUMN$";
 
-  private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:)?[0-9 a-z_A-Z\\-\\\\./]+)";
+  private static final String PATH_CHARS = "[0-9 a-z_A-Z\\-\\\\./]";
+  // A path starts at a drive letter or at the beginning of a run of path characters, tried in that order. Retrying
+  // the match from every character of a long run made filtering quadratic in the length of the line.
+  private static final String FILE_PATH_REGEXP = "((?:\\p{Alpha}\\:|(?<!" + PATH_CHARS + "))" + PATH_CHARS + "+)";
   private static final String NUMBER_REGEXP = "([0-9]+)";
 
   private static final Pattern PATTERN_FILENAME = Pattern.compile("[/\\\\]?([^/\\\\]*?\\.erl)$");
