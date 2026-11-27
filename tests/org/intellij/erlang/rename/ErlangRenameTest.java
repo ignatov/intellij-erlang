@@ -111,6 +111,9 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testFunHeadRepeatedVariable() { doTest("New"); } // issue 1640
   public void testFunHeadRepeatedVariableFromSecond() { doTest("B"); } // issue 1640
   public void testCatchClassVarAssignment()       { doTest("New"); } // issue 1648
+  public void testCaseClausePatternTwice()        { doTest("Zz"); } // issue 1650
+  public void testMatchLeftSeesEarlierBinding()   { doTest("Zz"); } // issue 1650
+  public void testMatchLeftSeesEarlierCasePattern() { doTest("Zz"); } // issue 1650
   public void testMapCompKeyValueRematch() { doTest("New"); } // issue 1668
   public void testListCompTemplateRematch() { doTest("New"); } // issue 1668
 

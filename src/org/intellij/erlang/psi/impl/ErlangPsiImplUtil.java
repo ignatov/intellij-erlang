@@ -1289,7 +1289,7 @@ public class ErlangPsiImplUtil {
     return processDeclarationRecursive(o, processor, state, false);
   }
 
-  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
+  static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {

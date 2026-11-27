@@ -27,6 +27,7 @@ import com.intellij.usageView.UsageViewUtil;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerHosts;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.ErlangCompositeElement;
+import org.intellij.erlang.psi.ErlangFakeBinaryExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,6 +61,10 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
   }
 
   static boolean processDeclarations(@NotNull PsiElement element, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
+    // the right side of a match is evaluated first, so the left side sees the variables that the right side binds
+    if (processor instanceof ErlangVarProcessor && lastParent != null && element instanceof ErlangFakeBinaryExpression match && ErlangVarProcessor.isEvaluatedMatch(match)
+        && match.getLeft() == lastParent && match.getRight() != null
+        && !ErlangPsiImplUtil.processDeclarationRecursive(match.getRight(), processor, state, true)) return false;
     return processor.execute(element, state) && ResolveUtil.processChildren(element, processor, state, lastParent, place);
   }
 
