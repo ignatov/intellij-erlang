@@ -135,6 +135,15 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     assertEquals(32, item.getHighlightEndOffset());
   }
 
+  // a letter, a colon and digits at the start of a run are a drive letter first, not a one-letter path and a line
+  public void testDriveLetterTriedBeforeOneLetterPath() {
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "x:2x:2";
+    Filter.ResultItem item = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length()).getResultItems().getFirst();
+    assertEquals(0, item.getHighlightStartOffset());
+    assertEquals(6, item.getHighlightEndOffset());
+  }
+
   // #965: a long run of path characters, such as a hex dump, must not take seconds to filter
   public void testLongLineWithoutPath() {
     String consoleOutput = "deadbeef".repeat(6250);
