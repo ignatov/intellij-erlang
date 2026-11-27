@@ -33,14 +33,29 @@ public class ErlangCalleeMethodsTreeStructureTest extends ErlangLightPlatformCod
       b() -> c(), c().
       c() -> ok.
       """);
-    ErlangFunction b = file.getFunction("b", 0);
-    assertNotNull(b);
+    assertOrderedEquals(callees(file.getFunction("b", 0)), "c/0");
+  }
+
+  public void testDifferentCalleesKeepCallOrder() {
+    ErlangFile file = (ErlangFile)myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([b/0]).
+      b() -> c(1), c(), c(2), b(), c().
+      c() -> ok.
+      c(_) -> ok.
+      """);
+    assertOrderedEquals(callees(file.getFunction("b", 0)), "c/1", "c/0", "b/0");
+  }
+
+  private List<String> callees(ErlangFunction function) {
+    assertNotNull(function);
     ErlangCalleeMethodsTreeStructure structure =
-      new ErlangCalleeMethodsTreeStructure(getProject(), b, HierarchyBrowserBaseEx.SCOPE_ALL);
+      new ErlangCalleeMethodsTreeStructure(getProject(), function, HierarchyBrowserBaseEx.SCOPE_ALL);
     List<String> callees = new ArrayList<>();
     for (Object child : structure.getChildElements(structure.getRootElement())) {
-      callees.add(((ErlangFunction)((HierarchyNodeDescriptor)child).getPsiElement()).getName());
+      ErlangFunction callee = (ErlangFunction)((HierarchyNodeDescriptor)child).getPsiElement();
+      callees.add(callee.getName() + "/" + callee.getArity());
     }
-    assertOrderedEquals(callees, "c");
+    return callees;
   }
 }
