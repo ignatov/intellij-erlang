@@ -1,0 +1,74 @@
+ERL_FILE
+  ERL_ATTRIBUTE
+    PsiElement(-)('-')
+    ERL_MODULE
+      PsiElement(atom_name)('module')
+      PsiElement(()('(')
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('otp29_record_names_errors')
+      PsiElement())(')')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('index')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_RECORD_EXPRESSION
+          PsiElement(#)('#')
+          PsiErrorElement:<record ref> expected, got 'when'
+            <empty list>
+          PsiErrorElement:'when' unexpected
+            PsiElement(when)('when')
+    PsiElement(.)('.')
+  PsiErrorElement:'-', <atom>, <attribute>, '?', atom_name or single_quote expected, got 'a'
+    PsiElement(atom_name)('a')
+    PsiElement(.)('.')
+  ERL_FUNCTION
+    ERL_FUNCTION_CLAUSE
+      ERL_Q_ATOM
+        ERL_ATOM
+          PsiElement(atom_name)('period')
+      ERL_ARGUMENT_DEFINITION_LIST
+        PsiElement(()('(')
+        ERL_ARGUMENT_DEFINITION
+          ERL_MAX_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('R')
+        PsiElement())(')')
+      ERL_CLAUSE_BODY
+        PsiElement(->)('->')
+        ERL_RECORD_EXPRESSION
+          ERL_MAX_EXPRESSION
+            ERL_Q_VAR
+              PsiElement(var)('R')
+          PsiElement(#)('#')
+          PsiErrorElement:<record ref> expected, got 'Foo'
+            <empty list>
+          PsiErrorElement:'Foo' unexpected
+            PsiElement(var)('Foo')
+    PsiElement(.)('.')
+  ERL_TYPE_DEFINITION
+    PsiElement(-)('-')
+    PsiElement(atom_name)('type')
+    ERL_Q_ATOM
+      ERL_ATOM
+        PsiElement(atom_name)('t')
+    ERL_ARGUMENT_DEFINITION_LIST
+      PsiElement(()('(')
+      PsiElement())(')')
+    PsiElement(::)('::')
+    ERL_TYPE
+      PsiElement(#)('#')
+      PsiErrorElement:<record ref> expected, got 'Foo'
+        <empty list>
+  PsiElement(var)('Foo')
+  PsiErrorElement:'{' unexpected
+    PsiElement({)('{')
+  PsiElement(})('}')
+  PsiElement(ERROR_ELEMENT)('.')

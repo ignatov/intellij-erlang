@@ -23,6 +23,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangElementFactory;
 import org.intellij.erlang.statistics.ErlangUsageCounters;
@@ -44,7 +46,8 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
     PsiElement element = descriptor.getPsiElement();
 
     List<String> fieldNames = element instanceof ErlangRecordRef ? getFieldNames((ErlangRecordRef) element) : ContainerUtil.emptyList();
-    PsiElement record = ErlangElementFactory.createRecordFromText(project, element.getText(), ArrayUtil.toStringArray(fieldNames));
+    String name = element instanceof ErlangRecordRef ? getRecordName((ErlangRecordRef) element) : element.getText();
+    PsiElement record = ErlangElementFactory.createRecordFromText(project, name, ArrayUtil.toStringArray(fieldNames));
     PsiFile file = element.getContainingFile();
 
     if (file instanceof ErlangFile) {
@@ -56,6 +59,20 @@ public class ErlangIntroduceRecordFix extends ErlangQuickFixBase {
         file.addBefore(ErlangElementFactory.createLeafFromText(project, newLines), elementBefore);
       }
     }
+  }
+
+  // OTP 29 takes a variable or a reserved word as a record name (#Foo{}, #when{}), -record( takes only an atom
+  @NotNull
+  private static String getRecordName(@NotNull ErlangRecordRef recordRef) {
+    String text = recordRef.getText();
+    ErlangAtom atom = recordRef.getQAtom().getAtom();
+    if (atom == null || !text.equals(atom.getText()) || atom.getNode().findChildByType(ErlangTypes.ERL_SINGLE_QUOTE) != null) {
+      return text;
+    }
+    ErlangLexer lexer = new ErlangLexer(recordRef.getProject());
+    lexer.start(text);
+    boolean plainAtom = lexer.getTokenType() == ErlangTypes.ERL_ATOM_NAME && lexer.getTokenEnd() == text.length();
+    return plainAtom ? text : "'" + text + "'";
   }
 
   private static List<String> getFieldNames(@NotNull ErlangRecordRef recordRef) {

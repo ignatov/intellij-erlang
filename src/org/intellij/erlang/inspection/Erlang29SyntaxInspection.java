@@ -22,9 +22,12 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.ErlangLexer;
+import org.intellij.erlang.psi.ErlangAtom;
 import org.intellij.erlang.psi.ErlangExpression;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangListComprehension;
+import org.intellij.erlang.psi.ErlangRecordRef;
 import org.intellij.erlang.psi.ErlangVisitor;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -33,6 +36,8 @@ import org.jetbrains.annotations.NotNull;
 public class Erlang29SyntaxInspection extends ErlangInspectionBase {
   private static final String MULTI_VALUED_COMPREHENSION_MESSAGE =
     "Multi-valued comprehensions are only supported in Erlang 29 and newer versions";
+  private static final String RECORD_NAME_MESSAGE =
+    "Record names that are reserved words or variables are only supported in Erlang 29 and newer versions";
 
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
@@ -64,6 +69,18 @@ public class Erlang29SyntaxInspection extends ErlangInspectionBase {
             registerProblem(holder, psi, MULTI_VALUED_COMPREHENSION_MESSAGE);
             afterComma = false;
           }
+        }
+      }
+
+      @Override
+      public void visitRecordRef(@NotNull ErlangRecordRef o) {
+        ErlangAtom atom = o.getQAtom().getAtom();
+        if (atom == null || atom.getNode().findChildByType(ErlangTypes.ERL_SINGLE_QUOTE) != null) return;
+        String name = atom.getText();
+        ErlangLexer lexer = new ErlangLexer(o.getProject());
+        lexer.start(name);
+        if (lexer.getTokenType() != ErlangTypes.ERL_ATOM_NAME || lexer.getTokenEnd() != name.length()) {
+          registerProblem(holder, atom, RECORD_NAME_MESSAGE);
         }
       }
     };

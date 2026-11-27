@@ -166,6 +166,27 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
     myFixture.checkResult("-record(bar, {a}).\nf() -> #bar{a = 1}.\n");
   }
 
+  // issue 1669: since OTP 29 #Foo{} and #when{} name the records 'Foo' and 'when'
+  public void testRecordNamedLikeVariable() {
+    myFixture.configureByText("a.erl", "-record('Fo<caret>o', {a}).\nf(R) -> {#Foo{a = 1}, R#Foo.a, R#Foo{a = 2}}.\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-record(bar, {a}).\nf(R) -> {#bar{a = 1}, R#bar.a, R#bar{a = 2}}.\n");
+  }
+
+  public void testRecordNamedLikeReservedWordFromUsage() {
+    myFixture.configureByText("a.erl", "-record('when', {a}).\nf(R) -> {#wh<caret>en{a = 1}, R#when.a, R#when{a = 2}}.\n");
+    myFixture.renameElementAtCaret("Bar");
+    myFixture.checkResult("-record('Bar', {a}).\nf(R) -> {#'Bar'{a = 1}, R#'Bar'.a, R#'Bar'{a = 2}}.\n");
+  }
+
+  public void testRecordNamedLikeVariableInHeader() {
+    myFixture.addFileToProject("b.erl", "-module(b).\n-include(\"a.hrl\").\nf() -> #Foo{}.\n");
+    myFixture.configureByText("a.hrl", "-record('F<caret>oo', {}).\n");
+    myFixture.renameElementAtCaret("bar");
+    myFixture.checkResult("-record(bar, {}).\n");
+    myFixture.checkResult("b.erl", "-module(b).\n-include(\"a.hrl\").\nf() -> #bar{}.\n", false);
+  }
+
   public void testRecordFieldUsedInRecordType() {
     myFixture.configureByText("a.erl", "-record(r, {<caret>a, b}).\n-type t() :: #r{a :: integer()}.\nf() -> #r{a = 1}.\n");
     myFixture.renameElementAtCaret("c");
