@@ -16,10 +16,17 @@
 
 package org.intellij.erlang.hierarchy;
 
+import com.intellij.ide.hierarchy.CallHierarchyBrowserBase;
+import com.intellij.ide.hierarchy.HierarchyBrowser;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManagerCore;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.extensions.PluginId;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.psi.PsiElement;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
 import java.io.IOException;
@@ -51,6 +58,25 @@ public class ErlangCallHierarchyProviderTest extends ErlangLightPlatformCodeInsi
       }
     }
     assertEmpty(fromJavaPlugin);
+  }
+
+  public void testBrowserIsCreatedAndActivated() {
+    myFixture.configureByText("calls.erl", """
+      -module(calls).
+      a() -> b<caret>().
+      b() -> ok.
+      """);
+    ErlangCallHierarchyProvider provider = new ErlangCallHierarchyProvider();
+    PsiElement target = provider.getTarget(SimpleDataContext.getSimpleContext(CommonDataKeys.PSI_ELEMENT, myFixture.getElementAtCaret()));
+    assertInstanceOf(target, ErlangFunction.class);
+    assertEquals("b", ((ErlangFunction)target).getName());
+    HierarchyBrowser browser = provider.createHierarchyBrowser(target);
+    try {
+      provider.browserActivated(browser);
+    }
+    finally {
+      Disposer.dispose((CallHierarchyBrowserBase)browser);
+    }
   }
 
   private static Set<String> referencedClasses(String classFile) throws IOException {
