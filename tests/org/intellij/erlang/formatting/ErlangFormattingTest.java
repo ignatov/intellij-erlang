@@ -419,6 +419,8 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
   public void testBindReceiveAfterParasite()       throws Exception { doEnterTest(); }
   public void testBindReceiveAfterClauseParasite() throws Exception { doEnterTest(); }
 
+  public void testDeepParens() throws Exception { doTest(); }
+
   public void testBindReceiveParasite__IR_OFF()            throws Exception { doEnterTest(); }
   public void testBindReceiveFirstClauseParasite__IR_OFF() throws Exception { doEnterTest(); }
   public void testBindReceiveLastClauseParasite__IR_OFF()  throws Exception { doEnterTest(); }
