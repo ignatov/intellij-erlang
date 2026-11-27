@@ -13,3 +13,5 @@ qualified(R) -> {#m:when{a = 1}, #m:Foo{}, R#m:Foo.b, R#m:Foo{b = 1}}.
 spaced(R) -> {R# Foo.b, R# when.a, R#%c
 Foo.b, R#
   when.a}.
+-define(X, #when{}).
+-define(Y(Rec), #Foo{b = Rec}).

@@ -80,6 +80,11 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  public void testRecordNameMacroParameter() {
+    enableErlang29SyntaxInspection();
+    doTest();
+  }
+
   public void testErlang29RecordNameReservedWordOrVarError() {
     enableErlang29SyntaxInspection();
     doTest();
