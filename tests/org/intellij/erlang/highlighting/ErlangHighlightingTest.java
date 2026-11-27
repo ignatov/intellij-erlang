@@ -175,6 +175,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnboundInOwnBindingClausePattern() { doTest(); } // issue 1650
   public void testUnboundInOwnBindingCasePatternTwice() { doTest(); } // issue 1650
   public void testUnboundInOwnBindingReceive() { doTest(); } // issue 1650
+  public void testReceiveClauseScope() { doTest(); } // issue 1727
   public void testCaseClauseRematchTwice() { doTest(); } // issue 1651
   public void testCaseClauseUseBeforeMatch() { doTest(); } // issue 1651
   public void testCaseClauseNestedCasePattern() { doTest(); } // issue 1651

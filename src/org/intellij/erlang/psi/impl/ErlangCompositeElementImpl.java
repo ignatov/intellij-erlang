@@ -28,6 +28,7 @@ import org.intellij.erlang.macrolayer.ErlangMacroLayerHosts;
 import org.intellij.erlang.macrolayer.ErlangMacroLayerTokenReference;
 import org.intellij.erlang.psi.ErlangCompositeElement;
 import org.intellij.erlang.psi.ErlangFakeBinaryExpression;
+import org.intellij.erlang.psi.ErlangReceiveExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,6 +66,8 @@ public class ErlangCompositeElementImpl extends ASTWrapperPsiElement implements 
     if (processor instanceof ErlangVarProcessor && lastParent != null && element instanceof ErlangFakeBinaryExpression match && ErlangVarProcessor.isEvaluatedMatch(match)
         && match.getLeft() == lastParent && match.getRight() != null
         && !ErlangPsiImplUtil.processDeclarationRecursive(match.getRight(), processor, state, true)) return false;
+    // a place inside a receive sees none of the variables of its other clauses, so the walk skips them
+    if (processor instanceof ErlangVarProcessor && lastParent != null && element instanceof ErlangReceiveExpression) return processor.execute(element, state);
     return processor.execute(element, state) && ResolveUtil.processChildren(element, processor, state, lastParent, place);
   }
 
