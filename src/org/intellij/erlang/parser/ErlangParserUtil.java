@@ -343,6 +343,41 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     return false;
   }
 
+  /**
+   * Tells whether the parser is inside a macro body or the arguments of a macro call. There a token sequence such as
+   * {@code ()} need not be an expression on its own: erlc parses it only after the expansion (#1647).
+   */
+  public static boolean isMacroFragment(PsiBuilder builder, @SuppressWarnings("UnusedParameters") int level) {
+    for (Frame frame = ErrorState.get(builder).currentFrame; frame != null; frame = frame.parentFrame) {
+      if (frame.elementType == ErlangTypes.ERL_MACROS_BODY) return true;
+      if (frame.elementType == ErlangTypes.ERL_ARGUMENT_LIST && followsMacroName(builder, frame.position)) return true;
+    }
+    return false;
+  }
+
+  private static boolean followsMacroName(PsiBuilder builder, int position) {
+    int i = skipBack(builder, position - 1);
+    if (rawTokenAt(builder, i) == ErlangTypes.ERL_SINGLE_QUOTE) i = skipBack(builder, i - 1);
+    IElementType name = rawTokenAt(builder, i);
+    if (name != ErlangTypes.ERL_ATOM_NAME && name != ErlangTypes.ERL_VAR) return false;
+    i = skipBack(builder, i - 1);
+    if (rawTokenAt(builder, i) == ErlangTypes.ERL_SINGLE_QUOTE) i = skipBack(builder, i - 1);
+    return rawTokenAt(builder, i) == ErlangTypes.ERL_QMARK;
+  }
+
+  private static int skipBack(PsiBuilder builder, int index) {
+    while (index >= 0) {
+      IElementType type = rawTokenAt(builder, index);
+      if (type != TokenType.WHITE_SPACE && !ErlangParserDefinition.COMMENTS.contains(type)) break;
+      index--;
+    }
+    return index;
+  }
+
+  private static @Nullable IElementType rawTokenAt(PsiBuilder builder, int index) {
+    return index < 0 ? null : builder.rawLookup(index - builder.rawTokenIndex());
+  }
+
   public static boolean isInCompletion(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level) {
     return ErrorState.get(builder_).completionState != null;
   }
