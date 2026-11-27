@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
-              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
-              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
-              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
-              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
-              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
-              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
-              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
+              <li>A spec constraint after when that is not Var :: Type or a subtype call is now marked as a syntax error (<a href="https://github.com/ignatov/intellij-erlang/pull/1719">#1719</a>)</li>
+              <li>The Run and Debug output of Erlang Application configurations now links to the .erl file and line it names (<a href="https://github.com/ignatov/intellij-erlang/pull/1713">#1713</a>)</li>
+              <li>A fun argument that hides a variable of another case clause is reported unused and renamed alone (<a href="https://github.com/ignatov/intellij-erlang/pull/1711">#1711</a>)</li>
+              <li>Unbound variable errors now appear for a match's own right side, recursive anonymous funs and guards (<a href="https://github.com/ignatov/intellij-erlang/pull/1707">#1707</a>)</li>
+              <li>The Erlang Console reads non-ASCII input such as "å" as one character, whatever locale the IDE was started with (<a href="https://github.com/ignatov/intellij-erlang/pull/1712">#1712</a>)</li>
+              <li>Empty parentheses where an expression is expected are now marked as a syntax error (<a href="https://github.com/ignatov/intellij-erlang/pull/1704">#1704</a>)</li>
+              <li>A variable matched again twice in one case clause no longer shows as unused, and Rename updates all of its uses (<a href="https://github.com/ignatov/intellij-erlang/pull/1708">#1708</a>)</li>
+              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1310">full list</a></li>
             </ul>
         ]]>
     </change-notes>
