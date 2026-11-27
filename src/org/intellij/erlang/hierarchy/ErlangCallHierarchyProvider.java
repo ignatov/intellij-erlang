@@ -17,10 +17,9 @@
 package org.intellij.erlang.hierarchy;
 
 import com.intellij.ide.hierarchy.*;
-import com.intellij.ide.hierarchy.call.CallHierarchyBrowser;
 import com.intellij.ide.util.treeView.AlphaComparator;
+import com.intellij.ide.util.treeView.IndexComparator;
 import com.intellij.ide.util.treeView.NodeDescriptor;
-import com.intellij.ide.util.treeView.SourceComparator;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -72,7 +71,7 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
       ActionGroup group = (ActionGroup) ActionManager.getInstance().getAction(IdeActions.GROUP_CALL_HIERARCHY_POPUP);
       final JTree tree1 = createTree(false);
       PopupHandler.installPopupMenu(tree1, group, ActionPlaces.CALL_HIERARCHY_VIEW_POPUP);
-      final CallHierarchyBrowser.BaseOnThisMethodAction baseOnThisMethodAction = new CallHierarchyBrowser.BaseOnThisMethodAction();
+      final BaseOnThisMethodAction baseOnThisMethodAction = new BaseOnThisMethodAction();
       baseOnThisMethodAction
         .registerCustomShortcutSet(ActionManager.getInstance().getAction(IdeActions.ACTION_CALL_HIERARCHY).getShortcutSet(), tree1);
       trees.put(getCalleeType(), tree1);
@@ -102,7 +101,7 @@ public class ErlangCallHierarchyProvider implements HierarchyProvider {
     @Override
     protected Comparator<NodeDescriptor<?>> getComparator() {
       HierarchyBrowserManager.State state = HierarchyBrowserManager.getInstance(myProject).getState();
-      return state != null && state.SORT_ALPHABETICALLY ? AlphaComparator.getInstance() : SourceComparator.INSTANCE;
+      return state != null && state.SORT_ALPHABETICALLY ? AlphaComparator.getInstance() : IndexComparator.getInstance();
     }
   }
 }
