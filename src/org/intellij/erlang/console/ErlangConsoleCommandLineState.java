@@ -28,9 +28,15 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.EnvironmentUtil;
 import com.intellij.util.execution.ParametersListUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class ErlangConsoleCommandLineState extends CommandLineState {
   @NotNull private final ErlangConsoleRunConfiguration myConfig;
@@ -54,7 +60,8 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
   @Override
   protected ProcessHandler startProcess() throws ExecutionException {
     GeneralCommandLine commandLine = createCommandLine(myConfig);
-    OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString());
+    OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getCommandLineString(),
+                                                  commandLine.getCharset());
     ProcessTerminatedListener.attach(handler);
     return handler;
   }
@@ -70,6 +77,37 @@ public class ErlangConsoleCommandLineState extends CommandLineState {
     commandLine.addParameters(ParametersListUtil.parse(consoleArgs));
     commandLine.addParameters(ErlangConsoleUtil.getCodePath(project, module, false));
     commandLine.setWorkDirectory(ErlangConsoleUtil.getWorkingDirPath(project, config.getWorkingDirPath()));
+    commandLine.setCharset(StandardCharsets.UTF_8);
+    setUtf8Locale(commandLine);
     return commandLine;
+  }
+
+  /**
+   * erl reads a piped standard input as latin1 unless the locale of its character type is UTF-8,
+   * and the console writes the input as UTF-8 (#692).
+   */
+  @VisibleForTesting
+  static void setUtf8Locale(@NotNull GeneralCommandLine commandLine) {
+    Map<String, String> inherited = commandLine.getEffectiveEnvironment();
+    if (isUtf8Locale(getLocaleCharacterType(inherited))) return;
+    Map<String, String> environment = commandLine.getEnvironment();
+    String locale = EnvironmentUtil.setLocaleEnv(environment, StandardCharsets.UTF_8);
+    // LC_ALL overrides LC_CTYPE.
+    if (StringUtil.isNotEmpty(inherited.get("LC_ALL"))) environment.put("LC_ALL", locale);
+  }
+
+  @VisibleForTesting
+  @Nullable
+  static String getLocaleCharacterType(@NotNull Map<String, String> environment) {
+    for (String name : new String[]{"LC_ALL", "LC_CTYPE", "LANG"}) {
+      String value = environment.get(name);
+      if (StringUtil.isNotEmpty(value)) return value;
+    }
+    return null;
+  }
+
+  @VisibleForTesting
+  static boolean isUtf8Locale(@Nullable String locale) {
+    return locale != null && StringUtil.toUpperCase(locale).replace("-", "").contains("UTF8");
   }
 }
