@@ -173,6 +173,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testCaseClauseNestedCasePattern() { doTest(); } // issue 1651
   public void testCatchClassVarAssignment() { doTest(); } // issue 1648
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
+  public void testFunArgShadowsOtherCaseClauseVariable() { doTest(); } // issue 1654
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
