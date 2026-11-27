@@ -436,6 +436,14 @@ public class ErlangFormattingBlock extends AbstractBlock {
       int spaceAfterComma = mySettings.SPACE_AFTER_COMMA ? 1 : 0;
       return Spacing.createSpacing(spaceAfterComma, spaceAfterComma, 0, false, 0);
     }
+    //keeps = and << apart, glued they read as =< and <
+    if (child1 instanceof ErlangFormattingBlock && child2 instanceof ErlangFormattingBlock &&
+      ((ErlangFormattingBlock) child1).getNode().getElementType() == ERL_OP_EQ) {
+      ASTNode firstLeaf = TreeUtil.findFirstLeaf(((ErlangFormattingBlock) child2).getNode());
+      if (firstLeaf != null && firstLeaf.getElementType() == ERL_BIN_START) {
+        return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+      }
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
   }
 

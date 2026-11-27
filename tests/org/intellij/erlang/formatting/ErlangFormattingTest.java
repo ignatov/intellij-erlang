@@ -262,6 +262,12 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testEqSpacesOffOtherRightSides() throws Exception {
+    getCommonSettings().SPACE_AROUND_ASSIGNMENT_OPERATORS = false;
+    getErlangSettings().SPACE_AROUND_EQ_IN_RECORDS = false;
+    doTest();
+  }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
 
