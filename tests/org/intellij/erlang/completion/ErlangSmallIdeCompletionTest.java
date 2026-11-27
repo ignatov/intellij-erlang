@@ -59,4 +59,11 @@ public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
       "otp-include-not-in-root/src/test.app.src");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "include.hrl");
   }
+
+  // issue 1731: completion inside 3000 nested parentheses, which erlc compiles, must not overflow the stack
+  public void testDeeplyNestedParentheses() {
+    String prefix = "-module(parens).\n-export([f/0]).\nf() -> " + "(".repeat(1690);
+    myFixture.configureByText("parens.erl", prefix + "<caret>" + "(".repeat(1310) + "1" + ")".repeat(3000) + ".\n");
+    myFixture.completeBasic();
+  }
 }
