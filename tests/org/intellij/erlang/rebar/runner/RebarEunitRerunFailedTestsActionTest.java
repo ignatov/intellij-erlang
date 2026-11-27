@@ -254,6 +254,14 @@ public class RebarEunitRerunFailedTestsActionTest extends BasePlatformTestCase {
     assertEquals("eunit --test=a:a2_test", createRerunCommand(new ArrayList<>(), "eunit://a:a2_test", "eunit://a:a2_test"));
   }
 
+  public void testGeneratedTestReportedTwiceIsListedOnce() {
+    useRebar("rebar3");
+    myFixture.addFileToProject("c.erl", C);
+    List<ErlangFunction> failedGeneratedTests = new ArrayList<>();
+    assertEquals("eunit --module=c", createRerunCommand(failedGeneratedTests, "eunit://c:with1:-1", "eunit://c:with1:-1"));
+    assertSize(1, failedGeneratedTests);
+  }
+
   public void testRebar3ReportsFailedTestsWithoutModule() {
     useRebar("rebar3");
     myFixture.addFileToProject("a.erl", A);
