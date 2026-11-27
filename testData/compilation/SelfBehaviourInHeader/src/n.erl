@@ -1,0 +1,3 @@
+-module(n).
+-include("n.hrl").
+-callback f() -> ok.

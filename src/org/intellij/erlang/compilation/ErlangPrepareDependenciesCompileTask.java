@@ -24,6 +24,7 @@ import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.JDOMUtil;
@@ -247,6 +248,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
     // The dependencies that order the build and are checked for cycles: myPathsToDependenciesMap without the guessed edges
     // into and out of headers without Erlang PSI, which could close a cycle through a parse transform or behaviour.
     private final Map<String, List<String>> myPathsToOrderingDependenciesMap = new HashMap<>();
+    private final Map<String, List<String>> myHeaderPathsToBehaviourPathsMap = new HashMap<>();
 
     private ErlangFilesDependencyGraph(@NotNull Module[] modulesToCompile) {
       assert modulesToCompile.length > 0;
@@ -257,6 +259,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
       for (Module module : modulesToCompile) {
         buildDependenciesMap(module);
       }
+      dropOwnBehavioursFromIncludedHeaders();
     }
 
     @NotNull
@@ -344,7 +347,7 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
         boolean isHeader = myHeaders.contains(path);
         ErlangFile psi = getErlangFile(file);
         if (psi != null) {
-          addDeclaredDependencies(module, psi, dependencies);
+          addDeclaredDependencies(module, psi, path, isHeader, dependencies);
         }
         else if (isHeader) {
           // The includes of a file without Erlang PSI (e.g. above the size limit) are unknown: depend on every header that has PSI.
@@ -375,10 +378,62 @@ public class ErlangPrepareDependenciesCompileTask implements CompileTask {
 
     private void addDeclaredDependencies(@NotNull Module module,
                                          @NotNull ErlangFile erlangModule,
+                                         @NotNull String path,
+                                         boolean isHeader,
                                          @NotNull Set<String> dependencies) {
+      List<String> behaviours = getDeclaredBehaviourPaths(module, erlangModule);
+      if (isHeader) {
+        myHeaderPathsToBehaviourPathsMap.put(path, behaviours);
+      }
+      for (String behaviour : behaviours) {
+        // erlc only warns about a module that names itself as its behaviour.
+        if (!behaviour.equals(path)) dependencies.add(behaviour);
+      }
       dependencies.addAll(getDeclaredParseTransformPaths(module, erlangModule));
-      dependencies.addAll(getDeclaredBehaviourPaths(module, erlangModule));
       dependencies.addAll(getDeclaredIncludePaths(erlangModule));
+    }
+
+    // erlc only warns about a behaviour that names the module itself, also when an included header declares it. Such an edge
+    // from a header to a module that includes it is dropped, and the other modules that include the header depend on that module.
+    private void dropOwnBehavioursFromIncludedHeaders() {
+      Map<String, Set<String>> modulesToIncludedHeaders = new HashMap<>();
+      Map<String, Set<String>> headersToOwnBehaviours = new HashMap<>();
+      for (String path : myPathsToOrderingDependenciesMap.keySet()) {
+        if (isHeader(path)) continue;
+        ProgressManager.checkCanceled();
+        Set<String> includedHeaders = getIncludedHeaders(path);
+        modulesToIncludedHeaders.put(path, includedHeaders);
+        for (String header : includedHeaders) {
+          List<String> behaviours = myHeaderPathsToBehaviourPathsMap.get(header);
+          if (behaviours != null && behaviours.contains(path)) {
+            headersToOwnBehaviours.computeIfAbsent(header, k -> new HashSet<>()).add(path);
+          }
+        }
+      }
+      if (headersToOwnBehaviours.isEmpty()) return;
+      headersToOwnBehaviours.forEach((header, modules) -> myPathsToOrderingDependenciesMap.get(header).removeAll(modules));
+      modulesToIncludedHeaders.forEach((path, includedHeaders) -> {
+        List<String> dependencies = myPathsToOrderingDependenciesMap.get(path);
+        for (String header : includedHeaders) {
+          for (String behaviour : headersToOwnBehaviours.getOrDefault(header, Collections.emptySet())) {
+            if (!behaviour.equals(path) && !dependencies.contains(behaviour)) dependencies.add(behaviour);
+          }
+        }
+      });
+    }
+
+    @NotNull
+    private Set<String> getIncludedHeaders(@NotNull String modulePath) {
+      Set<String> includedHeaders = new HashSet<>();
+      // The guessed edges of a module without Erlang PSI to every header are no includes.
+      Deque<String> toVisit = new ArrayDeque<>(getKnownOrderingDependencies(modulePath));
+      while (!toVisit.isEmpty()) {
+        String dependency = toVisit.pop();
+        if (isHeader(dependency) && includedHeaders.add(dependency)) {
+          toVisit.addAll(myPathsToOrderingDependenciesMap.getOrDefault(dependency, Collections.emptyList()));
+        }
+      }
+      return includedHeaders;
     }
 
     @NotNull

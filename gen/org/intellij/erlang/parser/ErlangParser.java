@@ -6304,13 +6304,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '(' top_type_list ')' | top_type
+  // q_atom '(' top_type_list ')' | &macros top_type | var_type_guard
   public static boolean type_guard(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_guard")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_TYPE_GUARD, "<type guard>");
     r = type_guard_0(b, l + 1);
-    if (!r) r = top_type(b, l + 1);
+    if (!r) r = type_guard_1(b, l + 1);
+    if (!r) r = var_type_guard(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -6325,6 +6326,27 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && top_type_list(b, l + 1);
     r = r && consumeToken(b, ERL_PAR_RIGHT);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &macros top_type
+  private static boolean type_guard_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = type_guard_1_0(b, l + 1);
+    r = r && top_type(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &macros
+  private static boolean type_guard_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = macros(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -6699,6 +6721,34 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // q_var var_type_guard_tail
+  public static boolean var_type_guard(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_type_guard")) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_TOP_TYPE, null);
+    r = q_var(b, l + 1);
+    p = r; // pin = 1
+    r = r && var_type_guard_tail(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '::' type_list
+  static boolean var_type_guard_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_type_guard_tail")) return false;
+    if (!nextTokenIs(b, ERL_COLON_COLON)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COLON_COLON);
+    p = r; // pin = 1
+    r = r && type_list(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
   // Expression root: expression
   // Operator priority table:
   // 0: ATOM(catch_expression)
@@ -6716,7 +6766,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // 12: ATOM(function_call_expression) ATOM(global_function_call_expression) ATOM(generic_function_call_expression) POSTFIX(anonymous_call_expression)
   //    POSTFIX(record_expression) ATOM(record2_expression) POSTFIX(map_expression) ATOM(qualified_expression)
   // 13: ATOM(max_expression)
-  // 14: PREFIX(parenthesized_expression)
+  // 14: ATOM(parenthesized_expression)
   public static boolean expression(PsiBuilder b, int l, int g) {
     if (!recursion_guard_(b, l, "expression")) return false;
     addVariant(b, "<expression>");
@@ -7073,17 +7123,50 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
+  // '(' (<<isMacroFragment>> &')' | expression) ')'
   public static boolean parenthesized_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "parenthesized_expression")) return false;
     if (!nextTokenIsSmart(b, ERL_PAR_LEFT)) return false;
     boolean r, p;
-    Marker m = enter_section_(b, l, _NONE_, null);
+    Marker m = enter_section_(b, l, _NONE_, ERL_PARENTHESIZED_EXPRESSION, "<expression>");
     r = consumeTokenSmart(b, ERL_PAR_LEFT);
-    p = r;
-    r = p && expression(b, l, -1);
-    r = p && report_error_(b, consumeToken(b, ERL_PAR_RIGHT)) && r;
-    exit_section_(b, l, m, ERL_PARENTHESIZED_EXPRESSION, r, p, null);
+    p = r; // pin = 1
+    r = r && report_error_(b, parenthesized_expression_1(b, l + 1));
+    r = p && consumeToken(b, ERL_PAR_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
     return r || p;
+  }
+
+  // <<isMacroFragment>> &')' | expression
+  private static boolean parenthesized_expression_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_expression_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = parenthesized_expression_1_0(b, l + 1);
+    if (!r) r = expression(b, l + 1, -1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // <<isMacroFragment>> &')'
+  private static boolean parenthesized_expression_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_expression_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = isMacroFragment(b, l + 1);
+    r = r && parenthesized_expression_1_0_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &')'
+  private static boolean parenthesized_expression_1_0_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "parenthesized_expression_1_0_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = consumeTokenSmart(b, ERL_PAR_RIGHT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
   }
 
   static final Parser expression_parser_ = (b, l) -> expression(b, l + 1, -1);

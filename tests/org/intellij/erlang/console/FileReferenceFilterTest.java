@@ -126,6 +126,37 @@ public class FileReferenceFilterTest extends ErlangLightPlatformCodeInsightFixtu
     assertNotNull(result.getFirstHyperlinkInfo());
   }
 
+  public void testWindowsDrivePathAfterText() {
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "error in C:\\work\\a_module.erl:12: more text here";
+    Filter.Result result = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length());
+    Filter.ResultItem item = result.getResultItems().getFirst();
+    assertEquals(9, item.getHighlightStartOffset());
+    assertEquals(32, item.getHighlightEndOffset());
+  }
+
+  // a letter, a colon and digits at the start of a run are a drive letter first, not a one-letter path and a line
+  public void testDriveLetterTriedBeforeOneLetterPath() {
+    FileReferenceFilter compilationErrorFilter = new FileReferenceFilter(getProject(), ErlangConsoleUtil.COMPILATION_ERROR_PATH);
+    String consoleOutput = "x:2x:2";
+    Filter.ResultItem item = compilationErrorFilter.applyFilter(consoleOutput, consoleOutput.length()).getResultItems().getFirst();
+    assertEquals(0, item.getHighlightStartOffset());
+    assertEquals(6, item.getHighlightEndOffset());
+  }
+
+  // #965: a long run of path characters, such as a hex dump, must not take seconds to filter
+  public void testLongLineWithoutPath() {
+    String consoleOutput = "deadbeef".repeat(6250);
+    for (String expression : List.of(ErlangConsoleUtil.COMPILATION_ERROR_PATH, ErlangConsoleUtil.EUNIT_ERROR_PATH,
+                                     ErlangConsoleUtil.EUNIT_FAILURE_PATH)) {
+      FileReferenceFilter filter = new FileReferenceFilter(getProject(), expression);
+      long start = System.nanoTime();
+      assertNull(filter.applyFilter(consoleOutput, consoleOutput.length()));
+      long millis = (System.nanoTime() - start) / 1_000_000;
+      assertTrue(expression + " took " + millis + " ms", millis < 2000);
+    }
+  }
+
   @NotNull
   @Override
   protected LightProjectDescriptor getProjectDescriptor() {
