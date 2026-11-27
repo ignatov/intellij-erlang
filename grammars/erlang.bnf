@@ -541,8 +541,8 @@ module_ref ::= q_atom {
   methods = [getReference]
 }
 
-map_comprehension ::= '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}' {
-  pin=4
+map_comprehension ::= '#' '{' <<isBinaryComprehension>> <<comprehension_element map_assoc>> '||' lc_exprs '}' {
+  pin=5
   methods=[processDeclarations]
   elementType=list_comprehension
 }
@@ -604,8 +604,9 @@ try_clause ::= <<guarded try_argument_definition>> clause_guard? clause_body {pi
 private try_argument_definition ::= [argument_definition ':'] argument_definition
 
 maybe_expression ::= maybe maybe_match_exprs [else cr_clauses] end {pin(".*")=1}
-maybe_match_exprs ::= (maybe_match_expression | expression) [',' maybe_match_exprs] (exprs_tail)* {pin=3 recoverWhile=exprs_recover}
-maybe_match_expression ::= expression '?=' expression { rightAssociative=true }
+maybe_match_exprs ::= maybe_match_expr [',' maybe_match_exprs] (exprs_tail)* {pin=3 recoverWhile=exprs_recover}
+private maybe_match_expr ::= expression maybe_match_expression?
+left maybe_match_expression ::= '?=' expression
 
 argument_list ::= '(' call_exprs? ')'
 
