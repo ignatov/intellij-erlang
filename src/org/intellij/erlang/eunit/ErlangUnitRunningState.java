@@ -72,6 +72,8 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   @NotNull
   @Override
   public List<File> createCodePathDirectories() throws ExecutionException {
+    // the debugger reads the tests only after it has started the debug target, so a bad test name must fail here
+    getDebugEntryPoint();
     try {
       return List.of(new File(createReporterModuleDirectory()));
     }
@@ -191,14 +193,17 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     return StringUtil.notNullize(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
-  private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
+  private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) throws ExecutionException {
     Map<String, List<String>> result = new HashMap<>(qualifiedFunctionNames.size());
     for (String qualifiedFunctionName : qualifiedFunctionNames) {
-      String[] moduleAndFunction = qualifiedFunctionName.split(":");
-      String module = moduleAndFunction[0];
-      String function = moduleAndFunction[1];
-
-      if (moduleAndFunction.length != 2) continue;
+      // a quoted function name may contain a colon, a module name of a test does not
+      String[] moduleAndFunction = qualifiedFunctionName.split(":", 2);
+      // the field may have spaces around the colon, which Erlang ignores between the module and the function
+      String module = moduleAndFunction[0].trim();
+      String function = moduleAndFunction.length == 2 ? moduleAndFunction[1].trim() : "";
+      if (module.isEmpty() || function.isEmpty()) {
+        throw new ExecutionException("Invalid test function name '" + qualifiedFunctionName + "': expected module:function");
+      }
 
       List<String> functions = result.computeIfAbsent(module, k -> new ArrayList<>());
       functions.add(function);

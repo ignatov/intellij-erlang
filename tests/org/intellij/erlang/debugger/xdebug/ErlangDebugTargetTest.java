@@ -190,6 +190,30 @@ public class ErlangDebugTargetTest extends ErlangLightPlatformCodeInsightFixture
     assertEquals("the reporter directory is created under a read action", Boolean.FALSE, readAccess.get());
   }
 
+  // #1372: the debug target and the debugger node were started before the bad name was found, and were left running
+  public void testEunitFunctionNameWithoutModuleFailsPrepare() throws Exception {
+    ErlangUnitRunConfiguration configuration =
+      new ErlangUnitRunConfiguration(getProject(), "eunit", ErlangUnitRunConfigurationType.getInstance());
+    configuration.getConfigData().setKind(ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION);
+    configuration.getConfigData().setFunctionNames(Set.of("my_test"));
+    ExecutionEnvironment environment = createEnvironment(configuration);
+    ErlangUnitRunningState state = new ErlangUnitRunningState(environment, getModule(), configuration);
+
+    Future<Throwable> error = ApplicationManager.getApplication().executeOnPooledThread(() -> {
+      try {
+        ErlangXDebugProcess.prepare(environment, state).deleteDirectories();
+        return null;
+      }
+      catch (ExecutionException e) {
+        return e;
+      }
+    });
+    PlatformTestUtil.waitWithEventsDispatching("prepare did not finish", error::isDone, 30);
+
+    assertNotNull("prepare must fail before the debug target is started", error.get());
+    assertEquals("Invalid test function name 'my_test': expected module:function", error.get().getMessage());
+  }
+
   @NotNull
   private ExecutionEnvironment createEnvironment(@NotNull ErlangRunConfigurationBase<?> configuration) throws ExecutionException {
     configuration.getConfigurationModule().setModule(getModule());
