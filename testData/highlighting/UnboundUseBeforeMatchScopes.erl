@@ -1,6 +1,7 @@
 -module('UnboundUseBeforeMatchScopes').
 -export([twice/0, in_case/1, in_begin/0, bind_in_fun/0, bind_in_case/1, bind_in_filter/0, case_pattern/1,
-  use_in_fun/0, use_in_comprehension/0, other_branch/1, other_if_branch/1, bind_in_fun_before/0, fun_argument/0]).
+  use_in_fun/0, use_in_comprehension/0, other_branch/1, other_if_branch/1, bind_in_fun_before/0, fun_argument/0,
+  other_fun_clause/0, same_fun_clause/0]).
 twice() -> <error descr="Variable 'X' is unbound">X</error>, <error descr="Variable 'X' is unbound">X</error>, X = ok.
 in_case(A) -> case A of 1 -> <error descr="Variable 'Y' is unbound">Y</error>; _ -> ok end, Y = ok.
 in_begin() -> begin <error descr="Variable 'V' is unbound">V</error> end, V = ok.
@@ -14,3 +15,5 @@ other_branch(A) -> case A of 1 -> <error descr="Variable 'Q' is unbound">Q</erro
 other_if_branch(A) -> if A -> <error descr="Variable 'O' is unbound">O</error>; true -> <warning descr="Unused variable 'O'">O</warning> = 1 end.
 bind_in_fun_before() -> fun() -> <warning descr="Unused variable 'X'">X</warning> = 1 end, <error descr="Variable 'X' is unbound">X</error>.
 fun_argument() -> <error descr="Variable 'X' is unbound">X</error>, fun(<warning descr="Unused variable 'X'">X</warning>) -> ok end.
+other_fun_clause() -> fun(1) -> <error descr="Variable 'X' is unbound">X</error>; (2) -> <warning descr="Unused variable 'X'">X</warning> = 1 end.
+same_fun_clause() -> fun(1) -> <error descr="Variable 'X' is unbound">X</error>, X = 1; (2) -> ok end.

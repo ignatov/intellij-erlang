@@ -91,6 +91,6 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
   }
 
   private static boolean isBranchClause(@NotNull PsiElement e) {
-    return e instanceof ErlangCrClause || e instanceof ErlangIfClause || e instanceof ErlangTryClause || e instanceof ErlangAfterClauseBody;
+    return e instanceof ErlangCrClause || e instanceof ErlangFunClause || e instanceof ErlangIfClause || e instanceof ErlangTryClause || e instanceof ErlangAfterClauseBody;
   }
 }
