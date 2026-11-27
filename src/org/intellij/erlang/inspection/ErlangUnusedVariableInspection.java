@@ -45,15 +45,17 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
             if (resolve != null) return;
 
             Query<PsiReference> search = ReferencesSearch.search(o, new LocalSearchScope(functionClause));
-            for (PsiReference ref : search.findAll()) {
+            // stop at the first use: collecting all references of every binding is quadratic in the number of clauses
+            boolean used = !search.forEach(ref -> {
               PsiElement element = ref.getElement();
-              if (isNamedFunClauseName(element)) continue;
+              if (isNamedFunClauseName(element)) return true;
               if (ErlangPsiImplUtil.fromTheSameCaseExpression(o, element)) {
                 PsiReference reference1 = element.getReference();
-                if (reference1 == null || reference1.resolve() == null) continue;
+                if (reference1 == null || reference1.resolve() == null) return true;
               }
-              return;
-            }
+              return false;
+            });
+            if (used) return;
 
             registerProblem(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'", null,
               ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());

@@ -45,4 +45,12 @@ public class ErlangSmallIdeHighlightingTest extends ErlangHighlightingTestBase {
     enableErlang18SyntaxInspection();
     doTest();
   }
+
+  // #1727: every clause binds its own X; highlighting must not take seconds per clause (1000 clauses hung for minutes)
+  public void testLongReceiveClauses() {
+    long start = System.nanoTime();
+    doTest();
+    long ms = (System.nanoTime() - start) / 1_000_000;
+    assertTrue("highlighting 200 receive clauses took " + ms + " ms", ms < 5_000);
+  }
 }
