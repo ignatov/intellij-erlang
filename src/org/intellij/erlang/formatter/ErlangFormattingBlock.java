@@ -34,6 +34,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
+import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,6 +74,11 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private static final TokenSet BINARY_EXPRESSIONS = TokenSet.create(
     ERL_LIST_OP_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION, ERL_SEND_EXPRESSION, //right-assoc
     ERL_ADDITIVE_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION
+  );
+  private static final TokenSet SPACED_OPERATORS = TokenSet.create(
+    ERL_OP_PLUS, ERL_OP_MINUS, ERL_OP_PLUS_PLUS, ERL_OP_MINUS_MINUS, ERL_OP_AR_MUL, ERL_OP_AR_DIV,
+    ERL_OP_EQ_EQ, ERL_OP_DIV_EQ, ERL_OP_EQ_COL_EQ, ERL_OP_EQ_DIV_EQ, ERL_OP_LT, ERL_OP_EQ_LT, ERL_OP_GT, ERL_OP_GT_EQ,
+    ERL_OR_OR, ERL_OP_OR, ERL_OP_EQ, ERL_OP_LT_MINUS, ERL_OP_EXL, ERL_ASSOC, ERL_MATCH
   );
 
   private final Indent myIndent;
@@ -436,7 +442,25 @@ public class ErlangFormattingBlock extends AbstractBlock {
       int spaceAfterComma = mySettings.SPACE_AFTER_COMMA ? 1 : 0;
       return Spacing.createSpacing(spaceAfterComma, spaceAfterComma, 0, false, 0);
     }
+    //an operator written next to its operand must not form another token, as A--B or X<-1 would
+    if (child1 instanceof ErlangFormattingBlock && child2 instanceof ErlangFormattingBlock &&
+      operatorWouldMerge(((ErlangFormattingBlock) child1).getNode(), ((ErlangFormattingBlock) child2).getNode())) {
+      return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
+  }
+
+  private static boolean operatorWouldMerge(@NotNull ASTNode node1, @NotNull ASTNode node2) {
+    ASTNode last = TreeUtil.findLastLeaf(node1);
+    ASTNode first = TreeUtil.findFirstLeaf(node2);
+    if (last == null || first == null) return false;
+    if (!SPACED_OPERATORS.contains(last.getElementType()) && !SPACED_OPERATORS.contains(first.getElementType())) return false;
+    String lastText = last.getText();
+    String firstText = first.getText();
+    if (lastText.isEmpty() || firstText.isEmpty()) return false;
+    ErlangLexer lexer = new ErlangLexer(null);
+    lexer.start(lastText + firstText);
+    return lexer.getTokenEnd() != lastText.length();
   }
 
   @NotNull
