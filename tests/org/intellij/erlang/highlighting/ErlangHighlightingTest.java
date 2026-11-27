@@ -54,6 +54,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
+  public void testUnresolvedFieldInRecordType() { doTest(); } // issue 1725
   public void test34()                { doTest(); }
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
