@@ -360,6 +360,33 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  public void testTypeUsedOnlyInNestedIncludedHeaderIsNotUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("inner.hrl", "-record(r, {a :: ?MODULE:loc(), b :: pair(atom())}).\n");
+    myFixture.addFileToProject("outer.hrl", "-include(\"inner.hrl\").\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type loc() :: integer().
+      -type pair(A) :: {A, A}.
+      -include("outer.hrl").
+      f() -> #r{a = 1}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testOtherArityRemoteOrBareAtomInHeaderIsNotUse() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("h.hrl", "-record(r, {a :: loc(integer()), b :: other:loc(), c :: loc}).\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type <warning descr="Unused type 'loc'">loc</warning>() :: integer().
+      -type loc(T) :: [T].
+      -include("h.hrl").
+      f() -> #r{a = [1]}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
