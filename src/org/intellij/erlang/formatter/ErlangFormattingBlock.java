@@ -395,15 +395,31 @@ public class ErlangFormattingBlock extends AbstractBlock {
   }
 
   /**
-   * The length of the clause with its whitespace collapsed to single spaces, and its ';' or '.'.
+   * The length of the clause on one line, with its ';' or '.'. It is computed from the tokens and the spaces the formatter
+   * puts around arrows and commas and between words, not from the whitespace of the input, so a reformatted clause gives
+   * the same length as the clause before the reformat.
    */
-  private static int oneLineLength(@NotNull ASTNode clause) {
-    CharSequence text = clause.getChars();
+  private int oneLineLength(@NotNull ASTNode clause) {
+    int spaceAroundArrow = myErlangSettings.SPACE_AROUND_ARROW ? 1 : 0;
+    int spacesAroundComma = (mySettings.SPACE_BEFORE_COMMA ? 1 : 0) + (mySettings.SPACE_AFTER_COMMA ? 1 : 0);
+    int end = clause.getTextRange().getEndOffset();
     int length = 1;
-    for (int i = 0; i < text.length(); i++) {
-      if (!StringUtil.isWhiteSpace(text.charAt(i)) || i > 0 && !StringUtil.isWhiteSpace(text.charAt(i - 1))) length++;
+    char last = ' ';
+    for (ASTNode leaf = TreeUtil.findFirstLeaf(clause); leaf != null && leaf.getStartOffset() < end; leaf = TreeUtil.nextLeaf(leaf)) {
+      CharSequence text = leaf.getChars();
+      if (StringUtil.isEmptyOrSpaces(text)) continue;
+      IElementType type = leaf.getElementType();
+      if (type == ERL_ARROW) length += 2 * spaceAroundArrow;
+      else if (type == ERL_COMMA) length += spacesAroundComma;
+      else if (isWordChar(last) && isWordChar(text.charAt(0))) length++;
+      length += text.length();
+      last = text.charAt(text.length() - 1);
     }
     return length;
+  }
+
+  private static boolean isWordChar(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
   }
 
   @Nullable

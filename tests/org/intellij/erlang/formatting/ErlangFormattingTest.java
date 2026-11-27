@@ -252,6 +252,32 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTestAndReformatAgain();
   }
 
+  public void testFunctionClausesAlignedExtraSpaces() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedExtraSpacesForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMissingSpaces() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMissingSpacesForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
   private void doTestAndReformatAgain() throws Exception {
     doTest();
     String first = myFixture.getFile().getText();
