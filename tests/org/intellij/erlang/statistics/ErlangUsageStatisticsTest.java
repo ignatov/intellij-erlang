@@ -61,6 +61,9 @@ import com.intellij.util.TimeoutUtil;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.ui.UIUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
 import org.intellij.erlang.application.ErlangApplicationRunConfigurationType;
 import org.intellij.erlang.console.ErlangConsoleRunConfiguration;
@@ -141,6 +144,23 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     ErlangUsageCounters.count(getProject(), ErlangUsageKey.RENAME);
     assertFalse(ErlangUsageCounters.isCounting());
     assertTrue(collector().getState().days.isEmpty());
+  }
+
+  // the startup activity of a test project runs beside setUp and can come after the test allowed the statistics; then
+  // it started the timer for the rest of the tests, and its check of the project, which has no Erlang files, took away
+  // what setErlangProjectForTests set
+  public void testStartupActivityDoesNothingInTests() {
+    new ErlangUsageListeners.Startup().execute(getProject(), new Continuation<>() {
+      @Override
+      public @NotNull CoroutineContext getContext() {
+        return EmptyCoroutineContext.INSTANCE;
+      }
+
+      @Override
+      public void resumeWith(@NotNull Object result) {
+      }
+    });
+    assertFalse(ErlangUsageStatistics.getInstance().isTimerStartedForTests());
   }
 
   public void testEnvironmentSwitches() {

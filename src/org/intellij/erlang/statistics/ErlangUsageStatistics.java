@@ -380,6 +380,11 @@ public final class ErlangUsageStatistics implements PersistentStateComponent<Erl
   }
 
   @TestOnly
+  boolean isTimerStartedForTests() {
+    return myTimer != null;
+  }
+
+  @TestOnly
   void tickForTests() {
     tick();
   }
