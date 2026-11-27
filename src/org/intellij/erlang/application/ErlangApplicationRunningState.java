@@ -25,6 +25,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.module.Module;
 import com.intellij.util.execution.ParametersListUtil;
+import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.runconfig.ErlangRunningState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,8 +84,16 @@ public class ErlangApplicationRunningState extends ErlangRunningState {
 
   @NotNull
   @Override
+  protected ConsoleView createConsole(@NotNull Executor executor) {
+    return createConsoleView(executor);
+  }
+
+  @NotNull
+  @Override
   public ConsoleView createConsoleView(Executor executor) {
     TextConsoleBuilder consoleBuilder = TextConsoleBuilderFactory.getInstance().createBuilder(myConfiguration.getProject());
-    return consoleBuilder.getConsole();
+    ConsoleView consoleView = consoleBuilder.getConsole();
+    ErlangConsoleUtil.attachFilters(myConfiguration.getProject(), consoleView);
+    return consoleView;
   }
 }
