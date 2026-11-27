@@ -22,6 +22,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
@@ -54,6 +55,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
               }
               return;
             }
+            if (hasEarlierUnboundUse(o, functionClause)) return;
 
             registerProblem(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'", null,
               ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
@@ -61,5 +63,34 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
         });
       }
     }
+  }
+
+  // erl_lint counts an unbound use evaluated before the binding as a use of it
+  private static boolean hasEarlierUnboundUse(@NotNull ErlangQVar binding, @NotNull ErlangFunctionClause functionClause) {
+    ErlangArgumentDefinition definition = PsiTreeUtil.getParentOfType(binding, ErlangArgumentDefinition.class);
+    if (definition != null && !(definition.getParent() instanceof ErlangCrClause || definition.getParent() instanceof ErlangTryClause)) {
+      return false;
+    }
+    int bindingOffset = binding.getTextRange().getStartOffset();
+    for (ErlangQVar use : PsiTreeUtil.findChildrenOfType(functionClause, ErlangQVar.class)) {
+      if (use.getTextRange().getStartOffset() >= bindingOffset) break;
+      if (!binding.getName().equals(use.getName()) || !ErlangUnboundVariableInspection.isUnbound(use)) continue;
+      PsiElement common = PsiTreeUtil.findCommonParent(use, binding);
+      if (common == null) continue;
+      boolean useInClause = false;
+      boolean useInNarrowerScope = false;
+      for (PsiElement e = use.getParent(); e != null && e != common; e = e.getParent()) {
+        useInClause |= isBranchClause(e);
+        useInNarrowerScope |= e instanceof ErlangFunExpression || e instanceof ErlangListComprehension;
+      }
+      if (useInNarrowerScope) continue;
+      if (useInClause && PsiTreeUtil.findFirstParent(binding, e -> e == common || isBranchClause(e)) != common) continue;
+      return true;
+    }
+    return false;
+  }
+
+  private static boolean isBranchClause(@NotNull PsiElement e) {
+    return e instanceof ErlangCrClause || e instanceof ErlangIfClause || e instanceof ErlangTryClause || e instanceof ErlangAfterClauseBody;
   }
 }
