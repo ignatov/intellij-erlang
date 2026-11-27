@@ -101,6 +101,13 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternCatchClass() { doTest(); }
   public void testIllegalPatternMapKey() { doTest(); }
   public void testMapConstructionMatchOperator() { doTest(); } // issue 1671
+  public void testMapConstructionMatchOperatorContexts() { doTest(); }
+  public void testMapComprehensionMatchOperatorOnlySyntaxError() {
+    myFixture.configureByText("mc.erl", "-module(mc).\n-export([f/1]).\nf(L) -> #{K := V || {K, V} <- L}.\n");
+    for (var info : myFixture.doHighlighting()) {
+      assertFalse(String.valueOf(info.getDescription()), String.valueOf(info.getDescription()).startsWith("only association operators"));
+    }
+  }
   public void testIllegalPatternPredefinedMacro() { doTest(); }
   public void testIllegalPatternBinarySegmentListOp() { doTest(); }
   public void testIllegalPatternCatchClassMatch() { doTest(); }
