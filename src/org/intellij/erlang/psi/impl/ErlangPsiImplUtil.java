@@ -1243,16 +1243,22 @@ public class ErlangPsiImplUtil {
   public static boolean processDeclarations(@NotNull ErlangListComprehension o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, PsiElement lastParent, @NotNull PsiElement place) {
     if (lastParent == null) return processDeclarationRecursive(o, processor, state);
     // the qualifiers nearest to the place first: a qualifier sees the earlier ones, the template sees all of them, the last one first
-    List<ErlangLcExpression> qualifiers = PsiTreeUtil.getChildrenOfTypeAsList(o, ErlangLcExpression.class);
+    // a filter is a bare expression, not an ErlangLcExpression, so the qualifiers are all the elements after '||'
+    List<ErlangCompositeElement> qualifiers = new SmartList<>();
+    boolean afterBars = false;
+    for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
+      if (child.getNode().getElementType() == ErlangTypes.ERL_OR_OR) afterBars = true;
+      else if (afterBars && child instanceof ErlangCompositeElement qualifier) qualifiers.add(qualifier);
+    }
     int index = qualifiers.indexOf(lastParent);
-    if (index >= 0) {
-      ErlangArgumentDefinition pattern = qualifiers.get(index).getArgumentDefinition();
+    if (index >= 0 && qualifiers.get(index) instanceof ErlangLcExpression generator) {
+      ErlangArgumentDefinition pattern = generator.getArgumentDefinition();
       if (pattern != null && PsiTreeUtil.isAncestor(pattern, place, false) && !processDeclarationRecursive(pattern, processor, state)) return false;
     }
     for (int i = (index >= 0 ? index : qualifiers.size()) - 1; i >= 0; i--) {
       if (!processDeclarationRecursive(qualifiers.get(i), processor, state)) return false;
     }
-    // the earlier part of the template is already walked and its later part comes later than the place, so go on to the outer scopes
+    // the earlier part of the template or the qualifier is already walked and its later part comes later than the place, so go on to the outer scopes
     return true;
   }
 
