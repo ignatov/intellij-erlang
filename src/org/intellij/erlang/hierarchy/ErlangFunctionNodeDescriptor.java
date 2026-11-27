@@ -36,5 +36,6 @@ class ErlangFunctionNodeDescriptor extends HierarchyNodeDescriptor {
     if (module != null) {
       beginning.addText(module.getName() + ":", SimpleTextAttributes.GRAY_ATTRIBUTES);
     }
+    myName = myHighlightedText.getText();
   }
 }
