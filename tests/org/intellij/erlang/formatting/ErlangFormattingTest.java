@@ -222,6 +222,23 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testFunctionClausesAlignedSecondReformatChangesNothing() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    String inputFile = "functionClausesAlignedWrapped.erl";
+    myFixture.configureByText(inputFile, FileUtil.loadFile(new File(getTestDataPath() + inputFile)));
+    Runnable reformat = () -> WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () -> {
+      CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+    });
+    reformat.run();
+    String first = myFixture.getEditor().getDocument().getText();
+    String clause = first.substring(first.indexOf("f(a)"));
+    assertTrue("the f(a) clause was not wrapped:\n" + first, StringUtil.countNewLines(clause.trim()) > 0);
+    reformat.run();
+    String second = myFixture.getEditor().getDocument().getText();
+    assertEquals(first, second);
+  }
+
   public void testKeepCommentAtTheFirstLine() throws Exception {
     getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = true;
     doTest();
