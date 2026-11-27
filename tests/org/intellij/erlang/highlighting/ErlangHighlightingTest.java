@@ -346,6 +346,69 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1655: erlc reports f1/0 and f2/0, which only call each other
+  public void testUnusedMutuallyRecursiveFunctions() { doTest(); }
+
+  // issue 1655: erlc reports t1() (used only by itself), t2() and t3() (used only by the unused t2())
+  public void testUnusedTypesUsedOnlyByUnusedTypes() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
+  // issue 1655: -on_load and funs from used code are roots; a spec and a use by the function itself are no uses
+  public void testUnusedFunctionsReachableFromRoots() { doTest(); }
+
+  // issue 1655: -export_type, records, callbacks and specs, even of unused functions, are roots, as in erlc
+  public void testUnusedTypesReachableFromRoots() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
+  // issue 1655: a function the search misses (a macro argument or body, a header) keeps the functions it calls used
+  public void testUnusedFunctionsUsedOutOfSight() { doTest("UnusedFunctionsUsedOutOfSight.erl", "unused_out_of_sight.hrl"); }
+
+  // issue 1655: without the macro layer, g(?ARGS) resolves to no g/2, which still keeps h/2 used
+  public void testUnusedFunctionsUsedOutOfSightLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    doTest();
+  }
+
+  // issue 1655: a function named by a macro keeps the functions it calls used
+  public void testUnusedFunctionNamedByMacro() { doTest(); }
+
+  // issue 1655: a macro use the plugin cannot resolve may call any function
+  public void testUnusedFunctionsUnresolvedMacro() { doTest(); }
+
+  // issue 1655: a type passed to a macro in a spec, a record field or a type keeps the types it uses used
+  public void testUnusedTypesInMacroArguments() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
+  public void testUnusedFunctionsUnresolvedMacroLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    doTest("UnusedFunctionsUnresolvedMacro.erl");
+  }
+
+  public void testUnusedTypesInMacroArgumentsLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("UnusedTypesInMacroArguments.erl");
+  }
+
+  // issue 1655: without the macro layer, ?M:mt() resolves to no mt(), which still keeps via() used
+  public void testUnusedRemoteTypeOfMacroModuleLayerOff() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.OFF, getTestRootDisposable());
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest("unused_remote_type_macro.erl");
+  }
+
+  // issue 1655: a type the search misses (in a macro used by a spec) keeps the types it uses used
+  public void testUnusedTypesUsedOutOfSight() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    doTest();
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);
