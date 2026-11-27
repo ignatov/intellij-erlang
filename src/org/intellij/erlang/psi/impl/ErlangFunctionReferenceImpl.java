@@ -201,12 +201,13 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
     return target == null && ErlangMacroLayer.isReferenceThroughMacroUses(this, element);
   }
 
-  // #1688: only in the copy that the module name resolves to, the first one with -module in the index order,
-  // since at run time the copy first on the code path shadows the others
+  // #1688: only in the copy that the module name resolves to, the first one with -module in the index order of the
+  // module name's scope, since at run time the copy first on the code path shadows the others
   @Nullable
   private ErlangFunction getExternalFunction(@NotNull String moduleFileName) {
     Project project = getElement().getProject();
-    List<ErlangFile> files = ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
+    List<ErlangFile> files = ErlangModuleIndex.getFilesByName(project, moduleFileName, ErlangModuleReferenceImpl.getSearchScope(getElement()));
+    if (files.isEmpty()) files = ErlangModuleIndex.getFilesByName(project, moduleFileName, GlobalSearchScope.allScope(project));
     ErlangFile file = ObjectUtils.chooseNotNull(ContainerUtil.find(files, f -> f.getModule() != null), ContainerUtil.getFirstItem(files));
     if (file == null) return null;
     ErlangFunction function = file.getFunction(myReferenceName, myArity);
