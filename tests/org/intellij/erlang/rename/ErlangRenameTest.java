@@ -123,6 +123,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testMapCompKeyValueRematch() { doTest("New"); } // issue 1668
   public void testListCompTemplateRematch() { doTest("New"); } // issue 1668
   public void testCompFilterBinding() { doTest("New"); } // issue 1668
+  public void testCompFilterCaseFromGenerator() { doTest("Zz"); } // issue 1668
+  public void testCompFilterCaseFromTemplate() { doTest("Zz"); } // issue 1668
+  public void testCompFilterReceiveFromGenerator() { doTest("Zz"); } // issue 1668
+  public void testCompFilterReceiveFromTemplate() { doTest("Zz"); } // issue 1668
 
   // issue 1295: a chain of n left-associative operators is a PSI tree n levels deep
   public void testLongOperatorChain() {

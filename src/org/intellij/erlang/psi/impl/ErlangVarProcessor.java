@@ -115,8 +115,9 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       ErlangQVar var = (ErlangQVar) psiElement;
       // the right side of the origin's own match lies after the origin, but a variable there can match a binding before the match
       List<ErlangQVar> found = inRightSideOfOriginMatch(var) ? getEarlierBindings(var, myEarlierBindings != null ? myEarlierBindings : getEarlierBindingsOfFile(var))
-                               : myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
-                               ? List.of(var) : getEarlierBindings(var, myEarlierBindings);
+                               // a later variable, like a clause pattern in a filter seen from the result of a comprehension,
+                               // stands for its own earlier binding, like the generator variable that it matches
+                               : myEarlierBindings == null ? List.of(var) : getEarlierBindings(var, myEarlierBindings);
       for (ErlangQVar v : found) {
         if (!myVarList.contains(v)) myVarList.add(v);
       }
