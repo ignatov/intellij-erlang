@@ -6721,7 +6721,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_var '::' type_list
+  // q_var var_type_guard_tail
   public static boolean var_type_guard(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "var_type_guard")) return false;
     if (!nextTokenIs(b, ERL_VAR)) return false;
@@ -6729,8 +6729,21 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_, ERL_TOP_TYPE, null);
     r = q_var(b, l + 1);
     p = r; // pin = 1
-    r = r && report_error_(b, consumeToken(b, ERL_COLON_COLON));
-    r = p && type_list(b, l + 1) && r;
+    r = r && var_type_guard_tail(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '::' type_list
+  static boolean var_type_guard_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_type_guard_tail")) return false;
+    if (!nextTokenIs(b, ERL_COLON_COLON)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COLON_COLON);
+    p = r; // pin = 1
+    r = r && type_list(b, l + 1);
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }

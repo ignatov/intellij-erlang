@@ -285,6 +285,13 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEmpty("Parsed with a syntax error", rejected);
   }
 
+  // #1667: an unfinished `when X` above a function must not take the function into the constraint.
+  public void testUnfinishedSpecConstraintKeepsNextFunction() {
+    PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(X) -> X when X\nf(X) -> X.\n");
+    assertTrue(PsiTreeUtil.hasErrorElements(file));
+    assertSize(1, PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class));
+  }
+
   public void testEmptyParenthesesAsFunctionBody() {
     assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() ->\n    ().\n");
   }
