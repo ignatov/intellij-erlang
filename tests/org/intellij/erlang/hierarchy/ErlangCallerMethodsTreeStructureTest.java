@@ -65,4 +65,31 @@ public class ErlangCallerMethodsTreeStructureTest extends ErlangLightPlatformCod
     }
     assertSameElements(callers, "a", "b");
   }
+
+  public void testThisClassScopeLeavesOutCallersOfOtherFiles() {
+    myFixture.addFileToProject("other.erl", """
+      -module(other).
+      -export([o/0]).
+      o() -> callers:c().
+      """);
+    ErlangFile file = (ErlangFile)myFixture.configureByText("callers.erl", """
+      -module(callers).
+      -export([a/0, c/0]).
+      a() -> c().
+      c() -> ok.
+      """);
+    ErlangFunction c = file.getFunction("c", 0);
+    assertNotNull(c);
+    assertSameElements(callers(c, HierarchyBrowserBaseEx.SCOPE_ALL), "a", "o");
+    assertSameElements(callers(c, HierarchyBrowserBaseEx.SCOPE_CLASS), "a");
+  }
+
+  private List<String> callers(ErlangFunction function, String scopeType) {
+    ErlangCallerMethodsTreeStructure structure = new ErlangCallerMethodsTreeStructure(getProject(), function, scopeType);
+    List<String> callers = new ArrayList<>();
+    for (Object child : structure.getChildElements(structure.getRootElement())) {
+      callers.add(((ErlangFunction)((HierarchyNodeDescriptor)child).getPsiElement()).getName());
+    }
+    return callers;
+  }
 }

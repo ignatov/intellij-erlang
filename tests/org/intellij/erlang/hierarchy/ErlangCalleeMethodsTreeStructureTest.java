@@ -65,10 +65,31 @@ public class ErlangCalleeMethodsTreeStructureTest extends ErlangLightPlatformCod
     assertOrderedEquals(callees(file.getFunction("b", 0)), "c/1", "c/0", "b/0");
   }
 
+  public void testThisClassScopeLeavesOutCalleesOfOtherFiles() {
+    myFixture.addFileToProject("other.erl", """
+      -module(other).
+      -export([o/0]).
+      o() -> ok.
+      """);
+    ErlangFile file = (ErlangFile)myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([a/0]).
+      a() -> other:o(), c().
+      c() -> ok.
+      """);
+    ErlangFunction a = file.getFunction("a", 0);
+    assertOrderedEquals(callees(a), "o/0", "c/0");
+    assertOrderedEquals(callees(a, HierarchyBrowserBaseEx.SCOPE_CLASS), "c/0");
+  }
+
   private List<String> callees(ErlangFunction function) {
+    return callees(function, HierarchyBrowserBaseEx.SCOPE_ALL);
+  }
+
+  private List<String> callees(ErlangFunction function, String scopeType) {
     assertNotNull(function);
     ErlangCalleeMethodsTreeStructure structure =
-      new ErlangCalleeMethodsTreeStructure(getProject(), function, HierarchyBrowserBaseEx.SCOPE_ALL);
+      new ErlangCalleeMethodsTreeStructure(getProject(), function, scopeType);
     List<String> callees = new ArrayList<>();
     for (Object child : structure.getChildElements(structure.getRootElement())) {
       ErlangFunction callee = (ErlangFunction)((HierarchyNodeDescriptor)child).getPsiElement();
