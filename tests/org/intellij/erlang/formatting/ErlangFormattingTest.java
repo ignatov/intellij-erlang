@@ -239,6 +239,28 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     assertEquals(first, second);
   }
 
+  public void testFunctionClausesAlignedMargin() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMarginForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  private void doTestAndReformatAgain() throws Exception {
+    doTest();
+    String first = myFixture.getFile().getText();
+    WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () -> {
+      CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+    });
+    assertEquals(first, myFixture.getFile().getText());
+  }
+
   public void testKeepCommentAtTheFirstLine() throws Exception {
     getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = true;
     doTest();

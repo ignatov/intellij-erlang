@@ -33,6 +33,7 @@ import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.psi.*;
 import org.jetbrains.annotations.NotNull;
@@ -284,6 +285,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     PsiElement nodePsi = node.getPsi();
     PsiElement parentPsi = parent.getPsi();
     if (parentType == ERL_CLAUSE_BODY && nodePsi instanceof ErlangExpression) {
+      if (parent == myNode && isAlignedFunctionClauseBody()) return null;
       return WrappingUtil.getWrapType(myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP);
     }
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
@@ -372,12 +374,36 @@ public class ErlangFormattingBlock extends AbstractBlock {
       Alignment alignment = myAlignmentStrategy.getAlignment(parentType, childType);
       if (alignment != null &&
         childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES &&
-        (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE || StringUtil.countNewLines(child.getText()) > 0)) {
+        (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE || StringUtil.countNewLines(child.getText()) > 0 ||
+          myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP == CommonCodeStyleSettings.WRAP_ALWAYS ||
+          oneLineLength(parent) > mySettings.getRootSettings().getRightMargin(ErlangLanguage.INSTANCE))) {
+        // a body that this run makes multi-line is not aligned, as the next run would not align it
         return null; // redesign this hack
       }
       return alignment;
     }
     return null;
+  }
+
+  /**
+   * Whether the expressions of this block are those of a function clause body that is aligned with the other clauses.
+   * They are not wrapped at the right margin: the wrapped body would leave the alignment on the next run.
+   */
+  private boolean isAlignedFunctionClauseBody() {
+    return myErlangSettings.ALIGN_FUNCTION_CLAUSES && getAlignment() != null && myNode.getElementType() == ERL_CLAUSE_BODY &&
+      myNode.getTreeParent() != null && myNode.getTreeParent().getElementType() == ERL_FUNCTION_CLAUSE;
+  }
+
+  /**
+   * The length of the clause with its whitespace collapsed to single spaces, and its ';' or '.'.
+   */
+  private static int oneLineLength(@NotNull ASTNode clause) {
+    CharSequence text = clause.getChars();
+    int length = 1;
+    for (int i = 0; i < text.length(); i++) {
+      if (!StringUtil.isWhiteSpace(text.charAt(i)) || i > 0 && !StringUtil.isWhiteSpace(text.charAt(i - 1))) length++;
+    }
+    return length;
   }
 
   @Nullable
