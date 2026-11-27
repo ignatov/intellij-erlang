@@ -1,0 +1,479 @@
+name: Property tests
+
+# One run of the property-based tests against erlc: tests/org/intellij/erlang/pbt/ErlangPropertyTest (see the README
+# next to it) with one Erlang/OTP release as the oracle. The workflow only runs what it is given and uploads what the
+# runner wrote. What to run next, the list of known signatures and the triage of the findings are kept outside this
+# repository; a caller passes the known signatures in, as the input known. Nothing here opens an issue or writes to
+# the repository.
+
+# The caller finds its run by this name; an empty seed shows as "time".
+run-name: property-tests ${{ inputs.mode }} otp ${{ inputs.otp }} seed ${{ inputs.seed || 'time' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: >-
+          cases: generated modules. controls: the controls of the runner (PBT_PLANT=1); the run fails when one does
+          not behave. files: the modules of the input files (PBT_FILES). measure: generated modules with coverage, for
+          a fixed seed and number of cases.
+        type: choice
+        default: cases
+        options:
+          - cases
+          - controls
+          - files
+          - measure
+      otp:
+        description: >-
+          Major release of Erlang/OTP that is the oracle; the mock SDK of the plugin is the same release. Each one is a
+          pinned build from builds.hex.pm with a pinned sha256.
+        type: choice
+        default: '27'
+        options:
+          - '27'
+          - '28'
+          - '29'
+      seed:
+        description: Seed of the run, a non-negative number. Empty takes the time; measure needs one.
+        default: ''
+      budget_minutes:
+        description: The runner stops before the next case after this many minutes (5 to 55).
+        default: '40'
+      cases:
+        description: Most generated modules to check; empty is no limit other than the time budget; measure needs one.
+        default: ''
+      props:
+        description: Comma-separated subset of parse, parse-reject and warnings; empty runs all of them.
+        default: ''
+      coverage:
+        description: For mode cases, also measure the coverage of the plugin (-Pcoverage) and run the coverage tool.
+        type: boolean
+        default: false
+      known:
+        description: >-
+          Optional, not in mode controls: the PBT_KNOWN file (lines signature, tab, label), gzip-compressed and then
+          base64-encoded.
+        default: ''
+      files:
+        description: >-
+          Mode files only, and needed there: the modules to check, gzip-compressed and then base64-encoded. The text
+          is one module, or several, each after a line "%%% file: <name>.erl".
+        default: ''
+
+permissions:
+  contents: read
+
+# One run at a time: a run takes most of an hour of a runner, and the runners of the account are shared with every
+# pull request. A second dispatch waits for the first one, and so do the following ones (queue: max keeps them all;
+# by default a third dispatch would cancel the second).
+concurrency:
+  group: property-tests
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  property-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Check the inputs
+      # Every input reaches the shell through the environment only, and only a value that matches its pattern is
+      # passed on to the later steps.
+      env:
+        MODE: ${{ inputs.mode }}
+        OTP: ${{ inputs.otp }}
+        SEED: ${{ inputs.seed }}
+        BUDGET_MINUTES: ${{ inputs.budget_minutes }}
+        CASES: ${{ inputs.cases }}
+        PROPS: ${{ inputs.props }}
+        COVERAGE: ${{ inputs.coverage }}
+        KNOWN: ${{ inputs.known }}
+        FILES: ${{ inputs.files }}
+      run: |
+        fail() {
+          echo "::error::$1"
+          exit 1
+        }
+        [[ "$MODE" =~ ^(cases|controls|files|measure)$ ]] || fail "mode must be cases, controls, files or measure"
+        [[ "$OTP" =~ ^(27|28|29)$ ]] || fail "otp must be 27, 28 or 29"
+        [[ "$SEED" =~ ^[0-9]{0,18}$ ]] || fail "seed must be a non-negative number of at most 18 digits"
+        [[ "$BUDGET_MINUTES" =~ ^[0-9]{1,2}$ ]] || fail "budget_minutes must be 5 to 55"
+        (( 10#$BUDGET_MINUTES >= 5 && 10#$BUDGET_MINUTES <= 55 )) || fail "budget_minutes must be 5 to 55"
+        [[ "$CASES" =~ ^[0-9]{0,7}$ ]] || fail "cases must be empty or a number of at most 7 digits"
+        if [[ -n "$CASES" ]]; then
+          (( 10#$CASES >= 1 )) || fail "cases must be empty or at least 1"
+        fi
+        prop='(parse|parse-reject|warnings)'
+        [[ -z "$PROPS" || "$PROPS" =~ ^$prop(,$prop){0,2}$ ]] || fail "props must be a comma-separated subset of parse, parse-reject and warnings"
+        [[ "$COVERAGE" =~ ^(true|false)$ ]] || fail "coverage must be true or false"
+        # GitHub takes at most 65,535 characters for all inputs together; the two texts get most of them.
+        b64='^[A-Za-z0-9+/]*={0,2}$'
+        [[ "$KNOWN" =~ $b64 && "$FILES" =~ $b64 ]] || fail "known and files must be base64 text"
+        (( ${#KNOWN} + ${#FILES} <= 64000 )) || fail "known and files have more than 64000 characters together"
+        if [[ "$MODE" == measure ]]; then
+          [[ -n "$SEED" && -n "$CASES" ]] || fail "mode measure needs a seed and cases"
+        fi
+        if [[ "$COVERAGE" == true && "$MODE" != cases && "$MODE" != measure ]]; then
+          fail "coverage is for mode cases; mode measure always has it"
+        fi
+        if [[ "$MODE" == files ]]; then
+          [[ -n "$FILES" ]] || fail "mode files needs the input files"
+        else
+          [[ -z "$FILES" ]] || fail "the input files are for mode files only"
+        fi
+        # A known signature is not shrunk, so a planted one would fail its positive control.
+        if [[ "$MODE" == controls ]]; then
+          [[ -z "$KNOWN" ]] || fail "mode controls takes no known signatures"
+        fi
+        if [[ -z "$SEED" ]]; then
+          SEED="$(date +%s)"
+        fi
+        if [[ -z "$CASES" ]]; then
+          # No cap: the time budget ends the run.
+          CASES=1000000
+        fi
+        {
+          echo "PBT_MODE=$MODE"
+          echo "PBT_OTP_MAJOR=$OTP"
+          echo "PBT_SDK_RELEASE=$OTP"
+          echo "PBT_SEED=$((10#$SEED))"
+          echo "PBT_CASES=$((10#$CASES))"
+          echo "PBT_BUDGET_MINUTES=$((10#$BUDGET_MINUTES))"
+          if [[ -n "$PROPS" ]]; then
+            echo "PBT_PROPS=$PROPS"
+          fi
+          if [[ "$MODE" == controls ]]; then
+            echo "PBT_PLANT=1"
+          fi
+          if [[ "$MODE" == measure || "$COVERAGE" == true ]]; then
+            echo "PBT_COVERAGE=1"
+          fi
+        } >> "$GITHUB_ENV"
+    - name: Decode the input files
+      # The texts are written outside build/, which the clean of a coverage run deletes; a later step copies them
+      # into the artifact. The decoded size is limited, and only plain module names are taken as file names.
+      env:
+        KNOWN: ${{ inputs.known }}
+        FILES: ${{ inputs.files }}
+        INPUTS: ${{ runner.temp }}/pbt-inputs
+      run: |
+        mkdir -p "$INPUTS"
+        python3 -I - <<'EOF' >> "$GITHUB_ENV"
+        import base64
+        import binascii
+        import hashlib
+        import json
+        import os
+        import re
+        import sys
+        import zlib
+
+        LIMIT = 4 * 1024 * 1024
+        out = os.environ["INPUTS"]
+
+
+        def fail(message):
+            print("::error::" + message, file=sys.stderr)
+            sys.exit(1)
+
+
+        def decode(name):
+            value = os.environ[name]
+            if not value:
+                return None
+            try:
+                packed = base64.b64decode(value, validate=True)
+            except binascii.Error:
+                fail("%s is not base64" % name.lower())
+            inflater = zlib.decompressobj(wbits=31)
+            try:
+                data = inflater.decompress(packed, LIMIT + 1)
+            except zlib.error:
+                fail("%s is not gzip data" % name.lower())
+            if len(data) > LIMIT or not inflater.eof or inflater.unused_data:
+                fail("%s is more than %d bytes, or not one gzip stream" % (name.lower(), LIMIT))
+            try:
+                return data.decode("utf-8")
+            except UnicodeDecodeError:
+                fail("%s is not UTF-8 text" % name.lower())
+
+
+        record = {"run_id": os.environ["GITHUB_RUN_ID"], "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+                  "sha": os.environ["GITHUB_SHA"], "mode": os.environ["PBT_MODE"], "otp": os.environ["PBT_OTP_MAJOR"],
+                  "seed": int(os.environ["PBT_SEED"]), "cases": int(os.environ["PBT_CASES"]),
+                  "budget_minutes": int(os.environ["PBT_BUDGET_MINUTES"]), "props": os.environ.get("PBT_PROPS", ""),
+                  "coverage": os.environ.get("PBT_COVERAGE") == "1", "known": None, "files": None}
+
+        known = decode("KNOWN")
+        if known is not None:
+            lines = [l for l in known.split("\n") if l.strip() and not l.startswith("#")]
+            for no, line in enumerate(lines, 1):
+                if "\t" not in line:
+                    fail("line %d of known has no tab between the signature and the label" % no)
+            path = os.path.join(out, "known.tsv")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(known)
+            record["known"] = {"signatures": len(lines), "sha256": hashlib.sha256(known.encode("utf-8")).hexdigest()}
+            print("PBT_KNOWN=" + path)
+
+        files = decode("FILES")
+        if files is not None:
+            marker = re.compile(r"^%%% file: (.*)$", re.M)
+            modules = {}
+            if not marker.match(files.lstrip("\n")):
+                modules["input.erl"] = files
+            else:
+                parts = marker.split(files.lstrip("\n"))
+                for name, text in zip(parts[1::2], parts[2::2]):
+                    name = name.strip()
+                    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}\.erl", name):
+                        fail("the input file name %r is not letters, digits, _ or - and .erl" % name[:80])
+                    if name in modules:
+                        fail("the input file %s is there twice" % name)
+                    modules[name] = text.lstrip("\n")
+            if len(modules) > 500:
+                fail("more than 500 input files")
+            folder = os.path.join(out, "files")
+            os.makedirs(folder)
+            for name, text in modules.items():
+                with open(os.path.join(folder, name), "w", encoding="utf-8") as f:
+                    f.write(text)
+            record["files"] = {"count": len(modules), "names": sorted(modules),
+                               "sha256": hashlib.sha256(files.encode("utf-8")).hexdigest()}
+            print("PBT_FILES=" + folder)
+
+        with open(os.path.join(out, "dispatch.json"), "w", encoding="utf-8") as f:
+            json.dump(record, f, indent=2)
+        EOF
+        cat "$INPUTS/dispatch.json"
+    - name: Run the unit tests of the coverage tool
+      if: env.PBT_COVERAGE == '1'
+      run: python3 -m unittest discover -s scripts/pbt -p 'test_*.py'
+    - name: Install Erlang/OTP
+      # The oracle runs erl, so a real Erlang/OTP is installed, in the same way as the compilation-tests job of
+      # gradle.yml: a build from builds.hex.pm for Ubuntu 24.04 on amd64. 27 is the release that gradle.yml pins. The
+      # sha256 of each build is pinned here; it is the one that builds.txt of builds.hex.pm lists for that build.
+      run: |
+        case "$PBT_OTP_MAJOR" in
+          27)
+            version=27.3.4.9
+            sha256=a9864f486e575e5e1c8e507641168bc31dbb43d7cfa8e124d5e8b67a6f6248d2
+            ;;
+          28)
+            version=28.5.0.8
+            sha256=9d1e254f31554bf26595a6a03164f8e38f48c74d5f60c00b589d581b8ad67781
+            ;;
+          29)
+            version=29.1.2
+            sha256=2cfca446976fc61962585a1c77e5d11ddb6f5fed83e84668a2c4acfaad60d22e
+            ;;
+          *)
+            echo "::error::No pinned build of Erlang/OTP $PBT_OTP_MAJOR"
+            exit 1
+            ;;
+        esac
+        . /etc/os-release
+        if [ "$(dpkg --print-architecture)" != amd64 ] || [ "$VERSION_ID" != 24.04 ]; then
+          echo "::error::The pinned builds are for Ubuntu 24.04 on amd64, the runner is Ubuntu $VERSION_ID on $(dpkg --print-architecture)"
+          exit 1
+        fi
+        archive="$RUNNER_TEMP/otp.tar.gz"
+        curl -fsSL --retry 3 -o "$archive" "https://builds.hex.pm/builds/otp/amd64/ubuntu-24.04/OTP-$version.tar.gz"
+        echo "$sha256  $archive" | sha256sum -c -
+        root=/usr/local/lib/erlang
+        sudo mkdir -p "$root"
+        sudo tar -xzf "$archive" -C "$root" --strip-components=1
+        sudo "$root/Install" -minimal "$root"
+        for tool in erl erlc escript; do
+          sudo ln -sf "$root/bin/$tool" "/usr/local/bin/$tool"
+        done
+        command -v erl erlc escript
+        release=$(erl -noshell -eval 'io:put_chars(erlang:system_info(otp_release)), halt().')
+        echo "Erlang/OTP $release at $(erl -noshell -eval 'io:put_chars(code:root_dir()), halt().')"
+        if [ "$release" != "$PBT_OTP_MAJOR" ]; then
+          echo "::error::erl on PATH is Erlang/OTP $release, expected $PBT_OTP_MAJOR"
+          exit 1
+        fi
+        echo "PBT_ERL=/usr/local/bin/erl" >> "$GITHUB_ENV"
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache-jdk: true
+    - name: Restore the Gradle dependency cache
+      # Restore only: the cache is saved by pushes to master in gradle.yml.
+      uses: ./.github/actions/gradle-cache
+    - name: Route Maven Central through a mirror
+      uses: ./.github/actions/maven-central-mirror
+    - name: Run the property tests
+      # The runner stops before the next case when the budget is over and writes the report. A JVM that hangs is
+      # stopped 20 minutes after the budget; the journal, written as the cases run, is uploaded all the same. With
+      # coverage the build starts with clean, which the coverage tool needs for right counts; the log is kept outside
+      # build/ until the clean is done.
+      env:
+        PBT_REPORT: ${{ github.workspace }}/build/pbt/report.json
+        PBT_OUT: ${{ github.workspace }}/build/pbt/out
+        PBT_WORK: ${{ github.workspace }}/build/pbt/work
+      run: |
+        tasks=(test)
+        if [[ "${PBT_COVERAGE:-}" == 1 ]]; then
+          tasks=(-Pcoverage clean test)
+        fi
+        log="$RUNNER_TEMP/pbt-inputs/gradle.log"
+        code=0
+        timeout -k 1m "$((PBT_BUDGET_MINUTES + 20))m" \
+          ./gradlew --no-daemon "${tasks[@]}" --rerun --tests 'org.intellij.erlang.pbt.ErlangPropertyTest' \
+          > "$log" 2>&1 || code=$?
+        mkdir -p build/pbt
+        cp "$log" build/pbt/gradle.log
+        tail -n 30 build/pbt/gradle.log
+        if (( code == 124 || code == 137 )); then
+          echo "::error::The run did not end within $((PBT_BUDGET_MINUTES + 20)) minutes; see the journal in the artifact"
+          exit 1
+        fi
+        if [[ ! -f "$PBT_REPORT" ]]; then
+          echo "::error::The runner wrote no report (exit code $code); see build/pbt/gradle.log in the artifact"
+          exit 1
+        fi
+        # A finished run is a success whatever it found. The controls fail the test when one does not behave.
+        if [[ -n "${PBT_PLANT:-}" ]]; then
+          if (( code != 0 )); then
+            echo "::error::A control did not behave (exit code $code); see the summary and build/pbt/gradle.log"
+          fi
+          exit "$code"
+        fi
+        # The test records findings without failing, so a nonzero exit code is a failure of the test or of the build;
+        # the steps that collect the report and the artifact run anyway.
+        if (( code != 0 )); then
+          echo "::error::Gradle ended with exit code $code after the report was written; see build/pbt/gradle.log"
+          exit "$code"
+        fi
+    - name: Run the coverage tool
+      # The JaCoCo report covers the plugin classes that the run loaded; the tool maps it to the rules of the grammar
+      # and to the methods of the inspections that the properties check.
+      if: always() && env.PBT_COVERAGE == '1'
+      run: |
+        mkdir -p build/pbt
+        xml=build/reports/jacoco/coverageReport/coverageReport.xml
+        if [[ ! -f "$xml" ]]; then
+          echo "::error::The run wrote no coverage report"
+          exit 1
+        fi
+        python3 scripts/pbt/coverage_gaps.py "$xml" --bnf grammars/erlang.bnf --json build/pbt/coverage.json \
+          > build/pbt/coverage.txt
+        sed -n '1,12p' build/pbt/coverage.txt
+    - name: Collect the inputs
+      if: always()
+      env:
+        INPUTS: ${{ runner.temp }}/pbt-inputs
+      run: |
+        mkdir -p build/pbt/inputs
+        for name in dispatch.json known.tsv; do
+          if [[ -f "$INPUTS/$name" ]]; then
+            cp "$INPUTS/$name" build/pbt/inputs/
+          fi
+        done
+        if [[ -d "$INPUTS/files" ]]; then
+          cp -R "$INPUTS/files" build/pbt/inputs/
+        fi
+    - name: Summarise the report
+      if: always()
+      env:
+        PBT_REPORT: ${{ github.workspace }}/build/pbt/report.json
+      run: |
+        mkdir -p build/pbt
+        if [[ ! -f "$PBT_REPORT" ]]; then
+          echo "No report was written." | tee build/pbt/summary.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        python3 - "$PBT_REPORT" build/pbt/coverage.json > build/pbt/summary.md <<'EOF'
+        import json
+        import os
+        import sys
+
+        report = json.load(open(sys.argv[1], encoding="utf-8"))
+        run = report.get("run", {})
+
+
+        def cell(text):
+            return str(text).replace("|", "\\|").replace("\n", " ").replace("<", "&lt;")[:300]
+
+
+        print("## Property tests")
+        print()
+        print("| | |")
+        print("|---|---|")
+        print("| mode | %s |" % cell(os.environ.get("PBT_MODE")))
+        for key in ("revision", "otp_release", "sdk_release", "seed", "props", "plant", "cases_requested", "cases_run",
+                    "complete", "oracle_restarts"):
+            if key in run:
+                print("| %s | %s |" % (key, cell(run[key])))
+        print("| wall, minutes | %.1f |" % (run.get("elapsed_ms", 0) / 60000.0))
+        print("| discards | %s |" % cell(report.get("discards", {}).get("count")))
+        print("| crashes | %s |" % len(report.get("crashes", [])))
+        never = report.get("generator", {}).get("never_generated", [])
+        print("| never generated | %s |" % cell(", ".join(never) if never else "none"))
+        print()
+        properties = report.get("properties", {})
+        if properties:
+            print("| Property | Checked | From mutants | Skipped | Violations | Known violations | New signatures |"
+                  " Known signatures |")
+            print("|---|---|---|---|---|---|---|---|")
+            for name, p in properties.items():
+                print("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+                    cell(name), p.get("checked"), p.get("from_mutants"), p.get("skipped"), p.get("violations"),
+                    p.get("known_violations", 0), len(p.get("signatures", [])), len(p.get("known_signatures", []))))
+            print()
+        rows = [(name, s) for name, p in properties.items() for s in p.get("signatures", [])]
+        if rows:
+            print("| Property | Signature | Count | First case | Shrunk files in out/ |")
+            print("|---|---|---|---|---|")
+            for name, s in rows[:100]:
+                print("| %s | `%s` | %s | %s | %s |" % (
+                    cell(name), cell(s.get("signature")).replace("`", "'").replace("&lt;", "<"), s.get("count"),
+                    cell(s.get("first_case")), cell(", ".join(f.rsplit("/", 1)[-1] for f in s.get("shrunk_files", [])))))
+            if len(rows) > 100:
+                print()
+                print("And %d more signatures in the report." % (len(rows) - 100))
+        else:
+            print("No violations.")
+        controls = report.get("controls", [])
+        if controls:
+            bad = [c for c in controls if not c.get("ok")]
+            print()
+            print("Controls: %d, not behaving: %d" % (len(controls), len(bad)))
+            for c in bad:
+                print("- %s" % cell(c.get("control")))
+        if os.path.isfile(sys.argv[2]):
+            coverage = json.load(open(sys.argv[2], encoding="utf-8"))
+            t = coverage["parser"]["totals"]
+            e = t["erl_rules"]
+            print()
+            print("Coverage: bnf rules reached %d, partly %d, not reached %d of %d; used in .erl files: reached %d, "
+                  "partly %d, not reached %d of %d; ErlangParser branches %.1f%%." % (
+                      t["reached"], t["partly"], t["not_reached"], t["rules"], e["reached"], e["partly"],
+                      e["not_reached"], e["rules"], t["parser_branches"]["pct"]))
+        EOF
+        cat build/pbt/summary.md >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload the report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: property-tests-${{ github.run_id }}
+        path: |
+          build/pbt/inputs
+          build/pbt/report.json
+          build/pbt/report.json.journal.jsonl
+          build/pbt/summary.md
+          build/pbt/coverage.json
+          build/pbt/coverage.txt
+          build/pbt/out
+          build/pbt/gradle.log
+          build/test-results/test/TEST-org.intellij.erlang.pbt.ErlangPropertyTest.xml
+        if-no-files-found: warn
