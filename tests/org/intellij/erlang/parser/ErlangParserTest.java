@@ -156,6 +156,17 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertTrue("Parsing took " + millis + " ms", millis < 5000);
   }
 
+  public void testDeeplyNestedMapsParseWithoutBacktracking() {
+    int depth = 20;
+    String text = "f() -> " + "#{a => ".repeat(depth) + "1" + "}".repeat(depth) + ".\n";
+    long start = System.nanoTime();
+    PsiFile file = createPsiFile("nested", text);
+    boolean hasErrors = PsiTreeUtil.hasErrorElements(file);
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertFalse("PsiFile contains error elements", hasErrors);
+    assertTrue("Parsing took " + millis + " ms", millis < 5000);
+  }
+
   public void testTypedMacroBody()                      { doTest(false); }
   public void testTypedMacroBodyIncomplete()            { doTest(false); }
   public void testIfElifConditionalCompilation()        { doTest(false); }
