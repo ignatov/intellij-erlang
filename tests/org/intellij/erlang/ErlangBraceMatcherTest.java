@@ -17,6 +17,7 @@
 package org.intellij.erlang;
 
 import com.intellij.codeInsight.highlighting.BraceMatchingUtil;
+import com.intellij.openapi.actionSystem.IdeActions;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.highlighter.HighlighterIterator;
 import com.intellij.openapi.fileTypes.FileType;
@@ -55,6 +56,80 @@ public class ErlangBraceMatcherTest extends ErlangLightPlatformCodeInsightFixtur
 
   public void testFunReferenceIsNotBrace() {
     myFixture.configureByText("a.erl", "f() -> fun() -> lists:map(<caret>fun m:g/1, []) end.");
+    HighlighterIterator iterator = createIterator();
+    assertEquals(ErlangTypes.ERL_FUN, iterator.getTokenType());
+    assertFalse(BraceMatchingUtil.isLBraceToken(iterator, getText(), getFileType()));
+    assertEquals(myFixture.getCaretOffset(), iterator.getStart());
+  }
+
+  public void testFunTypeInSpecIsNotBrace() {
+    doTestFunTypeIsNotBrace("-spec f(<caret>fun((a) -> b)) -> ok.\nf(_) -> ok.");
+  }
+
+  public void testFunTypeInTypeIsNotBrace() {
+    doTestFunTypeIsNotBrace("-type h() :: <caret>fun().");
+  }
+
+  public void testFunTypeInCallbackIsNotBrace() {
+    doTestFunTypeIsNotBrace("-callback f() -> <caret>fun((...) -> ok).");
+  }
+
+  public void testFunTypeWithConstraintInSpecIsNotBrace() {
+    doTestFunTypeIsNotBrace("-spec f(X) -> <caret>fun() when X :: integer().\nf(_) -> fun() -> ok end.");
+  }
+
+  public void testFunTypeWithConstraintInCallbackIsNotBrace() {
+    doTestFunTypeIsNotBrace("-callback f(X) -> <caret>fun() when X :: atom().");
+  }
+
+  public void testNavigationIgnoresFunTypeWithConstraintInSpec() {
+    doTestCaretStays(IdeActions.ACTION_EDITOR_MATCH_BRACE,
+                     "-module(a).\n-spec f(X) -> fun() when X :: integer().\nf(_) -> fun() -> ok end.\ng(X) -> X +<caret> 1.\n");
+    doTestCaretStays("EditorCodeBlockStart",
+                     "-module(a).\n-spec f(X) -> fun() when X :: integer().\nf(_) -> fun() -> ok end.\ng(X) -> X +<caret> 1.\n");
+  }
+
+  public void testLambdaWithGuardSequenceMatchesEnd() {
+    doTest(true, "f() -> <caret>fun() when a; b, c -> ok <match>end.");
+  }
+
+  public void testFunTypeInRecordFieldIsNotBrace() {
+    doTestFunTypeIsNotBrace("-record(r, {f = fun() -> ok end :: <caret>fun(() -> ok)}).");
+  }
+
+  public void testLambdaInRecordFieldDefaultMatchesEnd() {
+    doTest(true, "-record(r, {f = <caret>fun() -> ok <match>end :: fun(() -> ok)}).");
+  }
+
+  public void testLambdaWithGuardMatchesEnd() {
+    doTest(true, "f() -> <caret>fun() when true -> fun() -> ok end <match>end.");
+  }
+
+  public void testLambdaWithParenthesizedPatternMatchesEnd() {
+    doTest(true, "f() -> <caret>fun((X), {Y}) -> X(Y) <match>end.");
+  }
+
+  public void testCodeBlockStartIgnoresFunTypeInSpec() {
+    doTestCaretStays("EditorCodeBlockStart");
+  }
+
+  public void testMatchBraceIgnoresFunTypeInSpec() {
+    doTestCaretStays(IdeActions.ACTION_EDITOR_MATCH_BRACE);
+  }
+
+  private void doTestCaretStays(String actionId) {
+    doTestCaretStays(actionId, "-module(a).\n-spec f(fun((a) -> b)) -> ok.\nf(_) -> ok.\ng(X) -> X +<caret> 1.\n");
+  }
+
+  private void doTestCaretStays(String actionId, String text) {
+    myFixture.configureByText("a.erl", text);
+    int offset = myFixture.getCaretOffset();
+    myFixture.performEditorAction(actionId);
+    assertEquals(offset, myFixture.getCaretOffset());
+  }
+
+  private void doTestFunTypeIsNotBrace(String text) {
+    myFixture.configureByText("a.erl", text);
     HighlighterIterator iterator = createIterator();
     assertEquals(ErlangTypes.ERL_FUN, iterator.getTokenType());
     assertFalse(BraceMatchingUtil.isLBraceToken(iterator, getText(), getFileType()));
