@@ -27,13 +27,17 @@ import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.stubs.StubElement;
 import com.intellij.util.ref.GCUtil;
 import org.intellij.erlang.psi.ErlangBehaviour;
+import org.intellij.erlang.psi.ErlangCallbackFunction;
 import org.intellij.erlang.psi.ErlangFile;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.impl.ErlangBehaviourImpl;
 import org.intellij.erlang.stubs.types.ErlangFileElementType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTestCase {
   // Up to version 10 an unterminated '-if(' swallowed the rest of the file, so stubs cached by
@@ -117,6 +121,62 @@ public class ErlangFileStubTest extends ErlangLightPlatformCodeInsightFixtureTes
     doTestBehaviourFlag("b3.erl", "-module(b3).\n-compile(export_all).\nbehaviour_info(callbacks) -> [].\n", true);
     doTestBehaviourFlag("b4.erl", "-module(b4).\n-callback init(term()) -> ok.\n", true);
     doTestBehaviourFlag("b5.erl", "-module(b5).\n-export([behaviour_info/0]).\nbehaviour_info() -> [].\n", false);
+  }
+
+  // The parse transforms come from the stub without loading the tree, and equal those of the tree.
+  public void testParseTransformsComeFromStub() {
+    doTestParseTransforms("pt.erl", "-module(pt).\n-compile([{parse_transform, pt1}, debug_info]).\n-compile({parse_transform, pt2}).\n",
+                          Set.of("pt1", "pt2"));
+    doTestParseTransforms("nopt.erl", "-module(nopt).\n-compile(debug_info).\n", Set.of());
+  }
+
+  private void doTestParseTransforms(String fileName, String text, Set<String> expected) {
+    ErlangFile file = (ErlangFile) myFixture.addFileToProject(fileName, text);
+    PsiFileImpl fileImpl = (PsiFileImpl) file;
+    assertNotNull(fileImpl.getStub());
+    Set<String> fromStub = new HashSet<>();
+    file.addDeclaredParseTransforms(fromStub);
+    assertEquals(expected, fromStub);
+    assertFalse(fileImpl.isContentsLoaded());
+
+    assertNotNull(fileImpl.getNode());
+    assertNull(fileImpl.getStub());
+    Set<String> fromTree = new HashSet<>();
+    file.addDeclaredParseTransforms(fromTree);
+    assertEquals(expected, fromTree);
+  }
+
+  // The callbacks and the optional callbacks come from the stub without loading the tree, and equal those of the tree.
+  public void testCallbacksComeFromStub() {
+    ErlangFile file = (ErlangFile) myFixture.addFileToProject(
+      "cb.erl",
+      "-module(cb).\n-callback init(term()) -> ok.\n-callback handle(atom(), term()) -> ok.\n" +
+      "-callback stop() -> ok.\n-optional_callbacks([handle/2, stop/0]).\n");
+    PsiFileImpl fileImpl = (PsiFileImpl) file;
+    assertNotNull(fileImpl.getStub());
+    assertFalse(fileImpl.isContentsLoaded());
+
+    PsiManagerEx.getInstanceEx(getProject()).setAssertOnFileLoadingFilter(VirtualFileFilter.ALL, getTestRootDisposable());
+    List<String> callbacksFromStub = new ArrayList<>(file.getCallbackMap().keySet());
+    assertEquals(List.of("init/1", "handle/2", "stop/0"), callbacksFromStub);
+    assertNotNull(file.getCallbackByName("handle/2"));
+    assertNull(file.getCallbackByName("handle/1"));
+    List<String> optionalFromStub = new ArrayList<>();
+    for (ErlangCallbackFunction f : file.getOptionalCallbacks()) {
+      assertNotNull(f.getStub());
+      optionalFromStub.add(f.getStub().getName());
+    }
+    assertEquals(List.of("handle", "stop"), optionalFromStub);
+    assertTrue(file.isBehaviour());
+    assertFalse(fileImpl.isContentsLoaded());
+    PsiManagerEx.getInstanceEx(getProject()).setAssertOnFileLoadingFilter(VirtualFileFilter.NONE, getTestRootDisposable());
+
+    assertNotNull(fileImpl.getNode());
+    assertNull(fileImpl.getStub());
+    assertEquals(callbacksFromStub, new ArrayList<>(file.getCallbackMap().keySet()));
+    List<String> optionalFromTree = new ArrayList<>();
+    for (ErlangCallbackFunction f : file.getOptionalCallbacks()) optionalFromTree.add(f.getQAtom().getText());
+    assertEquals(optionalFromStub, optionalFromTree);
   }
 
   private void doTestBehaviourFlag(String fileName, String text, boolean expected) {
