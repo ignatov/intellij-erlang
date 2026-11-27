@@ -328,6 +328,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
         isFieldAccess(builder_, 2)) {
       PsiBuilder.Marker marker = builder_.mark();
       builder_.advanceLexer();
+      builder_.getTokenType(); // skips the whitespace and comments after '#', so the name is the current token
       remapToAtomName(builder_);
       marker.rollbackTo();
     }

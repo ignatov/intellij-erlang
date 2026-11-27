@@ -40,4 +40,6 @@ public class ErlangIntroduceRecordFixTest extends ErlangQuickFixTestBase {
   public void testSurroundedByDeclarations() { doIntroduceRecordTest(); }
   public void testWithFields()               { doIntroduceRecordTest(); }
   public void testAloneMacro()               { doIntroduceRecordTest(); }
+  public void testReservedWordName()         { doIntroduceRecordTest(); }
+  public void testVariableName()             { doIntroduceRecordTest(); }
 }

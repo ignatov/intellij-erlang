@@ -10,3 +10,6 @@ match(#when{a = A}, #Foo{b = B}) when A =:= B -> ok.
 update(R) -> R#when{a = 2}#Foo{b = 3}.
 nested() -> #Foo{b = #when{a = 1}}.
 qualified(R) -> {#m:when{a = 1}, #m:Foo{}, R#m:Foo.b, R#m:Foo{b = 1}}.
+spaced(R) -> {R# Foo.b, R# when.a, R#%c
+Foo.b, R#
+  when.a}.
