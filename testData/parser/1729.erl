@@ -1,0 +1,2 @@
+-define(H, #r).
+-type v() :: ?H{a :: integer()}.

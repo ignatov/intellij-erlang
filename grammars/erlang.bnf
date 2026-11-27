@@ -304,6 +304,7 @@ type ::=
   | '[' [top_type [',' '...']] ']'
   | record_like_type
   | record_hash record_ref '{' field_type_list? '}'
+  | macros '{' field_type_list? '}'
   | map_type {pin(".*")=1}
 record_like_type ::= '{' top_type_list? '}'
 

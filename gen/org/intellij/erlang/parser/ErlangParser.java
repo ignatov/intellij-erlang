@@ -5596,6 +5596,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     boolean r;
     Marker m = enter_section_(b, l, _COLLAPSE_, ERL_TYPE, "<type>");
     r = type_0(b, l + 1);
+    if (!r) r = type_9(b, l + 1);
     if (!r) r = type_1(b, l + 1);
     if (!r) r = type_2(b, l + 1);
     if (!r) r = type_3(b, l + 1);
@@ -5800,6 +5801,39 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   // field_type_list?
   private static boolean type_8_3(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_8_3")) return false;
+    field_type_list(b, l + 1);
+    return true;
+  }
+
+  // macros '{' field_type_list? '}'
+  private static boolean type_9(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_9")) return false;
+    if (!nextTokenIs(b, ERL_QMARK)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = macros(b, l + 1);
+    r = r && type_9_1(b, l + 1);
+    p = r; // pin = 1
+    r = r && report_error_(b, consumeToken(b, ERL_CURLY_LEFT));
+    r = p && report_error_(b, type_9_3(b, l + 1)) && r;
+    r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  // &('{')
+  private static boolean type_9_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_9_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = consumeToken(b, ERL_CURLY_LEFT);
+    exit_section_(b, l, m, r, false, null);
+    return r;
+  }
+
+  // field_type_list?
+  private static boolean type_9_3(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_9_3")) return false;
     field_type_list(b, l + 1);
     return true;
   }
