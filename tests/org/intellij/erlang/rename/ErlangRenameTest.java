@@ -82,6 +82,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testCaseHeadRematchInLaterCase() { doTest("New"); }
   public void testCaseHeadPattern()            { doTest("New"); }
   public void testCaseHeadPatternFromPattern() { doTest("New"); }
+  public void testMaybeBindingInCallArgument() { doTest("New"); } // issue 1664
   public void testCaseClauseRematchTwice()     { doTest("New"); }
   public void testCaseClauseBodyRematchTwice() { doTest("New"); }
   public void testCaseClauseNestedCasePattern() { doTest("New"); }

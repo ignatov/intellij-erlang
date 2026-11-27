@@ -103,7 +103,8 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
       boolean inArgumentListBeforeAssignment =
-        PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
+        PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class,
+                                    ErlangMaybeMatchExpression.class) instanceof ErlangArgumentList;
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
