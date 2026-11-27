@@ -285,6 +285,63 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertEmpty("Parsed with a syntax error", rejected);
   }
 
+  public void testEmptyParenthesesAsFunctionBody() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() ->\n    ().\n");
+  }
+
+  public void testEmptyParenthesesAsMatchRight() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() -> X = (), X.\n");
+  }
+
+  public void testEmptyParenthesesAsComprehensionFilter() {
+    assertHasSyntaxError("-module(t).\n-export([f/1]).\nf(X) -> [Z || Z <- X, ()].\n");
+  }
+
+  public void testEmptyParenthesesAsIfGuard() {
+    assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() -> if () -> ok end.\n");
+  }
+
+  public void testEmptyParenthesesOutsideExpressions() {
+    PsiFile file = parseText("-module(t).\n-export([f/0]).\n-type t() :: ok.\n-spec f() -> t().\n-callback c() -> ok.\n-define(PAR, ()).\n" +
+                             "f() -> F = fun() -> ok end, F(), g(), X = (1), <<(X), (X):8>>, ((X)).\n");
+    assertFalse(toParseTreeText(file, skipSpaces(), includeRanges()), PsiTreeUtil.hasErrorElements(file));
+  }
+
+  public void testEmptyParenthesesErrorKeepsNextFunction() {
+    PsiFile file = parseText("-module(t).\nf() -> ().\ng() -> ok.\n");
+    assertTrue(PsiTreeUtil.hasErrorElements(file));
+    Collection<ErlangFunction> functions = PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class);
+    assertEquals(2, functions.size());
+  }
+
+  // #1647: erlc parses a macro body and a macro argument only after the expansion, where () can be a fragment.
+  public void testEmptyParenthesesInMacros() {
+    String[] modules = {
+      "-define(F, () -> ok).\n",
+      "-define(P, (), ok).\n",
+      "-define(E, (())).\n",
+      "-define(P, ()) .\n",
+      "-define(CALL(F, A), F A).\nf() -> ?CALL(g, ()).\n",
+      "-define('CALL'(F, A), F A).\nf() -> ?'CALL'(g, ()).\n",
+    };
+    List<String> rejected = new ArrayList<>();
+    for (String module : modules) {
+      if (PsiTreeUtil.hasErrorElements(parseText("-module(t).\n" + module))) rejected.add(module);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
+  public void testEmptyParenthesesAsCallArgument() {
+    assertHasSyntaxError("-module(t).\nf() -> g(()).\n");
+  }
+
+  private void assertHasSyntaxError(String text) {
+    PsiFile file = parseText(text);
+    assertTrue("erlc reports a syntax error before ')', the parser gives none:\n" +
+               toParseTreeText(file, skipSpaces(), includeRanges()),
+               PsiTreeUtil.hasErrorElements(file));
+  }
+
   private PsiFile parseText(String text) {
     return createPsiFile("test.erl", text);
   }
