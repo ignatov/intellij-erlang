@@ -447,7 +447,24 @@ public class ErlangFormattingBlock extends AbstractBlock {
       operatorWouldMerge(((ErlangFormattingBlock) child1).getNode(), ((ErlangFormattingBlock) child2).getNode())) {
       return Spacing.createSpacing(1, 1, 0, mySettings.KEEP_LINE_BREAKS, mySettings.KEEP_BLANK_LINES_IN_CODE);
     }
+    //blocks of nested binary expressions are built flat, so the rules must see the expression the operator belongs to
+    ASTNode operatorParent = getFlatOperatorParent(child1);
+    if (operatorParent == null) operatorParent = getFlatOperatorParent(child2);
+    if (operatorParent != null && operatorParent != myNode) {
+      Block parent = new ErlangFormattingBlock(operatorParent, null, null, null, mySettings, myErlangSettings, mySpacingBuilder, -1);
+      return mySpacingBuilder.getSpacing(parent, child1, child2);
+    }
     return mySpacingBuilder.getSpacing(this, child1, child2);
+  }
+
+  @Nullable
+  private ASTNode getFlatOperatorParent(@Nullable Block child) {
+    if (!myErlangSettings.UNIFORM_BINARY_EXPRESSIONS || !BINARY_EXPRESSIONS.contains(myNode.getElementType())) return null;
+    if (!(child instanceof ErlangFormattingBlock)) return null;
+    ASTNode node = ((ErlangFormattingBlock) child).getNode();
+    if (node.getPsi() instanceof ErlangExpression || COMMENTS.contains(node.getElementType())) return null;
+    ASTNode parent = node.getTreeParent();
+    return parent != null && BINARY_EXPRESSIONS.contains(parent.getElementType()) ? parent : null;
   }
 
   private static boolean operatorWouldMerge(@NotNull ASTNode node1, @NotNull ASTNode node2) {
