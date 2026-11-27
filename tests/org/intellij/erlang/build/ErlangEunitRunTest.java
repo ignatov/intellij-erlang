@@ -28,14 +28,22 @@ import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.testframework.sm.runner.SMTestProxy;
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerConsoleView;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.JUnit38AssumeSupportRunner;
 import com.intellij.testFramework.PlatformTestUtil;
 import com.intellij.util.containers.ContainerUtil;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.eunit.ErlangUnitRunningState;
+import org.intellij.erlang.jps.rebar.RebarBuilder;
+import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Assume;
+import org.junit.runner.RunWith;
 
 import java.util.List;
 import java.util.Set;
@@ -43,6 +51,7 @@ import java.util.Set;
 /**
  * Runs EUnit through the plugin with the real Erlang SDK: the precompiled reporter module must load in it.
  */
+@RunWith(JUnit38AssumeSupportRunner.class)
 public class ErlangEunitRunTest extends ErlangCompilationTestBase {
   private static final long TIMEOUT_MS = 120_000;
 
@@ -108,6 +117,29 @@ public class ErlangEunitRunTest extends ErlangCompilationTestBase {
     assertTrue(output, output.contains("##teamcity[testFinished name='passing_test'"));
     assertTrue(output, output.contains("##teamcity[testFailed name='failing_test'"));
     assertFalse(output, output.contains("##teamcity[testFailed name='passing_test'"));
+  }
+
+  // #711: with "Compile project with rebar" turned on, the build runs only `rebar3 compile`, which does not compile the
+  // test sources, so EUnit aborted with {module_not_found,tests}. Needs the rebar3 escript in rebar.path.
+  public void testTestModuleOfRebarProject() throws Exception {
+    String rebarPath = RebarBuilder.getTestsRebarPath();
+    Assume.assumeTrue("Set the rebar.path system property to the rebar3 escript to run this test", rebarPath != null);
+    ErlangCompilerSettings.getInstance(myProject).setUseRebarCompilerEnabled(true);
+    RebarSettings.getInstance(myProject).setRebarPath(rebarPath);
+    VirtualFile[] contentRoots = ModuleRootManager.getInstance(myModule).getContentRoots();
+    assertSize(1, contentRoots);
+    addFileToDirectory(contentRoots[0], "rebar.config", "{erl_opts, [debug_info]}.\n");
+    addSourceFile(myModule, "app1.app.src", "{application, app1, [{vsn, \"1.0.0\"}, {applications, [kernel, stdlib]}]}.\n");
+    addSourceFile(myModule, "app1_mod.erl", "-module(app1_mod).\n-export([v/0]).\nv() -> 1.\n");
+    addTestFile(myModule, "tests.erl",
+                "-module(tests).\n" +
+                "-include_lib(\"eunit/include/eunit.hrl\").\n" +
+                "v_test() -> ?assertEqual(1, app1_mod:v()).\n");
+    myCompilationRunner.compile();
+
+    String output = runEunit("tests");
+    assertTrue(output, output.contains("##teamcity[testFinished name='v_test'"));
+    assertFalse(output, output.contains("##teamcity[testFailed"));
   }
 
   private String runEunit(String moduleName) throws Exception {
