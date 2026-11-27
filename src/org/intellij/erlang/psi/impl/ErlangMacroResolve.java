@@ -24,6 +24,7 @@ import org.intellij.erlang.psi.ErlangArgumentDefinitionList;
 import org.intellij.erlang.psi.ErlangAtomAttribute;
 import org.intellij.erlang.psi.ErlangAttribute;
 import org.intellij.erlang.psi.ErlangFile;
+import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangInclude;
 import org.intellij.erlang.psi.ErlangIncludeLib;
 import org.intellij.erlang.psi.ErlangMacrosDefinition;
@@ -182,6 +183,137 @@ public final class ErlangMacroResolve {
       }
     }
     return r;
+  }
+
+  /**
+   * Of the functions that the headers of a module define, in include order, the first one in a branch that epp takes
+   * when it compiles the module: the module and its headers are walked as epp reads them, following each
+   * {@code -include}, {@code -define} and {@code -undef} outside a skipped branch. A macro that nothing defines is taken
+   * as undefined, as erlc without {@code -D} options does. A branch of {@code -if}/{@code -elif}, or one that tests a
+   * predefined macro or a macro defined in a branch that may be skipped, is unknown: its functions come after those of
+   * taken branches and before those of skipped ones.
+   */
+  public static @Nullable ErlangFunction preferActiveBranch(@NotNull ErlangFile module, @NotNull List<ErlangFunction> functions) {
+    if (functions.size() <= 1) return functions.isEmpty() ? null : functions.get(0);
+    Map<ErlangFunction, Integer> states = CachedValuesManager.getCachedValue(module, () -> CachedValueProvider.Result.create(
+      new FunctionBranches().walk(module).states, PsiModificationTracker.MODIFICATION_COUNT,
+      ProjectRootManager.getInstance(module.getProject())));
+    ErlangFunction best = null;
+    int bestRank = Integer.MAX_VALUE;
+    for (ErlangFunction f : functions) {
+      int rank = rank(states.getOrDefault(f, UNKNOWN_BRANCH));
+      if (rank < bestRank) {
+        best = f;
+        bestRank = rank;
+      }
+    }
+    return best;
+  }
+
+  private static int rank(int state) {
+    return state == ACTIVE ? 0 : state == UNKNOWN_BRANCH ? 1 : 2;
+  }
+
+  /** The branch states of the functions of a module and its headers, for {@link #preferActiveBranch}. */
+  private static final class FunctionBranches {
+    private static final class Frame {
+      int state;
+      boolean anyActive, anyUnknown;
+
+      Frame(int state) {
+        this.state = state;
+        anyActive = state == ACTIVE;
+        anyUnknown = state == UNKNOWN_BRANCH;
+      }
+    }
+
+    final Map<ErlangFunction, Integer> states = new HashMap<>();
+    private final Set<String> defined = new HashSet<>(), maybeDefined = new HashSet<>();
+    private final Deque<Frame> stack = new ArrayDeque<>();
+    private final Set<ErlangFile> open = new HashSet<>();
+
+    private int current() {
+      int state = ACTIVE;
+      for (Frame f : stack) {
+        if (f.state == INACTIVE) return INACTIVE;
+        if (f.state == UNKNOWN_BRANCH) state = UNKNOWN_BRANCH;
+      }
+      return state;
+    }
+
+    private int test(@Nullable String macro, boolean ifdef) {
+      if (macro == null || maybeDefined.contains(macro) || ErlangMacroExpander.PREDEFINED.contains(macro)) return UNKNOWN_BRANCH;
+      return defined.contains(macro) == ifdef ? ACTIVE : INACTIVE;
+    }
+
+    @NotNull FunctionBranches walk(@NotNull ErlangFile file) {
+      if (!open.add(file)) return this;
+      for (PsiElement c = file.getFirstChild(); c != null; c = c.getNextSibling()) {
+        ProgressManager.checkCanceled();
+        int state = current();
+        if (c instanceof ErlangFunction f) {
+          states.merge(f, state, (a, b) -> rank(a) <= rank(b) ? a : b);
+          continue;
+        }
+        if (c instanceof ErlangMacrosDefinition d) {
+          String name = d.getName();
+          if (name == null || state == INACTIVE) continue;
+          if (state == ACTIVE) {
+            defined.add(name);
+            maybeDefined.remove(name);
+          }
+          else if (!defined.contains(name)) {
+            maybeDefined.add(name);
+          }
+          continue;
+        }
+        ErlangInclude include = c instanceof ErlangInclude i ? i : PsiTreeUtil.getChildOfType(c, ErlangInclude.class);
+        ErlangIncludeLib includeLib = c instanceof ErlangIncludeLib i ? i : PsiTreeUtil.getChildOfType(c, ErlangIncludeLib.class);
+        if (include != null || includeLib != null) {
+          if (state == INACTIVE) continue;
+          List<ErlangFile> headers = include != null ? ErlangPsiImplUtil.getDirectlyIncludedFiles(include, file)
+                                                     : ErlangPsiImplUtil.getDirectlyIncludedFiles(includeLib, file);
+          for (ErlangFile h : headers) walk(h);
+          continue;
+        }
+        if (!(c instanceof ErlangAttribute attribute)) continue;
+        if (attribute.getElseAtomAttribute() != null) {
+          Frame top = stack.peek();
+          if (top != null) top.state = top.anyActive ? INACTIVE : top.anyUnknown ? UNKNOWN_BRANCH : ACTIVE;
+          continue;
+        }
+        if (attribute.getIfAtomAttribute() != null) {
+          stack.push(new Frame(UNKNOWN_BRANCH));
+          continue;
+        }
+        ErlangAtomAttribute atom = attribute.getAtomAttribute();
+        if (atom == null) continue;
+        ErlangMacrosName m = PsiTreeUtil.getChildOfType(atom, ErlangMacrosName.class);
+        String macro = m == null ? null : StringUtil.unquoteString(m.getText(), '\'');
+        switch (atom.getName()) {
+          case "ifdef" -> stack.push(new Frame(test(macro, true)));
+          case "ifndef" -> stack.push(new Frame(test(macro, false)));
+          case "elif" -> {
+            Frame top = stack.peek();
+            if (top != null) {
+              top.state = top.anyActive ? INACTIVE : UNKNOWN_BRANCH;
+              top.anyUnknown |= top.state == UNKNOWN_BRANCH;
+            }
+          }
+          case "endif" -> stack.poll();
+          case "undef" -> {
+            if (macro == null || state == INACTIVE) continue;
+            if (state == ACTIVE) maybeDefined.remove(macro);
+            else if (defined.contains(macro)) maybeDefined.add(macro);
+            defined.remove(macro);
+          }
+          default -> {
+          }
+        }
+      }
+      open.remove(file);
+      return this;
+    }
   }
 
   /** The attribute when the name is the one of {@code -ifdef(X)}, {@code -ifndef(X)} or {@code -undef(X)}, else null. */

@@ -73,6 +73,14 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
   public void testPreferNestedIncludeInSourceOrder() {
     doFunctionCallTest("test.erl", "a.hrl", "outer.hrl", "b.hrl", "c.hrl", "d.hrl", "e.hrl", "g.hrl", "h.hrl", "i.hrl");
   }
+  // issue 1678: A is not defined, so erlc compiles f/0 of b.hrl (-ifndef(A)), not the one of a.hrl (-ifdef(A))
+  public void testPreferActiveIfdefBranchInLaterHeader() { doFunctionCallTest("test.erl", "b.hrl", "a.hrl"); }
+  public void testPreferActiveElseBranchInLaterHeader() { doFunctionCallTest("test.erl", "b.hrl", "a.hrl"); }
+  public void testPreferActiveBranchAfterUndef() { doFunctionCallTest("test.erl", "b.hrl", "a.hrl"); }
+  public void testPreferActiveBranchOfMacroDefinedInHeader() { doFunctionCallTest("test.erl", "b.hrl", "def.hrl", "a.hrl"); }
+  // a branch of -if is not decided: it comes after the taken branches, before the skipped ones
+  public void testPreferUnknownBranchOverSkippedOne() { doFunctionCallTest("test.erl", "b.hrl", "a.hrl", "c.hrl"); }
+  public void testPreferActiveIfdefBranchInRemoteCall() { doFunctionCallTest("test.erl", "b.hrl", "t.erl", "a.hrl"); }
 
   public void testGetArityFromParameter()      { doParameterTest("test.erl", "test.erl", "bar", 1); }
   public void testGetModuleFromParameter()     { doParameterTest("test.erl", "module.erl", "bar", 1); }

@@ -1,0 +1,4 @@
+-module(t).
+-export([f/0]).
+-include("a.hrl").
+-include("b.hrl").
