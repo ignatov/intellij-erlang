@@ -172,6 +172,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testCaseClauseUseBeforeMatch() { doTest(); } // issue 1651
   public void testCaseClauseNestedCasePattern() { doTest(); } // issue 1651
   public void testCatchClassVarAssignment() { doTest(); } // issue 1648
+  public void testBinarySegmentSizeVariable() { doTest(); } // issue 1665
+  public void testBinarySegmentSizeEarlierSegment() { doTest(); } // issue 1665
+  public void testBinarySizeExpressionBindings() { doTest(); } // issue 1665
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
   public void testFunArgShadowsOtherCaseClauseVariable() { doTest(); } // issue 1654
 

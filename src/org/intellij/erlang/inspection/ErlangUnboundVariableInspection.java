@@ -44,9 +44,10 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         if (!o.isValid()) return;
-        if (inArgumentDefinition(o) && !inArgumentList(o)
-          || inDefinitionBeforeArgumentList(o)
-          || inLeftPartOfAssignment(o) || inAtomAttribute(o)
+        // a segment size in a pattern is a use of a variable, not a binding
+        boolean binding = !isBinaryWidthExpression(o)
+                          && (inArgumentDefinition(o) && !inArgumentList(o) || inDefinitionBeforeArgumentList(o) || inLeftPartOfAssignment(o));
+        if (binding || inAtomAttribute(o)
           || isForceSkipped(o) || inSpecification(o) || inDefine(o)
           || inCallback(o) || inRecordDefinition(o)) {
           return;

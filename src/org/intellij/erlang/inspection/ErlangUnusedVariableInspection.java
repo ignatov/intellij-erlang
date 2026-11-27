@@ -38,7 +38,7 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
         functionClause.accept(new ErlangRecursiveVisitor() {
           @Override
           public void visitQVar(@NotNull ErlangQVar o) {
-            if (isForceSkipped(o) || !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o))) return;
+            if (isForceSkipped(o) || isBinaryWidthExpression(o) || !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o))) return;
 
             PsiReference reference = o.getReference();
             PsiElement resolve = reference.resolve();
