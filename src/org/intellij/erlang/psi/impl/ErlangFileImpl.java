@@ -25,9 +25,11 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiFileImpl;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.stubs.StubElement;
+import com.intellij.psi.text.BlockSupport;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.CachedValue;
 import com.intellij.psi.util.CachedValueProvider;
@@ -279,6 +281,23 @@ public class ErlangFileImpl extends PsiFileBase implements ErlangFile, PsiNameId
 
   public ErlangFileImpl(@NotNull FileViewProvider viewProvider) {
     super(viewProvider, ErlangLanguage.INSTANCE);
+  }
+
+  /**
+   * The platform copies the tree of a file recursively (completion copies the file, for example) and compares the old
+   * and the new tree recursively on a reparse, which overflows the stack on thousands of nested parentheses.
+   * A file that the parser marked as too deep is copied by its text instead. The copy parses that text before it gets
+   * its original file, so that the parser marks the copy itself as too deep and its reparse replaces the whole tree.
+   */
+  @Override
+  protected PsiFileImpl clone() {
+    if (getTreeElement() == null || !BlockSupport.isTooDeep(getOriginalFile())) return super.clone();
+    PsiFile copy = getViewProvider().clone().getPsi(getLanguage());
+    if (!(copy instanceof ErlangFileImpl erlangCopy)) return super.clone();
+    copyCopyableDataTo(erlangCopy);
+    erlangCopy.getNode().getFirstChildNode();
+    erlangCopy.myOriginalFile = getViewProvider().isEventSystemEnabled() ? this : myOriginalFile;
+    return erlangCopy;
   }
 
   /**

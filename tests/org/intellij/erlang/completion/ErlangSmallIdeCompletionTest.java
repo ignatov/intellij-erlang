@@ -18,6 +18,8 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 
+import java.util.List;
+
 public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
   public ErlangSmallIdeCompletionTest() {
     super(true);
@@ -65,5 +67,14 @@ public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
     String prefix = "-module(parens).\n-export([f/0]).\nf() -> " + "(".repeat(1690);
     myFixture.configureByText("parens.erl", prefix + "<caret>" + "(".repeat(1310) + "1" + ")".repeat(3000) + ".\n");
     myFixture.completeBasic();
+  }
+
+  public void testFunctionsInsideDeeplyNestedParentheses() {
+    String prefix = "-module(parens).\n-export([f/0]).\nfoo_bar() -> 1.\nfoo_baz() -> 2.\nf() -> " + "(".repeat(3000);
+    myFixture.configureByText("parens.erl", prefix + "foo_<caret>" + ")".repeat(3000) + ".\n");
+    myFixture.completeBasic();
+    List<String> variants = myFixture.getLookupElementStrings();
+    assertNotNull(variants);
+    assertContainsElements(variants, "foo_bar", "foo_baz");
   }
 }
