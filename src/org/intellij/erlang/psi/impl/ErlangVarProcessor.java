@@ -78,7 +78,12 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       // or to a variable bound before the pattern, never to another variable of the same pattern
       PsiElement pattern = getPattern(myOrigin);
       if (pattern != null && PsiTreeUtil.isAncestor(pattern, psiElement, false)) {
-        ErlangBinaryExpression binary = PsiTreeUtil.getParentOfType(myOrigin, ErlangBinaryExpression.class);
+        // the outermost binary of the pattern around the size, so that a binary nested in the size sees the segments before it
+        ErlangBinaryExpression binary = null;
+        for (PsiElement e = myOrigin; e != null; e = e.getParent()) {
+          if (e instanceof ErlangBinaryExpression b) binary = b;
+          if (e == pattern) break;
+        }
         if (!PsiTreeUtil.isAncestor(binary, psiElement, false) || psiElement.getTextOffset() > myOrigin.getTextOffset()) return true;
       }
     }
