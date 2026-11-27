@@ -85,7 +85,7 @@ public class ErlangFileImplTest extends ErlangLightPlatformCodeInsightFixtureTes
       "s.erl",
       "-module(s).\n" +
       "-compile([{no_auto_import, [{size, 1}, {\"length\", 1}, {hd, x}, {tl, 1, 2}]}, {inline, [f/0]}, {no_auto_import, [abs/1]}]).\n" +
-      "-compile({a, b, c}).\n-compile(debug_info).\n");
+      "-compile({a, b, c}).\n-compile(debug_info).\n-export([f/0]).\nf() -> ok.\n");
     assertFalse(file.isNoAutoImportAll());
     assertTrue(file.isNoAutoImport("size", 1));
     assertTrue(file.isNoAutoImport("abs", 1));
