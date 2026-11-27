@@ -19,6 +19,7 @@ package org.intellij.erlang.highlighting;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
@@ -48,6 +49,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
   public void testLoneDot()           { doTest(); } // issue 1646
+  public void testDuplicateAfterSplitFormMadeFunction() { doTest(); } // issue 1677
+  public void testDuplicateAfterSplitFormMadeFunctionOtherArity() { doTest(); } // issue 1677
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
@@ -384,6 +387,23 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
       -type loc(T) :: [T].
       -include("h.hrl").
       f() -> #r{a = [1]}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1684: a header whose extension is not lowercase is still an Erlang header
+  public void testNoUnusedTypeInUppercaseHeader() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.configureByFiles("UnusedTypeInUppercaseHeader.HRL", "unused_type_in_uppercase_header_user.erl");
+    assertEquals(ErlangFileType.HEADER, myFixture.getFile().getFileType());
+    setUpInspections(myFixture);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1684: the unused function inspection skips such a header too
+  public void testNoUnusedFunctionInUppercaseHeader() {
+    myFixture.configureByText("fns.HRL", "f() -> ok.\n");
+    assertEquals(ErlangFileType.HEADER, myFixture.getFile().getFileType());
+    setUpInspections(myFixture);
     myFixture.checkHighlighting(true, false, false);
   }
 

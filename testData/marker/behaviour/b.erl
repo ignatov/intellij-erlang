@@ -1,0 +1,4 @@
+-module(b).
+-callback 'my-cb'() -> ok.
+-callback init(term()) -> ok.
+-callback plain() -> ok.

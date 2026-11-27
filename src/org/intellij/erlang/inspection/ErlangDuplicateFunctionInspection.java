@@ -33,6 +33,8 @@ public class ErlangDuplicateFunctionInspection extends ErlangInspectionBase {
     for (ErlangFunction fun : file.getFunctions()) {
       // the rest of a split form (setup?PAR, hello().) is a call, not a second hello/0 of the source
       if (ErlangMacroLayer.preferSourceFunction(file, fun) != fun) continue;
+      // or a call to a function that a macro makes (?DEF(hello).)
+      if (ErlangMacroLayer.isEnabled() && ErlangMacroLayer.isHiddenByMadeFunction(fun)) continue;
       map.putValue(Pair.create(fun.getName(), fun.getArity()), fun);
     }
 
