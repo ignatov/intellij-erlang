@@ -22,15 +22,19 @@ import com.intellij.ide.projectWizard.ProjectWizardTestCase;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ex.ApplicationInfoEx;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.ModifiableModuleModel;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
+import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.TestDialogManager;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
@@ -38,10 +42,13 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.IdeaTestUtil;
+import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.console.ErlangConsoleUtil;
 import org.intellij.erlang.facet.ErlangFacet;
 import org.intellij.erlang.facet.ErlangFacetType;
+import org.intellij.erlang.icons.ErlangIcons;
 import org.intellij.erlang.jps.model.ErlangIncludeSourceRootType;
 import org.intellij.erlang.rebar.settings.RebarSettings;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
@@ -54,6 +61,7 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -300,6 +308,242 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
       }
     };
     assertEquals("modules: [demo at test], rebar path: '', compile with rebar: false", doQuickImport(processor));
+  }
+
+  public void testBuilderPresentation() {
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertEquals("Rebar", builder.getName());
+    assertSame(ErlangIcons.REBAR, builder.getIcon());
+    assertTrue(builder.isSuitableSdkType(ErlangSdkType.getInstance()));
+    assertFalse(builder.isSuitableSdkType(JavaSdk.getInstance()));
+  }
+
+  // Apps with the same parent directory are listed by name.
+  public void testBuilderSetProjectRootAgainKeepsFoundApps() throws Exception {
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    assertTrue(builder.setProjectRoot(projectRoot));
+    assertEquals(Arrays.asList("a", "b"), appNames(builder.getList()));
+
+    FileUtil.writeToFile(new File(projectRoot.getPath(), "apps/c/src/c.app.src"), "{application, c, []}.\n");
+    VfsUtil.markDirtyAndRefresh(false, true, true, projectRoot);
+    assertNotNull(projectRoot.findFileByRelativePath("apps/c/src/c.app.src"));
+    assertTrue(builder.setProjectRoot(projectRoot));
+    assertEquals(Arrays.asList("a", "b"), appNames(builder.getList()));
+  }
+
+  public void testBuilderSelection() throws Exception {
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(copyBuilderFixture("builderApps")));
+    List<ImportedOtpApp> apps = builder.getList();
+    ImportedOtpApp a = apps.get(0);
+    ImportedOtpApp b = apps.get(1);
+    assertTrue(builder.isMarked(a));
+    assertTrue(builder.isMarked(b));
+    assertFalse(builder.isMarked(null));
+
+    builder.setList(Collections.singletonList(a));
+    assertTrue(builder.isMarked(a));
+    assertFalse(builder.isMarked(b));
+
+    builder.setList(null);
+    assertTrue(builder.isMarked(a));
+    assertFalse(builder.isMarked(b));
+    assertEquals(Arrays.asList("a", "b"), appNames(builder.getList()));
+  }
+
+  // The examples directory is scanned only on request, the rel directory of the project root never,
+  // and a _build/test directory without lib holds no apps.
+  public void testBuilderScanSkipsExamplesAndRel() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderScan");
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    assertEquals(Collections.singletonList("main"), appNames(builder.getList()));
+
+    RebarProjectImportBuilder withExamples = new RebarProjectImportBuilder();
+    withExamples.setImportExamples(true);
+    assertTrue(withExamples.setProjectRoot(projectRoot));
+    assertEquals(Arrays.asList("main", "ex"), appNames(withExamples.getList()));
+  }
+
+  // _build/test/lib may hold files next to the app directories; they are not apps.
+  public void testBuilderScanIgnoresFilesInTestProfileLib() throws Exception {
+    String projectPath = getProject().getBasePath();
+    FileUtil.copyDir(new File(TEST_DATA_IMPORT, "builderScan"), new File(projectPath));
+    FileUtil.writeToFile(new File(projectPath, "test/_build/test/lib/c.app.src"), "{application, c, []}.\n");
+    FileUtil.writeToFile(new File(projectPath, "test/_build/test/lib/d/src/d.app.src"), "{application, d, []}.\n");
+    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectPath + "/test");
+    assertNotNull(projectRoot);
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    assertEquals(Arrays.asList("main", "d"), appNames(builder.getList()));
+  }
+
+  public void testBuilderValidateReusesModuleFiles() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    VirtualFile imlFile = createModuleFile(projectRoot, "apps/a/a.iml");
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    List<String> messages = answerModuleFilesFound(Messages.YES);
+
+    assertTrue(builder.validate(null, getProject()));
+    assertEquals(Collections.singletonList(moduleFilesFoundMessage(imlFile)), messages);
+    assertTrue(imlFile.isValid());
+    ImportedOtpApp a = builder.getList().get(0);
+    assertEquals(imlFile, a.getIdeaModuleFile());
+    assertNull(builder.getList().get(1).getIdeaModuleFile());
+  }
+
+  public void testBuilderValidateFindsEmlFiles() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    VirtualFile emlFile = createModuleFile(projectRoot, "apps/b/b.eml");
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    List<String> messages = answerModuleFilesFound(Messages.YES);
+
+    assertTrue(builder.validate(null, getProject()));
+    assertEquals(Collections.singletonList(moduleFilesFoundMessage(emlFile)), messages);
+    assertEquals(emlFile, builder.getList().get(1).getIdeaModuleFile());
+  }
+
+  public void testBuilderValidateDeletesModuleFiles() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    VirtualFile imlFile = createModuleFile(projectRoot, "apps/a/a.iml");
+    File imlIoFile = new File(imlFile.getPath());
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    List<String> messages = answerModuleFilesFound(Messages.NO);
+
+    assertTrue(builder.validate(null, getProject()));
+    assertEquals(1, messages.size());
+    assertFalse(imlIoFile.exists());
+    assertNull(builder.getList().get(0).getIdeaModuleFile());
+  }
+
+  public void testBuilderValidateCancelled() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    VirtualFile imlFile = createModuleFile(projectRoot, "apps/a/a.iml");
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    List<String> messages = answerModuleFilesFound(Messages.CANCEL);
+
+    assertFalse(builder.validate(null, getProject()));
+    assertEquals(1, messages.size());
+    assertTrue(new File(imlFile.getPath()).exists());
+    assertEquals(imlFile, builder.getList().get(0).getIdeaModuleFile());
+  }
+
+  // An Erlang SDK set as the project SDK stays, though a newer Erlang SDK exists.
+  public void testBuilderCommitKeepsErlangProjectSdk() throws Exception {
+    Sdk r15 = ProjectJdkTable.getInstance().getSdksOfType(ErlangSdkType.getInstance()).get(0);
+    Sdk r16 = ErlangSdkType.createMockSdk(TEST_DATA + "mockSdk-R16B/", ErlangSdkRelease.V_R16B);
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ProjectJdkTable.getInstance().addJdk(r16);
+      ProjectRootManager.getInstance(getProject()).setProjectSdk(r15);
+    });
+    assertSame(r16, ProjectJdkTable.getInstance().findMostRecentSdkOfType(ErlangSdkType.getInstance()));
+
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(copyBuilderFixture("builderApps")));
+    ModifiableModuleModel moduleModel = ModuleManager.getInstance(getProject()).getModifiableModel();
+    List<Module> modules = builder.commit(getProject(), moduleModel, ModulesProvider.EMPTY_MODULES_PROVIDER);
+
+    assertSame(r15, ProjectRootManager.getInstance(getProject()).getProjectSdk());
+    assertEquals(Arrays.asList("a", "b"), ContainerUtil.map(modules, Module::getName));
+    for (Module module : modules) {
+      assertSame(module, ModuleManager.getInstance(getProject()).findModuleByName(module.getName()));
+    }
+  }
+
+  public void testBuilderSetProjectRootWithoutApps() throws Exception {
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertFalse(builder.setProjectRoot(copyBuilderFixture("builderNoApps")));
+    assertEmpty(builder.getList());
+  }
+
+  // A project SDK that is not an Erlang SDK is replaced with the most recent Erlang SDK.
+  public void testBuilderCommitReplacesNonErlangProjectSdk() throws Exception {
+    Sdk erlangSdk = ProjectJdkTable.getInstance().getSdksOfType(ErlangSdkType.getInstance()).get(0);
+    Sdk javaSdk = IdeaTestUtil.getMockJdk17();
+    ApplicationManager.getApplication().runWriteAction(() -> {
+      ProjectJdkTable.getInstance().addJdk(javaSdk, getTestRootDisposable());
+      ProjectRootManager.getInstance(getProject()).setProjectSdk(javaSdk);
+    });
+    assertSame(javaSdk, ProjectRootManager.getInstance(getProject()).getProjectSdk());
+
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(copyBuilderFixture("builderApps")));
+    builder.commit(getProject(), null, ModulesProvider.EMPTY_MODULES_PROVIDER);
+
+    assertSame(erlangSdk, ProjectRootManager.getInstance(getProject()).getProjectSdk());
+  }
+
+  // The module file cannot be deleted: its directory is read-only (Linux, macOS) or the file is open (Windows).
+  public void testBuilderValidateReportsModuleFileNotDeleted() throws Exception {
+    VirtualFile projectRoot = copyBuilderFixture("builderApps");
+    VirtualFile imlFile = createModuleFile(projectRoot, "apps/a/a.iml");
+    File appDir = new File(projectRoot.getPath(), "apps/a");
+    RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
+    assertTrue(builder.setProjectRoot(projectRoot));
+    answerModuleFilesFound(Messages.NO);
+
+    AssertionError loggedError = null;
+    //noinspection ResultOfMethodCallIgnored
+    appDir.setWritable(false);
+    try (FileInputStream ignored = new FileInputStream(imlFile.getPath())) {
+      builder.validate(null, getProject());
+    }
+    catch (AssertionError e) {
+      loggedError = e;
+    }
+    finally {
+      //noinspection ResultOfMethodCallIgnored
+      appDir.setWritable(true);
+    }
+    assertNotNull("The failed deletion is not reported.", loggedError);
+    assertInstanceOf(loggedError.getCause(), IOException.class);
+    assertTrue(new File(imlFile.getPath()).exists());
+    assertEquals(imlFile, builder.getList().get(0).getIdeaModuleFile());
+  }
+
+  @NotNull
+  private VirtualFile copyBuilderFixture(@NotNull String fixture) throws IOException {
+    String projectPath = getProject().getBasePath();
+    FileUtil.copyDir(new File(TEST_DATA_IMPORT, fixture), new File(projectPath));
+    VirtualFile projectRoot = LocalFileSystem.getInstance().refreshAndFindFileByPath(projectPath + "/test");
+    assertNotNull(projectRoot);
+    return projectRoot;
+  }
+
+  @NotNull
+  private static VirtualFile createModuleFile(@NotNull VirtualFile projectRoot, @NotNull String relativePath) throws IOException {
+    File moduleFile = new File(projectRoot.getPath(), relativePath);
+    FileUtil.writeToFile(moduleFile, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<module type=\"ERLANG_MODULE\" version=\"4\" />\n");
+    VirtualFile file = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(moduleFile);
+    assertNotNull(file);
+    return file;
+  }
+
+  @NotNull
+  private List<String> answerModuleFilesFound(int answer) {
+    List<String> messages = new ArrayList<>();
+    TestDialogManager.setTestDialog(message -> {
+      messages.add(message);
+      return answer;
+    }, getTestRootDisposable());
+    return messages;
+  }
+
+  @NotNull
+  private static String moduleFilesFoundMessage(@NotNull VirtualFile moduleFile) {
+    return ApplicationInfoEx.getInstanceEx().getFullApplicationName() + " module files found:\n\n" +
+           "    " + moduleFile.getPath() + "\n" +
+           "\nWould you like to reuse them?";
+  }
+
+  @NotNull
+  private static List<String> appNames(@NotNull List<ImportedOtpApp> apps) {
+    return ContainerUtil.map(apps, ImportedOtpApp::getName);
   }
 
   @NotNull
