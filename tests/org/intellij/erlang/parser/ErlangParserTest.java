@@ -248,6 +248,52 @@ public class ErlangParserTest extends ErlangParserTestBase {
     assertSize(1, PsiTreeUtil.findChildrenOfType(file, ErlangRecordDefinition.class));
   }
 
+  // #1667: erlc accepts only `Var :: Type` and `Name(Type, ...)` as a spec constraint after `when`.
+  public void testSpecConstraintNotVarTypeOrSubtypeIsError() {
+    String[] constraints = {"(other_mod)", "x", "V", "1", "foo()", "(V :: atom())", "V :: atom(), (x)"};
+    List<String> accepted = new ArrayList<>();
+    for (String constraint : constraints) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(term()) -> V when " + constraint + ".\nf(X) -> X.\n");
+      if (!PsiTreeUtil.hasErrorElements(file)) accepted.add(constraint);
+    }
+    assertEmpty("Parsed without a syntax error", accepted);
+  }
+
+  // #1667: the constraint forms that erlc accepts.
+  public void testSpecConstraintVarTypeAndSubtype() {
+    String[] constraints = {"V :: atom()", "is_subtype(V, atom())", "V :: atom(), is_subtype(V, term())"};
+    List<String> rejected = new ArrayList<>();
+    for (String constraint : constraints) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(term()) -> V when " + constraint + ".\nf(X) -> X.\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(constraint);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
+  // #1667: a macro can expand to a whole constraint, erlc compiles -define(C, V :: atom()) with each of these.
+  public void testSpecConstraintMacro() {
+    String[] specs = {
+      "-spec f(term()) -> V when ?C.",
+      "-spec f(term()) -> V when ?C, is_subtype(V, term()).",
+      "-spec f(term()) -> V when ?C; (atom()) -> atom().",
+      "-spec(f(term()) -> V when ?C).",
+      "-callback f(term()) -> V when ?C."
+    };
+    List<String> rejected = new ArrayList<>();
+    for (String spec : specs) {
+      PsiFile file = parseText("-module(t).\n-export([f/1]).\n-define(C, V :: atom()).\n" + spec + "\nf(X) -> X.\n");
+      if (PsiTreeUtil.hasErrorElements(file)) rejected.add(spec);
+    }
+    assertEmpty("Parsed with a syntax error", rejected);
+  }
+
+  // #1667: an unfinished `when X` above a function must not take the function into the constraint.
+  public void testUnfinishedSpecConstraintKeepsNextFunction() {
+    PsiFile file = parseText("-module(t).\n-export([f/1]).\n-spec f(X) -> X when X\nf(X) -> X.\n");
+    assertTrue(PsiTreeUtil.hasErrorElements(file));
+    assertSize(1, PsiTreeUtil.findChildrenOfType(file, ErlangFunction.class));
+  }
+
   public void testEmptyParenthesesAsFunctionBody() {
     assertHasSyntaxError("-module(t).\n-export([f/0]).\nf() ->\n    ().\n");
   }

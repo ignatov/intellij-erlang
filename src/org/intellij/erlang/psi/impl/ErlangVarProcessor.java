@@ -103,15 +103,19 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
       boolean inArgumentListBeforeAssignment =
-        PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class) instanceof ErlangArgumentList;
+        PsiTreeUtil.getParentOfType(psiElement, ErlangArgumentList.class, ErlangAssignmentExpression.class,
+                                    ErlangMaybeMatchExpression.class) instanceof ErlangArgumentList;
       if (inArgumentList && inArgumentListBeforeAssignment && !inDefinitionBeforeArgumentList(psiElement)) return true;
       if (inDifferentCrClauses(psiElement)) return true;
       if (hasNarrowerParentScope(psiElement)) return true;
       if (boundInOwnOrLaterQualifier(psiElement)) return true;
       if (outsideOwnGeneratorPattern(psiElement)) return true;
+      if (boundAfterOrigin(psiElement)) return true;
       // put all possible variables to list
       ErlangQVar var = (ErlangQVar) psiElement;
-      List<ErlangQVar> found = myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
+      // the right side of the origin's own match lies after the origin, but a variable there can match a binding before the match
+      List<ErlangQVar> found = inRightSideOfOriginMatch(var) ? getEarlierBindings(var, myEarlierBindings != null ? myEarlierBindings : getEarlierBindingsOfFile(var))
+                               : myEarlierBindings == null || var.getTextOffset() >= myOrigin.getTextOffset()
                                ? List.of(var) : getEarlierBindings(var, myEarlierBindings);
       for (ErlangQVar v : found) {
         if (!myVarList.contains(v)) myVarList.add(v);
@@ -216,9 +220,13 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       }
     }
     if (narrowestParentScopeOwner instanceof ErlangCrClause) {
-      ErlangCaseExpression caseExpr = PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
-      if (Comparing.equal(
-        PsiTreeUtil.getParentOfType(caseExpr, ErlangClauseBody.class),
+      // the variables bound in the clauses of a case or a receive are visible after it
+      PsiElement clauseOwner = narrowestParentScopeOwner.getParent() instanceof ErlangReceiveExpression receive
+                               ? receive : PsiTreeUtil.getParentOfType(psiElement, ErlangCaseExpression.class);
+      // inside the receive, the other clauses, the guards and the after part do not see the patterns of its clauses
+      boolean originInReceive = clauseOwner instanceof ErlangReceiveExpression && PsiTreeUtil.isAncestor(clauseOwner, myOrigin, false);
+      if (!originInReceive && Comparing.equal(
+        PsiTreeUtil.getParentOfType(clauseOwner, ErlangClauseBody.class),
         PsiTreeUtil.getParentOfType(myOrigin, ErlangClauseBody.class))) return false;
     }
     return narrowestParentScopeOwner != null && !PsiTreeUtil.isAncestor(narrowestParentScopeOwner, myOrigin, false);
@@ -236,6 +244,35 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
       }
     }
     return false;
+  }
+
+  // the left side of a match is bound after its right side is evaluated, and a clause body after the head and the guard of its clause
+  private boolean boundAfterOrigin(PsiElement psiElement) {
+    for (PsiElement parent = psiElement.getParent(); parent != null && !(parent instanceof PsiFile); parent = parent.getParent()) {
+      if (parent instanceof ErlangFakeBinaryExpression match && isEvaluatedMatch(match)) {
+        if (PsiTreeUtil.isAncestor(match.getLeft(), psiElement, false) && PsiTreeUtil.isAncestor(match.getRight(), myOrigin, false)) return true;
+      }
+      else if (parent instanceof ErlangClauseBody body) {
+        if (!PsiTreeUtil.isAncestor(body, myOrigin, false) && PsiTreeUtil.isAncestor(body.getParent(), myOrigin, false)) return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean inRightSideOfOriginMatch(PsiElement psiElement) {
+    for (PsiElement parent = psiElement.getParent(); parent != null && !(parent instanceof PsiFile); parent = parent.getParent()) {
+      if (parent instanceof ErlangFakeBinaryExpression match && isEvaluatedMatch(match)
+          && PsiTreeUtil.isAncestor(match.getRight(), psiElement, false) && PsiTreeUtil.isAncestor(match.getLeft(), myOrigin, false)) return true;
+    }
+    return false;
+  }
+
+  // a match whose right side is evaluated before its left side is bound; in a pattern, like the head of a clause or the left side
+  // of a match, `=` is an alias and both of its sides are bound together
+  static boolean isEvaluatedMatch(@NotNull ErlangFakeBinaryExpression match) {
+    return (match instanceof ErlangAssignmentExpression || match instanceof ErlangMaybeMatchExpression)
+           && PsiTreeUtil.getParentOfType(match, ErlangArgumentDefinition.class, true, ErlangClauseBody.class) == null
+           && !inLeftPartOfAssignment(match);
   }
 
   // a variable bound in the pattern of a generator is a new one, which shadows any variable of the same name outside the pattern;

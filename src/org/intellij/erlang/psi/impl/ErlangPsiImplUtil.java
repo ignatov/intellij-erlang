@@ -1288,7 +1288,7 @@ public class ErlangPsiImplUtil {
     return processDeclarationRecursive(o, processor, state, false);
   }
 
-  private static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
+  static boolean processDeclarationRecursive(ErlangCompositeElement o, @NotNull PsiScopeProcessor processor, @NotNull ResolveState state, boolean skipFunExpressions) {
     Queue<ErlangCompositeElement> queue = new LinkedList<>();
     queue.add(o);
     while (!queue.isEmpty()) {
@@ -2300,10 +2300,20 @@ public class ErlangPsiImplUtil {
       if (cr1 != null && cr2 != null) {
         ErlangCaseExpression ce1 = PsiTreeUtil.getParentOfType(element, ErlangCaseExpression.class);
         ErlangCaseExpression ce2 = PsiTreeUtil.getParentOfType(origin, ErlangCaseExpression.class);
-        if (Comparing.equal(ce1, ce2)) return true;
+        if (Comparing.equal(ce1, ce2) && Comparing.equal(bindingScope(element), bindingScope(origin))) return true;
       }
     }
     return false;
+  }
+
+  // a fun clause or a comprehension below the case starts a new scope; a variable that resolves
+  // is in the scope of the variable it resolves to
+  @Nullable
+  private static PsiElement bindingScope(@NotNull PsiElement variable) {
+    PsiReference reference = variable.getReference();
+    PsiElement binding = reference != null ? reference.resolve() : null;
+    PsiElement target = binding instanceof ErlangQVar ? binding : variable;
+    return PsiTreeUtil.getParentOfType(target, ErlangCaseExpression.class, ErlangFunClause.class, ErlangListComprehension.class);
   }
 
   public static class ErlangFunctionCallArgumentBase<T extends PsiElement> extends PatternCondition<T> {

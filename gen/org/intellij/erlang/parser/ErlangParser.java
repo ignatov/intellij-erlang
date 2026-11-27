@@ -6318,13 +6318,14 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // q_atom '(' top_type_list ')' | top_type
+  // q_atom '(' top_type_list ')' | &macros top_type | var_type_guard
   public static boolean type_guard(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "type_guard")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_TYPE_GUARD, "<type guard>");
     r = type_guard_0(b, l + 1);
-    if (!r) r = top_type(b, l + 1);
+    if (!r) r = type_guard_1(b, l + 1);
+    if (!r) r = var_type_guard(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
@@ -6339,6 +6340,27 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = r && top_type_list(b, l + 1);
     r = r && consumeToken(b, ERL_PAR_RIGHT);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &macros top_type
+  private static boolean type_guard_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = type_guard_1_0(b, l + 1);
+    r = r && top_type(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // &macros
+  private static boolean type_guard_1_0(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "type_guard_1_0")) return false;
+    boolean r;
+    Marker m = enter_section_(b, l, _AND_);
+    r = macros(b, l + 1);
+    exit_section_(b, l, m, r, false, null);
     return r;
   }
 
@@ -6710,6 +6732,34 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     r = q_atom(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;
+  }
+
+  /* ********************************************************** */
+  // q_var var_type_guard_tail
+  public static boolean var_type_guard(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_type_guard")) return false;
+    if (!nextTokenIs(b, ERL_VAR)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_, ERL_TOP_TYPE, null);
+    r = q_var(b, l + 1);
+    p = r; // pin = 1
+    r = r && var_type_guard_tail(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
+  }
+
+  /* ********************************************************** */
+  // '::' type_list
+  static boolean var_type_guard_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "var_type_guard_tail")) return false;
+    if (!nextTokenIs(b, ERL_COLON_COLON)) return false;
+    boolean r, p;
+    Marker m = enter_section_(b, l, _NONE_);
+    r = consumeToken(b, ERL_COLON_COLON);
+    p = r; // pin = 1
+    r = r && type_list(b, l + 1);
+    exit_section_(b, l, m, r, p, null);
+    return r || p;
   }
 
   /* ********************************************************** */

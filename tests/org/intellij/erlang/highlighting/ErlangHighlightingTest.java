@@ -55,6 +55,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
   public void testMismatchedHead()    { doTest(); }
+  public void testFunClausesArityMismatch() { doTest(); } // issue 1666
   public void test154()               { doTest(); }
   public void test154_2()             { doTest(); }
   public void test155()               { doTest(); }
@@ -125,6 +126,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testAnonymousFunLaterClauseVariables() { doTest(); }
   public void testFunHeadRepeatedVariable() { doTest(); } // issue 1640
   public void testFunArgumentShadowsEarlierGeneratorVariable() { doTest(); } // issue 1652
+  public void testClausePatternInCallArgument() { doTest(); } // issue 1664
   public void testDuplicateExport1()  { doTest(); }
   public void testDuplicateExport2()  { doTest(); }
   public void testArityDigitSeparators() { doTest(); }
@@ -161,11 +163,19 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIncorrectModuleName() { doTest(); }
   public void testModuleAttributeInHeader() { doTest("ModuleAttributeInHeader.hrl"); }
   public void testCaseHeadVariable()  { doTest(); } // issue 982
+  public void testUnboundInRecursiveFun() { doTest(); } // issue 1650
+  public void testUnboundInOwnMatchRight() { doTest(); } // issue 1650
+  public void testUnboundInGuardBoundInBody() { doTest(); } // issue 1650
+  public void testUnboundInOwnBindingNeighbours() { doTest(); } // issue 1650
+  public void testUnboundInOwnBindingClausePattern() { doTest(); } // issue 1650
+  public void testUnboundInOwnBindingCasePatternTwice() { doTest(); } // issue 1650
+  public void testUnboundInOwnBindingReceive() { doTest(); } // issue 1650
   public void testCaseClauseRematchTwice() { doTest(); } // issue 1651
   public void testCaseClauseUseBeforeMatch() { doTest(); } // issue 1651
   public void testCaseClauseNestedCasePattern() { doTest(); } // issue 1651
   public void testCatchClassVarAssignment() { doTest(); } // issue 1648
   public void testOptionalCallbacksTuple() { doTest(); } // issue 1120
+  public void testFunArgShadowsOtherCaseClauseVariable() { doTest(); } // issue 1654
 
   public void testAttributeAnnotations() {
     String testDataFile = getTestName(false) + ".erl";
