@@ -44,19 +44,23 @@ public class ErlangUnboundVariableInspection extends ErlangInspectionBase {
       @Override
       public void visitQVar(@NotNull ErlangQVar o) {
         if (!o.isValid()) return;
-        if (inArgumentDefinition(o) && !inArgumentList(o)
-          || inDefinitionBeforeArgumentList(o)
-          || inLeftPartOfAssignment(o) || inAtomAttribute(o)
-          || isForceSkipped(o) || inSpecification(o) || inDefine(o)
-          || inCallback(o) || inRecordDefinition(o)) {
-          return;
-        }
-        PsiReference reference = o.getReference();
-        if (reference.resolve() == null) {
+        if (isUnbound(o)) {
           registerProblem(holder, o, "Variable " + "'" + o.getText() + "' is unbound", new ErlangIntroduceVariableQuickFix());
         }
       }
     };
+  }
+
+  static boolean isUnbound(@NotNull ErlangQVar o) {
+    if (inArgumentDefinition(o) && !inArgumentList(o)
+      || inDefinitionBeforeArgumentList(o)
+      || inLeftPartOfAssignment(o) || inAtomAttribute(o)
+      || isForceSkipped(o) || inSpecification(o) || inDefine(o)
+      || inCallback(o) || inRecordDefinition(o)) {
+      return false;
+    }
+    PsiReference reference = o.getReference();
+    return reference.resolve() == null;
   }
 
   private static class ErlangIntroduceVariableQuickFix extends ErlangQuickFixBase {
