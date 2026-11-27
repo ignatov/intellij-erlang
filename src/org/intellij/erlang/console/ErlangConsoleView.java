@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,7 +73,7 @@ public final class ErlangConsoleView extends LanguageConsoleImpl {
     super.attachToProcess(processHandler);
     OutputStream processInput = processHandler.getProcessInput();
     assert processInput != null;
-    myProcessInputWriter = new OutputStreamWriter(processInput);
+    myProcessInputWriter = new OutputStreamWriter(processInput, StandardCharsets.UTF_8);
     ConsoleRootType myConsoleRootType = new ConsoleRootType("Erlang", "Erlang") {};
     myHistoryController = new ConsoleHistoryController(myConsoleRootType, null, this);
     myHistoryController.install();
