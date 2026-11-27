@@ -257,6 +257,13 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testUniformBinaryExpressionsOperatorSpacing() throws Exception {
+    getErlangSettings().UNIFORM_BINARY_EXPRESSIONS = true;
+    doTest();
+  }
+
+  public void testUniformBinaryExpressionsOffOperatorSpacing() throws Exception { doTest(); }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
 
