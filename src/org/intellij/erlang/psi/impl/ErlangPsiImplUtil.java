@@ -636,8 +636,12 @@ public class ErlangPsiImplUtil {
    * Check whether expression is used in a binary expression after the colon, like <<_:Var>>
    */
   public static boolean isBinaryWidthExpression(PsiElement psiElement) {
-    // the size of a segment is everything after its ':', as in <<X:N>>, <<X : N>> or <<X:(N * 8)>>
-    ErlangBinElement element = PsiTreeUtil.getParentOfType(psiElement, ErlangBinElement.class);
+    // the size of a segment is everything after its ':', as in <<X:N>>, <<X : N>> or <<X:(N * 8)>>,
+    // except variables under a construct inside the size that can bind them, like a comprehension or a fun
+    ErlangBinElement element = PsiTreeUtil.getParentOfType(psiElement, ErlangBinElement.class, true,
+      ErlangListComprehension.class, ErlangFunExpression.class, ErlangCrClause.class, ErlangTryClause.class,
+      ErlangClauseBody.class, ErlangBeginEndExpression.class, ErlangTryExpression.class, ErlangMaybeExpression.class,
+      ErlangAssignmentExpression.class, ErlangMaybeMatchExpression.class);
     PsiElement colon = element != null ? element.getColon() : null;
     return colon != null && psiElement.getTextOffset() > colon.getTextOffset();
   }

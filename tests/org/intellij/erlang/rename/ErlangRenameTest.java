@@ -93,6 +93,7 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testMapKeyInNestedFunHeads()        { doTest("Key2"); }
   public void testMapKeyInNestedFunHeadsFromOuter() { doTest("Key2"); }
   public void testBinarySizeInFunHead()           { doTest("New"); } // issue 1665
+  public void testBinarySizeComprehension()       { doTest("New"); } // issue 1665
 
   public void testNamedFunName()                  { doTest("Fact"); }
   public void testNamedFunShadowingArgument()     { doTest("Arg"); }
