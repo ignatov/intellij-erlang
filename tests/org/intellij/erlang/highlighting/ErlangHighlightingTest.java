@@ -390,6 +390,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest();
   }
 
+  // issue 1729: a macro that expands to #r starts a record type, as it starts a record expression
+  public void testMacroRecordHashInType() {
+    ErlangMacroLayer.setModeForTests(ErlangMacroLayer.Mode.LAYER, getTestRootDisposable());
+    doTest();
+  }
+
   // issue 1435
   public void testTypeReferenceResolvesByArity() {
     myFixture.configureByFile("TypesWithSameNameAndDifferentArity.erl");

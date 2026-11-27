@@ -1,0 +1,5 @@
+-module('MacroRecordHashInType').
+-export_type([v/0]).
+-record(r, {a}).
+-define(H, #r).
+-type v() :: ?H{a :: integer()}.
