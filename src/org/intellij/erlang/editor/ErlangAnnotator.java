@@ -28,6 +28,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -96,6 +97,18 @@ public class ErlangAnnotator implements Annotator, DumbAware {
             !ErlangPsiImplUtil.inParameterizedMacroCallArguments(o)) {
           annotationHolder.newAnnotation(HighlightSeverity.ERROR, "A fun with a variable function name needs a module: fun M:F/Arity")
             .range(vars.get(0))
+            .create();
+        }
+      }
+
+      @Override
+      public void visitMapEntry(@NotNull ErlangMapEntry o) {
+        PsiElement match = o.getMatch();
+        if (match != null && isMapConstruction(o.getParent()) && !isInPattern(o.getParent().getParent()) &&
+            PsiTreeUtil.getParentOfType(o, ErlangMacrosDefinition.class) == null &&
+            !ErlangPsiImplUtil.inParameterizedMacroCallArguments(o)) {
+          annotationHolder.newAnnotation(HighlightSeverity.ERROR, "only association operators '=>' are allowed in map construction")
+            .range(match)
             .create();
         }
       }
@@ -195,6 +208,25 @@ public class ErlangAnnotator implements Annotator, DumbAware {
         }
       }
     });
+  }
+
+  // #{...} without an expression before it builds a map; Expr#{...} updates one, where := is allowed
+  // A map with a syntax error, such as #{K := V || ...}, already has an error
+  private static boolean isMapConstruction(@Nullable PsiElement tuple) {
+    return tuple instanceof ErlangMapTuple && tuple.getParent() instanceof ErlangMapExpression &&
+           tuple.getParent().getFirstChild() == tuple && !PsiTreeUtil.hasErrorElements(tuple);
+  }
+
+  // A function or clause head, a generator, or the left side of = or ?=, up to the enclosing clause body or guard
+  private static boolean isInPattern(@Nullable PsiElement element) {
+    for (PsiElement child = element, parent = element != null ? element.getParent() : null;
+         parent != null && !(parent instanceof ErlangClauseBody) && !(parent instanceof ErlangClauseGuard) && !(parent instanceof PsiFile);
+         child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangArgumentDefinition) return true;
+      if (parent instanceof ErlangAssignmentExpression assignment && assignment.getLeft() == child) return true;
+      if (parent instanceof ErlangMaybeMatchExpression maybeMatch && maybeMatch.getLeft() == child) return true;
+    }
+    return false;
   }
 
   private static void checkBasedInteger(@NotNull PsiElement integer, @NotNull AnnotationHolder holder) {
