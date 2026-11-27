@@ -23,6 +23,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
+import org.intellij.erlang.inspection.ErlangUnresolvedFunctionInspection;
 import org.intellij.erlang.psi.ErlangFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangGlobalFunctionCallExpression;
 import org.intellij.erlang.psi.ErlangModuleRef;
@@ -64,6 +65,34 @@ public class ErlangModuleResolutionTest extends ErlangLightPlatformCodeInsightFi
     assertEquals("/src/eunit.erl", resolvedPath(getElementAtCaret(ErlangFunctionCallExpression.class).getReference()));
     ErlangGlobalFunctionCallExpression call = getElementAtCaret(ErlangGlobalFunctionCallExpression.class);
     assertEquals("/src/eunit.erl", resolvedPath(call.getModuleRef().getReference()));
+  }
+
+  // #1688: the project copy that the module name goes to has no start/0, so the call must not resolve to the SDK copy
+  public void testUserModuleLacksFunction() {
+    myFixture.configureByFiles("test.erl", "eunit.erl");
+    ErlangGlobalFunctionCallExpression call = getElementAtCaret(ErlangGlobalFunctionCallExpression.class);
+    assertEquals("/src/eunit.erl", resolvedPath(call.getModuleRef().getReference()));
+    PsiReference reference = getElementAtCaret(ErlangFunctionCallExpression.class).getReference();
+    PsiElement target = reference != null ? reference.resolve() : null;
+    assertNull("start/0 resolved to " + (target != null ? target.getContainingFile().getVirtualFile().getPath() : null), target);
+  }
+
+  public void testUserModuleLacksFunctionIsUnresolved() {
+    myFixture.enableInspections(ErlangUnresolvedFunctionInspection.class);
+    myFixture.addFileToProject("eunit.erl", "-module(eunit).\n-export([test/1]).\ntest(_) -> ok.\n");
+    myFixture.configureByText("test.erl", """
+      -module(test).
+      -export([foo/0]).
+      foo() -> eunit:test(x), eunit:<warning descr="Unresolved function start/0">start</warning>().
+      """);
+    myFixture.checkHighlighting();
+  }
+
+  public void testUserModuleFunctionFromInclude() {
+    myFixture.addFileToProject("eunit_start.hrl", "start() -> ok.\n");
+    myFixture.addFileToProject("eunit.erl", "-module(eunit).\n-export([start/0]).\n-include(\"eunit_start.hrl\").\n");
+    myFixture.configureByText("test.erl", "-module(test).\nfoo() -> eunit:st<caret>art().\n");
+    assertEquals("/src/eunit_start.hrl", resolvedPath(getElementAtCaret(ErlangFunctionCallExpression.class).getReference()));
   }
 
   public void testModuleVariableInSpec() { doParameterTest("variableInArguments.erl", "variableInArguments.erl"); }

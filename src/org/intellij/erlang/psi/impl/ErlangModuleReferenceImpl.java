@@ -39,7 +39,7 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   @Override
   public PsiElement resolveInner() {
     // the index order, the one the function of a remote call resolves by, so that dup and f of dup:f() pick one copy
-    List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, getSearchScope());
+    List<ErlangModule> modules = ErlangModuleIndex.getModulesByName(myElement.getProject(), myReferenceName, getSearchScope(myElement));
     return ContainerUtil.getFirstItem(modules);
   }
 
@@ -50,9 +50,9 @@ public class ErlangModuleReferenceImpl extends ErlangQAtomBasedReferenceImpl {
   }
 
   @NotNull
-  private GlobalSearchScope getSearchScope() {
-    Project project = myElement.getProject();
-    Module module = ModuleUtilCore.findModuleForPsiElement(myElement);
+  static GlobalSearchScope getSearchScope(@NotNull PsiElement element) {
+    Project project = element.getProject();
+    Module module = ModuleUtilCore.findModuleForPsiElement(element);
     return module != null ? module.getModuleWithDependenciesAndLibrariesScope(true) :
            new ProjectAndLibrariesScope(project);
   }
