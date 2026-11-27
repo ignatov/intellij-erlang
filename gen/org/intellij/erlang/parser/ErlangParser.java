@@ -4246,16 +4246,17 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // '#' '{' <<comprehension_element map_assoc>> '||' lc_exprs '}'
+  // '#' '{' <<isBinaryComprehension>> <<comprehension_element map_assoc>> '||' lc_exprs '}'
   public static boolean map_comprehension(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "map_comprehension")) return false;
     if (!nextTokenIs(b, "<expression>", ERL_RADIX)) return false;
     boolean r, p;
     Marker m = enter_section_(b, l, _NONE_, ERL_LIST_COMPREHENSION, "<expression>");
     r = consumeTokens(b, 0, ERL_RADIX, ERL_CURLY_LEFT);
+    r = r && isBinaryComprehension(b, l + 1);
     r = r && comprehension_element(b, l + 1, ErlangParser::map_assoc);
     r = r && consumeToken(b, ERL_OR_OR);
-    p = r; // pin = 4
+    p = r; // pin = 5
     r = r && report_error_(b, lc_exprs(b, l + 1));
     r = p && consumeToken(b, ERL_CURLY_RIGHT) && r;
     exit_section_(b, l, m, r, p, null);
@@ -4606,37 +4607,47 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // expression '?=' expression
+  // expression maybe_match_expression?
+  static boolean maybe_match_expr(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "maybe_match_expr")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = expression(b, l + 1, -1);
+    r = r && maybe_match_expr_1(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // maybe_match_expression?
+  private static boolean maybe_match_expr_1(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "maybe_match_expr_1")) return false;
+    maybe_match_expression(b, l + 1);
+    return true;
+  }
+
+  /* ********************************************************** */
+  // '?=' expression
   public static boolean maybe_match_expression(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "maybe_match_expression")) return false;
+    if (!nextTokenIs(b, "<expression>", ERL_OP_MAYBE_EQ)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ERL_MAYBE_MATCH_EXPRESSION, "<expression>");
-    r = expression(b, l + 1, -1);
-    r = r && consumeToken(b, ERL_OP_MAYBE_EQ);
+    Marker m = enter_section_(b, l, _LEFT_, ERL_MAYBE_MATCH_EXPRESSION, "<expression>");
+    r = consumeToken(b, ERL_OP_MAYBE_EQ);
     r = r && expression(b, l + 1, -1);
     exit_section_(b, l, m, r, false, null);
     return r;
   }
 
   /* ********************************************************** */
-  // (maybe_match_expression | expression) [',' maybe_match_exprs] (exprs_tail)*
+  // maybe_match_expr [',' maybe_match_exprs] (exprs_tail)*
   public static boolean maybe_match_exprs(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "maybe_match_exprs")) return false;
     boolean r;
     Marker m = enter_section_(b, l, _NONE_, ERL_MAYBE_MATCH_EXPRS, "<maybe match exprs>");
-    r = maybe_match_exprs_0(b, l + 1);
+    r = maybe_match_expr(b, l + 1);
     r = r && maybe_match_exprs_1(b, l + 1);
     r = r && maybe_match_exprs_2(b, l + 1);
     exit_section_(b, l, m, r, false, ErlangParser::exprs_recover);
-    return r;
-  }
-
-  // maybe_match_expression | expression
-  private static boolean maybe_match_exprs_0(PsiBuilder b, int l) {
-    if (!recursion_guard_(b, l, "maybe_match_exprs_0")) return false;
-    boolean r;
-    r = maybe_match_expression(b, l + 1);
-    if (!r) r = expression(b, l + 1, -1);
     return r;
   }
 

@@ -17,6 +17,8 @@
 package org.intellij.erlang.highlighting;
 
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
@@ -47,6 +49,17 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
 
   public void testMaybeInCallArgumentNested() {
     doTest();
+  }
+
+  public void testDeeplyNestedMaybeParsesWithoutBacktracking() {
+    int depth = 20;
+    String text = "f() -> " + "maybe ".repeat(depth) + "ok" + " end".repeat(depth) + ".\n";
+    long start = System.nanoTime();
+    PsiFile file = myFixture.configureByText("nested.erl", text);
+    boolean hasErrors = PsiTreeUtil.hasErrorElements(file);
+    long millis = (System.nanoTime() - start) / 1_000_000;
+    assertFalse("PsiFile contains error elements", hasErrors);
+    assertTrue("Parsing took " + millis + " ms", millis < 5000);
   }
 
   public void testControlEscapeAnyCharOtp25() {
