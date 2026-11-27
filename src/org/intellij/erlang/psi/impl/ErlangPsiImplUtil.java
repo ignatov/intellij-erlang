@@ -1252,7 +1252,8 @@ public class ErlangPsiImplUtil {
     for (int i = (index >= 0 ? index : qualifiers.size()) - 1; i >= 0; i--) {
       if (!processDeclarationRecursive(qualifiers.get(i), processor, state)) return false;
     }
-    return index >= 0 || processDeclarationRecursive(o, processor, state);
+    // the earlier part of the template is already walked and its later part comes later than the place, so go on to the outer scopes
+    return true;
   }
 
   @SuppressWarnings("UnusedParameters")
