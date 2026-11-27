@@ -38,6 +38,7 @@ import com.intellij.openapi.ui.TestDialogManager;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.LocalFileOperationsHandler;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -61,7 +62,6 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 import org.jetbrains.jps.model.module.JpsModuleSourceRootType;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -478,27 +478,50 @@ public class RebarProjectImportBuilderTest extends ProjectWizardTestCase {
     assertSame(erlangSdk, ProjectRootManager.getInstance(getProject()).getProjectSdk());
   }
 
-  // The module file cannot be deleted: its directory is read-only (Linux, macOS) or the file is open (Windows).
+  // The file system refuses to delete the module file, the same way on every OS.
   public void testBuilderValidateReportsModuleFileNotDeleted() throws Exception {
     VirtualFile projectRoot = copyBuilderFixture("builderApps");
     VirtualFile imlFile = createModuleFile(projectRoot, "apps/a/a.iml");
-    File appDir = new File(projectRoot.getPath(), "apps/a");
     RebarProjectImportBuilder builder = new RebarProjectImportBuilder();
     assertTrue(builder.setProjectRoot(projectRoot));
     answerModuleFilesFound(Messages.NO);
 
+    LocalFileOperationsHandler refuseDelete = new LocalFileOperationsHandler() {
+      @Override
+      public boolean delete(@NotNull VirtualFile file) throws IOException {
+        throw new IOException("Cannot delete " + file.getPath());
+      }
+
+      @Override
+      public boolean move(@NotNull VirtualFile file, @NotNull VirtualFile toDir) {
+        return false;
+      }
+
+      @Override
+      public boolean rename(@NotNull VirtualFile file, @NotNull String newName) {
+        return false;
+      }
+
+      @Override
+      public boolean createFile(@NotNull VirtualFile dir, @NotNull String name) {
+        return false;
+      }
+
+      @Override
+      public boolean createDirectory(@NotNull VirtualFile dir, @NotNull String name) {
+        return false;
+      }
+    };
     AssertionError loggedError = null;
-    //noinspection ResultOfMethodCallIgnored
-    appDir.setWritable(false);
-    try (FileInputStream ignored = new FileInputStream(imlFile.getPath())) {
+    LocalFileSystem.getInstance().registerAuxiliaryFileOperationsHandler(refuseDelete);
+    try {
       builder.validate(null, getProject());
     }
     catch (AssertionError e) {
       loggedError = e;
     }
     finally {
-      //noinspection ResultOfMethodCallIgnored
-      appDir.setWritable(true);
+      LocalFileSystem.getInstance().unregisterAuxiliaryFileOperationsHandler(refuseDelete);
     }
     assertNotNull("The failed deletion is not reported.", loggedError);
     assertInstanceOf(loggedError.getCause(), IOException.class);
