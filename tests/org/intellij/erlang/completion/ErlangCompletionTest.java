@@ -122,6 +122,7 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
   }
 
   public void testVariablesFromCaseHead() { doTestInclude("foo() -> case V = 1 of _ -> <caret> end.", "V"); }
+  public void testVariableFromComprehensionFilter() { doTestInclude("foo(L) -> [X<caret> || Xg <- L, Xf = Xg].", "Xg", "Xf"); } // issue 1668
   public void testNoFunVariablesFromCaseHead() { doTestVariants("foo() -> case (fun(Yy) -> Zz = Yy end)(1) of _ -> <caret> end.", CompletionType.BASIC, 1, CheckType.EXCLUDES, "Yy", "Zz"); }
   public void testFunctions() {
     doTestInclude(
