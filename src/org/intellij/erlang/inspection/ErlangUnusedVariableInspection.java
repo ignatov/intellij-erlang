@@ -79,15 +79,22 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
       if (common == null) continue;
       boolean useInClause = false;
       boolean useInNarrowerScope = false;
-      for (PsiElement e = use.getParent(); e != null && e != common; e = e.getParent()) {
+      for (PsiElement e = use; e != null && e != common; e = e.getParent()) {
         useInClause |= isBranchClause(e);
-        useInNarrowerScope |= e instanceof ErlangFunExpression || e instanceof ErlangListComprehension;
+        useInNarrowerScope |= e instanceof ErlangFunExpression || e instanceof ErlangListComprehension || isGeneratorExpression(e);
       }
       if (useInNarrowerScope) continue;
       if (useInClause && PsiTreeUtil.findFirstParent(binding, e -> e == common || isBranchClause(e)) != common) continue;
       return true;
     }
     return false;
+  }
+
+  // erl_lint forgets the variables of a generator's expression once the generator is done
+  private static boolean isGeneratorExpression(@NotNull PsiElement e) {
+    PsiElement parent = e.getParent();
+    return parent instanceof ErlangLcExpression && ((ErlangLcExpression) parent).getArgumentDefinition() != null
+      && ((ErlangLcExpression) parent).getExpression() == e;
   }
 
   private static boolean isBranchClause(@NotNull PsiElement e) {
