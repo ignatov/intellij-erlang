@@ -57,7 +57,7 @@ public class ErlangBehaviourMarkerProvider implements LineMarkerProvider {
   
   @Nullable
   public static ErlangFunction findFunctionFromNameLeaf(@Nullable PsiElement element) {
-    if (!(element instanceof LeafPsiElement)) return null;
+    if (!(element instanceof LeafPsiElement) || ((LeafPsiElement) element).getElementType() != ErlangTypes.ERL_ATOM_NAME) return null;
     PsiElement atom = element.getParent();
     if (!(atom instanceof ErlangAtom)) return null;
     PsiElement parent = atom.getParent();
