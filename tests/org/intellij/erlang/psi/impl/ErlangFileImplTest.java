@@ -94,6 +94,7 @@ public class ErlangFileImplTest extends ErlangLightPlatformCodeInsightFixtureTes
     assertFalse(file.isNoAutoImport("hd", 1));
     assertFalse(file.isNoAutoImport("tl", 1));
     assertFalse(file.isNoAutoImport("inline", 1));
+    assertFalse(file.isNoAutoImport("f", 0));
   }
 
   public void testShouldAskParentForReferences() {
