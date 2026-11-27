@@ -20,6 +20,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.ErlangParserDefinition;
 import org.intellij.erlang.psi.ErlangFunction;
 import org.intellij.erlang.psi.ErlangRecordDefinition;
@@ -156,6 +157,14 @@ public class ErlangParserTest extends ErlangParserTestBase {
     long millis = (System.nanoTime() - start) / 1_000_000;
     assertFalse("PsiFile contains error elements", hasErrors);
     assertTrue("Parsing took " + millis + " ms", millis < 5000);
+  }
+
+  // The parsing tests give the files a mock file type; the Erlang file type comes from the extension then.
+  public void testFileTypeFromExtensionInTests() {
+    PsiFile unknown = createFile("x.foo", "-module(x).\n");
+    assertFalse(unknown.getViewProvider().getFileType() instanceof ErlangFileType);
+    assertSame(ErlangFileType.MODULE, unknown.getFileType());
+    assertSame(ErlangFileType.HEADER, createFile("y.HRL", "-define(A, 1).\n").getFileType());
   }
 
   public void testTypedMacroBody()                      { doTest(false); }
