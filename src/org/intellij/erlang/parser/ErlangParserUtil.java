@@ -179,7 +179,7 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
     parser.accept(root, builder);
   }
 
-  // a rollback keeps the token types that eofOrSpace remapped
+  // a rollback keeps the token types that eofOrSpace and remapToAtomName remapped
   private static void restoreRemappedTokens(PsiBuilder builder, FastParse fastParse) {
     if (fastParse.remappedTokens.isEmpty()) return;
     PsiBuilder.Marker start = builder.mark();
@@ -305,6 +305,64 @@ public class ErlangParserUtil extends GeneratedParserUtilBase {
       return true;
     }
     return false;
+  }
+
+  // OTP 29: record_name -> atom | var | reserved_word, so #when{...} and #Foo{...} name the records 'when' and 'Foo'
+  private static final TokenSet RECORD_NAME_WORDS = TokenSet.orSet(ErlangLexer.KEYWORDS, TokenSet.create(
+    ErlangTypes.ERL_VAR, ErlangTypes.ERL_AND, ErlangTypes.ERL_ANDALSO, ErlangTypes.ERL_BAND, ErlangTypes.ERL_BNOT,
+    ErlangTypes.ERL_BOR, ErlangTypes.ERL_BSL, ErlangTypes.ERL_BSR, ErlangTypes.ERL_BXOR, ErlangTypes.ERL_DIV,
+    ErlangTypes.ERL_NOT, ErlangTypes.ERL_OR, ErlangTypes.ERL_ORELSE, ErlangTypes.ERL_REM, ErlangTypes.ERL_XOR
+  ));
+
+  // the name right after '#': only '#' record_name record_tuple, the record index '#' atom '.' atom takes only an atom
+  public static boolean recordName(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level_) {
+    if (RECORD_NAME_WORDS.contains(builder_.getTokenType()) && builder_.lookAhead(1) == ErlangTypes.ERL_CURLY_LEFT) {
+      remapToAtomName(builder_);
+    }
+    return true;
+  }
+
+  // the name after an expression and '#': expr '#' record_name '.' atom
+  public static boolean recordNameBeforeField(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level_) {
+    if (builder_.getTokenType() == ErlangTypes.ERL_RADIX && RECORD_NAME_WORDS.contains(builder_.lookAhead(1)) &&
+        isFieldAccess(builder_, 2)) {
+      PsiBuilder.Marker marker = builder_.mark();
+      builder_.advanceLexer();
+      remapToAtomName(builder_);
+      marker.rollbackTo();
+    }
+    return true;
+  }
+
+  // the name after the module: '#' atom ':' record_name
+  public static boolean qualifiedRecordName(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level_) {
+    if (RECORD_NAME_WORDS.contains(builder_.getTokenType()) &&
+        (builder_.lookAhead(1) == ErlangTypes.ERL_CURLY_LEFT || isFieldAccess(builder_, 1))) {
+      remapToAtomName(builder_);
+    }
+    return true;
+  }
+
+  // '.' followed by a field name; a '.' followed by a whitespace, a comment or the end of the file ends the form
+  private static boolean isFieldAccess(PsiBuilder builder_, int steps) {
+    int i = 0;
+    for (int step = 0; step < steps; step++) {
+      IElementType type;
+      do {
+        type = builder_.rawLookup(++i);
+      }
+      while (type == TokenType.WHITE_SPACE || ErlangParserDefinition.COMMENTS.contains(type));
+      if (type == null) return false;
+    }
+    if (builder_.rawLookup(i) != ErlangTypes.ERL_DOT) return false;
+    IElementType field = builder_.rawLookup(i + 1);
+    return field == ErlangTypes.ERL_ATOM_NAME || field == ErlangTypes.ERL_SINGLE_QUOTE;
+  }
+
+  private static void remapToAtomName(PsiBuilder builder_) {
+    FastParse fastParse = fastParse(builder_);
+    if (fastParse != null) fastParse.remappedTokens.putIfAbsent(builder_.rawTokenIndex(), builder_.getTokenType());
+    builder_.remapCurrentToken(ErlangTypes.ERL_ATOM_NAME);
   }
 
   public static boolean consumeMacroBody(PsiBuilder builder_, @SuppressWarnings("UnusedParameters") int level_) {

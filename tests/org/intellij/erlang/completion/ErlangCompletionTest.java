@@ -166,6 +166,19 @@ public class ErlangCompletionTest extends ErlangCompletionTestBase {
       "bar(A)-> #foo{<caret>}", "id", "two");
   }
   
+  // issue 1669
+  public void testRecordFieldsOfRecordNamedLikeVariable() {
+    doTestEquals(
+      "-record('Foo', {id, two}).\n" +
+      "bar(A)-> #Foo{<caret>}", "id", "two");
+  }
+
+  public void testRecordFieldsOfRecordNamedLikeReservedWord() {
+    doTestEquals(
+      "-record('when', {id, two}).\n" +
+      "bar(A)-> A#when{<caret>}", "id", "two");
+  }
+
   public void testRecordFieldsFromTypedMacro() {
     doTestEquals(
       "-define(BASE(M), module = M :: atom(), id :: atom()).\n" +

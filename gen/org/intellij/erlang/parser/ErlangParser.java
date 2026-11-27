@@ -5231,6 +5231,18 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
+  // <<recordNameBeforeField>> record_tail
+  static boolean record_expression_tail(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "record_expression_tail")) return false;
+    boolean r;
+    Marker m = enter_section_(b);
+    r = recordNameBeforeField(b, l + 1);
+    r = r && record_tail(b, l + 1);
+    exit_section_(b, m, null, r);
+    return r;
+  }
+
+  /* ********************************************************** */
   // (q_atom | '_') '=' (qualified_atom_expression | expression)
   public static boolean record_field(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_field")) return false;
@@ -5423,7 +5435,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // record_hash record_ref
+  // record_hash <<recordName>> record_ref
   static boolean record_head_classic(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_head_classic")) return false;
     if (!nextTokenIs(b, ERL_RADIX)) return false;
@@ -5431,7 +5443,8 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     Marker m = enter_section_(b, l, _NONE_);
     r = record_hash(b, l + 1);
     p = r; // pin = 1
-    r = r && record_ref(b, l + 1);
+    r = r && report_error_(b, recordName(b, l + 1));
+    r = p && record_ref(b, l + 1) && r;
     exit_section_(b, l, m, r, p, null);
     return r || p;
   }
@@ -5458,7 +5471,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // [module_ref ':'] q_atom
+  // [module_ref ':' <<qualifiedRecordName>>] q_atom
   public static boolean record_ref(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_ref")) return false;
     boolean r;
@@ -5469,20 +5482,21 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // [module_ref ':']
+  // [module_ref ':' <<qualifiedRecordName>>]
   private static boolean record_ref_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_ref_0")) return false;
     record_ref_0_0(b, l + 1);
     return true;
   }
 
-  // module_ref ':'
+  // module_ref ':' <<qualifiedRecordName>>
   private static boolean record_ref_0_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "record_ref_0_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = module_ref(b, l + 1);
     r = r && consumeToken(b, ERL_COLON);
+    r = r && qualifiedRecordName(b, l + 1);
     exit_section_(b, m, null, r);
     return r;
   }
@@ -6783,7 +6797,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
         r = true;
         exit_section_(b, l, m, ERL_ANONYMOUS_CALL_EXPRESSION, r, true, null);
       }
-      else if (g < 12 && record_tail(b, l + 1)) {
+      else if (g < 12 && record_expression_tail(b, l + 1)) {
         r = true;
         exit_section_(b, l, m, ERL_RECORD_EXPRESSION, r, true, null);
       }
@@ -7006,7 +7020,7 @@ public class ErlangParser implements PsiParser, LightPsiParser {
     if (!recursion_guard_(b, l, "record2_expression")) return false;
     if (!nextTokenIsSmart(b, ERL_QMARK, ERL_RADIX)) return false;
     boolean r;
-    Marker m = enter_section_(b, l, _NONE_, ERL_RECORD_EXPRESSION, "<expression>");
+    Marker m = enter_section_(b, l, _COLLAPSE_, ERL_RECORD_EXPRESSION, "<expression>");
     r = record_tail(b, l + 1);
     exit_section_(b, l, m, r, false, null);
     return r;

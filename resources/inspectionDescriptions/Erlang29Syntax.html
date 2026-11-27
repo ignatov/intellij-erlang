@@ -22,6 +22,7 @@ Reports usage of OTP 29 syntax in Erlang versions prior to OTP 29.
 </p>
 <ul>
     <li>Multi-valued comprehensions: <code>[I, -I || I &lt;- lists:seq(1, 5)]</code></li>
+    <li>Record names that are reserved words or variables: <code>#when{a = 1}</code>, <code>R#Foo.b</code></li>
 </ul>
 <p>
     Using them with an older Erlang SDK will result in syntax errors. This inspection helps prevent such errors by
@@ -35,7 +36,7 @@ Reports usage of OTP 29 syntax in Erlang versions prior to OTP 29.
 </code></pre>
 <p>
     To fix this issue, either upgrade your Erlang SDK to version 29 or later, or return a single value from the
-    comprehension head.
+    comprehension head. Quote a record name that is a reserved word or a variable: <code>#'when'{a = 1}</code>.
 </p>
 <!-- tooltip end -->
 <p>

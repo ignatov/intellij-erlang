@@ -512,16 +512,17 @@ private bin_comprehension_template ::= &(macros '(') generic_function_call_expre
 
 tuple_expression ::= '{' (&'}' | exprs) '}' {pin=1}
 
-record_expression ::= expression record_tail {
+record_expression ::= expression record_expression_tail {
   pin=2
   methods = [getReferenceInternal]
 }
+private record_expression_tail ::= <<recordNameBeforeField>> record_tail
 private record_tail ::= record_head (record_field_ref | record_tuple | ()) {pin=1}
 private record_head ::= record_head_classic | macros &('{'|'.' q_atom &(!('(')))
-private record_head_classic ::= record_hash record_ref {pin=1}
+private record_head_classic ::= record_hash <<recordName>> record_ref {pin=1}
 private record_hash ::= '#' &(!'{')
 record_field_ref ::= '.' q_atom {pin=1 elementType=record_field}
-record_ref ::= [module_ref ':'] q_atom {methods = [getReference]}
+record_ref ::= [module_ref ':' <<qualifiedRecordName>>] q_atom {methods = [getReference]}
 
 record_tuple ::= '{' record_fields? '}' {pin=1}
 private record_fields ::= record_field (',' record_field)* {pin(".*")=1}
