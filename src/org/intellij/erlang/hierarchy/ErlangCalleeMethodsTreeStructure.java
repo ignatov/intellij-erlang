@@ -42,7 +42,7 @@ public class ErlangCalleeMethodsTreeStructure extends HierarchyTreeStructure {
       .filter(ErlangFunctionCallExpression.class)
       .map(o -> o.getReference().resolve())
       .filter(ErlangFunction.class)
-      .filter(f -> isInScope(function, f, myCurrentScopeType))
+      .filter(f -> isInScope(function.getContainingFile(), f, myCurrentScopeType))
       .unique()
       .map(f -> new ErlangFunctionNodeDescriptor(myProject, f))
       .toArray(new ErlangFunctionNodeDescriptor[0]);
