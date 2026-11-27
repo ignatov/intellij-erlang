@@ -103,6 +103,10 @@ public class ErlangModuleIndex extends ScalarIndexExtension<String> {
     });
   }
 
+  public static boolean hasModule(@NotNull String name, @NotNull GlobalSearchScope searchScope) {
+    return !FileBasedIndex.getInstance().processValues(ERLANG_MODULE_INDEX, name, null, (file, value) -> false, searchScope);
+  }
+
   @NotNull
   public static List<VirtualFile> getVirtualFilesByName(@NotNull Project project, @NotNull String name, @NotNull GlobalSearchScope searchScope) {
     ProjectFileIndex projectFileIndex = ProjectRootManager.getInstance(project).getFileIndex();

@@ -52,8 +52,44 @@ public class ErlangGotoSymbolTest extends BasePlatformTestCase {
     assertSameElements(gotoSymbol("module2:rec"), "module2.erl:rec");
   }
 
+  public void testExactModuleQualifier() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("module1:test"), "module1.erl:test/0");
+    assertSameElements(gotoSymbol("module1:te"), "module1.erl:test/0");
+  }
+
+  public void testExactModuleQualifierOfLongerName() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("my_module1:test"), "my_module1.erl:test/0");
+  }
+
+  public void testInexactModuleQualifier() {
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("odule1:test"), "module1.erl:test/0", "module10.erl:test/0", "my_module1.erl:test/0");
+  }
+
+  public void testExactModuleQualifierOfHeaderWithModuleName() {
+    myFixture.addFileToProject("module1.hrl", "-record(hrec, {}).\n-define(HMAC, 1).\n-type hty() :: ok.\n");
+    assertSameElements(gotoSymbol("module1:hrec"), "module1.hrl:hrec");
+    assertSameElements(gotoSymbol("module1:HMAC"), "module1.hrl:HMAC");
+    assertSameElements(gotoSymbol("module1:hty"), "module1.hrl:hty/0");
+    assertSameElements(gotoSymbol("module1:rec"), "module1.erl:rec", "module1.hrl:hrec");
+  }
+
+  public void testExactModuleQualifierOfModuleInSeveralFiles() {
+    myFixture.addFileToProject("a/module1.erl", "-module(module1).\ntest() -> ok.\n");
+    myFixture.addFileToProject("b/module1.erl", "-module(module1).\ntest() -> ok.\n");
+    addModulesNamedLikeModule1();
+    assertSameElements(gotoSymbol("module1:test"), "module1.erl:test/0", "module1.erl:test/0", "module1.erl:test/0");
+  }
+
   public void testUnknownModule() {
     assertEmpty(gotoSymbol("module3:test"));
+  }
+
+  private void addModulesNamedLikeModule1() {
+    myFixture.addFileToProject("module10.erl", "-module(module10).\ntest() -> ok.\n");
+    myFixture.addFileToProject("my_module1.erl", "-module(my_module1).\ntest() -> ok.\n");
   }
 
   private List<String> gotoSymbol(String pattern) {
