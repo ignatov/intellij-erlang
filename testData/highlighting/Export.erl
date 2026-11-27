@@ -27,7 +27,7 @@
 set_master_nodes(Nodes) ->
     {error, {bad_type, Nodes}}.
 
-<warning>log_valid_master_nodes</warning>(Cstructs, Nodes, UseDir, IsRunning) ->
+log_valid_master_nodes(Cstructs, Nodes, UseDir, IsRunning) ->
     Fun = fun(Cs) ->
 		  Copies = mnesia_lib:<warning>copy_holders</warning>(Cs),
 		  Valid = mnesia_lib:<warning>intersect</warning>(Nodes, Copies),

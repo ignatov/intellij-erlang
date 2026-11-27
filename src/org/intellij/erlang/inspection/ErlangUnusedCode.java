@@ -24,8 +24,8 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.containers.ContainerUtil;
 import org.intellij.erlang.ErlangTypes;
+import org.intellij.erlang.parser.macro.ErlangMacroExpander;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.jetbrains.annotations.NotNull;
@@ -87,21 +87,35 @@ final class ErlangUnusedCode {
   }
 
   /**
-   * The atoms that may name a definition where the reference search finds no use of it: the arguments of macro calls, the
-   * bodies of macros, the name of a call with a macro among its arguments, and every atom of the included headers.
+   * The names that may name a definition where the reference search finds no use of it: the atoms of the arguments of macro
+   * uses and of the bodies of macros, the name of a call with a macro among its arguments, of a {@code fun name/?A} and of a
+   * remote type of a macro module, and every atom of the included headers. Every name, when a macro use resolves to nothing.
    */
-  static @NotNull Set<String> namesUsedOutOfSight(@NotNull ErlangFile file) {
+  static @NotNull Predicate<String> namesUsedOutOfSight(@NotNull ErlangFile file) {
     Set<String> names = new HashSet<>();
-    for (ErlangGenericFunctionCallExpression call : PsiTreeUtil.findChildrenOfType(file, ErlangGenericFunctionCallExpression.class)) {
-      if (call.getMacros() != null || ContainerUtil.exists(call.getQAtomList(), q -> q.getMacros() != null)) addAtoms(call.getArgumentList(), names);
+    for (ErlangMacros macros : PsiTreeUtil.findChildrenOfType(file, ErlangMacros.class)) {
+      ErlangMacrosName macrosName = macros.getMacrosName();
+      PsiReference reference = macros.getReference();
+      if (macrosName != null && !ErlangMacroExpander.PREDEFINED.contains(macrosName.getText()) &&
+          reference != null && reference.resolve() == null) {
+        return name -> true;
+      }
+      PsiElement use = macros.getParent() instanceof ErlangQAtom ? macros.getParent() : macros;
+      PsiElement next = PsiTreeUtil.skipWhitespacesAndCommentsForward(use);
+      if (next instanceof ErlangArgumentList) addAtoms(next, names);
+      if (use.getParent() instanceof ErlangModuleRef moduleRef) {
+        ErlangTypeRef type = PsiTreeUtil.getNextSiblingOfType(moduleRef, ErlangTypeRef.class);
+        if (type != null) addAtoms(type, names);
+      }
+    }
+    for (ErlangFunctionWithArity function : PsiTreeUtil.findChildrenOfType(file, ErlangFunctionWithArity.class)) {
+      if (function.getInteger() == null) addAtoms(function.getQAtom(), names);
     }
     for (ErlangMacrosDefinition definition : PsiTreeUtil.findChildrenOfType(file, ErlangMacrosDefinition.class)) {
       addAtoms(definition.getMacrosBody(), names);
     }
     for (ErlangFunctionCallExpression call : PsiTreeUtil.findChildrenOfType(file, ErlangFunctionCallExpression.class)) {
-      ErlangQAtom name = PsiTreeUtil.getChildOfType(call, ErlangQAtom.class);
-      if (name != null && name.getMacros() != null) addAtoms(call.getArgumentList(), names);
-      else if (PsiTreeUtil.findChildOfType(call.getArgumentList(), ErlangMacros.class) != null) names.add(call.getName());
+      if (PsiTreeUtil.findChildOfType(call.getArgumentList(), ErlangMacros.class) != null) names.add(call.getName());
     }
     Set<ErlangFile> headers = new HashSet<>();
     Deque<ErlangFile> queue = new ArrayDeque<>(List.of(file));
@@ -114,7 +128,7 @@ final class ErlangUnusedCode {
         }
       }
     }
-    return names;
+    return names::contains;
   }
 
   private static void addAtoms(@Nullable PsiElement element, @NotNull Set<String> names) {

@@ -36,6 +36,7 @@ import org.intellij.erlang.quickfixes.ErlangRemoveFunctionFix;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   public static final String SHORT_NAME = "ErlangUnusedFunction";
@@ -64,11 +65,11 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
   // attributes, and the functions that are never reported or are suppressed; uses in specs and by the function itself do not count
   private @NotNull Set<ErlangFunction> unusedFunctions(@NotNull ErlangFile file) {
     return CachedValuesManager.getCachedValue(file, () -> {
-      Set<String> outOfSight = ErlangUnusedCode.namesUsedOutOfSight(file);
+      Predicate<String> outOfSight = ErlangUnusedCode.namesUsedOutOfSight(file);
       return CachedValueProvider.Result.create(
         ErlangUnusedCode.unreachable(file, ContainerUtil.filter(file.getFunctions(), f -> isChecked(file, f) && !isSuppressedFor(f.getNameIdentifier())), ErlangFunction.class,
                                      element -> PsiTreeUtil.getParentOfType(element, ErlangSpecification.class) != null,
-                                     f -> outOfSight.contains(f.getName())),
+                                     f -> f.getName().startsWith("?") || outOfSight.test(f.getName())),
         PsiModificationTracker.MODIFICATION_COUNT, ErlangMacroLayer.modeTracker());
     });
   }
