@@ -42,7 +42,7 @@ public class ErlangUnusedFunctionInspection extends ErlangInspectionBase {
 
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
-    return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension()) && !file.isExportedAll();
+    return file.getFileType() != ErlangFileType.HEADER && !file.isExportedAll();
   }
 
   @Override

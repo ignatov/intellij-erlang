@@ -356,6 +356,14 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  // issue 1684: the unused function inspection skips such a header too
+  public void testNoUnusedFunctionInUppercaseHeader() {
+    myFixture.configureByText("fns.HRL", "f() -> ok.\n");
+    assertEquals(ErlangFileType.HEADER, myFixture.getFile().getFileType());
+    setUpInspections(myFixture);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1561
   public void testModuleMacroQualifiedType() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);

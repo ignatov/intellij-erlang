@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 public class ErlangUnusedTypeInspection extends ErlangInspectionBase {
   @Override
   protected boolean canRunOn(@NotNull ErlangFile file) {
-    return !file.getName().endsWith(ErlangFileType.HEADER.getDefaultExtension());
+    return file.getFileType() != ErlangFileType.HEADER;
   }
 
   @Override
