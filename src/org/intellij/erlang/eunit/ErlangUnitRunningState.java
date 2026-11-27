@@ -48,6 +48,9 @@ import java.util.*;
 
 public class ErlangUnitRunningState extends ErlangRunningState {
   private static final int DEBUG_TEST_TIMEOUT = Integer.MAX_VALUE;
+  private static final Set<String> RESERVED_WORDS = Set.of(
+    "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr", "bxor", "case", "catch", "cond", "div", "else",
+    "end", "fun", "if", "let", "maybe", "not", "of", "or", "orelse", "receive", "rem", "try", "when", "xor");
   // EUnit gives each test of a group of several tests 5 seconds whatever the timeout of the group is, so a test that
   // waits at a breakpoint is killed. scale_timeouts (OTP 26.2 and later; older releases ignore it) lengthens them all.
   private static final int DEBUG_TIMEOUT_SCALE = Integer.MAX_VALUE;
@@ -156,7 +159,7 @@ public class ErlangUnitRunningState extends ErlangRunningState {
     ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind kind = myConfiguration.getConfigData().getKind();
     String tests;
     if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.MODULE) {
-      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ", ");
+      tests = StringUtil.join(myConfiguration.getConfigData().getModuleNames(), ErlangUnitRunningState::moduleNameToAtom, ", ");
     }
     else if (kind == ErlangUnitRunConfiguration.ErlangUnitRunConfigurationKind.FUNCTION) {
       StringBuilder result = new StringBuilder();
@@ -187,8 +190,16 @@ public class ErlangUnitRunningState extends ErlangRunningState {
   }
 
   @NotNull
+  private static String moduleNameToAtom(@NotNull String name) {
+    if (name.length() > 1 && name.startsWith("'") && name.endsWith("'")) return name;
+    if (name.length() > 1 && name.startsWith("\"") && name.endsWith("\"")) return name;
+    return toAtom(name.replace("\\", "\\\\").replace("'", "\\'"));
+  }
+
+  @NotNull
   private static String toAtom(@NotNull String name) {
-    return StringUtil.notNullize(ErlangPsiImplUtil.toAtomName(name), name);
+    if (RESERVED_WORDS.contains(name)) return '\'' + name + '\'';
+    return Objects.requireNonNullElse(ErlangPsiImplUtil.toAtomName(name), name);
   }
 
   private static Map<String, List<String>> groupByModule(Collection<String> qualifiedFunctionNames) {
