@@ -138,24 +138,34 @@ public class RebarProjectRootStep extends ProjectImportWizardStep {
         commandLine.setExePath(escriptPath);
         commandLine.addParameter(rebarPath);
         commandLine.addParameter("get-deps");
-        try {
-          OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine(Platform.current()));
-          handler.addProcessListener(new ProcessListener() {
-            @Override
-            public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-              String text = event.getText();
-              indicator.setText2(text);
-            }
-          });
-          ProcessTerminatedListener.attach(handler);
-          handler.startNotify();
-          handler.waitFor();
-          indicator.setText2("Refreshing");
-        }
-        catch (ExecutionException e) {
-          LOG.warn(e);
-        }
+        runGetDeps(indicator, commandLine);
       }
     });
+  }
+
+  static void runGetDeps(@NotNull ProgressIndicator indicator, @NotNull GeneralCommandLine commandLine) {
+    try {
+      OSProcessHandler handler = new OSProcessHandler(commandLine.createProcess(), commandLine.getPreparedCommandLine(Platform.current()));
+      handler.addProcessListener(new ProcessListener() {
+        @Override
+        public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+          String text = event.getText();
+          indicator.setText2(text);
+        }
+      });
+      ProcessTerminatedListener.attach(handler);
+      handler.startNotify();
+      while (!handler.waitFor(100)) {
+        if (indicator.isCanceled()) {
+          handler.destroyProcess(); // kills the whole tree: escript, erl and whatever rebar started
+          handler.waitFor(5000);
+          return;
+        }
+      }
+      indicator.setText2("Refreshing");
+    }
+    catch (ExecutionException e) {
+      LOG.warn(e);
+    }
   }
 }
