@@ -26,6 +26,7 @@ import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -80,6 +81,9 @@ public final class ErlangUsageListeners {
   public static final class Startup implements ProjectActivity {
     @Override
     public @Nullable Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
+      // tests drive the statistics themselves: this runs beside the setUp of a test, and when it came after the test
+      // allowed the statistics, it started the timer and its check of the project replaced what the test had set
+      if (ApplicationManager.getApplication().isUnitTestMode()) return Unit.INSTANCE;
       ErlangUsageStatistics.getInstance().projectOpened(project);
       return Unit.INSTANCE;
     }
