@@ -51,6 +51,16 @@ public class ErlangTypeReferenceImpl extends ErlangQAtomBasedReferenceImpl {
     return myArity < 0 && myElement instanceof ErlangTypeRef;
   }
 
+  /**
+   * Whether this local type reference, unresolved where it stands (a header), names {@code name/arity}:
+   * a module that includes the header defines what it means.
+   */
+  public boolean isUnresolvedLocalUseOf(@NotNull String name, int arity) {
+    if (isBareAtom() || myModuleRef != null && !ErlangPsiImplUtil.isModule(myModuleRef)) return false;
+    if (!myReferenceName.equals(name) || myArity != arity && !myArityUncertain) return false;
+    return resolve() == null;
+  }
+
   @Override
   public PsiElement resolveInner() {
     if (isBareAtom()) return null;

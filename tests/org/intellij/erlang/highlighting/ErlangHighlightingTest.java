@@ -349,6 +349,47 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     doTest("UnusedTypeInHeader.hrl", "unused_type_in_header_user.erl");
   }
 
+  // issue 1687: erlc -Wall does not warn about a type that only an included header uses
+  public void testTypeUsedOnlyInIncludedHeaderIsNotUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("h.hrl", "-record(r, {a :: loc()}).\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type loc() :: integer().
+      -type <warning descr="Unused type 'unused'">unused</warning>() :: atom().
+      -include("h.hrl").
+      f() -> #r{a = 1}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testTypeUsedOnlyInNestedIncludedHeaderIsNotUnused() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("inner.hrl", "-record(r, {a :: ?MODULE:loc(), b :: pair(atom())}).\n");
+    myFixture.addFileToProject("outer.hrl", "-include(\"inner.hrl\").\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type loc() :: integer().
+      -type pair(A) :: {A, A}.
+      -include("outer.hrl").
+      f() -> #r{a = 1}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testOtherArityRemoteOrBareAtomInHeaderIsNotUse() {
+    myFixture.enableInspections(ErlangUnusedTypeInspection.class);
+    myFixture.addFileToProject("h.hrl", "-record(r, {a :: loc(integer()), b :: other:loc(), c :: loc}).\n");
+    myFixture.configureByText("m.erl", """
+      -module(m).
+      -export([f/0]).
+      -type <warning descr="Unused type 'loc'">loc</warning>() :: integer().
+      -type loc(T) :: [T].
+      -include("h.hrl").
+      f() -> #r{a = [1]}.""");
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   // issue 1684: a header whose extension is not lowercase is still an Erlang header
   public void testNoUnusedTypeInUppercaseHeader() {
     myFixture.enableInspections(ErlangUnusedTypeInspection.class);

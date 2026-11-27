@@ -1312,7 +1312,7 @@ public class ErlangPsiImplUtil {
   }
 
   @NotNull
-  static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
+  public static Collection<ErlangFile> getIncludedFiles(@NotNull ErlangFile file) {
     Set<ErlangFile> includedFiles = new LinkedHashSet<>();
     addIncludedFiles(file, includedFiles);
     return includedFiles;
