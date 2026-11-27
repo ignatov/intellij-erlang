@@ -78,6 +78,10 @@ public class ErlangRenameTest extends ErlangLightPlatformCodeInsightFixtureTestC
   public void testCaseHeadVariable()  { doTest("Renamed"); }
   public void testCaseHeadRematch()            { doTest("New"); }
   public void testCaseHeadRematchArgument()    { doTest("New"); }
+  // #1649: the generator X is a new variable that shadows the parameter X
+  public void testGeneratorVariableShadowsParameter() { doTest("New"); }
+  public void testGeneratorVariableShadowsParameterMap()    { doTest("New"); } // issue 1649
+  public void testGeneratorVariableShadowsParameterBinary() { doTest("New"); } // issue 1649
   public void testCaseHeadRematchFromClause()  { doTest("New"); }
   public void testCaseHeadRematchInLaterCase() { doTest("New"); }
   public void testCaseHeadPattern()            { doTest("New"); }
