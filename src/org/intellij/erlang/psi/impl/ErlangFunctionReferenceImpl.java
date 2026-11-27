@@ -60,6 +60,9 @@ public class ErlangFunctionReferenceImpl extends ErlangPsiPolyVariantCachingRefe
   @Override
   public PsiElement resolveInner() {
     if (suppressResolve()) return null; // for #132
+    // an -import entry whose module is missing or a macro names no module to look in; the local lookup would
+    // find the entry among the file's imports and resolve it again, without end (#1735)
+    if (myModuleAtom == null && getElement() instanceof ErlangImportFunction) return null;
 
     if (myModuleAtom != null) {
       String moduleName = ErlangPsiImplUtil.getName(myModuleAtom);

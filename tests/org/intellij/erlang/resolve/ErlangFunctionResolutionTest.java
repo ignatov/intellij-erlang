@@ -157,6 +157,33 @@ public class ErlangFunctionResolutionTest extends ErlangLightPlatformCodeInsight
     assertNull(reference.resolve());
   }
 
+  public void testCallOfImportWithoutModule() {
+    myFixture.configureByText("attr_19.erl", """
+      -module(attr_19).
+      -export([f/0]).
+      -import([map/2]).
+      f() -> <caret>map(1, 2).
+      """);
+    PsiReference reference = getElementAtCaret(ErlangFunctionCallExpression.class).getReference();
+    assertNotNull(reference);
+    assertNull(reference.resolve());
+    assertNotNull(((PsiPolyVariantReference) reference).multiResolve(true));
+  }
+
+  public void testImportWithMacroModule() {
+    myFixture.configureByText("attr_19.erl", """
+      -module(attr_19).
+      -export([f/0]).
+      -define(M, lists).
+      -import(?M, [<caret>map/2]).
+      f() -> map(1, 2).
+      """);
+    PsiReference reference = getElementAtCaret(ErlangImportFunction.class).getReference();
+    assertNotNull(reference);
+    assertNull(reference.resolve());
+    assertNotNull(((PsiPolyVariantReference) reference).multiResolve(true));
+  }
+
   private void doExportTest(@NotNull String focusedFile, @NotNull String expectedFile, @NotNull String... otherFiles) {
     String[] files = {focusedFile, expectedFile};
     myFixture.configureByFiles(ArrayUtil.mergeArrays(files, otherFiles));
