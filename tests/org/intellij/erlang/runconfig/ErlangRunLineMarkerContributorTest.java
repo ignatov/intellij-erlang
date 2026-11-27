@@ -47,6 +47,11 @@ public class ErlangRunLineMarkerContributorTest extends ErlangLightPlatformCodeI
     doTest("6: a", "8: b", "10: c", "12: c", "15: d", "18: e", "20: g");
   }
 
+  /** #1696: a quoted function name gets one marker, on the name and not on its quotes. */
+  public void testQuotedName() {
+    doTest("4: my-test", "5: plain", "6: other");
+  }
+
   private void doTest(String... expected) {
     doTestFile(getTestName(true), expected);
   }
