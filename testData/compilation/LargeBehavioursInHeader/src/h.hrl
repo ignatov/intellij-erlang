@@ -1,0 +1,2 @@
+-behaviour(abig).
+-behaviour(zbig).

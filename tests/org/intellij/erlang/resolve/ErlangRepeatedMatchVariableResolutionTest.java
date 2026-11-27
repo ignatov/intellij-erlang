@@ -89,6 +89,21 @@ public class ErlangRepeatedMatchVariableResolutionTest extends ErlangLightPlatfo
     assertEquals(vars.subList(0, 3), targets);
   }
 
+  // #1650: a variable of a later receive clause resolves within its own clause, not to the pattern of an earlier clause
+  public void testReceiveClauseVariableResolvesInOwnClause() {
+    myFixture.configureByText("rec.erl", """
+      -module(rec).
+      -export([r/0]).
+      r() -> receive {a, X} -> X; {b, X} -> X + 1 end.
+      """);
+    List<ErlangQVar> vars = xVars();
+    assertEquals(4, vars.size());
+    ResolveResult[] results = multiResolve(vars.get(3));
+    assertEquals(1, results.length);
+    assertEquals(vars.get(2), results[0].getElement());
+    assertEmpty(multiResolve(vars.get(2)));
+  }
+
   // #1503: resolving every variable of the clause grows linearly with the number of matches, not quadratically.
   // From 25 to 200 repetitions the total grows about 8x when it is linear and 64x when it is quadratic
   public void testResolvingEveryVariableOfClauseIsNotQuadratic() {
