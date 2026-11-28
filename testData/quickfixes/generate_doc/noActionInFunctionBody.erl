@@ -1,0 +1,1 @@
+foo() -> o<caret>k.
