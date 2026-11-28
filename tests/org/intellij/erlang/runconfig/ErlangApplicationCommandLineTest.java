@@ -16,8 +16,11 @@
 
 package org.intellij.erlang.runconfig;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.application.ErlangApplicationConfiguration;
@@ -27,6 +30,7 @@ import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.intellij.erlang.utils.ErlangLightPlatformCodeInsightFixtureTestCase;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -77,6 +81,37 @@ public class ErlangApplicationCommandLineTest extends ErlangLightPlatformCodeIns
 
     assertEquals(List.of("-pa", "/src", "-s", "lager", "start", "-eval", "riak_dt_runner:boot().", "-s", "init", "stop",
                          "-noshell", "-extra", "foo", "bar"), params);
+  }
+
+  public void testQuotedEntryPointAndShellFlags() throws Exception {
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModuleAndFunction("'My mod' 'case'");
+    configuration.setStopErlang(false);
+
+    List<String> params = getCommandParameters(new ErlangApplicationRunningState(null, getModule(), configuration));
+
+    assertEquals(List.of("-pa", "/src", "-eval", "'My mod':'case'().", "-noshell"), params);
+  }
+
+  public void testModuleWithoutSdk() throws Exception {
+    ErlangApplicationConfiguration configuration =
+      new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
+    configuration.setModuleAndFunction("m f");
+    Sdk originalSdk = ModuleRootManager.getInstance(getModule()).getSdk();
+    ModuleRootModificationUtil.setModuleSdk(getModule(), null);
+    try {
+      assertNull(ModuleRootManager.getInstance(getModule()).getSdk());
+      getCommandParameters(new ErlangApplicationRunningState(null, getModule(), configuration));
+      fail("an invalid module SDK must stop the run");
+    }
+    catch (InvocationTargetException e) {
+      assertInstanceOf(e.getCause(), ExecutionException.class);
+      assertEquals("Invalid module SDK.", e.getCause().getMessage());
+    }
+    finally {
+      ModuleRootModificationUtil.setModuleSdk(getModule(), originalSdk);
+    }
   }
 
   private static List<String> getCommandParameters(ErlangRunningState state) throws Exception {
