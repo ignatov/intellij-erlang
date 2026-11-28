@@ -18,6 +18,8 @@ package org.intellij.erlang.completion;
 
 import com.intellij.codeInsight.completion.CompletionType;
 
+import java.util.List;
+
 public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
   public ErlangSmallIdeCompletionTest() {
     super(true);
@@ -58,5 +60,21 @@ public class ErlangSmallIdeCompletionTest extends ErlangCompletionTestBase {
       "otp-include-not-in-root/src/directory/include/include.hrl",
       "otp-include-not-in-root/src/test.app.src");
     doTestVariantsInner(CompletionType.BASIC, 1, CheckType.EXCLUDES, "include.hrl");
+  }
+
+  // issue 1731: completion inside 3000 nested parentheses, which erlc compiles, must not overflow the stack
+  public void testDeeplyNestedParentheses() {
+    String prefix = "-module(parens).\n-export([f/0]).\nf() -> " + "(".repeat(1690);
+    myFixture.configureByText("parens.erl", prefix + "<caret>" + "(".repeat(1310) + "1" + ")".repeat(3000) + ".\n");
+    myFixture.completeBasic();
+  }
+
+  public void testFunctionsInsideDeeplyNestedParentheses() {
+    String prefix = "-module(parens).\n-export([f/0]).\nfoo_bar() -> 1.\nfoo_baz() -> 2.\nf() -> " + "(".repeat(3000);
+    myFixture.configureByText("parens.erl", prefix + "foo_<caret>" + ")".repeat(3000) + ".\n");
+    myFixture.completeBasic();
+    List<String> variants = myFixture.getLookupElementStrings();
+    assertNotNull(variants);
+    assertContainsElements(variants, "foo_bar", "foo_baz");
   }
 }
