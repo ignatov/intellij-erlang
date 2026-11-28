@@ -46,6 +46,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnusedFunction()    { doTest(); }
   public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
   public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
+  public void testUnusedFunctionEunitNoAuto() { doTest("eunit_noauto_tests.erl"); } // issue 1775
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
   public void testLoneDot()           { doTest(); } // issue 1646
