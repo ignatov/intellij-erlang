@@ -222,6 +222,103 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testFunctionClausesAlignedSecondReformatChangesNothing() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    String inputFile = "functionClausesAlignedWrapped.erl";
+    myFixture.configureByText(inputFile, FileUtil.loadFile(new File(getTestDataPath() + inputFile)));
+    Runnable reformat = () -> WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () -> {
+      CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+    });
+    reformat.run();
+    String first = myFixture.getEditor().getDocument().getText();
+    String clause = first.substring(first.indexOf("f(a)"));
+    assertTrue("the f(a) clause was not wrapped:\n" + first, StringUtil.countNewLines(clause.trim()) > 0);
+    reformat.run();
+    String second = myFixture.getEditor().getDocument().getText();
+    assertEquals(first, second);
+  }
+
+  public void testFunctionClausesAlignedMargin() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMarginForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedExtraSpaces() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedExtraSpacesForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMissingSpaces() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMissingSpacesForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedDoNotWrap() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.DO_NOT_WRAP;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperators() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperatorsForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperatorsWide() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 120;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMultiLineHead() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  private void doTestAndReformatAgain() throws Exception {
+    doTest();
+    String first = myFixture.getFile().getText();
+    WriteCommandAction.runWriteCommandAction(myFixture.getProject(), () -> {
+      CodeStyleManager.getInstance(getProject()).reformat(myFixture.getFile());
+    });
+    assertEquals(first, myFixture.getFile().getText());
+  }
+
   public void testKeepCommentAtTheFirstLine() throws Exception {
     getCommonSettings().KEEP_FIRST_COLUMN_COMMENT = true;
     doTest();

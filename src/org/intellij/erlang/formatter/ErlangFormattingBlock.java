@@ -33,6 +33,8 @@ import com.intellij.psi.impl.source.tree.TreeUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiTreeUtil;
+import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.ErlangLanguage;
 import org.intellij.erlang.formatter.settings.ErlangCodeStyleSettings;
 import org.intellij.erlang.parser.ErlangLexer;
 import org.intellij.erlang.psi.*;
@@ -71,6 +73,9 @@ public class ErlangFormattingBlock extends AbstractBlock {
   private static final TokenSet BRACKETS_CONTAINERS = TokenSet.create(
     ERL_LIST_EXPRESSION, ERL_EXPORT_FUNCTIONS, ERL_EXPORT_TYPES, ERL_BINARY_EXPRESSION
   );
+  private static final TokenSet SPACED_KEYWORDS = TokenSet.create(
+    ERL_AFTER, ERL_WHEN, ERL_BEGIN, ERL_END, ERL_OF, ERL_CASE, ERL_CATCH, ERL_ELSE, ERL_IF, ERL_RECEIVE,
+    ERL_TRY, ERL_MAYBE, ERL_DIV, ERL_REM, ERL_OR, ERL_XOR, ERL_BOR, ERL_BXOR, ERL_BSL, ERL_BSR, ERL_AND, ERL_BAND);
   private static final TokenSet BINARY_EXPRESSIONS = TokenSet.create(
     ERL_LIST_OP_EXPRESSION, ERL_ASSIGNMENT_EXPRESSION, ERL_SEND_EXPRESSION, //right-assoc
     ERL_ADDITIVE_EXPRESSION, ERL_MULTIPLICATIVE_EXPRESSION
@@ -290,6 +295,7 @@ public class ErlangFormattingBlock extends AbstractBlock {
     PsiElement nodePsi = node.getPsi();
     PsiElement parentPsi = parent.getPsi();
     if (parentType == ERL_CLAUSE_BODY && nodePsi instanceof ErlangExpression) {
+      if (parent == myNode && isAlignedFunctionClauseBody()) return null;
       return WrappingUtil.getWrapType(myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP);
     }
     if (parentType == ERL_ARGUMENT_LIST && nodePsi instanceof ErlangExpression) {
@@ -378,12 +384,107 @@ public class ErlangFormattingBlock extends AbstractBlock {
       Alignment alignment = myAlignmentStrategy.getAlignment(parentType, childType);
       if (alignment != null &&
         childType == ERL_CLAUSE_BODY && myErlangSettings.ALIGN_FUNCTION_CLAUSES &&
-        (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE || StringUtil.countNewLines(child.getText()) > 0)) {
+        (myErlangSettings.NEW_LINE_AFTER_ARROW == ErlangCodeStyleSettings.NewLineAfterArrow.FORCE || StringUtil.countNewLines(child.getText()) > 0 ||
+          myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP == CommonCodeStyleSettings.WRAP_ALWAYS ||
+          myErlangSettings.EXPRESSION_IN_CLAUSE_WRAP != CommonCodeStyleSettings.DO_NOT_WRAP &&
+            oneLineLength(parent, child) > mySettings.getRootSettings().getRightMargin(ErlangLanguage.INSTANCE))) {
+        // a body that this run makes multi-line is not aligned, as the next run would not align it
         return null; // redesign this hack
       }
       return alignment;
     }
     return null;
+  }
+
+  /**
+   * Whether the expressions of this block are those of a function clause body that is aligned with the other clauses.
+   * They are not wrapped at the right margin: the wrapped body would leave the alignment on the next run.
+   */
+  private boolean isAlignedFunctionClauseBody() {
+    return myErlangSettings.ALIGN_FUNCTION_CLAUSES && getAlignment() != null && myNode.getElementType() == ERL_CLAUSE_BODY &&
+      myNode.getTreeParent() != null && myNode.getTreeParent().getElementType() == ERL_FUNCTION_CLAUSE;
+  }
+
+  /**
+   * The length of the last line of the clause when its body is on that line, with its ';' or '.'. A line break in the
+   * head is kept, so the line starts after the last one, at the indent of the parameters. The length is computed from
+   * the tokens and the spaces the formatter puts between them, not from the whitespace of the input, so a reformatted
+   * clause gives the same length as the clause before the reformat.
+   */
+  private int oneLineLength(@NotNull ASTNode clause, @NotNull ASTNode body) {
+    ASTNode first = TreeUtil.findFirstLeaf(clause);
+    int length = 1;
+    for (ASTNode leaf = first; leaf != null && leaf.getStartOffset() < body.getStartOffset(); leaf = TreeUtil.nextLeaf(leaf)) {
+      if (StringUtil.containsLineBreak(leaf.getChars())) {
+        first = TreeUtil.nextLeaf(leaf);
+        length = 1 + mySettings.getRootSettings().getIndentOptions(ErlangFileType.MODULE).CONTINUATION_INDENT_SIZE;
+      }
+    }
+    int end = clause.getTextRange().getEndOffset();
+    ASTNode prev = null;
+    for (ASTNode leaf = first; leaf != null && leaf.getStartOffset() < end; leaf = TreeUtil.nextLeaf(leaf)) {
+      if (StringUtil.isEmptyOrSpaces(leaf.getChars())) continue;
+      if (prev != null) length += spacesBetween(prev, leaf);
+      length += leaf.getTextLength();
+      prev = leaf;
+    }
+    return length;
+  }
+
+  /**
+   * The spaces that the rules of {@link ErlangFormattingModelBuilder} put between two tokens on one line.
+   */
+  private int spacesBetween(@NotNull ASTNode prev, @NotNull ASTNode next) {
+    IElementType prevType = prev.getElementType();
+    IElementType nextType = next.getElementType();
+    if (nextType == ERL_COMMA) return mySettings.SPACE_BEFORE_COMMA ? 1 : 0;
+    if (prevType == ERL_COMMA) return mySettings.SPACE_AFTER_COMMA ? 1 : 0;
+    if (nextType == ERL_SEMI) return 0;
+    Boolean space = spaceAround(prev);
+    if (space == null) space = spaceAround(next);
+    if (space != null) return space ? 1 : 0;
+    if (prevType == ERL_BRACKET_LEFT || prevType == ERL_CURLY_LEFT || prevType == ERL_BIN_START || prevType == ERL_PAR_LEFT ||
+      nextType == ERL_BRACKET_RIGHT || nextType == ERL_CURLY_RIGHT || nextType == ERL_BIN_END || nextType == ERL_PAR_RIGHT ||
+      nextType == ERL_PAR_LEFT) {
+      return 0;
+    }
+    if (SPACED_KEYWORDS.contains(prevType) || SPACED_KEYWORDS.contains(nextType)) return 1;
+    return isWordChar(prev.getChars().charAt(prev.getTextLength() - 1)) && isWordChar(next.getChars().charAt(0)) ? 1 : 0;
+  }
+
+  /**
+   * Whether the formatter puts spaces around an operator, or null if the token is not such an operator.
+   */
+  @Nullable
+  private Boolean spaceAround(@NotNull ASTNode leaf) {
+    IElementType type = leaf.getElementType();
+    IElementType parentType = leaf.getTreeParent() != null ? leaf.getTreeParent().getElementType() : null;
+    if (type == ERL_ARROW || type == ERL_ASSOC || type == ERL_MATCH) return myErlangSettings.SPACE_AROUND_ARROW;
+    if (type == ERL_OP_EQ) {
+      return parentType == ERL_RECORD_FIELD || parentType == ERL_TYPED_EXPR ? myErlangSettings.SPACE_AROUND_EQ_IN_RECORDS
+                                                                           : mySettings.SPACE_AROUND_ASSIGNMENT_OPERATORS;
+    }
+    if (type == ERL_OP_LT_MINUS) return myErlangSettings.SPACE_AROUND_LEFT_ARROW;
+    if (type == ERL_OP_EXL) return myErlangSettings.SPACE_AROUND_SEND;
+    if (type == ERL_OP_PLUS || type == ERL_OP_PLUS_PLUS || type == ERL_OP_MINUS && parentType == ERL_ADDITIVE_EXPRESSION) {
+      return mySettings.SPACE_AROUND_ADDITIVE_OPERATORS;
+    }
+    if (type == ERL_OP_AR_MUL || type == ERL_OP_AR_DIV && parentType == ERL_MULTIPLICATIVE_EXPRESSION) {
+      return mySettings.SPACE_AROUND_MULTIPLICATIVE_OPERATORS;
+    }
+    if (type == ERL_OP_EQ_EQ || type == ERL_OP_DIV_EQ || type == ERL_OP_EQ_DIV_EQ || type == ERL_OP_EQ_COL_EQ) {
+      return mySettings.SPACE_AROUND_EQUALITY_OPERATORS;
+    }
+    if (type == ERL_OP_OR && parentType == ERL_LIST_EXPRESSION) return myErlangSettings.SPACE_AROUND_OR_IN_LISTS;
+    if (type == ERL_OP_LT || type == ERL_OP_EQ_LT || type == ERL_OP_GT || type == ERL_OP_GT_EQ ||
+      type == ERL_OR_OR || type == ERL_OR || type == ERL_ANDALSO || type == ERL_ORELSE) {
+      return mySettings.SPACE_AROUND_LOGICAL_OPERATORS;
+    }
+    return null;
+  }
+
+  private static boolean isWordChar(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
   }
 
   @Nullable
