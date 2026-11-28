@@ -1,0 +1,79 @@
+name: Flaky tests
+
+# Files one issue per test that fails on CI without a reason in the code, so that the bug-fixing factory fixes the
+# test instead of someone rerunning the job. scripts/flaky/flaky.py does the work; its docstring has the rules.
+#
+# What counts: a test that failed in a job of Java CI (gradle.yml) that passed in another attempt of the same run,
+# or that failed on a push to master. The script reads the runs of the last days and the logs of their failed jobs,
+# and writes issues with the label flaky-test: a new one per test, later failures into the body and one comment, a
+# closed issue reopened when the test failed after the close.
+#
+# Modes:
+#   dry-run  print what a run would do and the body of the first new issue. It writes nothing.
+#   run      write the issues.
+# A scheduled run uses the mode run. A manual run (workflow_dispatch) uses the mode of its input, default dry-run.
+#
+# The token is the one of the workflow: it reads the runs and logs of this repository and writes issues. The script
+# runs from master only (no pull_request trigger), and the job logs it reads are text from outside: see "Text from
+# logs" in the script.
+
+on:
+  schedule:
+    - cron: '23 5,17 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: dry-run (print what it would do) or run (write the issues)
+        type: choice
+        options:
+          - dry-run
+          - run
+        default: dry-run
+      days:
+        description: How many days of Java CI runs to read (1 to 14)
+        type: string
+        default: '3'
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+concurrency:
+  group: flaky-tests
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    if: github.repository == 'ignatov/intellij-erlang'
+    runs-on: ubuntu-24.04
+    # Reading three days of runs takes about four minutes.
+    timeout-minutes: 20
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - name: Test the script
+      run: python3 -m unittest discover -s scripts/flaky -p 'test_*.py'
+    - name: Read the runs and file the issues
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        EVENT: ${{ github.event_name }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_DAYS: ${{ inputs.days }}
+      run: |
+        mode=run
+        days=3
+        if [[ "$EVENT" == workflow_dispatch ]]; then
+          mode="$INPUT_MODE"
+          days="$INPUT_DAYS"
+        fi
+        case "$mode" in
+          dry-run|run) ;;
+          *) echo "::error::Unknown mode: $mode"; exit 1 ;;
+        esac
+        if [[ ! "$days" =~ ^[0-9]{1,2}$ ]]; then
+          echo "::error::days must be a number from 1 to 14"
+          exit 1
+        fi
+        python3 scripts/flaky/flaky.py "--$mode" --days "$days"

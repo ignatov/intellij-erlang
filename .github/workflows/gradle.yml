@@ -33,6 +33,8 @@ jobs:
       run: python3 -m unittest discover -s scripts/stubs -p 'test_*.py'
     - name: Test the dispatch steps of the factory workflows
       run: python3 -m unittest discover -s scripts/factory -p 'test_*.py'
+    - name: Test the flaky tests watch
+      run: python3 -m unittest discover -s scripts/flaky -p 'test_*.py'
     - name: Check that the merge keeps the stub changes of master
       # The stub version is the number of entries of ErlangStubChanges. Two pull requests that append one conflict on
       # purpose; this fails when the resolution dropped, reordered or edited an entry of the base, or inserted one
