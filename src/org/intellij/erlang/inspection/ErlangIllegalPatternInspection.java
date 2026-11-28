@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
@@ -90,7 +91,14 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
     private static void checkExpressionAndReport(@NotNull PsiElement element,
                                                  @NotNull final ProblemsHolder problemsHolder) {
-      element.accept(new ErlangRecursiveVisitor() {
+      checkExpressionAndReport(element, element, problemsHolder);
+    }
+
+    // The pattern is the whole checked expression, which tells whether a part of it is in a guard expression
+    private static void checkExpressionAndReport(@NotNull PsiElement part,
+                                                 @NotNull PsiElement element,
+                                                 @NotNull final ProblemsHolder problemsHolder) {
+      part.accept(new ErlangRecursiveVisitor() {
 
         private void registerProblemIfContainsNonConstant(@NotNull ErlangExpression o) {
           ConstantExpressionChecker checker = new ConstantExpressionChecker();
@@ -146,6 +154,22 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           }
           else {
             registerProblem(problemsHolder, o, ERROR);
+          }
+        }
+
+        @Override
+        public void visitAssignmentExpression(@NotNull ErlangAssignmentExpression o) {
+          if (!isInSizeOrMapKey(o, element)) {
+            super.visitAssignmentExpression(o);
+            return;
+          }
+          // A match is not a guard expression; report it unless a part of it is reported, checking the parts only once
+          List<ProblemDescriptor> partProblems = checkParts(o, element, problemsHolder);
+          if (partProblems.isEmpty()) {
+            registerProblem(problemsHolder, o, ERROR);
+          }
+          else {
+            partProblems.forEach(problemsHolder::registerProblem);
           }
         }
 
@@ -237,6 +261,15 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           }
         }
       });
+    }
+
+    @NotNull
+    private static List<ProblemDescriptor> checkParts(@NotNull PsiElement o, @NotNull PsiElement pattern, @NotNull ProblemsHolder holder) {
+      ProblemsHolder tempHolder = new ProblemsHolder(holder.getManager(), holder.getFile(), holder.isOnTheFly());
+      for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
+        checkExpressionAndReport(child, pattern, tempHolder);
+      }
+      return tempHolder.getResults();
     }
 
     // Only ++ and -- are checked in the fields of a record in a guard expression; other guard expressions are allowed there

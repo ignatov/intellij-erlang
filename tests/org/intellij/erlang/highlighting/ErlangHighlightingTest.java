@@ -127,6 +127,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnboundVariableInComputedBinarySize() { doTest(); } // issue 1736
   public void testUnboundVariableInBinarySize() { doTest(); } // issue 1736
   public void testComputedBinarySizeScopes() { doTest(); } // issue 1736
+  public void testIllegalPatternMatchInSize() { doTest(); } // issue 1737
+  public void testIllegalPatternMatchChainInSize() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
   public void testUnresolvedBnotOperator() { doTest(); } // issue 1600
   public void testIllegalGuardBnotOperator() { doTest(); } // issue 1600
