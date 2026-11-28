@@ -278,6 +278,18 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     }
   }
 
+  // m.erl and the large pt.erl name each other as parse transforms: erlc compiles neither of them in any order (#1781).
+  public void testLargeParseTransformInCycle() throws Exception {
+    writeAboveSizeLimit("pt.erl", "-module(pt).\n-compile({parse_transform, m}).\n-export([parse_transform/2]).\n\n" +
+                                  "parse_transform(Forms, _Options) -> Forms.\n");
+    try {
+      List<ErlangFileDescriptor> buildOrder = ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule);
+      fail("Expected a cyclic dependency exception to be thrown, got the build order " + getDependencies(buildOrder));
+    }
+    catch (ErlangPrepareDependenciesCompileTask.CyclicDependencyFoundException ignored) {
+    }
+  }
+
   private void writeAboveSizeLimit(String fileName, String text) throws IOException {
     // A file above the code assistance limit (idea.max.intellisense.filesize) gets no Erlang PSI, but erlc compiles it.
     String moduleSourceDirPath = myModule.getModuleNioFile().getParent().toString() + "/src";
