@@ -20,6 +20,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.inspection.ErlangIllegalPatternInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
@@ -305,6 +306,12 @@ public class Erlang25HighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalGuardCeilFloorMinMaxR25() {
     myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR25.erl");
     myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalPatternSizeGuardBifsR25() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifsR25.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
 }

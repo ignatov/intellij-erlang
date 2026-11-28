@@ -331,10 +331,12 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
     int arity = o.getArgumentList().getExpressionList().size();
     String presentation = ErlangPsiImplUtil.createFunctionPresentation(name, arity);
     if (o.getParent() instanceof ErlangGlobalFunctionCallExpression global) {
-      return ErlangIllegalGuardInspection.isGuardBif(ErlangPsiImplUtil.getName(global.getModuleRef().getQAtom()), presentation);
+      return ErlangIllegalGuardInspection.isGuardBif(ErlangPsiImplUtil.getName(global.getModuleRef().getQAtom()), presentation, o);
     }
-    return ((ErlangFile) o.getContainingFile()).getFunction(name, arity) == null &&
-           ErlangIllegalGuardInspection.isGuardBif(null, presentation);
+    ErlangFile file = (ErlangFile) o.getContainingFile();
+    return file.getFunction(name, arity) == null &&
+           !ErlangIllegalGuardInspection.isImportedFromOtherThanErlang(file, name, arity) &&
+           ErlangIllegalGuardInspection.isGuardBif(null, presentation, o);
   }
 
   // A predefined macro of a known kind may stand only where its kind may; any other macro may expand to anything

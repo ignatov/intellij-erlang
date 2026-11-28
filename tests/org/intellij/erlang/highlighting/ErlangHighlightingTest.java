@@ -21,6 +21,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.inspection.ErlangIllegalPatternInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangExportType;
@@ -54,6 +55,8 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testmod2()              { doTest(); } // issue 29
   public void testx()                 { doTest(); } // issue 38
   public void testUnresolvedField()   { doTest(); }
+  public void testUnresolvedFieldInRecordType() { doTest(); } // issue 1725
+  public void testUnresolvedFieldInRecordTypeCases() { doTest(); } // issue 1725
   public void test34()                { doTest(); }
   public void test124()               { doTest(); }
   public void test149()               { doTest(); }
@@ -96,6 +99,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
     myFixture.checkHighlighting(true, false, false);
   }
 
+  public void testIllegalPatternSizeGuardBifsR15() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifsR15.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
   public void testIllegalPattern()    { doTest(); }
   public void testIllegalPatternMacroBinary() { doTest(); } // issue 1125
   public void testIllegalPatternMacroListOp() { doTest(); } // issue 890
@@ -115,6 +124,9 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalPatternCatchClassMacroCall() { doTest(); }
   public void testIllegalPatternComputedSizeAndKey() { doTest(); } // issue 1501
   public void testIllegalPatternComputedSizeAndKeyValue() { doTest(); }
+  public void testUnboundVariableInComputedBinarySize() { doTest(); } // issue 1736
+  public void testUnboundVariableInBinarySize() { doTest(); } // issue 1736
+  public void testComputedBinarySizeScopes() { doTest(); } // issue 1736
   public void testIllegalPatternMatchInSize() { doTest(); } // issue 1737
   public void testIllegalPatternMatchChainInSize() { doTest(); }
   public void testUnresolvedFunction(){ doTest(); }
