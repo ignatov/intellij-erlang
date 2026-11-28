@@ -90,7 +90,14 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
     private static void checkExpressionAndReport(@NotNull PsiElement element,
                                                  @NotNull final ProblemsHolder problemsHolder) {
-      element.accept(new ErlangRecursiveVisitor() {
+      checkExpressionAndReport(element, element, problemsHolder);
+    }
+
+    // The pattern is the whole checked expression, which tells whether a part of it is in a guard expression
+    private static void checkExpressionAndReport(@NotNull PsiElement part,
+                                                 @NotNull PsiElement element,
+                                                 @NotNull final ProblemsHolder problemsHolder) {
+      part.accept(new ErlangRecursiveVisitor() {
 
         private void registerProblemIfContainsNonConstant(@NotNull ErlangExpression o) {
           ConstantExpressionChecker checker = new ConstantExpressionChecker();
@@ -146,6 +153,17 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           }
           else {
             registerProblem(problemsHolder, o, ERROR);
+          }
+        }
+
+        @Override
+        public void visitAssignmentExpression(@NotNull ErlangAssignmentExpression o) {
+          // A match is not a guard expression; report it unless a part of it is reported
+          if (isInSizeOrMapKey(o, element) && !hasProblems(o, element, problemsHolder)) {
+            registerProblem(problemsHolder, o, ERROR);
+          }
+          else {
+            super.visitAssignmentExpression(o);
           }
         }
 
@@ -237,6 +255,14 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
           }
         }
       });
+    }
+
+    private static boolean hasProblems(@NotNull PsiElement o, @NotNull PsiElement pattern, @NotNull ProblemsHolder holder) {
+      ProblemsHolder tempHolder = new ProblemsHolder(holder.getManager(), holder.getFile(), holder.isOnTheFly());
+      for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
+        checkExpressionAndReport(child, pattern, tempHolder);
+      }
+      return !tempHolder.getResults().isEmpty();
     }
 
     // Only ++ and -- are checked in the fields of a record in a guard expression; other guard expressions are allowed there
