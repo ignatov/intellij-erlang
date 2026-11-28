@@ -138,4 +138,10 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
     myFixture.enableInspections(ErlangIllegalPatternInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
+
+  public void testIllegalPatternSizeGuardBifsQualifiedLocalImported() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifsQualifiedLocalImported.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
 }

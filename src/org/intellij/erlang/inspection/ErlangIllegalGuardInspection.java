@@ -52,10 +52,10 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
   private static final Set<String> OPERATORS_NOT_ALLOWED_IN_GUARDS = Set.of("'++'/2", "'--'/2", "'!'/2");
 
   // A guard may call a guard BIF, with or without erlang:, and an operator other than ++, -- and ! as erlang:'+'(..)
-  static boolean isGuardBif(@Nullable String moduleName, @NotNull String functionPresentation) {
-    if (moduleName == null) return BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation);
+  static boolean isGuardBif(@Nullable String moduleName, @NotNull String functionPresentation, @NotNull PsiElement call) {
+    if (moduleName == null) return isAllowedInGuard(functionPresentation, call);
     return "erlang".equals(moduleName) &&
-           (BIFS_ALLOWED_IN_GUARDS.contains(functionPresentation) ||
+           (isAllowedInGuard(functionPresentation, call) ||
             ErlangOperatorTable.canBeInvokedAsFunction(moduleName, functionPresentation) &&
             !OPERATORS_NOT_ALLOWED_IN_GUARDS.contains(functionPresentation));
   }
@@ -215,7 +215,7 @@ public class ErlangIllegalGuardInspection extends ErlangInspectionBase {
     }
   }
 
-  private static boolean isImportedFromOtherThanErlang(@NotNull ErlangFile file, @NotNull String name, int arity) {
+  static boolean isImportedFromOtherThanErlang(@NotNull ErlangFile file, @NotNull String name, int arity) {
     for (ErlangImportFunction importFunction : file.getImportedFunctions()) {
       if (!name.equals(ErlangPsiImplUtil.getName(importFunction)) || arity != ErlangPsiImplUtil.getArity(importFunction)) continue;
       ErlangImportDirective directive = PsiTreeUtil.getParentOfType(importFunction, ErlangImportDirective.class);
