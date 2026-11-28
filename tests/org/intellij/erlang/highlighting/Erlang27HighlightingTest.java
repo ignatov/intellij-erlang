@@ -4,6 +4,7 @@ import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.testFramework.LightProjectDescriptor;
 import com.intellij.testFramework.fixtures.DefaultLightProjectDescriptor;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.inspection.ErlangIllegalPatternInspection;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 
@@ -128,6 +129,19 @@ public class Erlang27HighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalGuardImportedFromErlangNoAutoImport() {
     myFixture.configureByFile("IllegalGuardImportedFromErlangNoAutoImport.erl");
     myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  // issue 1771: ceil/1, floor/1, min/2 and max/2 are guard BIFs in a binary segment size and a map key pattern
+  public void testIllegalPatternSizeGuardBifs() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifs.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalPatternSizeGuardBifsQualifiedLocalImported() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifsQualifiedLocalImported.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
 }

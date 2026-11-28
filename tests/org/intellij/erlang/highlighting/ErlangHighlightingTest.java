@@ -21,6 +21,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangFileType;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
+import org.intellij.erlang.inspection.ErlangIllegalPatternInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
 import org.intellij.erlang.psi.ErlangExportType;
@@ -95,6 +96,12 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIllegalGuardCeilFloorMinMaxR15() {
     myFixture.configureByFile("IllegalGuardCeilFloorMinMaxR15.erl");
     myFixture.enableInspections(ErlangIllegalGuardInspection.class);
+    myFixture.checkHighlighting(true, false, false);
+  }
+
+  public void testIllegalPatternSizeGuardBifsR15() {
+    myFixture.configureByFile("IllegalPatternSizeGuardBifsR15.erl");
+    myFixture.enableInspections(ErlangIllegalPatternInspection.class);
     myFixture.checkHighlighting(true, false, false);
   }
 
