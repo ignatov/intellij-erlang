@@ -22,11 +22,15 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.psi.impl.ErlangPsiImplUtil;
 import org.intellij.erlang.quickfixes.ErlangRenameVariableFix;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.intellij.erlang.psi.impl.ErlangPsiImplUtil.*;
 
@@ -36,9 +40,11 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
     for (ErlangFunction function : file.getFunctions()) {
       for (final ErlangFunctionClause functionClause : function.getFunctionClauseList()) {
         functionClause.accept(new ErlangRecursiveVisitor() {
+          private Set<String> myUnboundSizes;
+
           @Override
           public void visitQVar(@NotNull ErlangQVar o) {
-            if (isForceSkipped(o) || !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o) && !inDefinitionBeforeArgumentList(o))) return;
+            if (isForceSkipped(o) || isBinaryWidthExpression(o) || !inLeftPartOfAssignment(o) && (!inArgumentDefinition(o) || inArgumentList(o) && !inDefinitionBeforeArgumentList(o))) return;
 
             PsiReference reference = o.getReference();
             PsiElement resolve = reference.resolve();
@@ -56,9 +62,22 @@ public class ErlangUnusedVariableInspection extends ErlangInspectionBase {
               return false;
             });
             if (used) return;
+            // like erlc, a segment size that names the variable but is unbound counts as its use: the size is reported as unbound instead
+            if (getUnboundSizes().contains(o.getText())) return;
 
             registerProblem(problemsHolder, o, "Unused variable " + "'" + o.getText() + "'", null,
               ProblemHighlightType.LIKE_UNUSED_SYMBOL, new ErlangRenameVariableFix());
+          }
+
+          @NotNull
+          private Set<String> getUnboundSizes() {
+            if (myUnboundSizes == null) {
+              myUnboundSizes = new HashSet<>();
+              for (ErlangQVar v : PsiTreeUtil.findChildrenOfType(functionClause, ErlangQVar.class)) {
+                if (isBinaryWidthExpression(v) && v.getReference().resolve() == null) myUnboundSizes.add(v.getText());
+              }
+            }
+            return myUnboundSizes;
           }
         });
       }
