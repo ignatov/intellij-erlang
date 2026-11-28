@@ -72,6 +72,7 @@ import org.intellij.erlang.dialyzer.ErlangDialyzerExternalAnnotator;
 import org.intellij.erlang.eunit.ErlangUnitRunConfiguration;
 import org.intellij.erlang.eunit.ErlangUnitRunConfigurationType;
 import org.intellij.erlang.icons.ErlangIcons;
+import org.intellij.erlang.inspection.ErlangSingleClauseCaseInspection;
 import org.intellij.erlang.psi.*;
 import org.intellij.erlang.rebar.runner.RebarEunitRunConfigurationFactory;
 import org.intellij.erlang.rebar.runner.RebarRunConfiguration;
@@ -88,6 +89,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.time.LocalDate;
 import java.util.ArrayDeque;
@@ -95,6 +97,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeSet;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -694,6 +698,189 @@ public class ErlangUsageStatisticsTest extends ErlangLightPlatformCodeInsightFix
     ErlangUsageStatistics.getInstance().ask(getProject());
     assertEquals(ErlangUsageCollector.Consent.NO, collector().getConsent());
     assertFalse(collector().shouldAsk());
+  }
+
+  public void testLoadStateGoesToTheCollector() {
+    ErlangUsageStatisticsState state = new ErlangUsageStatisticsState();
+    state.consent = "NO";
+    state.askCount = 2;
+    ErlangUsageStatistics.getInstance().loadState(state);
+    assertEquals("NO", ErlangUsageStatistics.getInstance().getState().consent);
+    assertEquals(2, ErlangUsageStatistics.getInstance().getState().askCount);
+    assertEquals(ErlangUsageCollector.Consent.NO, collector().getConsent());
+    assertFalse(collector().shouldAsk());
+  }
+
+  public void testProjectOpenedStartsTheTimerOnlyWhenAllowed() throws Exception {
+    ErlangUsageStatistics statistics = new ErlangUsageStatistics();
+    try {
+      ErlangUsageStatistics.setAllowedForTests(false);
+      statistics.projectOpened(getProject());
+      assertFalse(statistics.isTimerStartedForTests());
+      ErlangUsageStatistics.setAllowedForTests(true);
+      statistics.projectOpened(getProject());
+      assertTrue(statistics.isTimerStartedForTests());
+      // the project has no Erlang files
+      PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+      ScheduledFuture<?> timer = timerOf(statistics);
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+      statistics.projectOpened(getProject());
+      PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+      assertSame("one timer per session", timer, timerOf(statistics));
+    }
+    finally {
+      statistics.dispose();
+    }
+  }
+
+  public void testDisposeStopsTheTimerAndTheChain() throws Exception {
+    ErlangUsageStatistics statistics = new ErlangUsageStatistics();
+    ScheduledFuture<?>[] pending = new ScheduledFuture<?>[1];
+    statistics.setSchedulerForTests((task, delay) -> pending[0] = AppExecutorUtil.getAppScheduledExecutorService().schedule(task, 1, TimeUnit.HOURS));
+    try {
+      statistics.askLaterForTests(getProject());
+      assertNotNull(pending[0]);
+      assertTrue(ErlangUsageIdle.isInstalled());
+      statistics.projectOpened(getProject());
+      PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+      ScheduledFuture<?> timer = timerOf(statistics);
+      assertNotNull(timer);
+      statistics.dispose();
+      assertTrue(timer.isCancelled());
+      assertTrue(pending[0].isCancelled());
+      assertFalse(ErlangUsageIdle.isInstalled());
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+      statistics.askLaterForTests(getProject());
+      assertEquals("no chain after the plugin is unloaded", 1, statistics.getScheduledForTests());
+    }
+    finally {
+      statistics.dispose();
+      if (pending[0] != null) pending[0].cancel(false);
+    }
+  }
+
+  public void testDisposeWithoutTimerOrChain() {
+    ErlangUsageStatistics statistics = new ErlangUsageStatistics();
+    statistics.setSchedulerForTests(new FakeScheduler());
+    statistics.dispose();
+    assertFalse(ErlangUsageIdle.isInstalled());
+    assertFalse(statistics.isTimerStartedForTests());
+    statistics.askLaterForTests(getProject());
+    assertEquals(0, statistics.getScheduledForTests());
+  }
+
+  // the plugin is unloaded while the check of the chain finds the user busy: no further check is due
+  public void testNoFurtherCheckAfterThePluginIsUnloadedDuringACheck() {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    FakeScheduler scheduler = new FakeScheduler();
+    statistics.setSchedulerForTests(scheduler);
+    statistics.setAskUiForTests(new ErlangUsageAskUi() {
+      @Override
+      public boolean canAskNow(@NotNull Project project) {
+        statistics.setDisposedForTests(true);
+        return false;
+      }
+
+      @Override
+      public @NotNull Choice ask(@NotNull Project project, boolean reminder, @NotNull Runnable beforeShow) {
+        throw new AssertionError("asked after the plugin is unloaded");
+      }
+    });
+    try {
+      assertTrue(ErlangUsageIdle.isInstalled());
+      statistics.ask(getProject());
+      assertEquals(1, statistics.getScheduledForTests());
+      assertEquals("no check is waiting", 0, scheduler.runAll());
+      assertFalse(ErlangUsageIdle.isInstalled());
+    }
+    finally {
+      statistics.setDisposedForTests(false);
+    }
+  }
+
+  // the plugin is unloaded while a check of the chain waits: the check ends the chain and does not ask
+  public void testWaitingCheckEndsTheChainAfterThePluginIsUnloaded() {
+    FakeAskUi ui = new FakeAskUi();
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    ErlangUsageIdle.setInstalledForTests(false, 0);
+    statistics.askLaterForTests(getProject());
+    assertTrue(ErlangUsageIdle.isInstalled());
+    statistics.setDisposedForTests(true);
+    try {
+      assertEquals(1, scheduler.runAll());
+      assertEquals(List.of(), ui.asked);
+      assertFalse(ErlangUsageIdle.isInstalled());
+    }
+    finally {
+      statistics.setDisposedForTests(false);
+    }
+    // the chain has ended, so a new one can start
+    statistics.askLaterForTests(getProject());
+    assertEquals(2, statistics.getScheduledForTests());
+  }
+
+  public void testTimerStartsAChainInAnErlangProject() {
+    FakeAskUi ui = new FakeAskUi();
+    FakeScheduler scheduler = new FakeScheduler();
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    statistics.setAskUiForTests(ui);
+    statistics.setSchedulerForTests(scheduler);
+    statistics.tickForTests();
+    assertEquals(1, statistics.getScheduledForTests());
+    assertEquals(1, scheduler.runAll());
+    assertEquals(List.of(false), ui.asked);
+  }
+
+  public void testProjectIsRecordedOncePerDayWhileCounting() throws Exception {
+    ErlangUsageStatistics statistics = ErlangUsageStatistics.getInstance();
+    // off by default
+    myFixture.enableInspections(ErlangSingleClauseCaseInspection.class);
+    // forgets the day on which an earlier test recorded the project
+    statistics.setEnabled(true);
+    PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+    try {
+      collector().setEnabled(false);
+      record(statistics, getProject(), 5);
+      // nothing is recorded while off, so the project is recorded once counting starts
+      collector().setEnabled(true);
+      record(statistics, fakeProject(new boolean[]{true}), 5);
+      assertNull("a closed project", projectProperty(ErlangUsageProperty.PROJECT_SIZE));
+      record(statistics, getProject(), 5);
+      assertEquals("up_to_10", projectProperty(ErlangUsageProperty.PROJECT_SIZE));
+      assertNotNull(projectProperty(ErlangUsageProperty.SDK_CONFIGURED));
+      assertNotNull(projectProperty(ErlangUsageProperty.OTP));
+      assertNotNull(projectProperty(ErlangUsageProperty.REBAR));
+      List<String> changed = ErlangUsageStatistics.changedInspections(getProject());
+      assertTrue(changed.toString(), changed.contains("ErlangSingleClauseCase"));
+      assertEquals(String.join(",", new TreeSet<>(changed)), projectProperty(ErlangUsageProperty.CHANGED_INSPECTIONS));
+      // once a day
+      record(statistics, getProject(), 500);
+      assertEquals("up_to_10", projectProperty(ErlangUsageProperty.PROJECT_SIZE));
+    }
+    finally {
+      ErlangUsageStatistics.setErlangProjectForTests(getProject(), true);
+      statistics.setEnabled(true);
+      PlatformTestUtil.waitWithEventsDispatching("the project check did not end", () -> !ErlangUsageStatistics.isErlangProject(getProject()), 10);
+    }
+  }
+
+  private static void record(@NotNull ErlangUsageStatistics statistics, @NotNull Project project, int erlangFiles) throws Exception {
+    AppExecutorUtil.getAppExecutorService().submit(() -> statistics.recordProjectForTests(project, erlangFiles)).get(10, TimeUnit.SECONDS);
+  }
+
+  @Nullable
+  private static String projectProperty(@NotNull ErlangUsageProperty property) {
+    return collector().getState().days.stream().map(day -> day.properties.get(property.name())).filter(Objects::nonNull).findFirst().orElse(null);
+  }
+
+  @Nullable
+  private static ScheduledFuture<?> timerOf(@NotNull ErlangUsageStatistics statistics) throws Exception {
+    Field timer = ErlangUsageStatistics.class.getDeclaredField("myTimer");
+    timer.setAccessible(true);
+    return (ScheduledFuture<?>)timer.get(statistics);
   }
 
   private static final class FakeAskUi implements ErlangUsageAskUi {
