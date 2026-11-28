@@ -119,7 +119,8 @@ public class ErlangRunningStateTest extends TestCase {
     assertEquals("z'\\", ErlangRunningState.atomName("\\z\\'\\\\"));
   }
 
-  // erlc rejects these; the text is kept as it is rather than dropped
+  // erlc rejects these; nothing is thrown: a trailing \ is kept, a trailing \^ or \x is dropped,
+  // an unclosed \x{41 is decoded and an invalid \x{...} keeps only the text between the braces
   public void testAtomNameIncompleteEscapes() {
     assertEquals("a\\", ErlangRunningState.atomName("a\\"));
     assertEquals("a", ErlangRunningState.atomName("a\\^"));
