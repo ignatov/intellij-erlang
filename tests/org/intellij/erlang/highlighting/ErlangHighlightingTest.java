@@ -66,6 +66,7 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testIoFormat()          { doTest(); }
   public void testIoFormatTwoArgumentControls() { doTest(); }
   public void testIoFormatTwoArgumentControlsOneArgument() { doTest(); }
+  public void testIoFormatModifierControlCombination() { doTest(); } // issue 1724
   public void testSuppression()       { doTest(); }
   public void testVariableResolve()   { doTest(); }
   public void testBinaryComprehensionTemplate() { doTest(); }
