@@ -563,6 +563,10 @@ public final class ErlangMacroLayer {
     ErlangMacroLayerCopies.prepareSearch(target, scope);
   }
 
+  public static void prepareSearch(@NotNull PsiElement target, @NotNull Supplier<? extends SearchScope> scopeSupplier) {
+    ErlangMacroLayerCopies.prepareSearch(target, scopeSupplier);
+  }
+
   static long quietMillis() {
     return ErlangMacroLayerCopies.quietMillis();
   }

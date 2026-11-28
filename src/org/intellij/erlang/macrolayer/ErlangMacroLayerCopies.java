@@ -338,6 +338,11 @@ final class ErlangMacroLayerCopies {
    * worker can no longer make a rename or a find usages miss the layer's answers in a file just typed in.
    */
   public static void prepareSearch(@NotNull PsiElement target, @NotNull SearchScope scope) {
+    prepareSearch(target, () -> scope);
+  }
+
+  /** As above, with the scope computed only when a recently changed file has to be checked against it. */
+  public static void prepareSearch(@NotNull PsiElement target, @NotNull Supplier<? extends SearchScope> scopeSupplier) {
     if (!ErlangMacroLayer.isEnabled() || ApplicationManager.getApplication().isDispatchThread() || ErlangMacroLayerCallers.nonCancellableCaller() != null) return;
     if (ErlangMacroLayerCallers.isHighlighting(ProgressManager.getGlobalProgressIndicator())) return; // highlighting is never refused a build
     if (!(target instanceof ErlangMacroLayerHeaderTarget) && !target.getLanguage().isKindOf(ErlangLanguage.INSTANCE)) return;
@@ -345,6 +350,7 @@ final class ErlangMacroLayerCopies {
     if (DumbService.isDumb(project)) return;
     List<VirtualFile> changed = ErlangMacroLayerRetention.getInstance(project).filesChangedWithin(quietMillis());
     if (changed.isEmpty()) return;
+    SearchScope scope = scopeSupplier.get();
     String name = target instanceof PsiNamedElement named ? named.getName() : target.getText();
     List<ErlangFile> files = new ArrayList<>();
     for (VirtualFile vf : changed) {
