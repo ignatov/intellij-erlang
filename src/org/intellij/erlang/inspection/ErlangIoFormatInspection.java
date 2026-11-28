@@ -28,7 +28,6 @@ import org.intellij.erlang.psi.*;
 import org.intellij.erlang.sdk.ErlangSdkRelease;
 import org.intellij.erlang.sdk.ErlangSdkType;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Set;
@@ -133,7 +132,8 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
       if (controlSequenceType != null) expectedArgumentsCount++;
       if (controlSequenceType != null && "PWXx".contains(controlSequenceType)) expectedArgumentsCount++;
       if (modifiers.indexOf('K') != -1) expectedArgumentsCount++;
-      if (!areValidModifiers(modifiers, controlSequenceType, mapOrderModifiers)) {
+      String control = controlSequenceType != null ? controlSequenceType : matcher.group(6);
+      if (!areValidModifiers(modifiers, control, mapOrderModifiers)) {
         throw new InvalidControlSequenceException(matcher.start());
       }
       previousMatchEnd = matcher.end();
@@ -142,15 +142,17 @@ public class ErlangIoFormatInspection extends ErlangInspectionBase {
     return expectedArgumentsCount;
   }
 
-  // as erl_lint: no modifier twice, not both t and l, not both k and K, and k or K only with p, P, w or W,
-  // and only from OTP 26
-  private static boolean areValidModifiers(@NotNull String modifiers, @Nullable String controlSequenceType,
+  // as erl_lint: no modifier twice, not both t and l, not both k and K, l only with p or P,
+  // t only with c, p, P, s, w or W, and k or K only with p, P, w or W, and only from OTP 26
+  private static boolean areValidModifiers(@NotNull String modifiers, @NotNull String control,
                                            boolean mapOrderModifiers) {
     if (modifiers.chars().distinct().count() != modifiers.length()) return false;
     if (modifiers.contains("t") && modifiers.contains("l")) return false;
     if (modifiers.contains("k") && modifiers.contains("K")) return false;
+    if (modifiers.contains("l") && !"pP".contains(control)) return false;
+    if (modifiers.contains("t") && !"cpPswW".contains(control)) return false;
     boolean mapOrder = modifiers.contains("k") || modifiers.contains("K");
-    return !mapOrder || mapOrderModifiers && controlSequenceType != null && "pPwW".contains(controlSequenceType);
+    return !mapOrder || mapOrderModifiers && "pPwW".contains(control);
   }
 
   private static void checkNoControlSequencePresent(String formatString, int begin, int end) throws InvalidControlSequenceException {
