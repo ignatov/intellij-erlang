@@ -19,6 +19,6 @@ public final class ErlangMacroLayerReferencesSearcher extends QueryExecutorBase<
   @Override
   public void processQuery(@NotNull ReferencesSearch.SearchParameters parameters, @NotNull Processor<? super PsiReference> consumer) {
     if (!ErlangMacroLayer.isEnabled()) return;
-    ErlangMacroLayer.prepareSearch(parameters.getElementToSearch(), parameters.getEffectiveSearchScope());
+    ErlangMacroLayer.prepareSearch(parameters.getElementToSearch(), parameters::getEffectiveSearchScope);
   }
 }
