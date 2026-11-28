@@ -73,7 +73,21 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     if (!psiElement.getText().equals(myRequestedName)) return true;
     if (psiElement.equals(myOrigin)) return true;
     if (isNamedFunDeclaration(myOrigin)) return true;
-    if (inFunArgList(myOrigin)) {
+    if (isBinaryWidthExpression(myOrigin)) {
+      // a segment size in a pattern is a use: it refers to an earlier segment of its own binary
+      // or to a variable bound before the pattern, never to another variable of the same pattern
+      PsiElement pattern = getPattern(myOrigin);
+      if (pattern != null && PsiTreeUtil.isAncestor(pattern, psiElement, false)) {
+        // the outermost binary of the pattern around the size, so that a binary nested in the size sees the segments before it
+        ErlangBinaryExpression binary = null;
+        for (PsiElement e = myOrigin; e != null; e = e.getParent()) {
+          if (e instanceof ErlangBinaryExpression b) binary = b;
+          if (e == pattern) break;
+        }
+        if (!PsiTreeUtil.isAncestor(binary, psiElement, false) || psiElement.getTextOffset() > myOrigin.getTextOffset()) return true;
+      }
+    }
+    else if (inFunArgList(myOrigin)) {
       ErlangArgumentDefinitionList originArgList = PsiTreeUtil.getParentOfType(myOrigin, ErlangArgumentDefinitionList.class);
       boolean inOriginArgList = PsiTreeUtil.isAncestor(originArgList, psiElement, false);
       // a map key in a fun head refers to an outer variable; any other variable there shadows the outer ones
@@ -98,7 +112,7 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
     boolean inMacroDefinition = PsiTreeUtil.isAncestor(macroDefinition, psiElement, false) && inDefinitionOrAssignment;
     boolean inBinaryWidthExpression = isBinaryWidthExpression(psiElement);
     
-    if (inAssignment && inBinaryWidthExpression) return true;
+    if (inBinaryWidthExpression) return true;
     
     if (inFunction || inModule(psiElement) || inSpecification || inMacroDefinition) {
       boolean inArgumentList = inArgumentList(psiElement);
@@ -187,6 +201,22 @@ public class ErlangVarProcessor implements PsiScopeProcessor {
            && definition.getParent() instanceof ErlangFunClause clause
            && clause.getArgumentDefinition() == definition
            && PsiTreeUtil.getPrevSiblingOfType(clause, ErlangFunClause.class) == null;
+  }
+
+  // the whole pattern that psiElement is in: the head of a function or fun, the pattern of a clause or a generator,
+  // or the left side of a match; null outside patterns
+  @Nullable
+  private static PsiElement getPattern(@NotNull PsiElement psiElement) {
+    for (PsiElement child = psiElement, parent = psiElement.getParent();
+         parent != null && !(parent instanceof ErlangClauseBody) && !(parent instanceof PsiFile);
+         child = parent, parent = parent.getParent()) {
+      if (parent instanceof ErlangArgumentDefinition) {
+        return parent.getParent() instanceof ErlangArgumentDefinitionList ? parent.getParent() : parent;
+      }
+      if (parent instanceof ErlangAssignmentExpression assignment && assignment.getLeft() == child) return child;
+      if (parent instanceof ErlangMaybeMatchExpression match && match.getLeft() == child) return child;
+    }
+    return null;
   }
 
   private static boolean inFunArgList(PsiElement psiElement) {
