@@ -252,6 +252,22 @@ public class ErlangDependenciesResolutionTest extends JavaModuleTestCase {
     assertTrue(files.toString(), files.indexOf("x.erl") < files.indexOf("m.erl"));
   }
 
+  // hX.hrl names X as its parse transform, and each large parse transform includes the header of the next one:
+  // erlc fails with "undefined parse transform" unless they are built from e.erl back to a.erl (#1782).
+  public void testLargeParseTransformIncludesHeaderOfOtherLargeParseTransform() throws Exception {
+    List<String> parseTransforms = List.of("a", "b", "c", "d", "e");
+    for (int i = 0; i < parseTransforms.size(); i++) {
+      String include = i + 1 < parseTransforms.size() ? "-include(\"h" + parseTransforms.get(i + 1) + ".hrl\").\n" : "";
+      writeAboveSizeLimit(parseTransforms.get(i) + ".erl", "-module(" + parseTransforms.get(i) + ").\n" + include +
+                                                           "-export([parse_transform/2]).\n\nparse_transform(Forms, _Options) -> Forms.\n");
+    }
+    List<String> files = ContainerUtil.map(getModulePaths(ErlangPrepareDependenciesCompileTask.getBuildOrder(myModule)),
+                                           path -> new File(path).getName());
+    for (int i = 0; i + 1 < parseTransforms.size(); i++) {
+      assertTrue(files.toString(), files.indexOf(parseTransforms.get(i + 1) + ".erl") < files.indexOf(parseTransforms.get(i) + ".erl"));
+    }
+  }
+
   public void testLargeModulesAfterParseTransformInHeaderWithGuardedCycle() throws Exception {
     List<String> largeModules = List.of("abig.erl", "zbig.erl", "big1.erl", "mbig.erl");
     for (String largeModule : largeModules) {
