@@ -278,6 +278,20 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTest();
   }
 
+  public void testUniformBinaryExpressionsOperatorSpacing() throws Exception {
+    getErlangSettings().UNIFORM_BINARY_EXPRESSIONS = true;
+    doTest();
+  }
+
+  public void testUniformBinaryExpressionsOffOperatorSpacing() throws Exception { doTest(); }
+
+  public void testUniformBinaryExpressionsOperatorSpacesOff() throws Exception {
+    getErlangSettings().UNIFORM_BINARY_EXPRESSIONS = true;
+    getCommonSettings().SPACE_AROUND_ADDITIVE_OPERATORS = false;
+    getCommonSettings().SPACE_AROUND_MULTIPLICATIVE_OPERATORS = false;
+    doTest();
+  }
+
   public void testFunctionClause() throws Exception { doEnterTest(); }
 
 
