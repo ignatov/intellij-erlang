@@ -39,14 +39,14 @@
     <change-notes>
         <![CDATA[
             <ul>
-              <li>Unbound and unused variables are now reported in comprehension generators such as [ok || K &lt;- K] (<a href="https://github.com/ignatov/intellij-erlang/pull/1660">#1660</a>)</li>
-              <li>Maps written with record syntax, such as #{a = 1}, are now marked as syntax errors, as erlc does (<a href="https://github.com/ignatov/intellij-erlang/pull/1662">#1662</a>)</li>
-              <li>A variable repeated in a fun head is no longer reported as unused, and Rename changes every occurrence (<a href="https://github.com/ignatov/intellij-erlang/pull/1659">#1659</a>)</li>
-              <li>A debug session that fails to start no longer leaves an erl process and an open port behind (<a href="https://github.com/ignatov/intellij-erlang/pull/1329">#1329</a>)</li>
-              <li>defined(Macro) in -if and -elif conditions is no longer marked as an unresolved function (<a href="https://github.com/ignatov/intellij-erlang/pull/1638">#1638</a>)</li>
-              <li>Introduce Variable on a selection in a function guard or a macro body shows "Cannot Perform Refactoring" instead of failing (<a href="https://github.com/ignatov/intellij-erlang/pull/1628">#1628</a>)</li>
-              <li>Introduce Variable with "Replace all occurrences" no longer moves the new variable into a case, receive or fun clause pattern (<a href="https://github.com/ignatov/intellij-erlang/pull/1627">#1627</a>)</li>
-              <li>and 12 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1309">full list</a></li>
+              <li>Highlighting a receive with hundreds of clauses that bind the same variable no longer freezes (<a href="https://github.com/ignatov/intellij-erlang/issues/1727">#1727</a>)</li>
+              <li>Reference searches in other languages, such as PHP code vision, no longer make the Erlang plugin compute their search scope (<a href="https://github.com/ignatov/intellij-erlang/pull/1768">#1768</a>)</li>
+              <li>The io:format check now warns on modifiers that erlc rejects for the control, such as ~tx or ~ln (<a href="https://github.com/ignatov/intellij-erlang/pull/1769">#1769</a>)</li>
+              <li>Code completion no longer crashes in files with thousands of nested parentheses (<a href="https://github.com/ignatov/intellij-erlang/pull/1767">#1767</a>)</li>
+              <li>Reformat Code spaces - and / again when "Uniform binary expressions style" is on (<a href="https://github.com/ignatov/intellij-erlang/pull/1765">#1765</a>)</li>
+              <li>Reformat Code no longer glues A - -B or X &lt; -1 into other operators when operator spaces are turned off (<a href="https://github.com/ignatov/intellij-erlang/pull/1762">#1762</a>)</li>
+              <li>Resolving a function in an -import without a module no longer crashes the editor (<a href="https://github.com/ignatov/intellij-erlang/pull/1761">#1761</a>)</li>
+              <li>and 32 more changes: <a href="https://github.com/ignatov/intellij-erlang/releases/tag/v0.11.1310">full list</a></li>
             </ul>
         ]]>
     </change-notes>
