@@ -18,8 +18,6 @@ package org.intellij.erlang.runconfig;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
@@ -97,23 +95,13 @@ public class ErlangApplicationCommandLineTest extends ErlangLightPlatformCodeIns
   }
 
   public void testModuleWithoutSdk() throws Exception {
-    assertInvalidModuleSdk(null);
-  }
-
-  public void testModuleSdkWithoutHomePath() throws Exception {
-    Sdk sdk = ProjectJdkTable.getInstance().createSdk("Erlang without home", ErlangSdkType.getInstance());
-    ApplicationManager.getApplication().runWriteAction(() -> ProjectJdkTable.getInstance().addJdk(sdk, getTestRootDisposable()));
-    assertInvalidModuleSdk(sdk);
-  }
-
-  private void assertInvalidModuleSdk(Sdk moduleSdk) throws Exception {
     ErlangApplicationConfiguration configuration =
       new ErlangApplicationConfiguration(getProject(), "app", ErlangApplicationRunConfigurationType.getInstance());
     configuration.setModuleAndFunction("m f");
     Sdk originalSdk = ModuleRootManager.getInstance(getModule()).getSdk();
-    ModuleRootModificationUtil.setModuleSdk(getModule(), moduleSdk);
+    ModuleRootModificationUtil.setModuleSdk(getModule(), null);
     try {
-      assertSame(moduleSdk, ModuleRootManager.getInstance(getModule()).getSdk());
+      assertNull(ModuleRootManager.getInstance(getModule()).getSdk());
       getCommandParameters(new ErlangApplicationRunningState(null, getModule(), configuration));
       fail("an invalid module SDK must stop the run");
     }

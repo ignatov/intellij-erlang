@@ -108,6 +108,12 @@ public class ErlangRunningStateTest extends TestCase {
     assertEquals("A\u0007\u00018", ErlangRunningState.atomName("\\101\\7\\18"));
   }
 
+  // erlc reads '\1 a' as [1, 32, 97] and 'a\1' as [97, 1]
+  public void testAtomNameShortOctalEscapes() {
+    assertEquals("\u0001 a", ErlangRunningState.atomName("\\1 a"));
+    assertEquals("a\u0001", ErlangRunningState.atomName("a\\1"));
+  }
+
   // erlc reads '\z\'\\' as [122, 39, 92]
   public void testAtomNameOtherEscapes() {
     assertEquals("z'\\", ErlangRunningState.atomName("\\z\\'\\\\"));
@@ -118,6 +124,7 @@ public class ErlangRunningStateTest extends TestCase {
     assertEquals("a\\", ErlangRunningState.atomName("a\\"));
     assertEquals("a", ErlangRunningState.atomName("a\\^"));
     assertEquals("A", ErlangRunningState.atomName("\\x{41"));
+    assertEquals("a", ErlangRunningState.atomName("a\\x"));
     assertEquals("zz", ErlangRunningState.atomName("\\x{zz}"));
     assertEquals("110000", ErlangRunningState.atomName("\\x{110000}"));
   }
