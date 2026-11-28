@@ -278,6 +278,38 @@ public class ErlangFormattingTest extends ErlangLightPlatformCodeInsightFixtureT
     doTestAndReformatAgain();
   }
 
+  public void testFunctionClausesAlignedDoNotWrap() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().EXPRESSION_IN_CLAUSE_WRAP = CommonCodeStyleSettings.DO_NOT_WRAP;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperators() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperatorsForceExceptOneLine() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getErlangSettings().NEW_LINE_AFTER_ARROW = ErlangCodeStyleSettings.NewLineAfterArrow.FORCE_EXCEPT_ONE_LINE_CLAUSES;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedOperatorsWide() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 120;
+    doTestAndReformatAgain();
+  }
+
+  public void testFunctionClausesAlignedMultiLineHead() throws Exception {
+    getErlangSettings().ALIGN_FUNCTION_CLAUSES = true;
+    getCommonSettings().RIGHT_MARGIN = 40;
+    doTestAndReformatAgain();
+  }
+
   private void doTestAndReformatAgain() throws Exception {
     doTest();
     String first = myFixture.getFile().getText();
