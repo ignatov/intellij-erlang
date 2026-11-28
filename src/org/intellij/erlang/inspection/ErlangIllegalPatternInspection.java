@@ -16,6 +16,7 @@
 
 package org.intellij.erlang.inspection;
 
+import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiComment;
@@ -158,12 +159,17 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
 
         @Override
         public void visitAssignmentExpression(@NotNull ErlangAssignmentExpression o) {
-          // A match is not a guard expression; report it unless a part of it is reported
-          if (isInSizeOrMapKey(o, element) && !hasProblems(o, element, problemsHolder)) {
+          if (!isInSizeOrMapKey(o, element)) {
+            super.visitAssignmentExpression(o);
+            return;
+          }
+          // A match is not a guard expression; report it unless a part of it is reported, checking the parts only once
+          List<ProblemDescriptor> partProblems = checkParts(o, element, problemsHolder);
+          if (partProblems.isEmpty()) {
             registerProblem(problemsHolder, o, ERROR);
           }
           else {
-            super.visitAssignmentExpression(o);
+            partProblems.forEach(problemsHolder::registerProblem);
           }
         }
 
@@ -257,12 +263,13 @@ public class ErlangIllegalPatternInspection extends ErlangInspectionBase {
       });
     }
 
-    private static boolean hasProblems(@NotNull PsiElement o, @NotNull PsiElement pattern, @NotNull ProblemsHolder holder) {
+    @NotNull
+    private static List<ProblemDescriptor> checkParts(@NotNull PsiElement o, @NotNull PsiElement pattern, @NotNull ProblemsHolder holder) {
       ProblemsHolder tempHolder = new ProblemsHolder(holder.getManager(), holder.getFile(), holder.isOnTheFly());
       for (PsiElement child = o.getFirstChild(); child != null; child = child.getNextSibling()) {
         checkExpressionAndReport(child, pattern, tempHolder);
       }
-      return !tempHolder.getResults().isEmpty();
+      return tempHolder.getResults();
     }
 
     // Only ++ and -- are checked in the fields of a record in a guard expression; other guard expressions are allowed there
