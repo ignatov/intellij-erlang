@@ -33,6 +33,10 @@ public class ErlangGenerateSpecFixTest extends ErlangQuickFixTestBase {
   public void testMacroName()       { doGenerateSpecTest(); }
   public void testProductWithUnknownOperand() { doGenerateSpecTest(); }
   public void testProductWithFloatOperand() { doGenerateSpecTest(); }
+  public void testReturnListThenString() { doGenerateSpecTest(); }
+  public void testReturnStringThenList() { doGenerateSpecTest(); }
+  public void testReturnIntegerThenFloat() { doGenerateSpecTest(); }
+  public void testArgListThenString() { doGenerateSpecTest(); }
 
   public void testNoActionIfSpecExists() {
     String testName = getTestName(true);
