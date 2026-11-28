@@ -20,6 +20,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.intellij.erlang.ErlangFileType;
+import org.intellij.erlang.configuration.ErlangCompilerSettings;
 import org.intellij.erlang.inspection.ErlangIllegalGuardInspection;
 import org.intellij.erlang.inspection.ErlangUnusedTypeInspection;
 import org.intellij.erlang.macrolayer.ErlangMacroLayer;
@@ -46,6 +47,19 @@ public class ErlangHighlightingTest extends ErlangHighlightingTestBase {
   public void testUnusedFunction()    { doTest(); }
   public void testUnusedFunctionEunitIsNotTheFirstIncludeLib() { doTest("eunit_not_first_include_lib_tests.erl"); } // issue 1434
   public void testUnusedFunctionEunitHrlIncludedWithInclude() { doTest("include_eunit_hrl_tests.erl", "eunit.hrl"); } // issue 1504
+  // issue 1774: eunit.hrl of the SDK, found by erlc through an -I option, as `erlc -I <otp>/lib/eunit-*/include` does
+  public void testUnusedFunctionEunitHrlOfSdkIncludedWithIncludeOption() {
+    ErlangCompilerSettings settings = ErlangCompilerSettings.getInstance(getProject());
+    List<String> backup = settings.getAdditionalErlcArguments();
+    String eunitInclude = new java.io.File("testData/mockSdk-R15B02/lib/eunit-2.2.4/include").getAbsolutePath();
+    settings.setAdditionalErlcArguments(List.of("-I", eunitInclude));
+    try {
+      doTest("sdk_eunit_hrl_tests.erl");
+    }
+    finally {
+      settings.setAdditionalErlcArguments(backup);
+    }
+  }
   public void testDuplicate()         { doTest(); }
   public void testDuplicateAfterSplitForm() { doTest(); } // issue 1609
   public void testLoneDot()           { doTest(); } // issue 1646
